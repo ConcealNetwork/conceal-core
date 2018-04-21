@@ -34,7 +34,8 @@ namespace {
 gen_upgrade::gen_upgrade() : m_invalidBlockIndex(0), m_checkBlockTemplateVersionCallCounter(0) {
   CryptoNote::CurrencyBuilder currencyBuilder(m_logger);
   currencyBuilder.maxBlockSizeInitial(std::numeric_limits<size_t>::max() / 2);
-  currencyBuilder.upgradeHeight(UpgradeDetectorBase::UNDEF_HEIGHT);
+  currencyBuilder.upgradeHeightV2(UpgradeDetectorBase::UNDEF_HEIGHT);
+  currencyBuilder.upgradeHeightV3(UpgradeDetectorBase::UNDEF_HEIGHT);
   m_currency = currencyBuilder.currency();
 
   REGISTER_CALLBACK_METHOD(gen_upgrade, markInvalidBlock);
@@ -191,8 +192,8 @@ bool gen_upgrade::checkBlockTemplateVersion(CryptoNote::core& c, uint8_t expecte
   difficulty_type diff;
   uint32_t height;
   CHECK_TEST_CONDITION(c.get_block_template(b, account.getAccountKeys().address, diff, height, BinaryArray()));
-  CHECK_EQ(b.majorVersion, expectedMajorVersion);
-  CHECK_EQ(b.minorVersion, expectedMinorVersion);
+  CHECK_EQ(static_cast<int>(b.majorVersion), static_cast<int>(expectedMajorVersion));
+  CHECK_EQ(static_cast<int>(b.minorVersion), static_cast<int>(expectedMinorVersion));
 
   return true;
 }

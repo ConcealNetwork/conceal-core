@@ -14,7 +14,7 @@
 namespace DepositTests {
 struct DepositTestsBase : public test_chain_unit_base {
   DepositTestsBase() {
-    m_currency = CryptoNote::CurrencyBuilder(m_logger).upgradeHeight(0).depositMinTerm(10).depositMinTotalRateFactor(100).currency();
+    m_currency = CryptoNote::CurrencyBuilder(m_logger).upgradeHeightV2(0).depositMinTerm(10).depositMinTotalRateFactor(100).currency();
     from.generate();
     to.generate();
     REGISTER_CALLBACK_METHOD(DepositTestsBase, mark_invalid_block);
@@ -64,7 +64,7 @@ struct DepositIndexTest : public DepositTestsBase {
   using Core = CryptoNote::core;
   using Events = std::vector<test_event_entry>;
   DepositIndexTest() {
-    m_currency = CryptoNote::CurrencyBuilder(m_logger).upgradeHeight(0).depositMinTerm(10).depositMinTotalRateFactor(100).mininumFee(1000).currency();
+    m_currency = CryptoNote::CurrencyBuilder(m_logger).upgradeHeightV2(0).depositMinTerm(10).depositMinTotalRateFactor(100).mininumFee(1000).currency();
     REGISTER_CALLBACK_METHOD(DepositIndexTest, interestZero);
     REGISTER_CALLBACK_METHOD(DepositIndexTest, interestOneMinimal);
     REGISTER_CALLBACK_METHOD(DepositIndexTest, interestTwoMininmal);
@@ -100,7 +100,7 @@ struct DepositIndexTest : public DepositTestsBase {
 
 struct EmissionTest : public DepositTestsBase {
   EmissionTest() {
-    m_currency = CryptoNote::CurrencyBuilder(m_logger).upgradeHeight(0).depositMinTerm(10).depositMinTotalRateFactor(100).currency();
+    m_currency = CryptoNote::CurrencyBuilder(m_logger).upgradeHeightV2(0).depositMinTerm(10).depositMinTotalRateFactor(100).currency();
     REGISTER_CALLBACK_METHOD(EmissionTest, save_emission_before);
     REGISTER_CALLBACK_METHOD(EmissionTest, save_emission_after);
   }
