@@ -29,9 +29,19 @@ size_t makeFusionTransaction(CryptoNote::WalletGreen &wallet,
         return CryptoNote::WALLET_INVALID_TRANSACTION_ID;
     }
 
-    return wallet.createFusionTransaction(bestThreshold, 
-                                          CryptoNote::parameters
-                                                    ::DEFAULT_MIXIN);
+    try
+    {
+        return wallet.createFusionTransaction(bestThreshold, 
+                                              CryptoNote::parameters
+                                                        ::DEFAULT_MIXIN);
+    }
+    catch (const std::runtime_error e)
+    {
+        std::cout << WarningMsg("Failed to send fusion transaction: ")
+                  << WarningMsg(e.what()) << std::endl;
+
+        return CryptoNote::WALLET_INVALID_TRANSACTION_ID;
+    }
 }
 
 void quickOptimize(CryptoNote::WalletGreen &wallet)
