@@ -1,9 +1,23 @@
-// Copyright (c) 2011-2016 The Cryptonote developers
-// Copyright (c) 2016-2018 krypt0x aka krypt0chaos
+// Copyright (c) 2011-2015 The Cryptonote developers
+// Copyright (c) 2015-2016 The Bytecoin developers
+// Copyright (c) 2016-2017 The TurtleCoin developers
+// Copyright (c) 2017-2018 krypt0x aka krypt0chaos
 // Copyright (c) 2018 The Circle Foundation
 //
-// Distributed under the MIT/X11 software license, see the accompanying
-// file COPYING or http://www.opensource.org/licenses/mit-license.php.
+// This file is part of Conceal Sense Crypto Engine.
+//
+// Conceal is free software: you can redistribute it and/or modify
+// it under the terms of the GNU Lesser General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+//
+// Conceal is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU Lesser General Public License for more details.
+//
+// You should have received a copy of the GNU Lesser General Public License
+// along with Conceal.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "gtest/gtest.h"
 
@@ -19,6 +33,7 @@
 
 #include <future>
 #include <algorithm>
+#include <numeric>
 
 #include <Logging/ConsoleLogger.h>
 
@@ -40,11 +55,12 @@ class TransfersApi : public ::testing::Test, public IBlockchainSynchronizerObser
 public:
 
   TransfersApi() :
+    m_logger(Logging::ERROR),
     m_currency(CryptoNote::CurrencyBuilder(m_logger).currency()),
     generator(m_currency),
     m_node(generator),
-    m_sync(m_node, m_currency.genesisBlockHash()),
-    m_transfersSync(m_currency, m_sync, m_node) {
+    m_sync(m_node, m_logger, m_currency.genesisBlockHash()),
+    m_transfersSync(m_currency, m_logger, m_sync, m_node) {
   }
 
   void addAccounts(size_t count) {
@@ -277,7 +293,11 @@ TEST_F(TransfersApi, moveMoney) {
   generator.generateEmptyBlocks(2 * m_currency.minedMoneyUnlockWindow());
 
   // sendAmount is an even number
-  uint64_t sendAmount = (get_outs_money_amount(generator.getBlockchain()[1].baseTransaction) / 4) * 2;
+  auto& transaction = generator.getBlockchain()[1].baseTransaction;
+  uint64_t sendAmount = std::accumulate(
+      transaction.outputs.begin(), transaction.outputs.end(), UINT64_C(0),
+      [](uint64_t sum, const decltype(transaction.outputs)::value_type& output) { return sum + output.amount; });
+  sendAmount = (sendAmount / 4) * 2;
   auto fee = m_currency.minimumFee();
 
   startSync();
@@ -367,8 +387,8 @@ TEST_F(TransfersApi, state) {
   m_transfersSync.save(memstm);
   m_sync.start();
 
-  BlockchainSynchronizer bsync2(m_node, m_currency.genesisBlockHash());
-  TransfersSyncronizer sync2(m_currency, bsync2, m_node);
+  BlockchainSynchronizer bsync2(m_node, m_logger, m_currency.genesisBlockHash());
+  TransfersSyncronizer sync2(m_currency, m_logger, bsync2, m_node);
 
   for (size_t i = 0; i < m_accounts.size(); ++i) {
     sync2.addSubscription(createSubscription(i));

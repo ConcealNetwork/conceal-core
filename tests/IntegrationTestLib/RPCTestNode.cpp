@@ -1,9 +1,23 @@
-// Copyright (c) 2011-2016 The Cryptonote developers
-// Copyright (c) 2016-2018 krypt0x aka krypt0chaos
+// Copyright (c) 2011-2015 The Cryptonote developers
+// Copyright (c) 2015-2016 The Bytecoin developers
+// Copyright (c) 2016-2017 The TurtleCoin developers
+// Copyright (c) 2017-2018 krypt0x aka krypt0chaos
 // Copyright (c) 2018 The Circle Foundation
 //
-// Distributed under the MIT/X11 software license, see the accompanying
-// file COPYING or http://www.opensource.org/licenses/mit-license.php.
+// This file is part of Conceal Sense Crypto Engine.
+//
+// Conceal is free software: you can redistribute it and/or modify
+// it under the terms of the GNU Lesser General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+//
+// Conceal is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU Lesser General Public License for more details.
+//
+// You should have received a copy of the GNU Lesser General Public License
+// along with Conceal.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "RPCTestNode.h"
 
@@ -26,8 +40,8 @@ using namespace System;
 
 namespace Tests {
 
-RPCTestNode::RPCTestNode(uint16_t port, System::Dispatcher& d) : 
-  m_rpcPort(port), m_dispatcher(d), m_httpClient(d, "127.0.0.1", port) {
+RPCTestNode::RPCTestNode(uint16_t port, System::Dispatcher& d) :
+  m_logger(m_log, "RPCTestNode"), m_rpcPort(port), m_dispatcher(d), m_httpClient(d, "127.0.0.1", port) {
 }
 
 bool RPCTestNode::startMining(size_t threadsCount, const std::string& address) { 
@@ -51,7 +65,7 @@ bool RPCTestNode::startMining(size_t threadsCount, const std::string& address) {
   return true;
 }
 
-bool RPCTestNode::getBlockTemplate(const std::string& minerAddress, CryptoNote::Block& blockTemplate, uint64_t& difficulty) {
+bool RPCTestNode::getBlockTemplate(const std::string& minerAddress, CryptoNote::BlockTemplate& blockTemplate, uint64_t& difficulty) {
   LOG_DEBUG("getBlockTemplate()");
 
   try {
@@ -135,7 +149,7 @@ bool RPCTestNode::getTailBlockId(Crypto::Hash& tailBlockId) {
 }
 
 bool RPCTestNode::makeINode(std::unique_ptr<CryptoNote::INode>& node) {
-  std::unique_ptr<CryptoNote::INode> newNode(new CryptoNote::NodeRpcProxy("127.0.0.1", m_rpcPort));
+  std::unique_ptr<CryptoNote::INode> newNode(new CryptoNote::NodeRpcProxy("127.0.0.1", m_rpcPort, m_logger.getLogger()));
   NodeCallback cb;
   newNode->init(cb.callback());
   auto ec = cb.get();

@@ -1,9 +1,23 @@
-// Copyright (c) 2011-2016 The Cryptonote developers
-// Copyright (c) 2016-2018 krypt0x aka krypt0chaos
+// Copyright (c) 2011-2015 The Cryptonote developers
+// Copyright (c) 2015-2016 The Bytecoin developers
+// Copyright (c) 2016-2017 The TurtleCoin developers
+// Copyright (c) 2017-2018 krypt0x aka krypt0chaos
 // Copyright (c) 2018 The Circle Foundation
 //
-// Distributed under the MIT/X11 software license, see the accompanying
-// file COPYING or http://www.opensource.org/licenses/mit-license.php.
+// This file is part of Conceal Sense Crypto Engine.
+//
+// Conceal is free software: you can redistribute it and/or modify
+// it under the terms of the GNU Lesser General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+//
+// Conceal is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU Lesser General Public License for more details.
+//
+// You should have received a copy of the GNU Lesser General Public License
+// along with Conceal.  If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
 
@@ -18,8 +32,8 @@ namespace CryptoNote {
 
 namespace TransactionTypes {
   
-  enum class InputType : uint8_t { Invalid, Key, Multisignature, Generating };
-  enum class OutputType : uint8_t { Invalid, Key, Multisignature };
+  enum class InputType : uint8_t { Invalid, Key, Generating };
+  enum class OutputType : uint8_t { Invalid, Key };
 
   struct GlobalOutput {
     Crypto::PublicKey targetKey;
@@ -64,14 +78,12 @@ public:
   virtual uint64_t getInputTotalAmount() const = 0;
   virtual TransactionTypes::InputType getInputType(size_t index) const = 0;
   virtual void getInput(size_t index, KeyInput& input) const = 0;
-  virtual void getInput(size_t index, MultisignatureInput& input) const = 0;
 
   // outputs
   virtual size_t getOutputCount() const = 0;
   virtual uint64_t getOutputTotalAmount() const = 0;
   virtual TransactionTypes::OutputType getOutputType(size_t index) const = 0;
   virtual void getOutput(size_t index, KeyOutput& output, uint64_t& amount) const = 0;
-  virtual void getOutput(size_t index, MultisignatureOutput& output, uint64_t& amount) const = 0;
 
   // signatures
   virtual size_t getRequiredSignaturesCount(size_t inputIndex) const = 0;
@@ -104,21 +116,16 @@ public:
 
   // Inputs/Outputs 
   virtual size_t addInput(const KeyInput& input) = 0;
-  virtual size_t addInput(const MultisignatureInput& input) = 0;
   virtual size_t addInput(const AccountKeys& senderKeys, const TransactionTypes::InputKeyInfo& info, KeyPair& ephKeys) = 0;
 
   virtual size_t addOutput(uint64_t amount, const AccountPublicAddress& to) = 0;
-  virtual size_t addOutput(uint64_t amount, const std::vector<AccountPublicAddress>& to, uint32_t requiredSignatures) = 0;
   virtual size_t addOutput(uint64_t amount, const KeyOutput& out) = 0;
-  virtual size_t addOutput(uint64_t amount, const MultisignatureOutput& out) = 0;
 
   // transaction info
   virtual void setTransactionSecretKey(const Crypto::SecretKey& key) = 0;
 
   // signing
   virtual void signInputKey(size_t input, const TransactionTypes::InputKeyInfo& info, const KeyPair& ephKeys) = 0;
-  virtual void signInputMultisignature(size_t input, const Crypto::PublicKey& sourceTransactionKey, size_t outputIndex, const AccountKeys& accountKeys) = 0;
-  virtual void signInputMultisignature(size_t input, const KeyPair& ephemeralKeys) = 0;
 };
 
 class ITransaction : 

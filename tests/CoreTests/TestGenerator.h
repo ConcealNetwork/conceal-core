@@ -1,9 +1,23 @@
-// Copyright (c) 2011-2016 The Cryptonote developers
-// Copyright (c) 2016-2018 krypt0x aka krypt0chaos
+// Copyright (c) 2011-2015 The Cryptonote developers
+// Copyright (c) 2015-2016 The Bytecoin developers
+// Copyright (c) 2016-2017 The TurtleCoin developers
+// Copyright (c) 2017-2018 krypt0x aka krypt0chaos
 // Copyright (c) 2018 The Circle Foundation
 //
-// Distributed under the MIT/X11 software license, see the accompanying
-// file COPYING or http://www.opensource.org/licenses/mit-license.php.
+// This file is part of Conceal Sense Crypto Engine.
+//
+// Conceal is free software: you can redistribute it and/or modify
+// it under the terms of the GNU Lesser General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+//
+// Conceal is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU Lesser General Public License for more details.
+//
+// You should have received a copy of the GNU Lesser General Public License
+// along with Conceal.  If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once 
 
@@ -21,17 +35,17 @@ public:
       generator(currency),
       events(eventsRef) {
     minerAccount.generate();
-    generator.constructBlock(genesisBlock, minerAccount, 1338224400);
-    events.push_back(genesisBlock);
-    lastBlock = genesisBlock;
+    //generator.constructBlock(genesisBlock, minerAccount, 1338224400);
+    lastBlock = currency.genesisBlock();
+    events.push_back(lastBlock);
   }
 
   const CryptoNote::Currency& currency() const { return generator.currency(); }
 
   void makeNextBlock(const std::list<CryptoNote::Transaction>& txs = std::list<CryptoNote::Transaction>()) {
-    CryptoNote::Block block;
+   CryptoNote::BlockTemplate block;
     generator.constructBlock(block, lastBlock, minerAccount, txs);
-    events.push_back(block);
+    events.push_back(populateBlock(block, txs));
     lastBlock = block;
   }
 
@@ -47,7 +61,7 @@ public:
 
   void generateBlocks(size_t count, uint8_t majorVersion = CryptoNote::BLOCK_MAJOR_VERSION_1) {
     while (count--) {
-      CryptoNote::Block next;
+     CryptoNote::BlockTemplate next;
       generator.constructBlockManually(next, lastBlock, minerAccount, test_generator::bf_major_ver, majorVersion);
       lastBlock = next;
       events.push_back(next);
@@ -106,8 +120,8 @@ public:
 
   Logging::LoggerGroup logger;
   test_generator generator;
-  CryptoNote::Block genesisBlock;
-  CryptoNote::Block lastBlock;
+ CryptoNote::BlockTemplate genesisBlock;
+ CryptoNote::BlockTemplate lastBlock;
   CryptoNote::AccountBase minerAccount;
   std::vector<test_event_entry>& events;
 };

@@ -1,9 +1,23 @@
-// Copyright (c) 2011-2016 The Cryptonote developers
-// Copyright (c) 2016-2018 krypt0x aka krypt0chaos
+// Copyright (c) 2011-2015 The Cryptonote developers
+// Copyright (c) 2015-2016 The Bytecoin developers
+// Copyright (c) 2016-2017 The TurtleCoin developers
+// Copyright (c) 2017-2018 krypt0x aka krypt0chaos
 // Copyright (c) 2018 The Circle Foundation
 //
-// Distributed under the MIT/X11 software license, see the accompanying
-// file COPYING or http://www.opensource.org/licenses/mit-license.php.
+// This file is part of Conceal Sense Crypto Engine.
+//
+// Conceal is free software: you can redistribute it and/or modify
+// it under the terms of the GNU Lesser General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+//
+// Conceal is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU Lesser General Public License for more details.
+//
+// You should have received a copy of the GNU Lesser General Public License
+// along with Conceal.  If not, see <http://www.gnu.org/licenses/>.
 
 #include <boost/optional.hpp>
 #include <boost/program_options.hpp>
@@ -44,11 +58,14 @@ namespace {
   const command_line::arg_descriptor<std::string> arg_priv_key           = {"private_key", "private key to subscribe debug command", "", true};
   const command_line::arg_descriptor<uint64_t>    arg_peer_id            = {"peer_id", "peer_id if known(if not - will be requested)", 0};
   const command_line::arg_descriptor<bool>        arg_generate_keys      = {"generate_keys_pair", "generate private and public keys pair"};
+#ifdef ALLOW_DEBUG_COMMANDS
   const command_line::arg_descriptor<bool>        arg_request_stat_info  = {"request_stat_info", "request statistics information"};
   const command_line::arg_descriptor<bool>        arg_request_net_state  = {"request_net_state", "request network state information (peer list, connections count)"};
+#endif
   const command_line::arg_descriptor<bool>        arg_get_daemon_info    = {"rpc_get_daemon_info", "request daemon state info vie rpc (--rpc_port option should be set ).", "", true};
 }
 
+#ifdef ALLOW_DEBUG_COMMANDS
 struct response_schema {
   std::string status;
   std::string COMMAND_REQUEST_STAT_INFO_status;
@@ -56,6 +73,7 @@ struct response_schema {
   boost::optional<COMMAND_REQUEST_STAT_INFO::response> si_rsp;
   boost::optional<COMMAND_REQUEST_NETWORK_STATE::response> ns_rsp;
 };
+#endif
 
 void withTimeout(System::Dispatcher& dispatcher, unsigned timeout, std::function<void()> f) {
   std::string result;
@@ -79,7 +97,7 @@ void withTimeout(System::Dispatcher& dispatcher, unsigned timeout, std::function
   }
 }
 
-
+#ifdef ALLOW_DEBUG_COMMANDS
 std::ostream& get_response_schema_as_json(std::ostream& ss, response_schema &rs) {
   
   ss << "{" << ENDL
@@ -145,11 +163,11 @@ bool print_COMMAND_REQUEST_STAT_INFO(const COMMAND_REQUEST_STAT_INFO::response &
   std::cout << "INC Connections:     " << si.incoming_connections_count << ENDL;
 
 
-  std::cout << "Tx pool size:        " << si.payload_info.tx_pool_size << ENDL;
-  std::cout << "BC height:           " << si.payload_info.blockchain_height << ENDL;
-  std::cout << "Mining speed:          " << si.payload_info.mining_speed << ENDL;
-  std::cout << "Alternative blocks:  " << si.payload_info.alternative_blocks << ENDL;
-  std::cout << "Top block id:        " << si.payload_info.top_block_id_str << ENDL;
+  std::cout << "Tx pool size:        " << si.payload_info.transactionPoolSize << ENDL;
+  std::cout << "BC height:           " << si.payload_info.blockchainHeight << ENDL;
+  std::cout << "Mining speed:          " << si.payload_info.miningSpeed << ENDL;
+  std::cout << "Alternative blocks:  " << si.payload_info.alternativeBlockCount << ENDL;
+  std::cout << "Top block id:        " << si.payload_info.topBlockHashString << ENDL;
   return true;
 }
 //---------------------------------------------------------------------------------------------------------------
@@ -175,6 +193,8 @@ bool print_COMMAND_REQUEST_NETWORK_STATE(const COMMAND_REQUEST_NETWORK_STATE::re
   return true;
 }
 //---------------------------------------------------------------------------------------------------------------
+#endif
+
 bool handle_get_daemon_info(po::variables_map& vm) {
   if(!command_line::has_arg(vm, arg_rpc_port)) {
     std::cout << "ERROR: rpc port not set" << ENDL;
@@ -209,6 +229,8 @@ bool handle_get_daemon_info(po::variables_map& vm) {
   return true;
 }
 //---------------------------------------------------------------------------------------------------------------
+
+#ifdef ALLOW_DEBUG_COMMANDS
 bool handle_request_stat(po::variables_map& vm, PeerIdType peer_id) {
   if(!command_line::has_arg(vm, arg_priv_key)) {
     std::cout << "{" << ENDL << "  \"status\": \"ERROR: " << "secret key not set \"" << ENDL << "}";
@@ -310,6 +332,7 @@ bool handle_request_stat(po::variables_map& vm, PeerIdType peer_id) {
   get_response_schema_as_json(std::cout, rs) << std::endl;
   return true;
 }
+#endif
 
 //---------------------------------------------------------------------------------------------------------------
 bool generate_and_print_keys() {
@@ -331,8 +354,10 @@ int main(int argc, char *argv[]) {
   command_line::add_arg(desc_params, arg_port);
   command_line::add_arg(desc_params, arg_rpc_port);
   command_line::add_arg(desc_params, arg_timeout);
+#ifdef ALLOW_DEBUG_COMMANDS
   command_line::add_arg(desc_params, arg_request_stat_info);
   command_line::add_arg(desc_params, arg_request_net_state);
+#endif
   command_line::add_arg(desc_params, arg_generate_keys);
   command_line::add_arg(desc_params, arg_peer_id);
   command_line::add_arg(desc_params, arg_priv_key);
@@ -359,9 +384,11 @@ int main(int argc, char *argv[]) {
   if (!r)
     return 1;
 
+#ifdef ALLOW_DEBUG_COMMANDS
   if (command_line::has_arg(vm, arg_request_stat_info) || command_line::has_arg(vm, arg_request_net_state)) {
     return handle_request_stat(vm, command_line::get_arg(vm, arg_peer_id)) ? 0 : 1;
   }
+#endif
   
   if (command_line::has_arg(vm, arg_get_daemon_info)) {
     return handle_get_daemon_info(vm) ? 0 : 1;

@@ -1,0 +1,32 @@
+version: '3'
+
+services:
+  node1:
+    image: funkypenguin/Conceal
+    container_name: turtletest-node1
+    volumes:
+      - ../Conceald:/var/lib/Conceald/
+    networks:
+      testnet:
+        ipv4_address: 172.16.76.11
+  
+#  node2:
+#    image: funkypenguin/Conceal
+#    container_name: turtletest-node2
+#    networks:
+#      testnet:
+#        ipv4_address: 172.16.76.12
+  
+#  node3:
+#    image: funkypenguin/Conceal
+#    container_name: turtletest-node3
+#    networks:
+#      testnet:
+#        ipv4_address: 172.16.76.13
+
+networks:
+  testnet:
+    ipam:
+      config:
+        - subnet: 172.16.76.0/24
+

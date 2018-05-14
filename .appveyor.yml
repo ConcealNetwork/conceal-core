@@ -1,0 +1,11 @@
+os: Visual Studio 2015
+
+environment:
+    BOOST_ROOT: C:\Libraries\boost_1_59_0
+    BOOST_LIBRARYDIR: C:\Libraries\boost_1_59_0\lib64-msvc-14
+
+build_script:
+    - md build
+    - cd build
+    - cmake -G "Visual Studio 14 Win64" ..
+    - MSBuild Conceal.sln /p:Configuration=Release /m

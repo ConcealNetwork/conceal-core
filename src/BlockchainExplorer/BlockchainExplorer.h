@@ -1,9 +1,23 @@
-// Copyright (c) 2011-2016 The Cryptonote developers
-// Copyright (c) 2016-2018 krypt0x aka krypt0chaos
+// Copyright (c) 2011-2015 The Cryptonote developers
+// Copyright (c) 2015-2016 The Bytecoin developers
+// Copyright (c) 2016-2017 The TurtleCoin developers
+// Copyright (c) 2017-2018 krypt0x aka krypt0chaos
 // Copyright (c) 2018 The Circle Foundation
 //
-// Distributed under the MIT/X11 software license, see the accompanying
-// file COPYING or http://www.opensource.org/licenses/mit-license.php.
+// This file is part of Conceal Sense Crypto Engine.
+//
+// Conceal is free software: you can redistribute it and/or modify
+// it under the terms of the GNU Lesser General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+//
+// Conceal is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU Lesser General Public License for more details.
+//
+// You should have received a copy of the GNU Lesser General Public License
+// along with Conceal.  If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
 
@@ -12,20 +26,27 @@
 #include <unordered_set>
 
 #include "IBlockchainExplorer.h"
+#include "IDataBase.h"
 #include "INode.h"
 
-#include "Common/ObserverManager.h"
 #include "BlockchainExplorerErrors.h"
-
+#include "Common/ObserverManager.h"
+#include "Serialization/BinaryInputStreamSerializer.h"
+#include "Serialization/BinaryOutputStreamSerializer.h"
 #include "Wallet/WalletAsyncContextCounter.h"
 
 #include "Logging/LoggerRef.h"
 
 namespace CryptoNote {
 
+enum State {
+  NOT_INITIALIZED,
+  INITIALIZED
+};
+
 class BlockchainExplorer : public IBlockchainExplorer, public INodeObserver {
 public:
-  BlockchainExplorer(INode& node, Logging::ILogger& logger);
+  BlockchainExplorer(INode& node, Logging::ILogger& logger/*, IDataBase& dataBase*/);
 
   BlockchainExplorer(const BlockchainExplorer&) = delete;
   BlockchainExplorer(BlockchainExplorer&&) = delete;
@@ -46,7 +67,6 @@ public:
 
   virtual bool getTransactions(const std::vector<Crypto::Hash>& transactionHashes, std::vector<TransactionDetails>& transactions) override;
   virtual bool getTransactionsByPaymentId(const Crypto::Hash& paymentId, std::vector<TransactionDetails>& transactions) override;
-  virtual bool getPoolTransactions(uint64_t timestampBegin, uint64_t timestampEnd, uint32_t transactionsNumberLimit, std::vector<TransactionDetails>& transactions, uint64_t& transactionsNumberWithinTimestamps) override;
   virtual bool getPoolState(const std::vector<Crypto::Hash>& knownPoolTransactionHashes, Crypto::Hash knownBlockchainTop, bool& isBlockchainActual, std::vector<TransactionDetails>& newTransactions, std::vector<Crypto::Hash>& removedTransactions) override;
 
   virtual uint64_t getRewardBlocksWindow() override;
@@ -58,8 +78,9 @@ public:
   virtual void shutdown() override;
 
   virtual void poolChanged() override;
-  virtual void blockchainSynchronized(uint32_t topHeight) override;
-  virtual void localBlockchainUpdated(uint32_t height) override;
+  virtual void blockchainSynchronized(uint32_t topIndex) override;
+  virtual void localBlockchainUpdated(uint32_t index) override;
+  virtual void chainSwitched(uint32_t newTopIndex, uint32_t commonRoot, const std::vector<Crypto::Hash>& hashes) override;
 
   typedef WalletAsyncContextCounter AsyncContextCounter;
 
@@ -83,14 +104,14 @@ private:
     std::atomic<State> m_state;
   };
 
-  enum State {
-    NOT_INITIALIZED,
-    INITIALIZED
-  };
+  bool getBlockchainTop(BlockDetails& topBlock, bool checkInitialization);
+  bool getBlocks(const std::vector<uint32_t>& blockHeights, std::vector<std::vector<BlockDetails>>& blocks, bool checkInitialization);
+
+  void rebuildIndexes();
+  void handleBlockchainUpdatedNotification(const std::vector<std::vector<BlockDetails>>& blocks);
 
   BlockDetails knownBlockchainTop;
-  uint32_t knownBlockchainTopHeight;
-  std::unordered_set<Crypto::Hash> knownPoolState;
+  std::unordered_map<Crypto::Hash, TransactionDetails> knownPoolState;
 
   std::atomic<State> state;
   std::atomic<bool> synchronized;
@@ -101,6 +122,7 @@ private:
 
   INode& node;
   Logging::LoggerRef logger;
+  IDataBase& database;
 
   AsyncContextCounter asyncContextCounter;
   PoolUpdateGuard poolUpdateGuard;

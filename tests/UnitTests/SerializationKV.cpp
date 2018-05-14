@@ -1,9 +1,23 @@
-// Copyright (c) 2011-2016 The Cryptonote developers
-// Copyright (c) 2016-2018 krypt0x aka krypt0chaos
+// Copyright (c) 2011-2015 The Cryptonote developers
+// Copyright (c) 2015-2016 The Bytecoin developers
+// Copyright (c) 2016-2017 The TurtleCoin developers
+// Copyright (c) 2017-2018 krypt0x aka krypt0chaos
 // Copyright (c) 2018 The Circle Foundation
 //
-// Distributed under the MIT/X11 software license, see the accompanying
-// file COPYING or http://www.opensource.org/licenses/mit-license.php.
+// This file is part of Conceal Sense Crypto Engine.
+//
+// Conceal is free software: you can redistribute it and/or modify
+// it under the terms of the GNU Lesser General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+//
+// Conceal is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU Lesser General Public License for more details.
+//
+// You should have received a copy of the GNU Lesser General Public License
+// along with Conceal.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "gtest/gtest.h"
 
@@ -48,6 +62,7 @@ struct TestStruct {
   uint64_t u64;
   std::vector<TestElement> vec1;
   std::vector<TestElement> vec2;
+  std::vector<std::vector<TestElement>> vecOfVec;
   TestElement root;
 
   bool operator == (const TestStruct& other) const {
@@ -57,13 +72,15 @@ struct TestStruct {
       u32 == other.u32 &&
       u64 == other.u64 &&
       vec1 == other.vec1 &&
-      vec2 == other.vec2;
+      vec2 == other.vec2 && 
+      vecOfVec == other.vecOfVec;
   }
 
   void serialize(ISerializer& s) {
     s(root, "root");
     s(vec1, "vec1");
     s(vec2, "vec2");
+    s(vecOfVec, "vecOfVec");
     s(u8, "u8");
     s(u32, "u32");
     s(u64, "u64");
@@ -117,6 +134,21 @@ TEST(KVSerialize, BigCollection) {
   TestElement sample;
   sample.nonce = 101;
   ts1.vec1.resize(0x10000 >> 2, sample);
+
+  TestStruct ts2;
+
+  std::string buf = CryptoNote::storeToBinaryKeyValue(ts1);
+  ASSERT_TRUE(CryptoNote::loadFromBinaryKeyValue(ts2, buf));
+  EXPECT_EQ(ts1, ts2);
+}
+
+TEST(KVSerialize, DISABLED_CollectionOfCollections) {
+  TestStruct ts1;
+
+  TestElement sample;
+  sample.nonce = 101;
+  ts1.vec1.resize(0x10000 >> 10, sample);
+  ts1.vecOfVec.resize(0x10000 >> 14, ts1.vec1);
 
   TestStruct ts2;
 

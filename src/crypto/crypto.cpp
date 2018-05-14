@@ -1,9 +1,23 @@
-// Copyright (c) 2011-2016 The Cryptonote developers
-// Copyright (c) 2016-2018 krypt0x aka krypt0chaos
+// Copyright (c) 2011-2015 The Cryptonote developers
+// Copyright (c) 2015-2016 The Bytecoin developers
+// Copyright (c) 2016-2017 The TurtleCoin developers
+// Copyright (c) 2017-2018 krypt0x aka krypt0chaos
 // Copyright (c) 2018 The Circle Foundation
 //
-// Distributed under the MIT/X11 software license, see the accompanying
-// file COPYING or http://www.opensource.org/licenses/mit-license.php.
+// This file is part of Conceal Sense Crypto Engine.
+//
+// Conceal is free software: you can redistribute it and/or modify
+// it under the terms of the GNU Lesser General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+//
+// Conceal is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU Lesser General Public License for more details.
+//
+// You should have received a copy of the GNU Lesser General Public License
+// along with Conceal.  If not, see <http://www.gnu.org/licenses/>.
 
 #include <alloca.h>
 #include <cassert>
@@ -48,6 +62,14 @@ namespace Crypto {
     lock_guard<mutex> lock(random_lock);
     ge_p3 point;
     random_scalar(reinterpret_cast<EllipticCurveScalar&>(sec));
+    ge_scalarmult_base(&point, reinterpret_cast<unsigned char*>(&sec));
+    ge_p3_tobytes(reinterpret_cast<unsigned char*>(&pub), &point);
+  }
+
+  void crypto_ops::generate_keys_from_seed(PublicKey &pub, SecretKey &sec, SecretKey &seed) {
+    ge_p3 point;
+    sec = seed;
+    sc_reduce32(reinterpret_cast<unsigned char*>(&sec));
     ge_scalarmult_base(&point, reinterpret_cast<unsigned char*>(&sec));
     ge_p3_tobytes(reinterpret_cast<unsigned char*>(&pub), &point);
   }
@@ -288,6 +310,17 @@ namespace Crypto {
     ge_p1p1_to_p3(&res, &point2);
   }
 
+    KeyImage crypto_ops::scalarmultKey(const KeyImage & P, const KeyImage & a) {
+        ge_p3 A;
+        ge_p2 R;
+// maybe use assert instead?
+        ge_frombytes_vartime(&A, reinterpret_cast<const unsigned char*>(&P));
+        ge_scalarmult(&R, reinterpret_cast<const unsigned char*>(&a), &A);
+        KeyImage aP;
+        ge_tobytes(reinterpret_cast<unsigned char*>(&aP), &R);
+        return aP;
+    }
+
   void crypto_ops::hash_data_to_ec(const uint8_t* data, std::size_t len, PublicKey& key) {
     Hash h;
     ge_p2 point;
@@ -317,16 +350,17 @@ namespace Crypto {
 #ifdef _MSC_VER
 #pragma warning(disable: 4200)
 #endif
-
+  struct ec_point_pair {
+    EllipticCurvePoint a, b;
+  };
   struct rs_comm {
     Hash h;
-    struct {
-      EllipticCurvePoint a, b;
-    } ab[];
+    struct ec_point_pair ab[];
+
   };
 
   static inline size_t rs_comm_size(size_t pubs_count) {
-    return sizeof(rs_comm) + pubs_count * sizeof(rs_comm().ab[0]);
+     return sizeof(rs_comm) + pubs_count * sizeof(ec_point_pair);
   }
 
   void crypto_ops::generate_ring_signature(const Hash &prefix_hash, const KeyImage &image,
@@ -393,7 +427,7 @@ namespace Crypto {
 
   bool crypto_ops::check_ring_signature(const Hash &prefix_hash, const KeyImage &image,
     const PublicKey *const *pubs, size_t pubs_count,
-    const Signature *sig) {
+    const Signature *sig, bool checkKeyImage) {
     size_t i;
     ge_p3 image_unp;
     ge_dsmp image_pre;
@@ -408,6 +442,9 @@ namespace Crypto {
       return false;
     }
     ge_dsm_precomp(image_pre, &image_unp);
+    if (checkKeyImage && ge_check_subgroup_precomp_vartime(image_pre) != 0) {
+      return false;
+    }
     sc_0(reinterpret_cast<unsigned char*>(&sum));
     buf->h = prefix_hash;
     for (i = 0; i < pubs_count; i++) {
@@ -431,3 +468,4 @@ namespace Crypto {
     return sc_isnonzero(reinterpret_cast<unsigned char*>(&h)) == 0;
   }
 }
+

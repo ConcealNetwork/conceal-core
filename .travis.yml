@@ -1,0 +1,44 @@
+sudo: true
+language: cpp
+compiler: gcc
+env:
+- CXXFLAGS="-std=gnu++11"
+matrix:
+  include:
+  - os: linux
+    addons:
+      apt:
+        sources:
+        - ubuntu-toolchain-r-test
+        packages:
+        - g++-4.9
+        - libboost1.55-all-dev
+    env:
+    - MATRIX_EVAL="CC=gcc-4.9 && CXX=g++-4.9
+  - os: osx
+before_install:
+- if [[ "$TRAVIS_OS_NAME" == "linux" ]]; then sudo add-apt-repository ppa:ethcore/ethcore
+  -y    ; fi
+- if [[ "$TRAVIS_OS_NAME" == "linux" ]]; then sudo apt-get update -q                            ;
+  fi
+install:
+- if [[ "$TRAVIS_OS_NAME" == "linux" ]]; then sudo apt-get install librocksdb-dev
+  -y            ; fi
+script:
+- mkdir build && cd build
+- cmake -DCMAKE_BUILD_TYPE=Release -DSTATIC=true .. && make
+before_deploy:
+- cd src
+- mkdir Conceal-${TRAVIS_TAG}
+- mv Conceald miner simplewallet walletd poolwallet Conceal-${TRAVIS_TAG}/
+- tar cvfz Conceal-${TRAVIS_TAG}-${TRAVIS_OS_NAME}.tar.gz Conceal-${TRAVIS_TAG}/
+deploy:
+  provider: releases
+  api_key:
+    secure: XyM7qAnX9Slm4bX7WYPOnWGRuXfuwc7wnJHb7wN4WGy+GefXm3xSFoNIZdmTY1XnJ2HpIAXuuHL2aey8KKt+gEXbhp882z6m9jZWOdog3cjObdRCsOuETNE0rbXasDvntdhm1Jn7PM+mkN6O9GoqRVaEnyyIwCGEFA7Cc/d2KgtqpTu0NB6nIPZbTgJnudHDQYEWl0kwA1UjkYrEIRlAOFTaRHBUsUHPTFW8758mgerYitLm27BNJTbo74lYe65iExtguKFN/VRVXDl08/2i3gnAxzWJ2K0qUZu7PD8ePd+2UC1wwE2Dc1uiTOmhDgVeuQO6k0tuipjIA+dh5r7A8/YPyOX4zoZ4ac+g1mWSRO1VS/WQ2Uvq2XU848KACLJ+ky3kHWZKowTSl/v3+3rU4c6kqYJHShkH5XlFp503yRqlaqOow4ogz020eIEHEFCgwLhNxZSEUzKP4rEZPpboZyNJbW7lL92UxMZDZm1zKMvnrY5zi2HltYzIQyOjDvmXUxQD8blz1C66lqfBc6mApjDRZVLUcfTT4WIGAWc6opTYJAJpCg34zGAQgXoFaOG0cH3ApsREmBd1dg9d8cJscedy9qZjn3HsmibmdRiGctB5o08JrjfM5sZVk620iKFgovis7q7XfIKb3rQdSfsiRwsfZEwhE2lvY3bf9B0VMrU=
+  file:
+    - Conceal-${TRAVIS_TAG}-${TRAVIS_OS_NAME}.tar.gz
+  skip_cleanup: true
+  on:
+    repo: Conceal/Conceal
+    tags: true

@@ -1,14 +1,27 @@
-// Copyright (c) 2011-2016 The Cryptonote developers
-// Copyright (c) 2016-2018 krypt0x aka krypt0chaos
+// Copyright (c) 2011-2015 The Cryptonote developers
+// Copyright (c) 2015-2016 The Bytecoin developers
+// Copyright (c) 2016-2017 The TurtleCoin developers
+// Copyright (c) 2017-2018 krypt0x aka krypt0chaos
 // Copyright (c) 2018 The Circle Foundation
 //
-// Distributed under the MIT/X11 software license, see the accompanying
-// file COPYING or http://www.opensource.org/licenses/mit-license.php.
+// This file is part of Conceal Sense Crypto Engine.
+//
+// Conceal is free software: you can redistribute it and/or modify
+// it under the terms of the GNU Lesser General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+//
+// Conceal is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU Lesser General Public License for more details.
+//
+// You should have received a copy of the GNU Lesser General Public License
+// along with Conceal.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "gtest/gtest.h"
 
 #include "CryptoNoteCore/Account.h"
-#include "CryptoNoteCore/CoreConfig.h"
 #include "CryptoNoteCore/Core.h"
 #include "CryptoNoteCore/Currency.h"
 #include "Logging/LoggerManager.h"
@@ -83,8 +96,8 @@ namespace {
     ASSERT_TRUE(mineBlocks(*nodeDaemons[NODE_0], wallet2.address(), 1));
     ASSERT_TRUE(mineBlocks(*nodeDaemons[NODE_0], minerAccount.getAccountKeys().address, m_currency.minedMoneyUnlockWindow()));
 
-    wallet1.waitForSynchronizationToHeight(static_cast<uint32_t>(m_currency.minedMoneyUnlockWindow()) + 3);
-    wallet2.waitForSynchronizationToHeight(static_cast<uint32_t>(m_currency.minedMoneyUnlockWindow()) + 3);
+    wallet1.waitForSynchronizationToHeight(m_currency.minedMoneyUnlockWindow() + 3);
+    wallet2.waitForSynchronizationToHeight(m_currency.minedMoneyUnlockWindow() + 3);
 
     stopNode(NODE_2);
     // To make sure new transaction won't be received by NODE_2 and NODE_3
@@ -180,7 +193,7 @@ namespace {
     ASSERT_TRUE(waitForPeerCount(*node1, 1));
 
     ASSERT_TRUE(mineBlocks(*nodeDaemons[NODE_0], minerAccount.getAccountKeys().address, m_currency.minedMoneyUnlockWindow()));
-    wallet1.waitForSynchronizationToHeight(static_cast<uint32_t>(m_currency.minedMoneyUnlockWindow()) + 3);
+    wallet1.waitForSynchronizationToHeight(m_currency.minedMoneyUnlockWindow() + 3);
 
     Hash txHash1;
     ASSERT_FALSE(static_cast<bool>(wallet1.sendTransaction(m_currency.accountAddressAsString(minerAccount), m_currency.coin(), txHash1)));
@@ -194,7 +207,7 @@ namespace {
     ASSERT_TRUE(waitForPeerCount(*node3, 1));
 
     ASSERT_TRUE(mineBlocks(*nodeDaemons[NODE_3], minerAccount.getAccountKeys().address, m_currency.minedMoneyUnlockWindow()));
-    wallet2.waitForSynchronizationToHeight(static_cast<uint32_t>(m_currency.minedMoneyUnlockWindow()) + 3);
+    wallet2.waitForSynchronizationToHeight(m_currency.minedMoneyUnlockWindow() + 3);
 
     Hash txHash2;
     ASSERT_FALSE(static_cast<bool>(wallet2.sendTransaction(m_currency.accountAddressAsString(minerAccount), m_currency.coin(), txHash2)));
@@ -275,7 +288,7 @@ namespace {
 
     ASSERT_TRUE(mineBlocks(*nodeDaemons[NODE_0], wallet1.address(), 1));
     ASSERT_TRUE(mineBlocks(*nodeDaemons[NODE_0], minerAccount.getAccountKeys().address, m_currency.minedMoneyUnlockWindow()));
-    wallet1.waitForSynchronizationToHeight(static_cast<uint32_t>(m_currency.minedMoneyUnlockWindow()) + 2);
+    wallet1.waitForSynchronizationToHeight(m_currency.minedMoneyUnlockWindow() + 2);
 
     Hash txHash1;
     ASSERT_FALSE(static_cast<bool>(wallet1.sendTransaction(m_currency.accountAddressAsString(minerAccount), m_currency.coin(), txHash1)));
@@ -364,7 +377,7 @@ namespace {
     // Generate alternative chain for NODE_1
     ASSERT_TRUE(mineBlocks(*nodeDaemons[NODE_0], wallet1.address(), 1));
     ASSERT_TRUE(mineBlocks(*nodeDaemons[NODE_0], wallet2.address(), m_currency.minedMoneyUnlockWindow()));
-    blockchainLenght += 1 + static_cast<uint32_t>(m_currency.minedMoneyUnlockWindow());
+    blockchainLenght += 1 + m_currency.minedMoneyUnlockWindow();
 
     wallet1.waitForSynchronizationToHeight(blockchainLenght);
 
@@ -393,7 +406,7 @@ namespace {
     wallet2.waitForSynchronizationToHeight(blockchainLenght);
 
     // This block template doesn't contain txHash2, as it is not created yet
-    CryptoNote::Block blockTemplate2;
+    CryptoNote::BlockTemplate blockTemplate2;
     uint64_t difficulty2;
     ASSERT_TRUE(nodeDaemons[NODE_2]->getBlockTemplate(wallet1.wallet()->getAddress(), blockTemplate2, difficulty2));
     ASSERT_EQ(1, difficulty2);

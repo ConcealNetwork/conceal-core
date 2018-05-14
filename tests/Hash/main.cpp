@@ -1,9 +1,23 @@
-// Copyright (c) 2011-2016 The Cryptonote developers
-// Copyright (c) 2016-2018 krypt0x aka krypt0chaos
+// Copyright (c) 2011-2015 The Cryptonote developers
+// Copyright (c) 2015-2016 The Bytecoin developers
+// Copyright (c) 2016-2017 The TurtleCoin developers
+// Copyright (c) 2017-2018 krypt0x aka krypt0chaos
 // Copyright (c) 2018 The Circle Foundation
 //
-// Distributed under the MIT/X11 software license, see the accompanying
-// file COPYING or http://www.opensource.org/licenses/mit-license.php.
+// This file is part of Conceal Sense Crypto Engine.
+//
+// Conceal is free software: you can redistribute it and/or modify
+// it under the terms of the GNU Lesser General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+//
+// Conceal is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU Lesser General Public License for more details.
+//
+// You should have received a copy of the GNU Lesser General Public License
+// along with Conceal.  If not, see <http://www.gnu.org/licenses/>.
 
 #include <cstddef>
 #include <fstream>
@@ -31,8 +45,20 @@ extern "C" {
     Crypto::tree_hash((const char (*)[32]) data, length >> 5, hash);
   }
 
-  static void slow_hash(const void *data, size_t length, char *hash) {
-    cn_slow_hash(*context, data, length, *reinterpret_cast<chash *>(hash));
+  static void cn_v6(const void *data, size_t length, char *hash) {
+    cn_slow_hash_v6(*context, data, length, *reinterpret_cast<chash *>(hash));
+  }
+
+  static void cn_v7(const void *data, size_t length, char *hash) {
+    cn_slow_hash_v7(*context, data, length, *reinterpret_cast<chash *>(hash));
+  }
+
+  static void cn_lite_v0(const void *data, size_t length, char *hash) {
+    cn_lite_slow_hash_v0(*context, data, length, *reinterpret_cast<chash *>(hash));
+  }
+
+  static void cn_lite_v1(const void *data, size_t length, char *hash) {
+    cn_lite_slow_hash_v1(*context, data, length, *reinterpret_cast<chash *>(hash));
   }
 }
 
@@ -40,9 +66,16 @@ extern "C" typedef void hash_f(const void *, size_t, char *);
 struct hash_func {
   const string name;
   hash_f &f;
-} hashes[] = {{"fast", Crypto::cn_fast_hash}, {"slow", slow_hash}, {"tree", hash_tree},
-  {"extra-blake", Crypto::hash_extra_blake}, {"extra-groestl", Crypto::hash_extra_groestl},
-  {"extra-jh", Crypto::hash_extra_jh}, {"extra-skein", Crypto::hash_extra_skein}};
+} hashes[] = {{"fast", Crypto::cn_fast_hash},
+              {"cryptonight-v6", cn_v6},
+              {"cryptonight-v7", cn_v7},
+              {"cryptonight-lite-v0", cn_lite_v0},
+              {"cryptonight-lite-v1", cn_lite_v1},
+              {"tree", hash_tree},
+              {"extra-blake", Crypto::hash_extra_blake},
+              {"extra-groestl", Crypto::hash_extra_groestl},
+              {"extra-jh", Crypto::hash_extra_jh},
+              {"extra-skein", Crypto::hash_extra_skein}};
 
 int main(int argc, char *argv[]) {
   hash_f *f;
@@ -66,7 +99,7 @@ int main(int argc, char *argv[]) {
       break;
     }
   }
-  if (f == slow_hash) {
+  if (f == cn_v6 || f == cn_v7 || f == cn_lite_v0 || f == cn_lite_v1 ) {
     context = new Crypto::cn_context();
   }
   input.open(argv[2], ios_base::in);
