@@ -115,7 +115,7 @@ then
 fi
 
 # -- Config
-GITHUB_REPO="https://github.com/TheCircleFoundation/Conceal/Conceal.git"
+GITHUB_REPO="https://github.com/TheCircleFoundation/Conceal"
 CLONE_DIR="$BUILD_DIRECTORY/Conceal-buildall"
 TARGET_DIR="$BUILD_DIRECTORY/Conceal-releases"
 DYNAMIC_RELEASE="Conceal-${TAG_VERSION}-linux-CLI"
