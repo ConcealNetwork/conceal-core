@@ -1,23 +1,9 @@
-// Copyright (c) 2011-2015 The Cryptonote developers
-// Copyright (c) 2015-2016 The Bytecoin developers
-// Copyright (c) 2016-2017 The TurtleCoin developers
-// Copyright (c) 2017-2018 krypt0x aka krypt0chaos
+// Copyright (c) 2011-2016 The Cryptonote developers
+// Copyright (c) 2016-2018 krypt0x aka krypt0chaos
 // Copyright (c) 2018 The Circle Foundation
 //
-// This file is part of Conceal Sense Crypto Engine.
-//
-// Conceal is free software: you can redistribute it and/or modify
-// it under the terms of the GNU Lesser General Public License as published by
-// the Free Software Foundation, either version 3 of the License, or
-// (at your option) any later version.
-//
-// Conceal is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-// GNU Lesser General Public License for more details.
-//
-// You should have received a copy of the GNU Lesser General Public License
-// along with Conceal.  If not, see <http://www.gnu.org/licenses/>.
+// Distributed under the MIT/X11 software license, see the accompanying
+// file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #pragma once
 
@@ -37,18 +23,65 @@ namespace CryptoNote
   /************************************************************************/
   /*                                                                      */
   /************************************************************************/
+  struct block_complete_entry
+  {
+    std::string block;
+    std::vector<std::string> txs;
 
-  //just to keep backward compatibility with BlockCompleteEntry serialization
-  struct RawBlockLegacy {
-    BinaryArray block;
-    std::vector<BinaryArray> transactions;
+    void serialize(ISerializer& s) {
+      KV_MEMBER(block);
+      KV_MEMBER(txs);
+    }
+
   };
 
+  struct BlockFullInfo : public block_complete_entry
+  {
+    Crypto::Hash block_id;
+
+    void serialize(ISerializer& s) {
+      KV_MEMBER(block_id);
+      KV_MEMBER(block);
+      KV_MEMBER(txs);
+    }
+  };
+
+  struct TransactionPrefixInfo {
+    Crypto::Hash txHash;
+    TransactionPrefix txPrefix;
+
+    void serialize(ISerializer& s) {
+      KV_MEMBER(txHash);
+      KV_MEMBER(txPrefix);
+    }
+  };
+
+  struct BlockShortInfo {
+    Crypto::Hash blockId;
+    std::string block;
+    std::vector<TransactionPrefixInfo> txPrefixes;
+
+    void serialize(ISerializer& s) {
+      KV_MEMBER(blockId);
+      KV_MEMBER(block);
+      KV_MEMBER(txPrefixes);
+    }
+  };
+
+  /************************************************************************/
+  /*                                                                      */
+  /************************************************************************/
   struct NOTIFY_NEW_BLOCK_request
   {
-    RawBlockLegacy b;
+    block_complete_entry b;
     uint32_t current_blockchain_height;
     uint32_t hop;
+
+    void serialize(ISerializer& s) {
+      KV_MEMBER(b)
+      KV_MEMBER(current_blockchain_height)
+      KV_MEMBER(hop)
+    }
   };
 
   struct NOTIFY_NEW_BLOCK
@@ -62,7 +95,12 @@ namespace CryptoNote
   /************************************************************************/
   struct NOTIFY_NEW_TRANSACTIONS_request
   {
-    std::vector<BinaryArray> txs;
+    std::vector<std::string> txs;
+
+    void serialize(ISerializer& s) {
+      KV_MEMBER(txs);
+    }
+
   };
 
   struct NOTIFY_NEW_TRANSACTIONS
@@ -94,9 +132,17 @@ namespace CryptoNote
   struct NOTIFY_RESPONSE_GET_OBJECTS_request
   {
     std::vector<std::string> txs;
-    std::vector<RawBlockLegacy> blocks;
+    std::vector<block_complete_entry> blocks;
     std::vector<Crypto::Hash> missed_ids;
     uint32_t current_blockchain_height;
+
+    void serialize(ISerializer& s) {
+      KV_MEMBER(txs)
+      KV_MEMBER(blocks)
+      serializeAsBinary(missed_ids, "missed_ids", s);
+      KV_MEMBER(current_blockchain_height)
+    }
+
   };
 
   struct NOTIFY_RESPONSE_GET_OBJECTS

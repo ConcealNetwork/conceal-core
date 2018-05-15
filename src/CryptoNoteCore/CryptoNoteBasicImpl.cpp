@@ -1,23 +1,9 @@
-// Copyright (c) 2011-2015 The Cryptonote developers
-// Copyright (c) 2015-2016 The Bytecoin developers
-// Copyright (c) 2016-2017 The TurtleCoin developers
-// Copyright (c) 2017-2018 krypt0x aka krypt0chaos
+// Copyright (c) 2011-2016 The Cryptonote developers
+// Copyright (c) 2016-2018 krypt0x aka krypt0chaos
 // Copyright (c) 2018 The Circle Foundation
 //
-// This file is part of Conceal Sense Crypto Engine.
-//
-// Conceal is free software: you can redistribute it and/or modify
-// it under the terms of the GNU Lesser General Public License as published by
-// the Free Software Foundation, either version 3 of the License, or
-// (at your option) any later version.
-//
-// Conceal is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-// GNU Lesser General Public License for more details.
-//
-// You should have received a copy of the GNU Lesser General Public License
-// along with Conceal.  If not, see <http://www.gnu.org/licenses/>.
+// Distributed under the MIT/X11 software license, see the accompanying
+// file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #include "CryptoNoteBasicImpl.h"
 #include "CryptoNoteFormatUtils.h"
@@ -68,7 +54,6 @@ namespace CryptoNote {
   std::string getAccountAddressAsStr(uint64_t prefix, const AccountPublicAddress& adr) {
     BinaryArray ba;
     bool r = toBinaryArray(adr, ba);
-    if (r) {}
     assert(r);
     return Tools::Base58::encode_addr(prefix, Common::asString(ba));
   }
@@ -95,15 +80,14 @@ namespace CryptoNote {
       check_key(adr.spendPublicKey) &&
       check_key(adr.viewPublicKey);
   }
-  ////-----------------------------------------------------------------------
-  //bool operator ==(const CryptoNote::Transaction& a, const CryptoNote::Transaction& b) {
-  //  return getObjectHash(a) == getObjectHash(b);
-  //}
-  ////-----------------------------------------------------------------------
-  //bool operator ==(const CryptoNote::BlockTemplate& a, const CryptoNote::BlockTemplate& b) {
-
-  //  return CryptoNote::get_block_hash(a) == CryptoNote::get_block_hash(b);
-  //}
+  //-----------------------------------------------------------------------
+  bool operator ==(const CryptoNote::Transaction& a, const CryptoNote::Transaction& b) {
+    return getObjectHash(a) == getObjectHash(b);
+  }
+  //-----------------------------------------------------------------------
+  bool operator ==(const CryptoNote::Block& a, const CryptoNote::Block& b) {
+    return CryptoNote::get_block_hash(a) == CryptoNote::get_block_hash(b);
+  }
 }
 
 //--------------------------------------------------------------------------------

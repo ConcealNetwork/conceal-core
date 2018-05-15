@@ -1,23 +1,9 @@
-// Copyright (c) 2011-2015 The Cryptonote developers
-// Copyright (c) 2015-2016 The Bytecoin developers
-// Copyright (c) 2016-2017 The TurtleCoin developers
-// Copyright (c) 2017-2018 krypt0x aka krypt0chaos
+// Copyright (c) 2011-2016 The Cryptonote developers
+// Copyright (c) 2016-2018 krypt0x aka krypt0chaos
 // Copyright (c) 2018 The Circle Foundation
 //
-// This file is part of Conceal Sense Crypto Engine.
-//
-// Conceal is free software: you can redistribute it and/or modify
-// it under the terms of the GNU Lesser General Public License as published by
-// the Free Software Foundation, either version 3 of the License, or
-// (at your option) any later version.
-//
-// Conceal is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-// GNU Lesser General Public License for more details.
-//
-// You should have received a copy of the GNU Lesser General Public License
-// along with Conceal.  If not, see <http://www.gnu.org/licenses/>.
+// Distributed under the MIT/X11 software license, see the accompanying
+// file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #pragma once
 
@@ -161,12 +147,12 @@ namespace CryptoNote
     int handle_get_stat_info(int command, COMMAND_REQUEST_STAT_INFO::request& arg, COMMAND_REQUEST_STAT_INFO::response& rsp, P2pConnectionContext& context);
     int handle_get_network_state(int command, COMMAND_REQUEST_NETWORK_STATE::request& arg, COMMAND_REQUEST_NETWORK_STATE::response& rsp, P2pConnectionContext& context);
     int handle_get_peer_id(int command, COMMAND_REQUEST_PEER_ID::request& arg, COMMAND_REQUEST_PEER_ID::response& rsp, P2pConnectionContext& context);
-    bool check_trust(const proof_of_trust& tr);
 #endif
 
     bool init_config();
     bool make_default_config();
     bool store_config();
+    bool check_trust(const proof_of_trust& tr);
     void initUpnp();
 
     bool handshake(CryptoNote::LevinProtocol& proto, P2pConnectionContext& context, bool just_take_peerlist = false);
@@ -221,9 +207,6 @@ namespace CryptoNote
     void onIdle();
     void timedSyncLoop();
     void timeoutLoop();
-    
-    template<typename T>
-    void safeInterrupt(T& obj);
 
     struct config
     {

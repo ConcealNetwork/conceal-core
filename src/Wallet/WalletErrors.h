@@ -1,23 +1,9 @@
-// Copyright (c) 2011-2015 The Cryptonote developers
-// Copyright (c) 2015-2016 The Bytecoin developers
-// Copyright (c) 2016-2017 The TurtleCoin developers
-// Copyright (c) 2017-2018 krypt0x aka krypt0chaos
+// Copyright (c) 2011-2016 The Cryptonote developers
+// Copyright (c) 2016-2018 krypt0x aka krypt0chaos
 // Copyright (c) 2018 The Circle Foundation
 //
-// This file is part of Conceal Sense Crypto Engine.
-//
-// Conceal is free software: you can redistribute it and/or modify
-// it under the terms of the GNU Lesser General Public License as published by
-// the Free Software Foundation, either version 3 of the License, or
-// (at your option) any later version.
-//
-// Conceal is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-// GNU Lesser General Public License for more details.
-//
-// You should have received a copy of the GNU Lesser General Public License
-// along with Conceal.  If not, see <http://www.gnu.org/licenses/>.
+// Distributed under the MIT/X11 software license, see the accompanying
+// file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #pragma once
 
@@ -54,13 +40,7 @@ enum WalletErrorCodes {
   OBJECT_NOT_FOUND,
   WALLET_NOT_FOUND,
   CHANGE_ADDRESS_REQUIRED,
-  CHANGE_ADDRESS_NOT_FOUND,
-  DESTINATION_ADDRESS_REQUIRED,
-  DESTINATION_ADDRESS_NOT_FOUND,
-  BAD_PAYMENT_ID,
-  BAD_TRANSACTION_EXTRA,
-  MIXIN_BELOW_THRESHOLD,
-  MIXIN_ABOVE_THRESHOLD
+  CHANGE_ADDRESS_NOT_FOUND
 };
 
 // custom category:
@@ -78,38 +58,32 @@ public:
 
   virtual std::string message(int ev) const override {
     switch (ev) {
-    case NOT_INITIALIZED:               return "Object was not initialized";
-    case WRONG_PASSWORD:                return "The password is wrong";
-    case ALREADY_INITIALIZED:           return "The object is already initialized";
-    case INTERNAL_WALLET_ERROR:         return "Internal error occurred";
-    case MIXIN_COUNT_TOO_BIG:           return "MixIn count is too big";
-    case BAD_ADDRESS:                   return "Bad address";
-    case TRANSACTION_SIZE_TOO_BIG:      return "Transaction size is too big";
-    case WRONG_AMOUNT:                  return "Wrong amount";
-    case SUM_OVERFLOW:                  return "Sum overflow";
-    case ZERO_DESTINATION:              return "The destination is empty";
-    case TX_CANCEL_IMPOSSIBLE:          return "Impossible to cancel transaction";
-    case WRONG_STATE:                   return "The wallet is in wrong state (maybe loading or saving), try again later";
-    case OPERATION_CANCELLED:           return "The operation you've requested has been cancelled";
-    case TX_TRANSFER_IMPOSSIBLE:        return "Transaction transfer impossible";
-    case WRONG_VERSION:                 return "Wrong version";
-    case FEE_TOO_SMALL:                 return "Transaction fee is too small";
-    case KEY_GENERATION_ERROR:          return "Cannot generate new key";
-    case INDEX_OUT_OF_RANGE:            return "Index is out of range";
-    case ADDRESS_ALREADY_EXISTS:        return "Address already exists";
-    case TRACKING_MODE:                 return "The wallet is in tracking mode";
-    case WRONG_PARAMETERS:              return "Wrong parameters passed";
-    case OBJECT_NOT_FOUND:              return "Object not found";
-    case WALLET_NOT_FOUND:              return "Requested wallet not found";
-    case CHANGE_ADDRESS_REQUIRED:       return "Change address required";
-    case CHANGE_ADDRESS_NOT_FOUND:      return "Change address not found";
-    case DESTINATION_ADDRESS_REQUIRED:  return  "Destination address required";
-    case DESTINATION_ADDRESS_NOT_FOUND: return "Destination address not found";
-    case BAD_PAYMENT_ID:                return "Wrong payment id format";
-    case BAD_TRANSACTION_EXTRA:         return "Wrong transaction extra format";
-    case MIXIN_BELOW_THRESHOLD:         return "Mixin below minimum allowed threshold";
-    case MIXIN_ABOVE_THRESHOLD:         return "Mixin above maximum allowed threshold";
-    default:                            return "Unknown error";
+    case NOT_INITIALIZED:          return "Object was not initialized";
+    case WRONG_PASSWORD:           return "The password is wrong";
+    case ALREADY_INITIALIZED:      return "The object is already initialized";
+    case INTERNAL_WALLET_ERROR:    return "Internal error occurred";
+    case MIXIN_COUNT_TOO_BIG:      return "MixIn count is too big";
+    case BAD_ADDRESS:              return "Bad address";
+    case TRANSACTION_SIZE_TOO_BIG: return "Transaction size is too big";
+    case WRONG_AMOUNT:             return "Wrong amount";
+    case SUM_OVERFLOW:             return "Sum overflow";
+    case ZERO_DESTINATION:         return "The destination is empty";
+    case TX_CANCEL_IMPOSSIBLE:     return "Impossible to cancel transaction";
+    case WRONG_STATE:              return "The wallet is in wrong state (maybe loading or saving), try again later";
+    case OPERATION_CANCELLED:      return "The operation you've requested has been cancelled";
+    case TX_TRANSFER_IMPOSSIBLE:   return "Transaction transfer impossible";
+    case WRONG_VERSION:            return "Wrong version";
+    case FEE_TOO_SMALL:            return "Transaction fee is too small";
+    case KEY_GENERATION_ERROR:     return "Cannot generate new key";
+    case INDEX_OUT_OF_RANGE:       return "Index is out of range";
+    case ADDRESS_ALREADY_EXISTS:   return "Address already exists";
+    case TRACKING_MODE:            return "The wallet is in tracking mode";
+    case WRONG_PARAMETERS:         return "Wrong parameters passed";
+    case OBJECT_NOT_FOUND:         return "Object not found";
+    case WALLET_NOT_FOUND:         return "Requested wallet not found";
+    case CHANGE_ADDRESS_REQUIRED:  return "Change address required";
+    case CHANGE_ADDRESS_NOT_FOUND: return "Change address not found";
+    default:                       return "Unknown error";
     }
   }
 

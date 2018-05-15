@@ -1,23 +1,9 @@
-// Copyright (c) 2011-2015 The Cryptonote developers
-// Copyright (c) 2015-2016 The Bytecoin developers
-// Copyright (c) 2016-2017 The TurtleCoin developers
-// Copyright (c) 2017-2018 krypt0x aka krypt0chaos
+// Copyright (c) 2011-2016 The Cryptonote developers
+// Copyright (c) 2016-2018 krypt0x aka krypt0chaos
 // Copyright (c) 2018 The Circle Foundation
 //
-// This file is part of Conceal Sense Crypto Engine.
-//
-// Conceal is free software: you can redistribute it and/or modify
-// it under the terms of the GNU Lesser General Public License as published by
-// the Free Software Foundation, either version 3 of the License, or
-// (at your option) any later version.
-//
-// Conceal is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-// GNU Lesser General Public License for more details.
-//
-// You should have received a copy of the GNU Lesser General Public License
-// along with Conceal.  If not, see <http://www.gnu.org/licenses/>.
+// Distributed under the MIT/X11 software license, see the accompanying
+// file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #pragma once
 
@@ -34,28 +20,6 @@ const uint32_t DEFAULT_ANONYMITY_LEVEL = 6;
 class RequestSerializationError: public std::exception {
 public:
   virtual const char* what() const throw() override { return "Request error"; }
-};
-
-struct Save {
-  struct Request {
-    void serialize(CryptoNote::ISerializer& serializer);
-  };
-
-  struct Response {
-    void serialize(CryptoNote::ISerializer& serializer);
-  };
-};
-
-struct Export {
-  struct Request {
-    std::string fileName;
-
-    void serialize(CryptoNote::ISerializer& serializer);
-  };
-
-  struct Response {
-    void serialize(CryptoNote::ISerializer& serializer);
-  };
 };
 
 struct Reset {
@@ -77,20 +41,6 @@ struct GetViewKey {
 
   struct Response {
     std::string viewSecretKey;
-
-    void serialize(CryptoNote::ISerializer& serializer);
-  };
-};
-
-struct GetMnemonicSeed {
-  struct Request {
-    std::string address;
-
-    void serialize(CryptoNote::ISerializer& serializer);
-  };
-
-  struct Response {
-    std::string mnemonicSeed;
 
     void serialize(CryptoNote::ISerializer& serializer);
   };
@@ -133,20 +83,6 @@ struct CreateAddress {
 
   struct Response {
     std::string address;
-
-    void serialize(CryptoNote::ISerializer& serializer);
-  };
-};
-
-struct CreateAddressList {
-  struct Request {
-    std::vector<std::string> spendSecretKeys;
-
-    void serialize(CryptoNote::ISerializer& serializer);
-  };
-
-  struct Response {
-    std::vector<std::string> addresses;
 
     void serialize(CryptoNote::ISerializer& serializer);
   };
@@ -392,39 +328,6 @@ struct SendDelayedTransaction {
   };
 
   struct Response {
-    void serialize(CryptoNote::ISerializer& serializer);
-  };
-};
-
-struct SendFusionTransaction {
-  struct Request {
-    uint64_t threshold;
-    uint32_t anonymity = DEFAULT_ANONYMITY_LEVEL;
-    std::vector<std::string> addresses;
-    std::string destinationAddress;
-
-    void serialize(CryptoNote::ISerializer& serializer);
-  };
-
-  struct Response {
-    std::string transactionHash;
-
-    void serialize(CryptoNote::ISerializer& serializer);
-  };
-};
-
-struct EstimateFusion {
-  struct Request {
-    uint64_t threshold;
-    std::vector<std::string> addresses;
-
-    void serialize(CryptoNote::ISerializer& serializer);
-  };
-
-  struct Response {
-    uint32_t fusionReadyCount;
-    uint32_t totalOutputCount;
-
     void serialize(CryptoNote::ISerializer& serializer);
   };
 };

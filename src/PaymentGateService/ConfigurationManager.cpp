@@ -1,23 +1,9 @@
-// Copyright (c) 2011-2015 The Cryptonote developers
-// Copyright (c) 2015-2016 The Bytecoin developers
-// Copyright (c) 2016-2017 The TurtleCoin developers
-// Copyright (c) 2017-2018 krypt0x aka krypt0chaos
+// Copyright (c) 2011-2016 The Cryptonote developers
+// Copyright (c) 2016-2018 krypt0x aka krypt0chaos
 // Copyright (c) 2018 The Circle Foundation
 //
-// This file is part of Conceal Sense Crypto Engine.
-//
-// Conceal is free software: you can redistribute it and/or modify
-// it under the terms of the GNU Lesser General Public License as published by
-// the Free Software Foundation, either version 3 of the License, or
-// (at your option) any later version.
-//
-// Conceal is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-// GNU Lesser General Public License for more details.
-//
-// You should have received a copy of the GNU Lesser General Public License
-// along with Conceal.  If not, see <http://www.gnu.org/licenses/>.
+// Distributed under the MIT/X11 software license, see the accompanying
+// file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #include "ConfigurationManager.h"
 
@@ -26,7 +12,6 @@
 
 #include "Common/CommandLine.h"
 #include "Common/Util.h"
-#include "version.h"
 
 namespace PaymentService {
 
@@ -50,17 +35,18 @@ bool ConfigurationManager::init(int argc, char** argv) {
   cmdGeneralOptions.add_options()
       ("help,h", "produce this help message and exit")
       ("local", po::bool_switch(), "start with local node (remote is default)")
-      ("testnet", po::bool_switch(), "testnet mode")
-      ("version", "Output version information");
+      ("testnet", po::bool_switch(), "testnet mode");
 
   command_line::add_arg(cmdGeneralOptions, command_line::arg_data_dir, Tools::getDefaultDataDirectory());
   command_line::add_arg(confGeneralOptions, command_line::arg_data_dir, Tools::getDefaultDataDirectory());
 
   Configuration::initOptions(cmdGeneralOptions);
   Configuration::initOptions(confGeneralOptions);
+
   po::options_description netNodeOptions("Local Node Options");
   CryptoNote::NetNodeConfig::initOptions(netNodeOptions);
-  
+  CryptoNote::CoreConfig::initOptions(netNodeOptions);
+
   po::options_description remoteNodeOptions("Remote Node Options");
   RpcNodeConfiguration::initOptions(remoteNodeOptions);
 
@@ -79,31 +65,38 @@ bool ConfigurationManager::init(int argc, char** argv) {
     return false;
   }
 
-  if (cmdOptions.count("version") > 0) {
-    std::cout << "walletd v" << PROJECT_VERSION_LONG;
-    return false;
-  }
-
-  po::variables_map allOptions;
   if (cmdOptions.count("config")) {
     std::ifstream confStream(cmdOptions["config"].as<std::string>(), std::ifstream::in);
     if (!confStream.good()) {
       throw ConfigurationError("Cannot open configuration file");
     }
-    po::store(po::parse_config_file(confStream, confOptionsDesc), allOptions);
-    po::notify(allOptions);
+
+    po::variables_map confOptions;
+    po::store(po::parse_config_file(confStream, confOptionsDesc), confOptions);
+    po::notify(confOptions);
+
+    gateConfiguration.init(confOptions);
+    netNodeConfig.init(confOptions);
+    coreConfig.init(confOptions);
+    remoteNodeConfig.init(confOptions);
+
+    netNodeConfig.setTestnet(confOptions["testnet"].as<bool>());
+    startInprocess = confOptions["local"].as<bool>();
   }
 
-  po::store(po::parse_command_line(argc, argv, cmdOptionsDesc), allOptions);
-  po::notify(allOptions);
+  //command line options should override options from config file
+  gateConfiguration.init(cmdOptions);
+  netNodeConfig.init(cmdOptions);
+  coreConfig.init(cmdOptions);
+  remoteNodeConfig.init(cmdOptions);
 
-  gateConfiguration.init(allOptions);
-  netNodeConfig.init(allOptions);
-  remoteNodeConfig.init(allOptions);
-  dataDir = command_line::get_arg(allOptions, command_line::arg_data_dir);
+  if (cmdOptions["testnet"].as<bool>()) {
+    netNodeConfig.setTestnet(true);
+  }
 
-  netNodeConfig.setTestnet(allOptions["testnet"].as<bool>());
-  startInprocess = allOptions["local"].as<bool>();
+  if (cmdOptions["local"].as<bool>()) {
+    startInprocess = true;
+  }
 
   return true;
 }

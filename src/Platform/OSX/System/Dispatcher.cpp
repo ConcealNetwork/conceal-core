@@ -1,23 +1,9 @@
-// Copyright (c) 2011-2015 The Cryptonote developers
-// Copyright (c) 2015-2016 The Bytecoin developers
-// Copyright (c) 2016-2017 The TurtleCoin developers
-// Copyright (c) 2017-2018 krypt0x aka krypt0chaos
+// Copyright (c) 2011-2016 The Cryptonote developers
+// Copyright (c) 2016-2018 krypt0x aka krypt0chaos
 // Copyright (c) 2018 The Circle Foundation
 //
-// This file is part of Conceal Sense Crypto Engine.
-//
-// Conceal is free software: you can redistribute it and/or modify
-// it under the terms of the GNU Lesser General Public License as published by
-// the Free Software Foundation, either version 3 of the License, or
-// (at your option) any later version.
-//
-// Conceal is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-// GNU Lesser General Public License for more details.
-//
-// You should have received a copy of the GNU Lesser General Public License
-// along with Conceal.  If not, see <http://www.gnu.org/licenses/>.
+// Distributed under the MIT/X11 software license, see the accompanying
+// file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #include "Dispatcher.h"
 #include <cassert>
@@ -89,7 +75,6 @@ Dispatcher::Dispatcher() : lastCreatedTimer(0) {
           mainContext.group = &contextGroup;
           mainContext.groupPrev = nullptr;
           mainContext.groupNext = nullptr;
-          mainContext.inExecutionQueue = false;
           contextGroup.firstContext = nullptr;
           contextGroup.lastContext = nullptr;
           contextGroup.firstWaiter = nullptr;
@@ -104,7 +89,6 @@ Dispatcher::Dispatcher() : lastCreatedTimer(0) {
     }
 
     auto result = close(kqueue);
-    if (result) {}
     assert(result == 0);
   }
 
@@ -130,7 +114,6 @@ Dispatcher::~Dispatcher() {
   }
   
   auto result = close(kqueue);
-  if (result) {}
   assert(result != -1);
   result = pthread_mutex_destroy(reinterpret_cast<pthread_mutex_t*>(this->mutex));
   assert(result != -1);
@@ -152,10 +135,6 @@ void Dispatcher::dispatch() {
     if (firstResumingContext != nullptr) {
       context = firstResumingContext;
       firstResumingContext = context->next;
-
-      assert(context->inExecutionQueue);
-      context->inExecutionQueue = false;
-      
       break;
     }
     
@@ -248,12 +227,7 @@ bool Dispatcher::interrupted() {
 
 void Dispatcher::pushContext(NativeContext* context) {
   assert(context!=nullptr);
-
-  if (context->inExecutionQueue)
-    return;
-
   context->next = nullptr;
-  context->inExecutionQueue = true;
   if (firstResumingContext != nullptr) {
     assert(lastResumingContext != nullptr);
     lastResumingContext->next = context;
@@ -404,7 +378,6 @@ void Dispatcher::contextProcedure(void* ucontext) {
   context.uctx = ucontext;
   context.interrupted = false;
   context.next = nullptr;
-  context.inExecutionQueue = false;
   firstReusableContext = &context;
   uctx* oldContext = static_cast<uctx*>(context.uctx);
   if (swapcontext(oldContext, static_cast<uctx*>(currentContext->uctx)) == -1) {
@@ -415,7 +388,7 @@ void Dispatcher::contextProcedure(void* ucontext) {
     ++runningContextCount;
     try {
       context.procedure();
-    } catch(...) {
+    } catch(std::exception&) {
     }
 
     if (context.group != nullptr) {

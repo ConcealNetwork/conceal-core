@@ -1,23 +1,9 @@
-// Copyright (c) 2011-2015 The Cryptonote developers
-// Copyright (c) 2015-2016 The Bytecoin developers
-// Copyright (c) 2016-2017 The TurtleCoin developers
-// Copyright (c) 2017-2018 krypt0x aka krypt0chaos
+// Copyright (c) 2011-2016 The Cryptonote developers
+// Copyright (c) 2016-2018 krypt0x aka krypt0chaos
 // Copyright (c) 2018 The Circle Foundation
 //
-// This file is part of Conceal Sense Crypto Engine.
-//
-// Conceal is free software: you can redistribute it and/or modify
-// it under the terms of the GNU Lesser General Public License as published by
-// the Free Software Foundation, either version 3 of the License, or
-// (at your option) any later version.
-//
-// Conceal is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-// GNU Lesser General Public License for more details.
-//
-// You should have received a copy of the GNU Lesser General Public License
-// along with Conceal.  If not, see <http://www.gnu.org/licenses/>.
+// Distributed under the MIT/X11 software license, see the accompanying
+// file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #pragma once
 
@@ -41,7 +27,6 @@ const int errInvalidRequest = -32600;
 const int errMethodNotFound = -32601;
 const int errInvalidParams = -32602;
 const int errInternalError = -32603;
-const int errInvalidPassword = -32604;
 
 class JsonRpcError: public std::exception {
 public:
@@ -67,7 +52,6 @@ public:
 };
 
 typedef boost::optional<Common::JsonValue> OptionalId;
-typedef boost::optional<Common::JsonValue> OptionalPassword;
 
 class JsonRpcRequest {
 public:
@@ -89,10 +73,6 @@ public:
 
     if (psReq.contains("id")) {
       id = psReq("id");
-    }
-	
-	if (psReq.contains("password")) {
-		password = psReq("password");
     }
 
     return true;
@@ -122,10 +102,6 @@ public:
   const OptionalId& getId() const {
     return id;
   }
-  
-  const OptionalPassword& getPassword() const {
-	  return password;
-  }
 
   std::string getBody() {
     psReq.set("jsonrpc", std::string("2.0"));
@@ -137,7 +113,6 @@ private:
 
   Common::JsonValue psReq;
   OptionalId id;
-  OptionalPassword password;
   std::string method;
 };
 

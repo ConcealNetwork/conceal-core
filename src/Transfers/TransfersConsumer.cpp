@@ -1,23 +1,9 @@
-// Copyright (c) 2011-2015 The Cryptonote developers
-// Copyright (c) 2015-2016 The Bytecoin developers
-// Copyright (c) 2016-2017 The TurtleCoin developers
-// Copyright (c) 2017-2018 krypt0x aka krypt0chaos
+// Copyright (c) 2011-2016 The Cryptonote developers
+// Copyright (c) 2016-2018 krypt0x aka krypt0chaos
 // Copyright (c) 2018 The Circle Foundation
 //
-// This file is part of Conceal Sense Crypto Engine.
-//
-// Conceal is free software: you can redistribute it and/or modify
-// it under the terms of the GNU Lesser General Public License as published by
-// the Free Software Foundation, either version 3 of the License, or
-// (at your option) any later version.
-//
-// Conceal is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-// GNU Lesser General Public License for more details.
-//
-// You should have received a copy of the GNU Lesser General Public License
-// along with Conceal.  If not, see <http://www.gnu.org/licenses/>.
+// Distributed under the MIT/X11 software license, see the accompanying
+// file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #include "TransfersConsumer.h"
 
@@ -25,7 +11,6 @@
 
 #include "CommonTypes.h"
 #include "Common/BlockingQueue.h"
-#include "CryptoNoteCore/CryptoNoteBasicImpl.h"
 #include "CryptoNoteCore/CryptoNoteFormatUtils.h"
 #include "CryptoNoteCore/TransactionApi.h"
 
@@ -34,24 +19,10 @@
 #include <future>
 
 using namespace Crypto;
-using namespace Logging;
 
 namespace {
 
 using namespace CryptoNote;
-
-class MarkTransactionConfirmedException : public std::exception {
-public:
-    MarkTransactionConfirmedException(const Crypto::Hash& txHash) {
-    }
-
-    const Hash& getTxHash() const {
-        return m_txHash;
-    }
-
-private:
-    Crypto::Hash m_txHash;
-};
 
 void checkOutputKey(
   const KeyDerivation& derivation,
@@ -98,6 +69,15 @@ void findMyOutputs(
       checkOutputKey(derivation, out.key, keyIndex, idx, spendKeys, outputs);
       ++keyIndex;
 
+    } else if (outType == TransactionTypes::OutputType::Multisignature) {
+
+      uint64_t amount;
+      MultisignatureOutput out;
+      tx.getOutput(idx, out, amount);
+      for (const auto& key : out.keys) {
+        checkOutputKey(derivation, key, idx, idx, spendKeys, outputs);
+        ++keyIndex;
+      }
     }
   }
 }
@@ -117,8 +97,8 @@ std::vector<Crypto::Hash> getBlockHashes(const CryptoNote::CompleteBlock* blocks
 
 namespace CryptoNote {
 
-TransfersConsumer::TransfersConsumer(const CryptoNote::Currency& currency, INode& node, Logging::ILogger& logger, const SecretKey& viewSecret) :
-  m_node(node), m_viewSecret(viewSecret), m_currency(currency), m_logger(logger, "TransfersConsumer") {
+TransfersConsumer::TransfersConsumer(const CryptoNote::Currency& currency, INode& node, const SecretKey& viewSecret) :
+  m_node(node), m_viewSecret(viewSecret), m_currency(currency) {
   updateSyncStart();
 }
 
@@ -130,16 +110,9 @@ ITransfersSubscription& TransfersConsumer::addSubscription(const AccountSubscrip
   auto& res = m_subscriptions[subscription.keys.address.spendPublicKey];
 
   if (res.get() == nullptr) {
-    res.reset(new TransfersSubscription(m_currency, m_logger.getLogger(), subscription));
+    res.reset(new TransfersSubscription(m_currency, subscription));
     m_spendKeys.insert(subscription.keys.address.spendPublicKey);
-
-    if (m_subscriptions.size() == 1) {
-      m_syncStart = res->getSyncStart();
-    } else {
-      auto subStart = res->getSyncStart();
-      m_syncStart.height = std::min(m_syncStart.height, subStart.height);
-      m_syncStart.timestamp = std::min(m_syncStart.timestamp, subStart.timestamp);
-    }
+    updateSyncStart();
   }
 
   return *res;
@@ -203,14 +176,13 @@ void TransfersConsumer::onBlockchainDetach(uint32_t height) {
   }
 }
 
-uint32_t TransfersConsumer::onNewBlocks(const CompleteBlock* blocks, uint32_t startHeight, uint32_t count) {
+bool TransfersConsumer::onNewBlocks(const CompleteBlock* blocks, uint32_t startHeight, uint32_t count) {
   assert(blocks);
   assert(count > 0);
 
   struct Tx {
     TransactionBlockInfo blockInfo;
     const ITransactionReader* tx;
-    bool isLastTransactionInBlock;
   };
 
   struct PreprocessedTx : Tx, PreprocessInfo {};
@@ -226,20 +198,17 @@ uint32_t TransfersConsumer::onNewBlocks(const CompleteBlock* blocks, uint32_t st
   BlockingQueue<Tx> inputQueue(workers * 2);
 
   std::atomic<bool> stopProcessing(false);
-  std::atomic<size_t> emptyBlockCount(0);
 
   auto pushingThread = std::async(std::launch::async, [&] {
     for( uint32_t i = 0; i < count && !stopProcessing; ++i) {
       const auto& block = blocks[i].block;
 
       if (!block.is_initialized()) {
-        ++emptyBlockCount;
         continue;
       }
 
       // filter by syncStartTimestamp
       if (m_syncStart.timestamp && block->timestamp < m_syncStart.timestamp) {
-        ++emptyBlockCount;
         continue;
       }
 
@@ -255,8 +224,7 @@ uint32_t TransfersConsumer::onNewBlocks(const CompleteBlock* blocks, uint32_t st
           continue;
         }
 
-        bool isLastTransactionInBlock = blockInfo.transactionIndex + 1 == blocks[i].transactions.size();
-        Tx item = { blockInfo, tx.get(), isLastTransactionInBlock };
+        Tx item = { blockInfo, tx.get() };
         inputQueue.push(item);
         ++blockInfo.transactionIndex;
       }
@@ -303,63 +271,32 @@ uint32_t TransfersConsumer::onNewBlocks(const CompleteBlock* blocks, uint32_t st
     }
   }
 
-  if (processingError) {
+  std::vector<Crypto::Hash> blockHashes = getBlockHashes(blocks, count);
+  if (!processingError) {
+    m_observerManager.notify(&IBlockchainConsumerObserver::onBlocksAdded, this, blockHashes);
+
+    // sort by block height and transaction index in block
+    std::sort(preprocessedTransactions.begin(), preprocessedTransactions.end(), [](const PreprocessedTx& a, const PreprocessedTx& b) {
+      return std::tie(a.blockInfo.height, a.blockInfo.transactionIndex) < std::tie(b.blockInfo.height, b.blockInfo.transactionIndex);
+    });
+
+    for (const auto& tx : preprocessedTransactions) {
+      processTransaction(tx.blockInfo, *tx.tx, tx);
+    }
+  } else {
     forEachSubscription([&](TransfersSubscription& sub) {
       sub.onError(processingError, startHeight);
     });
 
-    return 0;
+    return false;
   }
 
-  std::vector<Crypto::Hash> blockHashes = getBlockHashes(blocks, count);
-  m_observerManager.notify(&IBlockchainConsumerObserver::onBlocksAdded, this, blockHashes);
-
-  // sort by block height and transaction index in block
-  std::sort(preprocessedTransactions.begin(), preprocessedTransactions.end(), [](const PreprocessedTx& a, const PreprocessedTx& b) {
-    return std::tie(a.blockInfo.height, a.blockInfo.transactionIndex) < std::tie(b.blockInfo.height, b.blockInfo.transactionIndex);
+  auto newHeight = startHeight + count - 1;
+  forEachSubscription([newHeight](TransfersSubscription& sub) {
+    sub.advanceHeight(newHeight);
   });
 
-  uint32_t processedBlockCount = static_cast<uint32_t>(emptyBlockCount);
-  try {
-    for (const auto& tx : preprocessedTransactions) {
-      processTransaction(tx.blockInfo, *tx.tx, tx);
-
-      if (tx.isLastTransactionInBlock) {
-        ++processedBlockCount;
-        m_logger(TRACE) << "Processed block " << processedBlockCount << " of " << count << ", last processed block index " << tx.blockInfo.height <<
-            ", hash " << blocks[processedBlockCount - 1].blockHash;
-
-        auto newHeight = startHeight + processedBlockCount - 1;
-        forEachSubscription([newHeight](TransfersSubscription& sub) {
-            sub.advanceHeight(newHeight);
-        });
-      }
-    }
-  } catch (const MarkTransactionConfirmedException& e) {
-    m_logger(ERROR, BRIGHT_RED) << "Failed to process block transactions: failed to confirm transaction " << e.getTxHash() <<
-      ", remove this transaction from all containers and transaction pool";
-    forEachSubscription([&e](TransfersSubscription& sub) {
-      sub.deleteUnconfirmedTransaction(e.getTxHash());
-    });
-
-    m_poolTxs.erase(e.getTxHash());
-  } catch (std::exception& e) {
-    m_logger(ERROR, BRIGHT_RED) << "Failed to process block transactions, exception: " << e.what();
-  } catch (...) {
-    m_logger(ERROR, BRIGHT_RED) << "Failed to process block transactions, unknown exception";
-  }
-
-  if (processedBlockCount < count) {
-    uint32_t detachIndex = startHeight + processedBlockCount;
-    m_logger(ERROR, BRIGHT_RED) << "Not all block transactions are processed, fully processed block count: " << processedBlockCount << " of " << count <<
-        ", last processed block hash " << (processedBlockCount > 0 ? blocks[processedBlockCount - 1].blockHash : NULL_HASH) <<
-        ", detach block index " << detachIndex << " to remove partially processed block";
-    forEachSubscription([detachIndex](TransfersSubscription& sub) {
-        sub.onBlockchainDetach(detachIndex);
-    });
-  }
-
-  return processedBlockCount;
+  return true;
 }
 
 std::error_code TransfersConsumer::onPoolUpdated(const std::vector<std::unique_ptr<ITransactionReader>>& addedTransactions, const std::vector<Hash>& deletedTransactions) {
@@ -434,7 +371,8 @@ std::error_code createTransfers(
     auto outType = tx.getOutputType(size_t(idx));
 
     if (
-      outType != TransactionTypes::OutputType::Key) {
+      outType != TransactionTypes::OutputType::Key &&
+      outType != TransactionTypes::OutputType::Multisignature) {
       continue;
     }
 
@@ -464,6 +402,13 @@ std::error_code createTransfers(
       info.amount = amount;
       info.outputKey = out.key;
 
+    } else if (outType == TransactionTypes::OutputType::Multisignature) {
+      uint64_t amount;
+      MultisignatureOutput out;
+      tx.getOutput(idx, out, amount);
+
+      info.amount = amount;
+      info.requiredSignatures = out.requiredSignatureCount;
     }
 
     transfers.push_back(info);
@@ -517,8 +462,6 @@ std::error_code TransfersConsumer::processTransaction(const TransactionBlockInfo
 void TransfersConsumer::processTransaction(const TransactionBlockInfo& blockInfo, const ITransactionReader& tx, const PreprocessInfo& info) {
   std::vector<TransactionOutputInformationIn> emptyOutputs;
   std::vector<ITransfersContainer*> transactionContainers;
-
-  m_logger(TRACE) << "Process transaction, block " << blockInfo.height << ", transaction index " << blockInfo.transactionIndex << ", hash " << tx.getTransactionHash();
   bool someContainerUpdated = false;
   for (auto& kv : m_subscriptions) {
     auto it = info.outputs.find(kv.first);
@@ -534,10 +477,7 @@ void TransfersConsumer::processTransaction(const TransactionBlockInfo& blockInfo
   }
 
   if (someContainerUpdated) {
-    m_logger(TRACE) << "Transaction updated some containers, hash " << tx.getTransactionHash();
     m_observerManager.notify(&IBlockchainConsumerObserver::onTransactionUpdated, this, tx.getTransactionHash(), transactionContainers);
-  } else {
-    m_logger(TRACE) << "Transaction doesn't updated any container, hash " << tx.getTransactionHash();
   }
 }
 
@@ -550,14 +490,9 @@ void TransfersConsumer::processOutputs(const TransactionBlockInfo& blockInfo, Tr
 
   if (contains) {
     if (subscribtionTxInfo.blockHeight == WALLET_UNCONFIRMED_TRANSACTION_HEIGHT && blockInfo.height != WALLET_UNCONFIRMED_TRANSACTION_HEIGHT) {
-      try {
-        // pool->blockchain
-        sub.markTransactionConfirmed(blockInfo, tx.getTransactionHash(), globalIdxs);
-        updated = true;
-      } catch (...) {
-          m_logger(ERROR, BRIGHT_RED) << "markTransactionConfirmed failed, throw MarkTransactionConfirmedException";
-          throw MarkTransactionConfirmedException(tx.getTransactionHash());
-      }
+      // pool->blockchain
+      sub.markTransactionConfirmed(blockInfo, tx.getTransactionHash(), globalIdxs);
+      updated = true;
     } else {
       assert(subscribtionTxInfo.blockHeight == blockInfo.height);
     }
@@ -567,7 +502,7 @@ void TransfersConsumer::processOutputs(const TransactionBlockInfo& blockInfo, Tr
   }
 }
 
-std::error_code TransfersConsumer::getGlobalIndices(const Hash& transactionHash, std::vector<uint32_t>& outsGlobalIndices) {
+std::error_code TransfersConsumer::getGlobalIndices(const Hash& transactionHash, std::vector<uint32_t>& outsGlobalIndices) {  
   std::promise<std::error_code> prom;
   std::future<std::error_code> f = prom.get_future();
 

@@ -1,23 +1,9 @@
-// Copyright (c) 2011-2015 The Cryptonote developers
-// Copyright (c) 2015-2016 The Bytecoin developers
-// Copyright (c) 2016-2017 The TurtleCoin developers
-// Copyright (c) 2017-2018 krypt0x aka krypt0chaos
+// Copyright (c) 2011-2016 The Cryptonote developers
+// Copyright (c) 2016-2018 krypt0x aka krypt0chaos
 // Copyright (c) 2018 The Circle Foundation
 //
-// This file is part of Conceal Sense Crypto Engine.
-//
-// Conceal is free software: you can redistribute it and/or modify
-// it under the terms of the GNU Lesser General Public License as published by
-// the Free Software Foundation, either version 3 of the License, or
-// (at your option) any later version.
-//
-// Conceal is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-// GNU Lesser General Public License for more details.
-//
-// You should have received a copy of the GNU Lesser General Public License
-// along with Conceal.  If not, see <http://www.gnu.org/licenses/>.
+// Distributed under the MIT/X11 software license, see the accompanying
+// file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #include "JsonRpcServer.h"
 
@@ -34,7 +20,6 @@
 #include <System/Ipv4Address.h>
 #include "HTTP/HttpParser.h"
 #include "HTTP/HttpResponse.h"
-#include "Rpc/JsonRpc.h"
 
 #include "Common/JsonValue.h"
 #include "Serialization/JsonInputValueSerializer.h"
@@ -42,12 +27,11 @@
 
 namespace CryptoNote {
 
-JsonRpcServer::JsonRpcServer(System::Dispatcher& sys, System::Event& stopEvent, Logging::ILogger& loggerGroup, PaymentService::Configuration& config) :
+JsonRpcServer::JsonRpcServer(System::Dispatcher& sys, System::Event& stopEvent, Logging::ILogger& loggerGroup) :
   HttpServer(sys, loggerGroup), 
   system(sys),
   stopEvent(stopEvent),
-  logger(loggerGroup, "JsonRpcServer"),
-  config(config)
+  logger(loggerGroup, "JsonRpcServer")
 {
 }
 
@@ -111,7 +95,7 @@ void JsonRpcServer::makeErrorResponse(const std::error_code& ec, Common::JsonVal
   JsonValue error(JsonValue::OBJECT);
 
   JsonValue code;
-  code = static_cast<int64_t>(CryptoNote::JsonRpc::errParseError); //Application specific error code
+  code = static_cast<int64_t>(-32000); //Application specific error code
 
   JsonValue message;
   message = ec.message();
@@ -159,27 +143,10 @@ void JsonRpcServer::makeMethodNotFoundResponse(Common::JsonValue& resp) {
   JsonValue error(JsonValue::OBJECT);
 
   JsonValue code;
-  code = static_cast<int64_t>(CryptoNote::JsonRpc::errMethodNotFound); //ambigous declaration of JsonValue::operator= (between int and JsonValue)
+  code = static_cast<int64_t>(-32601); //ambigous declaration of JsonValue::operator= (between int and JsonValue)
 
   JsonValue message;
   message = "Method not found";
-
-  error.insert("code", code);
-  error.insert("message", message);
-
-  resp.insert("error", error);
-}
-
-void JsonRpcServer::makeInvalidPasswordResponse(Common::JsonValue& resp) {
-  using Common::JsonValue;
-
-  JsonValue error(JsonValue::OBJECT);
-
-  JsonValue code;
-  code = static_cast<int64_t>(CryptoNote::JsonRpc::errInvalidPassword);
-
-  JsonValue message;
-  message = "Invalid or no rpc password";
 
   error.insert("code", code);
   error.insert("message", message);
@@ -200,7 +167,7 @@ void JsonRpcServer::makeJsonParsingErrorResponse(Common::JsonValue& resp) {
 
   JsonValue error(JsonValue::OBJECT);
   JsonValue code;
-  code = static_cast<int64_t>(CryptoNote::JsonRpc::errParseError); //ambigous declaration of JsonValue::operator= (between int and JsonValue)
+  code = static_cast<int64_t>(-32700); //ambigous declaration of JsonValue::operator= (between int and JsonValue)
 
   JsonValue message = "Parse error";
 

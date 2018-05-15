@@ -1,37 +1,19 @@
-// Copyright (c) 2011-2015 The Cryptonote developers
-// Copyright (c) 2015-2016 The Bytecoin developers
-// Copyright (c) 2016-2017 The TurtleCoin developers
-// Copyright (c) 2017-2018 krypt0x aka krypt0chaos
+// Copyright (c) 2011-2016 The Cryptonote developers
+// Copyright (c) 2016-2018 krypt0x aka krypt0chaos
 // Copyright (c) 2018 The Circle Foundation
 //
-// This file is part of Conceal Sense Crypto Engine.
-//
-// Conceal is free software: you can redistribute it and/or modify
-// it under the terms of the GNU Lesser General Public License as published by
-// the Free Software Foundation, either version 3 of the License, or
-// (at your option) any later version.
-//
-// Conceal is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-// GNU Lesser General Public License for more details.
-//
-// You should have received a copy of the GNU Lesser General Public License
-// along with Conceal.  If not, see <http://www.gnu.org/licenses/>.
+// Distributed under the MIT/X11 software license, see the accompanying
+// file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #include "TransfersSubscription.h"
 #include "IWalletLegacy.h"
-#include "CryptoNoteCore/CryptoNoteBasicImpl.h"
 
 using namespace Crypto;
-using namespace Logging;
 
 namespace CryptoNote {
 
-TransfersSubscription::TransfersSubscription(const CryptoNote::Currency& currency, Logging::ILogger& logger, const AccountSubscription& sub)
-  : subscription(sub), logger(logger, "TransfersSubscription"), transfers(currency, logger, sub.transactionSpendableAge),
-    m_address(currency.accountAddressAsString(sub.keys.address)) {
-}
+TransfersSubscription::TransfersSubscription(const CryptoNote::Currency& currency, const AccountSubscription& sub)
+  : subscription(sub), transfers(currency, sub.transactionSpendableAge) {}
 
 
 SynchronizationStart TransfersSubscription::getSyncStart() {
@@ -41,7 +23,6 @@ SynchronizationStart TransfersSubscription::getSyncStart() {
 void TransfersSubscription::onBlockchainDetach(uint32_t height) {
   std::vector<Hash> deletedTransactions = transfers.detach(height);
   for (auto& hash : deletedTransactions) {
-    logger(TRACE) << "Transaction deleted from wallet " << m_address << ", hash " << hash;
     m_observerManager.notify(&ITransfersObserver::onTransactionDeleted, this, hash);
   }
 }
@@ -65,7 +46,6 @@ bool TransfersSubscription::addTransaction(const TransactionBlockInfo& blockInfo
                                            const std::vector<TransactionOutputInformationIn>& transfersList) {
   bool added = transfers.addTransaction(blockInfo, tx, transfersList);
   if (added) {
-    logger(TRACE) << "Transaction updates balance of wallet " << m_address << ", hash " << tx.getTransactionHash();
     m_observerManager.notify(&ITransfersObserver::onTransactionUpdated, this, tx.getTransactionHash());
   }
 
@@ -82,7 +62,6 @@ ITransfersContainer& TransfersSubscription::getContainer() {
 
 void TransfersSubscription::deleteUnconfirmedTransaction(const Hash& transactionHash) {
   if (transfers.deleteUnconfirmedTransaction(transactionHash)) {
-    logger(TRACE) << "Transaction deleted from wallet " << m_address << ", hash " << transactionHash;
     m_observerManager.notify(&ITransfersObserver::onTransactionDeleted, this, transactionHash);
   }
 }
