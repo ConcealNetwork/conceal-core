@@ -77,7 +77,7 @@ const char     MINER_CONFIG_FILE_NAME[]                      = "miner_conf.json"
 
 //TODO Put here the name of your currency
 const char     CRYPTONOTE_NAME[]                             = "Conceal";
-const char     GENESIS_COINBASE_TX_HEX[]                     = "013c01ff0001f6f4acdbe01b029b2e4c0281c0b02e7c53291a94d1d0cbff8883f8024f5142ee494ffbbd08807121015cbaf268a09a0f87981878efc0342d3da7802274be201ad181debee8d0b8c6a6";
+const char     GENESIS_COINBASE_TX_HEX[]                     = "12345678901b029b2e4c0281c0b02e7c53291a94d1d0cbff8883f8024f5142ee494ffbbd08807121015cbaf268a09a0f87981878efc0342d3da7802274be201ad181debee8d0b8c6a6";
 
 const uint8_t  CURRENT_TRANSACTION_VERSION                   =  1;
 const uint8_t  BLOCK_MAJOR_VERSION_1                         =  1;
@@ -105,12 +105,12 @@ const uint32_t P2P_DEFAULT_CONNECTION_TIMEOUT                = 5000;          //
 const uint32_t P2P_DEFAULT_PING_CONNECTION_TIMEOUT           = 2000;          // 2 seconds
 const uint64_t P2P_DEFAULT_INVOKE_TIMEOUT                    = 60 * 2 * 1000; // 2 minutes
 const size_t   P2P_DEFAULT_HANDSHAKE_INVOKE_TIMEOUT          = 5000;          // 5 seconds
-const char     P2P_STAT_TRUSTED_PUB_KEY[]                    = "8f80f9a5a434a9f1510d13336228debfee9c918ce505efe225d8c94d045fa115";
+const char     P2P_STAT_TRUSTED_PUB_KEY[]                    = "cc70f9a5a434a9f1510d13336228debfee9c918ce505efe225d8c94d045fa115";
 
 //TODO Add here your network seed nodes
 const std::initializer_list<const char*> SEED_NODES = {
-   //"your_seed_ip2.com:8080",
-    "93.186.254.77:17236"
+   "0.0.0.0:17236",
+   "127.0.0.1:17236"
 };
 
 struct CheckpointData {
@@ -126,10 +126,7 @@ __attribute__((unused))
 // {<block height>, "<block hash>"},
 const std::initializer_list<CheckpointData> CHECKPOINTS = {
 	{ 0, "f7061e9a5f0d30549afde49c9bfbaa52ac60afdc46304642b460a9ea34bf7a4e" },
-	{ 100, "f31aef1d6648712ccfa963895cbfca313f36bf26c255024cb92c719b9b8f90b9" },
-	{ 500, "ebbb5032bf4090fc788395ffd55f3ff3ff1822f11fa9d256d10e0a7ac6cd2714" },
-	{ 1000, "18a6d0e77718f7592fd0ae146a31d66ad48569fac2a389f3c2d193be2b7298a6" },
-    { 1500, "7a61f8341e27a5ea454833711cfd5796f04409011edd109d1063c9597528fb97" }
+	{ 1000, "f31aef1d6648712ccfa963895cbfca313f36bf26c255024cb92c719b9b8f90b9" },
 };
 } // CryptoNote
 
