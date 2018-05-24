@@ -1,7 +1,5 @@
 // Copyright (c) 2011-2016 The Cryptonote developers
-// Copyright (c) 2016-2018 krypt0x aka krypt0chaos
-// Copyright (c) 2018 The Circle Foundation
-//
+// Copyright (c) 2014-2016 SDN developers
 // Distributed under the MIT/X11 software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -482,15 +480,32 @@ private:
 };
 
 class WalletServiceTest_getTransactions : public WalletServiceTest {
+public:
+  WalletServiceTest_getTransactions();
+
   virtual void SetUp() override;
+
 protected:
   std::vector<TransactionsInBlockInfo> testTransactions;
-  const std::string RANDOM_ADDRESS1 = "288DiQfYSxDNQoWpR6cy94i2AWyGnxo1L1MF2ZiXg58h9P52o576CSDcJp7ZceSXSUQ7u8aTF1MigQXzAtqRZ3Uq58Sne8x";
-  const std::string RANDOM_ADDRESS2 = "29PQ8VbzPi163kG59w5V8PR9A6watydfYAvwFcDS74KhDEyU9CGgqsDH719oeLbpAa4xtPsgfQ6Bv9RmKs1XZWudV6q6cmU";
-  const std::string RANDOM_ADDRESS3 = "23E4CVgzJok9zXnrKzvHgbKvMXZnAgsB9FA1pkAppR6d42dWMEuJjsfcJp7ZceSXSUQ7u8aTF1MigQXzAtqRZ3Uq5AHHbzZ";
+  std::string RANDOM_ADDRESS1;
+  std::string RANDOM_ADDRESS2;
+  std::string RANDOM_ADDRESS3;
   const std::string TRANSACTION_EXTRA = "022100dededededededededededededededededededededededededededededededede";
   const std::string PAYMENT_ID = "dededededededededededededededededededededededededededededededede";
 };
+
+WalletServiceTest_getTransactions::WalletServiceTest_getTransactions() {
+  AccountBase account;
+
+  account.generate();
+  RANDOM_ADDRESS1 = currency.accountAddressAsString(account.getAccountKeys().address);
+
+  account.generate();
+  RANDOM_ADDRESS2 = currency.accountAddressAsString(account.getAccountKeys().address);
+
+  account.generate();
+  RANDOM_ADDRESS3 = currency.accountAddressAsString(account.getAccountKeys().address);
+}
 
 void WalletServiceTest_getTransactions::SetUp() {
   TransactionsInBlockInfo block;

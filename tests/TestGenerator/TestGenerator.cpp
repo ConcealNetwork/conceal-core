@@ -1,7 +1,5 @@
 // Copyright (c) 2011-2016 The Cryptonote developers
-// Copyright (c) 2016-2018 krypt0x aka krypt0chaos
-// Copyright (c) 2018 The Circle Foundation
-//
+// Copyright (c) 2014-2016 SDN developers
 // Distributed under the MIT/X11 software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -64,7 +62,7 @@ void test_generator::addBlock(const CryptoNote::Block& blk, size_t tsxSize, uint
   const size_t blockSize = tsxSize + getObjectBinarySize(blk.baseTransaction);
   int64_t emissionChange;
   uint64_t blockReward;
-  m_currency.getBlockReward(Common::medianValue(blockSizes), blockSize, alreadyGeneratedCoins, fee,
+  m_currency.getBlockReward(Common::medianValue(blockSizes), blockSize, alreadyGeneratedCoins, fee, m_blocksInfo.size(),
     blockReward, emissionChange);
   m_blocksInfo[get_block_hash(blk)] = BlockInfo(blk.previousBlockHash, alreadyGeneratedCoins + emissionChange, blockSize);
 }
@@ -88,7 +86,7 @@ bool test_generator::constructBlock(CryptoNote::Block& blk, uint32_t height, con
   size_t txsSize = 0;
   for (auto& tx : txList) {
     uint64_t fee = 0;
-    bool r = get_tx_fee(tx, fee);
+    bool r = m_currency.getTransactionFee(tx, fee, height);
     CHECK_AND_ASSERT_MES(r, false, "wrong transaction passed to construct_block");
     totalFee += fee;
     txsSize += getObjectBinarySize(tx);
@@ -144,7 +142,7 @@ bool test_generator::constructBlock(CryptoNote::Block& blk, uint32_t height, con
 bool test_generator::constructBlock(CryptoNote::Block& blk, const CryptoNote::AccountBase& minerAcc, uint64_t timestamp) {
   std::vector<size_t> blockSizes;
   std::list<CryptoNote::Transaction> txList;
-  return constructBlock(blk, 0, NULL_HASH, minerAcc, timestamp, 0, blockSizes, txList);
+  return constructBlock(blk, 0, NULL_HASH, minerAcc, timestamp, 0, blockSizes, txList); //only called to create genesis block so height is 0
 }
 
 bool test_generator::constructBlock(CryptoNote::Block& blk, const CryptoNote::Block& blkPrev,
@@ -219,9 +217,10 @@ bool test_generator::constructMaxSizeBlock(CryptoNote::Block& blk, const CryptoN
   uint64_t totalFee = 0;
   size_t txsSize = 0;
   std::vector<Crypto::Hash> transactionHashes;
+  uint32_t height = get_block_height(blkPrev) + 1;
   for (auto& tx : txList) {
     uint64_t fee = 0;
-    bool r = get_tx_fee(tx, fee);
+    bool r = m_currency.getTransactionFee(tx, fee, height);
     CHECK_AND_ASSERT_MES(r, false, "wrong transaction passed to construct_max_size_block");
     totalFee += fee;
     txsSize += getObjectBinarySize(tx);
@@ -229,7 +228,7 @@ bool test_generator::constructMaxSizeBlock(CryptoNote::Block& blk, const CryptoN
   }
 
   Transaction baseTransaction;
-  bool r = constructMinerTxBySize(m_currency, baseTransaction, get_block_height(blkPrev) + 1,
+  bool r = constructMinerTxBySize(m_currency, baseTransaction, height,
     getAlreadyGeneratedCoins(blkPrev), minerAccount.getAccountKeys().address, blockSizes,
     2 * median - txsSize, 2 * median, totalFee);
   if (!r) {
@@ -265,7 +264,7 @@ bool constructMinerTxManually(const CryptoNote::Currency& currency, uint32_t hei
   // This will work, until size of constructed block is less then currency.blockGrantedFullRewardZone()
   int64_t emissionChange;
   uint64_t blockReward;
-  if (!currency.getBlockReward(0, 0, alreadyGeneratedCoins, fee, blockReward, emissionChange)) {
+  if (!currency.getBlockReward(0, 0, alreadyGeneratedCoins, fee, height, blockReward, emissionChange)) {
     std::cerr << "Block is too big" << std::endl;
     return false;
   }
@@ -280,7 +279,7 @@ bool constructMinerTxManually(const CryptoNote::Currency& currency, uint32_t hei
   out.target = KeyOutput{outEphPublicKey};
   tx.outputs.push_back(out);
 
-  tx.version = CURRENT_TRANSACTION_VERSION;
+  tx.version = TRANSACTION_VERSION_1;
   tx.unlockTime = height + currency.minedMoneyUnlockWindow();
 
   return true;

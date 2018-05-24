@@ -1,7 +1,5 @@
 // Copyright (c) 2011-2016 The Cryptonote developers
-// Copyright (c) 2016-2018 krypt0x aka krypt0chaos
-// Copyright (c) 2018 The Circle Foundation
-//
+// Copyright (c) 2014-2016 SDN developers
 // Distributed under the MIT/X11 software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -122,6 +120,7 @@ public:
   void addTestMultisignatureInput(uint64_t amount, const TransactionOutputInformation& t);
   size_t addFakeMultisignatureInput(uint64_t amount, uint32_t globalOutputIndex, size_t signatureCount);
   void addInput(const AccountKeys& senderKeys, const TransactionOutputInformation& t);
+  void addMultisignatureInput(uint64_t amount, uint32_t signatures, uint32_t outputIndex, uint32_t term);
 
   // outputs
   TransactionOutputInformationIn addTestKeyOutput(uint64_t amount, uint32_t globalOutputIndex, const AccountKeys& senderKeys = generateAccountKeys());
@@ -203,4 +202,47 @@ namespace CryptoNote {
 inline bool operator == (const AccountKeys& a, const AccountKeys& b) { 
   return memcmp(&a, &b, sizeof(a)) == 0; 
 }
+
+inline bool operator==(const TransactionOutputInformation& l, const TransactionOutputInformation& r) {
+  if (l.type != r.type) {
+    return false;
+  }
+
+  if (l.amount != r.amount) {
+    return false;
+  }
+
+  if (l.globalOutputIndex != r.globalOutputIndex) {
+    return false;
+  }
+
+  if (l.outputInTransaction != r.outputInTransaction) {
+    return false;
+  }
+
+  if (l.transactionHash != r.transactionHash) {
+    return false;
+  }
+
+  if (l.transactionPublicKey != r.transactionPublicKey) {
+    return false;
+  }
+
+  if (l.type == TransactionTypes::OutputType::Key) {
+    if (l.outputKey != r.outputKey) {
+      return false;
+    }
+  } else if (l.type == TransactionTypes::OutputType::Multisignature) {
+    if (l.requiredSignatures != r.requiredSignatures) {
+      return false;
+    }
+
+    if (l.term != r.term) {
+      return false;
+    }
+  }
+
+  return true;
+}
+
 }

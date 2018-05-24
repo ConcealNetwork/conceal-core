@@ -1,7 +1,5 @@
 // Copyright (c) 2011-2016 The Cryptonote developers
-// Copyright (c) 2016-2018 krypt0x aka krypt0chaos
-// Copyright (c) 2018 The Circle Foundation
-//
+// Copyright (c) 2014-2016 SDN developers
 // Distributed under the MIT/X11 software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -59,7 +57,7 @@ bool test_transaction_generation_and_ring_signature()
   std::vector<TransactionSourceEntry> sources;
   sources.resize(sources.size()+1);
   TransactionSourceEntry& src = sources.back();
-  src.amount = 70368744177663;
+  src.amount = 1;
   {
     tx_output_entry oe;
     oe.first = 0;
@@ -93,7 +91,7 @@ bool test_transaction_generation_and_ring_signature()
   //fill outputs entry
   TransactionDestinationEntry td;
   td.addr = rv_acc.getAccountKeys().address;
-  td.amount = 69368744177663;
+  td.amount = 1;
   std::vector<TransactionDestinationEntry> destinations;
   destinations.push_back(td);
 

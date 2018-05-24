@@ -1,7 +1,5 @@
 // Copyright (c) 2011-2016 The Cryptonote developers
-// Copyright (c) 2016-2018 krypt0x aka krypt0chaos
-// Copyright (c) 2018 The Circle Foundation
-//
+// Copyright (c) 2014-2016 SDN developers
 // Distributed under the MIT/X11 software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -15,7 +13,7 @@ namespace
 {
   struct tx_builder
   {
-    void step1_init(size_t version = CURRENT_TRANSACTION_VERSION, uint64_t unlock_time = 0)
+    void step1_init(size_t version = TRANSACTION_VERSION_1, uint64_t unlock_time = 0)
     {
       m_tx.inputs.clear();
       m_tx.outputs.clear();
@@ -113,7 +111,7 @@ namespace
     fill_tx_sources_and_destinations(events, blk_head, from, to, amount, fee, 0, sources, destinations);
 
     tx_builder builder;
-    builder.step1_init(CURRENT_TRANSACTION_VERSION, unlock_time);
+    builder.step1_init(TRANSACTION_VERSION_1, unlock_time);
     builder.step2_fill_inputs(from.getAccountKeys(), sources);
     builder.step3_fill_outputs(destinations);
     builder.step4_calc_hash();
@@ -154,7 +152,7 @@ bool gen_tx_big_version::generate(std::vector<test_event_entry>& events) const
   fill_tx_sources_and_destinations(events, blk_0, miner_account, miner_account, MK_COINS(1), m_currency.minimumFee(), 0, sources, destinations);
 
   tx_builder builder;
-  builder.step1_init(CURRENT_TRANSACTION_VERSION + 1, 0);
+  builder.step1_init(TRANSACTION_VERSION_2 + 1, 0);
   builder.step2_fill_inputs(miner_account.getAccountKeys(), sources);
   builder.step3_fill_outputs(destinations);
   builder.step4_calc_hash();
@@ -703,6 +701,8 @@ bool GenerateTransactionWithZeroFee::generate(std::vector<test_event_entry>& eve
 MultiSigTx_OutputSignatures::MultiSigTx_OutputSignatures(size_t givenKeys, uint32_t requiredSignatures, bool shouldSucceed) :
   m_givenKeys(givenKeys), m_requiredSignatures(requiredSignatures), m_shouldSucceed(shouldSucceed) {
 
+  m_currency = CurrencyBuilder(m_logger).upgradeHeight(0).currency();
+
   for (size_t i = 0; i < m_givenKeys; ++i) {
     AccountBase acc;
     acc.generate();
@@ -713,20 +713,21 @@ MultiSigTx_OutputSignatures::MultiSigTx_OutputSignatures(size_t givenKeys, uint3
 
 bool MultiSigTx_OutputSignatures::generate(std::vector<test_event_entry>& events) const {
   TestGenerator generator(m_currency, events);
+  generator.generator.defaultMajorVersion = BLOCK_MAJOR_VERSION_2;
   return generate(generator);
 }
 
 bool MultiSigTx_OutputSignatures::generate(TestGenerator& generator) const {
 
-  generator.generateBlocks(m_currency.minedMoneyUnlockWindow());
+  generator.generateBlocks(m_currency.minedMoneyUnlockWindow(), BLOCK_MAJOR_VERSION_2);
 
   std::vector<TransactionSourceEntry> sources;
   std::vector<TransactionDestinationEntry> destinations;
-  fill_tx_sources_and_destinations(generator.events, generator.lastBlock, generator.minerAccount, generator.minerAccount, 
+  fill_tx_sources_and_destinations(generator.events, generator.lastBlock, generator.minerAccount, generator.minerAccount,
     MK_COINS(1), m_currency.minimumFee(), 0, sources, destinations);
 
   tx_builder builder;
-  builder.step1_init();
+  builder.step1_init(TRANSACTION_VERSION_2);
   builder.step2_fill_inputs(generator.minerAccount.getAccountKeys(), sources);
 
   MultisignatureOutput target;
@@ -735,6 +736,7 @@ bool MultiSigTx_OutputSignatures::generate(TestGenerator& generator) const {
     target.keys.push_back(acc.getAccountKeys().address.spendPublicKey);
   }
   target.requiredSignatureCount = m_requiredSignatures;
+  target.term = 0;
   TransactionOutput txOut = { MK_COINS(1), target };
   builder.m_tx.outputs.push_back(txOut);
 
@@ -769,7 +771,7 @@ bool MultiSigTx_InvalidOutputSignature::generate(std::vector<test_event_entry>& 
   fill_tx_sources_and_destinations(events, blk_0, miner_account, miner_account, MK_COINS(1), m_currency.minimumFee(), 0, sources, destinations);
 
   tx_builder builder;
-  builder.step1_init();
+  builder.step1_init(TRANSACTION_VERSION_2);
   builder.step2_fill_inputs(miner_account.getAccountKeys(), sources);
 
   MultisignatureOutput target;
@@ -784,6 +786,7 @@ bool MultiSigTx_InvalidOutputSignature::generate(std::vector<test_event_entry>& 
   target.keys.push_back(generate_invalid_pub_key());
 
   target.requiredSignatureCount = 2;
+  target.term = 0;
 
   TransactionOutput txOut = { MK_COINS(1), target };
   builder.m_tx.outputs.push_back(txOut);
@@ -799,15 +802,16 @@ bool MultiSigTx_InvalidOutputSignature::generate(std::vector<test_event_entry>& 
 
 namespace
 {
-  void fillMultisignatureInput(TestGenerator& generator, tx_builder& builder, uint64_t inputAmount, uint32_t givenSignatures) {  
-    
-    builder.step1_init();
+  void fillMultisignatureInput(TestGenerator& generator, tx_builder& builder, uint64_t inputAmount, uint32_t givenSignatures) {
+
+    builder.step1_init(TRANSACTION_VERSION_2);
 
     // create input
     MultisignatureInput input;
     input.amount = inputAmount;
     input.signatureCount = givenSignatures;
     input.outputIndex = 0;
+    input.term = 0;
     builder.m_tx.inputs.push_back(input);
 
     // create output
@@ -824,13 +828,17 @@ namespace
 
 MultiSigTx_Input::MultiSigTx_Input(
   size_t givenKeys, uint32_t requiredSignatures, uint32_t givenSignatures, bool inputShouldSucceed) :
-    MultiSigTx_OutputSignatures(givenKeys, requiredSignatures, true), 
-    m_givenSignatures(givenSignatures), 
-    m_inputShouldSucceed(inputShouldSucceed) {}
+    MultiSigTx_OutputSignatures(givenKeys, requiredSignatures, true),
+    m_givenSignatures(givenSignatures),
+    m_inputShouldSucceed(inputShouldSucceed) {
+
+  m_currency = CurrencyBuilder(m_logger).upgradeHeight(0).currency();
+}
 
 bool MultiSigTx_Input::generate(std::vector<test_event_entry>& events) const {
-  
+
   TestGenerator generator(m_currency, events);
+  generator.generator.defaultMajorVersion = BLOCK_MAJOR_VERSION_2;
 
   // create outputs
   MultiSigTx_OutputSignatures::generate(generator);
@@ -850,7 +858,7 @@ bool MultiSigTx_Input::generate(std::vector<test_event_entry>& events) const {
     Crypto::generate_signature(builder.m_tx_prefix_hash, pk, sk, sig);
     outsigs.push_back(sig);
   }
-  
+
   if (!m_inputShouldSucceed) {
     generator.addCallback("mark_invalid_tx");
   }
@@ -860,7 +868,7 @@ bool MultiSigTx_Input::generate(std::vector<test_event_entry>& events) const {
 }
 
 
-MultiSigTx_BadInputSignature::MultiSigTx_BadInputSignature() : 
+MultiSigTx_BadInputSignature::MultiSigTx_BadInputSignature() :
   MultiSigTx_OutputSignatures(1, 1, true) {
 }
 
@@ -868,6 +876,7 @@ MultiSigTx_BadInputSignature::MultiSigTx_BadInputSignature() :
 bool MultiSigTx_BadInputSignature::generate(std::vector<test_event_entry>& events) const {
 
   TestGenerator generator(m_currency, events);
+  generator.generator.defaultMajorVersion = BLOCK_MAJOR_VERSION_2;
 
   // create outputs
   MultiSigTx_OutputSignatures::generate(generator);
@@ -898,6 +907,6 @@ bool MultiSigTx_BadInputSignature::generate(std::vector<test_event_entry>& event
   // blocks with transaction with bad signature should be rejected
   generator.addCallback("mark_invalid_block");
   generator.makeNextBlock(builder.m_tx);
-  
+
   return true;
 }

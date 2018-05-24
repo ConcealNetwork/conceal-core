@@ -1,7 +1,5 @@
 // Copyright (c) 2011-2016 The Cryptonote developers
-// Copyright (c) 2016-2018 krypt0x aka krypt0chaos
-// Copyright (c) 2018 The Circle Foundation
-//
+// Copyright (c) 2014-2016 SDN developers
 // Distributed under the MIT/X11 software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -21,10 +19,7 @@ bool GetRandomOutputs::generate(std::vector<test_event_entry>& events) const {
 
   uint64_t sendAmount = MK_COINS(1);
 
-  auto builder = generator.createTxBuilder(
-    generator.minerAccount, generator.minerAccount, sendAmount, m_currency.minimumFee());
-
-  for (int i = 0; i < 10; ++i) {
+  for (int i = 0; i < m_currency.minedMoneyUnlockWindow(); ++i) {
     auto builder = generator.createTxBuilder(
       generator.minerAccount, generator.minerAccount, sendAmount, m_currency.minimumFee());
 
@@ -34,7 +29,7 @@ bool GetRandomOutputs::generate(std::vector<test_event_entry>& events) const {
   }
 
   // unlock half of the money
-  generator.generateBlocks(m_currency.minedMoneyUnlockWindow() / 2);
+  generator.generateBlocks(m_currency.minedMoneyUnlockWindow() / 2 - 1);
   generator.addCallback("checkHalfUnlocked");
 
   // unlock the remaining part
@@ -61,7 +56,7 @@ bool GetRandomOutputs::checkHalfUnlocked(CryptoNote::core& c, size_t ev_index, c
   CryptoNote::COMMAND_RPC_GET_RANDOM_OUTPUTS_FOR_AMOUNTS_response resp;
 
   auto amount = MK_COINS(1);
-  auto unlocked = m_currency.minedMoneyUnlockWindow() / 2 + 1;
+  auto unlocked = m_currency.minedMoneyUnlockWindow() / 2;
 
   CHECK(request(c, amount, 0, resp));
   CHECK(resp.outs.size() == 1);
@@ -85,7 +80,7 @@ bool GetRandomOutputs::checkFullyUnlocked(CryptoNote::core& c, size_t ev_index, 
   CryptoNote::COMMAND_RPC_GET_RANDOM_OUTPUTS_FOR_AMOUNTS_response resp;
 
   auto amount = MK_COINS(1);
-  auto unlocked = m_currency.minedMoneyUnlockWindow() + 1;
+  auto unlocked = m_currency.minedMoneyUnlockWindow();
 
   CHECK(request(c, amount, unlocked, resp));
   CHECK(resp.outs.size() == 1);

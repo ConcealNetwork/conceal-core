@@ -1,7 +1,5 @@
 // Copyright (c) 2011-2016 The Cryptonote developers
-// Copyright (c) 2016-2018 krypt0x aka krypt0chaos
-// Copyright (c) 2018 The Circle Foundation
-//
+// Copyright (c) 2014-2016 SDN developers
 // Distributed under the MIT/X11 software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -48,7 +46,7 @@ public:
     auto tx = std::shared_ptr<ITransactionReader>(b1.build().release());
 
     std::vector<TransactionOutputInformationIn> outputs = { outInfo };
-    sub.addTransaction(TransactionBlockInfo{ height, 100000 }, *tx, outputs);
+    sub.addTransaction(TransactionBlockInfo{ height, 100000 }, *tx, outputs, {});
     return tx;
   }
 
@@ -77,7 +75,7 @@ TEST_F(TransfersSubscriptionTest, addTransaction) {
   // this transaction should not be added, so no notification
   auto tx = createTransaction();
   addTestInput(*tx, 20000);
-  sub.addTransaction(TransactionBlockInfo{ 2, 100000 }, *tx, {});
+  sub.addTransaction(TransactionBlockInfo{ 2, 100000 }, *tx, {}, {});
 
   ASSERT_EQ(2, sub.getContainer().transactionsCount());
   ASSERT_EQ(2, observer.updated.size());
@@ -123,7 +121,7 @@ TEST_F(TransfersSubscriptionTest, onError) {
 
 TEST_F(TransfersSubscriptionTest, advanceHeight) {
   ASSERT_TRUE(sub.advanceHeight(10));
-  ASSERT_FALSE(sub.advanceHeight(9)); // can't go backwards
+  ASSERT_ANY_THROW(sub.advanceHeight(9)); // can't go backwards
 }
 
 

@@ -1,7 +1,5 @@
 // Copyright (c) 2011-2016 The Cryptonote developers
-// Copyright (c) 2016-2018 krypt0x aka krypt0chaos
-// Copyright (c) 2018 The Circle Foundation
-//
+// Copyright (c) 2014-2016 SDN developers
 // Distributed under the MIT/X11 software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -742,6 +740,7 @@ TEST_F(TransfersConsumerTest, onNewBlocks_checkTransactionInformation) {
   ASSERT_EQ(10000, info.totalAmountIn);
   ASSERT_EQ(1000, info.totalAmountOut);
   ASSERT_EQ(paymentId, info.paymentId);
+  ASSERT_TRUE(info.messages.empty());
 }
 
 TEST_F(TransfersConsumerTest, onNewBlocks_manyBlocks) {
@@ -950,6 +949,33 @@ TEST_F(TransfersConsumerTest, getKnownPoolTxIds_returnsUnconfirmed) {
     auto txhash = txs[i]->getTransactionHash();
     ASSERT_EQ(1, ids.count(txhash));
   }
+}
+
+TEST_F(TransfersConsumerTest, onNewBlocks_getsDepositOutputCorrectly) {
+  auto& container = addSubscription().getContainer();
+
+  const uint64_t AMOUNT = 84756;
+  const uint32_t REQUIRED_SIGNATURES = 2;
+  const uint32_t TERM = 444021;
+
+  std::shared_ptr<ITransaction> tx = createTransaction();
+  tx->addOutput(AMOUNT, std::vector<AccountPublicAddress> {m_accountKeys.address}, REQUIRED_SIGNATURES, TERM);
+
+  CompleteBlock block;
+  block.block = CryptoNote::Block();
+  block.block->timestamp = 1235;
+  block.transactions.push_back(tx);
+
+  m_consumer.onNewBlocks(&block, 0, 1);
+
+  std::vector<TransactionOutputInformation> transfers;
+  container.getOutputs(transfers, ITransfersContainer::IncludeAll);
+
+  ASSERT_EQ(1, transfers.size());
+  EXPECT_EQ(TransactionTypes::OutputType::Multisignature, transfers[0].type);
+  EXPECT_EQ(AMOUNT, transfers[0].amount);
+  EXPECT_EQ(REQUIRED_SIGNATURES, transfers[0].requiredSignatures);
+  EXPECT_EQ(TERM, transfers[0].term);
 }
 
 

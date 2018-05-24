@@ -1,7 +1,5 @@
 // Copyright (c) 2011-2016 The Cryptonote developers
-// Copyright (c) 2016-2018 krypt0x aka krypt0chaos
-// Copyright (c) 2018 The Circle Foundation
-//
+// Copyright (c) 2014-2016 SDN developers
 // Distributed under the MIT/X11 software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -663,7 +661,7 @@ TEST_F(InProcessNodeTests, getLastLocalBlockTimestampError) {
 TEST_F(InProcessNodeTests, getPoolDiffereceNotInited) {
   CryptoNote::InProcessNode newNode(coreStub, protocolQueryStub);
 
-  std::vector<Crypto::Hash> knownPoolTxIds; 
+  std::vector<Crypto::Hash> knownPoolTxIds;
   Crypto::Hash knownBlockId = boost::value_initialized<Crypto::Hash>();
   bool isBcActual = false;
   std::vector<std::unique_ptr<ITransactionReader>> newTxs;
@@ -688,9 +686,9 @@ TEST_F(InProcessNodeTests, getPoolDiffereceActualBC) {
     transactionHashes.insert(CryptoNote::getObjectHash(tx));
     CryptoNote::tx_verification_context tvc = boost::value_initialized<tx_verification_context>();
     bool keptByBlock = false;
-    coreStub.handleIncomingTransaction(tx, CryptoNote::getObjectHash(tx), CryptoNote::getObjectBinarySize(tx), tvc, keptByBlock);
+    coreStub.handleIncomingTransaction(tx, CryptoNote::getObjectHash(tx), CryptoNote::getObjectBinarySize(tx), tvc, keptByBlock, 0);
     ASSERT_TRUE(tvc.m_added_to_pool);
-    ASSERT_FALSE(tvc.m_verifivation_failed);
+    ASSERT_FALSE(tvc.m_verification_failed);
   }
 
   ASSERT_EQ(transactionHashes.size(), POOL_TX_NUMBER);
@@ -727,9 +725,9 @@ TEST_F(InProcessNodeTests, getPoolDiffereceNotActualBC) {
     transactionHashes.insert(CryptoNote::getObjectHash(tx));
     CryptoNote::tx_verification_context tvc = boost::value_initialized<tx_verification_context>();
     bool keptByBlock = false;
-    coreStub.handleIncomingTransaction(tx, CryptoNote::getObjectHash(tx), CryptoNote::getObjectBinarySize(tx), tvc, keptByBlock);
+    coreStub.handleIncomingTransaction(tx, CryptoNote::getObjectHash(tx), CryptoNote::getObjectBinarySize(tx), tvc, keptByBlock, 0);
     ASSERT_TRUE(tvc.m_added_to_pool);
-    ASSERT_FALSE(tvc.m_verifivation_failed);
+    ASSERT_FALSE(tvc.m_verification_failed);
   }
 
   ASSERT_EQ(transactionHashes.size(), POOL_TX_NUMBER);

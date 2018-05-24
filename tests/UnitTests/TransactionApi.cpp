@@ -1,7 +1,5 @@
 // Copyright (c) 2011-2016 The Cryptonote developers
-// Copyright (c) 2016-2018 krypt0x aka krypt0chaos
-// Copyright (c) 2018 The Circle Foundation
-//
+// Copyright (c) 2014-2016 SDN developers
 // Distributed under the MIT/X11 software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -362,4 +360,47 @@ TEST_F(TransactionApi, unableToModifySignedTransaction) {
   tx->signInputMultisignature(index, srcTxKey, 0, generateAccountKeys());
 
   EXPECT_NO_FATAL_FAILURE(checkHashChanged());
+}
+
+TEST_F(TransactionApi, deserializeTransactionInputMultisignature) {
+  MultisignatureInput inputMsig;
+
+  inputMsig.amount = 1000;
+  inputMsig.outputIndex = 3;
+  inputMsig.signatureCount = 1;
+  inputMsig.term = 4235;
+
+  auto index = tx->addInput(inputMsig);
+
+  auto srcTxKey = CryptoNote::generateKeyPair().publicKey;
+  tx->signInputMultisignature(index, srcTxKey, 0, sender);
+
+  auto restoredTransaction = reloadedTx(tx);
+
+  MultisignatureInput restoredMsig;
+  restoredTransaction->getInput(index, restoredMsig);
+
+  EXPECT_EQ(restoredMsig.amount, inputMsig.amount);
+  EXPECT_EQ(restoredMsig.outputIndex, inputMsig.outputIndex);
+  EXPECT_EQ(restoredMsig.signatureCount, inputMsig.signatureCount);
+  EXPECT_EQ(restoredMsig.term, inputMsig.term);
+}
+
+TEST_F(TransactionApi, deserializeTransactionOutputMultisignature) {
+  std::vector<AccountPublicAddress> destinations = {generateAccountKeys().address, generateAccountKeys().address, generateAccountKeys().address};
+
+  const uint32_t REQUIRED_SIGNATURES = static_cast<uint32_t>(destinations.size());
+  const uint64_t AMOUNT = 82435;
+  const uint32_t TERM = 82835;
+
+  auto index = tx->addOutput(AMOUNT, destinations, REQUIRED_SIGNATURES, TERM);
+  auto restoredTransaction = reloadedTx(tx);
+
+  MultisignatureOutput msigOutput;
+  uint64_t outAmount;
+  restoredTransaction->getOutput(index, msigOutput, outAmount);
+
+  EXPECT_EQ(msigOutput.requiredSignatureCount, REQUIRED_SIGNATURES);
+  EXPECT_EQ(outAmount, AMOUNT);
+  EXPECT_EQ(msigOutput.term, TERM);
 }

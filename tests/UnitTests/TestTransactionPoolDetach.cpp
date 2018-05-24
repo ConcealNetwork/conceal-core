@@ -1,7 +1,5 @@
 // Copyright (c) 2011-2016 The Cryptonote developers
-// Copyright (c) 2016-2018 krypt0x aka krypt0chaos
-// Copyright (c) 2018 The Circle Foundation
-//
+// Copyright (c) 2014-2016 SDN developers
 // Distributed under the MIT/X11 software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -194,17 +192,6 @@ protected:
   std::future<std::error_code> syncCompletedFuture;
 
 };
-
-
-namespace CryptoNote {
-inline bool operator == (const TransactionOutputInformation& t1, const TransactionOutputInformation& t2) {
-  return
-    t1.type == t2.type &&
-    t1.amount == t2.amount &&
-    t1.outputInTransaction == t2.outputInTransaction &&
-    t1.transactionPublicKey == t2.transactionPublicKey;
-}
-}
 
 namespace {
   std::unique_ptr<ITransaction> createMoneyTransfer(
@@ -443,8 +430,8 @@ TEST_F(DetachTest, testDetachWithWallet) {
   ASSERT_EQ(txInfo.blockHeight, expectedTransactionBlockHeight);
   ASSERT_EQ(txInfo.totalAmount, tr.amount);
 
-  ASSERT_EQ(Bob.pendingBalance(), 0);
-  ASSERT_EQ(Bob.actualBalance(), tr.amount);
+  ASSERT_EQ(Bob.actualBalance(), 0);
+  ASSERT_EQ(Bob.pendingBalance(), tr.amount);
 
   m_node.startAlternativeChain(txInfo.blockHeight - 1);
   generator.generateEmptyBlocks(2);

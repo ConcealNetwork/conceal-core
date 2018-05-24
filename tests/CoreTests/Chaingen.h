@@ -1,7 +1,5 @@
 // Copyright (c) 2011-2016 The Cryptonote developers
-// Copyright (c) 2016-2018 krypt0x aka krypt0chaos
-// Copyright (c) 2018 The Circle Foundation
-//
+// Copyright (c) 2014-2016 SDN developers
 // Distributed under the MIT/X11 software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -206,7 +204,7 @@ template<class t_test_class>
 bool do_check_tx_verification_context(const CryptoNote::tx_verification_context& tvc, bool tx_added, size_t /*event_index*/, const CryptoNote::Transaction& /*tx*/, t_test_class&, long)
 {
   // Default block verification context check
-  if (tvc.m_verifivation_failed)
+  if (tvc.m_verification_failed)
     throw std::runtime_error("Transaction verification failed");
   return true;
 }
@@ -229,7 +227,7 @@ template<class t_test_class>
 bool do_check_block_verification_context(const CryptoNote::block_verification_context& bvc, size_t /*event_index*/, const CryptoNote::Block& /*blk*/, t_test_class&, long)
 {
   // Default block verification context check
-  if (bvc.m_verifivation_failed)
+  if (bvc.m_verification_failed)
     throw std::runtime_error("Block verification failed");
   return true;
 }

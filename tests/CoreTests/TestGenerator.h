@@ -1,7 +1,5 @@
 // Copyright (c) 2011-2016 The Cryptonote developers
-// Copyright (c) 2016-2018 krypt0x aka krypt0chaos
-// Copyright (c) 2018 The Circle Foundation
-//
+// Copyright (c) 2014-2016 SDN developers
 // Distributed under the MIT/X11 software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -15,6 +13,14 @@
 
 class TestGenerator {
 public:
+  TestGenerator(const test_generator& gen, const CryptoNote::AccountBase& miner, CryptoNote::Block last, const CryptoNote::Currency& currency, std::vector<test_event_entry>& eventsRef) :
+    lastBlock(last),
+      generator(gen),
+      minerAccount(miner),
+      events(eventsRef) {
+    minerAccount.generate();
+  }
+
   TestGenerator(
     const CryptoNote::Currency& currency, 
     std::vector<test_event_entry>& eventsRef) :
@@ -24,6 +30,7 @@ public:
     generator.constructBlock(genesisBlock, minerAccount, 1338224400);
     events.push_back(genesisBlock);
     lastBlock = genesisBlock;
+	height = 0;
   }
 
   const CryptoNote::Currency& currency() const { return generator.currency(); }
@@ -33,6 +40,7 @@ public:
     generator.constructBlock(block, lastBlock, minerAccount, txs);
     events.push_back(block);
     lastBlock = block;
+	++height;
   }
 
   void makeNextBlock(const CryptoNote::Transaction& tx) {
@@ -50,6 +58,7 @@ public:
       CryptoNote::Block next;
       generator.constructBlockManually(next, lastBlock, minerAccount, test_generator::bf_major_ver, majorVersion);
       lastBlock = next;
+	  ++height;
       events.push_back(next);
     }
   }
@@ -110,4 +119,6 @@ public:
   CryptoNote::Block lastBlock;
   CryptoNote::AccountBase minerAccount;
   std::vector<test_event_entry>& events;
+  
+  uint32_t height;
 };
