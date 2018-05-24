@@ -1,7 +1,5 @@
-// Copyright (c) 2011-2016 The Cryptonote developers
-// Copyright (c) 2016-2018 krypt0x aka krypt0chaos
+// Copyright (c) 2011-2017 The Cryptonote developers
 // Copyright (c) 2018 The Circle Foundation
-//
 // Distributed under the MIT/X11 software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -27,6 +25,7 @@ struct MultisignatureInput {
   uint64_t amount;
   uint8_t signatureCount;
   uint32_t outputIndex;
+  uint32_t term;
 };
 
 struct KeyOutput {
@@ -36,6 +35,7 @@ struct KeyOutput {
 struct MultisignatureOutput {
   std::vector<Crypto::PublicKey> keys;
   uint8_t requiredSignatureCount;
+  uint32_t term;
 };
 
 typedef boost::variant<BaseInput, KeyInput, MultisignatureInput> TransactionInput;

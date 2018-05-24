@@ -1,7 +1,5 @@
-// Copyright (c) 2011-2016 The Cryptonote developers
-// Copyright (c) 2016-2018 krypt0x aka krypt0chaos
+// Copyright (c) 2011-2017 The Cryptonote developers
 // Copyright (c) 2018 The Circle Foundation
-//
 // Distributed under the MIT/X11 software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -42,6 +40,13 @@ public:
    * for the same \a transactionHash.
    */
   virtual void onTransactionDeleted(ITransfersSubscription* object, const Crypto::Hash& transactionHash) {}
+
+  /**
+   * \note this method MUST be called after appropriate onTransactionUpdated has been called
+   */
+  virtual void onTransfersUnlocked(ITransfersSubscription* object, const std::vector<TransactionOutputInformation>& unlockedTransfers) {}
+
+  virtual void onTransfersLocked(ITransfersSubscription* object, const std::vector<TransactionOutputInformation>& lockedTransfers) {}
 };
 
 class ITransfersSubscription : public IObservable < ITransfersObserver > {
