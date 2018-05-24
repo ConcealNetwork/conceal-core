@@ -1,7 +1,5 @@
-// Copyright (c) 2011-2016 The Cryptonote developers
-// Copyright (c) 2016-2018 krypt0x aka krypt0chaos
+// Copyright (c) 2011-2017 The Cryptonote developers
 // Copyright (c) 2018 The Circle Foundation
-//
 // Distributed under the MIT/X11 software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -9,6 +7,7 @@
 
 #include <set>
 #include <Logging/LoggerRef.h>
+#include <Common/int-util.h>
 #include <Common/Varint.h>
 
 #include "Serialization/BinaryOutputStreamSerializer.h"
@@ -71,42 +70,12 @@ uint64_t power_integral(uint64_t a, uint64_t b) {
   return total;
 }
 
-bool get_tx_fee(const Transaction& tx, uint64_t & fee) {
-  uint64_t amount_in = 0;
-  uint64_t amount_out = 0;
-
-  for (const auto& in : tx.inputs) {
-    if (in.type() == typeid(KeyInput)) {
-      amount_in += boost::get<KeyInput>(in).amount;
-    } else if (in.type() == typeid(MultisignatureInput)) {
-      amount_in += boost::get<MultisignatureInput>(in).amount;
-    }
-  }
-
-  for (const auto& o : tx.outputs) {
-    amount_out += o.amount;
-  }
-
-  if (!(amount_in >= amount_out)) {
-    return false;
-  }
-
-  fee = amount_in - amount_out;
-  return true;
-}
-
-uint64_t get_tx_fee(const Transaction& tx) {
-  uint64_t r = 0;
-  if (!get_tx_fee(tx, r))
-    return 0;
-  return r;
-}
-
-
 bool constructTransaction(
   const AccountKeys& sender_account_keys,
   const std::vector<TransactionSourceEntry>& sources,
   const std::vector<TransactionDestinationEntry>& destinations,
+  const std::vector<tx_message_entry>& messages,
+  uint64_t ttl,
   std::vector<uint8_t> extra,
   Transaction& tx,
   uint64_t unlock_time,
@@ -117,7 +86,7 @@ bool constructTransaction(
   tx.outputs.clear();
   tx.signatures.clear();
 
-  tx.version = CURRENT_TRANSACTION_VERSION;
+  tx.version = TRANSACTION_VERSION_1;
   tx.unlockTime = unlock_time;
 
   tx.extra = extra;
@@ -217,6 +186,22 @@ bool constructTransaction(
     return false;
   }
 
+  for (size_t i = 0; i < messages.size(); i++) {
+    const tx_message_entry &msg = messages[i];
+    tx_extra_message tag;
+    if (!tag.encrypt(i, msg.message, msg.encrypt ? &msg.addr : NULL, txkey)) {
+      return false;
+    }
+
+    if (!append_message_to_extra(tx.extra, tag)) {
+      return false;
+    }
+  }
+
+  if (ttl != 0) {
+    appendTTLToExtra(tx.extra, ttl);
+  }
+
   //generate ring signatures
   Hash tx_prefix_hash;
   getObjectHash(*static_cast<TransactionPrefix*>(&tx), tx_prefix_hash);
@@ -269,7 +254,12 @@ uint32_t get_block_height(const Block& b) {
 
 bool check_inputs_types_supported(const TransactionPrefix& tx) {
   for (const auto& in : tx.inputs) {
-    if (in.type() != typeid(KeyInput) && in.type() != typeid(MultisignatureInput)) {
+    const auto& inputType = in.type();
+    if (inputType == typeid(MultisignatureInput)) {
+      if (tx.version < TRANSACTION_VERSION_2) {
+        return false;
+      }
+    } else if (in.type() != typeid(KeyInput) && in.type() != typeid(MultisignatureInput)) {
       return false;
     }
   }
@@ -294,6 +284,11 @@ bool check_outs_valid(const TransactionPrefix& tx, std::string* error) {
         return false;
       }
     } else if (out.target.type() == typeid(MultisignatureOutput)) {
+      if (tx.version < TRANSACTION_VERSION_2) {
+        *error = "Transaction contains multisignature output but its version is less than 2";
+        return false;
+      }
+
       const MultisignatureOutput& multisignatureOutput = ::boost::get<MultisignatureOutput>(out.target);
       if (multisignatureOutput.requiredSignatureCount > multisignatureOutput.keys.size()) {
         if (error) {
@@ -347,6 +342,22 @@ bool check_inputs_overflow(const TransactionPrefix &tx) {
       amount = boost::get<KeyInput>(in).amount;
     } else if (in.type() == typeid(MultisignatureInput)) {
       amount = boost::get<MultisignatureInput>(in).amount;
+      if (boost::get<MultisignatureInput>(in).term != 0) {
+        uint64_t hi;
+        uint64_t lo = mul128(amount, CryptoNote::parameters::DEPOSIT_MAX_TOTAL_RATE, &hi);
+        uint64_t maxInterestHi;
+        uint64_t maxInterestLo;
+        div128_32(hi, lo, 100, &maxInterestHi, &maxInterestLo);
+        if (maxInterestHi > 0) {
+          return false;
+        }
+
+        if (amount > std::numeric_limits<uint64_t>::max() - maxInterestLo) {
+          return false;
+        }
+
+        amount += maxInterestLo;
+      }
     }
 
     if (money > amount + money)

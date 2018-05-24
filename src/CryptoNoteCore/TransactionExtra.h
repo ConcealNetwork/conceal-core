@@ -1,12 +1,11 @@
-// Copyright (c) 2011-2016 The Cryptonote developers
-// Copyright (c) 2016-2018 krypt0x aka krypt0chaos
+// Copyright (c) 2011-2017 The Cryptonote developers
 // Copyright (c) 2018 The Circle Foundation
-//
 // Distributed under the MIT/X11 software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #pragma once
 
+#include <string>
 #include <vector>
 #include <boost/variant.hpp>
 
@@ -18,10 +17,15 @@
 #define TX_EXTRA_TAG_PADDING                0x00
 #define TX_EXTRA_TAG_PUBKEY                 0x01
 #define TX_EXTRA_NONCE                      0x02
+#define TX_EXTRA_MERGE_MINING_TAG           0x03
+#define TX_EXTRA_MESSAGE_TAG                0x04
+#define TX_EXTRA_TTL                        0x05
 
 #define TX_EXTRA_NONCE_PAYMENT_ID           0x00
 
 namespace CryptoNote {
+
+class ISerializer;
 
 struct TransactionExtraPadding {
   size_t size;
@@ -35,11 +39,29 @@ struct TransactionExtraNonce {
   std::vector<uint8_t> nonce;
 };
 
+struct TransactionExtraMergeMiningTag {
+  size_t depth;
+  Crypto::Hash merkleRoot;
+};
+
+struct tx_extra_message {
+  std::string data;
+
+  bool encrypt(std::size_t index, const std::string &message, const AccountPublicAddress* recipient, const KeyPair &txkey);
+  bool decrypt(std::size_t index, const Crypto::PublicKey &txkey, const Crypto::SecretKey *recepient_secret_key, std::string &message) const;
+
+  bool serialize(ISerializer& serializer);
+};
+
+struct TransactionExtraTTL {
+  uint64_t ttl;
+};
+
 // tx_extra_field format, except tx_extra_padding and tx_extra_pub_key:
 //   varint tag;
 //   varint size;
 //   varint data[];
-typedef boost::variant<TransactionExtraPadding, TransactionExtraPublicKey, TransactionExtraNonce> TransactionExtraField;
+typedef boost::variant<TransactionExtraPadding, TransactionExtraPublicKey, TransactionExtraNonce, TransactionExtraMergeMiningTag, tx_extra_message, TransactionExtraTTL> TransactionExtraField;
 
 
 
@@ -63,6 +85,10 @@ bool addTransactionPublicKeyToExtra(std::vector<uint8_t>& tx_extra, const Crypto
 bool addExtraNonceToTransactionExtra(std::vector<uint8_t>& tx_extra, const BinaryArray& extra_nonce);
 void setPaymentIdToTransactionExtraNonce(BinaryArray& extra_nonce, const Crypto::Hash& payment_id);
 bool getPaymentIdFromTransactionExtraNonce(const BinaryArray& extra_nonce, Crypto::Hash& payment_id);
+bool appendMergeMiningTagToExtra(std::vector<uint8_t>& tx_extra, const TransactionExtraMergeMiningTag& mm_tag);
+bool append_message_to_extra(std::vector<uint8_t>& tx_extra, const tx_extra_message& message);
+std::vector<std::string> get_messages_from_extra(const std::vector<uint8_t>& extra, const Crypto::PublicKey &txkey, const Crypto::SecretKey *recepient_secret_key);
+void appendTTLToExtra(std::vector<uint8_t>& tx_extra, uint64_t ttl);
 
 bool createTxExtraWithPaymentId(const std::string& paymentIdString, std::vector<uint8_t>& extra);
 //returns false if payment id is not found or parse error

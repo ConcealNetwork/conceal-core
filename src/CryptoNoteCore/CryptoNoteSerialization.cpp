@@ -1,7 +1,5 @@
-// Copyright (c) 2011-2016 The Cryptonote developers
-// Copyright (c) 2016-2018 krypt0x aka krypt0chaos
+// Copyright (c) 2011-2017 The Cryptonote developers
 // Copyright (c) 2018 The Circle Foundation
-//
 // Distributed under the MIT/X11 software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -152,7 +150,7 @@ bool serialize(KeyImage& keyImage, Common::StringView name, CryptoNote::ISeriali
   return serializePod(keyImage, name, serializer);
 }
 
-bool serialize(chacha8_iv& chacha, Common::StringView name, CryptoNote::ISerializer& serializer) {
+bool serialize(chacha_iv& chacha, Common::StringView name, CryptoNote::ISerializer& serializer) {
   return serializePod(chacha, name, serializer);
 }
 
@@ -175,7 +173,7 @@ namespace CryptoNote {
 void serialize(TransactionPrefix& txP, ISerializer& serializer) {
   serializer(txP.version, "version");
 
-  if (CURRENT_TRANSACTION_VERSION < txP.version) {
+  if (TRANSACTION_VERSION_2 < txP.version) {
     throw std::runtime_error("Wrong transaction version");
   }
 
@@ -262,6 +260,7 @@ void serialize(MultisignatureInput& multisignature, ISerializer& serializer) {
   serializer(multisignature.amount, "amount");
   serializer(multisignature.signatureCount, "signatures");
   serializer(multisignature.outputIndex, "outputIndex");
+  serializer(multisignature.term, "term");
 }
 
 void serialize(TransactionOutput& output, ISerializer& serializer) {
@@ -292,11 +291,12 @@ void serialize(KeyOutput& key, ISerializer& serializer) {
 void serialize(MultisignatureOutput& multisignature, ISerializer& serializer) {
   serializer(multisignature.keys, "keys");
   serializer(multisignature.requiredSignatureCount, "required_signatures");
+  serializer(multisignature.term, "term");
 }
 
 void serializeBlockHeader(BlockHeader& header, ISerializer& serializer) {
   serializer(header.majorVersion, "major_version");
-  if (header.majorVersion > BLOCK_MAJOR_VERSION_1) {
+  if (header.majorVersion > BLOCK_MAJOR_VERSION_2) {
     throw std::runtime_error("Wrong major version");
   }
 
@@ -326,6 +326,29 @@ void serialize(AccountKeys& keys, ISerializer& s) {
   s(keys.address, "m_account_address");
   s(keys.spendSecretKey, "m_spend_secret_key");
   s(keys.viewSecretKey, "m_view_secret_key");
+}
+
+void doSerialize(TransactionExtraMergeMiningTag& tag, ISerializer& serializer) {
+  uint64_t depth = static_cast<uint64_t>(tag.depth);
+  serializer(depth, "depth");
+  tag.depth = static_cast<size_t>(depth);
+  serializer(tag.merkleRoot, "merkle_root");
+}
+
+void serialize(TransactionExtraMergeMiningTag& tag, ISerializer& serializer) {
+  if (serializer.type() == ISerializer::OUTPUT) {
+    std::string field;
+    StringOutputStream os(field);
+    BinaryOutputStreamSerializer output(os);
+    doSerialize(tag, output);
+    serializer(field, "");
+  } else {
+    std::string field;
+    serializer(field, "");
+    MemoryInputStream stream(field.data(), field.size());
+    BinaryInputStreamSerializer input(stream);
+    doSerialize(tag, input);
+  }
 }
 
 void serialize(KeyPair& keyPair, ISerializer& serializer) {

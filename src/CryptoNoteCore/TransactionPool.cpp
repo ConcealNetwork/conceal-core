@@ -1,7 +1,5 @@
-// Copyright (c) 2011-2016 The Cryptonote developers
-// Copyright (c) 2016-2018 krypt0x aka krypt0chaos
+// Copyright (c) 2011-2017 The Cryptonote developers
 // Copyright (c) 2018 The Circle Foundation
-//
 // Distributed under the MIT/X11 software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -24,6 +22,10 @@
 #include "CryptoNoteFormatUtils.h"
 #include "CryptoNoteTools.h"
 #include "CryptoNoteConfig.h"
+#include "Transfers/TransfersContainer.h"
+#include "IWallet.h"
+#include "Blockchain.h"
+#include "TransactionExtra.h"
 
 using namespace Logging;
 
@@ -38,8 +40,9 @@ namespace CryptoNote {
   public:
 
     bool addTransaction(const Crypto::Hash& txid, const Transaction& tx) {
-      if (!canAdd(tx))
+      if (!canAdd(tx)) {
         return false;
+      }
 
       for (const auto& in : tx.inputs) {
         if (in.type() == typeid(KeyInput)) {
@@ -63,7 +66,6 @@ namespace CryptoNote {
     }
 
   private:
-
     bool canAdd(const Transaction& tx) {
       for (const auto& in : tx.inputs) {
         if (in.type() == typeid(KeyInput)) {
@@ -79,7 +81,7 @@ namespace CryptoNote {
       }
       return true;
     }
-    
+
     std::unordered_set<Crypto::KeyImage> m_keyImages;
     std::set<std::pair<uint64_t, uint64_t>> m_usedOutputs;
     std::vector<Crypto::Hash> m_txHashes;
@@ -89,47 +91,68 @@ namespace CryptoNote {
 
   //---------------------------------------------------------------------------------
   tx_memory_pool::tx_memory_pool(
-    const CryptoNote::Currency& currency, 
-    CryptoNote::ITransactionValidator& validator, 
+    const CryptoNote::Currency& currency,
+    CryptoNote::ITransactionValidator& validator,
     CryptoNote::ITimeProvider& timeProvider,
     Logging::ILogger& log) :
     m_currency(currency),
-    m_validator(validator), 
-    m_timeProvider(timeProvider), 
+    m_validator(validator),
+    m_timeProvider(timeProvider),
     m_txCheckInterval(60, timeProvider),
     m_fee_index(boost::get<1>(m_transactions)),
     logger(log, "txpool") {
   }
   //---------------------------------------------------------------------------------
-  bool tx_memory_pool::add_tx(const Transaction &tx, /*const Crypto::Hash& tx_prefix_hash,*/ const Crypto::Hash &id, size_t blobSize, tx_verification_context& tvc, bool keptByBlock) {
+  bool tx_memory_pool::add_tx(const Transaction &tx, /*const Crypto::Hash& tx_prefix_hash,*/ const Crypto::Hash &id, size_t blobSize, tx_verification_context& tvc, bool keptByBlock, uint32_t height) {
     if (!check_inputs_types_supported(tx)) {
-      tvc.m_verifivation_failed = true;
+      tvc.m_verification_failed = true;
       return false;
     }
 
-    uint64_t inputs_amount = 0;
-    if (!get_inputs_money_amount(tx, inputs_amount)) {
-      tvc.m_verifivation_failed = true;
-      return false;
-    }
-
+    uint64_t inputs_amount = m_currency.getTransactionAllInputsAmount(tx, height);
     uint64_t outputs_amount = get_outs_money_amount(tx);
 
     if (outputs_amount > inputs_amount) {
       logger(INFO) << "transaction use more money then it has: use " << m_currency.formatAmount(outputs_amount) <<
         ", have " << m_currency.formatAmount(inputs_amount);
-      tvc.m_verifivation_failed = true;
+      tvc.m_verification_failed = true;
       return false;
     }
 
-    const uint64_t fee = inputs_amount - outputs_amount;
+    std::vector<TransactionExtraField> txExtraFields;
+    parseTransactionExtra(tx.extra, txExtraFields);
+    TransactionExtraTTL ttl;
+    if (!findTransactionExtraFieldByType(txExtraFields, ttl)) {
+      ttl.ttl = 0;
+    }
+
+    const uint64_t fee = inputs_amount < outputs_amount ? CryptoNote::parameters::MINIMUM_FEE : inputs_amount - outputs_amount;
     bool isFusionTransaction = fee == 0 && m_currency.isFusionTransaction(tx, blobSize);
-    if (!keptByBlock && !isFusionTransaction && fee < m_currency.minimumFee()) {
+    if (!keptByBlock && !isFusionTransaction && ttl.ttl == 0 && fee < m_currency.minimumFee()) {
       logger(INFO) << "transaction fee is not enough: " << m_currency.formatAmount(fee) <<
         ", minimum fee: " << m_currency.formatAmount(m_currency.minimumFee());
-      tvc.m_verifivation_failed = true;
+      tvc.m_verification_failed = true;
       tvc.m_tx_fee_too_small = true;
       return false;
+    }
+
+    if (ttl.ttl != 0 && !keptByBlock) {
+      uint64_t now = static_cast<uint64_t>(time(nullptr));
+      if (ttl.ttl <= now) {
+        logger(WARNING, BRIGHT_YELLOW) << "Transaction TTL has already expired: tx = " << id << ", ttl = " << ttl.ttl;
+        tvc.m_verification_failed = true;
+        return false;
+      } else if (ttl.ttl - now > m_currency.mempoolTxLiveTime() + m_currency.blockFutureTimeLimit()) {
+        logger(WARNING, BRIGHT_YELLOW) << "Transaction TTL is out of range: tx = " << id << ", ttl = " << ttl.ttl;
+        tvc.m_verification_failed = true;
+        return false;
+      }
+
+      if (fee != 0) {
+        logger(WARNING, BRIGHT_YELLOW) << "Transaction with TTL has non-zero fee: tx = " << id << ", fee = " << m_currency.formatAmount(fee);
+        tvc.m_verification_failed = true;
+        return false;
+      }
     }
 
     //check key images for transaction if it is not kept by block
@@ -137,7 +160,7 @@ namespace CryptoNote {
       std::lock_guard<std::recursive_mutex> lock(m_transactions_lock);
       if (haveSpentInputs(tx)) {
         logger(INFO) << "Transaction with id= " << id << " used already spent inputs";
-        tvc.m_verifivation_failed = true;
+        tvc.m_verification_failed = true;
         return false;
       }
     }
@@ -150,19 +173,19 @@ namespace CryptoNote {
     if (!inputsValid) {
       if (!keptByBlock) {
         logger(INFO) << "tx used wrong inputs, rejected";
-        tvc.m_verifivation_failed = true;
+        tvc.m_verification_failed = true;
         return false;
       }
 
       maxUsedBlock.clear();
-      tvc.m_verifivation_impossible = true;
+      tvc.m_verification_impossible = true;
     }
 
     if (!keptByBlock) {
       bool sizeValid = m_validator.checkTransactionSize(blobSize);
       if (!sizeValid) {
         logger(INFO) << "tx too big, rejected";
-        tvc.m_verifivation_failed = true;
+        tvc.m_verification_failed = true;
         return false;
       }
     }
@@ -171,7 +194,7 @@ namespace CryptoNote {
 
     if (!keptByBlock && m_recentlyDeletedTransactions.find(id) != m_recentlyDeletedTransactions.end()) {
       logger(INFO) << "Trying to add recently deleted transaction. Ignore: " << id;
-      tvc.m_verifivation_failed = false;
+      tvc.m_verification_failed = false;
       tvc.m_should_be_relayed = false;
       tvc.m_added_to_pool = false;
       return true;
@@ -199,26 +222,29 @@ namespace CryptoNote {
       m_paymentIdIndex.add(txd.tx);
       m_timestampIndex.add(txd.receiveTime, txd.id);
 
+      if (ttl.ttl != 0) {
+        m_ttlIndex.emplace(std::make_pair(id, ttl.ttl));
+      }
     }
 
     tvc.m_added_to_pool = true;
-    tvc.m_should_be_relayed = inputsValid && (fee > 0 || isFusionTransaction);
-    tvc.m_verifivation_failed = true;
+    tvc.m_should_be_relayed = inputsValid && (fee > 0 || isFusionTransaction || ttl.ttl != 0);
+    tvc.m_verification_failed = true;
 
     if (!addTransactionInputs(id, tx, keptByBlock))
       return false;
 
-    tvc.m_verifivation_failed = false;
+    tvc.m_verification_failed = false;
     //succeed
     return true;
   }
 
   //---------------------------------------------------------------------------------
-  bool tx_memory_pool::add_tx(const Transaction &tx, tx_verification_context& tvc, bool keeped_by_block) {
+  bool tx_memory_pool::add_tx(const Transaction &tx, tx_verification_context& tvc, bool keeped_by_block, uint32_t height) {
     Crypto::Hash h = NULL_HASH;
     size_t blobSize = 0;
     getObjectHash(tx, h, blobSize);
-    return add_tx(tx, h, blobSize, tvc, keeped_by_block);
+    return add_tx(tx, h, blobSize, tvc, keeped_by_block, height);
   }
   //---------------------------------------------------------------------------------
   bool tx_memory_pool::take_tx(const Crypto::Hash &id, Transaction &tx, size_t& blobSize, uint64_t& fee) {
@@ -289,6 +315,7 @@ namespace CryptoNote {
     if (m_transactions.count(id)) {
       return true;
     }
+
     return false;
   }
   //---------------------------------------------------------------------------------
@@ -307,12 +334,14 @@ namespace CryptoNote {
   //---------------------------------------------------------------------------------
   bool tx_memory_pool::is_transaction_ready_to_go(const Transaction& tx, TransactionCheckInfo& txd) const {
 
-    if (!m_validator.checkTransactionInputs(tx, txd.maxUsedBlock, txd.lastFailedBlock))
+    if (!m_validator.checkTransactionInputs(tx, txd.maxUsedBlock, txd.lastFailedBlock)) {
       return false;
+    }
 
     //if we here, transaction seems valid, but, anyway, check for key_images collisions with blockchain, just to be sure
-    if (m_validator.haveSpentKeyImages(tx))
+    if (m_validator.haveSpentKeyImages(tx)) {
       return false;
+    }
 
     //transaction is ok.
     return true;
@@ -323,7 +352,7 @@ namespace CryptoNote {
     std::lock_guard<std::recursive_mutex> lock(m_transactions_lock);
     for (const auto& txd : m_fee_index) {
       ss << "id: " << txd.id << std::endl;
-      
+
       if (!short_format) {
         ss << storeToJson(txd.tx) << std::endl;
       }
@@ -335,7 +364,15 @@ namespace CryptoNote {
         << "max_used_block_id: " << txd.maxUsedBlock.id << std::endl
         << "last_failed_height: " << txd.lastFailedBlock.height << std::endl
         << "last_failed_id: " << txd.lastFailedBlock.id << std::endl
-        << "received: " << std::ctime(&txd.receiveTime) << std::endl;
+        << "received: " << std::ctime(&txd.receiveTime);
+
+      auto ttlIt = m_ttlIndex.find(txd.id);
+      if (ttlIt != m_ttlIndex.end()) {
+        // ctime() returns string that ends with new line
+        ss << "TTL: " << std::ctime(reinterpret_cast<const time_t*>(&ttlIt->second));
+      }
+
+      ss << std::endl;
     }
 
     return ss.str();
@@ -343,18 +380,23 @@ namespace CryptoNote {
   //---------------------------------------------------------------------------------
   bool tx_memory_pool::fill_block_template(Block& bl, size_t median_size, size_t maxCumulativeSize,
                                            uint64_t already_generated_coins, size_t& total_size, uint64_t& fee) {
+
     std::lock_guard<std::recursive_mutex> lock(m_transactions_lock);
 
     total_size = 0;
     fee = 0;
 
-    size_t max_total_size = 2 * median_size - m_currency.minerTxBlobReservedSize();
+    size_t max_total_size = (125 * median_size) / 100 - m_currency.minerTxBlobReservedSize();
     max_total_size = std::min(max_total_size, maxCumulativeSize);
 
     BlockTemplate blockTemplate;
 
     for (auto it = m_fee_index.rbegin(); it != m_fee_index.rend() && it->fee == 0; ++it) {
       const auto& txd = *it;
+
+      if (m_ttlIndex.count(txd.id) > 0) {
+        continue;
+      }
 
       if (m_currency.fusionTxMaxSize() < total_size + txd.blobSize) {
         continue;
@@ -368,6 +410,10 @@ namespace CryptoNote {
 
     for (auto i = m_fee_index.begin(); i != m_fee_index.end(); ++i) {
       const auto& txd = *i;
+
+      if (m_ttlIndex.count(txd.id) > 0) {
+        continue;
+      }
 
       size_t blockSizeLimit = (txd.fee == 0) ? median_size : max_total_size;
       if (blockSizeLimit < total_size + txd.blobSize) {
@@ -411,6 +457,7 @@ namespace CryptoNote {
 
       m_paymentIdIndex.clear();
       m_timestampIndex.clear();
+      m_ttlIndex.clear();
     } else {
       buildIndices();
     }
@@ -435,7 +482,8 @@ namespace CryptoNote {
 
     m_paymentIdIndex.clear();
     m_timestampIndex.clear();
-    
+    m_ttlIndex.clear();
+
     return true;
   }
 
@@ -456,7 +504,6 @@ namespace CryptoNote {
 
   //---------------------------------------------------------------------------------
   void tx_memory_pool::serialize(ISerializer& s) {
-
     uint8_t version = CURRENT_MEMPOOL_ARCHIVE_VER;
 
     s(version, "version");
@@ -505,8 +552,16 @@ namespace CryptoNote {
         uint64_t txAge = now - it->receiveTime;
         bool remove = txAge > (it->keptByBlock ? m_currency.mempoolTxFromAltBlockLiveTime() : m_currency.mempoolTxLiveTime());
 
-        if (remove) {
-          logger(TRACE) << "Tx " << it->id << " removed from tx pool due to outdated, age: " << txAge;
+        auto ttlIt = m_ttlIndex.find(it->id);
+        bool ttlExpired = (ttlIt != m_ttlIndex.end() && ttlIt->second <= now);
+
+        if (remove || ttlExpired) {
+          if (ttlExpired) {
+            logger(TRACE) << "Tx " << it->id << " removed from tx pool due to expired TTL, TTL : " << ttlIt->second;
+          } else {
+            logger(TRACE) << "Tx " << it->id << " removed from tx pool due to outdated, age: " << txAge;
+          }
+
           m_recentlyDeletedTransactions.emplace(it->id, now);
           it = removeTransaction(it);
           somethingRemoved = true;
@@ -527,6 +582,7 @@ namespace CryptoNote {
     removeTransactionInputs(i->id, i->tx, i->keptByBlock);
     m_paymentIdIndex.remove(i->tx);
     m_timestampIndex.remove(i->receiveTime, i->id);
+    m_ttlIndex.erase(i->id);
     return m_transactions.erase(i);
   }
 
@@ -625,6 +681,15 @@ namespace CryptoNote {
     for (auto it = m_transactions.begin(); it != m_transactions.end(); it++) {
       m_paymentIdIndex.add(it->tx);
       m_timestampIndex.add(it->receiveTime, it->id);
+
+      std::vector<TransactionExtraField> txExtraFields;
+      parseTransactionExtra(it->tx.extra, txExtraFields);
+      TransactionExtraTTL ttl;
+      if (findTransactionExtraFieldByType(txExtraFields, ttl)) {
+        if (ttl.ttl != 0) {
+          m_ttlIndex.emplace(std::make_pair(it->id, ttl.ttl));
+        }
+      }
     }
   }
 

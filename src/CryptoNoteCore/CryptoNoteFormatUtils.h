@@ -1,7 +1,5 @@
-// Copyright (c) 2011-2016 The Cryptonote developers
-// Copyright (c) 2016-2018 krypt0x aka krypt0chaos
+// Copyright (c) 2011-2017 The Cryptonote developers
 // Copyright (c) 2018 The Circle Foundation
-//
 // Distributed under the MIT/X11 software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -41,20 +39,33 @@ struct TransactionDestinationEntry {
   TransactionDestinationEntry(uint64_t amount, const AccountPublicAddress &addr) : amount(amount), addr(addr) {}
 };
 
+struct tx_message_entry
+{
+  std::string message;
+  bool encrypt;
+  AccountPublicAddress addr;
+};
 
 bool constructTransaction(
   const AccountKeys& senderAccountKeys,
   const std::vector<TransactionSourceEntry>& sources,
   const std::vector<TransactionDestinationEntry>& destinations,
-  std::vector<uint8_t> extra, Transaction& transaction, uint64_t unlock_time, Logging::ILogger& log);
+  const std::vector<tx_message_entry>& messages,
+  uint64_t ttl, std::vector<uint8_t> extra, Transaction& transaction, uint64_t unlock_time, Logging::ILogger& log);
 
+inline bool constructTransaction(
+  const AccountKeys& sender_account_keys,
+  const std::vector<TransactionSourceEntry>& sources,
+  const std::vector<TransactionDestinationEntry>& destinations,
+  std::vector<uint8_t> extra, Transaction& tx, uint64_t unlock_time, Logging::ILogger& log) {
+
+  return constructTransaction(sender_account_keys, sources, destinations, std::vector<tx_message_entry>(), 0, extra, tx, unlock_time, log);
+}
 
 bool is_out_to_acc(const AccountKeys& acc, const KeyOutput& out_key, const Crypto::PublicKey& tx_pub_key, size_t keyIndex);
 bool is_out_to_acc(const AccountKeys& acc, const KeyOutput& out_key, const Crypto::KeyDerivation& derivation, size_t keyIndex);
 bool lookup_acc_outs(const AccountKeys& acc, const Transaction& tx, const Crypto::PublicKey& tx_pub_key, std::vector<size_t>& outs, uint64_t& money_transfered);
 bool lookup_acc_outs(const AccountKeys& acc, const Transaction& tx, std::vector<size_t>& outs, uint64_t& money_transfered);
-bool get_tx_fee(const Transaction& tx, uint64_t & fee);
-uint64_t get_tx_fee(const Transaction& tx);
 bool generate_key_image_helper(const AccountKeys& ack, const Crypto::PublicKey& tx_public_key, size_t real_output_index, KeyPair& in_ephemeral, Crypto::KeyImage& ki);
 std::string short_hash_str(const Crypto::Hash& h);
 

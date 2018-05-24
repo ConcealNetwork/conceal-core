@@ -1,7 +1,5 @@
-// Copyright (c) 2011-2016 The Cryptonote developers
-// Copyright (c) 2016-2018 krypt0x aka krypt0chaos
+// Copyright (c) 2011-2017 The Cryptonote developers
 // Copyright (c) 2018 The Circle Foundation
-//
 // Distributed under the MIT/X11 software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -46,6 +44,7 @@ uint64_t getTransactionInputAmount(const TransactionInput& in) {
     return boost::get<KeyInput>(in).amount;
   }
   if (in.type() == typeid(MultisignatureInput)) {
+    // TODO calculate interest
     return boost::get<MultisignatureInput>(in).amount;
   }
   return 0;

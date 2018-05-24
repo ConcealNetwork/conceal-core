@@ -1,7 +1,5 @@
-// Copyright (c) 2011-2016 The Cryptonote developers
-// Copyright (c) 2016-2018 krypt0x aka krypt0chaos
+// Copyright (c) 2011-2017 The Cryptonote developers
 // Copyright (c) 2018 The Circle Foundation
-//
 // Distributed under the MIT/X11 software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -48,7 +46,7 @@ CryptoNoteProtocolHandler::CryptoNoteProtocolHandler(const Currency& currency, S
   m_observedHeight(0),
   m_peersCount(0),
   logger(log, "protocol") {
-  
+
   if (!m_p2p) {
     m_p2p = &m_p2p_stub;
   }
@@ -239,7 +237,7 @@ int CryptoNoteProtocolHandler::handle_notify_new_block(int command, NOTIFY_NEW_B
   for (auto tx_blob_it = arg.b.txs.begin(); tx_blob_it != arg.b.txs.end(); tx_blob_it++) {
     CryptoNote::tx_verification_context tvc = boost::value_initialized<decltype(tvc)>();
     m_core.handle_incoming_tx(asBinaryArray(*tx_blob_it), tvc, true);
-    if (tvc.m_verifivation_failed) {
+    if (tvc.m_verification_failed) {
       logger(Logging::INFO) << context << "Block verification failed: transaction verification failed, dropping connection";
       context.m_state = CryptoNoteConnectionContext::state_shutdown;
       return 1;
@@ -248,7 +246,7 @@ int CryptoNoteProtocolHandler::handle_notify_new_block(int command, NOTIFY_NEW_B
 
   block_verification_context bvc = boost::value_initialized<block_verification_context>();
   m_core.handle_incoming_block_blob(asBinaryArray(arg.b.block), bvc, true, false);
-  if (bvc.m_verifivation_failed) {
+  if (bvc.m_verification_failed) {
     logger(Logging::DEBUGGING) << context << "Block verification failed, dropping connection";
     context.m_state = CryptoNoteConnectionContext::state_shutdown;
     return 1;
@@ -281,10 +279,10 @@ int CryptoNoteProtocolHandler::handle_notify_new_transactions(int command, NOTIF
   for (auto tx_blob_it = arg.txs.begin(); tx_blob_it != arg.txs.end();) {
     CryptoNote::tx_verification_context tvc = boost::value_initialized<decltype(tvc)>();
     m_core.handle_incoming_tx(asBinaryArray(*tx_blob_it), tvc, false);
-    if (tvc.m_verifivation_failed) {
+    if (tvc.m_verification_failed) {
       logger(Logging::INFO) << context << "Tx verification failed";
     }
-    if (!tvc.m_verifivation_failed && tvc.m_should_be_relayed) {
+    if (!tvc.m_verification_failed && tvc.m_should_be_relayed) {
       ++tx_blob_it;
     } else {
       tx_blob_it = arg.txs.erase(tx_blob_it);
@@ -408,7 +406,7 @@ int CryptoNoteProtocolHandler::processObjects(CryptoNoteConnectionContext& conte
     for (auto& tx_blob : block_entry.txs) {
       tx_verification_context tvc = boost::value_initialized<decltype(tvc)>();
       m_core.handle_incoming_tx(asBinaryArray(tx_blob), tvc, true);
-      if (tvc.m_verifivation_failed) {
+      if (tvc.m_verification_failed) {
         logger(Logging::ERROR) << context << "transaction verification failed on NOTIFY_RESPONSE_GET_OBJECTS, \r\ntx_id = "
           << Common::podToHex(getBinaryArrayHash(asBinaryArray(tx_blob))) << ", dropping connection";
         context.m_state = CryptoNoteConnectionContext::state_shutdown;
@@ -420,7 +418,7 @@ int CryptoNoteProtocolHandler::processObjects(CryptoNoteConnectionContext& conte
     block_verification_context bvc = boost::value_initialized<block_verification_context>();
     m_core.handle_incoming_block_blob(asBinaryArray(block_entry.block), bvc, false, false);
 
-    if (bvc.m_verifivation_failed) {
+    if (bvc.m_verification_failed) {
       logger(Logging::DEBUGGING) << context << "Block verification failed, dropping connection";
       context.m_state = CryptoNoteConnectionContext::state_shutdown;
       return 1;
@@ -504,7 +502,7 @@ bool CryptoNoteProtocolHandler::request_missing_objects(CryptoNoteConnectionCont
         << "\r\nm_last_response_height=" << context.m_last_response_height
         << "\r\nm_remote_blockchain_height=" << context.m_remote_blockchain_height
         << "\r\nm_needed_objects.size()=" << context.m_needed_objects.size()
-        << "\r\nm_requested_objects.size()=" << context.m_requested_objects.size() 
+        << "\r\nm_requested_objects.size()=" << context.m_requested_objects.size()
         << "\r\non connection [" << context << "]";
       return false;
     }

@@ -1,7 +1,5 @@
-// Copyright (c) 2011-2016 The Cryptonote developers
-// Copyright (c) 2016-2018 krypt0x aka krypt0chaos
+// Copyright (c) 2011-2017 The Cryptonote developers
 // Copyright (c) 2018 The Circle Foundation
-//
 // Distributed under the MIT/X11 software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -72,14 +70,19 @@ struct EllipticCurveScalar {
     friend bool check_signature(const Hash &, const PublicKey &, const Signature &);
     static void generate_key_image(const PublicKey &, const SecretKey &, KeyImage &);
     friend void generate_key_image(const PublicKey &, const SecretKey &, KeyImage &);
+    static KeyImage scalarmultKey(const KeyImage & P, const KeyImage & a);
+    friend KeyImage scalarmultKey(const KeyImage & P, const KeyImage & a);
     static void hash_data_to_ec(const uint8_t*, std::size_t, PublicKey&);
     friend void hash_data_to_ec(const uint8_t*, std::size_t, PublicKey&);
     static void generate_ring_signature(const Hash &, const KeyImage &,
       const PublicKey *const *, size_t, const SecretKey &, size_t, Signature *);
+
     friend void generate_ring_signature(const Hash &, const KeyImage &,
       const PublicKey *const *, size_t, const SecretKey &, size_t, Signature *);
+
     static bool check_ring_signature(const Hash &, const KeyImage &,
       const PublicKey *const *, size_t, const Signature *);
+
     friend bool check_ring_signature(const Hash &, const KeyImage &,
       const PublicKey *const *, size_t, const Signature *);
   };
@@ -166,7 +169,7 @@ struct EllipticCurveScalar {
     const PublicKey &derived_key, PublicKey &base, EllipticCurveScalar &hashed_derivation) {
     return crypto_ops::underive_public_key_and_get_scalar(derivation, output_index, derived_key, base, hashed_derivation);
   }
-  
+
   inline void derive_secret_key(const KeyDerivation &derivation, std::size_t output_index,
     const SecretKey &base, const uint8_t* prefix, size_t prefixLength, SecretKey &derived_key) {
     crypto_ops::derive_secret_key(derivation, output_index, base, prefix, prefixLength, derived_key);
@@ -207,6 +210,10 @@ struct EllipticCurveScalar {
    */
   inline void generate_key_image(const PublicKey &pub, const SecretKey &sec, KeyImage &image) {
     crypto_ops::generate_key_image(pub, sec, image);
+  }
+
+  inline KeyImage scalarmultKey(const KeyImage & P, const KeyImage & a) {
+    return crypto_ops::scalarmultKey(P, a);
   }
 
   inline void hash_data_to_ec(const uint8_t* data, std::size_t len, PublicKey& key) {

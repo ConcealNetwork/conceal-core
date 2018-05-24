@@ -1,7 +1,5 @@
-// Copyright (c) 2011-2016 The Cryptonote developers
-// Copyright (c) 2016-2018 krypt0x aka krypt0chaos
+// Copyright (c) 2011-2017 The Cryptonote developers
 // Copyright (c) 2018 The Circle Foundation
-//
 // Distributed under the MIT/X11 software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -92,7 +90,7 @@ namespace CryptoNote {
     virtual size_t addInput(const AccountKeys& senderKeys, const TransactionTypes::InputKeyInfo& info, KeyPair& ephKeys) override;
 
     virtual size_t addOutput(uint64_t amount, const AccountPublicAddress& to) override;
-    virtual size_t addOutput(uint64_t amount, const std::vector<AccountPublicAddress>& to, uint32_t requiredSignatures) override;
+    virtual size_t addOutput(uint64_t amount, const std::vector<AccountPublicAddress>& to, uint32_t requiredSignatures, uint32_t term = 0) override;
     virtual size_t addOutput(uint64_t amount, const KeyOutput& out) override;
     virtual size_t addOutput(uint64_t amount, const MultisignatureOutput& out) override;
 
@@ -153,7 +151,7 @@ namespace CryptoNote {
     TransactionExtraPublicKey pk = { txKeys.publicKey };
     extra.set(pk);
 
-    transaction.version = CURRENT_TRANSACTION_VERSION;
+    transaction.version = TRANSACTION_VERSION_1;
     transaction.unlockTime = 0;
     transaction.extra = extra.serialize();
 
@@ -261,6 +259,7 @@ namespace CryptoNote {
   size_t TransactionImpl::addInput(const MultisignatureInput& input) {
     checkIfSigning();
     transaction.inputs.push_back(input);
+    transaction.version = TRANSACTION_VERSION_2;
     invalidateHash();
     return transaction.inputs.size() - 1;
   }
@@ -277,7 +276,7 @@ namespace CryptoNote {
     return transaction.outputs.size() - 1;
   }
 
-  size_t TransactionImpl::addOutput(uint64_t amount, const std::vector<AccountPublicAddress>& to, uint32_t requiredSignatures) {
+  size_t TransactionImpl::addOutput(uint64_t amount, const std::vector<AccountPublicAddress>& to, uint32_t requiredSignatures, uint32_t term) {
     checkIfSigning();
 
     const auto& txKey = txSecretKey();
@@ -285,6 +284,7 @@ namespace CryptoNote {
     MultisignatureOutput outMsig;
     outMsig.requiredSignatureCount = requiredSignatures;
     outMsig.keys.resize(to.size());
+    outMsig.term = term;
     
     for (size_t i = 0; i < to.size(); ++i) {
       derivePublicKey(to[i], txKey, outputIndex, outMsig.keys[i]);
@@ -292,6 +292,7 @@ namespace CryptoNote {
 
     TransactionOutput out = { amount, outMsig };
     transaction.outputs.emplace_back(out);
+    transaction.version = TRANSACTION_VERSION_2;
     invalidateHash();
 
     return outputIndex;

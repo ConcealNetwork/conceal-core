@@ -1,7 +1,5 @@
-// Copyright (c) 2011-2016 The Cryptonote developers
-// Copyright (c) 2016-2018 krypt0x aka krypt0chaos
+// Copyright (c) 2011-2017 The Cryptonote developers
 // Copyright (c) 2018 The Circle Foundation
-//
 // Distributed under the MIT/X11 software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -87,8 +85,8 @@ namespace CryptoNote {
     bool deinit();
 
     bool have_tx(const Crypto::Hash &id) const;
-    bool add_tx(const Transaction &tx, const Crypto::Hash &id, size_t blobSize, tx_verification_context& tvc, bool keeped_by_block);
-    bool add_tx(const Transaction &tx, tx_verification_context& tvc, bool keeped_by_block);
+    bool add_tx(const Transaction &tx, const Crypto::Hash &id, size_t blobSize, tx_verification_context& tvc, bool keeped_by_block, uint32_t height);
+    bool add_tx(const Transaction &tx, tx_verification_context& tvc, bool keeped_by_block, uint32_t height);
     //gets tx and remove it from pool
     bool take_tx(const Crypto::Hash &id, Transaction &tx, size_t& blobSize, uint64_t& fee);
 
@@ -205,7 +203,6 @@ namespace CryptoNote {
 
     PaymentIdIndex m_paymentIdIndex;
     TimestampTransactionsIndex m_timestampIndex;
+    std::unordered_map<Crypto::Hash, uint64_t> m_ttlIndex;
   };
 }
-
-

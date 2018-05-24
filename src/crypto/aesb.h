@@ -3,7 +3,7 @@
 Copyright (c) 1998-2013, Brian Gladman, Worcester, UK. All rights reserved.
 
 The redistribution and use of this software (with or without changes)
-is allowed without the payment of fees or royalties provided that:
+is allowed without the payment of fees or concealX provided that:
 
   source code distributions include the above copyright notice, this
   list of conditions and the following disclaimer;

@@ -1,7 +1,5 @@
-// Copyright (c) 2011-2016 The Cryptonote developers
-// Copyright (c) 2016-2018 krypt0x aka krypt0chaos
+// Copyright (c) 2011-2017 The Cryptonote developers
 // Copyright (c) 2018 The Circle Foundation
-//
 // Distributed under the MIT/X11 software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -45,6 +43,8 @@ class ICore {
 public:
   virtual ~ICore() {}
 
+  virtual const Currency& currency() const = 0;
+
   virtual bool addObserver(ICoreObserver* observer) = 0;
   virtual bool removeObserver(ICoreObserver* observer) = 0;
 
@@ -87,7 +87,7 @@ public:
   virtual bool getBackwardBlocksSizes(uint32_t fromHeight, std::vector<size_t>& sizes, size_t count) = 0;
   virtual bool getBlockSize(const Crypto::Hash& hash, size_t& size) = 0;
   virtual bool getAlreadyGeneratedCoins(const Crypto::Hash& hash, uint64_t& generatedCoins) = 0;
-  virtual bool getBlockReward(size_t medianSize, size_t currentBlockSize, uint64_t alreadyGeneratedCoins, uint64_t fee,
+  virtual bool getBlockReward(size_t medianSize, size_t currentBlockSize, uint64_t alreadyGeneratedCoins, uint64_t fee, uint32_t height,
                               uint64_t& reward, int64_t& emissionChange) = 0;
   virtual bool scanOutputkeysForIndices(const KeyInput& txInToKey, std::list<std::pair<Crypto::Hash, size_t>>& outputReferences) = 0;
   virtual bool getBlockDifficulty(uint32_t height, difficulty_type& difficulty) = 0;
@@ -101,7 +101,7 @@ public:
   virtual bool getTransactionsByPaymentId(const Crypto::Hash& paymentId, std::vector<Transaction>& transactions) = 0;
 
   virtual std::unique_ptr<IBlock> getBlock(const Crypto::Hash& blocksId) = 0;
-  virtual bool handleIncomingTransaction(const Transaction& tx, const Crypto::Hash& txHash, size_t blobSize, tx_verification_context& tvc, bool keptByBlock) = 0;
+  virtual bool handleIncomingTransaction(const Transaction& tx, const Crypto::Hash& txHash, size_t blobSize, tx_verification_context& tvc, bool keptByBlock, uint32_t height) = 0;
   virtual std::error_code executeLocked(const std::function<std::error_code()>& func) = 0;
 
   virtual bool addMessageQueue(MessageQueue<BlockchainMessage>& messageQueue) = 0;

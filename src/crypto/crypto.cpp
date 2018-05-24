@@ -1,7 +1,5 @@
-// Copyright (c) 2011-2016 The Cryptonote developers
-// Copyright (c) 2016-2018 krypt0x aka krypt0chaos
+// Copyright (c) 2011-2017 The Cryptonote developers
 // Copyright (c) 2018 The Circle Foundation
-//
 // Distributed under the MIT/X11 software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -288,6 +286,17 @@ namespace Crypto {
     ge_p1p1_to_p3(&res, &point2);
   }
 
+  KeyImage crypto_ops::scalarmultKey(const KeyImage & P, const KeyImage & a) {
+    ge_p3 A;
+    ge_p2 R;
+    // maybe use assert instead?
+    ge_frombytes_vartime(&A, reinterpret_cast<const unsigned char*>(&P));
+    ge_scalarmult(&R, reinterpret_cast<const unsigned char*>(&a), &A);
+    KeyImage aP;
+    ge_tobytes(reinterpret_cast<unsigned char*>(&aP), &R);
+    return aP;
+  }
+
   void crypto_ops::hash_data_to_ec(const uint8_t* data, std::size_t len, PublicKey& key) {
     Hash h;
     ge_p2 point;
@@ -326,7 +335,7 @@ namespace Crypto {
   };
 
   static inline size_t rs_comm_size(size_t pubs_count) {
-    return sizeof(rs_comm) + pubs_count * sizeof(rs_comm().ab[0]);
+    return sizeof(rs_comm) + pubs_count * sizeof(((rs_comm*)0)->ab[0]);
   }
 
   void crypto_ops::generate_ring_signature(const Hash &prefix_hash, const KeyImage &image,
