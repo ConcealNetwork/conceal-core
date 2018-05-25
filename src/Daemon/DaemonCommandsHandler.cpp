@@ -1,7 +1,5 @@
-// Copyright (c) 2011-2016 The Cryptonote developers
-// Copyright (c) 2016-2018 krypt0x aka krypt0chaos
+// Copyright (c) 2011-2017 The Cryptonote developers
 // Copyright (c) 2018 The Circle Foundation
-//
 // Distributed under the MIT/X11 software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -10,6 +8,7 @@
 #include "P2p/NetNode.h"
 #include "CryptoNoteCore/Miner.h"
 #include "CryptoNoteCore/Core.h"
+#include "CryptoNoteCore/Currency.h"
 #include "CryptoNoteProtocol/CryptoNoteProtocolHandler.h"
 #include "Serialization/SerializationTools.h"
 #include "version.h"
@@ -33,6 +32,7 @@ DaemonCommandsHandler::DaemonCommandsHandler(CryptoNote::core& core, CryptoNote:
   //m_consoleHandler.setHandler("print_bci", boost::bind(&DaemonCommandsHandler::print_bci, this, _1));
   //m_consoleHandler.setHandler("print_bc_outs", boost::bind(&DaemonCommandsHandler::print_bc_outs, this, _1));
   m_consoleHandler.setHandler("print_block", boost::bind(&DaemonCommandsHandler::print_block, this, _1), "Print block, print_block <block_hash> | <block_height>");
+  m_consoleHandler.setHandler("print_stat", boost::bind(&DaemonCommandsHandler::print_stat, this, _1), "Print statistics, print_stat <nothing=last> | <block_hash> | <block_height>");
   m_consoleHandler.setHandler("print_tx", boost::bind(&DaemonCommandsHandler::print_tx, this, _1), "Print transaction, print_tx <transaction_hash>");
   m_consoleHandler.setHandler("start_mining", boost::bind(&DaemonCommandsHandler::start_mining, this, _1), "Start mining for specified address, start_mining <addr> [threads=1]");
   m_consoleHandler.setHandler("stop_mining", boost::bind(&DaemonCommandsHandler::stop_mining, this, _1), "Stop mining");
@@ -217,6 +217,47 @@ bool DaemonCommandsHandler::print_block_by_hash(const std::string& arg)
     std::cout << "block wasn't found: " << arg << std::endl;
     return false;
   }
+
+  return true;
+}
+//--------------------------------------------------------------------------------
+uint64_t DaemonCommandsHandler::calculatePercent(const CryptoNote::Currency& currency, uint64_t value, uint64_t total) {
+  return static_cast<uint64_t>(100.0 * currency.coin() * static_cast<double>(value) / static_cast<double>(total));
+}
+//--------------------------------------------------------------------------------
+bool DaemonCommandsHandler::print_stat(const std::vector<std::string>& args) {
+  uint32_t height = 0;
+  uint32_t maxHeight = m_core.get_current_blockchain_height() - 1;
+  if (args.empty()) {
+    height = maxHeight;
+  } else {
+    try {
+      height = boost::lexical_cast<uint32_t>(args.front());
+    } catch (boost::bad_lexical_cast&) {
+      Crypto::Hash block_hash;
+      if (!parse_hash256(args.front(), block_hash) || !m_core.getBlockHeight(block_hash, height)) {
+        return false;
+      }
+    }
+    if (height > maxHeight) {
+      std::cout << "printing for last available block: " << maxHeight << std::endl;
+      height = maxHeight;
+    }
+  }
+
+  uint64_t totalCoinsInNetwork = m_core.coinsEmittedAtHeight(height);
+  uint64_t totalCoinsOnDeposits = m_core.depositAmountAtHeight(height);
+  uint64_t amountOfActiveCoins = totalCoinsInNetwork - totalCoinsOnDeposits;
+
+  const auto& currency = m_core.currency();
+  std::cout << "Block height: " << height << std::endl;
+  std::cout << "Block difficulty: " << m_core.difficultyAtHeight(height) << std::endl;
+  std::cout << "Total coins in network:  " << currency.formatAmount(totalCoinsInNetwork) << std::endl;
+  std::cout << "Total coins on deposits: " << currency.formatAmount(totalCoinsOnDeposits) <<
+    " (" << currency.formatAmount(calculatePercent(currency, totalCoinsOnDeposits, totalCoinsInNetwork)) << "%)" << std::endl;
+  std::cout << "Amount of active coins:  " << currency.formatAmount(amountOfActiveCoins) <<
+    " (" << currency.formatAmount(calculatePercent(currency, amountOfActiveCoins, totalCoinsInNetwork)) << "%)" << std::endl;
+  std::cout << "Total interest paid: " << currency.formatAmount(m_core.depositInterestAtHeight(height)) << std::endl;
 
   return true;
 }

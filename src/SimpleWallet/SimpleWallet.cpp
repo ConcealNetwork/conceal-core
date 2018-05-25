@@ -1,7 +1,5 @@
-// Copyright (c) 2011-2016 The Cryptonote developers
-// Copyright (c) 2016-2018 krypt0x aka krypt0chaos
+// Copyright (c) 2011-2017 The Cryptonote developers
 // Copyright (c) 2018 The Circle Foundation
-//
 // Distributed under the MIT/X11 software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -61,11 +59,10 @@ const command_line::arg_descriptor<std::string> arg_generate_new_wallet = { "gen
 const command_line::arg_descriptor<std::string> arg_daemon_address = { "daemon-address", "Use daemon instance at <host>:<port>", "" };
 const command_line::arg_descriptor<std::string> arg_daemon_host = { "daemon-host", "Use daemon instance at host <arg> instead of localhost", "" };
 const command_line::arg_descriptor<std::string> arg_password = { "password", "Wallet password", "", true };
-const command_line::arg_descriptor<uint16_t> arg_daemon_port = { "daemon-port", "Use daemon instance at port <arg> instead of 8081", 0 };
-const command_line::arg_descriptor<uint32_t> arg_log_level = { "set_log", "", INFO, true };
-const command_line::arg_descriptor<bool> arg_testnet = { "testnet", "Used to deploy test nets. The daemon must be launched with --testnet flag", false };
+const command_line::arg_descriptor<uint16_t>    arg_daemon_port = { "daemon-port", "Use daemon instance at port <arg> instead of 8081", 0 };
+const command_line::arg_descriptor<uint32_t>    arg_log_level = { "set_log", "", INFO, true };
+const command_line::arg_descriptor<bool>        arg_testnet = { "testnet", "Used to deploy test nets. The daemon must be launched with --testnet flag", false };
 const command_line::arg_descriptor< std::vector<std::string> > arg_command = { "command", "" };
-
 
 bool parseUrlAddress(const std::string& url, std::string& address, uint16_t& port) {
   auto pos = url.find("://");
@@ -138,9 +135,12 @@ struct TransferCommand {
   std::vector<CryptoNote::WalletLegacyTransfer> dsts;
   std::vector<uint8_t> extra;
   uint64_t fee;
+  std::map<std::string, std::vector<WalletLegacyTransfer>> aliases;
+  std::vector<std::string> messages;
+  uint64_t ttl;
 
   TransferCommand(const CryptoNote::Currency& currency) :
-    m_currency(currency), fake_outs_count(0), fee(currency.minimumFee()) {
+    m_currency(currency), fake_outs_count(0), fee(currency.minimumFee()), ttl(0) {
   }
 
   bool parseArguments(LoggerRef& logger, const std::vector<std::string> &args) {
@@ -156,8 +156,10 @@ struct TransferCommand {
         return false;
       }
 
-      while (!ar.eof()) {
+      bool feeFound = false;
+      bool ttlFound = false;
 
+      while (!ar.eof()) {
         auto arg = ar.next();
 
         if (arg.size() && arg[0] == '-') {
@@ -170,6 +172,13 @@ struct TransferCommand {
               return false;
             }
           } else if (arg == "-f") {
+              feeFound = true;
+
+            if (ttlFound) {
+              logger(ERROR, BRIGHT_RED) << "Transaction with TTL can not have fee";
+              return false;
+            }
+
             bool ok = m_currency.parseAmount(value, fee);
             if (!ok) {
               logger(ERROR, BRIGHT_RED) << "Fee value is invalid: " << value;
@@ -180,20 +189,31 @@ struct TransferCommand {
               logger(ERROR, BRIGHT_RED) << "Fee value is less than minimum: " << m_currency.minimumFee();
               return false;
             }
+          } else if (arg == "-m") {
+            messages.emplace_back(value);
+          } else if (arg == "-ttl") {
+            ttlFound = true;
+
+            if (feeFound) {
+              logger(ERROR, BRIGHT_RED) << "Transaction with fee can not have TTL";
+              return false;
+            } else {
+              fee = 0;
+            }
+
+            if (!Common::fromString(value, ttl) || ttl < 1 || ttl * 60 > m_currency.mempoolTxLiveTime()) {
+              logger(ERROR, BRIGHT_RED) << "TTL has invalid format: \"" << value << "\", " <<
+                "enter time from 1 to " << (m_currency.mempoolTxLiveTime() / 60) << " minutes";
+              return false;
+            }
           }
         } else {
           WalletLegacyTransfer destination;
           CryptoNote::TransactionDestinationEntry de;
+          std::string aliasUrl;
 
           if (!m_currency.parseAccountAddressString(arg, de.addr)) {
-            Crypto::Hash paymentId;
-            if (CryptoNote::parsePaymentId(arg, paymentId)) {
-              logger(ERROR, BRIGHT_RED) << "Invalid payment ID usage. Please, use -p <payment_id>. See help for details.";
-            } else {
-              logger(ERROR, BRIGHT_RED) << "Wrong address: " << arg;
-            }
-
-            return false;
+            aliasUrl = arg;
           }
 
           auto value = ar.next();
@@ -203,14 +223,18 @@ struct TransferCommand {
               ", expected number from 0 to " << m_currency.formatAmount(std::numeric_limits<uint64_t>::max());
             return false;
           }
-          destination.address = arg;
-          destination.amount = de.amount;
 
-          dsts.push_back(destination);
+          if (aliasUrl.empty()) {
+            destination.address = arg;
+            destination.amount = de.amount;
+            dsts.push_back(destination);
+          } else {
+            aliases[aliasUrl].emplace_back(WalletLegacyTransfer{"", static_cast<int64_t>(de.amount)});
+          }
         }
       }
 
-      if (dsts.empty()) {
+      if (dsts.empty() && aliases.empty()) {
         logger(ERROR, BRIGHT_RED) << "At least one destination address is required";
         return false;
       }
@@ -307,7 +331,7 @@ std::string tryToOpenWalletOrLoadKeysOrThrow(LoggerRef& logger, std::unique_ptr<
       } else { // no keys, wallet error loading
         throw std::runtime_error("can't load wallet file '" + walletFileName + "', check password");
       }
-    } else { //new wallet ok 
+    } else { //new wallet ok
       return walletFileName;
     }
   } else if (keysExists) { //wallet not exists but keys presented
@@ -425,6 +449,80 @@ bool writeAddressFile(const std::string& addressFilename, const std::string& add
   return true;
 }
 
+bool processServerAliasResponse(const std::string& response, std::string& address) {
+  try {
+    std::stringstream stream(response);
+    JsonValue json;
+    stream >> json;
+
+    auto rootIt = json.getObject().find("digitalname1");
+    if (rootIt == json.getObject().end()) {
+      return false;
+    }
+
+    if (!rootIt->second.isArray()) {
+      return false;
+    }
+
+    if (rootIt->second.size() == 0) {
+      return false;
+    }
+
+    if (!rootIt->second[0].isObject()) {
+      return false;
+    }
+
+    auto xdnIt = rootIt->second[0].getObject().find("xdn");
+    if (xdnIt == rootIt->second[0].getObject().end()) {
+      return false;
+    }
+
+    address = xdnIt->second.getString();
+  } catch (std::exception&) {
+    return false;
+  }
+
+  return true;
+}
+
+bool splitUrlToHostAndUri(const std::string& aliasUrl, std::string& host, std::string& uri) {
+  size_t protoBegin = aliasUrl.find("http://");
+  if (protoBegin != 0 && protoBegin != std::string::npos) {
+    return false;
+  }
+
+  size_t hostBegin = protoBegin == std::string::npos ? 0 : 7; //strlen("http://")
+  size_t hostEnd = aliasUrl.find('/', hostBegin);
+
+  if (hostEnd == std::string::npos) {
+    uri = "/";
+    host = aliasUrl.substr(hostBegin);
+  } else {
+    uri = aliasUrl.substr(hostEnd);
+    host = aliasUrl.substr(hostBegin, hostEnd - hostBegin);
+  }
+
+  return true;
+}
+
+bool askAliasesTransfersConfirmation(const std::map<std::string, std::vector<WalletLegacyTransfer>>& aliases, const Currency& currency) {
+  std::cout << "Would you like to send money to the following addresses?" << std::endl;
+
+  for (const auto& kv: aliases) {
+    for (const auto& transfer: kv.second) {
+      std::cout << transfer.address << " " << std::setw(21) << currency.formatAmount(transfer.amount) << "  " << kv.first << std::endl;
+    }
+  }
+
+  std::string answer;
+  do {
+    std::cout << "y/n: ";
+    std::getline(std::cin, answer);
+  } while (answer != "y" && answer != "Y" && answer != "n" && answer != "N");
+
+  return answer == "y" || answer == "Y";
+}
+
 }
 
 std::string simple_wallet::get_commands_str() {
@@ -449,11 +547,11 @@ bool simple_wallet::exit(const std::vector<std::string> &args) {
 
 simple_wallet::simple_wallet(System::Dispatcher& dispatcher, const CryptoNote::Currency& currency, Logging::LoggerManager& log) :
   m_dispatcher(dispatcher),
-  m_daemon_port(0), 
-  m_currency(currency), 
+  m_daemon_port(0),
+  m_currency(currency),
   logManager(log),
   logger(log, "simplewallet"),
-  m_refresh_progress_reporter(*this), 
+  m_refresh_progress_reporter(*this),
   m_initResultPromise(nullptr),
   m_walletSynchronized(false) {
   m_consoleHandler.setHandler("start_mining", boost::bind(&simple_wallet::start_mining, this, _1), "start_mining [<number_of_threads>] - Start mining in daemon");
@@ -487,7 +585,7 @@ bool simple_wallet::set_log(const std::vector<std::string> &args) {
     fail_msg_writer() << "wrong number format, use: set_log <log_level_number_0-4>";
     return true;
   }
- 
+
   if (l > Logging::TRACE) {
     fail_msg_writer() << "wrong number range, use: set_log <log_level_number_0-4>";
     return true;
@@ -558,7 +656,7 @@ bool simple_wallet::init(const boost::program_options::variables_map& vm) {
     m_daemon_host = "localhost";
   if (!m_daemon_port)
     m_daemon_port = RPC_DEFAULT_PORT;
-  
+
   if (!m_daemon_address.empty()) {
     if (!parseUrlAddress(m_daemon_address, m_daemon_host, m_daemon_port)) {
       fail_msg_writer() << "failed to parse daemon address: " << m_daemon_address;
@@ -829,7 +927,7 @@ void simple_wallet::connectionStatusUpdated(bool connected) {
 void simple_wallet::externalTransactionCreated(CryptoNote::TransactionId transactionId)  {
   WalletLegacyTransaction txInfo;
   m_wallet->getTransaction(transactionId, txInfo);
-  
+
   std::stringstream logPrefix;
   if (txInfo.blockHeight == WALLET_LEGACY_UNCONFIRMED_TRANSACTION_HEIGHT) {
     logPrefix << "Unconfirmed";
@@ -923,41 +1021,42 @@ bool simple_wallet::show_payments(const std::vector<std::string> &args) {
     return true;
   }
 
-  logger(INFO) << "                            payment                             \t" <<
-    "                          transaction                           \t" <<
-    "  height\t       amount        ";
-
-  bool payments_found = false;
-  for (const std::string& arg: args) {
-    Crypto::Hash expectedPaymentId;
-    if (CryptoNote::parsePaymentId(arg, expectedPaymentId)) {
-      size_t transactionsCount = m_wallet->getTransactionCount();
-      for (size_t trantransactionNumber = 0; trantransactionNumber < transactionsCount; ++trantransactionNumber) {
-        WalletLegacyTransaction txInfo;
-        m_wallet->getTransaction(trantransactionNumber, txInfo);
-        if (txInfo.totalAmount < 0) continue;
-        std::vector<uint8_t> extraVec;
-        extraVec.reserve(txInfo.extra.size());
-        std::for_each(txInfo.extra.begin(), txInfo.extra.end(), [&extraVec](const char el) { extraVec.push_back(el); });
-
-        Crypto::Hash paymentId;
-        if (CryptoNote::getPaymentIdFromTxExtra(extraVec, paymentId) && paymentId == expectedPaymentId) {
-          payments_found = true;
-          success_msg_writer(true) <<
-            paymentId << "\t\t" <<
-            Common::podToHex(txInfo.hash) <<
-            std::setw(8) << txInfo.blockHeight << '\t' <<
-            std::setw(21) << m_currency.formatAmount(txInfo.totalAmount);// << '\t' <<
-        }
+  try {
+    auto hashes = args;
+    std::sort(std::begin(hashes), std::end(hashes));
+    hashes.erase(std::unique(std::begin(hashes), std::end(hashes)), std::end(hashes));
+    std::vector<PaymentId> paymentIds;
+    paymentIds.reserve(hashes.size());
+    std::transform(std::begin(hashes), std::end(hashes), std::back_inserter(paymentIds), [](const std::string& arg) {
+      PaymentId paymentId;
+      if (!CryptoNote::parsePaymentId(arg, paymentId)) {
+        throw std::runtime_error("payment ID has invalid format: \"" + arg + "\", expected 64-character string");
       }
 
-      if (!payments_found) {
-        success_msg_writer() << "No payments with id " << expectedPaymentId;
-        continue;
+      return paymentId;
+    });
+
+    logger(INFO) << "                            payment                             \t" <<
+      "                          transaction                           \t" <<
+      "  height\t       amount        ";
+
+    auto payments = m_wallet->getTransactionsByPaymentIds(paymentIds);
+
+    for (auto& payment : payments) {
+      for (auto& transaction : payment.transactions) {
+        success_msg_writer(true) <<
+          Common::podToHex(payment.paymentId) << '\t' <<
+          Common::podToHex(transaction.hash) << '\t' <<
+          std::setw(8) << transaction.blockHeight << '\t' <<
+          std::setw(21) << m_currency.formatAmount(transaction.totalAmount);
       }
-    } else {
-      fail_msg_writer() << "payment ID has invalid format: \"" << arg << "\", expected 64-character string";
+
+      if (payment.transactions.empty()) {
+        success_msg_writer() << "No payments with id " << Common::podToHex(payment.paymentId);
+      }
     }
+  } catch (std::exception& e) {
+    fail_msg_writer() << "show_payments exception: " << e.what();
   }
 
   return true;
@@ -974,12 +1073,85 @@ bool simple_wallet::show_blockchain_height(const std::vector<std::string>& args)
   return true;
 }
 //----------------------------------------------------------------------------------------------------
+std::string simple_wallet::resolveAlias(const std::string& aliasUrl) {
+  std::string host;
+  std::string uri;
+
+  if (!splitUrlToHostAndUri(aliasUrl, host, uri)) {
+    throw std::runtime_error("Invalid url");
+  }
+
+  HttpClient httpClient(m_dispatcher, host, 80);
+
+  HttpRequest req;
+  HttpResponse res;
+
+  req.setUrl(uri);
+  httpClient.request(req, res);
+
+  if (res.getStatus() != HttpResponse::STATUS_200) {
+    throw std::runtime_error("Remote server returned code " + std::to_string(res.getStatus()));
+  }
+
+  std::string address;
+  if (!processServerAliasResponse(res.getBody(), address)) {
+    throw std::runtime_error("Failed to parse server response");
+  }
+
+  return address;
+}
+//----------------------------------------------------------------------------------------------------
 bool simple_wallet::transfer(const std::vector<std::string> &args) {
   try {
     TransferCommand cmd(m_currency);
 
     if (!cmd.parseArguments(logger, args))
-      return false;
+      return true;
+
+    for (auto& kv: cmd.aliases) {
+      std::string address;
+
+      try {
+        address = resolveAlias(kv.first);
+
+        AccountPublicAddress ignore;
+        if (!m_currency.parseAccountAddressString(address, ignore)) {
+          throw std::runtime_error("Address \"" + address + "\" is invalid");
+        }
+      } catch (std::exception& e) {
+        fail_msg_writer() << "Couldn't resolve alias: " << e.what() << ", alias: " << kv.first;
+        return true;
+      }
+
+      for (auto& transfer: kv.second) {
+        transfer.address = address;
+      }
+    }
+
+    if (!cmd.aliases.empty()) {
+      if (!askAliasesTransfersConfirmation(cmd.aliases, m_currency)) {
+        return true;
+      }
+
+      for (auto& kv: cmd.aliases) {
+        std::copy(std::move_iterator<std::vector<WalletLegacyTransfer>::iterator>(kv.second.begin()),
+                  std::move_iterator<std::vector<WalletLegacyTransfer>::iterator>(kv.second.end()),
+                  std::back_inserter(cmd.dsts));
+      }
+    }
+
+    std::vector<TransactionMessage> messages;
+    for (auto dst : cmd.dsts) {
+      for (auto msg : cmd.messages) {
+        messages.emplace_back(TransactionMessage{ msg, dst.address });
+      }
+    }
+
+    uint64_t ttl = 0;
+    if (cmd.ttl != 0) {
+      ttl = static_cast<uint64_t>(time(nullptr)) + cmd.ttl;
+    }
+
     CryptoNote::WalletHelper::SendCompleteResultObserver sent;
 
     std::string extraString;
@@ -987,7 +1159,7 @@ bool simple_wallet::transfer(const std::vector<std::string> &args) {
 
     WalletHelper::IWalletRemoveObserverGuard removeGuard(*m_wallet, sent);
 
-    CryptoNote::TransactionId tx = m_wallet->sendTransaction(cmd.dsts, cmd.fee, extraString, cmd.fake_outs_count, 0);
+    CryptoNote::TransactionId tx = m_wallet->sendTransaction(cmd.dsts, cmd.fee, extraString, cmd.fake_outs_count, 0, messages, ttl);
     if (tx == WALLET_LEGACY_INVALID_TRANSACTION_ID) {
       fail_msg_writer() << "Can't send money";
       return true;
@@ -1201,7 +1373,7 @@ int main(int argc, char* argv[]) {
     logger(INFO) << "Starting wallet rpc server";
     wrpc.run();
     logger(INFO) << "Stopped wallet rpc server";
-    
+
     try {
       logger(INFO) << "Storing wallet...";
       CryptoNote::WalletHelper::storeWallet(*wallet, walletFileName);
@@ -1213,10 +1385,10 @@ int main(int argc, char* argv[]) {
   } else {
     //runs wallet with console interface
     CryptoNote::simple_wallet wal(dispatcher, currency, logManager);
-    
+
     if (!wal.init(vm)) {
-      logger(ERROR, BRIGHT_RED) << "Failed to initialize wallet"; 
-      return 1; 
+      logger(ERROR, BRIGHT_RED) << "Failed to initialize wallet";
+      return 1;
     }
 
     std::vector<std::string> command = command_line::get_arg(vm, arg_command);
@@ -1226,7 +1398,7 @@ int main(int argc, char* argv[]) {
     Tools::SignalHandler::install([&wal] {
       wal.stop();
     });
-    
+
     wal.run();
 
     if (!wal.deinit()) {

@@ -1,7 +1,5 @@
-// Copyright (c) 2011-2016 The Cryptonote developers
-// Copyright (c) 2016-2018 krypt0x aka krypt0chaos
+// Copyright (c) 2011-2017 The Cryptonote developers
 // Copyright (c) 2018 The Circle Foundation
-//
 // Distributed under the MIT/X11 software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -333,7 +331,7 @@ CryptoContext WalletSerializer::generateCryptoContext(const std::string& passwor
   Crypto::cn_context c;
   Crypto::generate_chacha8_key(c, password, context.key);
 
-  context.iv = Crypto::rand<Crypto::chacha8_iv>();
+  context.iv = Crypto::rand<Crypto::chacha_iv>();
 
   return context;
 }
@@ -345,7 +343,7 @@ void WalletSerializer::saveVersion(Common::IOutputStream& destination) {
   s(version, "version");
 }
 
-void WalletSerializer::saveIv(Common::IOutputStream& destination, Crypto::chacha8_iv& iv) {
+void WalletSerializer::saveIv(Common::IOutputStream& destination, Crypto::chacha_iv& iv) {
   BinaryOutputStreamSerializer s(destination);
   s.binary(reinterpret_cast<void *>(&iv.data), sizeof(iv.data), "chacha_iv");
 }
@@ -483,7 +481,7 @@ void WalletSerializer::load(const std::string& password, Common::IInputStream& s
 
   if (version > SERIALIZATION_VERSION) {
     throw std::system_error(make_error_code(error::WRONG_VERSION));
-  } else if (version != 1) {
+  } else if (version > 2) {
     loadWallet(source, password, version);
   } else {
     loadWalletV1(source, password);
@@ -613,13 +611,13 @@ uint32_t WalletSerializer::loadVersion(Common::IInputStream& source) {
   return version;
 }
 
-void WalletSerializer::loadIv(Common::IInputStream& source, Crypto::chacha8_iv& iv) {
+void WalletSerializer::loadIv(Common::IInputStream& source, Crypto::chacha_iv& iv) {
   CryptoNote::BinaryInputStreamSerializer s(source);
 
   s.binary(static_cast<void *>(&iv.data), sizeof(iv.data), "chacha_iv");
 }
 
-void WalletSerializer::generateKey(const std::string& password, Crypto::chacha8_key& key) {
+void WalletSerializer::generateKey(const std::string& password, Crypto::chacha_key& key) {
   Crypto::cn_context context;
   Crypto::generate_chacha8_key(context, password, key);
 }

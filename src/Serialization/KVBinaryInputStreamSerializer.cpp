@@ -1,7 +1,5 @@
-// Copyright (c) 2011-2016 The Cryptonote developers
-// Copyright (c) 2016-2018 krypt0x aka krypt0chaos
+// Copyright (c) 2011-2017 The Cryptonote developers
 // Copyright (c) 2018 The Circle Foundation
-//
 // Distributed under the MIT/X11 software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -71,6 +69,10 @@ size_t readVarint(Common::IInputStream& s) {
 
 std::string readString(Common::IInputStream& s) {
   auto size = readVarint(s);
+  if (size > 100 * 1024 * 1024) {
+    throw std::runtime_error("string size is too big");
+  }
+
   std::string str;
   str.resize(size);
   if (size) {

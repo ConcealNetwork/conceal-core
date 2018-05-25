@@ -1,7 +1,5 @@
-// Copyright (c) 2011-2016 The Cryptonote developers
-// Copyright (c) 2016-2018 krypt0x aka krypt0chaos
+// Copyright (c) 2011-2017 The Cryptonote developers
 // Copyright (c) 2018 The Circle Foundation
-//
 // Distributed under the MIT/X11 software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -27,7 +25,7 @@ using namespace Crypto;
 namespace {
 
 struct keys_file_data {
-  chacha8_iv iv;
+  chacha_iv iv;
   std::string account_data;
 
   void serialize(CryptoNote::ISerializer& s) {
@@ -54,7 +52,7 @@ void loadKeysFromFile(const std::string& filename, const std::string& password, 
     throw std::system_error(make_error_code(CryptoNote::error::INTERNAL_WALLET_ERROR), "failed to deserialize \"" + filename + '\"');
   }
 
-  chacha8_key key;
+  chacha_key key;
   cn_context cn_context;
   generate_chacha8_key(cn_context, password, key);
   std::string account_data;

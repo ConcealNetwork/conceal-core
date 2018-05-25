@@ -1,7 +1,5 @@
-// Copyright (c) 2011-2016 The Cryptonote developers
-// Copyright (c) 2016-2018 krypt0x aka krypt0chaos
+// Copyright (c) 2011-2017 The Cryptonote developers
 // Copyright (c) 2018 The Circle Foundation
-//
 // Distributed under the MIT/X11 software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -34,6 +32,8 @@ void Configuration::initOptions(boost::program_options::options_description& des
   desc.add_options()
       ("bind-address", po::value<std::string>()->default_value("0.0.0.0"), "payment service bind address")
       ("bind-port", po::value<uint16_t>()->default_value(8070), "payment service bind port")
+      ("rpc-user", po::value<std::string>()->default_value(""), "username to use the payment service. If authorization is not required, leave it empty")
+      ("rpc-password", po::value<std::string>()->default_value(""), "password to use the payment service. If authorization is not required, leave it empty")
       ("container-file,w", po::value<std::string>(), "container file")
       ("container-password,p", po::value<std::string>(), "container password")
       ("generate-container,g", "generate new container file with one wallet and exit")
@@ -91,6 +91,14 @@ void Configuration::init(const boost::program_options::variables_map& options) {
 
   if (options.count("bind-port") != 0 && (!options["bind-port"].defaulted() || bindPort == 0)) {
     bindPort = options["bind-port"].as<uint16_t>();
+  }
+
+  if (options.count("rpc-user") != 0 && !options["rpc-user"].defaulted()) {
+    rpcUser = options["rpc-user"].as<std::string>();
+  }
+
+  if (options.count("rpc-password") != 0 && !options["rpc-password"].defaulted()) {
+    rpcPassword = options["rpc-password"].as<std::string>();
   }
 
   if (options.count("container-file") != 0) {

@@ -1,7 +1,5 @@
-// Copyright (c) 2011-2016 The Cryptonote developers
-// Copyright (c) 2016-2018 krypt0x aka krypt0chaos
+// Copyright (c) 2011-2017 The Cryptonote developers
 // Copyright (c) 2018 The Circle Foundation
-//
 // Distributed under the MIT/X11 software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -21,21 +19,34 @@ SynchronizationStart TransfersSubscription::getSyncStart() {
 }
 
 void TransfersSubscription::onBlockchainDetach(uint32_t height) {
-  std::vector<Hash> deletedTransactions = transfers.detach(height);
+  std::vector<Hash> deletedTransactions;
+  std::vector<TransactionOutputInformation> lockedTransfers;
+  transfers.detach(height, deletedTransactions, lockedTransfers);
+
   for (auto& hash : deletedTransactions) {
     m_observerManager.notify(&ITransfersObserver::onTransactionDeleted, this, hash);
+  }
+
+  if (!lockedTransfers.empty()) {
+    m_observerManager.notify(&ITransfersObserver::onTransfersLocked, this, lockedTransfers);
   }
 }
 
 void TransfersSubscription::onError(const std::error_code& ec, uint32_t height) {
   if (height != WALLET_LEGACY_UNCONFIRMED_TRANSACTION_HEIGHT) {
-  transfers.detach(height);
+    onBlockchainDetach(height);
   }
   m_observerManager.notify(&ITransfersObserver::onError, this, height, ec);
 }
 
 bool TransfersSubscription::advanceHeight(uint32_t height) {
-  return transfers.advanceHeight(height);
+  std::vector<TransactionOutputInformation> unlockedTransfers = transfers.advanceHeight(height);
+
+  if (!unlockedTransfers.empty()) {
+    m_observerManager.notify(&ITransfersObserver::onTransfersUnlocked, this, unlockedTransfers);
+  }
+
+  return true;
 }
 
 const AccountKeys& TransfersSubscription::getKeys() const {
@@ -43,10 +54,17 @@ const AccountKeys& TransfersSubscription::getKeys() const {
 }
 
 bool TransfersSubscription::addTransaction(const TransactionBlockInfo& blockInfo, const ITransactionReader& tx,
-                                           const std::vector<TransactionOutputInformationIn>& transfersList) {
-  bool added = transfers.addTransaction(blockInfo, tx, transfersList);
+                                           const std::vector<TransactionOutputInformationIn>& transfersList,
+                                           std::vector<std::string>&& messages) {
+  std::vector<TransactionOutputInformation> unlockedTransfers;
+
+  bool added = transfers.addTransaction(blockInfo, tx, transfersList, std::move(messages), &unlockedTransfers);
   if (added) {
     m_observerManager.notify(&ITransfersObserver::onTransactionUpdated, this, tx.getTransactionHash());
+  }
+
+  if (!unlockedTransfers.empty()) {
+    m_observerManager.notify(&ITransfersObserver::onTransfersUnlocked, this, unlockedTransfers);
   }
 
   return added;

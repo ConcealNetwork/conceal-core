@@ -1,32 +1,21 @@
-# Prerequisites
-*.d
+# Build
+*.ycm_extra_conf.py
+*.ycm_extra_conf.pyc
 
-# Compiled Object files
-*.slo
-*.lo
-*.o
-*.obj
+build/
+tags/
+Release/
+Debug/
+CMakeFiles/
 
-# Precompiled Headers
-*.gch
-*.pch
+# Mac OS
+*.DS_Store
 
-# Compiled Dynamic libraries
-*.so
-*.dylib
-*.dll
-
-# Fortran module files
-*.mod
-*.smod
-
-# Compiled Static libraries
-*.lai
-*.la
+# Other
+*.idea
 *.a
-*.lib
 
-# Executables
-*.exe
-*.out
-*.app
+version/
+
+miniupnpcstrings.h
+compile_commands.json

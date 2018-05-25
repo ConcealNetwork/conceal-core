@@ -1,7 +1,5 @@
-// Copyright (c) 2011-2016 The Cryptonote developers
-// Copyright (c) 2016-2018 krypt0x aka krypt0chaos
+// Copyright (c) 2011-2017 The Cryptonote developers
 // Copyright (c) 2018 The Circle Foundation
-//
 // Distributed under the MIT/X11 software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -50,6 +48,7 @@ namespace
   const command_line::arg_descriptor<bool>        arg_testnet_on  = {"testnet", "Used to deploy test nets. Checkpoints and hardcoded seeds are ignored, "
     "network id is changed. Use it with --data-dir flag. The wallet must be launched with --testnet flag.", false};
   const command_line::arg_descriptor<bool>        arg_print_genesis_tx = { "print-genesis-tx", "Prints genesis' block tx hex to insert it to config and exits" };
+  //const command_line::arg_descriptor<std::vector<std::string>> arg_genesis_block_reward_address = {"genesis-block-reward-address", ""};
 }
 
 bool command_line_preprocessor(const boost::program_options::variables_map& vm, LoggerRef& logger);
@@ -65,6 +64,49 @@ void print_genesis_tx_hex() {
 
   return;
 }
+
+// void print_genesis_tx_hex(const po::variables_map& vm) {
+  // std::vector<CryptoNote::AccountPublicAddress> targets;
+ //  auto genesis_block_reward_addresses = command_line::get_arg(vm, arg_genesis_block_reward_address);
+
+//   Logging::ConsoleLogger logger;
+//   CryptoNote::CurrencyBuilder currencyBuilder(logger);
+
+ //  CryptoNote::Currency currency = currencyBuilder.currency();
+
+ //  for (const auto& address_string : genesis_block_reward_addresses) {
+ //     CryptoNote::AccountPublicAddress address;
+   //  if (!currency.parseAccountAddressString(address_string, address)) {
+   //    std::cout << "Failed to parse address: " << address_string << std::endl;
+   //    return;
+  //   }
+ //	//Print GENESIS_BLOCK_REWARD Mined Address
+ //	std::cout << "Your SDN Pre-mined Address String is:  " << address_string << std::endl;
+ //    targets.emplace_back(std::move(address));
+//   }
+
+ //  if (targets.empty()) {
+ //    if (CryptoNote::parameters::GENESIS_BLOCK_REWARD > 0) {
+ //      std::cout << "Error: genesis block reward addresses are not defined" << std::endl;
+ //    } else {
+
+ //	  CryptoNote::Transaction tx = CryptoNote::CurrencyBuilder(logger).generateGenesisTransaction();
+ //	  CryptoNote::BinaryArray txb = CryptoNote::toBinaryArray(tx);
+ //	  std::string tx_hex = Common::toHex(txb);
+
+// 	  std::cout << "Insert this line into your coin configuration file as is: " << std::endl;
+ //	  std::cout << "const char GENESIS_COINBASE_TX_HEX[] = \"" << tx_hex << "\";" << std::endl;
+ //	}
+//   } else {
+ //	CryptoNote::Transaction tx = CryptoNote::CurrencyBuilder(logger).generateGenesisTransaction(targets);
+ //	CryptoNote::BinaryArray txb = CryptoNote::toBinaryArray(tx);
+ //	std::string tx_hex = Common::toHex(txb);
+
+ //	std::cout << "Modify this line into your concealX configuration file as is:  " << std::endl;
+ //	std::cout << "const char GENESIS_COINBASE_TX_HEX[] = \"" << tx_hex << "\";" << std::endl;
+//   }
+//   return;
+// }
 
 JsonValue buildLoggerConfiguration(Level level, const std::string& logfile) {
   JsonValue loggerConfiguration(JsonValue::OBJECT);
@@ -85,6 +127,25 @@ JsonValue buildLoggerConfiguration(Level level, const std::string& logfile) {
   return loggerConfiguration;
 }
 
+void renameDataDir() {
+  std::string concealXDir = Tools::getDefaultDataDirectory();
+  boost::filesystem::path concealXDirPath(concealXDir);
+  if (boost::filesystem::exists(concealXDirPath)) {
+    return;
+  }
+
+  std::string dataDirPrefix = concealXDir.substr(0, concealXDir.size() + 1 - sizeof(CRYPTONOTE_NAME));
+  boost::filesystem::path cediDirPath(dataDirPrefix + "BXC");
+
+  if (boost::filesystem::exists(cediDirPath)) {
+    boost::filesystem::rename(cediDirPath, concealXDirPath);
+  } else {
+    boost::filesystem::path BcediDirPath(dataDirPrefix + "Bcedi");
+    if (boost::filesystem::exists(boost::filesystem::path(BcediDirPath))) {
+		boost::filesystem::rename(BcediDirPath, concealXDirPath);
+    }
+  }
+}
 
 int main(int argc, char* argv[])
 {
@@ -97,6 +158,7 @@ int main(int argc, char* argv[])
   LoggerRef logger(logManager, "daemon");
 
   try {
+    renameDataDir();
 
     po::options_description desc_cmd_only("Command line options");
     po::options_description desc_cmd_sett("Command line options and settings options");
@@ -104,7 +166,6 @@ int main(int argc, char* argv[])
     command_line::add_arg(desc_cmd_only, command_line::arg_help);
     command_line::add_arg(desc_cmd_only, command_line::arg_version);
     command_line::add_arg(desc_cmd_only, arg_os_version);
-    // tools::get_default_data_dir() can't be called during static initialization
     command_line::add_arg(desc_cmd_only, command_line::arg_data_dir, Tools::getDefaultDataDirectory());
     command_line::add_arg(desc_cmd_only, arg_config_file);
 
@@ -113,6 +174,7 @@ int main(int argc, char* argv[])
     command_line::add_arg(desc_cmd_sett, arg_console);
     command_line::add_arg(desc_cmd_sett, arg_testnet_on);
     command_line::add_arg(desc_cmd_sett, arg_print_genesis_tx);
+    //command_line::add_arg(desc_cmd_sett, arg_genesis_block_reward_address);
 
     RpcServerConfig::initOptions(desc_cmd_sett);
     CoreConfig::initOptions(desc_cmd_sett);
@@ -135,7 +197,8 @@ int main(int argc, char* argv[])
       }
 
       if (command_line::get_arg(vm, arg_print_genesis_tx)) {
-        print_genesis_tx_hex();
+        //print_genesis_tx_hex(vm);
+		    print_genesis_tx_hex();
         return false;
       }
 
@@ -152,13 +215,15 @@ int main(int argc, char* argv[])
       if (boost::filesystem::exists(config_path, ec)) {
         po::store(po::parse_config_file<char>(config_path.string<std::string>().c_str(), desc_cmd_sett), vm);
       }
+
       po::notify(vm);
       return true;
     });
 
-    if (!r)
+    if (!r) {
       return 1;
-  
+    }
+
     auto modulePath = Common::NativePathToGeneric(argv[0]);
     auto cfgLogFile = Common::NativePathToGeneric(command_line::get_arg(vm, arg_log_file));
 
@@ -247,6 +312,7 @@ int main(int argc, char* argv[])
       logger(ERROR, BRIGHT_RED) << "Failed to initialize p2p server.";
       return 1;
     }
+
     logger(INFO) << "P2p server initialized OK";
 
     //logger(INFO) << "Initializing core rpc server...";
@@ -262,6 +328,7 @@ int main(int argc, char* argv[])
       logger(ERROR, BRIGHT_RED) << "Failed to initialize core";
       return 1;
     }
+
     logger(INFO) << "Core initialized OK";
 
     // start components
@@ -313,6 +380,7 @@ bool command_line_preprocessor(const boost::program_options::variables_map &vm, 
     std::cout << CryptoNote::CRYPTONOTE_NAME << " v" << PROJECT_VERSION_LONG << ENDL;
     exit = true;
   }
+
   if (command_line::get_arg(vm, arg_os_version)) {
     std::cout << "OS: " << Tools::get_os_version_string() << ENDL;
     exit = true;
