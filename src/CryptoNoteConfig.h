@@ -16,7 +16,7 @@ const uint64_t CRYPTONOTE_MAX_BLOCK_NUMBER                   = 500000000;
 const size_t   CRYPTONOTE_MAX_BLOCK_BLOB_SIZE                = 500000000;
 const size_t   CRYPTONOTE_MAX_TX_SIZE                        = 10000000; // max tx 10M
 const uint64_t CRYPTONOTE_PUBLIC_ADDRESS_BASE58_PREFIX       = 0x7ad4; // addresses start with "ccx7"
-const size_t   CRYPTONOTE_MINED_MONEY_UNLOCK_WINDOW          = 120; // increased protection 2h
+const size_t   CRYPTONOTE_MINED_MONEY_UNLOCK_WINDOW          = 120; // increased protection 4 hours unlock
 const uint64_t CRYPTONOTE_BLOCK_FUTURE_TIME_LIMIT            = 60 * 60 * 2; // 2 hours
 const uint64_t CRYPTONOTE_DEFAULT_TX_SPENDABLE_AGE           = 30; // 1 hour unlock
 
@@ -69,8 +69,8 @@ static_assert(DEPOSIT_MIN_TERM > 0, "Bad DEPOSIT_MIN_TERM");
 static_assert(DEPOSIT_MIN_TERM <= DEPOSIT_MAX_TERM, "Bad DEPOSIT_MAX_TERM");
 static_assert(DEPOSIT_MIN_TERM * DEPOSIT_MAX_TOTAL_RATE > DEPOSIT_MIN_TOTAL_RATE_FACTOR, "Bad DEPOSIT_MIN_TOTAL_RATE_FACTOR or DEPOSIT_MAX_TOTAL_RATE");
 
-const uint64_t MULTIPLIER_FACTOR                             = 100; // early depositor multiplier
-const uint32_t END_MULTIPLIER_BLOCK                          = 30000; // block at which the multiplier ceases to be applied
+const uint64_t MULTIPLIER_FACTOR                             = 100; 
+const uint32_t END_MULTIPLIER_BLOCK                          = 30000; 
 
 const size_t   MAX_BLOCK_SIZE_INITIAL                        = CRYPTONOTE_BLOCK_GRANTED_FULL_REWARD_ZONE * 10;
 const uint64_t MAX_BLOCK_SIZE_GROWTH_SPEED_NUMERATOR         = 100 * 1024;
