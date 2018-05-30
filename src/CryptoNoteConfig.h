@@ -108,7 +108,7 @@ const char     MINER_CONFIG_FILE_NAME[]                      = "miner_conf.json"
 } // parameters
 
 const uint64_t START_BLOCK_REWARD                            = (UINT64_C(5000) * parameters::POINT);
-const uint64_t AIRDROP_BLOCK_REWARD	                         = (UINT64_C(12000000) * parameters::COIN);
+const uint64_t MATRIX_BLOCK_REWARD	                         = (UINT64_C(12000000) * parameters::COIN);
 const uint64_t MAX_BLOCK_REWARD                              = (UINT64_C(25) * parameters::COIN);
 const uint64_t REWARD_INCREASE_INTERVAL                      = (UINT64_C(264000));
 
@@ -165,9 +165,10 @@ __attribute__((unused))
 // {<block height>, "<block hash>"},
 const std::initializer_list<CheckpointData> CHECKPOINTS = {
 		{0, "b9dc432e56e37b52771970ce014dd23fda517cfd4fc5a9b296f1954b7d4505de"},
-		{100, "41f52c2ef5ae3b87470f919c9be6d2d59b9acba9312688a2cb665139efcea2e8"},
-		{500, "f6f7f72b7c46d8d4f6923b6ba3a723272c3da2bbd8d2323bcd16f5637b250fb5"},
-		{1000, "52ba463c6b6fbfd88765f50bb79761313091b585ed4a182a91fcf209c55ccb9f"}
+		{1000, "52ba463c6b6fbfd88765f50bb79761313091b585ed4a182a91fcf209c55ccb9f"},
+		{2000, "b2f2d356cfc4acb3a5a9bb643a0d28059919d26101f46178262fc9c466321c4c"},
+		{3000, "48013304f58d8b10882f7a1c265e5f307e453b44ab33ba5b9ea2a6565e993377"};
+		{4000, "af92aac58e3ecf03ccd5118f920893fa4ff9207f650282d5fb439d18d53fe928"}
 };
 
 } // CryptoNote

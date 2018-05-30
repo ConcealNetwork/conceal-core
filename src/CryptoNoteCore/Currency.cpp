@@ -84,6 +84,7 @@ bool Currency::init() {
 
   if (isTestnet()) {
     m_upgradeHeight = 0;
+	//m_upgradeHeightV7 = 10;
     m_blocksFileName = "testnet_" + m_blocksFileName;
     m_blocksCacheFileName = "testnet_" + m_blocksCacheFileName;
     m_blockIndexesFileName = "testnet_" + m_blockIndexesFileName;
@@ -145,7 +146,7 @@ size_t Currency::difficultyCutByBlockVersion(uint8_t blockMajorVersion) const {
 
 uint64_t Currency::baseRewardFunction(uint64_t alreadyGeneratedCoins, uint32_t height) const {
   if (height == 1) {
-    return AIRDROP_BLOCK_REWARD;
+    return MATRIX_BLOCK_REWARD;
   }
 
   uint64_t incrIntervals = static_cast<uint64_t>(height) / REWARD_INCREASE_INTERVAL;
