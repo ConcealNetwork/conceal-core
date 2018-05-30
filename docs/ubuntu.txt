@@ -1,9 +1,9 @@
-<b>How to compile?</b>
+How to compile?
 
-git clone https://github.com/TheCircleFoundation/concealx.git <br>
-cd concealx <br>
-mkdir build <br>
-cd build <br>
-cmake .. <br>
-cd .. <br>
-make <br>
+git clone https://github.com/TheCircleFoundation/concealx.git
+cd concealx
+mkdir build
+cd build
+cmake ..
+cd ..
+make
