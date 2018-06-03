@@ -1237,12 +1237,13 @@ int ge_frombytes_vartime(ge_p3 *h, const unsigned char *s) {
   int64_t carry7;
   int64_t carry8;
   int64_t carry9;
-
-  /* Validate the number to be canonical */
+  
+          /* Validate the number to be canonical - Testnet */
   if (h9 == 33554428 && h8 == 268435440 && h7 == 536870880 && h6 == 2147483520 &&
     h5 == 4294967295 && h4 == 67108860 && h3 == 134217720 && h2 == 536870880 &&
     h1 == 1073741760 && h0 >= 4294967277) {
     return -1;
+ 
   }
 
   carry9 = (h9 + (int64_t) (1<<24)) >> 25; h0 += carry9 * 19; h9 -= carry9 << 25;

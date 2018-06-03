@@ -48,7 +48,7 @@ using CryptoNote::parameters::CRYPTONOTE_BLOCK_GRANTED_FULL_REWARD_ZONE;
 
     do_test(1);
     ASSERT_TRUE(m_block_not_too_big);
-    ASSERT_EQ(m_block_reward, MATRIX_BLOCK_REWARD);
+    ASSERT_EQ(m_block_reward, FOUNDATION_TRUST);
 
     do_test(REWARD_INCREASE_INTERVAL - 1);
     ASSERT_TRUE(m_block_not_too_big);

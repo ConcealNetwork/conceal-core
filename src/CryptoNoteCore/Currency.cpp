@@ -48,8 +48,8 @@ const std::vector<uint64_t> Currency::PRETTY_AMOUNTS = {
   10000000000000000000ull
 };
 
-const std::vector<uint64_t> Currency::POWERS_OF_TEN = {
-	1,
+const std::vector<uint64_t> Currency::REWARD_MULTIPLIER_FACTOR = {
+	1, 2, 3, 4, 5, 6, 7, 8, 9,
 	10,
 	100,
 	1000,
@@ -146,13 +146,13 @@ size_t Currency::difficultyCutByBlockVersion(uint8_t blockMajorVersion) const {
 
 uint64_t Currency::baseRewardFunction(uint64_t alreadyGeneratedCoins, uint32_t height) const {
   if (height == 1) {
-    return MATRIX_BLOCK_REWARD;
+    return FOUNDATION_TRUST;
   }
 
   uint64_t incrIntervals = static_cast<uint64_t>(height) / REWARD_INCREASE_INTERVAL;
-  assert(incrIntervals < POWERS_OF_TEN.size());
+  assert(incrIntervals < REWARD_MULTIPLIER_FACTOR.size());
 
-  uint64_t base_reward = START_BLOCK_REWARD * POWERS_OF_TEN[incrIntervals];
+  uint64_t base_reward = START_BLOCK_REWARD * REWARD_MULTIPLIER_FACTOR[incrIntervals];
   base_reward = (std::min)(base_reward, MAX_BLOCK_REWARD);
   base_reward = (std::min)(base_reward, m_moneySupply - alreadyGeneratedCoins);
 
