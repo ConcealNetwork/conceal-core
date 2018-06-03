@@ -4,7 +4,7 @@
 Work In Progress by The Circle Team.
 
 If you would like to know more about this community project please join our discord channel,
-https://discord.gg/2Ns7jRd
+https://discord.gg/YbpHVSd
 
 <b>How to compile?</b>
 
