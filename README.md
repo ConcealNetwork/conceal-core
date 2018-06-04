@@ -1,7 +1,7 @@
 
-# ConCeal X - CCX
+# ConCeal X - CCX CLI v.3.1.2
 
-Work In Progress by The Circle Team.
+Maintained by The Circle Team.
 
 If you would like to know more about this community project please join our discord channel,
 https://discord.gg/YbpHVSd
