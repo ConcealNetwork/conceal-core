@@ -56,27 +56,27 @@ using CryptoNote::parameters::CRYPTONOTE_BLOCK_GRANTED_FULL_REWARD_ZONE;
 
     do_test(REWARD_INCREASE_INTERVAL);
     ASSERT_TRUE(m_block_not_too_big);
-    ASSERT_EQ(m_block_reward, START_BLOCK_REWARD * 10);
+    ASSERT_EQ(m_block_reward, START_BLOCK_REWARD * 2);
 
     do_test(2 * REWARD_INCREASE_INTERVAL - 1);
     ASSERT_TRUE(m_block_not_too_big);
-    ASSERT_EQ(m_block_reward, START_BLOCK_REWARD * 10);
+    ASSERT_EQ(m_block_reward, START_BLOCK_REWARD * 2);
 
     do_test(2 * REWARD_INCREASE_INTERVAL);
     ASSERT_TRUE(m_block_not_too_big);
-    ASSERT_EQ(m_block_reward, START_BLOCK_REWARD * 100);
+    ASSERT_EQ(m_block_reward, START_BLOCK_REWARD * 3);
 
     do_test(3 * REWARD_INCREASE_INTERVAL - 1);
     ASSERT_TRUE(m_block_not_too_big);
-    ASSERT_EQ(m_block_reward, START_BLOCK_REWARD * 100);
+    ASSERT_EQ(m_block_reward, START_BLOCK_REWARD * 3);
 
     do_test(3 * REWARD_INCREASE_INTERVAL);
     ASSERT_TRUE(m_block_not_too_big);
-    ASSERT_EQ(m_block_reward, START_BLOCK_REWARD * 100);
+    ASSERT_EQ(m_block_reward, START_BLOCK_REWARD * 4);
 
     do_test(4 * REWARD_INCREASE_INTERVAL);
     ASSERT_TRUE(m_block_not_too_big);
-    ASSERT_EQ(m_block_reward, START_BLOCK_REWARD * 100);
+    ASSERT_EQ(m_block_reward, START_BLOCK_REWARD * 4);
 
     do_test(5 * REWARD_INCREASE_INTERVAL);
     ASSERT_TRUE(m_block_not_too_big);
