@@ -1,10 +1,9 @@
 
-# ConCeal X - CCX CLI v.3.2.0
+# ConCeal X - CCX CLI v.3.2.1
 
 Maintained by The Circle Team.
 
-If you would like to know more about this community project please join our discord channel,
-https://discord.gg/YbpHVSd
+Join our community, https://discord.gg/YbpHVSd
 
 <b>How to compile on *nix?</b>
 
