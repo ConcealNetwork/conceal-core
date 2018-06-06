@@ -20,7 +20,7 @@ const uint64_t CRYPTONOTE_MINED_MONEY_UNLOCK_WINDOW          = 10; // 20m unlock
 const uint64_t CRYPTONOTE_BLOCK_FUTURE_TIME_LIMIT            = 60 * 60 * 2; // 2 hours
 const uint64_t CRYPTONOTE_DEFAULT_TX_SPENDABLE_AGE           = 10; // 20m unlock
 
-const size_t   BLOCKCHAIN_TIMESTAMP_CHECK_WINDOW             = 30;
+const uint64_t BLOCKCHAIN_TIMESTAMP_CHECK_WINDOW             = 30;
 
 const uint64_t MONEY_SUPPLY                                  = UINT64_C(200000000000000); // max supply: 200M (Consensus II)
 
