@@ -84,7 +84,7 @@ bool Currency::init() {
 
   if (isTestnet()) {
     m_upgradeHeight = 0;
-	//m_upgradeHeightV7 = 10;
+	//m_upgradeHeightV7 = 11;
     m_blocksFileName = "testnet_" + m_blocksFileName;
     m_blocksCacheFileName = "testnet_" + m_blocksCacheFileName;
     m_blockIndexesFileName = "testnet_" + m_blockIndexesFileName;
