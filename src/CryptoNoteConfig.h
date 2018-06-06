@@ -1,4 +1,4 @@
-// Copyright (c) 2011-2017 The Cryptonote developers
+// Copyright (c) 2011-2017 The Cryptonote Developers
 // Copyright (c) 2018 The Circle Foundation
 //
 // Distributed under the MIT/X11 software license, see the accompanying
@@ -16,13 +16,13 @@ const uint64_t CRYPTONOTE_MAX_BLOCK_NUMBER                   = 500000000;
 const size_t   CRYPTONOTE_MAX_BLOCK_BLOB_SIZE                = 500000000;
 const size_t   CRYPTONOTE_MAX_TX_SIZE                        = 1000000000;
 const uint64_t CRYPTONOTE_PUBLIC_ADDRESS_BASE58_PREFIX       = 0x7ad4; // addresses start with "ccx7"
-const size_t   CRYPTONOTE_MINED_MONEY_UNLOCK_WINDOW          = 10; // 20m unlock
+const uint64_t CRYPTONOTE_MINED_MONEY_UNLOCK_WINDOW          = 10; // 20m unlock
 const uint64_t CRYPTONOTE_BLOCK_FUTURE_TIME_LIMIT            = 60 * 60 * 2; // 2 hours
 const uint64_t CRYPTONOTE_DEFAULT_TX_SPENDABLE_AGE           = 10; // 20m unlock
 
 const size_t   BLOCKCHAIN_TIMESTAMP_CHECK_WINDOW             = 30;
 
-const uint64_t MONEY_SUPPLY                                  = UINT64_C(150000000000000); // max supply: 150M
+const uint64_t MONEY_SUPPLY                                  = UINT64_C(200000000000000); // max supply: 200M (Consensus II)
 
 const uint32_t ZAWY_DIFFICULTY_BLOCK_INDEX                   = 0;
 const size_t   ZAWY_DIFFICULTY_FIX                           = 1;
@@ -84,8 +84,8 @@ const size_t   FUSION_TX_MIN_INPUT_COUNT                     = 12;
 const size_t   FUSION_TX_MIN_IN_OUT_COUNT_RATIO              = 4;
 
 const uint64_t UPGRADE_HEIGHT                                = 1;
-const uint64_t UPGRADE_HEIGHT_V2                              = 1;
-const uint64_t UPGRADE_HEIGHT_V3                              = 30000;
+const uint64_t UPGRADE_HEIGHT_V2                             = 1;
+const uint64_t UPGRADE_HEIGHT_V3                             = 12750; // Consensus III - block for CN LT v1 fork
 const unsigned UPGRADE_VOTING_THRESHOLD                      = 90; // percent
 const size_t   UPGRADE_VOTING_WINDOW                         = EXPECTED_NUMBER_OF_BLOCKS_PER_DAY; // blocks
 const size_t   UPGRADE_WINDOW                                = EXPECTED_NUMBER_OF_BLOCKS_PER_DAY; // blocks
@@ -103,10 +103,10 @@ const char     MINER_CONFIG_FILE_NAME[]                      = "miner_conf.json"
 
 } // parameters
 
-const uint64_t START_BLOCK_REWARD                            = (UINT64_C(5000) * parameters::POINT); // start reward
-const uint64_t FOUNDATION_TRUST	                             = (UINT64_C(12000000) * parameters::COIN); // locked funds to secure network
-const uint64_t MAX_BLOCK_REWARD                              = (UINT64_C(25) * parameters::COIN); // peak reward
-const uint64_t REWARD_INCREASE_INTERVAL                      = (UINT64_C(264000)); // aprox. 1 year
+const uint64_t START_BLOCK_REWARD                            = (UINT64_C(5000) * parameters::POINT); // start reward (Consensus I)
+const uint64_t FOUNDATION_TRUST	                             = (UINT64_C(12000000) * parameters::COIN); // locked funds to secure network  (Consensus II)
+const uint64_t MAX_BLOCK_REWARD                              = (UINT64_C(25) * parameters::COIN); // max reward (Consensus I)
+const uint64_t REWARD_INCREASE_INTERVAL                      = (UINT64_C(264000)); // aprox. 1 year (still waiting consensus to reduce it)
 
 const char     CRYPTONOTE_NAME[]                             = "concealx";
 const char     GENESIS_COINBASE_TX_HEX[]                     = "010a01ff0001c096b102029b2e4c0281c0b02e7c53291a94d1d0cbff8883f8024f5142ee494ffbbd08807121017d6775185749e95ac2d70cae3f29e0e46f430ab648abbe9fdc61d8e7437c60f8";
@@ -117,7 +117,7 @@ const uint8_t  TRANSACTION_VERSION_1                         =  1;
 const uint8_t  TRANSACTION_VERSION_2                         =  2;
 const uint8_t  BLOCK_MAJOR_VERSION_1                         =  1;
 const uint8_t  BLOCK_MAJOR_VERSION_2                         =  2;
-const uint8_t  BLOCK_MAJOR_VERSION_3                         =  3;
+const uint8_t  BLOCK_MAJOR_VERSION_3                         =  3; // (Consensus III)
 const uint8_t  BLOCK_MINOR_VERSION_0                         =  0;
 const uint8_t  BLOCK_MINOR_VERSION_1                         =  1;
 
@@ -169,7 +169,9 @@ const std::initializer_list<CheckpointData> CHECKPOINTS = {
 		{5000, "5fdf72e7c106d429231fb980bc336e736464403dee77c7c5ef5e87305644965d"},
 		{6000, "acb8e16f4117763bccf966ad2a3af2f522246437c8be8956d1f145693a245b04"},
 		{7000, "072a845b3113be159c2a79b8bb1206612b58a6e5395f2e449ddaf6941b660416"},
-		{8000, "34cb847e7313e3a316d4eb4c017389f967da5d85573365ae0dec0e5bacddcfba"}
+		{8000, "34cb847e7313e3a316d4eb4c017389f967da5d85573365ae0dec0e5bacddcfba"},
+		{10000, "55cf271a5c97785fb35fea7ed177cb75f47c18688bd86fc01ae66508878029d6"}
+		
 };
 
 } // CryptoNote
