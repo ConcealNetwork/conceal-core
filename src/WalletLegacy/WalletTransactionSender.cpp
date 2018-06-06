@@ -407,10 +407,6 @@ std::unique_ptr<WalletRequest> WalletTransactionSender::doSendMultisigTransactio
     deposit.creatingTransactionId = context->transactionId;
     deposit.spendingTransactionId = WALLET_LEGACY_INVALID_TRANSACTION_ID;
 	uint32_t height = transactionInfo.blockHeight;
-	if (height == 4294967295){
-		height = m_node.getLastKnownBlockHeight();
-		if (!height) height = 4294967295;
-	}
 	deposit.interest = m_currency.calculateInterest(deposit.amount, deposit.term, height);
     deposit.locked = true;
     DepositId depositId = m_transactionsCache.insertDeposit(deposit, depositIndex, transaction->getTransactionHash());

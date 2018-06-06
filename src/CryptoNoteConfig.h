@@ -14,7 +14,7 @@ namespace parameters {
 
 const uint64_t CRYPTONOTE_MAX_BLOCK_NUMBER                   = 500000000;
 const size_t   CRYPTONOTE_MAX_BLOCK_BLOB_SIZE                = 500000000;
-const size_t   CRYPTONOTE_MAX_TX_SIZE                        = 10000000; // max tx 10M
+const size_t   CRYPTONOTE_MAX_TX_SIZE                        = 1000000000;
 const uint64_t CRYPTONOTE_PUBLIC_ADDRESS_BASE58_PREFIX       = 0x7ad4; // addresses start with "ccx7"
 const size_t   CRYPTONOTE_MINED_MONEY_UNLOCK_WINDOW          = 10; // 20m unlock
 const uint64_t CRYPTONOTE_BLOCK_FUTURE_TIME_LIMIT            = 60 * 60 * 2; // 2 hours
@@ -22,13 +22,7 @@ const uint64_t CRYPTONOTE_DEFAULT_TX_SPENDABLE_AGE           = 10; // 20m unlock
 
 const size_t   BLOCKCHAIN_TIMESTAMP_CHECK_WINDOW             = 30;
 
-const uint64_t MONEY_SUPPLY                                  = UINT64_C(150000000000000);
-
-// begin of "speed factor patch"
-const unsigned EMISSION_SPEED_FACTOR                         = 21;
-
-static_assert(EMISSION_SPEED_FACTOR <= 8 * sizeof(uint64_t), "Bad EMISSION_SPEED_FACTOR");
-// end of "speed fator patch"
+const uint64_t MONEY_SUPPLY                                  = UINT64_C(150000000000000); // max supply: 150M
 
 const uint32_t ZAWY_DIFFICULTY_BLOCK_INDEX                   = 0;
 const size_t   ZAWY_DIFFICULTY_FIX                           = 1;
@@ -59,7 +53,7 @@ const size_t   DIFFICULTY_LAG_V2                             = DIFFICULTY_LAG;
 
 static_assert(2 * DIFFICULTY_CUT <= DIFFICULTY_WINDOW - 2, "Bad DIFFICULTY_WINDOW or DIFFICULTY_CUT");
 
-const uint64_t DEPOSIT_MIN_AMOUNT                            = 1 * COIN;
+const uint64_t DEPOSIT_MIN_AMOUNT                            = 1 * COIN; // minimun mmount for a valid deposit
 const uint32_t DEPOSIT_MIN_TERM                              = 22000; // ~1 month
 const uint32_t DEPOSIT_MAX_TERM                              = 1 * 12 * 22000; // ~1 year
 const uint64_t DEPOSIT_MIN_TOTAL_RATE_FACTOR                 = 0; // rate is constant
@@ -90,6 +84,7 @@ const size_t   FUSION_TX_MIN_INPUT_COUNT                     = 12;
 const size_t   FUSION_TX_MIN_IN_OUT_COUNT_RATIO              = 4;
 
 const uint64_t UPGRADE_HEIGHT                                = 1;
+//const uint64_t UPGRADE_HEIGHT_CNV1                           = 30000;
 const unsigned UPGRADE_VOTING_THRESHOLD                      = 90; // percent
 const size_t   UPGRADE_VOTING_WINDOW                         = EXPECTED_NUMBER_OF_BLOCKS_PER_DAY; // blocks
 const size_t   UPGRADE_WINDOW                                = EXPECTED_NUMBER_OF_BLOCKS_PER_DAY; // blocks
@@ -107,10 +102,10 @@ const char     MINER_CONFIG_FILE_NAME[]                      = "miner_conf.json"
 
 } // parameters
 
-const uint64_t START_BLOCK_REWARD                            = (UINT64_C(5000) * parameters::POINT);
-const uint64_t MATRIX_BLOCK_REWARD	                         = (UINT64_C(12000000) * parameters::COIN);
-const uint64_t MAX_BLOCK_REWARD                              = (UINT64_C(25) * parameters::COIN);
-const uint64_t REWARD_INCREASE_INTERVAL                      = (UINT64_C(264000));
+const uint64_t START_BLOCK_REWARD                            = (UINT64_C(5000) * parameters::POINT); // start reward
+const uint64_t FOUNDATION_TRUST	                             = (UINT64_C(12000000) * parameters::COIN); // locked funds to secure network
+const uint64_t MAX_BLOCK_REWARD                              = (UINT64_C(25) * parameters::COIN); // peak reward
+const uint64_t REWARD_INCREASE_INTERVAL                      = (UINT64_C(264000)); // aprox. 1 year
 
 const char     CRYPTONOTE_NAME[]                             = "concealx";
 const char     GENESIS_COINBASE_TX_HEX[]                     = "010a01ff0001c096b102029b2e4c0281c0b02e7c53291a94d1d0cbff8883f8024f5142ee494ffbbd08807121017d6775185749e95ac2d70cae3f29e0e46f430ab648abbe9fdc61d8e7437c60f8";
@@ -168,7 +163,11 @@ const std::initializer_list<CheckpointData> CHECKPOINTS = {
 		{1000, "52ba463c6b6fbfd88765f50bb79761313091b585ed4a182a91fcf209c55ccb9f"},
 		{2000, "b2f2d356cfc4acb3a5a9bb643a0d28059919d26101f46178262fc9c466321c4c"},
 		{3000, "48013304f58d8b10882f7a1c265e5f307e453b44ab33ba5b9ea2a6565e993377"},
-		{4000, "af92aac58e3ecf03ccd5118f920893fa4ff9207f650282d5fb439d18d53fe928"}
+		{4000, "af92aac58e3ecf03ccd5118f920893fa4ff9207f650282d5fb439d18d53fe928"},
+		{5000, "5fdf72e7c106d429231fb980bc336e736464403dee77c7c5ef5e87305644965d"},
+		{6000, "acb8e16f4117763bccf966ad2a3af2f522246437c8be8956d1f145693a245b04"},
+		{7000, "072a845b3113be159c2a79b8bb1206612b58a6e5395f2e449ddaf6941b660416"},
+		{8000, "34cb847e7313e3a316d4eb4c017389f967da5d85573365ae0dec0e5bacddcfba"}
 };
 
 } // CryptoNote

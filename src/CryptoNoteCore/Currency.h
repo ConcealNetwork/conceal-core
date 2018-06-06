@@ -208,7 +208,7 @@ private:
   std::string m_blockchinIndicesFileName;
 
   static const std::vector<uint64_t> PRETTY_AMOUNTS;
-  static const std::vector<uint64_t> POWERS_OF_TEN;
+  static const std::vector<uint64_t> REWARD_MULTIPLIER_FACTOR;
 
   bool m_testnet;
   std::string m_genesisCoinbaseTxHex;

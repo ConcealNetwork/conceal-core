@@ -333,7 +333,6 @@ bool Blockchain::checkTransactionInputs(const CryptoNote::Transaction& tx, Block
 bool Blockchain::checkTransactionInputs(const CryptoNote::Transaction& tx, BlockInfo& maxUsedBlock, BlockInfo& lastFailed) {
 
   BlockInfo tail;
-
   //not the best implementation at this time, sorry :(
   //check is ring_signature already checked ?
   if (maxUsedBlock.empty()) {
@@ -372,9 +371,8 @@ bool Blockchain::haveSpentKeyImages(const CryptoNote::Transaction& tx) {
   return this->haveTransactionKeyImagesAsSpent(tx);
 }
 
-/**
-* \pre m_blockchain_lock is locked
-*/
+// pre m_blockchain_lock is locked
+
 bool Blockchain::checkTransactionSize(size_t blobSize) {
   if (blobSize >= getCurrentCumulativeBlocksizeLimit() - m_currency.minerTxBlobReservedSize()) {
     logger(ERROR) << "transaction is too big " << blobSize << ", maximum allowed size is " <<
@@ -656,6 +654,8 @@ difficulty_type Blockchain::getDifficultyForNextBlock() {
   std::lock_guard<decltype(m_blockchain_lock)> lk(m_blockchain_lock);
   std::vector<uint64_t> timestamps;
   std::vector<difficulty_type> commulative_difficulties;
+  // kox
+  // uint8_t BlockMajorVersion = m_blocks.size() >= m_upgradeDetectorV3.upgradeHeight() ? m_upgradeDetectorV3.targetVersion() : BLOCK_MAJOR_VERSION_1;
   size_t offset = m_blocks.size() - std::min(m_blocks.size(), static_cast<uint64_t>(m_currency.difficultyBlocksCount()));
   if (offset == 0) {
     ++offset;
