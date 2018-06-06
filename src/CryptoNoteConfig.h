@@ -84,7 +84,8 @@ const size_t   FUSION_TX_MIN_INPUT_COUNT                     = 12;
 const size_t   FUSION_TX_MIN_IN_OUT_COUNT_RATIO              = 4;
 
 const uint64_t UPGRADE_HEIGHT                                = 1;
-//const uint64_t UPGRADE_HEIGHT_CNV1                           = 30000;
+const uint64_t UPGRADE_HEIGHT_V2                              = 1;
+const uint64_t UPGRADE_HEIGHT_V3                              = 30000;
 const unsigned UPGRADE_VOTING_THRESHOLD                      = 90; // percent
 const size_t   UPGRADE_VOTING_WINDOW                         = EXPECTED_NUMBER_OF_BLOCKS_PER_DAY; // blocks
 const size_t   UPGRADE_WINDOW                                = EXPECTED_NUMBER_OF_BLOCKS_PER_DAY; // blocks
@@ -112,12 +113,13 @@ const char     GENESIS_COINBASE_TX_HEX[]                     = "010a01ff0001c096
 const uint32_t GENESIS_NONCE                                 = 10000;
 const uint64_t GENESIS_TIMESTAMP                             = 1527078920;
 
-const uint8_t  TRANSACTION_VERSION_1                         = 1;
-const uint8_t  TRANSACTION_VERSION_2                         = 2;
-const uint8_t  BLOCK_MAJOR_VERSION_1                         = 1;
-const uint8_t  BLOCK_MAJOR_VERSION_2                         = 2;
-const uint8_t  BLOCK_MINOR_VERSION_0                         = 0;
-const uint8_t  BLOCK_MINOR_VERSION_1                         = 1;
+const uint8_t  TRANSACTION_VERSION_1                         =  1;
+const uint8_t  TRANSACTION_VERSION_2                         =  2;
+const uint8_t  BLOCK_MAJOR_VERSION_1                         =  1;
+const uint8_t  BLOCK_MAJOR_VERSION_2                         =  2;
+const uint8_t  BLOCK_MAJOR_VERSION_3                         =  3;
+const uint8_t  BLOCK_MINOR_VERSION_0                         =  0;
+const uint8_t  BLOCK_MINOR_VERSION_1                         =  1;
 
 const size_t   BLOCKS_IDS_SYNCHRONIZING_DEFAULT_COUNT        = 10000; // by default, blocks ids count in synchronizing
 const size_t   BLOCKS_SYNCHRONIZING_DEFAULT_COUNT            = 128; // by default, blocks count in blocks downloading
