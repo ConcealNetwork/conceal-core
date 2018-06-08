@@ -26,7 +26,7 @@ const uint64_t MONEY_SUPPLY                                  = UINT64_C(20000000
 
 const uint32_t ZAWY_DIFFICULTY_BLOCK_INDEX                   = 0;
 const size_t   ZAWY_DIFFICULTY_FIX                           = 1;
-const uint8_t  ZAWY_DIFFICULTY_BLOCK_VERSION      			 = 0;
+const uint8_t  ZAWY_DIFFICULTY_BLOCK_VERSION                 = 0;
 
 const size_t   CRYPTONOTE_REWARD_BLOCKS_WINDOW               = 100;
 const size_t   CRYPTONOTE_BLOCK_GRANTED_FULL_REWARD_ZONE     = 100000; // size of block (bytes): after which reward is calculated using block size
