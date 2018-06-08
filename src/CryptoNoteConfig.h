@@ -85,7 +85,7 @@ const size_t   FUSION_TX_MIN_IN_OUT_COUNT_RATIO              = 4;
 
 const uint64_t UPGRADE_HEIGHT                                = 1;
 const uint64_t UPGRADE_HEIGHT_V2                             = 1;
-const uint64_t UPGRADE_HEIGHT_V3                             = 12750; // Consensus III - block for CN LT v1 fork
+const uint64_t UPGRADE_HEIGHT_V3                             = 12770; // Consensus III - block for CN LT v1 fork
 const unsigned UPGRADE_VOTING_THRESHOLD                      = 90; // percent
 const size_t   UPGRADE_VOTING_WINDOW                         = EXPECTED_NUMBER_OF_BLOCKS_PER_DAY; // blocks
 const size_t   UPGRADE_WINDOW                                = EXPECTED_NUMBER_OF_BLOCKS_PER_DAY; // blocks
@@ -170,8 +170,8 @@ const std::initializer_list<CheckpointData> CHECKPOINTS = {
 		{6000, "acb8e16f4117763bccf966ad2a3af2f522246437c8be8956d1f145693a245b04"},
 		{7000, "072a845b3113be159c2a79b8bb1206612b58a6e5395f2e449ddaf6941b660416"},
 		{8000, "34cb847e7313e3a316d4eb4c017389f967da5d85573365ae0dec0e5bacddcfba"},
-		{10000, "55cf271a5c97785fb35fea7ed177cb75f47c18688bd86fc01ae66508878029d6"}
-		
+		{10000, "55cf271a5c97785fb35fea7ed177cb75f47c18688bd86fc01ae66508878029d6"},
+		{11000, "eb4b3b4e3711ff132710392703d18eaffdfc044567447dae67ecd11a9799da68"}
 };
 
 } // CryptoNote
