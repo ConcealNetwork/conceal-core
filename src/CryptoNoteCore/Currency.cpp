@@ -591,7 +591,7 @@ difficulty_type Currency::nextDifficulty(std::vector<uint64_t> timestamps,
 difficulty_type Currency::nextDifficulty(uint8_t version, uint32_t blockIndex, std::vector<uint64_t> timestamps,
   std::vector<difficulty_type> cumulativeDifficulties) const {
   
-  if (blockIndex >= 12766 && blockIndex <= 12800) {
+  if (blockIndex >= 12766 && blockIndex <= 13766) {
     return 13;
   }
 
