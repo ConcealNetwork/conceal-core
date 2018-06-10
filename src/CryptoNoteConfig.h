@@ -125,8 +125,8 @@ const size_t   BLOCKS_IDS_SYNCHRONIZING_DEFAULT_COUNT        = 10000; // by defa
 const size_t   BLOCKS_SYNCHRONIZING_DEFAULT_COUNT            = 128; // by default, blocks count in blocks downloading
 const size_t   COMMAND_RPC_GET_BLOCKS_FAST_MAX_COUNT         = 1000;
 
-const int      P2P_DEFAULT_PORT                              = 17250;
-const int      RPC_DEFAULT_PORT                              = 18250;
+const int      P2P_DEFAULT_PORT                              = 17251;
+const int      RPC_DEFAULT_PORT                              = 18251;
 
 const size_t   P2P_LOCAL_WHITE_PEERLIST_LIMIT                = 1000;
 const size_t   P2P_LOCAL_GRAY_PEERLIST_LIMIT                 = 5000;
@@ -145,8 +145,8 @@ const char     P2P_STAT_TRUSTED_PUB_KEY[]                    = "f7061e9a5f0d3054
 
 // Seed Nodes
 const std::initializer_list<const char*> SEED_NODES = {
-  "94.177.171.102:17250",
-  "93.186.254.77:17250" 
+  "94.177.171.102:17251",
+  "93.186.254.77:17251" 
 };
 
 struct CheckpointData {
@@ -180,8 +180,8 @@ const std::initializer_list<CheckpointData> CHECKPOINTS = {
 		{12769, "46128480a16448a452693cd23e64f6fb3d4e28c156fbc711e3d825cd5e33ec05"},
 		{12770, "5af53b92cc7880feca5d1a5dfcfcf127e464796aeaa1d2d6af1e816c590d5443"},
 		{12771, "6de0bb18956138e644410a312e387c98b3e6b1ccb7b26c5a74dd65f3b87eb5e5"},
-		{12800, "9086a2a00812d3f9cca39a72f2926ee815a48734646aa67d9bec76e2db79a794"},
-		{13781, "d3159029e2caa91f77a023a01777ec99d3b1f1b1d141dc390f86f216f0b9d52b"}
+		{12800, "9086a2a00812d3f9cca39a72f2926ee815a48734646aa67d9bec76e2db79a794"}
+	
 };
 
 } // CryptoNote
