@@ -1,5 +1,5 @@
 
-# ConCeal X - CCX CLI v.3.3.0
+# ConCeal X - CCX CLI v.3.3.1
 
 Maintained by The Circle Team.
 
