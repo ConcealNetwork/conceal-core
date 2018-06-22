@@ -1,5 +1,5 @@
 
-# ConCeal X - CCX CLI
+# Conceal - CCX CLI
 
 Maintained by The Circle Team.
 
