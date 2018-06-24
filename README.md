@@ -1,5 +1,9 @@
 
+<<<<<<< HEAD
 # CONCEAL ORION - CCX CLI v.4.0.0 (Major Release)
+=======
+# ConCeal - CCX CLI
+>>>>>>> 0f96f21a1ea86f5ffabc50950b7900086c2cfeab
 
 Maintained by The Circle Team.
 
