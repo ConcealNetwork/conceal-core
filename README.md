@@ -1,5 +1,6 @@
 
-# CONCEAL - CCX CLI v.4.0.0 (Orion Build - Major Release)
+
+# CONCEAL - CCX CLI v.4.0.1 (Orion Build 002)
 
 Maintained by The Circle Team.
 
