@@ -5,7 +5,7 @@
 Maintained by The Circle Team.
 
 Join our community:
-{ Website: https://conceal.network/
+(https://conceal.network/ "Website")
 { Github: http://github.conceal.network/
 { Discord: http://discord.conceal.network/
 { Twitter: https://twitter.com/ConcealNetwork
@@ -20,7 +20,7 @@ Online Wallet Generator
 
 ```
 git clone https://github.com/TheCircleFoundation/conceal-cli.git
-cd concealx
+cd conceal-cli
 mkdir build
 cd build
 cmake ..
