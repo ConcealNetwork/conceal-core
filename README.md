@@ -5,7 +5,7 @@
 Maintained by The Circle Team.
 
 Join our community:
-(https://conceal.network/ "Website")
+[Website](https://conceal.network/ "Website")
 { Github: http://github.conceal.network/
 { Discord: http://discord.conceal.network/
 { Twitter: https://twitter.com/ConcealNetwork
