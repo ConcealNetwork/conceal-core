@@ -1,4 +1,4 @@
-![image](hhttps://github.com/TheCircleFoundation/conceal-assets/blob/master/splash.png)
+![image](https://github.com/TheCircleFoundation/conceal-assets/blob/master/splash.png)
 
 # Conceal
 Latest Release: v.4.0.1 (Orion Build 002)
