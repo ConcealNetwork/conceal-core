@@ -1,3 +1,5 @@
+![image](hhttps://github.com/TheCircleFoundation/conceal-assets/blob/master/splash.png)
+
 # Conceal
 Latest Release: v.4.0.1 (Orion Build 002)
 Maintained by The Circle Team.
