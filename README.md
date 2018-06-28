@@ -19,6 +19,8 @@ Conceal is a free open source privacy protected peer-to-peer digital cash system
 
 ## Compiling Conceal from source
 
+### Linux / Ubuntu
+
 - You will need the following dependencies to build the Conceal CLI: boost, cmake, git, gcc, g++, python, and make.
 - On Ubuntu: `sudo apt-get install -y build-essential python-dev gcc g++ git cmake libboost-all-dev`
 
@@ -29,3 +31,6 @@ Conceal is a free open source privacy protected peer-to-peer digital cash system
 - `mkdir build && cd $_`
 - `cmake ..`
 - `make`
+
+#### Special Thanks
+Special thanks goes out to the developers from Cryptonote, Bytecoin, Monero, Forknote, TurtleCoin, and Masari.
