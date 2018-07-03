@@ -21,6 +21,8 @@ Conceal is a free open source privacy protected peer-to-peer digital cash system
 
 ### Linux / Ubuntu
 
+##### Prerequisites
+
 - You will need the following dependencies to build the Conceal CLI: boost, cmake, git, gcc, g++, python, and make.
 - On Ubuntu: `sudo apt-get install -y build-essential python-dev gcc g++ git cmake libboost-all-dev`
 
@@ -31,6 +33,28 @@ Conceal is a free open source privacy protected peer-to-peer digital cash system
 - `mkdir build && cd $_`
 - `cmake ..`
 - `make`
+
+If the build is successful the binaries will be in the src folder.
+
+### Windows 10
+
+##### Prerequisites
+
+- Install [Visual Studio 2017 Community Edition](https://www.visualstudio.com/thank-you-downloading-visual-studio/?sku=Community&rel=15&page=inlineinstall)
+- Install [CMake](https://cmake.org/download/)
+- When installing Visual Studio, you need to install **Desktop development with C++** and the **VC++ v140 toolchain** components. The option to install the v140 toolchain can be found by expanding the "Desktop development with C++" node on the right. You will need this for the project to build correctly.
+- Install [Boost 1.67.0](https://boost.teeks99.com/bin/1.67.0/), ensuring you download the installer for MSVC 14.1.
+
+##### Building
+
+- From the start menu, open 'x64 Native Tools Command Prompt for vs2017' or run "C:\Program Files (x86)\Microsoft Visual Studio\2017\Community\Common7\Tools\VsMSBuildCmd.bat" from any command prompt.
+- `cd conceal-cli`
+- `mkdir build`
+- `cd build`
+- `cmake -G "Visual Studio 15 2017 Win64" -DBOOST_LIBRARYDIR:PATH=c:/local/boost_1_67_0 ..` (Or your boost installed dir.)
+- `msbuild concealX.sln /p:Configuration=Release /m`
+
+If the build is successful the binaries will be in the src/Release folder.
 
 #### Special Thanks
 Special thanks goes out to the developers from Cryptonote, Bytecoin, Monero, Forknote, TurtleCoin, and Masari.
