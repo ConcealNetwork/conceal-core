@@ -34,6 +34,7 @@
 #include "WalletLegacy/WalletLegacy.h"
 #include "Wallet/LegacyKeysImporter.h"
 #include "WalletLegacy/WalletHelper.h"
+#include "Mnemonics/electrum-words.cpp"
 
 #include "version.h"
 
@@ -556,7 +557,6 @@ simple_wallet::simple_wallet(System::Dispatcher& dispatcher, const CryptoNote::C
   m_walletSynchronized(false) {
   m_consoleHandler.setHandler("start_mining", boost::bind(&simple_wallet::start_mining, this, _1), "start_mining [<number_of_threads>] - Start mining in daemon");
   m_consoleHandler.setHandler("stop_mining", boost::bind(&simple_wallet::stop_mining, this, _1), "Stop mining in daemon");
-  //m_consoleHandler.setHandler("refresh", boost::bind(&simple_wallet::refresh, this, _1), "Resynchronize transactions and balance");
   m_consoleHandler.setHandler("export_keys", boost::bind(&simple_wallet::export_keys, this, _1), "Show the secret keys of the current wallet");
   m_consoleHandler.setHandler("balance", boost::bind(&simple_wallet::show_balance, this, _1), "Show current wallet balance");
   m_consoleHandler.setHandler("incoming_transfers", boost::bind(&simple_wallet::show_incoming_transfers, this, _1), "Show incoming transfers");
@@ -595,6 +595,9 @@ bool simple_wallet::set_log(const std::vector<std::string> &args) {
   logManager.setMaxLevel(static_cast<Logging::Level>(l));
   return true;
 }
+
+bool key_import = true;
+
 //----------------------------------------------------------------------------------------------------
 bool simple_wallet::init(const boost::program_options::variables_map& vm) {
   handle_command_line(vm);
@@ -618,13 +621,13 @@ bool simple_wallet::init(const boost::program_options::variables_map& vm) {
     << "      @@@@@@    @@@@@@(   .@@(   @@@,    @@@@@  @@@@@@@@ @@@    (@@@ @@@@@@@@#  " << ENDL
     << "  " << ENDL
     << "  " << ENDL;
-    std::cout << "How you would like to proceed?\n\n\t[O]pen an existing wallet\n\t[G]enerate a new wallet file\n\t[I]mport wallet from keys\n\t[E]xit.\n\n";
+    std::cout << "How you would like to proceed?\n\n\t[O]pen an existing wallet\n\t[G]enerate a new wallet file\n\t[I]mport wallet from keys\n\t[M]nemonic seed import\n\t[E]xit.\n\n";
     char c;
     do {
       std::string answer;
       std::getline(std::cin, answer);
       c = answer[0];
-      if (!(c == 'O' || c == 'G' || c == 'E' || c == 'I' || c == 'o' || c == 'g' || c == 'e' || c == 'i')) {
+      if (!(c == 'O' || c == 'G' || c == 'E' || c == 'I' || c == 'o' || c == 'g' || c == 'e' || c == 'i' || c == 'm' || c == 'M')) {
         std::cout << "Unknown command: " << c <<std::endl;
       } else {
         break;
@@ -635,7 +638,7 @@ bool simple_wallet::init(const boost::program_options::variables_map& vm) {
       return false;
     }
 
-    std::cout << "Specify wallet file name (e.g., wallet.bin).\n";
+    std::cout << "Specify wallet file name (e.g., name.wallet).\n";
     std::string userInput;
     do {
       std::cout << "Wallet file name: ";
@@ -643,13 +646,19 @@ bool simple_wallet::init(const boost::program_options::variables_map& vm) {
       boost::algorithm::trim(userInput);
     } while (userInput.empty());
     if (c == 'i' || c == 'I'){
+      key_import = true;
       m_import_new = userInput;
-    }else if (c == 'g' || c == 'G') {
+    } else if (c == 'm' || c == 'M') {
+      key_import = false;
+      m_import_new = userInput;
+    } else if (c == 'g' || c == 'G') {
       m_generate_new = userInput;
     } else {
       m_wallet_file_arg = userInput;
     }
   }
+
+
 
   if (!m_generate_new.empty() && !m_wallet_file_arg.empty() && !m_import_new.empty()) {
     fail_msg_writer() << "you can't specify 'generate-new-wallet' and 'wallet-file' arguments simultaneously";
@@ -733,39 +742,62 @@ bool simple_wallet::init(const boost::program_options::variables_map& vm) {
                
     std::string private_spend_key_string;
     std::string private_view_key_string;
+
+Crypto::SecretKey private_spend_key;
+Crypto::SecretKey private_view_key;
+
+if (key_import) {
     do {
-       std::cout << "Private Spend Key: ";
-       std::getline(std::cin, private_spend_key_string);
-       boost::algorithm::trim(private_spend_key_string);
+      std::cout << "Private Spend Key: ";
+      std::getline(std::cin, private_spend_key_string);
+      boost::algorithm::trim(private_spend_key_string);
     } while (private_spend_key_string.empty());
-      do {
-          std::cout << "Private View Key: ";
-          std::getline(std::cin, private_view_key_string);
-          boost::algorithm::trim(private_view_key_string);
-      } while (private_view_key_string.empty());
-              
-        Crypto::Hash private_spend_key_hash;
-        Crypto::Hash private_view_key_hash;
-        size_t size;
-        if (!Common::fromHex(private_spend_key_string, &private_spend_key_hash, sizeof(private_spend_key_hash), size) || size != sizeof(private_spend_key_hash)) {
-            return false;
-           }
-        if (!Common::fromHex(private_view_key_string, &private_view_key_hash, sizeof(private_view_key_hash), size) || size != sizeof(private_spend_key_hash)) {
-            return false;
-           }
-        Crypto::SecretKey private_spend_key = *(struct Crypto::SecretKey *) &private_spend_key_hash;
-        Crypto::SecretKey private_view_key = *(struct Crypto::SecretKey *) &private_view_key_hash;
-               
-        if (!new_wallet(private_spend_key, private_view_key, walletFileName, pwd_container.password())) {
-            logger(ERROR, BRIGHT_RED) << "account creation failed";
-            return false;
-           }
-                
-        if (!writeAddressFile(walletAddressFile, m_wallet->getAddress())) {
-                  logger(WARNING, BRIGHT_RED) << "Couldn't write wallet address file: " + walletAddressFile;
-           }
-    } else {
-      m_wallet.reset(new WalletLegacy(m_currency, *m_node));
+    do {
+      std::cout << "Private View Key: ";
+      std::getline(std::cin, private_view_key_string);
+      boost::algorithm::trim(private_view_key_string);
+    } while (private_view_key_string.empty());
+} else {
+  std::string mnemonic_phrase;
+
+  do {
+    std::cout << "Mnemonics Phrase (25 words): ";
+    std::getline(std::cin, mnemonic_phrase);
+    boost::algorithm::trim(mnemonic_phrase);
+    boost::algorithm::to_lower(mnemonic_phrase);
+  } while (!is_valid_mnemonic(mnemonic_phrase, private_spend_key));
+
+  /* This is not used, but is needed to be passed to the function, not sure how we can avoid this */
+  Crypto::PublicKey unused_dummy_variable;
+
+  AccountBase::generateViewFromSpend(private_spend_key, private_view_key, unused_dummy_variable);
+}
+
+/* We already have our keys if we import via mnemonic seed */
+if (key_import) {
+    Crypto::Hash private_spend_key_hash;
+    Crypto::Hash private_view_key_hash;
+    size_t size;
+    if (!Common::fromHex(private_spend_key_string, &private_spend_key_hash, sizeof(private_spend_key_hash), size) || size != sizeof(private_spend_key_hash)) {
+      return false;
+    }
+    if (!Common::fromHex(private_view_key_string, &private_view_key_hash, sizeof(private_view_key_hash), size) || size != sizeof(private_spend_key_hash)) {
+      return false;
+    }
+      private_spend_key = *(struct Crypto::SecretKey *) &private_spend_key_hash;
+      private_view_key = *(struct Crypto::SecretKey *) &private_view_key_hash;
+    }
+
+    if (!new_wallet(private_spend_key, private_view_key, walletFileName, pwd_container.password())) {
+      logger(ERROR, BRIGHT_RED) << "account creation failed";
+      return false;
+    }
+
+    if (!writeAddressFile(walletAddressFile, m_wallet->getAddress())) {
+      logger(WARNING, BRIGHT_RED) << "Couldn't write wallet address file: " + walletAddressFile;
+    }
+  } else {
+    m_wallet.reset(new WalletLegacy(m_currency, *m_node));
 
     try {
       m_wallet_file = tryToOpenWalletOrLoadKeysOrThrow(logger, m_wallet, m_wallet_file_arg, pwd_container.password());
@@ -787,6 +819,64 @@ bool simple_wallet::init(const boost::program_options::variables_map& vm) {
 
   return true;
 }
+
+
+//----------------------------------------------------------------------------------------------------
+/* adding support for 25 word electrum seeds. however, we have to ensure that all old wallets that are 
+not deterministic, dont get a seed to avoid any loss of funds.
+*/
+std::string simple_wallet::generate_mnemonic(Crypto::SecretKey &private_spend_key) {
+
+  std::string mnemonic_str;
+
+  if (!crypto::ElectrumWords::bytes_to_words(private_spend_key, mnemonic_str, "English")) {
+      logger(ERROR, BRIGHT_RED) << "Cant create the mnemonic for the private spend key!";
+  }
+
+  return mnemonic_str;
+}
+//----------------------------------------------------------------------------------------------------
+void simple_wallet::log_incorrect_words(std::vector<std::string> words) {
+  Language::Base *language = Language::Singleton<Language::English>::instance();
+  const std::vector<std::string> &dictionary = language->get_word_list();
+
+  for (auto i : words) {
+    if (std::find(dictionary.begin(), dictionary.end(), i) == dictionary.end()) {
+      logger(ERROR, BRIGHT_RED) << i << " is not in the english word list!";
+    }
+  }
+}
+//----------------------------------------------------------------------------------------------------
+bool simple_wallet::is_valid_mnemonic(std::string &mnemonic_phrase, Crypto::SecretKey &private_spend_key) {
+
+  static std::string languages[] = {"English"};
+  static const int num_of_languages = 1;
+  static const int mnemonic_phrase_length = 25;
+
+  std::vector<std::string> words;
+
+  words = boost::split(words, mnemonic_phrase, ::isspace);
+
+  if (words.size() != mnemonic_phrase_length) {
+    logger(ERROR, BRIGHT_RED) << "Invalid mnemonic phrase!";
+    logger(ERROR, BRIGHT_RED) << "Seed phrase is not 25 words! Please try again.";
+    log_incorrect_words(words);
+    return false;
+  }
+
+  for (int i = 0; i < num_of_languages; i++) {
+    if (crypto::ElectrumWords::words_to_bytes(mnemonic_phrase, private_spend_key, languages[i])) {
+      return true;
+    }
+  }
+
+  logger(ERROR, BRIGHT_RED) << "Invalid mnemonic phrase!";
+  log_incorrect_words(words);
+  return false;
+}
+//----------------------------------------------------------------------------------------------------
+
+
 //----------------------------------------------------------------------------------------------------
 bool simple_wallet::deinit() {
   m_wallet->removeObserver(this);
@@ -837,7 +927,9 @@ bool simple_wallet::new_wallet(const std::string &wallet_file, const std::string
     logger(INFO, BRIGHT_WHITE) <<
       "Generated new wallet: " << m_wallet->getAddress() << std::endl <<
       "View secret key: " << Common::podToHex(keys.viewSecretKey) << std::endl <<
-      "Spend secret key: " << Common::podToHex(keys.spendSecretKey);
+      "Spend secret key: " << Common::podToHex(keys.spendSecretKey) << std::endl <<
+      "Mnemonic seed: " << generate_mnemonic(keys.spendSecretKey) << std::endl;
+
 
   }
   catch (const std::exception& e) {
@@ -1093,7 +1185,18 @@ bool simple_wallet::export_keys(const std::vector<std::string>& args/* = std::ve
   m_wallet->getAccountKeys(keys);
   std::cout << "Spend secret key: " << Common::podToHex(keys.spendSecretKey) << std::endl;
   std::cout << "View secret key: " <<  Common::podToHex(keys.viewSecretKey) << std::endl;
-                
+
+  Crypto::PublicKey unused_dummy_variable;
+  Crypto::SecretKey deterministic_private_view_key;
+
+  AccountBase::generateViewFromSpend(keys.spendSecretKey, deterministic_private_view_key, unused_dummy_variable);
+
+  bool deterministic_private_keys = deterministic_private_view_key == keys.viewSecretKey;
+
+/* dont show a mnemonic seed if it is an old non-deterministic wallet */
+  if (deterministic_private_keys) {
+    std::cout << "Mnemonic seed: " << generate_mnemonic(keys.spendSecretKey) << std::endl;
+  }
   return true;
 }
 //----------------------------------------------------------------------------------------------------
@@ -1106,7 +1209,7 @@ bool simple_wallet::show_incoming_transfers(const std::vector<std::string>& args
     if (txInfo.totalAmount < 0) continue;
     hasTransfers = true;
     logger(INFO) << "        amount       \t                              tx id";
-    logger(INFO, GREEN) <<  // spent - magenta
+    logger(INFO, GREEN) <<  
       std::setw(21) << m_currency.formatAmount(txInfo.totalAmount) << '\t' << Common::podToHex(txInfo.hash);
   }
 

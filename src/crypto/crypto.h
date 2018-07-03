@@ -40,6 +40,8 @@ struct EllipticCurveScalar {
 
     static void generate_keys(PublicKey &, SecretKey &);
     friend void generate_keys(PublicKey &, SecretKey &);
+    static void generate_keys_from_seed(PublicKey &, SecretKey &, SecretKey &);
+    friend void generate_keys_from_seed(PublicKey &, SecretKey &, SecretKey &);
     static bool check_key(const PublicKey &);
     friend bool check_key(const PublicKey &);
     static bool secret_key_to_public_key(const SecretKey &, PublicKey &);
@@ -142,6 +144,12 @@ struct EllipticCurveScalar {
    */
   inline bool secret_key_to_public_key(const SecretKey &sec, PublicKey &pub) {
     return crypto_ops::secret_key_to_public_key(sec, pub);
+  }
+
+/* Generate a new key pair from a seed
+   */
+  inline void generate_keys_from_seed(PublicKey &pub, SecretKey &sec, SecretKey &seed) {
+    crypto_ops::generate_keys_from_seed(pub, sec, seed);
   }
 
   /* To generate an ephemeral key used to send money to:

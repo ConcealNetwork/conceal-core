@@ -50,6 +50,14 @@ namespace Crypto {
     ge_p3_tobytes(reinterpret_cast<unsigned char*>(&pub), &point);
   }
 
+  void crypto_ops::generate_keys_from_seed(PublicKey &pub, SecretKey &sec, SecretKey &seed) {
+    ge_p3 point;
+    sec = seed;
+    sc_reduce32(reinterpret_cast<unsigned char*>(&sec));
+    ge_scalarmult_base(&point, reinterpret_cast<unsigned char*>(&sec));
+    ge_p3_tobytes(reinterpret_cast<unsigned char*>(&pub), &point);
+  }
+
   bool crypto_ops::check_key(const PublicKey &key) {
     ge_p3 point;
     return ge_frombytes_vartime(&point, reinterpret_cast<const unsigned char*>(&key)) == 0;

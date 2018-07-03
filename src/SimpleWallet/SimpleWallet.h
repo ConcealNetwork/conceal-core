@@ -85,8 +85,12 @@ namespace CryptoNote
 
     bool ask_wallet_create_if_needed();
     std::string resolveAlias(const std::string& aliasUrl);
-
     void printConnectionError() const;
+ 
+    std::string generate_mnemonic(Crypto::SecretKey &);
+    void log_incorrect_words(std::vector<std::string>);
+    bool is_valid_mnemonic(std::string &, Crypto::SecretKey &);
+
 
     //---------------- IWalletLegacyObserver -------------------------
     virtual void initCompleted(std::error_code result) override;

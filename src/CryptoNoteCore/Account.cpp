@@ -5,6 +5,7 @@
 
 #include "Account.h"
 #include "CryptoNoteSerialization.h"
+#include "crypto/keccak.c"
 
 namespace CryptoNote {
 //-----------------------------------------------------------------
@@ -16,9 +17,15 @@ void AccountBase::setNull() {
   m_keys = AccountKeys();
 }
 //-----------------------------------------------------------------
+void AccountBase::generateViewFromSpend(Crypto::SecretKey &spend, Crypto::SecretKey &viewSecret, Crypto::PublicKey &viewPublic) {
+  Crypto::SecretKey viewKeySeed;
+  keccak((uint8_t *)&spend, sizeof(spend), (uint8_t *)&viewKeySeed, sizeof(viewKeySeed));
+  Crypto::generate_keys_from_seed(viewPublic, viewSecret, viewKeySeed);
+}
+//-----------------------------------------------------------------
 void AccountBase::generate() {
   Crypto::generate_keys(m_keys.address.spendPublicKey, m_keys.spendSecretKey);
-  Crypto::generate_keys(m_keys.address.viewPublicKey, m_keys.viewSecretKey);
+  generateViewFromSpend(m_keys.spendSecretKey, m_keys.viewSecretKey, m_keys.address.viewPublicKey);
   m_creation_timestamp = time(NULL);
 }
 //-----------------------------------------------------------------
