@@ -1630,6 +1630,11 @@ bool Blockchain::check_tx_input(const KeyInput& txin, const Crypto::Hash& tx_pre
       "Output keys for tx with amount = " << txin.amount << " and count indexes " << txin.outputIndexes.size() << " returned wrong keys count " << output_keys.size();
     return false;
   }
+  
+  if (getCurrentBlockchainHeight() > CryptoNote::parameters::UPGRADE_HEIGHT_V4 && txin.outputIndexes.size() < 3) {
+    logger(ERROR, BRIGHT_RED) << "ring size is too small: " <<  txin.outputIndexes.size() << " Expected: 3";
+    return false;
+  }
 
   if (!(sig.size() == output_keys.size())) { logger(ERROR, BRIGHT_RED) << "internal error: tx signatures count=" << sig.size() << " mismatch with outputs keys count for inputs=" << output_keys.size(); return false; }
   if (m_is_in_checkpoint_zone) {
