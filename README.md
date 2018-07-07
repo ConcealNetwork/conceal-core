@@ -1,7 +1,7 @@
 ![image](https://github.com/TheCircleFoundation/conceal-assets/blob/master/splash.png)
 
 # Conceal CLI
-Latest Release: v.4.0.1 (Orion Build 003)
+Latest Release: v.4.0.2
 Maintained by The Circle Team.
 
 ## Information
