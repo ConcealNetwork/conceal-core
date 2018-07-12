@@ -19,6 +19,7 @@
 #include <boost/algorithm/string.hpp>
 #include <boost/filesystem.hpp>
 
+#include "Common/Base58.h"
 #include "Common/CommandLine.h"
 #include "Common/SignalHandler.h"
 #include "Common/StringTools.h"
@@ -924,12 +925,15 @@ bool simple_wallet::new_wallet(const std::string &wallet_file, const std::string
     AccountKeys keys;
     m_wallet->getAccountKeys(keys);
 
+    std::string secretKeysData = std::string(reinterpret_cast<char*>(&keys.spendSecretKey), sizeof(keys.spendSecretKey)) + std::string(reinterpret_cast<char*>(&keys.viewSecretKey), sizeof(keys.viewSecretKey));
+    std::string guiKeys = Tools::Base58::encode_addr(CryptoNote::parameters::CRYPTONOTE_PUBLIC_ADDRESS_BASE58_PREFIX, secretKeysData);
+
     logger(INFO, BRIGHT_WHITE) <<
       "Generated new wallet: " << m_wallet->getAddress() << std::endl <<
       "View secret key: " << Common::podToHex(keys.viewSecretKey) << std::endl <<
       "Spend secret key: " << Common::podToHex(keys.spendSecretKey) << std::endl <<
-      "Mnemonic seed: " << generate_mnemonic(keys.spendSecretKey) << std::endl;
-
+      "GUI key: " << guiKeys << std::endl <<  
+      "Mnemonic seed: " << generate_mnemonic(keys.spendSecretKey) << std::endl << std::endl;
 
   }
   catch (const std::exception& e) {
@@ -1183,8 +1187,16 @@ bool simple_wallet::show_balance(const std::vector<std::string>& args/* = std::v
 bool simple_wallet::export_keys(const std::vector<std::string>& args/* = std::vector<std::string>()*/) {
   AccountKeys keys;
   m_wallet->getAccountKeys(keys);
-  std::cout << "Spend secret key: " << Common::podToHex(keys.spendSecretKey) << std::endl;
+
+  std::string secretKeysData = std::string(reinterpret_cast<char*>(&keys.spendSecretKey), sizeof(keys.spendSecretKey)) + std::string(reinterpret_cast<char*>(&keys.viewSecretKey), sizeof(keys.viewSecretKey));
+  std::string guiKeys = Tools::Base58::encode_addr(CryptoNote::parameters::CRYPTONOTE_PUBLIC_ADDRESS_BASE58_PREFIX, secretKeysData);
+
+  std::cout << std::endl << "Spend secret key: " << Common::podToHex(keys.spendSecretKey) << std::endl;
   std::cout << "View secret key: " <<  Common::podToHex(keys.viewSecretKey) << std::endl;
+  std::cout << "GUI key: " <<  guiKeys << std::endl;
+
+
+
 
   Crypto::PublicKey unused_dummy_variable;
   Crypto::SecretKey deterministic_private_view_key;
@@ -1195,7 +1207,7 @@ bool simple_wallet::export_keys(const std::vector<std::string>& args/* = std::ve
 
 /* dont show a mnemonic seed if it is an old non-deterministic wallet */
   if (deterministic_private_keys) {
-    std::cout << "Mnemonic seed: " << generate_mnemonic(keys.spendSecretKey) << std::endl;
+    std::cout << "Mnemonic seed: " << generate_mnemonic(keys.spendSecretKey) << std::endl << std::endl;
   }
   return true;
 }
