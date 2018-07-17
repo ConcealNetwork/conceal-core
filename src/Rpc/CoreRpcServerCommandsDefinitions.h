@@ -373,6 +373,7 @@ struct block_header_response {
   bool orphan_status;
   uint64_t height;
   uint64_t depth;
+  uint64_t deposits;
   std::string hash;
   difficulty_type difficulty;
   uint64_t reward;
@@ -386,6 +387,7 @@ struct block_header_response {
     KV_MEMBER(orphan_status)
     KV_MEMBER(height)
     KV_MEMBER(depth)
+    KV_MEMBER(deposits)
     KV_MEMBER(hash)
     KV_MEMBER(difficulty)
     KV_MEMBER(reward)
