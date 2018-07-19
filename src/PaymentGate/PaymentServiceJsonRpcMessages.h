@@ -248,6 +248,14 @@ struct GetUnconfirmedTransactionHashes {
 struct WalletRpcOrder {
   std::string address;
   uint64_t amount;
+  std::string message;
+
+  void serialize(CryptoNote::ISerializer& serializer);
+};
+
+struct WalletRpcMessage {
+  std::string address;
+  std::string message;
 
   void serialize(CryptoNote::ISerializer& serializer);
 };
@@ -326,6 +334,20 @@ struct SendDelayedTransaction {
   };
 
   struct Response {
+    void serialize(CryptoNote::ISerializer& serializer);
+  };
+};
+
+struct GetMessagesFromExtra {
+  struct Request {
+    std::string extra;
+
+    void serialize(CryptoNote::ISerializer& serializer);
+  };
+
+  struct Response {
+    std::vector<std::string> messages;
+
     void serialize(CryptoNote::ISerializer& serializer);
   };
 };
