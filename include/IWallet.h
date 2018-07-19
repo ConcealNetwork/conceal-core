@@ -78,6 +78,11 @@ struct WalletOrder {
   uint64_t amount;
 };
 
+struct WalletMessage {
+  std::string address;
+  std::string message;
+};
+
 struct WalletTransfer {
   WalletTransferType type;
   std::string address;
@@ -92,6 +97,7 @@ struct DonationSettings {
 struct TransactionParameters {
   std::vector<std::string> sourceAddresses;
   std::vector<WalletOrder> destinations;
+  std::vector<WalletMessage> messages;
   uint64_t fee = 0;
   uint64_t mixIn = 0;
   std::string extra;

@@ -313,12 +313,36 @@ std::vector<std::string> collectDestinationAddresses(const std::vector<PaymentSe
   return result;
 }
 
+std::vector<PaymentService::WalletRpcMessage> collectMessages(const std::vector<PaymentService::WalletRpcOrder>& orders) {
+  std::vector<PaymentService::WalletRpcMessage> result;
+
+  result.reserve(orders.size());
+  for (const auto& order: orders) {
+    if (!order.message.empty()) {
+      result.push_back({ order.address, order.message });
+    }
+  }
+
+  return result;
+}
+
 std::vector<CryptoNote::WalletOrder> convertWalletRpcOrdersToWalletOrders(const std::vector<PaymentService::WalletRpcOrder>& orders) {
   std::vector<CryptoNote::WalletOrder> result;
   result.reserve(orders.size());
 
   for (const auto& order: orders) {
     result.emplace_back(CryptoNote::WalletOrder {order.address, order.amount});
+  }
+
+  return result;
+}
+
+std::vector<CryptoNote::WalletMessage> convertWalletRpcMessagesToWalletMessages(const std::vector<PaymentService::WalletRpcMessage>& messages) {
+  std::vector<CryptoNote::WalletMessage> result;
+  result.reserve(messages.size());
+
+  for (const auto& message: messages) {
+    result.emplace_back(CryptoNote::WalletMessage {message.address, message.message});
   }
 
   return result;
@@ -821,6 +845,7 @@ std::error_code WalletService::sendTransaction(const SendTransaction::Request& r
 
     validateAddresses(request.sourceAddresses, currency, logger);
     validateAddresses(collectDestinationAddresses(request.transfers), currency, logger);
+    std::vector<PaymentService::WalletRpcMessage> messages = collectMessages(request.transfers);
     if (!request.changeAddress.empty()) {
       validateAddresses({ request.changeAddress }, currency, logger);
     }
@@ -834,6 +859,7 @@ std::error_code WalletService::sendTransaction(const SendTransaction::Request& r
 
     sendParams.sourceAddresses = request.sourceAddresses;
     sendParams.destinations = convertWalletRpcOrdersToWalletOrders(request.transfers);
+    sendParams.messages = convertWalletRpcMessagesToWalletMessages(messages);
     sendParams.fee = request.fee;
     sendParams.mixIn = request.anonymity;
     sendParams.unlockTimestamp = request.unlockTime;
@@ -862,6 +888,7 @@ std::error_code WalletService::createDelayedTransaction(const CreateDelayedTrans
 
     validateAddresses(request.addresses, currency, logger);
     validateAddresses(collectDestinationAddresses(request.transfers), currency, logger);
+    std::vector<PaymentService::WalletRpcMessage> messages = collectMessages(request.transfers);
     if (!request.changeAddress.empty()) {
       validateAddresses({ request.changeAddress }, currency, logger);
     }
@@ -875,6 +902,7 @@ std::error_code WalletService::createDelayedTransaction(const CreateDelayedTrans
 
     sendParams.sourceAddresses = request.addresses;
     sendParams.destinations = convertWalletRpcOrdersToWalletOrders(request.transfers);
+    sendParams.messages = convertWalletRpcMessagesToWalletMessages(messages);
     sendParams.fee = request.fee;
     sendParams.mixIn = request.anonymity;
     sendParams.unlockTimestamp = request.unlockTime;
@@ -1010,6 +1038,26 @@ std::error_code WalletService::getStatus(uint32_t& blockCount, uint32_t& knownBl
     return x.code();
   } catch (std::exception& x) {
     logger(Logging::WARNING) << "Error while getting status: " << x.what();
+    return make_error_code(CryptoNote::error::INTERNAL_WALLET_ERROR);
+  }
+
+  return std::error_code();
+}
+
+std::error_code WalletService::getMessagesFromExtra(const std::string& extra, std::vector<std::string>& messages) {
+  try {
+    System::EventLock lk(readyEvent);
+
+    std::vector<uint8_t> extraBin = Common::fromHex(extra);
+    Crypto::PublicKey publicKey = CryptoNote::getTransactionPublicKeyFromExtra(extraBin);
+    messages.clear();
+    for (size_t i = 0; i < wallet.getAddressCount(); ++i) {
+      Crypto::SecretKey secretKey = wallet.getAddressSpendKey(wallet.getAddress(i)).secretKey;
+      std::vector<std::string> m = CryptoNote::get_messages_from_extra(extraBin, publicKey, &secretKey);
+      messages.insert(std::end(messages), std::begin(m), std::end(m));
+    }
+  } catch (std::exception& e) {
+    logger(Logging::WARNING) << "getMessagesFromExtra warning: " << e.what();
     return make_error_code(CryptoNote::error::INTERNAL_WALLET_ERROR);
   }
 

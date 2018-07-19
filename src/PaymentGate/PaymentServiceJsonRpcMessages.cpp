@@ -180,8 +180,18 @@ void GetUnconfirmedTransactionHashes::Response::serialize(CryptoNote::ISerialize
 }
 
 void WalletRpcOrder::serialize(CryptoNote::ISerializer& serializer) {
+  serializer(message, "message");
   bool r = serializer(address, "address");
   r &= serializer(amount, "amount");
+
+  if (!r) {
+    throw RequestSerializationError();
+  }
+}
+
+void WalletRpcMessage::serialize(CryptoNote::ISerializer& serializer) {
+  bool r = serializer(address, "address");
+  r &= serializer(message, "message");
 
   if (!r) {
     throw RequestSerializationError();
@@ -273,6 +283,16 @@ void SendDelayedTransaction::Request::serialize(CryptoNote::ISerializer& seriali
 }
 
 void SendDelayedTransaction::Response::serialize(CryptoNote::ISerializer& serializer) {
+}
+
+void GetMessagesFromExtra::Request::serialize(CryptoNote::ISerializer& serializer) {
+  if (!serializer(extra, "extra")) {
+    throw RequestSerializationError();
+  }
+}
+
+void GetMessagesFromExtra::Response::serialize(CryptoNote::ISerializer& serializer) {
+  serializer(messages, "messages");
 }
 
 }
