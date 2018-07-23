@@ -839,7 +839,7 @@ std::error_code WalletService::getAddresses(std::vector<std::string>& addresses)
   return std::error_code();
 }
 
-std::error_code WalletService::sendTransaction(const SendTransaction::Request& request, std::string& transactionHash) {
+std::error_code WalletService::sendTransaction(const SendTransaction::Request& request, std::string& transactionHash, std::string& transactionSecretKey) {
   try {
     System::EventLock lk(readyEvent);
 
@@ -865,9 +865,10 @@ std::error_code WalletService::sendTransaction(const SendTransaction::Request& r
     sendParams.unlockTimestamp = request.unlockTime;
     sendParams.changeDestination = request.changeAddress;
 
-    size_t transactionId = wallet.transfer(sendParams);
+    Crypto::SecretKey transactionSK;
+    size_t transactionId = wallet.transfer(sendParams, transactionSK);
     transactionHash = Common::podToHex(wallet.getTransaction(transactionId).hash);
-	
+	transactionSecretKey = Common::podToHex(transactionSK);
 	saveWallet();
 
     logger(Logging::DEBUGGING) << "Transaction " << transactionHash << " has been sent";

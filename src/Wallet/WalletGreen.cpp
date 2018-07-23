@@ -697,7 +697,7 @@ WalletGreen::TransfersRange WalletGreen::getTransactionTransfersRange(size_t tra
   return bounds;
 }
 
-size_t WalletGreen::transfer(const TransactionParameters& transactionParameters) {
+size_t WalletGreen::transfer(const TransactionParameters& transactionParameters, Crypto::SecretKey& transactionSK) {
   Tools::ScopeExit releaseContext([this] {
     m_dispatcher.yield();
   });
@@ -708,7 +708,7 @@ size_t WalletGreen::transfer(const TransactionParameters& transactionParameters)
   throwIfTrackingMode();
   throwIfStopped();
 
-  return doTransfer(transactionParameters);
+  return doTransfer(transactionParameters, transactionSK);
 }
 
 void WalletGreen::prepareTransaction(std::vector<WalletOuts>&& wallets,
@@ -720,7 +720,8 @@ void WalletGreen::prepareTransaction(std::vector<WalletOuts>&& wallets,
   uint64_t unlockTimestamp,
   const DonationSettings& donation,
   const CryptoNote::AccountPublicAddress& changeDestination,
-  PreparedTransaction& preparedTransaction) {
+  PreparedTransaction& preparedTransaction,
+  Crypto::SecretKey& transactionSK) {
 
   preparedTransaction.destinations = convertOrdersToTransfers(orders);
   preparedTransaction.neededMoney = countNeededMoney(preparedTransaction.destinations, fee);
@@ -757,7 +758,7 @@ void WalletGreen::prepareTransaction(std::vector<WalletOuts>&& wallets,
     decomposedOutputs.emplace_back(std::move(splittedChange));
   }
 
-  preparedTransaction.transaction = makeTransaction(decomposedOutputs, keysInfo, messages, extra, unlockTimestamp);
+  preparedTransaction.transaction = makeTransaction(decomposedOutputs, keysInfo, messages, extra, unlockTimestamp, transactionSK);
 }
 
 void WalletGreen::validateTransactionParameters(const TransactionParameters& transactionParameters) {
@@ -801,7 +802,7 @@ void WalletGreen::validateTransactionParameters(const TransactionParameters& tra
   }
 }
 
-size_t WalletGreen::doTransfer(const TransactionParameters& transactionParameters) {
+size_t WalletGreen::doTransfer(const TransactionParameters& transactionParameters, Crypto::SecretKey& transactionSK) {
   validateTransactionParameters(transactionParameters);
   CryptoNote::AccountPublicAddress changeDestination = getChangeDestination(transactionParameters.changeDestination, transactionParameters.sourceAddresses);
 
@@ -822,7 +823,8 @@ size_t WalletGreen::doTransfer(const TransactionParameters& transactionParameter
     transactionParameters.unlockTimestamp,
     transactionParameters.donation,
     changeDestination,
-    preparedTransaction);
+    preparedTransaction,
+    transactionSK);
 
   return validateSaveAndSendTransaction(*preparedTransaction.transaction, preparedTransaction.destinations, false, true);
 }
@@ -848,6 +850,7 @@ size_t WalletGreen::makeTransaction(const TransactionParameters& sendingTransact
     wallets = pickWalletsWithMoney();
   }
 
+  Crypto::SecretKey transactionSK;
   PreparedTransaction preparedTransaction;
   prepareTransaction(
     std::move(wallets),
@@ -859,7 +862,8 @@ size_t WalletGreen::makeTransaction(const TransactionParameters& sendingTransact
     sendingTransaction.unlockTimestamp,
     sendingTransaction.donation,
     changeDestination,
-    preparedTransaction);
+    preparedTransaction,
+    transactionSK);
 
   return validateSaveAndSendTransaction(*preparedTransaction.transaction, preparedTransaction.destinations, false, false);
 }
@@ -1240,14 +1244,13 @@ bool WalletGreen::eraseForeignTransfers(size_t transactionId, size_t firstTransf
 }
 
 std::unique_ptr<CryptoNote::ITransaction> WalletGreen::makeTransaction(const std::vector<ReceiverAmounts>& decomposedOutputs,
-  std::vector<InputInfo>& keysInfo, const std::vector<WalletMessage>& messages, const std::string& extra, uint64_t unlockTimestamp) {
+  std::vector<InputInfo>& keysInfo, const std::vector<WalletMessage>& messages, const std::string& extra, uint64_t unlockTimestamp, Crypto::SecretKey &transactionSK) {
 
   std::unique_ptr<ITransaction> tx = createTransaction();
 
-  Crypto::SecretKey secretKey;
-  tx->getTransactionSecretKey(secretKey);
+  tx->getTransactionSecretKey(transactionSK);
   Crypto::PublicKey publicKey = tx->getTransactionPublicKey();
-  CryptoNote::KeyPair kp = { publicKey, secretKey };
+  CryptoNote::KeyPair kp = { publicKey, transactionSK };
   for (size_t i = 0; i < messages.size(); ++i) {
     CryptoNote::AccountPublicAddress addressBin;
     if(!m_currency.parseAccountAddressString(messages[i].address, addressBin)) continue;
@@ -2126,7 +2129,8 @@ size_t WalletGreen::createFusionTransaction(uint64_t threshold, uint64_t mixin) 
     assert(decomposedOutputs.amounts.size() <= MAX_FUSION_OUTPUT_COUNT);
 
     std::vector<WalletMessage> messages;
-    fusionTransaction = makeTransaction(std::vector<ReceiverAmounts>{decomposedOutputs}, keysInfo, messages, "", 0);
+    Crypto::SecretKey transactionSK;
+    fusionTransaction = makeTransaction(std::vector<ReceiverAmounts>{decomposedOutputs}, keysInfo, messages, "", 0, transactionSK);
 
     transactionSize = getTransactionSize(*fusionTransaction);
 
