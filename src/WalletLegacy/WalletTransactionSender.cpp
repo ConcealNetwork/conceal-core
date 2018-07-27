@@ -52,14 +52,14 @@ void createChangeDestinations(const AccountPublicAddress& address, uint64_t need
 }
 
 void constructTx(const AccountKeys keys, const std::vector<TransactionSourceEntry>& sources, const std::vector<TransactionDestinationEntry>& splittedDests,
-    const std::string& extra, uint64_t unlockTimestamp, uint64_t sizeLimit, Transaction& tx, const std::vector<tx_message_entry>& messages, uint64_t ttl) {
+    const std::string& extra, uint64_t unlockTimestamp, uint64_t sizeLimit, Transaction& tx, const std::vector<tx_message_entry>& messages, uint64_t ttl, Crypto::SecretKey& transactionSK) {
 
   std::vector<uint8_t> extraVec;
   extraVec.reserve(extra.size());
   std::for_each(extra.begin(), extra.end(), [&extraVec] (const char el) { extraVec.push_back(el);});
 
   Logging::LoggerGroup nullLog;
-  bool r = constructTransaction(keys, sources, splittedDests, messages, ttl, extraVec, tx, unlockTimestamp, nullLog);
+  bool r = constructTransaction(keys, sources, splittedDests, messages, ttl, extraVec, tx, unlockTimestamp, nullLog, transactionSK);
 
   throwIf(!r, error::INTERNAL_WALLET_ERROR);
   throwIf(getObjectBinarySize(tx) >= sizeLimit, error::TRANSACTION_SIZE_TOO_BIG);
@@ -178,7 +178,8 @@ void WalletTransactionSender::validateTransfersAddresses(const std::vector<Walle
   }
 }
 
-std::unique_ptr<WalletRequest> WalletTransactionSender::makeSendRequest(TransactionId& transactionId,
+std::unique_ptr<WalletRequest> WalletTransactionSender::makeSendRequest(Crypto::SecretKey& transactionSK,
+                                                                        TransactionId& transactionId,
                                                                         std::deque<std::unique_ptr<WalletLegacyEvent>>& events,
                                                                         const std::vector<WalletLegacyTransfer>& transfers,
                                                                         uint64_t fee,
@@ -212,10 +213,10 @@ std::unique_ptr<WalletRequest> WalletTransactionSender::makeSendRequest(Transact
   }
 
   if (context->mixIn != 0) {
-    return makeGetRandomOutsRequest(std::move(context), false);
+    return makeGetRandomOutsRequest(std::move(context), false, transactionSK);
   }
 
-  return doSendTransaction(std::move(context), events);
+  return doSendTransaction(std::move(context), events, transactionSK);
 }
 
 std::unique_ptr<WalletRequest> WalletTransactionSender::makeDepositRequest(TransactionId& transactionId,
@@ -243,7 +244,8 @@ std::unique_ptr<WalletRequest> WalletTransactionSender::makeDepositRequest(Trans
   context->depositTerm = static_cast<uint32_t>(term);
 
   if (context->mixIn != 0) {
-    return makeGetRandomOutsRequest(std::move(context), true);
+    Crypto::SecretKey transactionSK;
+    return makeGetRandomOutsRequest(std::move(context), true, transactionSK);
   }
 
   return doSendMultisigTransaction(std::move(context), events);
@@ -269,7 +271,7 @@ std::unique_ptr<WalletRequest> WalletTransactionSender::makeWithdrawDepositReque
   return doSendDepositWithdrawTransaction(std::move(context), events, depositIds);
 }
 
-std::unique_ptr<WalletRequest> WalletTransactionSender::makeGetRandomOutsRequest(std::shared_ptr<SendTransactionContext>&& context, bool isMultisigTransaction) {
+std::unique_ptr<WalletRequest> WalletTransactionSender::makeGetRandomOutsRequest(std::shared_ptr<SendTransactionContext>&& context, bool isMultisigTransaction, Crypto::SecretKey& transactionSK) {
   uint64_t outsCount = context->mixIn + 1;// add one to make possible (if need) to skip real output key
   std::vector<uint64_t> amounts;
 
@@ -278,12 +280,13 @@ std::unique_ptr<WalletRequest> WalletTransactionSender::makeGetRandomOutsRequest
   }
 
   return std::unique_ptr<WalletRequest>(new WalletGetRandomOutsByAmountsRequest(amounts, outsCount, context,
-    std::bind(&WalletTransactionSender::sendTransactionRandomOutsByAmount, this, isMultisigTransaction, context,
+    std::bind(&WalletTransactionSender::sendTransactionRandomOutsByAmount, this, isMultisigTransaction, context, std::ref(transactionSK),
       std::placeholders::_1, std::placeholders::_2, std::placeholders::_3)));
 }
 
 void WalletTransactionSender::sendTransactionRandomOutsByAmount(bool isMultisigTransaction,
                                                                 std::shared_ptr<SendTransactionContext> context,
+                                                                Crypto::SecretKey& transactionSK,
                                                                 std::deque<std::unique_ptr<WalletLegacyEvent>>& events,
                                                                 std::unique_ptr<WalletRequest>& nextRequest,
                                                                 std::error_code ec) {
@@ -304,7 +307,7 @@ void WalletTransactionSender::sendTransactionRandomOutsByAmount(bool isMultisigT
   if (isMultisigTransaction) {
     nextRequest = doSendMultisigTransaction(std::move(context), events);
   } else {
-    nextRequest = doSendTransaction(std::move(context), events);
+    nextRequest = doSendTransaction(std::move(context), events, transactionSK);
   }
 }
 
@@ -317,7 +320,7 @@ bool WalletTransactionSender::checkIfEnoughMixins(const std::vector<COMMAND_RPC_
 }
 
 std::unique_ptr<WalletRequest> WalletTransactionSender::doSendTransaction(std::shared_ptr<SendTransactionContext>&& context,
-                                                                          std::deque<std::unique_ptr<WalletLegacyEvent>>& events) {
+                                                                          std::deque<std::unique_ptr<WalletLegacyEvent>>& events, Crypto::SecretKey& transactionSK) {
   if (m_isStoping) {
     events.push_back(makeCompleteEvent(m_transactionsCache, context->transactionId, make_error_code(error::TX_CANCELLED)));
     return std::unique_ptr<WalletRequest>();
@@ -339,7 +342,7 @@ std::unique_ptr<WalletRequest> WalletTransactionSender::doSendTransaction(std::s
     splitDestinations(transaction.firstTransferId, transaction.transferCount, changeDts, context->dustPolicy, splittedDests);
 
     Transaction tx;
-    constructTx(m_keys, sources, splittedDests, transaction.extra, transaction.unlockTime, m_upperTransactionSizeLimit, tx, context->messages, context->ttl);
+    constructTx(m_keys, sources, splittedDests, transaction.extra, transaction.unlockTime, m_upperTransactionSizeLimit, tx, context->messages, context->ttl, transactionSK);
 
     getObjectHash(tx, transaction.hash);
 

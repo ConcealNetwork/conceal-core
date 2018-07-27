@@ -27,7 +27,8 @@ public:
 
   void stop();
 
-  std::unique_ptr<WalletRequest> makeSendRequest(TransactionId& transactionId,
+  std::unique_ptr<WalletRequest> makeSendRequest(Crypto::SecretKey& transactionSK,
+                                                 TransactionId& transactionId,
                                                  std::deque<std::unique_ptr<WalletLegacyEvent>>& events,
                                                  const std::vector<WalletLegacyTransfer>& transfers,
                                                  uint64_t fee,
@@ -50,8 +51,8 @@ public:
                                                             uint64_t fee);
 
 private:
-  std::unique_ptr<WalletRequest> makeGetRandomOutsRequest(std::shared_ptr<SendTransactionContext>&& context, bool isMultisigTransaction);
-  std::unique_ptr<WalletRequest> doSendTransaction(std::shared_ptr<SendTransactionContext>&& context, std::deque<std::unique_ptr<WalletLegacyEvent>>& events);
+  std::unique_ptr<WalletRequest> makeGetRandomOutsRequest(std::shared_ptr<SendTransactionContext>&& context, bool isMultisigTransaction, Crypto::SecretKey& transactionSK);
+  std::unique_ptr<WalletRequest> doSendTransaction(std::shared_ptr<SendTransactionContext>&& context, std::deque<std::unique_ptr<WalletLegacyEvent>>& events, Crypto::SecretKey& transactionSK);
   std::unique_ptr<WalletRequest> doSendMultisigTransaction(std::shared_ptr<SendTransactionContext>&& context, std::deque<std::unique_ptr<WalletLegacyEvent>>& events);
   std::unique_ptr<WalletRequest> doSendDepositWithdrawTransaction(std::shared_ptr<SendTransactionContext>&& context,
                                                                   std::deque<std::unique_ptr<WalletLegacyEvent>>& events,
@@ -59,6 +60,7 @@ private:
 
   void sendTransactionRandomOutsByAmount(bool isMultisigTransaction,
                                          std::shared_ptr<SendTransactionContext> context,
+                                         Crypto::SecretKey& transactionSK,
                                          std::deque<std::unique_ptr<WalletLegacyEvent>>& events,
                                          std::unique_ptr<WalletRequest>& nextRequest,
                                          std::error_code ec);

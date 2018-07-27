@@ -72,14 +72,16 @@ public:
   virtual bool getDeposit(DepositId depositId, Deposit& deposit) override;
   virtual std::vector<Payments> getTransactionsByPaymentIds(const std::vector<PaymentId>& paymentIds) const override;
 
-  virtual TransactionId sendTransaction(const WalletLegacyTransfer& transfer,
+  virtual TransactionId sendTransaction(Crypto::SecretKey& transactionSK,
+                                        const WalletLegacyTransfer& transfer,
                                         uint64_t fee,
                                         const std::string& extra = "",
                                         uint64_t mixIn = 0,
                                         uint64_t unlockTimestamp = 0,
                                         const std::vector<TransactionMessage>& messages = std::vector<TransactionMessage>(),
                                         uint64_t ttl = 0) override;
-  virtual TransactionId sendTransaction(const std::vector<WalletLegacyTransfer>& transfers,
+  virtual TransactionId sendTransaction(Crypto::SecretKey& transactionSK,
+                                        const std::vector<WalletLegacyTransfer>& transfers,
                                         uint64_t fee,
                                         const std::string& extra = "",
                                         uint64_t mixIn = 0,

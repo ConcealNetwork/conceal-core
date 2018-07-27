@@ -462,7 +462,8 @@ bool WalletLegacy::getDeposit(DepositId depositId, Deposit& deposit) {
   return m_transactionsCache.getDeposit(depositId, deposit);
 }
 
-TransactionId WalletLegacy::sendTransaction(const WalletLegacyTransfer& transfer,
+TransactionId WalletLegacy::sendTransaction(Crypto::SecretKey& transactionSK,
+                                            const WalletLegacyTransfer& transfer,
                                             uint64_t fee,
                                             const std::string& extra,
                                             uint64_t mixIn,
@@ -473,10 +474,11 @@ TransactionId WalletLegacy::sendTransaction(const WalletLegacyTransfer& transfer
   transfers.push_back(transfer);
   throwIfNotInitialised();
 
-  return sendTransaction(transfers, fee, extra, mixIn, unlockTimestamp, messages, ttl);
+  return sendTransaction(transactionSK, transfers, fee, extra, mixIn, unlockTimestamp, messages, ttl);
 }
 
-TransactionId WalletLegacy::sendTransaction(const std::vector<WalletLegacyTransfer>& transfers,
+TransactionId WalletLegacy::sendTransaction(Crypto::SecretKey& transactionSK,
+                                            const std::vector<WalletLegacyTransfer>& transfers,
                                             uint64_t fee,
                                             const std::string& extra,
                                             uint64_t mixIn,
@@ -490,7 +492,7 @@ TransactionId WalletLegacy::sendTransaction(const std::vector<WalletLegacyTransf
 
   {
     std::unique_lock<std::mutex> lock(m_cacheMutex);
-    request = m_sender->makeSendRequest(txId, events, transfers, fee, extra, mixIn, unlockTimestamp, messages, ttl);
+    request = m_sender->makeSendRequest(transactionSK, txId, events, transfers, fee, extra, mixIn, unlockTimestamp, messages, ttl);
   }
 
   notifyClients(events);

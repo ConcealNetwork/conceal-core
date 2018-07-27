@@ -178,7 +178,8 @@ bool wallet_rpc_server::on_transfer(const wallet_rpc::COMMAND_RPC_TRANSFER::requ
     CryptoNote::WalletHelper::SendCompleteResultObserver sent;
     WalletHelper::IWalletRemoveObserverGuard removeGuard(m_wallet, sent);
 
-    CryptoNote::TransactionId tx = m_wallet.sendTransaction(transfers, req.fee, extraString, req.mixin, req.unlock_time, messages, ttl);
+    Crypto::SecretKey transactionSK;
+    CryptoNote::TransactionId tx = m_wallet.sendTransaction(transactionSK, transfers, req.fee, extraString, req.mixin, req.unlock_time, messages, ttl);
     if (tx == WALLET_LEGACY_INVALID_TRANSACTION_ID) {
       throw std::runtime_error("Couldn't send transaction");
     }
@@ -193,6 +194,7 @@ bool wallet_rpc_server::on_transfer(const wallet_rpc::COMMAND_RPC_TRANSFER::requ
     CryptoNote::WalletLegacyTransaction txInfo;
     m_wallet.getTransaction(tx, txInfo);
     res.tx_hash = Common::podToHex(txInfo.hash);
+    res.tx_secret_key = Common::podToHex(transactionSK);
 
   } catch (const std::exception& e) {
     throw JsonRpc::JsonRpcError(WALLET_RPC_ERROR_CODE_GENERIC_TRANSFER_ERROR, e.what());
