@@ -556,8 +556,8 @@ simple_wallet::simple_wallet(System::Dispatcher& dispatcher, const CryptoNote::C
   m_refresh_progress_reporter(*this),
   m_initResultPromise(nullptr),
   m_walletSynchronized(false) {
-  m_consoleHandler.setHandler("start_mining", boost::bind(&simple_wallet::start_mining, this, _1), "start_mining [<number_of_threads>] - Start mining in daemon");
-  m_consoleHandler.setHandler("stop_mining", boost::bind(&simple_wallet::stop_mining, this, _1), "Stop mining in daemon");
+//  m_consoleHandler.setHandler("start_mining", boost::bind(&simple_wallet::start_mining, this, _1), "start_mining [<number_of_threads>] - Start mining in daemon");
+//  m_consoleHandler.setHandler("stop_mining", boost::bind(&simple_wallet::stop_mining, this, _1), "Stop mining in daemon");
   m_consoleHandler.setHandler("export_keys", boost::bind(&simple_wallet::export_keys, this, _1), "Show the secret keys of the current wallet");
   m_consoleHandler.setHandler("balance", boost::bind(&simple_wallet::show_balance, this, _1), "Show current wallet balance");
   m_consoleHandler.setHandler("incoming_transfers", boost::bind(&simple_wallet::show_incoming_transfers, this, _1), "Show incoming transfers");
@@ -740,7 +740,7 @@ bool simple_wallet::init(const boost::program_options::variables_map& vm) {
       logger(ERROR, BRIGHT_RED) << "Address file already exists: " + walletAddressFile;
       return false;
     }
-               
+
     std::string private_spend_key_string;
     std::string private_view_key_string;
 
@@ -823,7 +823,7 @@ if (key_import) {
 
 
 //----------------------------------------------------------------------------------------------------
-/* adding support for 25 word electrum seeds. however, we have to ensure that all old wallets that are 
+/* adding support for 25 word electrum seeds. however, we have to ensure that all old wallets that are
 not deterministic, dont get a seed to avoid any loss of funds.
 */
 std::string simple_wallet::generate_mnemonic(Crypto::SecretKey &private_spend_key) {
@@ -932,7 +932,7 @@ bool simple_wallet::new_wallet(const std::string &wallet_file, const std::string
       "Generated new wallet: " << m_wallet->getAddress() << std::endl <<
       "View secret key: " << Common::podToHex(keys.viewSecretKey) << std::endl <<
       "Spend secret key: " << Common::podToHex(keys.spendSecretKey) << std::endl <<
-      "GUI key: " << guiKeys << std::endl <<  
+      "GUI key: " << guiKeys << std::endl <<
       "Mnemonic seed: " << generate_mnemonic(keys.spendSecretKey) << std::endl << std::endl;
 
   }
@@ -954,20 +954,20 @@ bool simple_wallet::new_wallet(const std::string &wallet_file, const std::string
 //----------------------------------------------------------------------------------------------------
 bool simple_wallet::new_wallet(Crypto::SecretKey &secret_key, Crypto::SecretKey &view_key, const std::string &wallet_file, const std::string& password) {
                 m_wallet_file = wallet_file;
-                
+
                 m_wallet.reset(new WalletLegacy(m_currency, *m_node.get()));
                 m_node->addObserver(static_cast<INodeObserver*>(this));
                 m_wallet->addObserver(this);
                 try {
                   m_initResultPromise.reset(new std::promise<std::error_code>());
                   std::future<std::error_code> f_initError = m_initResultPromise->get_future();
-                
+
                   AccountKeys wallet_keys;
                   wallet_keys.spendSecretKey = secret_key;
                   wallet_keys.viewSecretKey = view_key;
                   Crypto::secret_key_to_public_key(wallet_keys.spendSecretKey, wallet_keys.address.spendPublicKey);
                   Crypto::secret_key_to_public_key(wallet_keys.viewSecretKey, wallet_keys.address.viewPublicKey);
-                
+
                   m_wallet->initWithKeys(wallet_keys, password);
                   auto initError = f_initError.get();
                   m_initResultPromise.reset(nullptr);
@@ -975,17 +975,17 @@ bool simple_wallet::new_wallet(Crypto::SecretKey &secret_key, Crypto::SecretKey 
                     fail_msg_writer() << "failed to generate new wallet: " << initError.message();
                     return false;
                   }
-                
+
                   try {
                     CryptoNote::WalletHelper::storeWallet(*m_wallet, m_wallet_file);
                   } catch (std::exception& e) {
                     fail_msg_writer() << "failed to save new wallet: " << e.what();
                     throw;
                   }
-                
+
                   AccountKeys keys;
                   m_wallet->getAccountKeys(keys);
-                
+
                   logger(INFO, BRIGHT_WHITE) <<
                     "Imported wallet: " << m_wallet->getAddress() << std::endl;
                 }
@@ -993,7 +993,7 @@ bool simple_wallet::new_wallet(Crypto::SecretKey &secret_key, Crypto::SecretKey 
                   fail_msg_writer() << "failed to import wallet: " << e.what();
                   return false;
                 }
-                
+
                 success_msg_writer() <<
                   "**********************************************************************\n" <<
                   "Your wallet has been imported.\n" <<
@@ -1004,7 +1004,7 @@ bool simple_wallet::new_wallet(Crypto::SecretKey &secret_key, Crypto::SecretKey 
                   "**********************************************************************";
                 return true;
                 }
-                
+
 //----------------------------------------------------------------------------------------------------
 bool simple_wallet::close_wallet()
 {
@@ -1221,7 +1221,7 @@ bool simple_wallet::show_incoming_transfers(const std::vector<std::string>& args
     if (txInfo.totalAmount < 0) continue;
     hasTransfers = true;
     logger(INFO) << "        amount       \t                              tx id";
-    logger(INFO, GREEN) <<  
+    logger(INFO, GREEN) <<
       std::setw(21) << m_currency.formatAmount(txInfo.totalAmount) << '\t' << Common::podToHex(txInfo.hash);
   }
 
