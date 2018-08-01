@@ -32,7 +32,7 @@ file(GLOB_RECURSE JsonRpcServer JsonRpcServer/*)
 
 file(GLOB_RECURSE PaymentGate PaymentGate/*)
 file(GLOB_RECURSE PaymentGateService PaymentGateService/*)
-file(GLOB_RECURSE Miner Miner/*)
+#file(GLOB_RECURSE Miner Miner/*)
 
 source_group("" FILES $${Common} ${ConnectivityTool} ${Crypto} ${CryptoNoteCore} ${CryptoNoteProtocol} ${Daemon} ${JsonRpcServer} ${Http} ${Logging} ${NodeRpcProxy} ${P2p} ${Rpc} ${Serialization} ${SimpleWallet} ${System} ${Transfers} ${Wallet} ${WalletLegacy})
 
@@ -57,7 +57,7 @@ add_executable(ConnectivityTool ${ConnectivityTool})
 add_executable(Daemon ${Daemon})
 add_executable(SimpleWallet ${SimpleWallet})
 add_executable(PaymentGateService ${PaymentGateService})
-add_executable(Miner ${Miner})
+#add_executable(Miner ${Miner})
 
 if (MSVC)
   target_link_libraries(System ws2_32)
@@ -68,7 +68,7 @@ target_link_libraries(ConnectivityTool ${ConnectivityToolLibs})
 target_link_libraries(Daemon CryptoNoteCore P2P Rpc System Http Logging Common Crypto upnpc-static BlockchainExplorer ${Boost_LIBRARIES} Serialization)
 target_link_libraries(SimpleWallet Wallet NodeRpcProxy Transfers Rpc Http CryptoNoteCore System Logging Common Crypto ${Boost_LIBRARIES} Serialization)
 target_link_libraries(PaymentGateService PaymentGate JsonRpcServer Wallet NodeRpcProxy Transfers CryptoNoteCore Crypto P2P Rpc Http System Logging Common InProcessNode upnpc-static BlockchainExplorer ${Boost_LIBRARIES} Serialization)
-target_link_libraries(Miner CryptoNoteCore Rpc System Http Logging Common Crypto ${Boost_LIBRARIES} Serialization)
+#target_link_libraries(Miner CryptoNoteCore Rpc System Http Logging Common Crypto ${Boost_LIBRARIES} Serialization)
 
 add_dependencies(Rpc version)
 
@@ -81,5 +81,5 @@ add_dependencies(P2P version)
 set_property(TARGET ConnectivityTool PROPERTY OUTPUT_NAME "tools-connectivity")
 set_property(TARGET SimpleWallet PROPERTY OUTPUT_NAME "concealwallet")
 set_property(TARGET PaymentGateService PROPERTY OUTPUT_NAME "walletd")
-set_property(TARGET Miner PROPERTY OUTPUT_NAME "concealminer")
+#set_property(TARGET Miner PROPERTY OUTPUT_NAME "concealminer")
 set_property(TARGET Daemon PROPERTY OUTPUT_NAME "conceald")
