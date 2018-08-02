@@ -9,7 +9,7 @@ Conceal is a free open source privacy protected peer-to-peer digital cash system
 
 ## Resources
 - Web: [conceal.network](https://conceal.network/)
-- GitHub: [https://github.com/TheCircleFoundation/conceal-cli](https://github.com/TheCircleFoundation/conceal-cli)
+- GitHub: [https://github.com/TheCircleFoundation/conceal-core](https://github.com/TheCircleFoundation/conceal-core)
 - Discord: [https://discord.gg/YbpHVSd](https://discord.gg/YbpHVSd)
 - Twitter: [https://twitter.com/ConcealNetwork](https://twitter.com/ConcealNetwork)
 - Medium: [https://medium.com/@ConcealNetwork](https://medium.com/@ConcealNetwork)
@@ -28,11 +28,9 @@ Conceal is a free open source privacy protected peer-to-peer digital cash system
 
 #### Building
 
-- `git clone https://github.com/TheCircleFoundation/conceal-cli`
-- `cd conceal-cli`
-- `mkdir build && cd $_`
-- `cmake ..`
-- `make`
+- `git clone https://github.com/TheCircleFoundation/conceal-core`
+- `cd conceal-core`
+- `make build-release`
 
 If the build is successful the binaries will be in the src folder.
 
@@ -48,7 +46,8 @@ If the build is successful the binaries will be in the src folder.
 ##### Building
 
 - From the start menu, open 'x64 Native Tools Command Prompt for vs2017' or run "C:\Program Files (x86)\Microsoft Visual Studio\2017\Community\Common7\Tools\VsMSBuildCmd.bat" from any command prompt.
-- `cd conceal-cli`
+- `git clone https://github.com/TheCircleFoundation/conceal-core`
+- `cd conceal-core`
 - `mkdir build`
 - `cd build`
 - `cmake -G "Visual Studio 15 2017 Win64" -DBOOST_LIBRARYDIR:PATH=c:/local/boost_1_67_0 ..` (Or your boost installed dir.)
