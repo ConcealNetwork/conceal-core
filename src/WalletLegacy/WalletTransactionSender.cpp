@@ -320,14 +320,20 @@ bool WalletTransactionSender::checkIfEnoughMixins(const std::vector<COMMAND_RPC_
 }
 
 std::unique_ptr<WalletRequest> WalletTransactionSender::doSendTransaction(std::shared_ptr<SendTransactionContext>&& context,
-                                                                          std::deque<std::unique_ptr<WalletLegacyEvent>>& events, Crypto::SecretKey& transactionSK) {
-  if (m_isStoping) {
+                                                                          std::deque<std::unique_ptr<WalletLegacyEvent>>& events, 
+                                                                          Crypto::SecretKey& transactionSK) 
+{
+
+  if (m_isStoping) 
+  {
+
     events.push_back(makeCompleteEvent(m_transactionsCache, context->transactionId, make_error_code(error::TX_CANCELLED)));
     return std::unique_ptr<WalletRequest>();
   }
 
   try
   {
+
     WalletLegacyTransaction& transaction = m_transactionsCache.getTransaction(context->transactionId);
 
     std::vector<TransactionSourceEntry> sources;
@@ -345,6 +351,7 @@ std::unique_ptr<WalletRequest> WalletTransactionSender::doSendTransaction(std::s
     constructTx(m_keys, sources, splittedDests, transaction.extra, transaction.unlockTime, m_upperTransactionSizeLimit, tx, context->messages, context->ttl, transactionSK);
 
     getObjectHash(tx, transaction.hash);
+    transaction.transactionSK = transactionSK;
 
     m_transactionsCache.updateTransaction(context->transactionId, tx, totalAmount, context->selectedTransfers);
 

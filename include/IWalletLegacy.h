@@ -56,6 +56,8 @@ struct WalletLegacyTransaction {
   uint64_t         sentTime;
   uint64_t         unlockTime;
   Crypto::Hash     hash;
+  Crypto::SecretKey transactionSK;
+  
   bool             isCoinbase;
   uint32_t         blockHeight;
   uint64_t         timestamp;
