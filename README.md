@@ -1,7 +1,7 @@
 ![image](https://github.com/TheCircleFoundation/conceal-assets/blob/master/splash.png)
 
 # Conceal Core (CLI)
-Latest Release: v.4.2.1
+Latest Release: v.4.2.2
 Maintained by The Circle Team.
 
 ## Information
