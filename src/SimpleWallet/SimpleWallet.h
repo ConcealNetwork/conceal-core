@@ -76,6 +76,7 @@ namespace CryptoNote
     bool show_incoming_transfers(const std::vector<std::string> &args);
     bool show_payments(const std::vector<std::string> &args);
     bool show_blockchain_height(const std::vector<std::string> &args);
+    bool show_num_unlocked_outputs(const std::vector<std::string> &args);
     bool listTransfers(const std::vector<std::string> &args);
     bool transfer(const std::vector<std::string> &args);
     bool print_address(const std::vector<std::string> &args = std::vector<std::string>());
@@ -86,7 +87,7 @@ namespace CryptoNote
     bool ask_wallet_create_if_needed();
     std::string resolveAlias(const std::string& aliasUrl);
     void printConnectionError() const;
- 
+
     std::string generate_mnemonic(Crypto::SecretKey &);
     void log_incorrect_words(std::vector<std::string>);
     bool is_valid_mnemonic(std::string &, Crypto::SecretKey &);

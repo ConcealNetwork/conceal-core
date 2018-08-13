@@ -57,7 +57,7 @@ struct WalletLegacyTransaction {
   uint64_t         unlockTime;
   Crypto::Hash     hash;
   Crypto::SecretKey transactionSK;
-  
+
   bool             isCoinbase;
   uint32_t         blockHeight;
   uint64_t         timestamp;
@@ -127,9 +127,10 @@ public:
   virtual size_t getTransactionCount() = 0;
   virtual size_t getTransferCount() = 0;
   virtual size_t getDepositCount() = 0;
+  virtual size_t getNumUnlockedOutputs() = 0;
 
   virtual TransactionId findTransactionByTransferId(TransferId transferId) = 0;
-  
+
   virtual bool getTransaction(TransactionId transactionId, WalletLegacyTransaction& transaction) = 0;
   virtual bool getTransfer(TransferId transferId, WalletLegacyTransfer& transfer) = 0;
   virtual bool getDeposit(DepositId depositId, Deposit& deposit) = 0;

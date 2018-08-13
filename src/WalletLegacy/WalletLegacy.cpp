@@ -189,7 +189,7 @@ void WalletLegacy::initAndLoad(std::istream& source, const std::string& password
 
   m_password = password;
   m_state = LOADING;
-      
+
   m_asyncContextCounter.addAsyncContext();
   std::thread loader(&WalletLegacy::doLoad, this, std::ref(source));
   loader.detach();
@@ -201,14 +201,14 @@ void WalletLegacy::initSync() {
   sub.transactionSpendableAge = CryptoNote::parameters::CRYPTONOTE_DEFAULT_TX_SPENDABLE_AGE;
   sub.syncStart.height = 0;
   sub.syncStart.timestamp = m_account.get_createtime() - ACCOUN_CREATE_TIME_ACCURACY;
-  
+
   auto& subObject = m_transfersSync.addSubscription(sub);
   m_transferDetails = &subObject.getContainer();
   subObject.addObserver(this);
 
   m_sender.reset(new WalletTransactionSender(m_currency, m_transactionsCache, m_account.getAccountKeys(), *m_transferDetails, m_node));
   m_state = INITIALIZED;
-  
+
   m_blockchainSync.addObserver(this);
 }
 
@@ -216,11 +216,11 @@ void WalletLegacy::doLoad(std::istream& source) {
   ContextCounterHolder counterHolder(m_asyncContextCounter);
   try {
     std::unique_lock<std::mutex> lock(m_cacheMutex);
-    
+
     std::string cache;
     WalletLegacySerializer serializer(m_account, m_transactionsCache);
     serializer.deserialize(source, m_password, cache);
-      
+
     initSync();
 
     try {
@@ -264,7 +264,7 @@ void WalletLegacy::shutdown() {
   m_asyncContextCounter.waitAsyncContextsFinish();
 
   m_sender.release();
-   
+
   {
     std::unique_lock<std::mutex> lock(m_cacheMutex);
     m_isStopping = false;
@@ -335,7 +335,7 @@ void WalletLegacy::doSave(std::ostream& destination, bool saveDetailed, bool sav
   try {
     m_blockchainSync.stop();
     std::unique_lock<std::mutex> lock(m_cacheMutex);
-    
+
     WalletLegacySerializer serializer(m_account, m_transactionsCache);
     std::string cache;
 
@@ -460,6 +460,12 @@ bool WalletLegacy::getDeposit(DepositId depositId, Deposit& deposit) {
   throwIfNotInitialised();
 
   return m_transactionsCache.getDeposit(depositId, deposit);
+}
+
+size_t WalletLegacy::getNumUnlockedOutputs() {
+  std::vector<TransactionOutputInformation> outputs;
+  m_transferDetails->getOutputs(outputs, ITransfersContainer::IncludeKeyUnlocked);
+  return outputs.size();
 }
 
 TransactionId WalletLegacy::sendTransaction(Crypto::SecretKey& transactionSK,

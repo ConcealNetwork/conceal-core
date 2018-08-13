@@ -103,6 +103,7 @@ void wallet_rpc_server::processRequest(const CryptoNote::HttpRequest& request, C
       { "get_payments", makeMemberMethod(&wallet_rpc_server::on_get_payments) },
       { "get_transfers", makeMemberMethod(&wallet_rpc_server::on_get_transfers) },
       { "get_height", makeMemberMethod(&wallet_rpc_server::on_get_height) },
+      { "get_outputs", makeMemberMethod(&wallet_rpc_server::on_get_outputs) },
       { "reset", makeMemberMethod(&wallet_rpc_server::on_reset) }
     };
 
@@ -316,6 +317,11 @@ bool wallet_rpc_server::on_get_transfers(const wallet_rpc::COMMAND_RPC_GET_TRANS
 
 bool wallet_rpc_server::on_get_height(const wallet_rpc::COMMAND_RPC_GET_HEIGHT::request& req, wallet_rpc::COMMAND_RPC_GET_HEIGHT::response& res) {
   res.height = m_node.getLastLocalBlockHeight();
+  return true;
+}
+
+bool wallet_rpc_server::on_get_outputs(const wallet_rpc::COMMAND_RPC_GET_OUTPUTS::request& req, wallet_rpc::COMMAND_RPC_GET_OUTPUTS::response& res) {
+  res.num_unlocked_outputs = m_wallet.getNumUnlockedOutputs();
   return true;
 }
 

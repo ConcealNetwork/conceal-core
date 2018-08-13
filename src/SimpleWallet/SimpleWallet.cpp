@@ -564,6 +564,7 @@ simple_wallet::simple_wallet(System::Dispatcher& dispatcher, const CryptoNote::C
   m_consoleHandler.setHandler("list_transfers", boost::bind(&simple_wallet::listTransfers, this, _1), "Show all known transfers");
   m_consoleHandler.setHandler("payments", boost::bind(&simple_wallet::show_payments, this, _1), "payments <payment_id_1> [<payment_id_2> ... <payment_id_N>] - Show payments <payment_id_1>, ... <payment_id_N>");
   m_consoleHandler.setHandler("bc_height", boost::bind(&simple_wallet::show_blockchain_height, this, _1), "Show blockchain height");
+  m_consoleHandler.setHandler("outputs", boost::bind(&simple_wallet::show_num_unlocked_outputs, this, _1), "Show the number of unlocked outputs available for a transaction");
   m_consoleHandler.setHandler("transfer", boost::bind(&simple_wallet::transfer, this, _1),
     "transfer <mixin_count> <addr_1> <amount_1> [<addr_2> <amount_2> ... <addr_N> <amount_N>] [-p payment_id] [-f fee]"
     " - Transfer <amount_1>,... <amount_N> to <address_1>,... <address_N>, respectively. "
@@ -1308,6 +1309,17 @@ bool simple_wallet::show_blockchain_height(const std::vector<std::string>& args)
     success_msg_writer() << bc_height;
   } catch (std::exception &e) {
     fail_msg_writer() << "failed to get blockchain height: " << e.what();
+  }
+
+  return true;
+}
+//----------------------------------------------------------------------------------------------------
+bool simple_wallet::show_num_unlocked_outputs(const std::vector<std::string>& args) {
+  try {
+    size_t num_unlocked_outputs = m_wallet->getNumUnlockedOutputs();
+    success_msg_writer() << num_unlocked_outputs;
+  } catch (std::exception &e) {
+    fail_msg_writer() << "failed to get outputs: " << e.what();
   }
 
   return true;

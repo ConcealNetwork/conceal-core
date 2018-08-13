@@ -32,9 +32,9 @@ namespace CryptoNote {
 
 class SyncStarter;
 
-class WalletLegacy : 
-  public IWalletLegacy, 
-  IBlockchainSynchronizerObserver,  
+class WalletLegacy :
+  public IWalletLegacy,
+  IBlockchainSynchronizerObserver,
   ITransfersObserver {
 
 public:
@@ -64,6 +64,7 @@ public:
   virtual size_t getTransactionCount() override;
   virtual size_t getTransferCount() override;
   virtual size_t getDepositCount() override;
+  virtual size_t getNumUnlockedOutputs() override;
 
   virtual TransactionId findTransactionByTransferId(TransferId transferId) override;
 
@@ -133,7 +134,7 @@ private:
   void pushBalanceUpdatedEvents(std::deque<std::unique_ptr<WalletLegacyEvent>>& eventsQueue);
 
   std::vector<TransactionId> deleteOutdatedUnconfirmedTransactions();
-  
+
   std::vector<uint32_t> getTransactionHeights(std::vector<TransactionOutputInformation> transfers);
 
   enum WalletState
