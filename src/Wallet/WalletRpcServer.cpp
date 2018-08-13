@@ -104,6 +104,7 @@ void wallet_rpc_server::processRequest(const CryptoNote::HttpRequest& request, C
       { "get_transfers", makeMemberMethod(&wallet_rpc_server::on_get_transfers) },
       { "get_height", makeMemberMethod(&wallet_rpc_server::on_get_height) },
       { "get_outputs", makeMemberMethod(&wallet_rpc_server::on_get_outputs) },
+      { "consolidate", makeMemberMethod(&wallet_rpc_server::on_consolidate) },
       { "reset", makeMemberMethod(&wallet_rpc_server::on_reset) }
     };
 
@@ -181,6 +182,43 @@ bool wallet_rpc_server::on_transfer(const wallet_rpc::COMMAND_RPC_TRANSFER::requ
 
     Crypto::SecretKey transactionSK;
     CryptoNote::TransactionId tx = m_wallet.sendTransaction(transactionSK, transfers, req.fee, extraString, req.mixin, req.unlock_time, messages, ttl);
+    if (tx == WALLET_LEGACY_INVALID_TRANSACTION_ID) {
+      throw std::runtime_error("Couldn't send transaction");
+    }
+
+    std::error_code sendError = sent.wait(tx);
+    removeGuard.removeObserver();
+
+    if (sendError) {
+      throw std::system_error(sendError);
+    }
+
+    CryptoNote::WalletLegacyTransaction txInfo;
+    m_wallet.getTransaction(tx, txInfo);
+    res.tx_hash = Common::podToHex(txInfo.hash);
+    res.tx_secret_key = Common::podToHex(transactionSK);
+
+  } catch (const std::exception& e) {
+    throw JsonRpc::JsonRpcError(WALLET_RPC_ERROR_CODE_GENERIC_TRANSFER_ERROR, e.what());
+  }
+  return true;
+}
+//------------------------------------------------------------------------------------------------------------------------------
+bool wallet_rpc_server::on_consolidate(const wallet_rpc::COMMAND_RPC_CONSOLIDATE::request& req, wallet_rpc::COMMAND_RPC_CONSOLIDATE::response& res) {
+  std::vector<CryptoNote::WalletLegacyTransfer> transfers;
+  std::vector<CryptoNote::TransactionMessage> messages;
+  std::string extraString;
+  uint64_t fee = CryptoNote::parameters::MINIMUM_FEE;
+  uint64_t mixIn = 2;
+  uint64_t unlockTimestamp = 0;
+  uint64_t ttl = 0;
+
+  try {
+    CryptoNote::WalletHelper::SendCompleteResultObserver sent;
+    WalletHelper::IWalletRemoveObserverGuard removeGuard(m_wallet, sent);
+
+    Crypto::SecretKey transactionSK;
+    CryptoNote::TransactionId tx = m_wallet.sendTransaction(transactionSK, transfers, fee, extraString, mixIn, unlockTimestamp, messages, ttl);
     if (tx == WALLET_LEGACY_INVALID_TRANSACTION_ID) {
       throw std::runtime_error("Couldn't send transaction");
     }

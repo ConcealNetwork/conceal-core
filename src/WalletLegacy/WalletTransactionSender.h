@@ -17,7 +17,7 @@
 #include "ITransfersContainer.h"
 
 namespace CryptoNote {
-	
+
 class INode;
 
 class WalletTransactionSender
@@ -28,9 +28,10 @@ public:
   void stop();
 
   std::unique_ptr<WalletRequest> makeSendRequest(Crypto::SecretKey& transactionSK,
+                                                 bool consolidate,
                                                  TransactionId& transactionId,
                                                  std::deque<std::unique_ptr<WalletLegacyEvent>>& events,
-                                                 const std::vector<WalletLegacyTransfer>& transfers,
+                                                 std::vector<WalletLegacyTransfer>& transfers,
                                                  uint64_t fee,
                                                  const std::string& extra = "",
                                                  uint64_t mixIn = 0,
@@ -92,6 +93,7 @@ private:
   void validateTransfersAddresses(const std::vector<WalletLegacyTransfer>& transfers);
   bool validateDestinationAddress(const std::string& address);
 
+  uint64_t selectNTransfersToSend(std::vector<TransactionOutputInformation>& selectedTransfers);
   uint64_t selectTransfersToSend(uint64_t neededMoney, bool addDust, uint64_t dust, std::vector<TransactionOutputInformation>& selectedTransfers);
   uint64_t selectDepositTransfers(const std::vector<DepositId>& depositIds, std::vector<TransactionOutputInformation>& selectedTransfers);
 
@@ -104,7 +106,7 @@ private:
 
   bool m_isStoping;
   ITransfersContainer& m_transferDetails;
-  
+
   INode& m_node; //used solely to get last known block height for calculateInterest
 };
 

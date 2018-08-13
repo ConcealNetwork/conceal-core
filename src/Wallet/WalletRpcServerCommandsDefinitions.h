@@ -240,6 +240,22 @@ using CryptoNote::ISerializer;
     };
   };
 
+  struct COMMAND_RPC_CONSOLIDATE
+  {
+    typedef CryptoNote::EMPTY_STRUCT request;
+
+    struct response
+    {
+      std::string tx_hash;
+      std::string tx_secret_key;
+
+      void serialize(ISerializer& s) {
+        KV_MEMBER(tx_hash)
+        KV_MEMBER(tx_secret_key)
+      }
+    };
+  };
+
   struct COMMAND_RPC_RESET {
     typedef CryptoNote::EMPTY_STRUCT request;
     typedef CryptoNote::EMPTY_STRUCT response;

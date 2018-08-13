@@ -484,13 +484,21 @@ TransactionId WalletLegacy::sendTransaction(Crypto::SecretKey& transactionSK,
 }
 
 TransactionId WalletLegacy::sendTransaction(Crypto::SecretKey& transactionSK,
-                                            const std::vector<WalletLegacyTransfer>& transfers,
+                                            std::vector<WalletLegacyTransfer>& transfers,
                                             uint64_t fee,
                                             const std::string& extra,
                                             uint64_t mixIn,
                                             uint64_t unlockTimestamp,
                                             const std::vector<TransactionMessage>& messages,
                                             uint64_t ttl) {
+  bool consolidate = false;
+  if (transfers.empty()) {
+    CryptoNote::WalletLegacyTransfer transfer;
+    transfer.address = getAddress();
+    transfer.amount = 0;
+    transfers.push_back(transfer);
+    consolidate = true;
+  }
   TransactionId txId = 0;
   std::unique_ptr<WalletRequest> request;
   std::deque<std::unique_ptr<WalletLegacyEvent>> events;
@@ -498,7 +506,7 @@ TransactionId WalletLegacy::sendTransaction(Crypto::SecretKey& transactionSK,
 
   {
     std::unique_lock<std::mutex> lock(m_cacheMutex);
-    request = m_sender->makeSendRequest(transactionSK, txId, events, transfers, fee, extra, mixIn, unlockTimestamp, messages, ttl);
+    request = m_sender->makeSendRequest(transactionSK, consolidate, txId, events, transfers, fee, extra, mixIn, unlockTimestamp, messages, ttl);
   }
 
   notifyClients(events);

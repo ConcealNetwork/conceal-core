@@ -57,6 +57,7 @@ namespace Tools
     bool on_get_transfers(const wallet_rpc::COMMAND_RPC_GET_TRANSFERS::request& req, wallet_rpc::COMMAND_RPC_GET_TRANSFERS::response& res);
     bool on_get_height(const wallet_rpc::COMMAND_RPC_GET_HEIGHT::request& req, wallet_rpc::COMMAND_RPC_GET_HEIGHT::response& res);
     bool on_get_outputs(const wallet_rpc::COMMAND_RPC_GET_OUTPUTS::request& req, wallet_rpc::COMMAND_RPC_GET_OUTPUTS::response& res);
+    bool on_consolidate(const wallet_rpc::COMMAND_RPC_CONSOLIDATE::request& req, wallet_rpc::COMMAND_RPC_CONSOLIDATE::response& res);
     bool on_reset(const wallet_rpc::COMMAND_RPC_RESET::request& req, wallet_rpc::COMMAND_RPC_RESET::response& res);
 
     bool handle_command_line(const boost::program_options::variables_map& vm);
