@@ -28,7 +28,7 @@ public:
   void stop();
 
   std::unique_ptr<WalletRequest> makeSendRequest(Crypto::SecretKey& transactionSK,
-                                                 bool consolidate,
+                                                 bool optimize,
                                                  TransactionId& transactionId,
                                                  std::deque<std::unique_ptr<WalletLegacyEvent>>& events,
                                                  std::vector<WalletLegacyTransfer>& transfers,
