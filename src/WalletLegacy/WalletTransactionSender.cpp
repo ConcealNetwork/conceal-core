@@ -181,7 +181,7 @@ void WalletTransactionSender::validateTransfersAddresses(const std::vector<Walle
 }
 
 std::unique_ptr<WalletRequest> WalletTransactionSender::makeSendRequest(Crypto::SecretKey& transactionSK,
-                                                                        bool consolidate,
+                                                                        bool optimize,
                                                                         TransactionId& transactionId,
                                                                         std::deque<std::unique_ptr<WalletLegacyEvent>>& events,
                                                                         std::vector<WalletLegacyTransfer>& transfers,
@@ -197,7 +197,7 @@ std::unique_ptr<WalletRequest> WalletTransactionSender::makeSendRequest(Crypto::
 
   std::shared_ptr<SendTransactionContext> context = std::make_shared<SendTransactionContext>();
   context->dustPolicy.dustThreshold = m_currency.defaultDustThreshold();
-  if (consolidate) {
+  if (optimize) {
     context->foundMoney = selectNTransfersToSend(context->selectedTransfers);
     neededMoney = context->foundMoney;
     throwIf(context->foundMoney < fee, error::WRONG_AMOUNT);
@@ -696,7 +696,7 @@ uint64_t WalletTransactionSender::selectNTransfersToSend(std::vector<Transaction
   std::default_random_engine randomGenerator(Crypto::rand<std::default_random_engine::result_type>());
   uint64_t foundMoney = 0;
   size_t i = 0;
-  while (!unusedTransfers.empty() && i < CryptoNote::parameters::CRYPTONOTE_CONSOLIDATE_SIZE) {
+  while (!unusedTransfers.empty() && i < CryptoNote::parameters::CRYPTONOTE_OPTIMIZE_SIZE) {
     size_t idx = popRandomValue(randomGenerator, unusedTransfers);
     selectedTransfers.push_back(outputs[idx]);
     foundMoney += outputs[idx].amount;

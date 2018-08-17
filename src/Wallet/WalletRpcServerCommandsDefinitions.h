@@ -240,7 +240,7 @@ using CryptoNote::ISerializer;
     };
   };
 
-  struct COMMAND_RPC_CONSOLIDATE
+  struct COMMAND_RPC_OPTIMIZE
   {
     typedef CryptoNote::EMPTY_STRUCT request;
 

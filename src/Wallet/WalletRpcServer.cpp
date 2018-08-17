@@ -104,7 +104,7 @@ void wallet_rpc_server::processRequest(const CryptoNote::HttpRequest& request, C
       { "get_transfers", makeMemberMethod(&wallet_rpc_server::on_get_transfers) },
       { "get_height", makeMemberMethod(&wallet_rpc_server::on_get_height) },
       { "get_outputs", makeMemberMethod(&wallet_rpc_server::on_get_outputs) },
-      { "consolidate", makeMemberMethod(&wallet_rpc_server::on_consolidate) },
+      { "optimize", makeMemberMethod(&wallet_rpc_server::on_optimize) },
       { "reset", makeMemberMethod(&wallet_rpc_server::on_reset) }
     };
 
@@ -204,7 +204,7 @@ bool wallet_rpc_server::on_transfer(const wallet_rpc::COMMAND_RPC_TRANSFER::requ
   return true;
 }
 //------------------------------------------------------------------------------------------------------------------------------
-bool wallet_rpc_server::on_consolidate(const wallet_rpc::COMMAND_RPC_CONSOLIDATE::request& req, wallet_rpc::COMMAND_RPC_CONSOLIDATE::response& res) {
+bool wallet_rpc_server::on_optimize(const wallet_rpc::COMMAND_RPC_OPTIMIZE::request& req, wallet_rpc::COMMAND_RPC_OPTIMIZE::response& res) {
   std::vector<CryptoNote::WalletLegacyTransfer> transfers;
   std::vector<CryptoNote::TransactionMessage> messages;
   std::string extraString;
