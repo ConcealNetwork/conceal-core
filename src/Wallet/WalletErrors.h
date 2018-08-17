@@ -67,7 +67,7 @@ public:
     case INTERNAL_WALLET_ERROR:    return "Internal error occurred";
     case MIXIN_COUNT_TOO_BIG:      return "MixIn count is too big";
     case BAD_ADDRESS:              return "Bad address";
-    case TRANSACTION_SIZE_TOO_BIG: return "Transaction size is too big";
+    case TRANSACTION_SIZE_TOO_BIG: return "Transaction size is too big, please optimize your wallet.";
     case WRONG_AMOUNT:             return "Wrong amount";
     case SUM_OVERFLOW:             return "Sum overflow";
     case ZERO_DESTINATION:         return "The destination is empty";
