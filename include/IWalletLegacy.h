@@ -15,6 +15,7 @@
 #include <vector>
 
 #include "CryptoNote.h"
+#include "CryptoNoteCore/CryptoNoteBasic.h"
 
 namespace CryptoNote {
 
@@ -56,7 +57,7 @@ struct WalletLegacyTransaction {
   uint64_t         sentTime;
   uint64_t         unlockTime;
   Crypto::Hash     hash;
-  Crypto::SecretKey transactionSK = { 0 };
+  Crypto::SecretKey transactionSK = NULL_SECRET_KEY;
 
   bool             isCoinbase;
   uint32_t         blockHeight;
