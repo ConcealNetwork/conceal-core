@@ -121,6 +121,7 @@ public:
   virtual std::string getAddress() = 0;
 
   virtual uint64_t actualBalance() = 0;
+  virtual uint64_t poolBalance() = 0;  
   virtual uint64_t pendingBalance() = 0;
   virtual uint64_t actualDepositBalance() = 0;
   virtual uint64_t pendingDepositBalance() = 0;

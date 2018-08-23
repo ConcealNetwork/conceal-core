@@ -83,6 +83,13 @@ uint64_t calculateDepositsAmount(const std::vector<CryptoNote::TransactionOutput
   });
 }
 
+uint64_t calculatePoolAmount(const std::vector<CryptoNote::TransactionOutputInformation>& transfers, const CryptoNote::Currency& currency, const std::vector<uint32_t> heights) {
+	int index = 0;
+  return std::accumulate(transfers.begin(), transfers.end(), static_cast<uint64_t>(0), [&currency, &index, heights] (uint64_t sum, const CryptoNote::TransactionOutputInformation& deposit) {
+    return sum + deposit.amount;
+  });
+}
+
 } //namespace
 
 namespace CryptoNote {
@@ -390,6 +397,13 @@ uint64_t WalletLegacy::actualBalance() {
   throwIfNotInitialised();
 
   return calculateActualBalance();
+}
+
+uint64_t WalletLegacy::poolBalance() {
+  std::unique_lock<std::mutex> lock(m_cacheMutex);
+  throwIfNotInitialised();
+
+  return calculatePoolEarnings();
 }
 
 uint64_t WalletLegacy::pendingBalance() {
@@ -851,6 +865,27 @@ std::vector<uint32_t> WalletLegacy::getTransactionHeights(const std::vector<Tran
 	  bool ok = m_transferDetails->getTransactionInformation(hash, info, NULL, NULL);
 	  assert(ok);
 	  heights.push_back(info.blockHeight);
+  }
+  return heights;
+}
+
+uint64_t WalletLegacy::calculatePoolEarnings() {
+  std::vector<TransactionOutputInformation> transfers;
+  std::vector<uint32_t> heights = getPoolTransactions(transfers);
+  return calculateDepositsAmount(transfers, m_currency, heights);
+}
+
+
+std::vector<uint32_t> WalletLegacy::getPoolTransactions(const std::vector<TransactionOutputInformation> transfers) {
+  std::vector<uint32_t> heights;
+  for (auto transfer : transfers){
+	  Crypto::Hash hash = transfer.transactionHash;
+	  TransactionInformation info;
+	  bool ok = m_transferDetails->getTransactionInformation(hash, info, NULL, NULL);
+	  assert(ok);
+    if (info.messages[0] == "P01") {
+	    heights.push_back(info.blockHeight);
+    }
   }
   return heights;
 }

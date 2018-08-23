@@ -57,6 +57,7 @@ public:
   virtual std::string getAddress() override;
 
   virtual uint64_t actualBalance() override;
+  virtual uint64_t poolBalance() override;  
   virtual uint64_t pendingBalance() override;
   virtual uint64_t actualDepositBalance() override;
   virtual uint64_t pendingDepositBalance() override;
@@ -128,6 +129,9 @@ private:
   uint64_t calculateActualDepositBalance();
   uint64_t calculatePendingDepositBalance();
 
+  uint64_t calculatePoolEarnings();
+
+
   uint64_t calculateActualBalance();
   uint64_t calculatePendingBalance();
 
@@ -136,6 +140,8 @@ private:
   std::vector<TransactionId> deleteOutdatedUnconfirmedTransactions();
 
   std::vector<uint32_t> getTransactionHeights(std::vector<TransactionOutputInformation> transfers);
+
+  std::vector<uint32_t> getPoolTransactions(std::vector<TransactionOutputInformation> transfers);
 
   enum WalletState
   {
