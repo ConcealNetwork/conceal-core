@@ -118,6 +118,20 @@ void GetTransactionHashes::Response::serialize(CryptoNote::ISerializer& serializ
   serializer(items, "items");
 }
 
+void CreateIntegrated::Request::serialize(CryptoNote::ISerializer& serializer) {
+  serializer(address, "address");
+
+  serializer(payment_id, "payment_id");
+}
+
+void CreateIntegrated::Response::serialize(CryptoNote::ISerializer& serializer) {
+  serializer(integrated_address, "integrated_address");
+}
+
+
+
+
+
 void TransferRpcInfo::serialize(CryptoNote::ISerializer& serializer) {
   serializer(type, "type");
   serializer(address, "address");

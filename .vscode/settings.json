@@ -73,6 +73,9 @@
         "xutility": "cpp",
         "emmintrin.h": "c",
         "resumable": "cpp",
-        "xthread": "cpp"
+        "xthread": "cpp",
+        "sparse_hash_map": "cpp",
+        "sparse_hash_set": "cpp",
+        "sparsetable": "cpp"
     }
 }
