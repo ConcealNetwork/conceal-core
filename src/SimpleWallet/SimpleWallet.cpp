@@ -30,6 +30,7 @@
 #include "NodeRpcProxy/NodeRpcProxy.h"
 #include "Rpc/CoreRpcServerCommandsDefinitions.h"
 #include "Rpc/HttpClient.h"
+#include "CryptoNoteCore/CryptoNoteTools.h"
 
 #include "Wallet/WalletRpcServer.h"
 #include "WalletLegacy/WalletLegacy.h"
@@ -145,15 +146,22 @@ struct TransferCommand {
     m_currency(currency), fake_outs_count(0), fee(currency.minimumFee()), ttl(0) {
   }
 
-  bool parseArguments(LoggerRef& logger, const std::vector<std::string> &args) {
+/* PARSE ARGUMENTS */
+/* parses arguments from the transfer command */
+
+bool parseArguments(LoggerRef& logger, const std::vector<std::string> &args) 
+{
 
     ArgumentReader<std::vector<std::string>::const_iterator> ar(args.begin(), args.end());
 
-    try {
+    try 
+    {
 
       auto mixin_str = ar.next();
 
-      if (!Common::fromString(mixin_str, fake_outs_count)) {
+      if (!Common::fromString(mixin_str, fake_outs_count)) 
+      {
+
         logger(ERROR, BRIGHT_RED) << "mixin_count should be non-negative integer, got " << mixin_str;
         return false;
       }
@@ -161,86 +169,169 @@ struct TransferCommand {
       bool feeFound = false;
       bool ttlFound = false;
 
-      while (!ar.eof()) {
+      while (!ar.eof()) 
+      {
+
         auto arg = ar.next();
 
-        if (arg.size() && arg[0] == '-') {
-
+        if (arg.size() && arg[0] == '-') 
+        {
+            
           const auto& value = ar.next();
 
-          if (arg == "-p") {
-            if (!createTxExtraWithPaymentId(value, extra)) {
+          if (arg == "-p") 
+          {
+
+            if (!createTxExtraWithPaymentId(value, extra)) 
+            {
+
               logger(ERROR, BRIGHT_RED) << "payment ID has invalid format: \"" << value << "\", expected 64-character string";
               return false;
             }
-          } else if (arg == "-f") {
+          } else if (arg == "-f") 
+          {
+
               feeFound = true;
 
-            if (ttlFound) {
+            if (ttlFound) 
+            {
+
               logger(ERROR, BRIGHT_RED) << "Transaction with TTL can not have fee";
               return false;
             }
 
             bool ok = m_currency.parseAmount(value, fee);
-            if (!ok) {
+            if (!ok) 
+            {
+
               logger(ERROR, BRIGHT_RED) << "Fee value is invalid: " << value;
               return false;
             }
 
-            if (fee < m_currency.minimumFee()) {
+            if (fee < m_currency.minimumFee()) 
+            {
+
               logger(ERROR, BRIGHT_RED) << "Fee value is less than minimum: " << m_currency.minimumFee();
               return false;
             }
-          } else if (arg == "-m") {
+          } else if (arg == "-m") 
+          {
+
             messages.emplace_back(value);
-          } else if (arg == "-ttl") {
+
+          } else if (arg == "-ttl") 
+          {
+
             ttlFound = true;
 
-            if (feeFound) {
+            if (feeFound) 
+            {
+
               logger(ERROR, BRIGHT_RED) << "Transaction with fee can not have TTL";
               return false;
-            } else {
+            } else 
+            {
+
               fee = 0;
             }
 
-            if (!Common::fromString(value, ttl) || ttl < 1 || ttl * 60 > m_currency.mempoolTxLiveTime()) {
+            if (!Common::fromString(value, ttl) || ttl < 1 || ttl * 60 > m_currency.mempoolTxLiveTime()) 
+            {
+
               logger(ERROR, BRIGHT_RED) << "TTL has invalid format: \"" << value << "\", " <<
                 "enter time from 1 to " << (m_currency.mempoolTxLiveTime() / 60) << " minutes";
               return false;
             }
           }
         } else {
+
+          /* integrated address check */
+          if (arg.length() == 186) 
+          {
+
+            std::string paymentID;
+            std::string spendPublicKey;
+            std::string viewPublicKey;
+            const uint64_t paymentIDLen = 64;
+
+            /* extract the payment id */
+            std::string decoded;
+            uint64_t prefix;
+            if (Tools::Base58::decode_addr(arg, prefix, decoded)) 
+            {
+              
+              paymentID = decoded.substr(0, paymentIDLen);
+            }
+
+            /* validate and add the payment ID to extra */
+            if (!createTxExtraWithPaymentId(paymentID, extra)) 
+            {
+
+              logger(ERROR, BRIGHT_RED) << "Integrated payment ID has invalid format: \"" << paymentID << "\", expected 64-character string";
+              return false;
+            }
+
+            /* create the address from the public keys */
+            std::string keys = decoded.substr(paymentIDLen, std::string::npos);
+            CryptoNote::AccountPublicAddress addr;
+            CryptoNote::BinaryArray ba = Common::asBinaryArray(keys);
+
+            if (!CryptoNote::fromBinaryArray(addr, ba))
+            {
+
+              return true;
+            }
+
+            std::string address = CryptoNote::getAccountAddressAsStr(CryptoNote::parameters::CRYPTONOTE_PUBLIC_ADDRESS_BASE58_PREFIX, 
+                                                                    addr);   
+
+            arg = address;
+
+          }
+
           WalletLegacyTransfer destination;
           CryptoNote::TransactionDestinationEntry de;
           std::string aliasUrl;
 
-          if (!m_currency.parseAccountAddressString(arg, de.addr)) {
+          if (!m_currency.parseAccountAddressString(arg, de.addr)) 
+          {
+
             aliasUrl = arg;
           }
 
           auto value = ar.next();
           bool ok = m_currency.parseAmount(value, de.amount);
-          if (!ok || 0 == de.amount) {
+          if (!ok || 0 == de.amount) 
+          {
+
             logger(ERROR, BRIGHT_RED) << "amount is wrong: " << arg << ' ' << value <<
               ", expected number from 0 to " << m_currency.formatAmount(std::numeric_limits<uint64_t>::max());
             return false;
           }
 
-          if (aliasUrl.empty()) {
+          if (aliasUrl.empty()) 
+          {
+
             destination.address = arg;
             destination.amount = de.amount;
             dsts.push_back(destination);
-          } else {
+          } else 
+          {
+
             aliases[aliasUrl].emplace_back(WalletLegacyTransfer{"", static_cast<int64_t>(de.amount)});
           }
         }
       }
 
-      if (dsts.empty() && aliases.empty()) {
+      if (dsts.empty() && aliases.empty()) 
+      {
+
         logger(ERROR, BRIGHT_RED) << "At least one destination address is required";
         return false;
       }
-    } catch (const std::exception& e) {
+    } catch (const std::exception& e) 
+    {
+
       logger(ERROR, BRIGHT_RED) << e.what();
       return false;
     }
@@ -558,6 +649,7 @@ simple_wallet::simple_wallet(System::Dispatcher& dispatcher, const CryptoNote::C
   m_walletSynchronized(false) {
 //  m_consoleHandler.setHandler("start_mining", boost::bind(&simple_wallet::start_mining, this, _1), "start_mining [<number_of_threads>] - Start mining in daemon");
 //  m_consoleHandler.setHandler("stop_mining", boost::bind(&simple_wallet::stop_mining, this, _1), "Stop mining in daemon");
+  m_consoleHandler.setHandler("create_integrated", boost::bind(&simple_wallet::create_integrated, this, _1), "create_integrated <payment_id> - Create an integrated address with a payment ID");
   m_consoleHandler.setHandler("export_keys", boost::bind(&simple_wallet::export_keys, this, _1), "Show the secret keys of the current wallet");
   m_consoleHandler.setHandler("balance", boost::bind(&simple_wallet::show_balance, this, _1), "Show current wallet balance");
   m_consoleHandler.setHandler("incoming_transfers", boost::bind(&simple_wallet::show_incoming_transfers, this, _1), "Show incoming transfers");
@@ -1186,6 +1278,49 @@ bool simple_wallet::show_balance(const std::vector<std::string>& args/* = std::v
   return true;
 }
 
+/* ------------------------------------------------------------------------------------------- */
+
+/* CREATE INTEGRATED ADDRESS */
+/* take a payment Id as an argument and generate an integrated wallet address */
+
+bool simple_wallet::create_integrated(const std::vector<std::string>& args/* = std::vector<std::string>()*/) 
+{
+
+  /* check if there is a payment id */
+  if (args.empty()) 
+  {
+
+    fail_msg_writer() << "Please enter a payment ID";
+    return true;
+  }
+
+  std::string paymentID = args[0];
+  std::string address = m_wallet->getAddress();
+  uint64_t prefix;
+  CryptoNote::AccountPublicAddress addr;
+
+  /* get the spend and view public keys from the address */
+  const bool valid = CryptoNote::parseAccountAddressString(prefix, 
+                                                          addr,
+                                                          address);
+
+  CryptoNote::BinaryArray ba;
+  CryptoNote::toBinaryArray(addr, ba);
+  std::string keys = Common::asString(ba);
+
+  /* create the integrated address the same way you make a public address */
+  std::string integratedAddress = Tools::Base58::encode_addr (CryptoNote::parameters::CRYPTONOTE_PUBLIC_ADDRESS_BASE58_PREFIX,
+                                                              paymentID + keys
+  );
+
+  std::cout << std::endl << "Integrated address: " << integratedAddress << std::endl << std::endl;
+
+  return true;
+}
+
+/* ---------------------------------------------------------------------------------------- */
+
+
 bool simple_wallet::export_keys(const std::vector<std::string>& args/* = std::vector<std::string>()*/) {
   AccountKeys keys;
   m_wallet->getAccountKeys(keys);
@@ -1196,9 +1331,6 @@ bool simple_wallet::export_keys(const std::vector<std::string>& args/* = std::ve
   std::cout << std::endl << "Spend secret key: " << Common::podToHex(keys.spendSecretKey) << std::endl;
   std::cout << "View secret key: " <<  Common::podToHex(keys.viewSecretKey) << std::endl;
   std::cout << "GUI key: " <<  guiKeys << std::endl;
-
-
-
 
   Crypto::PublicKey unused_dummy_variable;
   Crypto::SecretKey deterministic_private_view_key;
