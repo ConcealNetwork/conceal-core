@@ -26,21 +26,19 @@
 #include "Common/StringTools.h"
 #include "Common/PathTools.h"
 #include "Common/Util.h"
+
+#include "CryptoNoteCore/CryptoNoteTools.h"
 #include "CryptoNoteCore/CryptoNoteFormatUtils.h"
 #include "CryptoNoteProtocol/CryptoNoteProtocolHandler.h"
 #include "NodeRpcProxy/NodeRpcProxy.h"
 #include "Rpc/CoreRpcServerCommandsDefinitions.h"
 #include "Rpc/HttpClient.h"
-#include "CryptoNoteCore/CryptoNoteTools.h"
-
-#include "Wallet/PoolRpcServer.h"
 #include "WalletLegacy/WalletLegacy.h"
-#include "Wallet/LegacyKeysImporter.h"
 #include "WalletLegacy/WalletHelper.h"
+#include "Wallet/PoolRpcServer.h"
+#include "Wallet/LegacyKeysImporter.h"
 #include "Mnemonics/electrum-words.cpp"
-
 #include "version.h"
-
 #include <Logging/LoggerManager.h>
 
 #if defined(WIN32)
