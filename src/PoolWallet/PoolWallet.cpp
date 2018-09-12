@@ -1599,7 +1599,7 @@ bool pool_wallet::transfer(const std::vector<std::string> &args) {
       }
     }
 
-std::vector<TransactionMessage> messages;
+    std::vector<TransactionMessage> messages;
     for (auto dst : cmd.dsts) {
         messages.emplace_back(TransactionMessage{ "P01", dst.address });
     }
