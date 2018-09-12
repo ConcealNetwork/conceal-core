@@ -20,11 +20,11 @@ namespace Tools
   /************************************************************************/
   /*                                                                      */
   /************************************************************************/
-  class wallet_rpc_server : CryptoNote::HttpServer
+  class pool_rpc_server : CryptoNote::HttpServer
   {
   public:
 
-    wallet_rpc_server(
+    pool_rpc_server(
       System::Dispatcher& dispatcher,
       Logging::ILogger& log,
       CryptoNote::IWalletLegacy &w,

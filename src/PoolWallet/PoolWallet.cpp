@@ -33,7 +33,7 @@
 #include "Rpc/HttpClient.h"
 #include "CryptoNoteCore/CryptoNoteTools.h"
 
-#include "Wallet/WalletRpcServer.h"
+#include "Wallet/PoolRpcServer.h"
 #include "WalletLegacy/WalletLegacy.h"
 #include "Wallet/LegacyKeysImporter.h"
 #include "WalletLegacy/WalletHelper.h"
@@ -1710,7 +1710,7 @@ int main(int argc, char* argv[]) {
   command_line::add_arg(desc_params, arg_command);
   command_line::add_arg(desc_params, arg_log_level);
   command_line::add_arg(desc_params, arg_testnet);
-  Tools::wallet_rpc_server::init_options(desc_params);
+  Tools::pool_rpc_server::init_options(desc_params);
 
   po::positional_options_description positional_options;
   positional_options.add(arg_command.name, -1);
@@ -1763,7 +1763,7 @@ int main(int argc, char* argv[]) {
   CryptoNote::Currency currency = CryptoNote::CurrencyBuilder(logManager).
     testnet(command_line::get_arg(vm, arg_testnet)).currency();
 
-  if (command_line::has_arg(vm, Tools::wallet_rpc_server::arg_rpc_bind_port)) {
+  if (command_line::has_arg(vm, Tools::pool_rpc_server::arg_rpc_bind_port)) {
     //runs wallet with rpc interface
     if (!command_line::has_arg(vm, arg_wallet_file)) {
       logger(ERROR, BRIGHT_RED) << "Wallet file not set.";
@@ -1823,7 +1823,7 @@ int main(int argc, char* argv[]) {
       return 1;
     }
 
-    Tools::wallet_rpc_server wrpc(dispatcher, logManager, *wallet, *node, currency, walletFileName);
+    Tools::pool_rpc_server wrpc(dispatcher, logManager, *wallet, *node, currency, walletFileName);
 
     if (!wrpc.init(vm)) {
       logger(ERROR, BRIGHT_RED) << "Failed to initialize wallet rpc server";
