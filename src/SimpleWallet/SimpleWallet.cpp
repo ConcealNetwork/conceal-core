@@ -1617,9 +1617,9 @@ bool simple_wallet::transfer(const std::vector<std::string> &args) {
 
     WalletHelper::IWalletRemoveObserverGuard removeGuard(*m_wallet, sent);
 
-    if (cmd.fake_outs_count < 8) {
-      fail_msg_writer() << "Mixin too small, minimum mixin is 9";
-      return true;
+    if (cmd.fake_outs_count < 9) {
+      success_msg_writer(true) << "Mixin too small, mixin set to network minimum of 9";
+      cmd.fake_outs_count = 9;
     }
 
     Crypto::SecretKey transactionSK;
@@ -1640,7 +1640,7 @@ bool simple_wallet::transfer(const std::vector<std::string> &args) {
     CryptoNote::WalletLegacyTransaction txInfo;
     m_wallet->getTransaction(tx, txInfo);
     success_msg_writer(true) << "Money successfully sent, transaction " << Common::podToHex(txInfo.hash);
-    success_msg_writer(true) << "Transaction secret key " << Common::podToHex(transactionSK);
+    /* success_msg_writer(true) << "Transaction secret key " << Common::podToHex(transactionSK); */
 
     try {
       CryptoNote::WalletHelper::storeWallet(*m_wallet, m_wallet_file);
