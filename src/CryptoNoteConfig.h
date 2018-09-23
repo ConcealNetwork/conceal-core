@@ -74,7 +74,7 @@ const uint64_t CRYPTONOTE_LOCKED_TX_ALLOWED_DELTA_BLOCKS     = 1;
 const uint64_t CRYPTONOTE_LOCKED_TX_ALLOWED_DELTA_SECONDS    = DIFFICULTY_TARGET * CRYPTONOTE_LOCKED_TX_ALLOWED_DELTA_BLOCKS;
 
 const size_t   CRYPTONOTE_MAX_TX_SIZE_LIMIT                  = (CRYPTONOTE_BLOCK_GRANTED_FULL_REWARD_ZONE / 4) - CRYPTONOTE_COINBASE_BLOB_RESERVED_SIZE;
-const size_t   CRYPTONOTE_OPTIMIZE_SIZE                   = 100; // proportional to CRYPTONOTE_MAX_TX_SIZE_LIMIT
+const size_t   CRYPTONOTE_OPTIMIZE_SIZE                      = 100; // proportional to CRYPTONOTE_MAX_TX_SIZE_LIMIT
 
 const uint64_t CRYPTONOTE_MEMPOOL_TX_LIVETIME                = (60 * 60 * 12); // seconds, 12 hours
 const uint64_t CRYPTONOTE_MEMPOOL_TX_FROM_ALT_BLOCK_LIVETIME = (60 * 60 * 24); // seconds, 1 day
@@ -86,8 +86,8 @@ const size_t   FUSION_TX_MIN_IN_OUT_COUNT_RATIO              = 4;
 
 const uint64_t UPGRADE_HEIGHT                                = 1;
 const uint64_t UPGRADE_HEIGHT_V2                             = 1;
-const uint64_t UPGRADE_HEIGHT_V3                             = 12750; // Consensus III - block for CN Orion fork
-const uint64_t UPGRADE_HEIGHT_V4                             = 45000; // block for minimum mixin fork
+const uint64_t UPGRADE_HEIGHT_V3                             = 12750; // CN Fast fork
+const uint64_t UPGRADE_HEIGHT_V4                             = 45000; // Mixin >2 fork
 const unsigned UPGRADE_VOTING_THRESHOLD                      = 90; // percent
 const size_t   UPGRADE_VOTING_WINDOW                         = EXPECTED_NUMBER_OF_BLOCKS_PER_DAY; // blocks
 const size_t   UPGRADE_WINDOW                                = EXPECTED_NUMBER_OF_BLOCKS_PER_DAY; // blocks
