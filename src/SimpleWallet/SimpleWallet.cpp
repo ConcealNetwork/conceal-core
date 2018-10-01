@@ -1512,7 +1512,7 @@ bool simple_wallet::optimize_outputs(const std::vector<std::string>& args) {
     CryptoNote::WalletLegacyTransaction txInfo;
     m_wallet->getTransaction(tx, txInfo);
     success_msg_writer(true) << "Money successfully sent, transaction " << Common::podToHex(txInfo.hash);
-    /* success_msg_writer(true) << "Transaction secret key " << Common::podToHex(transactionSK); */
+    success_msg_writer(true) << "Transaction secret key " << Common::podToHex(transactionSK);
 
     try {
       CryptoNote::WalletHelper::storeWallet(*m_wallet, m_wallet_file);
