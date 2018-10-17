@@ -163,4 +163,38 @@ private:
   uint64_t m_balance;
 };
 
+/* investments */
+
+class WalletActualInvestmentBalanceUpdatedEvent : public WalletLegacyEvent
+{
+public:
+  WalletActualInvestmentBalanceUpdatedEvent(uint64_t balance) : m_balance(balance) {}
+  virtual ~WalletActualInvestmentBalanceUpdatedEvent() {}
+
+  virtual void notify(Tools::ObserverManager<CryptoNote::IWalletLegacyObserver>& observer)
+  {
+    observer.notify(&IWalletLegacyObserver::actualInvestmentBalanceUpdated, m_balance);
+  }
+private:
+  uint64_t m_balance;
+};
+
+class WalletPendingInvestmentBalanceUpdatedEvent : public WalletLegacyEvent
+{
+public:
+  WalletPendingInvestmentBalanceUpdatedEvent(uint64_t balance) : m_balance(balance) {}
+  virtual ~WalletPendingInvestmentBalanceUpdatedEvent() {}
+
+  virtual void notify(Tools::ObserverManager<CryptoNote::IWalletLegacyObserver>& observer)
+  {
+    observer.notify(&IWalletLegacyObserver::pendingInvestmentBalanceUpdated, m_balance);
+  }
+private:
+  uint64_t m_balance;
+};
+
+
+
+
+
 } /* namespace CryptoNote */

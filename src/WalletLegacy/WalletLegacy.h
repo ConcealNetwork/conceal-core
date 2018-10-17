@@ -57,10 +57,11 @@ public:
   virtual std::string getAddress() override;
 
   virtual uint64_t actualBalance() override;
-  virtual uint64_t poolBalance() override;  
   virtual uint64_t pendingBalance() override;
   virtual uint64_t actualDepositBalance() override;
+  virtual uint64_t actualInvestmentBalance() override;  
   virtual uint64_t pendingDepositBalance() override;
+  virtual uint64_t pendingInvestmentBalance() override;  
 
   virtual size_t getTransactionCount() override;
   virtual size_t getTransferCount() override;
@@ -119,18 +120,23 @@ private:
   void notifyClients(std::deque<std::unique_ptr<WalletLegacyEvent> >& events);
   void notifyIfBalanceChanged();
   void notifyIfDepositBalanceChanged();
+  void notifyIfInvestmentBalanceChanged();  
+
+  std::unique_ptr<WalletLegacyEvent> getActualInvestmentBalanceChangedEvent();
+  std::unique_ptr<WalletLegacyEvent> getPendingInvestmentBalanceChangedEvent();
 
   std::unique_ptr<WalletLegacyEvent> getActualDepositBalanceChangedEvent();
   std::unique_ptr<WalletLegacyEvent> getPendingDepositBalanceChangedEvent();
 
+
   std::unique_ptr<WalletLegacyEvent> getActualBalanceChangedEvent();
   std::unique_ptr<WalletLegacyEvent> getPendingBalanceChangedEvent();
 
+
   uint64_t calculateActualDepositBalance();
+  uint64_t calculateActualInvestmentBalance();
   uint64_t calculatePendingDepositBalance();
-
-  uint64_t calculatePoolEarnings();
-
+  uint64_t calculatePendingInvestmentBalance();  
 
   uint64_t calculateActualBalance();
   uint64_t calculatePendingBalance();
@@ -141,7 +147,6 @@ private:
 
   std::vector<uint32_t> getTransactionHeights(std::vector<TransactionOutputInformation> transfers);
 
-  std::vector<uint32_t> getPoolTransactions(std::vector<TransactionOutputInformation> transfers);
 
   enum WalletState
   {
@@ -164,6 +169,8 @@ private:
 
   std::atomic<uint64_t> m_lastNotifiedActualDepositBalance;
   std::atomic<uint64_t> m_lastNotifiedPendingDepositBalance;
+  std::atomic<uint64_t> m_lastNotifiedActualInvestmentBalance;
+  std::atomic<uint64_t> m_lastNotifiedPendingInvestmentBalance;  
 
   BlockchainSynchronizer m_blockchainSync;
   TransfersSyncronizer m_transfersSync;
