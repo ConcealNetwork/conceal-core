@@ -206,7 +206,6 @@ uint64_t Currency::calculateInterest(uint64_t amount, uint32_t term, uint32_t he
 
   /* deposits 2.0 and investments 1.0 */
   if (( term % 5040 == 0) || (term % 65700 == 0)) {
-    assert(height >= CryptoNote::parameters::UPGRADE_HEIGHT_V5);
     return calculateInterestV2(amount, term);
   }
 

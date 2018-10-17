@@ -54,7 +54,7 @@ const size_t   DIFFICULTY_LAG_V2				= DIFFICULTY_LAG;
 static_assert(2 * DIFFICULTY_CUT <= DIFFICULTY_WINDOW - 2, "Bad DIFFICULTY_WINDOW or DIFFICULTY_CUT");
 
 const uint64_t DEPOSIT_MIN_AMOUNT				= 1 * COIN; // minimun mmount for a valid deposit
-const uint32_t DEPOSIT_MIN_TERM					= 21900; // ~1 month
+const uint32_t DEPOSIT_MIN_TERM					= 5040; // ~1 week
 const uint32_t DEPOSIT_MAX_TERM					= 1 * 12 * 21900; // ~1 year
 const uint64_t DEPOSIT_MIN_TOTAL_RATE_FACTOR			= 0; // rate is constant
 const uint64_t DEPOSIT_MAX_TOTAL_RATE				= 4; // percentage rate for DEPOSIT_MAX_TERM
