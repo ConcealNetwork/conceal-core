@@ -1617,6 +1617,7 @@ bool simple_wallet::transfer(const std::vector<std::string> &args) {
 
     WalletHelper::IWalletRemoveObserverGuard removeGuard(*m_wallet, sent);
 
+    /* set static mixin of 4*/
     cmd.fake_outs_count = 4;
 
     Crypto::SecretKey transactionSK;
@@ -1637,7 +1638,7 @@ bool simple_wallet::transfer(const std::vector<std::string> &args) {
     CryptoNote::WalletLegacyTransaction txInfo;
     m_wallet->getTransaction(tx, txInfo);
     success_msg_writer(true) << "Money successfully sent, transaction hash: " << Common::podToHex(txInfo.hash);
-    /* success_msg_writer(true) << "Transaction secret key " << Common::podToHex(transactionSK); */
+    success_msg_writer(true) << "Transaction secret key " << Common::podToHex(transactionSK); 
 
     try {
       CryptoNote::WalletHelper::storeWallet(*m_wallet, m_wallet_file);
