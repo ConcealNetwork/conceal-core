@@ -96,6 +96,8 @@ public:
   virtual void pendingBalanceUpdated(uint64_t pendingBalance) {}
   virtual void actualDepositBalanceUpdated(uint64_t actualDepositBalance) {}
   virtual void pendingDepositBalanceUpdated(uint64_t pendingDepositBalance) {}
+  virtual void actualInvestmentBalanceUpdated(uint64_t actualInvestmentBalance) {}
+  virtual void pendingInvestmentBalanceUpdated(uint64_t pendingInvestmentBalance) {}  
   virtual void externalTransactionCreated(TransactionId transactionId) {}
   virtual void sendTransactionCompleted(TransactionId transactionId, std::error_code result) {}
   virtual void transactionUpdated(TransactionId transactionId) {}
@@ -121,10 +123,12 @@ public:
   virtual std::string getAddress() = 0;
 
   virtual uint64_t actualBalance() = 0;
-  virtual uint64_t poolBalance() = 0;  
+
   virtual uint64_t pendingBalance() = 0;
   virtual uint64_t actualDepositBalance() = 0;
+  virtual uint64_t actualInvestmentBalance() = 0;  
   virtual uint64_t pendingDepositBalance() = 0;
+  virtual uint64_t pendingInvestmentBalance() = 0;  
 
   virtual size_t getTransactionCount() = 0;
   virtual size_t getTransferCount() = 0;
