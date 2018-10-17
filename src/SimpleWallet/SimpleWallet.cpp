@@ -658,6 +658,7 @@ simple_wallet::simple_wallet(System::Dispatcher& dispatcher, const CryptoNote::C
   m_consoleHandler.setHandler("bc_height", boost::bind(&simple_wallet::show_blockchain_height, this, _1), "Show blockchain height");
   m_consoleHandler.setHandler("outputs", boost::bind(&simple_wallet::show_num_unlocked_outputs, this, _1), "Show the number of unlocked outputs available for a transaction");
   m_consoleHandler.setHandler("optimize", boost::bind(&simple_wallet::optimize_outputs, this, _1), "Combine many available outputs into a few by sending a transaction to self");
+  m_consoleHandler.setHandler("optimize_all", boost::bind(&simple_wallet::optimize_all_outputs, this, _1), "Optimize your wallet several times so you can send large transactions");  
   m_consoleHandler.setHandler("transfer", boost::bind(&simple_wallet::transfer, this, _1),
     "transfer <mixin_count> <addr_1> <amount_1> [<addr_2> <amount_2> ... <addr_N> <amount_N>] [-p payment_id] [-f fee]"
     " - Transfer <amount_1>,... <amount_N> to <address_1>,... <address_N>, respectively. "
@@ -1530,7 +1531,76 @@ bool simple_wallet::optimize_outputs(const std::vector<std::string>& args) {
 
   return true;
 }
+
 //----------------------------------------------------------------------------------------------------
+
+
+bool simple_wallet::optimize_all_outputs(const std::vector<std::string>& args) {
+
+  uint64_t num_unlocked_outputs = 0;
+
+  try {
+    num_unlocked_outputs = m_wallet->getNumUnlockedOutputs();
+    success_msg_writer() << "Total outputs: " << num_unlocked_outputs;
+
+  } catch (std::exception &e) {
+    fail_msg_writer() << "failed to get outputs: " << e.what();
+  }
+
+  uint64_t remainder = num_unlocked_outputs % 100;
+  uint64_t rounds = (num_unlocked_outputs - remainder) / 100;
+  success_msg_writer() << "Total optimization rounds: " << rounds;
+  for(uint64_t a = 1; a < rounds; a = a + 1 ) {
+    
+    try {
+      CryptoNote::WalletHelper::SendCompleteResultObserver sent;
+      WalletHelper::IWalletRemoveObserverGuard removeGuard(*m_wallet, sent);
+
+      std::vector<CryptoNote::WalletLegacyTransfer> transfers;
+      std::vector<CryptoNote::TransactionMessage> messages;
+      std::string extraString;
+      uint64_t fee = CryptoNote::parameters::MINIMUM_FEE;
+      uint64_t mixIn = 2;
+      uint64_t unlockTimestamp = 0;
+      uint64_t ttl = 0;
+      Crypto::SecretKey transactionSK;
+      CryptoNote::TransactionId tx = m_wallet->sendTransaction(transactionSK, transfers, fee, extraString, mixIn, unlockTimestamp, messages, ttl);
+      if (tx == WALLET_LEGACY_INVALID_TRANSACTION_ID) {
+        fail_msg_writer() << "Can't send money";
+        return true;
+      }
+
+      std::error_code sendError = sent.wait(tx);
+      removeGuard.removeObserver();
+
+      if (sendError) {
+        fail_msg_writer() << sendError.message();
+        return true;
+      }
+
+      CryptoNote::WalletLegacyTransaction txInfo;
+      m_wallet->getTransaction(tx, txInfo);
+      success_msg_writer(true) << a << ". Optimization transaction successfully sent, transaction " << Common::podToHex(txInfo.hash);
+
+      try {
+        CryptoNote::WalletHelper::storeWallet(*m_wallet, m_wallet_file);
+      } catch (const std::exception& e) {
+        fail_msg_writer() << e.what();
+        return true;
+      }
+    } catch (const std::system_error& e) {
+      fail_msg_writer() << e.what();
+    } catch (const std::exception& e) {
+      fail_msg_writer() << e.what();
+    } catch (...) {
+      fail_msg_writer() << "unknown error";
+    }
+  }
+  return true;
+}
+
+//----------------------------------------------------------------------------------------------------
+
 std::string simple_wallet::resolveAlias(const std::string& aliasUrl) {
   std::string host;
   std::string uri;
