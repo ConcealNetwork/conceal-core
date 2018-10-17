@@ -91,6 +91,8 @@ bool Currency::init() {
   return true;
 }
 
+/* ---------------------------------------------------------------------------------------------------- */
+
 bool Currency::generateGenesisBlock() {
   m_genesisBlock = boost::value_initialized<Block>();
 
@@ -120,6 +122,8 @@ bool Currency::generateGenesisBlock() {
   return true;
 }
 
+/* ---------------------------------------------------------------------------------------------------- */
+
 size_t Currency::difficultyWindowByBlockVersion(uint8_t blockMajorVersion) const {
   if (blockMajorVersion >= BLOCK_MAJOR_VERSION_2) {
     return m_difficultyWindow;
@@ -130,6 +134,8 @@ size_t Currency::difficultyWindowByBlockVersion(uint8_t blockMajorVersion) const
   }
 }
 
+/* ---------------------------------------------------------------------------------------------------- */
+
 size_t Currency::difficultyCutByBlockVersion(uint8_t blockMajorVersion) const {
   if (blockMajorVersion >= BLOCK_MAJOR_VERSION_2) {
     return m_difficultyCut;
@@ -139,6 +145,8 @@ size_t Currency::difficultyCutByBlockVersion(uint8_t blockMajorVersion) const {
     return parameters::DIFFICULTY_CUT_V1;
   }
 }
+
+/* ---------------------------------------------------------------------------------------------------- */
 
 uint64_t Currency::baseRewardFunction(uint64_t alreadyGeneratedCoins, uint32_t height) const {
   if (height == 1) {
@@ -154,6 +162,8 @@ uint64_t Currency::baseRewardFunction(uint64_t alreadyGeneratedCoins, uint32_t h
   return base_reward;
 }
 
+/* ---------------------------------------------------------------------------------------------------- */
+
 uint32_t Currency::upgradeHeight(uint8_t majorVersion) const {
   if (majorVersion == BLOCK_MAJOR_VERSION_2) {
     return m_upgradeHeightV2;
@@ -163,6 +173,8 @@ uint32_t Currency::upgradeHeight(uint8_t majorVersion) const {
     return static_cast<uint32_t>(-1);
   }
 }
+
+/* ---------------------------------------------------------------------------------------------------- */
 
 bool Currency::getBlockReward(size_t medianSize, size_t currentBlockSize, uint64_t alreadyGeneratedCoins,
   uint64_t fee, uint32_t height, uint64_t& reward, int64_t& emissionChange) const {
@@ -185,33 +197,125 @@ bool Currency::getBlockReward(size_t medianSize, size_t currentBlockSize, uint64
   return true;
 }
 
-uint64_t Currency::calculateInterest(uint64_t amount, uint32_t term, uint32_t height) const {
-  assert(m_depositMinTerm <= term && term <= m_depositMaxTerm);
-  assert(static_cast<uint64_t>(term)* m_depositMaxTotalRate > m_depositMinTotalRateFactor);
+/* ---------------------------------------------------------------------------------------------------- */
+
+uint64_t Currency::calculateInterest(uint64_t amount, uint32_t term, uint32_t height) const 
+{
+
+  assert(m_depositMinTerm <= term);
+
+  /* deposits 2.0 and investments 1.0 */
+  if (( term % 5040 == 0) || (term % 65700 == 0)) {
+    assert(height >= CryptoNote::parameters::UPGRADE_HEIGHT_V5);
+    return calculateInterestV2(amount, term);
+  }
 
   uint64_t a = static_cast<uint64_t>(term) * m_depositMaxTotalRate - m_depositMinTotalRateFactor;
   uint64_t bHi;
   uint64_t bLo = mul128(amount, a, &bHi);
-
   uint64_t cHi;
   uint64_t cLo;
   assert(std::numeric_limits<uint32_t>::max() / 100 > m_depositMaxTerm);
   div128_32(bHi, bLo, static_cast<uint32_t>(100 * m_depositMaxTerm), &cHi, &cLo);
   assert(cHi == 0);
 
-  // early depositor multiplier
+  /* early deposit multiplier */
   uint64_t interestHi;
   uint64_t interestLo;
-  if (height <= CryptoNote::parameters::END_MULTIPLIER_BLOCK){
+  if (height <= CryptoNote::parameters::END_MULTIPLIER_BLOCK) {
       interestLo = mul128(cLo, CryptoNote::parameters::MULTIPLIER_FACTOR, &interestHi);
       assert(interestHi == 0);
   } else {
       interestHi = cHi;
       interestLo = cLo;
   }
-
   return interestLo;
 }
+
+/* ---------------------------------------------------------------------------------------------------- */
+
+uint64_t Currency::calculateInterestV2(uint64_t amount, uint32_t term) const 
+{
+  /* investments */
+  if (term % 65700 == 0) {    
+
+    /* minimum 50000 for investments */
+    uint64_t amount4Humans = amount / 1000000;
+    assert(amount4Humans < 50000);
+
+    /* quantity tiers */
+    float qTier = 1;
+    if(amount4Humans > 110000 && amount4Humans < 180000)
+      qTier = 1.01;
+      
+    if(amount4Humans >= 180000 && amount4Humans < 260000)
+      qTier = 1.02;
+
+    if(amount4Humans >= 260000 && amount4Humans < 350000)
+      qTier = 1.03;
+
+    if(amount4Humans >= 350000 && amount4Humans < 450000)
+      qTier = 1.04;
+
+    if(amount4Humans >= 450000 && amount4Humans < 560000)
+      qTier = 1.05;
+
+    if(amount4Humans >= 560000 && amount4Humans < 680000)
+      qTier = 1.06;
+
+    if(amount4Humans >= 680000 && amount4Humans < 810000)
+      qTier = 1.07;
+
+    if(amount4Humans >= 810000 && amount4Humans < 950000)
+      qTier = 1.08;
+
+    if(amount4Humans >= 950000 && amount4Humans < 1100000)
+      qTier = 1.09;
+
+    if(amount4Humans >= 1100000 && amount4Humans < 1260000)
+      qTier = 1.1;
+
+    if(amount4Humans >= 1260000 && amount4Humans < 1430000)
+      qTier = 1.11;
+
+    if(amount4Humans >= 1430000 && amount4Humans < 1610000)
+      qTier = 1.12;
+
+    if(amount4Humans >= 1610000 && amount4Humans < 1800000)
+      qTier = 1.13;
+
+    if(amount4Humans >= 1800000 && amount4Humans < 2000000)
+      qTier = 1.14;
+
+    if(amount4Humans > 2000000)
+      qTier = 1.15;
+
+    float mq = 1.4473;
+    float termQuarters = term / 65700;
+    float m8 = 100.0*pow(1.0+(mq/100.0), termQuarters)-100.0;
+    float m5 = termQuarters * 0.5;
+    float m7 = m8 * (1 + (m5/100));
+    float rate = m7 * qTier;
+    float interest = amount * (rate/100);
+    uint64_t returnVal = static_cast<uint64_t>(interest);
+    return returnVal;
+  } 
+
+  /* weekly deposits */
+  if (term % 5040 == 0) {    
+
+    uint64_t actualAmount = amount;
+    float weeks = term / 5040;
+    float baseInterest = 0.0696;
+    float interestPerWeek = 0.0002;
+    float interestRate = baseInterest + (weeks * interestPerWeek);
+    float interest = actualAmount * ((weeks * interestRate) / 100);
+    uint64_t returnVal = static_cast<uint64_t>(interest);
+    return returnVal;
+  } 
+} /* Currency::calculateInterestV2 */
+
+/* ---------------------------------------------------------------------------------------------------- */
 
 uint64_t Currency::calculateTotalTransactionInterest(const Transaction& tx, uint32_t height) const {
   uint64_t interest = 0;
@@ -226,6 +330,8 @@ uint64_t Currency::calculateTotalTransactionInterest(const Transaction& tx, uint
 
   return interest;
 }
+
+/* ---------------------------------------------------------------------------------------------------- */
 
 uint64_t Currency::getTransactionInputAmount(const TransactionInput& in, uint32_t height) const {
   if (in.type() == typeid(KeyInput)) {
@@ -245,6 +351,8 @@ uint64_t Currency::getTransactionInputAmount(const TransactionInput& in, uint32_
   }
 }
 
+/* ---------------------------------------------------------------------------------------------------- */
+
 uint64_t Currency::getTransactionAllInputsAmount(const Transaction& tx, uint32_t height) const {
   uint64_t amount = 0;
   for (const auto& in : tx.inputs) {
@@ -253,6 +361,8 @@ uint64_t Currency::getTransactionAllInputsAmount(const Transaction& tx, uint32_t
 
   return amount;
 }
+
+/* ---------------------------------------------------------------------------------------------------- */
 
 bool Currency::getTransactionFee(const Transaction& tx, uint64_t& fee, uint32_t height) const {
   uint64_t amount_in = 0;
@@ -283,6 +393,8 @@ bool Currency::getTransactionFee(const Transaction& tx, uint64_t& fee, uint32_t 
   return true;
 }
 
+/* ---------------------------------------------------------------------------------------------------- */
+
 uint64_t Currency::getTransactionFee(const Transaction& tx, uint32_t height) const {
   uint64_t r = 0;
   if (!getTransactionFee(tx, r, height)) {
@@ -292,6 +404,8 @@ uint64_t Currency::getTransactionFee(const Transaction& tx, uint32_t height) con
   return r;
 }
 
+/* ---------------------------------------------------------------------------------------------------- */
+
 size_t Currency::maxBlockCumulativeSize(uint64_t height) const {
   assert(height <= std::numeric_limits<uint64_t>::max() / m_maxBlockSizeGrowthSpeedNumerator);
   size_t maxSize = static_cast<size_t>(m_maxBlockSizeInitial +
@@ -300,6 +414,8 @@ size_t Currency::maxBlockCumulativeSize(uint64_t height) const {
   assert(maxSize >= m_maxBlockSizeInitial);
   return maxSize;
 }
+
+/* ---------------------------------------------------------------------------------------------------- */
 
 bool Currency::constructMinerTx(uint32_t height, size_t medianSize, uint64_t alreadyGeneratedCoins, size_t currentBlockSize,
   uint64_t fee, const AccountPublicAddress& minerAddress, Transaction& tx,
@@ -388,6 +504,8 @@ bool Currency::constructMinerTx(uint32_t height, size_t medianSize, uint64_t alr
   return true;
 }
 
+/* ---------------------------------------------------------------------------------------------------- */
+
 bool Currency::isFusionTransaction(const std::vector<uint64_t>& inputsAmounts, const std::vector<uint64_t>& outputsAmounts, size_t size) const {
   if (size > fusionTxMaxSize()) {
     return false;
@@ -418,6 +536,8 @@ bool Currency::isFusionTransaction(const std::vector<uint64_t>& inputsAmounts, c
   return expectedOutputsAmounts == outputsAmounts;
 }
 
+/* ---------------------------------------------------------------------------------------------------- */
+
 bool Currency::isFusionTransaction(const Transaction& transaction, size_t size) const {
   assert(getObjectBinarySize(transaction) == size);
 
@@ -430,14 +550,20 @@ bool Currency::isFusionTransaction(const Transaction& transaction, size_t size) 
   return isFusionTransaction(getInputsAmounts(transaction), outputsAmounts, size);
 }
 
+/* ---------------------------------------------------------------------------------------------------- */
+
 bool Currency::isFusionTransaction(const Transaction& transaction) const {
   return isFusionTransaction(transaction, getObjectBinarySize(transaction));
 }
+
+/* ---------------------------------------------------------------------------------------------------- */
 
 bool Currency::isAmountApplicableInFusionTransactionInput(uint64_t amount, uint64_t threshold) const {
   uint8_t ignore;
   return isAmountApplicableInFusionTransactionInput(amount, threshold, ignore);
 }
+
+/* ---------------------------------------------------------------------------------------------------- */
 
 bool Currency::isAmountApplicableInFusionTransactionInput(uint64_t amount, uint64_t threshold, uint8_t& amountPowerOfTen) const {
   if (amount >= threshold) {
@@ -457,13 +583,19 @@ bool Currency::isAmountApplicableInFusionTransactionInput(uint64_t amount, uint6
   return true;
 }
 
+/* ---------------------------------------------------------------------------------------------------- */
+
 std::string Currency::accountAddressAsString(const AccountBase& account) const {
   return getAccountAddressAsStr(m_publicAddressBase58Prefix, account.getAccountKeys().address);
 }
 
+/* ---------------------------------------------------------------------------------------------------- */
+
 std::string Currency::accountAddressAsString(const AccountPublicAddress& accountPublicAddress) const {
   return getAccountAddressAsStr(m_publicAddressBase58Prefix, accountPublicAddress);
 }
+
+/* ---------------------------------------------------------------------------------------------------- */
 
 bool Currency::parseAccountAddressString(const std::string& str, AccountPublicAddress& addr) const {
   uint64_t prefix;
@@ -479,6 +611,8 @@ bool Currency::parseAccountAddressString(const std::string& str, AccountPublicAd
   return true;
 }
 
+/* ---------------------------------------------------------------------------------------------------- */
+
 std::string Currency::formatAmount(uint64_t amount) const {
   std::string s = std::to_string(amount);
   if (s.size() < m_numberOfDecimalPlaces + 1) {
@@ -489,6 +623,8 @@ std::string Currency::formatAmount(uint64_t amount) const {
   return s;
 }
 
+/* ---------------------------------------------------------------------------------------------------- */
+
 std::string Currency::formatAmount(int64_t amount) const {
   std::string s = formatAmount(static_cast<uint64_t>(std::abs(amount)));
 
@@ -498,6 +634,8 @@ std::string Currency::formatAmount(int64_t amount) const {
 
   return s;
 }
+
+/* ---------------------------------------------------------------------------------------------------- */
 
 bool Currency::parseAmount(const std::string& str, uint64_t& amount) const {
   std::string strAmount = str;
@@ -536,6 +674,8 @@ bool Currency::parseAmount(const std::string& str, uint64_t& amount) const {
 
   return Common::fromString(strAmount, amount);
 }
+
+/* ---------------------------------------------------------------------------------------------------- */
 
 difficulty_type Currency::nextDifficulty(std::vector<uint64_t> timestamps,
   std::vector<difficulty_type> cumulativeDifficulties) const {
@@ -582,6 +722,8 @@ difficulty_type Currency::nextDifficulty(std::vector<uint64_t> timestamps,
 
   return (low + timeSpan - 1) / timeSpan;
 }
+
+/* ---------------------------------------------------------------------------------------------------- */
 
 difficulty_type Currency::nextDifficulty(uint8_t version, uint32_t blockIndex, std::vector<uint64_t> timestamps,
   std::vector<difficulty_type> cumulativeDifficulties) const {
@@ -718,6 +860,8 @@ difficulty_type Currency::nextDifficulty(uint8_t version, uint32_t blockIndex, s
   return (low + timeSpan - 1) / timeSpan;
 }
 
+/* ---------------------------------------------------------------------------------------------------- */
+
 bool Currency::checkProofOfWork(Crypto::cn_context& context, const Block& block, difficulty_type currentDifficulty,
   Crypto::Hash& proofOfWork) const {
 
@@ -727,6 +871,8 @@ bool Currency::checkProofOfWork(Crypto::cn_context& context, const Block& block,
 
   return check_hash(proofOfWork, currentDifficulty);
 }
+
+/* ---------------------------------------------------------------------------------------------------- */
 
 size_t Currency::getApproximateMaximumInputCount(size_t transactionSize, size_t outputCount, size_t mixinCount) const {
   const size_t KEY_IMAGE_SIZE = sizeof(Crypto::KeyImage);
@@ -750,6 +896,8 @@ size_t Currency::getApproximateMaximumInputCount(size_t transactionSize, size_t 
 
   return (transactionSize - headerSize - outputsSize) / inputSize;
 }
+
+/* ---------------------------------------------------------------------------------------------------- */
 
 CurrencyBuilder::CurrencyBuilder(Logging::ILogger& log) : m_currency(log) {
   maxBlockNumber(parameters::CRYPTONOTE_MAX_BLOCK_NUMBER);
@@ -820,6 +968,8 @@ CurrencyBuilder::CurrencyBuilder(Logging::ILogger& log) : m_currency(log) {
   testnet(false);
 }
 
+/* ---------------------------------------------------------------------------------------------------- */
+
 Transaction CurrencyBuilder::generateGenesisTransaction() {
   CryptoNote::Transaction tx;
   CryptoNote::AccountPublicAddress ac = boost::value_initialized<CryptoNote::AccountPublicAddress>();
@@ -827,6 +977,8 @@ Transaction CurrencyBuilder::generateGenesisTransaction() {
 
   return tx;
 }
+
+/* ---------------------------------------------------------------------------------------------------- */
 
 CurrencyBuilder& CurrencyBuilder::numberOfDecimalPlaces(size_t val) {
   m_currency.m_numberOfDecimalPlaces = val;
@@ -838,6 +990,8 @@ CurrencyBuilder& CurrencyBuilder::numberOfDecimalPlaces(size_t val) {
   return *this;
 }
 
+/* ---------------------------------------------------------------------------------------------------- */
+
 CurrencyBuilder& CurrencyBuilder::difficultyWindow(size_t val) {
   if (val < 2) {
     throw std::invalid_argument("val at difficultyWindow()");
@@ -847,6 +1001,8 @@ CurrencyBuilder& CurrencyBuilder::difficultyWindow(size_t val) {
   return *this;
 }
 
+/* ---------------------------------------------------------------------------------------------------- */
+
 CurrencyBuilder& CurrencyBuilder::upgradeVotingThreshold(unsigned int val) {
   if (val <= 0 || val > 100) {
     throw std::invalid_argument("val at upgradeVotingThreshold()");
@@ -855,6 +1011,8 @@ CurrencyBuilder& CurrencyBuilder::upgradeVotingThreshold(unsigned int val) {
   m_currency.m_upgradeVotingThreshold = val;
   return *this;
 }
+
+/* ---------------------------------------------------------------------------------------------------- */
 
 CurrencyBuilder& CurrencyBuilder::upgradeWindow(size_t val) {
   if (val <= 0) {
