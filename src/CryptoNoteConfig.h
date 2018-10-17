@@ -88,6 +88,7 @@ const uint64_t UPGRADE_HEIGHT					= 1;
 const uint64_t UPGRADE_HEIGHT_V2				= 1;
 const uint64_t UPGRADE_HEIGHT_V3				= 12750; // CN Fast fork
 const uint64_t UPGRADE_HEIGHT_V4				= 45000; // Mixin >2 fork
+const uint64_t UPGRADE_HEIGHT_V5				= 108000; // Deposits 2.0, Investments 1.0
 const unsigned UPGRADE_VOTING_THRESHOLD				= 90; // percent
 const size_t   UPGRADE_VOTING_WINDOW				= EXPECTED_NUMBER_OF_BLOCKS_PER_DAY; // blocks
 const size_t   UPGRADE_WINDOW					= EXPECTED_NUMBER_OF_BLOCKS_PER_DAY; // blocks
@@ -133,7 +134,7 @@ const int      RPC_DEFAULT_PORT					= 16000;
 const size_t   P2P_LOCAL_WHITE_PEERLIST_LIMIT			= 1000;
 const size_t   P2P_LOCAL_GRAY_PEERLIST_LIMIT			= 5000;
 
-const size_t   P2P_CONNECTION_MAX_WRITE_BUFFER_SIZE		= 16 * 1024 * 1024; // 16MB
+const size_t   P2P_CONNECTION_MAX_WRITE_BUFFER_SIZE		= 64 * 1024 * 1024; // 16MB
 const uint32_t P2P_DEFAULT_CONNECTIONS_COUNT			= 8;
 const size_t   P2P_DEFAULT_WHITELIST_CONNECTIONS_PERCENT	= 70; // percent
 const uint32_t P2P_DEFAULT_HANDSHAKE_INTERVAL			= 60; // seconds

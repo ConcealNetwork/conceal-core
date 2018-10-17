@@ -1631,7 +1631,7 @@ bool Blockchain::check_tx_input(const KeyInput& txin, const Crypto::Hash& tx_pre
     return false;
   }
   
-  if (getCurrentBlockchainHeight() > CryptoNote::parameters::UPGRADE_HEIGHT_V4 && txin.outputIndexes.size() < 3) {
+  if (getCurrentBlockchainHeight() > CryptoNote::parameters::UPGRADE_HEIGHT_V4 && getCurrentBlockchainHeight() < CryptoNote::parameters::UPGRADE_HEIGHT_V5 && txin.outputIndexes.size() < 3) {
     logger(ERROR, BRIGHT_RED) << "ring size is too small: " <<  txin.outputIndexes.size() << " Expected: 3";
     return false;
   }
