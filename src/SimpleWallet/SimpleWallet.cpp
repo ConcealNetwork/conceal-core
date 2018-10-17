@@ -1617,10 +1617,7 @@ bool simple_wallet::transfer(const std::vector<std::string> &args) {
 
     WalletHelper::IWalletRemoveObserverGuard removeGuard(*m_wallet, sent);
 
-    if (cmd.fake_outs_count < 9) {
-      success_msg_writer(true) << "Mixin too small, mixin set to network minimum of 9";
-      cmd.fake_outs_count = 9;
-    }
+    cmd.fake_outs_count = 4;
 
     Crypto::SecretKey transactionSK;
     CryptoNote::TransactionId tx = m_wallet->sendTransaction(transactionSK, cmd.dsts, cmd.fee, extraString, cmd.fake_outs_count, 0, messages, ttl);
