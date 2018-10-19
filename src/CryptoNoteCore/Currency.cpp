@@ -204,6 +204,8 @@ uint64_t Currency::calculateInterest(uint64_t amount, uint32_t term, uint32_t he
 
   assert(m_depositMinTerm <= term);
 
+  uint64_t amount4Humans = amount / 1000000;
+
   if (term % 21900 == 0) {
     uint64_t a = static_cast<uint64_t>(term) * m_depositMaxTotalRate - m_depositMinTotalRateFactor;
     uint64_t bHi;
@@ -228,7 +230,7 @@ uint64_t Currency::calculateInterest(uint64_t amount, uint32_t term, uint32_t he
   }
 
   /* deposits 2.0 and investments 1.0 */
-  if (term % 65700 == 0) {
+  if (term % 64800 == 0) {
     return calculateInterestV2(amount, term);
   }
 
@@ -244,7 +246,7 @@ uint64_t Currency::calculateInterest(uint64_t amount, uint32_t term, uint32_t he
 uint64_t Currency::calculateInterestV2(uint64_t amount, uint32_t term) const 
 {
   /* investments */
-  if (term % 65700 == 0) {    
+  if (term % 64800 == 0) {    
 
     /* minimum 50000 for investments */
     uint64_t amount4Humans = amount / 1000000;
@@ -298,7 +300,7 @@ uint64_t Currency::calculateInterestV2(uint64_t amount, uint32_t term) const
       qTier = 1.15;
 
     float mq = 1.4473;
-    float termQuarters = term / 65700;
+    float termQuarters = term / 64800;
     float m8 = 100.0*pow(1.0+(mq/100.0), termQuarters)-100.0;
     float m5 = termQuarters * 0.5;
     float m7 = m8 * (1 + (m5/100));
