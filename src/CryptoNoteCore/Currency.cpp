@@ -206,29 +206,6 @@ uint64_t Currency::calculateInterest(uint64_t amount, uint32_t term, uint32_t he
 
   uint64_t amount4Humans = amount / 1000000;
 
-  if (term % 21900 == 0) {
-    uint64_t a = static_cast<uint64_t>(term) * m_depositMaxTotalRate - m_depositMinTotalRateFactor;
-    uint64_t bHi;
-    uint64_t bLo = mul128(amount, a, &bHi);
-    uint64_t cHi;
-    uint64_t cLo;
-    assert(std::numeric_limits<uint32_t>::max() / 100 > m_depositMaxTerm);
-    div128_32(bHi, bLo, static_cast<uint32_t>(100 * m_depositMaxTerm), &cHi, &cLo);
-    assert(cHi == 0);
-
-    /* early deposit multiplier */
-    uint64_t interestHi;
-    uint64_t interestLo;
-    if (height <= CryptoNote::parameters::END_MULTIPLIER_BLOCK) {
-        interestLo = mul128(cLo, CryptoNote::parameters::MULTIPLIER_FACTOR, &interestHi);
-        assert(interestHi == 0);
-    } else {
-        interestHi = cHi;
-        interestLo = cLo;
-    }
-    return interestLo;
-  }
-
   /* deposits 2.0 and investments 1.0 */
   if (term % 64800 == 0) {
     return calculateInterestV2(amount, term);
@@ -238,7 +215,26 @@ uint64_t Currency::calculateInterest(uint64_t amount, uint32_t term, uint32_t he
     return calculateInterestV2(amount, term);
   }
 
+  uint64_t a = static_cast<uint64_t>(term) * m_depositMaxTotalRate - m_depositMinTotalRateFactor;
+  uint64_t bHi;
+  uint64_t bLo = mul128(amount, a, &bHi);
+  uint64_t cHi;
+  uint64_t cLo;
+  assert(std::numeric_limits<uint32_t>::max() / 100 > m_depositMaxTerm);
+  div128_32(bHi, bLo, static_cast<uint32_t>(100 * m_depositMaxTerm), &cHi, &cLo);
+  assert(cHi == 0);
 
+  /* early deposit multiplier */
+  uint64_t interestHi;
+  uint64_t interestLo;
+  if (height <= CryptoNote::parameters::END_MULTIPLIER_BLOCK) {
+      interestLo = mul128(cLo, CryptoNote::parameters::MULTIPLIER_FACTOR, &interestHi);
+      assert(interestHi == 0);
+  } else {
+      interestHi = cHi;
+      interestLo = cLo;
+  }
+  return interestLo;
 }
 
 /* ---------------------------------------------------------------------------------------------------- */
