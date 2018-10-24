@@ -246,7 +246,7 @@ uint64_t Currency::calculateInterestV2(uint64_t amount, uint32_t term) const
 
     /* minimum 50000 for investments */
     uint64_t amount4Humans = amount / 1000000;
-    assert(amount4Humans < 50000);
+    assert(amount4Humans >= 50000);
 
     /* quantity tiers */
     float qTier = 1;
