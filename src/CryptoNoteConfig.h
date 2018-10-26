@@ -17,10 +17,12 @@ const size_t   CRYPTONOTE_MAX_BLOCK_BLOB_SIZE			= 500000000;
 const size_t   CRYPTONOTE_MAX_TX_SIZE				= 1000000000;
 const uint64_t CRYPTONOTE_PUBLIC_ADDRESS_BASE58_PREFIX		= 0x7ad4; // addresses start with "ccx7"
 const size_t   CRYPTONOTE_MINED_MONEY_UNLOCK_WINDOW		= 10; // 20m unlock
-const uint64_t CRYPTONOTE_BLOCK_FUTURE_TIME_LIMIT		= 60 * 60 * 2; // 2 hours
+const uint64_t CRYPTONOTE_BLOCK_FUTURE_TIME_LIMIT		= 60 * 60 * 2; // was 2 hours, not 3 * T
+const uint64_t CRYPTONOTE_BLOCK_FUTURE_TIME_LIMIT_V1	= 360; // LWMA3
 const uint64_t CRYPTONOTE_DEFAULT_TX_SPENDABLE_AGE		= 10; // 20m unlock
 
 const size_t   BLOCKCHAIN_TIMESTAMP_CHECK_WINDOW		= 30;
+const size_t   BLOCKCHAIN_TIMESTAMP_CHECK_WINDOW_V1		= 11; // LWMA3
 
 const uint64_t MONEY_SUPPLY					= UINT64_C(200000000000000); // max supply: 200M (Consensus II)
 
@@ -44,10 +46,12 @@ const uint64_t EXPECTED_NUMBER_OF_BLOCKS_PER_DAY		= 24 * 60 * 60 / DIFFICULTY_TA
 const size_t   DIFFICULTY_WINDOW				= EXPECTED_NUMBER_OF_BLOCKS_PER_DAY; // blocks
 const size_t   DIFFICULTY_WINDOW_V1				= DIFFICULTY_WINDOW;
 const size_t   DIFFICULTY_WINDOW_V2				= DIFFICULTY_WINDOW;
+const size_t   DIFFICULTY_WINDOW_V3				= 60; // LWMA3
+const size_t   DIFFICULTY_BLOCKS_COUNT			= DIFFICULTY_WINDOW_V3 + 1; // LWMA3
 const size_t   DIFFICULTY_CUT					= 60; // timestamps to cut after sorting
 const size_t   DIFFICULTY_CUT_V1				= DIFFICULTY_CUT;
 const size_t   DIFFICULTY_CUT_V2				= DIFFICULTY_CUT;
-const size_t   DIFFICULTY_LAG					= 15; // !!!
+const size_t   DIFFICULTY_LAG					= 15; 
 const size_t   DIFFICULTY_LAG_V1				= DIFFICULTY_LAG;
 const size_t   DIFFICULTY_LAG_V2				= DIFFICULTY_LAG;
 
@@ -89,6 +93,7 @@ const uint64_t UPGRADE_HEIGHT_V2				= 1;
 const uint64_t UPGRADE_HEIGHT_V3				= 12750; // CN Fast fork
 const uint64_t UPGRADE_HEIGHT_V4				= 45000; // Mixin >2 fork
 const uint64_t UPGRADE_HEIGHT_V5				= 98160; // Deposits 2.0, Investments 1.0
+const uint64_t UPGRADE_HEIGHT_V6				= 99950; // LWMA3
 const unsigned UPGRADE_VOTING_THRESHOLD				= 90; // percent
 const size_t   UPGRADE_VOTING_WINDOW				= EXPECTED_NUMBER_OF_BLOCKS_PER_DAY; // blocks
 const size_t   UPGRADE_WINDOW					= EXPECTED_NUMBER_OF_BLOCKS_PER_DAY; // blocks
@@ -111,7 +116,7 @@ const uint64_t FOUNDATION_TRUST					= (UINT64_C(12000000) * parameters::COIN); /
 const uint64_t MAX_BLOCK_REWARD					= (UINT64_C(20) * parameters::COIN); // max reward (Consensus I)
 const uint64_t REWARD_INCREASE_INTERVAL				= (UINT64_C(21900)); // aprox. 1 month (+ 0.25 CCX increment per month)
 
-const char     CRYPTONOTE_NAME[]                             	= "conceal";
+const char     CRYPTONOTE_NAME[]                             	= "testnet";
 const char     GENESIS_COINBASE_TX_HEX[]			= "010a01ff0001c096b102029b2e4c0281c0b02e7c53291a94d1d0cbff8883f8024f5142ee494ffbbd08807121017d6775185749e95ac2d70cae3f29e0e46f430ab648abbe9fdc61d8e7437c60f8";
 const uint32_t GENESIS_NONCE                         	        = 10000;
 const uint64_t GENESIS_TIMESTAMP				= 1527078920;
@@ -121,6 +126,7 @@ const uint8_t  TRANSACTION_VERSION_2				=  2;
 const uint8_t  BLOCK_MAJOR_VERSION_1				=  1; // (Consensus I)
 const uint8_t  BLOCK_MAJOR_VERSION_2				=  2; // (Consensus II)
 const uint8_t  BLOCK_MAJOR_VERSION_3				=  3; // (Consensus III)
+const uint8_t  BLOCK_MAJOR_VERSION_4				=  4; // LWMA3
 const uint8_t  BLOCK_MINOR_VERSION_0				=  0;
 const uint8_t  BLOCK_MINOR_VERSION_1				=  1;
 
