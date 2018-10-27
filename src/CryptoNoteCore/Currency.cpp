@@ -80,7 +80,7 @@ bool Currency::init() {
 
   if (isTestnet()) {
     m_upgradeHeightV2 = 0;
-	m_upgradeHeightV3 = static_cast<uint32_t>(-1);
+	  m_upgradeHeightV3 = static_cast<uint32_t>(-1);
     m_blocksFileName = "testnet_" + m_blocksFileName;
     m_blocksCacheFileName = "testnet_" + m_blocksCacheFileName;
     m_blockIndexesFileName = "testnet_" + m_blockIndexesFileName;
@@ -125,7 +125,9 @@ bool Currency::generateGenesisBlock() {
 /* ---------------------------------------------------------------------------------------------------- */
 
 size_t Currency::difficultyWindowByBlockVersion(uint8_t blockMajorVersion) const {
-  if (blockMajorVersion >= BLOCK_MAJOR_VERSION_2) {
+  if (blockMajorVersion >= BLOCK_MAJOR_VERSION_4) {
+    return parameters::DIFFICULTY_WINDOW_V3;
+  } else if (blockMajorVersion >= BLOCK_MAJOR_VERSION_2) {
     return m_difficultyWindow;
   } else if (blockMajorVersion == BLOCK_MAJOR_VERSION_1) {
     return parameters::DIFFICULTY_WINDOW_V2;
@@ -169,6 +171,8 @@ uint32_t Currency::upgradeHeight(uint8_t majorVersion) const {
     return m_upgradeHeightV2;
   } else if (majorVersion == BLOCK_MAJOR_VERSION_3) {
     return m_upgradeHeightV3;
+  } else if (majorVersion == BLOCK_MAJOR_VERSION_4) {
+    return m_upgradeHeightV6;
   } else {
     return static_cast<uint32_t>(-1);
   }
@@ -682,8 +686,7 @@ bool Currency::parseAmount(const std::string& str, uint64_t& amount) const {
 
 /* ---------------------------------------------------------------------------------------------------- */
 
-difficulty_type Currency::nextDifficulty(std::vector<uint64_t> timestamps,
-  std::vector<difficulty_type> cumulativeDifficulties) const {
+difficulty_type Currency::nextDifficulty(std::vector<uint64_t> timestamps, std::vector<difficulty_type> cumulativeDifficulties) const {
   assert(m_difficultyWindow >= 2);
 
   if (timestamps.size() > m_difficultyWindow) {
@@ -730,8 +733,7 @@ difficulty_type Currency::nextDifficulty(std::vector<uint64_t> timestamps,
 
 /* ---------------------------------------------------------------------------------------------------- */
 
-difficulty_type Currency::nextDifficulty(uint8_t version, uint32_t blockIndex, std::vector<uint64_t> timestamps,
-  std::vector<difficulty_type> cumulativeDifficulties) const {
+difficulty_type Currency::nextDifficulty(uint8_t version, uint32_t blockIndex, std::vector<uint64_t> timestamps, std::vector<difficulty_type> cumulativeDifficulties) const {
 
   // manual diff set hack
   if (blockIndex >= 12750 && blockIndex < 13500) {
@@ -867,6 +869,78 @@ difficulty_type Currency::nextDifficulty(uint8_t version, uint32_t blockIndex, s
 
 /* ---------------------------------------------------------------------------------------------------- */
 
+// LWMA-3 difficulty algorithm (commented version)
+// Copyright (c) 2017-2018 Zawy, MIT License
+// https://github.com/zawy12/difficulty-algorithms/issues/3
+// Bitcoin clones must lower their FTL. 
+// Cryptonote et al coins must make the following changes:
+// #define BLOCKCHAIN_TIMESTAMP_CHECK_WINDOW X    11
+// #define CRYPTONOTE_BLOCK_FUTURE_TIME_LIMIT X        3 * DIFFICULTY_TARGET 
+// #define DIFFICULTY_WINDOW X                     60 //  N=45, 60, and 90 for T=600, 120, 60.
+// Bytecoin / Karbo clones may not have the following
+// #define DIFFICULTY_BLOCKS_COUNT       DIFFICULTY_WINDOW+1 X
+// The BLOCKS_COUNT is to make timestamps & cumulative_difficulty vectors size N+1
+// Do not sort timestamps.  
+// CN coins (but not Monero >= 12.3) must deploy the Jagerman MTP Patch. See:
+// https://github.com/loki-project/loki/pull/26   or
+// https://github.com/graft-project/GraftNetwork/pull/118/files
+
+// difficulty_type should be uint64_t
+difficulty_type Currency::nextDifficultyLWMA3(std::vector<std::uint64_t> timestamps, std::vector<difficulty_type> cumulative_difficulties) const {
+
+  uint64_t T    = 120; // target solvetime seconds
+  uint64_t N   = 60; //  N=45, 60, and 90 for T=600, 120, 60.
+  uint64_t L(0), ST, sum_3_ST(0), next_D, prev_D, this_timestamp, previous_timestamp;
+ 
+    // Make sure timestamps & CD vectors are not bigger than they are supposed to be.
+    assert(timestamps.size() == cumulative_difficulties.size() && 
+                     timestamps.size() <= N+1 );
+
+    // If it's a new coin, do startup code. 
+    // Increase difficulty_guess if it needs to be much higher, but guess lower than lowest guess.
+    uint64_t difficulty_guess = 100; 
+    if (timestamps.size() <= 10 ) {   return difficulty_guess;   }
+    // Use "if" instead of "else if" in case vectors are incorrectly N all the time instead of N+1.
+    if ( timestamps.size() < N +1 ) { N = timestamps.size()-1;  }
+    
+    // If hashrate/difficulty ratio after a fork is < 1/3 prior ratio, hardcode D for N+1 blocks after fork. 
+    // difficulty_guess = 100; //  Dev may change.  Guess low.
+    // if (height <= UPGRADE_HEIGHT + N+1 ) { return difficulty_guess;  }
+
+    // N is most recently solved block. 
+    previous_timestamp = timestamps[0];
+    for ( uint64_t i = 1; i <= N; i++) {  
+       // prevent out-of-sequence timestamps in a way that prevents 
+       // an exploit caused by "if ST< 0 then ST = 0"
+       if (timestamps[i] > previous_timestamp  ) {   
+           this_timestamp = timestamps[i];
+       } else {  this_timestamp = previous_timestamp+1 ;   }
+       // Limit solvetime ST to 6*T to prevent large drop in difficulty that could cause oscillations.
+       ST = std::min(6*T ,this_timestamp - previous_timestamp);
+       previous_timestamp = this_timestamp;
+       L +=  ST * i ; // give linearly higher weight to more recent solvetimes
+        // delete the following line if you do not want the "jump rule"
+       if ( i > N-3 ) { sum_3_ST += ST; } // used below to check for hashrate jumps
+   }
+   // Calculate next_D = avgD * T / LWMA(STs) using integer math
+
+    next_D = ((cumulative_difficulties[N] - cumulative_difficulties[0])*T*(N+1)*99)/(100*2*L);
+
+    prev_D = cumulative_difficulties[N] - cumulative_difficulties[N-1];
+    // The following is only for safety to limit unexpected extreme events.  
+    next_D = std::max( (prev_D*67)/100, std::min(next_D, (prev_D*150)/100 ));
+
+    // If last 3 solvetimes were so fast it's probably a jump in hashrate, increase D 8%.
+    // delete the following line if you do not want the "jump rule"
+    if ( sum_3_ST < (8*T)/10) {  next_D = std::max(next_D,(prev_D*108)/100); }
+
+   return next_D;
+
+    // next_Target = sumTargets*L*2/0.998/T/(N+1)/N/N; // To show the difference.
+}
+
+/* ---------------------------------------------------------------------------------------------------- */
+
 bool Currency::checkProofOfWork(Crypto::cn_context& context, const Block& block, difficulty_type currentDifficulty,
   Crypto::Hash& proofOfWork) const {
 
@@ -912,7 +986,9 @@ CurrencyBuilder::CurrencyBuilder(Logging::ILogger& log) : m_currency(log) {
   minedMoneyUnlockWindow(parameters::CRYPTONOTE_MINED_MONEY_UNLOCK_WINDOW);
 
   timestampCheckWindow(parameters::BLOCKCHAIN_TIMESTAMP_CHECK_WINDOW);
+  timestampCheckWindow_v1(parameters::BLOCKCHAIN_TIMESTAMP_CHECK_WINDOW_V1);
   blockFutureTimeLimit(parameters::CRYPTONOTE_BLOCK_FUTURE_TIME_LIMIT);
+  blockFutureTimeLimit_v1(parameters::CRYPTONOTE_BLOCK_FUTURE_TIME_LIMIT_V1);
 
   moneySupply(parameters::MONEY_SUPPLY);
   //genesisBlockReward(parameters::GENESIS_BLOCK_REWARD);
@@ -955,6 +1031,7 @@ CurrencyBuilder::CurrencyBuilder(Logging::ILogger& log) : m_currency(log) {
 
   upgradeHeightV2(parameters::UPGRADE_HEIGHT_V2);
   upgradeHeightV3(parameters::UPGRADE_HEIGHT_V3);
+  upgradeHeightV6(parameters::UPGRADE_HEIGHT_V6);
   upgradeVotingThreshold(parameters::UPGRADE_VOTING_THRESHOLD);
   upgradeVotingWindow(parameters::UPGRADE_VOTING_WINDOW);
   upgradeWindow(parameters::UPGRADE_WINDOW);
