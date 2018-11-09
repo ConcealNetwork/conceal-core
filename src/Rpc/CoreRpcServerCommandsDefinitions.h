@@ -267,6 +267,7 @@ struct COMMAND_RPC_GET_INFO {
     uint64_t grey_peerlist_size;
     uint32_t last_known_block_index;
     uint64_t full_deposit_amount;
+	uint64_t full_investment_amount;
     uint64_t full_deposit_interest;
 
     void serialize(ISerializer &s) {

@@ -242,21 +242,28 @@ bool DaemonCommandsHandler::print_stat(const std::vector<std::string>& args) {
       height = maxHeight;
     }
   }
-
+  uint64_t totalCoinsOnInvestments = m_core.investmentAmountAtHeight(height);
   uint64_t totalCoinsInNetwork = m_core.coinsEmittedAtHeight(height);
   uint64_t totalCoinsOnDeposits = m_core.depositAmountAtHeight(height);
-  uint64_t amountOfActiveCoins = totalCoinsInNetwork - totalCoinsOnDeposits;
+  uint64_t amountOfActiveCoins = totalCoinsInNetwork - totalCoinsOnDeposits ;
+  uint64_t fullCoinsOnDeposits = m_core.fullDepositAmount();
+  uint64_t fullCoinsOnInvestment = m_core.fullInvestmentAmount();
+  uint64_t InvestmentAfterSub = fullCoinsOnDeposits - fullCoinsOnInvestment;
 
   const auto& currency = m_core.currency();
+
   std::cout << "Block height: " << height << std::endl;
   std::cout << "Block difficulty: " << m_core.difficultyAtHeight(height) << std::endl;
   std::cout << "Total coins in network:  " << currency.formatAmount(totalCoinsInNetwork) << std::endl;
-  std::cout << "Total coins on deposits: " << currency.formatAmount(totalCoinsOnDeposits) <<
-    " (" << currency.formatAmount(calculatePercent(currency, totalCoinsOnDeposits, totalCoinsInNetwork)) << "%)" << std::endl;
+  std::cout << "Total coins on deposits: " << currency.formatAmount(fullCoinsOnInvestment) <<
+	  " (" << currency.formatAmount(calculatePercent(currency, fullCoinsOnInvestment, totalCoinsInNetwork)) << "%)" << std::endl;
+  std::cout << "Total coins on investment: " << currency.formatAmount(InvestmentAfterSub) <<
+	  " (" << currency.formatAmount(calculatePercent(currency, InvestmentAfterSub, totalCoinsInNetwork)) << "%)" << std::endl;
   std::cout << "Amount of active coins:  " << currency.formatAmount(amountOfActiveCoins) <<
-    " (" << currency.formatAmount(calculatePercent(currency, amountOfActiveCoins, totalCoinsInNetwork)) << "%)" << std::endl;
- 
+	  " (" << currency.formatAmount(calculatePercent(currency, amountOfActiveCoins, totalCoinsInNetwork)) << "%)" << std::endl;
+
   return true;
+
 }
 //--------------------------------------------------------------------------------
 bool DaemonCommandsHandler::print_block(const std::vector<std::string> &args) {

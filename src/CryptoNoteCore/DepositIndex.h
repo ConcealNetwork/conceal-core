@@ -15,16 +15,21 @@ class ISerializer;
 class DepositIndex {
 public:
   using DepositAmount = int64_t;
+ 
+  using InvestmentAmount = int64_t;
   using DepositInterest = uint64_t;
   using DepositHeight = uint32_t;
+
   DepositIndex();
   explicit DepositIndex(DepositHeight expectedHeight);
-  void pushBlock(DepositAmount amount, DepositInterest interest); 
+  void pushBlock(DepositAmount amount, DepositInterest interest, InvestmentAmount investment);
   void popBlock(); 
   void reserve(DepositHeight expectedHeight);
-  size_t popBlocks(DepositHeight from); 
+  size_t popBlocks(DepositHeight from);   
+ InvestmentAmount investmentAmountAtHeight(DepositHeight height) const;
   DepositAmount depositAmountAtHeight(DepositHeight height) const;
   DepositAmount fullDepositAmount() const; 
+  DepositAmount fullInvestmentAmount() const;
   DepositInterest depositInterestAtHeight(DepositHeight height) const;
   DepositInterest fullInterestAmount() const; 
   DepositHeight size() const;
@@ -35,6 +40,7 @@ private:
     DepositHeight height;
     DepositAmount amount;
     DepositInterest interest;
+	InvestmentAmount investment;
 
     void serialize(ISerializer& s);
   };

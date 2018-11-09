@@ -110,7 +110,9 @@ namespace CryptoNote {
     bool getTransactionIdsByPaymentId(const Crypto::Hash& paymentId, std::vector<Crypto::Hash>& transactionHashes);
     bool isBlockInMainChain(const Crypto::Hash& blockId);
     uint64_t fullDepositAmount() const;
+	uint64_t fullInvestmentAmount() const;
     uint64_t depositAmountAtHeight(size_t height) const;
+	uint64_t investmentAmountAtHeight(size_t height) const;
     uint64_t fullDepositInterest() const;
     uint64_t depositInterestAtHeight(size_t height) const;
     uint64_t coinsEmittedAtHeight(uint64_t height);

@@ -652,6 +652,7 @@ uint64_t core::coinsEmittedAtHeight(uint64_t height) {
   return m_blockchain.coinsEmittedAtHeight(height);
 }
 
+
 uint64_t core::difficultyAtHeight(uint64_t height) {
   return m_blockchain.difficultyAtHeight(height);
 }
@@ -996,10 +997,18 @@ uint64_t core::getTotalGeneratedAmount() {
 uint64_t core::fullDepositAmount() const {
   return m_blockchain.fullDepositAmount();
 }
+uint64_t core::fullInvestmentAmount() const {
+	return m_blockchain.fullInvestmentAmount();
+}
 
 uint64_t core::depositAmountAtHeight(size_t height) const {
   return m_blockchain.depositAmountAtHeight(height);
 }
+
+uint64_t core::investmentAmountAtHeight(size_t height) const {
+	return m_blockchain.investmentAmountAtHeight(height);
+}
+
 
 uint64_t core::fullDepositInterest() const {
   return m_blockchain.fullDepositInterest();

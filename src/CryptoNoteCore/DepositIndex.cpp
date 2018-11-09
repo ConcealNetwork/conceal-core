@@ -29,6 +29,12 @@ void DepositIndex::reserve(DepositHeight expectedHeight) {
 
 auto DepositIndex::fullDepositAmount() const -> DepositAmount {
   return index.empty() ? 0 : index.back().amount;
+  
+}
+
+auto DepositIndex::fullInvestmentAmount() const -> InvestmentAmount {
+	return index.empty() ? 0 : index.back().investment;
+
 }
 
 auto DepositIndex::fullInterestAmount() const -> DepositInterest {
@@ -55,22 +61,26 @@ static inline bool sumWillOverflow(uint64_t x, uint64_t y) {
   return false;
 }
 
-void DepositIndex::pushBlock(DepositAmount amount, DepositInterest interest) {
+void DepositIndex::pushBlock(DepositAmount amount, DepositInterest interest, InvestmentAmount investment) {
+	InvestmentAmount lastAmount2;
   DepositAmount lastAmount;
   DepositInterest lastInterest;
   if (index.empty()) {
     lastAmount = 0;
+	lastAmount2 = 0;
     lastInterest = 0;
   } else {
     lastAmount = index.back().amount;
+	lastAmount2 = index.back().investment;
     lastInterest = index.back().interest;
   }
-
+  assert(!sumWillOverflow(investment, lastAmount2));
   assert(!sumWillOverflow(amount, lastAmount));
   assert(!sumWillOverflow(interest, lastInterest));
   assert(amount + lastAmount >= 0);
+  assert(investment + lastAmount2 >= 0);
   if (amount != 0 || interest > 0) {
-    index.push_back({blockCount, amount + lastAmount, interest + lastInterest});
+    index.push_back({blockCount, amount + lastAmount, interest + lastInterest,investment + lastAmount2});
   }
 
   ++blockCount;
@@ -119,9 +129,20 @@ auto DepositIndex::depositAmountAtHeight(DepositHeight height) const -> DepositA
     return 0;
   } else {
     auto it = upperBound(height);
-    return it == index.cbegin() ? 0 : (--it)->amount;
+    return it == index.cbegin() ? 0 : (--it)->amount ;
   }
 }
+
+auto DepositIndex::investmentAmountAtHeight(DepositHeight height) const -> InvestmentAmount {
+	if (blockCount == 0) {
+		return 0;
+	}
+	else {
+		auto it = upperBound(height);
+		return it == index.cbegin() ? 0 : (--it)->investment;
+	}
+}
+
 
 auto DepositIndex::depositInterestAtHeight(DepositHeight height) const -> DepositInterest {
   if (blockCount == 0) {

@@ -15,10 +15,12 @@
 #include "Rpc/CoreRpcServerCommandsDefinitions.h"
 #include "Serialization/BinarySerializationTools.h"
 #include "CryptoNoteTools.h"
+#include <iostream>
 
 using namespace Logging;
 using namespace Common;
 
+using namespace std;
 namespace {
 
 std::string appendPath(const std::string& path, const std::string& fileName) {
@@ -2044,11 +2046,21 @@ uint64_t Blockchain::fullDepositAmount() const {
   std::lock_guard<decltype(m_blockchain_lock)> lk(m_blockchain_lock);
   return m_depositIndex.fullDepositAmount();
 }
-
+uint64_t Blockchain::fullInvestmentAmount() const {
+	std::lock_guard<decltype(m_blockchain_lock)> lk(m_blockchain_lock);
+	return m_depositIndex.fullInvestmentAmount();
+}
 uint64_t Blockchain::depositAmountAtHeight(size_t height) const {
   std::lock_guard<decltype(m_blockchain_lock)> lk(m_blockchain_lock);
   return m_depositIndex.depositAmountAtHeight(static_cast<DepositIndex::DepositHeight>(height));
+}   
+
+uint64_t Blockchain::investmentAmountAtHeight(size_t height) const {
+	std::lock_guard<decltype(m_blockchain_lock)> lk(m_blockchain_lock);
+	return m_depositIndex.investmentAmountAtHeight(static_cast<DepositIndex::DepositHeight>(height));
 }
+
+
 
 uint64_t Blockchain::fullDepositInterest() const {
   std::lock_guard<decltype(m_blockchain_lock)> lk(m_blockchain_lock);
@@ -2062,25 +2074,49 @@ uint64_t Blockchain::depositInterestAtHeight(size_t height) const {
 
 void Blockchain::pushToDepositIndex(const BlockEntry& block, uint64_t interest) {
   int64_t deposit = 0;
+  int64_t investment = 0;
   for (const auto& tx : block.transactions) {
     for (const auto& in : tx.tx.inputs) {
       if (in.type() == typeid(MultisignatureInput)) {
         auto& multisign = boost::get<MultisignatureInput>(in);
-        if (multisign.term > 0) {
-          deposit -= multisign.amount;
-        }
+
+
+
+		if (multisign.term > 0) {
+			deposit -= multisign.amount;
+		}
+
+
+
+
+
+
+
+		if (((multisign.term % 5040) == 0) || ((multisign.term % 21900) == 0)) {
+			investment -= multisign.amount;
+			
+		}	
+
       }
     }
     for (const auto& out : tx.tx.outputs) {
       if (out.target.type() == typeid(MultisignatureOutput)) {
         auto& multisign = boost::get<MultisignatureOutput>(out.target);
-        if (multisign.term > 0) {
-          deposit += out.amount;
-        }
+	
+		if (multisign.term > 0) {
+			deposit += out.amount;
+		}
+
+
+		if (((multisign.term % 5040) == 0) || ((multisign.term % 21900) == 0)) {
+			investment += out.amount;
+			
+		}
+	
       }
     }
   }
-  m_depositIndex.pushBlock(deposit, interest);
+  m_depositIndex.pushBlock(deposit, interest, investment);
 }
 
 bool Blockchain::pushBlock(BlockEntry& block) {
