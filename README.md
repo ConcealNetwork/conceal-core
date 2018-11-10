@@ -1,11 +1,15 @@
 ![image](https://github.com/TheCircleFoundation/conceal-assets/blob/master/splash.png)
 
 # Conceal Core (CLI)
-Latest Release: v5.0.0
+Latest Release: v5.0.4
 Maintained by The Circle Team.
 
 ## Information
-Conceal is a free open source privacy protected peer-to-peer digital cash system that is completely decentralized, without the need for a central server or trusted parties. Users hold the crypto keys to their own money and transact directly with each other, with the help of a P2P network to check for double-spending. Conceal has a decentralized blockchain banking in its core and instant untraceable crypto messages that can be decrypted with recipient`s private key.
+Conceal is a decentralized banking platform with encrypted messages and own privacy protected cryptocurrency.
+
+Conceal is based on the Cryptonote protocol and runs on a secure peer-to-peer network technology to operate with no central authority. You control your private keys to your funds, you control your destiny. Conceal Network is accessible by anyone in the world regardless of his/her geographic location or status. Our blockchain is resistant to any kind of analysis. All your CCX transactions and messages are anonymous. Conceal Network provides an instant secure, untraceable and unlinkable way of encrypted communication - crypto messages.
+
+Conceal is open-source, community driven and truly decentralized. No one owns it, everyone can take part.
 
 ## Resources
 - Web: [conceal.network](https://conceal.network/)
