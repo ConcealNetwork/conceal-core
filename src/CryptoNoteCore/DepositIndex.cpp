@@ -69,7 +69,7 @@ void DepositIndex::pushBlock(DepositAmount amount, DepositInterest interest) {
   assert(!sumWillOverflow(amount, lastAmount));
   assert(!sumWillOverflow(interest, lastInterest));
   assert(amount + lastAmount >= 0);
-  if (amount != 0 || interest > 0) {
+  if (amount != 0) {
     index.push_back({blockCount, amount + lastAmount, interest + lastInterest});
   }
 

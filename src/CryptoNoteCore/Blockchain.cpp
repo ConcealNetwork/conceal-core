@@ -2067,7 +2067,11 @@ void Blockchain::pushToDepositIndex(const BlockEntry& block, uint64_t interest) 
       if (in.type() == typeid(MultisignatureInput)) {
         auto& multisign = boost::get<MultisignatureInput>(in);
         if (multisign.term > 0) {
+          if ((multisign.term % 64800 == 0) || (multisign.term % 22000 == 0)){
+            logger(INFO, BRIGHT_YELLOW) << "DEPOSIT ";    
           deposit -= multisign.amount;
+            logger(INFO, BRIGHT_WHITE) << "unlock  " << (multisign.amount / 1000000) << " with a term of " << multisign.term << " blocks ";
+          }
         }
       }
     }
@@ -2075,10 +2079,17 @@ void Blockchain::pushToDepositIndex(const BlockEntry& block, uint64_t interest) 
       if (out.target.type() == typeid(MultisignatureOutput)) {
         auto& multisign = boost::get<MultisignatureOutput>(out.target);
         if (multisign.term > 0) {
-          deposit += out.amount;
+          if ((multisign.term % 64800 == 0) || (multisign.term % 22000 == 0)){
+            logger(INFO, BRIGHT_GREEN) << "DEPOSIT ";    
+            deposit += out.amount;      
+            logger(INFO, BRIGHT_WHITE) << "Lock for " << (out.amount / 1000000) << " with a term of " << multisign.term << " blocks ";
+          } 
         }
       }
     }
+  }
+  if (deposit > 0) { 
+    logger(INFO, BRIGHT_GREEN) << "pushBlock " << deposit << " int " << interest;    
   }
   m_depositIndex.pushBlock(deposit, interest);
 }
