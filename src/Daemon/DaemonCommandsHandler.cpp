@@ -245,12 +245,14 @@ bool DaemonCommandsHandler::print_stat(const std::vector<std::string>& args) {
 
   uint64_t totalCoinsInNetwork = m_core.coinsEmittedAtHeight(height);
   uint64_t totalCoinsOnDeposits = m_core.depositAmountAtHeight(height);
+  uint64_t totalCoinsOnInvestments = m_core.investmentAmountAtHeight(height);
   uint64_t amountOfActiveCoins = totalCoinsInNetwork - totalCoinsOnDeposits;
 
   const auto& currency = m_core.currency();
   std::cout << "Block height: " << height << std::endl;
   std::cout << "Block difficulty: " << m_core.difficultyAtHeight(height) << std::endl;
   std::cout << "Total coins in network:  " << currency.formatAmount(totalCoinsInNetwork) << std::endl;
+  std::cout << "Total coins on investments: " << currency.formatAmount(totalCoinsOnInvestments) << std::endl;
   std::cout << "Total coins on deposits: " << currency.formatAmount(totalCoinsOnDeposits) <<
     " (" << currency.formatAmount(calculatePercent(currency, totalCoinsOnDeposits, totalCoinsInNetwork)) << "%)" << std::endl;
   std::cout << "Amount of active coins:  " << currency.formatAmount(amountOfActiveCoins) <<
