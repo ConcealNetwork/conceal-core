@@ -253,7 +253,7 @@ bool TransactionWithTermGreaterThenMaxIsRejected::generate(std::vector<test_even
   TransactionBuilder::KeysVector kv;
   kv.push_back(to.getAccountKeys());
 
-  builder.addMultisignatureOut(m_currency.depositMinAmount(), kv, 1, m_currency.depositMaxTerm() + 1);
+  builder.addMultisignatureOut(m_currency.depositMinAmount(), kv, 1, m_currency.depositMaxTermV1() + 1);
   auto tx = builder.build();
   generator.addCallback("mark_invalid_tx"); // should be rejected by the core
   generator.addEvent(tx);

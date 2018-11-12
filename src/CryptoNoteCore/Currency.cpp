@@ -1015,6 +1015,7 @@ CurrencyBuilder::CurrencyBuilder(Logging::ILogger& log) : m_currency(log) {
   depositMinAmount(parameters::DEPOSIT_MIN_AMOUNT);
   depositMinTerm(parameters::DEPOSIT_MIN_TERM);
   depositMaxTerm(parameters::DEPOSIT_MAX_TERM);
+  depositMaxTermV1(parameters::DEPOSIT_MAX_TERM_V1);
   depositMinTotalRateFactor(parameters::DEPOSIT_MIN_TOTAL_RATE_FACTOR);
   depositMaxTotalRate(parameters::DEPOSIT_MAX_TOTAL_RATE);
 

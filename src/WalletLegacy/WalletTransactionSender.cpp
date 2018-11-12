@@ -239,7 +239,7 @@ std::unique_ptr<WalletRequest> WalletTransactionSender::makeDepositRequest(Trans
                                                                            uint64_t mixIn) {
 
   throwIf(term < m_currency.depositMinTerm(), error::DEPOSIT_TERM_TOO_SMALL);
-  throwIf(term > m_currency.depositMaxTerm(), error::DEPOSIT_TERM_TOO_BIG);
+  throwIf(term > m_currency.depositMaxTermV1(), error::DEPOSIT_TERM_TOO_BIG);
   throwIf(amount < m_currency.depositMinAmount(), error::DEPOSIT_AMOUNT_TOO_SMALL);
 
   uint64_t neededMoney = getSumWithOverflowCheck(amount, fee);

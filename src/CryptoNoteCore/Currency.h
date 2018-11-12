@@ -88,6 +88,7 @@ public:
   uint64_t depositMinAmount() const { return m_depositMinAmount; }
   uint32_t depositMinTerm() const { return m_depositMinTerm; }
   uint32_t depositMaxTerm() const { return m_depositMaxTerm; }
+  uint32_t depositMaxTermV1() const { return m_depositMaxTermV1; }
   uint64_t depositMinTotalRateFactor() const { return m_depositMinTotalRateFactor; }
   uint64_t depositMaxTotalRate() const { return m_depositMaxTotalRate; }
 
@@ -211,6 +212,7 @@ private:
   uint64_t m_depositMinAmount;
   uint32_t m_depositMinTerm;
   uint32_t m_depositMaxTerm;
+  uint32_t m_depositMaxTermV1;
   uint64_t m_depositMinTotalRateFactor;
   uint64_t m_depositMaxTotalRate;
 
@@ -308,6 +310,7 @@ public:
   CurrencyBuilder& depositMinAmount(uint64_t val) { m_currency.m_depositMinAmount = val; return *this; }
   CurrencyBuilder& depositMinTerm(uint32_t val) { m_currency.m_depositMinTerm = val; return *this; }
   CurrencyBuilder& depositMaxTerm(uint32_t val) { m_currency.m_depositMaxTerm = val; return *this; }
+  CurrencyBuilder& depositMaxTermV1(uint32_t val) { m_currency.m_depositMaxTermV1 = val; return *this; }
   CurrencyBuilder& depositMinTotalRateFactor(uint64_t val) { m_currency.m_depositMinTotalRateFactor = val; return *this; }
   CurrencyBuilder& depositMaxTotalRate(uint64_t val) { m_currency.m_depositMaxTotalRate = val; return *this; }
 
