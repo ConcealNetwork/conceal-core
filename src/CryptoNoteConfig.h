@@ -156,9 +156,10 @@ const char     P2P_STAT_TRUSTED_PUB_KEY[]			= "f7061e9a5f0d30549afde49c9bfbaa52a
 // Seed Nodes
 const std::initializer_list<const char*> SEED_NODES = {
 		"212.237.59.97:15000", // gamma
-		"94.177.171.102:15000", // aurora
 		"188.213.165.210:15000", // omega
-		"93.186.254.77:15000" // chaos
+		"89.40.118.85:15000", // delta
+		"94.177.245.107:15000", // lamda
+		"199.175.54.195:15000" // godspeed
 };
 
 struct CheckpointData {
