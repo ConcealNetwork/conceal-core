@@ -1,12 +1,16 @@
 // Copyright (c) 2011-2017 The Cryptonote developers
+// Copyright (c) 2016-2018, The Karbo developers
 // Copyright (c) 2018 The Circle Foundation
+
 // Distributed under the MIT/X11 software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #include "Blockchain.h"
 
 #include <algorithm>
+#include <numeric>
 #include <cstdio>
+#include <cmath>
 #include <boost/foreach.hpp>
 #include "Common/Math.h"
 #include "Common/int-util.h"
@@ -16,6 +20,7 @@
 #include "Rpc/CoreRpcServerCommandsDefinitions.h"
 #include "Serialization/BinarySerializationTools.h"
 #include "CryptoNoteTools.h"
+#include "TransactionExtra.h"
 
 using namespace Logging;
 using namespace Common;
@@ -1183,6 +1188,13 @@ bool Blockchain::handle_alternative_block(const Block& b, const Crypto::Hash& id
       return false;
     }
 
+    // Disable merged mining
+    TransactionExtraMergeMiningTag mmTag;
+    if (getMergeMiningTagFromExtra(bei.bl.baseTransaction.extra, mmTag) && bei.height >= CryptoNote::parameters::UPGRADE_HEIGHT_V6) {
+      logger(ERROR, BRIGHT_RED) << "Merge mining tag was found in extra of miner transaction";
+      return false;
+    }
+
     // Always check PoW for alternative blocks
     m_is_in_checkpoint_zone = false;
     difficulty_type current_diff = get_next_difficulty_for_alternative_chain(alt_chain, bei);
@@ -1917,6 +1929,17 @@ bool Blockchain::pushBlock(const Block& blockData, const std::vector<Transaction
     bvc.m_verification_failed = true;
     return false;
   }
+
+  // Disable merged mining
+  uint32_t height = 0;
+  TransactionExtraMergeMiningTag mmTag;
+  if (m_blockIndex.getBlockHeight(blockHash, height)) {
+    if (getMergeMiningTagFromExtra(blockData.baseTransaction.extra, mmTag) && height >= CryptoNote::parameters::UPGRADE_HEIGHT_V6) {
+      logger(ERROR, BRIGHT_RED) << "Merge mining tag was found in extra of miner transaction";
+      return false;
+    }
+  }
+
 
   if (blockData.previousBlockHash != getTailId()) {
     logger(INFO, BRIGHT_WHITE) <<
