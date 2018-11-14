@@ -1583,7 +1583,7 @@ bool Blockchain::checkTransactionInputs(const Transaction& tx, const Crypto::Has
       }
 
       if (!check_tx_input(in_to_key, tx_prefix_hash, tx.signatures[inputIndex], pmax_used_block_height)) {
-        logger(INFO, BRIGHT_WHITE) <<
+        logger(DEBUGGING) <<
           "Failed to check ring signature for tx " << transactionHash;
         return false;
       }
