@@ -6,7 +6,5 @@
 #include "Math.h"
 
 namespace {
-#ifdef MSVC
-  char suppressMSVCWarningLNK4221;
-#endif
+char suppressMSVCWarningLNK4221;
 }
