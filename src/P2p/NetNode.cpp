@@ -1423,7 +1423,7 @@ namespace CryptoNote
       } catch (System::InterruptedException&) {
         logger(DEBUGGING) << ctx << "connectionHandler() inner context is interrupted";
       } catch (std::exception& e) {
-        logger(WARNING) << ctx << "Exception in connectionHandler: " << e.what();
+        logger(DEBUGGING) << ctx << "Exception in connectionHandler: " << e.what();
       }
 
       safeInterrupt(ctx);

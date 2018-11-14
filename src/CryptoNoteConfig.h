@@ -89,6 +89,10 @@ const size_t   FUSION_TX_MAX_SIZE				= CRYPTONOTE_MAX_TX_SIZE_LIMIT * 2;
 const size_t   FUSION_TX_MIN_INPUT_COUNT			= 12;
 const size_t   FUSION_TX_MIN_IN_OUT_COUNT_RATIO			= 4;
 
+static constexpr uint64_t POISSON_CHECK_TRIGGER = 10;  // Reorg size that triggers poisson timestamp check
+static constexpr uint64_t POISSON_CHECK_DEPTH = 60;   // Main-chain depth of the poisson check. The attacker will have to tamper 50% of those blocks
+static constexpr double POISSON_LOG_P_REJECT = -75.0; // Reject reorg if the probablity that the timestamps are genuine is below e^x, -75 = 10^-33
+
 const uint64_t UPGRADE_HEIGHT					= 1;
 const uint64_t UPGRADE_HEIGHT_V2				= 1;
 const uint64_t UPGRADE_HEIGHT_V3				= 12750; // CN Fast fork
@@ -221,8 +225,6 @@ const std::initializer_list<CheckpointData> CHECKPOINTS = {
 		{114684, "46b1d589cc25af65171bcec8c29b8d76b265b17df9c5f323db4f0e5028611d77"},
 		{114750, "1333e84eb21e8efdea8760e1e14ecf4b0ee5ee79fa9ce0cec9f0244f65ace9d1"}
 };
-
-
 
 } // CryptoNote
 

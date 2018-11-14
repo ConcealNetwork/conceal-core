@@ -9,6 +9,7 @@
 #include <cstdio>
 #include <boost/foreach.hpp>
 #include "Common/Math.h"
+#include "Common/int-util.h"
 #include "Common/ShuffleGenerator.h"
 #include "Common/StdInputStream.h"
 #include "Common/StdOutputStream.h"
@@ -763,6 +764,11 @@ bool Blockchain::rollback_blockchain_switching(std::list<Block> &original_chain,
   return true;
 }
 
+
+
+
+
+
 bool Blockchain::switch_to_alternative_blockchain(std::list<blocks_ext_by_hash::iterator>& alt_chain, bool discard_disconnected_chain) {
   std::lock_guard<decltype(m_blockchain_lock)> lk(m_blockchain_lock);
 
@@ -777,6 +783,96 @@ bool Blockchain::switch_to_alternative_blockchain(std::list<blocks_ext_by_hash::
     logger(ERROR, BRIGHT_RED) << "switch_to_alternative_blockchain: blockchain size is lower than split height";
     return false;
   }
+
+  // Poisson check, courtesy of ryo-project
+  // https://github.com/ryo-currency/ryo-writeups/blob/master/poisson-writeup.md
+  // For longer reorgs, check if the timestamps are probable - if they aren't the diff algo has failed
+  // This check is meant to detect an offline bypass of timestamp < time() + ftl check
+  // It doesn't need to be very strict as it synergises with the median check
+  if (alt_chain.size() >= CryptoNote::parameters::POISSON_CHECK_TRIGGER)
+  {
+    uint64_t alt_chain_size = alt_chain.size();
+    uint64_t high_timestamp = alt_chain.back()->second.bl.timestamp;
+    Crypto::Hash low_block = alt_chain.front()->second.bl.previousBlockHash;
+
+    //Make sure that the high_timestamp is really highest
+    for (const blocks_ext_by_hash::iterator &it : alt_chain)
+    {
+      if (high_timestamp < it->second.bl.timestamp)
+        high_timestamp = it->second.bl.timestamp;
+    }
+
+    uint64_t block_ftl = CryptoNote::parameters::CRYPTONOTE_BLOCK_FUTURE_TIME_LIMIT_V1;
+    // This would fail later anyway
+    if (high_timestamp > get_adjusted_time() + block_ftl)
+    {
+      logger(ERROR, BRIGHT_RED) << "Attempting to move to an alternate chain, but it failed FTL check! Timestamp: " << high_timestamp << ", limit: " << get_adjusted_time() + block_ftl;
+      return false;
+    }
+
+    logger(WARNING) << "Poisson check triggered by reorg size of " << alt_chain_size;
+
+    uint64_t failed_checks = 0, i = 1;
+    for (; i <= CryptoNote::parameters::POISSON_CHECK_DEPTH; i++)
+    {
+      // This means we reached the genesis block
+      if (low_block == NULL_HASH)
+        break;
+
+      Block blk;
+      getBlockByHash(low_block, blk);
+
+      uint64_t low_timestamp = blk.timestamp;
+      low_block = blk.previousBlockHash;
+
+      if (low_timestamp >= high_timestamp)
+      {
+        logger(INFO) << "Skipping check at depth " << i << " due to tampered timestamp on main chain.";
+        failed_checks++;
+        continue;
+      }
+
+      double lam = double(high_timestamp - low_timestamp) / double(CryptoNote::parameters::DIFFICULTY_TARGET);
+      if (calc_poisson_ln(lam, alt_chain_size + i) < CryptoNote::parameters::POISSON_LOG_P_REJECT)
+      {
+        logger(INFO) << "Poisson check at depth " << i << " failed! delta_t: " << (high_timestamp - low_timestamp) << " size: " << alt_chain_size + i;
+        failed_checks++;
+      }
+    }
+
+    i--; //Convert to number of checks
+    logger(INFO) << "Poisson check result " << failed_checks << " fails out of " << i;
+
+    if (failed_checks > i / 2)
+    {
+      logger(ERROR, BRIGHT_RED) << "Attempting to move to an alternate chain, but it failed Poisson check! " << failed_checks << " fails out of " << i << " alt_chain_size: " << alt_chain_size;
+      return false;
+    }
+  }
+
+  // Compare transactions in proposed alt chain vs current main chain and reject if some transaction is missing in the alt chain
+  std::vector<Crypto::Hash> mainChainTxHashes, altChainTxHashes;
+  for (size_t i = m_blocks.size() - 1; i >= split_height; i--) {
+    Block b = m_blocks[i].bl;
+    std::copy(b.transactionHashes.begin(), b.transactionHashes.end(), std::inserter(mainChainTxHashes, mainChainTxHashes.end()));
+  }
+  for (auto alt_ch_iter = alt_chain.begin(); alt_ch_iter != alt_chain.end(); alt_ch_iter++) {
+    auto ch_ent = *alt_ch_iter;
+    Block b = ch_ent->second.bl;
+    std::copy(b.transactionHashes.begin(), b.transactionHashes.end(), std::inserter(altChainTxHashes, altChainTxHashes.end()));
+  }
+  for (auto main_ch_it = mainChainTxHashes.begin(); main_ch_it != mainChainTxHashes.end(); main_ch_it++) {
+    auto tx_hash = *main_ch_it;
+    if (std::find(altChainTxHashes.begin(), altChainTxHashes.end(), tx_hash) == altChainTxHashes.end()) {
+      logger(ERROR, BRIGHT_RED) << "Attempting to switch to an alternate chain, but it lacks transaction " << Common::podToHex(tx_hash) << " from main chain, rejected";
+      mainChainTxHashes.clear();
+      mainChainTxHashes.shrink_to_fit();
+      altChainTxHashes.clear();
+      altChainTxHashes.shrink_to_fit();
+      return false;
+    }
+  }
+
 
   //disconnecting old chain
   std::list<Block> disconnected_chain;
