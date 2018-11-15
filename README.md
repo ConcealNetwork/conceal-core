@@ -1,4 +1,4 @@
-![image](https://github.com/TheCircleFoundation/conceal-assets/blob/master/splash.png)
+![image](https://github.com/ConcealNetwork/conceal-assets/blob/master/splash.png)
 
 # Conceal Core (CLI)
 Latest Release: v5.1.0
@@ -13,7 +13,7 @@ Conceal is open-source, community driven and truly decentralized. No one owns it
 
 ## Resources
 - Web: [conceal.network](https://conceal.network/)
-- GitHub: [https://github.com/TheCircleFoundation/conceal-core](https://github.com/TheCircleFoundation/conceal-core)
+- GitHub: [https://github.com/ConcealNetwork/conceal-core](https://github.com/ConcealNetwork/conceal-core)
 - Discord: [https://discord.gg/YbpHVSd](https://discord.gg/YbpHVSd)
 - Twitter: [https://twitter.com/ConcealNetwork](https://twitter.com/ConcealNetwork)
 - Medium: [https://medium.com/@ConcealNetwork](https://medium.com/@ConcealNetwork)
@@ -32,7 +32,7 @@ Conceal is open-source, community driven and truly decentralized. No one owns it
 
 #### Building
 
-- `git clone https://github.com/TheCircleFoundation/conceal-core`
+- `git clone https://github.com/ConcealNetwork/conceal-core`
 - `cd conceal-core`
 - `make build-release`
 
@@ -50,7 +50,7 @@ If the build is successful the binaries will be in the src folder.
 ##### Building
 
 - From the start menu, open 'x64 Native Tools Command Prompt for vs2017' or run "C:\Program Files (x86)\Microsoft Visual Studio\2017\Community\Common7\Tools\VsMSBuildCmd.bat" from any command prompt.
-- `git clone https://github.com/TheCircleFoundation/conceal-core`
+- `git clone https://github.com/ConcealNetwork/conceal-core`
 - `cd conceal-core`
 - `mkdir build`
 - `cd build`
