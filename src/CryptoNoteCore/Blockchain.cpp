@@ -2129,9 +2129,7 @@ void Blockchain::pushToDepositIndex(const BlockEntry& block, uint64_t interest) 
       if (in.type() == typeid(MultisignatureInput)) {
         auto& multisign = boost::get<MultisignatureInput>(in);
         if (multisign.term > 0) {
-          if ((multisign.term % 5040 == 0) || (multisign.term % 21900 == 0)){
             deposit -= multisign.amount;
-          }
         }
       }
     }
@@ -2139,10 +2137,7 @@ void Blockchain::pushToDepositIndex(const BlockEntry& block, uint64_t interest) 
       if (out.target.type() == typeid(MultisignatureOutput)) {
         auto& multisign = boost::get<MultisignatureOutput>(out.target);
         if (multisign.term > 0) {
-          if ((multisign.term % 5040 == 0) || (multisign.term % 21900 == 0)){
             deposit += out.amount;      
-            logger(INFO, BRIGHT_GREEN) << "Deposit: Locked " << (out.amount / 1000000) << " with a term of " << multisign.term << " blocks ";
-          } 
         }
       }
     }
