@@ -21,8 +21,12 @@ class ICryptoNoteProtocolQuery;
 class RpcServer : public HttpServer {
 public:
   RpcServer(System::Dispatcher& dispatcher, Logging::ILogger& log, core& c, NodeServer& p2p, const ICryptoNoteProtocolQuery& protocolQuery);
-
   typedef std::function<bool(RpcServer*, const HttpRequest& request, HttpResponse& response)> HandlerFunction;
+  bool setFeeAddress(const std::string& fee_address, const AccountPublicAddress& fee_acc);
+  bool setViewKey(const std::string& view_key);
+  bool restrictRPC(const bool is_resctricted);
+  bool enableCors(const std::string domain);  
+  bool remotenode_check_incoming_tx(const BinaryArray& tx_blob);
 
 private:
 
@@ -56,6 +60,7 @@ private:
   bool on_start_mining(const COMMAND_RPC_START_MINING::request& req, COMMAND_RPC_START_MINING::response& res);
   bool on_stop_mining(const COMMAND_RPC_STOP_MINING::request& req, COMMAND_RPC_STOP_MINING::response& res);
   bool on_stop_daemon(const COMMAND_RPC_STOP_DAEMON::request& req, COMMAND_RPC_STOP_DAEMON::response& res);
+  bool on_get_fee_address(const COMMAND_RPC_GET_FEE_ADDRESS::request& req, COMMAND_RPC_GET_FEE_ADDRESS::response& res);
 
   // json rpc
   bool on_getblockcount(const COMMAND_RPC_GETBLOCKCOUNT::request& req, COMMAND_RPC_GETBLOCKCOUNT::response& res);
@@ -80,6 +85,11 @@ private:
   core& m_core;
   NodeServer& m_p2p;
   const ICryptoNoteProtocolQuery& m_protocolQuery;
+  bool m_restricted_rpc;
+  std::string m_cors_domain;
+  std::string m_fee_address;
+  Crypto::SecretKey m_view_key = NULL_SECRET_KEY;
+  AccountPublicAddress m_fee_acc; 
 };
 
 }
