@@ -79,7 +79,7 @@ private:
 uint64_t calculateDepositsAmount(const std::vector<CryptoNote::TransactionOutputInformation>& transfers, const CryptoNote::Currency& currency, const std::vector<uint32_t> heights) {
 	int index = 0;
   return std::accumulate(transfers.begin(), transfers.end(), static_cast<uint64_t>(0), [&currency, &index, heights] (uint64_t sum, const CryptoNote::TransactionOutputInformation& deposit) {
-    if (deposit.term % 64800 != 0) {
+    if ((deposit.term % 64800 != 0) && (deposit.term > 0)) {
       return sum + deposit.amount + currency.calculateInterest(deposit.amount, deposit.term, heights[index++]);
     }  
   });
@@ -88,7 +88,7 @@ uint64_t calculateDepositsAmount(const std::vector<CryptoNote::TransactionOutput
 uint64_t calculateInvestmentsAmount(const std::vector<CryptoNote::TransactionOutputInformation>& transfers, const CryptoNote::Currency& currency, const std::vector<uint32_t> heights) {
 	int index = 0;
   return std::accumulate(transfers.begin(), transfers.end(), static_cast<uint64_t>(0), [&currency, &index, heights] (uint64_t sum, const CryptoNote::TransactionOutputInformation& deposit) {
-    if (deposit.term % 64800 == 0) {
+    if ((deposit.term % 64800 == 0) && (deposit.term > 0)) {
       return sum + deposit.amount + currency.calculateInterest(deposit.amount, deposit.term, heights[index++]);
     }
   });
@@ -750,6 +750,7 @@ void WalletLegacy::onTransfersUnlocked(ITransfersSubscription* object, const std
     m_observerManager.notify(&IWalletLegacyObserver::depositsUpdated, unlockedDeposits);
 
     notifyIfDepositBalanceChanged();
+    notifyIfInvestmentBalanceChanged();
   }
 }
 
@@ -762,6 +763,7 @@ void WalletLegacy::onTransfersLocked(ITransfersSubscription* object, const std::
     m_observerManager.notify(&IWalletLegacyObserver::depositsUpdated, lockedDeposits);
 
     notifyIfDepositBalanceChanged();
+    notifyIfInvestmentBalanceChanged();
   }
 }
 
@@ -960,7 +962,7 @@ uint64_t WalletLegacy::calculatePendingDepositBalance() {
                                 | ITransfersContainer::IncludeStateLocked
                                 | ITransfersContainer::IncludeStateSoftLocked);
   std::vector<uint32_t> heights = getTransactionHeights(transfers);
-  return calculateDepositsAmount(transfers, m_currency, heights) + m_transactionsCache.countUnconfirmedCreatedDepositsSum();
+  return calculateDepositsAmount(transfers, m_currency, heights);
 }
 
 uint64_t WalletLegacy::calculatePendingInvestmentBalance() {
@@ -969,7 +971,7 @@ uint64_t WalletLegacy::calculatePendingInvestmentBalance() {
                                 | ITransfersContainer::IncludeStateLocked
                                 | ITransfersContainer::IncludeStateSoftLocked);
   std::vector<uint32_t> heights = getTransactionHeights(transfers);
-  return calculateInvestmentsAmount(transfers, m_currency, heights) + m_transactionsCache.countUnconfirmedCreatedDepositsSum();
+  return calculateInvestmentsAmount(transfers, m_currency, heights);
 }
 
 uint64_t WalletLegacy::calculateActualBalance() {

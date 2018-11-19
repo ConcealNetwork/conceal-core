@@ -128,10 +128,8 @@ private:
   std::unique_ptr<WalletLegacyEvent> getActualDepositBalanceChangedEvent();
   std::unique_ptr<WalletLegacyEvent> getPendingDepositBalanceChangedEvent();
 
-
   std::unique_ptr<WalletLegacyEvent> getActualBalanceChangedEvent();
   std::unique_ptr<WalletLegacyEvent> getPendingBalanceChangedEvent();
-
 
   uint64_t calculateActualDepositBalance();
   uint64_t calculateActualInvestmentBalance();
