@@ -240,17 +240,17 @@ int main(int argc, char* argv[])
     // configure logging
     logManager.configure(buildLoggerConfiguration(cfgLogLevel, cfgLogFile));
 
-    logger(INFO) << CryptoNote::CRYPTONOTE_NAME << " v" << PROJECT_VERSION_LONG;
+    logger(INFO) << "<< Daemon.cpp << " << CryptoNote::CRYPTONOTE_NAME << " v" << PROJECT_VERSION_LONG;
 
     if (command_line_preprocessor(vm, logger)) {
       return 0;
     }
 
-    logger(INFO) << "Module folder: " << argv[0];
+    logger(INFO) << "<< Daemon.cpp << " "Module folder: " << argv[0];
 
     bool testnet_mode = command_line::get_arg(vm, arg_testnet_on);
     if (testnet_mode) {
-      logger(INFO) << "Starting in testnet mode!";
+      logger(INFO) << "<< Daemon.cpp << " "Starting in testnet mode!";
     }
 
     //create objects and link them
@@ -307,15 +307,15 @@ int main(int argc, char* argv[])
     DaemonCommandsHandler dch(ccore, p2psrv, logManager);
 
     // initialize objects
-    logger(INFO) << "Initializing p2p server...";
+    logger(INFO) << "<< Daemon.cpp << " "Initializing p2p server...";
     if (!p2psrv.init(netNodeConfig)) {
       logger(ERROR, BRIGHT_RED) << "Failed to initialize p2p server.";
       return 1;
     }
 
-    logger(INFO) << "P2p server initialized OK";
+    logger(INFO) << "<< Daemon.cpp << " "P2p server initialized OK";
 
-    //logger(INFO) << "Initializing core rpc server...";
+    //logger(INFO) << "<< Daemon.cpp << " "Initializing core rpc server...";
     //if (!rpc_server.init(vm)) {
     //  logger(ERROR, BRIGHT_RED) << "Failed to initialize core rpc server.";
     //  return 1;
@@ -323,42 +323,42 @@ int main(int argc, char* argv[])
     // logger(INFO, BRIGHT_GREEN) << "Core rpc server initialized OK on port: " << rpc_server.get_binded_port();
 
     // initialize core here
-    logger(INFO) << "Initializing core...";
+    logger(INFO) << "<< Daemon.cpp << " "Initializing core...";
     if (!ccore.init(coreConfig, minerConfig, true)) {
       logger(ERROR, BRIGHT_RED) << "Failed to initialize core";
       return 1;
     }
 
-    logger(INFO) << "Core initialized OK";
+    logger(INFO) << "<< Daemon.cpp << " "Core initialized OK";
 
     // start components
     if (!command_line::has_arg(vm, arg_console)) {
       dch.start_handling();
     }
 
-    logger(INFO) << "Starting core rpc server on address " << rpcConfig.getBindAddress();
+    logger(INFO) << "<< Daemon.cpp << " "Starting core rpc server on address " << rpcConfig.getBindAddress();
     rpcServer.start(rpcConfig.bindIp, rpcConfig.bindPort);
-    logger(INFO) << "Core rpc server started ok";
+    logger(INFO) << "<< Daemon.cpp << " "Core rpc server started ok";
 
     Tools::SignalHandler::install([&dch, &p2psrv] {
       dch.stop_handling();
       p2psrv.sendStopSignal();
     });
 
-    logger(INFO) << "Starting p2p net loop...";
+    logger(INFO) << "<< Daemon.cpp << " "Starting p2p net loop...";
     p2psrv.run();
-    logger(INFO) << "p2p net loop stopped";
+    logger(INFO) << "<< Daemon.cpp << " "p2p net loop stopped";
 
     dch.stop_handling();
 
     //stop components
-    logger(INFO) << "Stopping core rpc server...";
+    logger(INFO) << "<< Daemon.cpp << " "Stopping core rpc server...";
     rpcServer.stop();
 
     //deinitialize components
-    logger(INFO) << "Deinitializing core...";
+    logger(INFO) << "<< Daemon.cpp << " "Deinitializing core...";
     ccore.deinit();
-    logger(INFO) << "Deinitializing p2p...";
+    logger(INFO) << "<< Daemon.cpp << " "Deinitializing p2p...";
     p2psrv.deinit();
 
     ccore.set_cryptonote_protocol(NULL);
@@ -369,7 +369,7 @@ int main(int argc, char* argv[])
     return 1;
   }
 
-  logger(INFO) << "Node stopped.";
+  logger(INFO) << "<< Daemon.cpp << " "Node stopped.";
   return 0;
 }
 
