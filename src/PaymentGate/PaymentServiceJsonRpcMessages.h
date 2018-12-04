@@ -280,7 +280,7 @@ struct SendTransaction {
     std::vector<std::string> sourceAddresses;
     std::vector<WalletRpcOrder> transfers;
     std::string changeAddress;
-    uint64_t fee = 0;
+    uint64_t fee = 10;
     uint32_t anonymity = DEFAULT_ANONYMITY_LEVEL;
     std::string extra;
     std::string paymentId;
@@ -302,7 +302,7 @@ struct CreateDelayedTransaction {
     std::vector<std::string> addresses;
     std::vector<WalletRpcOrder> transfers;
     std::string changeAddress;
-    uint64_t fee = 0;
+    uint64_t fee = 10;
     uint32_t anonymity = DEFAULT_ANONYMITY_LEVEL;
     std::string extra;
     std::string paymentId;

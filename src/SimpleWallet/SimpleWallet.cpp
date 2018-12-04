@@ -1690,6 +1690,11 @@ bool simple_wallet::transfer(const std::vector<std::string> &args) {
     /* set static mixin of 4*/
     cmd.fake_outs_count = 4;
 
+    /* force minimum fee */
+    if (cmd.fee < 10) {
+      cmd.fee = 10;
+    }
+
     Crypto::SecretKey transactionSK;
     CryptoNote::TransactionId tx = m_wallet->sendTransaction(transactionSK, cmd.dsts, cmd.fee, extraString, cmd.fake_outs_count, 0, messages, ttl);
     if (tx == WALLET_LEGACY_INVALID_TRANSACTION_ID) {

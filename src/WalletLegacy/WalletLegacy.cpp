@@ -543,6 +543,10 @@ TransactionId WalletLegacy::sendTransaction(Crypto::SecretKey& transactionSK,
   std::deque<std::unique_ptr<WalletLegacyEvent>> events;
   throwIfNotInitialised();
 
+  if (fee < 10) {
+    fee = 10;
+  }
+
   {
     std::unique_lock<std::mutex> lock(m_cacheMutex);
     request = m_sender->makeSendRequest(transactionSK, optimize, txId, events, transfers, fee, extra, mixIn, unlockTimestamp, messages, ttl);
@@ -564,6 +568,10 @@ TransactionId WalletLegacy::deposit(uint32_t term, uint64_t amount, uint64_t fee
   TransactionId txId = 0;
   std::unique_ptr<WalletRequest> request;
   std::deque<std::unique_ptr<WalletLegacyEvent>> events;
+
+  if (fee < 10) {
+    fee = 10;
+  }
 
   {
     std::unique_lock<std::mutex> lock(m_cacheMutex);
@@ -590,6 +598,10 @@ TransactionId WalletLegacy::withdrawDeposits(const std::vector<DepositId>& depos
   TransactionId txId = 0;
   std::unique_ptr<WalletRequest> request;
   std::deque<std::unique_ptr<WalletLegacyEvent>> events;
+
+  if (fee < 10) {
+    fee = 10;
+  }
 
   {
     std::unique_lock<std::mutex> lock(m_cacheMutex);

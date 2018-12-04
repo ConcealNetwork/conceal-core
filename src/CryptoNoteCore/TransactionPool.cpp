@@ -126,15 +126,8 @@ namespace CryptoNote {
       ttl.ttl = 0;
     }
 
-    const uint64_t fee = inputs_amount < outputs_amount ? CryptoNote::parameters::MINIMUM_FEE : inputs_amount - outputs_amount;
+    const uint64_t fee = inputs_amount - outputs_amount;
     bool isFusionTransaction = fee == 0 && m_currency.isFusionTransaction(tx, blobSize);
-    if (!keptByBlock && !isFusionTransaction && ttl.ttl == 0 && fee < m_currency.minimumFee()) {
-      logger(INFO) << "transaction fee is not enough: " << m_currency.formatAmount(fee) <<
-        ", minimum fee: " << m_currency.formatAmount(m_currency.minimumFee());
-      tvc.m_verification_failed = true;
-      tvc.m_tx_fee_too_small = true;
-      return false;
-    }
 
     if (ttl.ttl != 0 && !keptByBlock) {
       uint64_t now = static_cast<uint64_t>(time(nullptr));

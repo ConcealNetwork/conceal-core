@@ -181,6 +181,11 @@ bool pool_rpc_server::on_transfer(const wallet_rpc::COMMAND_RPC_TRANSFER::reques
     ttl = static_cast<uint64_t>(time(nullptr)) + req.ttl;
   }
 
+  uint64_t actualFee = 10;
+  if (req.fee >= 10) {
+    actualFee = req.fee;
+  }
+
   std::string extraString;
   std::copy(extra.begin(), extra.end(), std::back_inserter(extraString));
   try {
@@ -188,7 +193,7 @@ bool pool_rpc_server::on_transfer(const wallet_rpc::COMMAND_RPC_TRANSFER::reques
     WalletHelper::IWalletRemoveObserverGuard removeGuard(m_wallet, sent);
 
     Crypto::SecretKey transactionSK;
-    CryptoNote::TransactionId tx = m_wallet.sendTransaction(transactionSK, transfers, req.fee, extraString, req.mixin, req.unlock_time, messages, ttl);
+    CryptoNote::TransactionId tx = m_wallet.sendTransaction(transactionSK, transfers, actualFee, extraString, req.mixin, req.unlock_time, messages, ttl);
     if (tx == WALLET_LEGACY_INVALID_TRANSACTION_ID) {
       throw std::runtime_error("Couldn't send transaction");
     }
