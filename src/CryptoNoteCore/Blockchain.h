@@ -16,7 +16,6 @@
 #include "CryptoNoteCore/Checkpoints.h"
 #include "CryptoNoteCore/Currency.h"
 #include "CryptoNoteCore/DepositIndex.h"
-#include "CryptoNoteCore/InvestmentIndex.h"
 #include "CryptoNoteCore/IBlockchainStorageObserver.h"
 #include "CryptoNoteCore/ITransactionValidator.h"
 #include "CryptoNoteCore/SwappedVector.h"
@@ -112,7 +111,6 @@ namespace CryptoNote {
     bool isBlockInMainChain(const Crypto::Hash& blockId);
     uint64_t fullDepositAmount() const;
     uint64_t depositAmountAtHeight(size_t height) const;
-    uint64_t investmentAmountAtHeight(size_t height) const;
     uint64_t fullDepositInterest() const;
     uint64_t depositInterestAtHeight(size_t height) const;
     uint64_t coinsEmittedAtHeight(uint64_t height);
@@ -259,7 +257,6 @@ namespace CryptoNote {
     Blocks m_blocks;
     CryptoNote::BlockIndex m_blockIndex;
     CryptoNote::DepositIndex m_depositIndex;
-    CryptoNote::InvestmentIndex m_investmentIndex;
     TransactionMap m_transactionMap;
     MultisignatureOutputsContainer m_multisignatureOutputs;
 	UpgradeDetector m_upgradeDetectorV2;
@@ -281,7 +278,6 @@ namespace CryptoNote {
     bool handle_alternative_block(const Block& b, const Crypto::Hash& id, block_verification_context& bvc, bool sendNewAlternativeBlockMessage = true);
     difficulty_type get_next_difficulty_for_alternative_chain(const std::list<blocks_ext_by_hash::iterator>& alt_chain, BlockEntry& bei);
     void pushToDepositIndex(const BlockEntry& block, uint64_t interest);
-    void pushToInvestmentIndex(const BlockEntry& block, uint64_t interest);
     bool prevalidate_miner_transaction(const Block& b, uint32_t height);
     bool validate_miner_transaction(const Block& b, uint32_t height, size_t cumulativeBlockSize, uint64_t alreadyGeneratedCoins, uint64_t fee, uint64_t& reward, int64_t& emissionChange);
     bool rollback_blockchain_switching(std::list<Block>& original_chain, size_t rollback_height);

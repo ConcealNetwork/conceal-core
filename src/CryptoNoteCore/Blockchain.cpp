@@ -200,9 +200,6 @@ public:
     logger(INFO) << "<< Blockchain.cpp << " << operation << "deposit index...";
     s(m_bs.m_depositIndex, "deposit_index");
 
-    logger(INFO) << "<< Blockchain.cpp << " << operation << "investment index...";
-    s(m_bs.m_investmentIndex, "investment_index");
-
     auto dur = std::chrono::steady_clock::now() - start;
 
     logger(INFO) << "<< Blockchain.cpp << " << "Serialization time: " << std::chrono::duration_cast<std::chrono::milliseconds>(dur).count() << "ms";
@@ -539,7 +536,6 @@ void Blockchain::rebuildCache() {
     }
 
     pushToDepositIndex(block, interest);
-    pushToInvestmentIndex(block, interest);
   }
 
   std::chrono::duration<double> duration = std::chrono::steady_clock::now() - timePoint;
@@ -2079,8 +2075,8 @@ bool Blockchain::pushBlock(const Block& blockData, const std::vector<Transaction
 
   auto block_processing_time = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::steady_clock::now() - blockProcessingStart).count();
 
-  logger(DEBUGGING) <<
-    "+++++ BLOCK SUCCESSFULLY ADDED" << ENDL << "id:\t" << blockHash
+  logger(INFO) <<
+    "+++++ Block added" << ENDL << "id:\t" << blockHash
     << ENDL << "PoW:\t" << proof_of_work
     << ENDL << "HEIGHT " << block.height << ", difficulty:\t" << currentDifficulty
     << ENDL << "block reward: " << m_currency.formatAmount(reward) << ", fee = " << m_currency.formatAmount(fee_summary)
@@ -2105,11 +2101,6 @@ uint64_t Blockchain::fullDepositAmount() const {
 uint64_t Blockchain::depositAmountAtHeight(size_t height) const {
   std::lock_guard<decltype(m_blockchain_lock)> lk(m_blockchain_lock);
   return m_depositIndex.depositAmountAtHeight(static_cast<DepositIndex::DepositHeight>(height));
-}
-
-uint64_t Blockchain::investmentAmountAtHeight(size_t height) const {
-  std::lock_guard<decltype(m_blockchain_lock)> lk(m_blockchain_lock);
-  return m_investmentIndex.investmentAmountAtHeight(static_cast<InvestmentIndex::DepositHeight>(height));
 }
 
 uint64_t Blockchain::fullDepositInterest() const {
@@ -2145,33 +2136,6 @@ void Blockchain::pushToDepositIndex(const BlockEntry& block, uint64_t interest) 
   m_depositIndex.pushBlock(deposit, interest);
 }
 
-void Blockchain::pushToInvestmentIndex(const BlockEntry& block, uint64_t interest) {
-  int64_t deposit = 0;
-  for (const auto& tx : block.transactions) {
-    for (const auto& in : tx.tx.inputs) {
-      if (in.type() == typeid(MultisignatureInput)) {
-        auto& multisign = boost::get<MultisignatureInput>(in);
-        if (multisign.term > 0) {
-          if (multisign.term % 64800 == 0) {
-            deposit -= multisign.amount;
-          }
-        }
-      }
-    }
-    for (const auto& out : tx.tx.outputs) {
-      if (out.target.type() == typeid(MultisignatureOutput)) {
-        auto& multisign = boost::get<MultisignatureOutput>(out.target);
-        if (multisign.term > 0) {
-          if (multisign.term % 64800 == 0) {
-            deposit += out.amount;      
-            logger(INFO, BRIGHT_YELLOW) << "Investment: Locked " << (out.amount / 1000000) << " with a term of " << multisign.term << " blocks ";
-          }     
-        }    
-      }
-    }
-  }
-  m_investmentIndex.pushBlock(deposit, interest);
-}
 
 bool Blockchain::pushBlock(BlockEntry& block) {
   Crypto::Hash blockHash = get_block_hash(block.bl);
