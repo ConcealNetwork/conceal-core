@@ -162,7 +162,7 @@ const std::initializer_list<const char*> SEED_NODES = {
 		"212.237.59.97:15000", // Gamma
 		"188.213.165.210:15000", // Omega
 		"89.40.118.85:15000", // Delta
-		"94.177.245.107:15000", // Lamda
+		"94.177.245.107:15000", // Lambda
 		"199.175.54.195:15000" // Godspeed
 };
 
@@ -225,7 +225,10 @@ const std::initializer_list<CheckpointData> CHECKPOINTS = {
 		{114684, "46b1d589cc25af65171bcec8c29b8d76b265b17df9c5f323db4f0e5028611d77"},
 		{114750, "1333e84eb21e8efdea8760e1e14ecf4b0ee5ee79fa9ce0cec9f0244f65ace9d1"},
 		{124804, "d9fdb62b1131c13d19cb21f6713c21492dd2c7098e6c4d27034641ea966ccba7"},
-		{124805, "d44f1defe56b0f19908d9a48fa017a22b0149201f06b69475a824f5bc1ff44de"}
+		{124805, "d44f1defe56b0f19908d9a48fa017a22b0149201f06b69475a824f5bc1ff44de"},
+		{128844, "32995417568bdeb9c24ba9bbcfd6124882c8acae0fd10e9f8d052637bbafcc19"},
+		{128850, "7b8c9784d2639d61d41149095d4a9cd23ab579b780e42b45bc77863a457ac84e"},
+		{129000, "a41dd4a91943972012fa942cb1176d8f7be0b3656d121999bfde5bd9e2ee5d0f"}
 };
 
 } // CryptoNote
