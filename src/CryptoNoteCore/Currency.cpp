@@ -200,7 +200,7 @@ bool Currency::getBlockReward(size_t medianSize, size_t currentBlockSize, uint64
   reward = penalizedBaseReward + penalizedFee;
 
 
-  logger(INFO) << "<< Currency.cpp [getBlockReward] << " << "Height: " << height << " penalizedFee: " << penalizedFee << ", penalizedBaseReward: " << penalizedBaseReward << " reward: " << reward;
+  logger(DEBUG) << "<< Currency.cpp [getBlockReward] << " << "Height: " << height << " penalizedFee: " << penalizedFee << ", penalizedBaseReward: " << penalizedBaseReward << " reward: " << reward;
 
 
   return true;
