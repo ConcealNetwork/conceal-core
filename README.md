@@ -1,7 +1,7 @@
 ![image](https://github.com/ConcealNetwork/conceal-assets/blob/master/splash.png)
 
 # Conceal Core (CLI)
-Latest Release: v5.1.1
+Latest Release: v5.1.5
 Maintained by The Circle Team.
 
 ## Information
@@ -34,7 +34,9 @@ Conceal is open-source, community driven and truly decentralized. No one owns it
 
 - `git clone https://github.com/ConcealNetwork/conceal-core`
 - `cd conceal-core`
-- `make build-release`
+- `mkdir build && cd $_`
+- `cmake ..`
+- `make`
 
 If the build is successful the binaries will be in the src folder.
 

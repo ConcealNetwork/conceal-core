@@ -1094,7 +1094,7 @@ bool Blockchain::handle_alternative_block(const Block& b, const Crypto::Hash& id
   }
 
   if (!m_checkpoints.is_alternative_block_allowed(getCurrentBlockchainHeight(), block_height)) {
-    logger(TRACE) << "Block with id: " << id << std::endl <<
+    logger(DEBUGGING) << "Block with id: " << id << std::endl <<
       " can't be accepted for alternative chain, block height: " << block_height << std::endl <<
       " blockchain height: " << getCurrentBlockchainHeight();
 
@@ -1109,7 +1109,7 @@ bool Blockchain::handle_alternative_block(const Block& b, const Crypto::Hash& id
 
   size_t cumulativeSize;
   if (!getBlockCumulativeSize(b, cumulativeSize)) {
-    logger(TRACE) << "Block with id: " << id << " has at least one unknown transaction. Cumulative size is calculated imprecisely";
+    logger(DEBUGGING) << "Block with id: " << id << " has at least one unknown transaction. Cumulative size is calculated imprecisely";
   }
 
   if (!checkCumulativeBlockSize(id, cumulativeSize, block_height)) {
@@ -2075,7 +2075,7 @@ bool Blockchain::pushBlock(const Block& blockData, const std::vector<Transaction
 
   auto block_processing_time = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::steady_clock::now() - blockProcessingStart).count();
 
-  logger(TRACE) <<
+  logger(DEBUGGING) <<
     "+++++ Block added" << ENDL << "id:\t" << blockHash
     << ENDL << "PoW:\t" << proof_of_work
     << ENDL << "HEIGHT " << block.height << ", difficulty:\t" << currentDifficulty
