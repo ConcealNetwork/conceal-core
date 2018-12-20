@@ -952,7 +952,7 @@ uint64_t WalletLegacy::calculateActualInvestmentBalance() {
   std::vector<TransactionOutputInformation> transfers;
   m_transferDetails->getOutputs(transfers, ITransfersContainer::IncludeTypeDeposit | ITransfersContainer::IncludeStateUnlocked);
   std::vector<uint32_t> heights = getTransactionHeights(transfers);
-  return calculateInvestmentsAmount(transfers, m_currency, heights) - m_transactionsCache.countUnconfirmedSpentDepositsTotalAmount();
+  return calculateInvestmentsAmount(transfers, m_currency, heights);
 }
 
 std::vector<uint32_t> WalletLegacy::getTransactionHeights(const std::vector<TransactionOutputInformation> transfers){
