@@ -64,7 +64,7 @@ namespace Common {
 
 			if (0 != DnsQuery_A(domain.c_str(), type, DNS_QUERY_BYPASS_CACHE, NULL, &pDnsRecord, NULL))
 			{
-				cerr << "Error querying: '" << domain << "'" << endl;
+				cerr << "<< Dnstools.cpp << Error connecting to '" << domain << "'" << endl;
 				return false;
 			}
 		}
