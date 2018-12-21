@@ -1093,6 +1093,9 @@ bool Blockchain::handle_alternative_block(const Block& b, const Crypto::Hash& id
     return false;
   }
 
+  /* in the absence of a better solution, we fetch checkpoints from dns records */
+  m_checkpoints.load_checkpoints_from_dns();
+
   if (!m_checkpoints.is_alternative_block_allowed(getCurrentBlockchainHeight(), block_height)) {
     logger(DEBUGGING) << "Block with id: " << id << std::endl <<
       " can't be accepted for alternative chain, block height: " << block_height << std::endl <<

@@ -20,6 +20,7 @@
 #include "Checkpoints.h"
 #include "../CryptoNoteConfig.h"
 #include "Common/StringTools.h"
+#include "Common/DnsTools.h"
 
 using namespace Logging;
 
