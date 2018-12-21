@@ -20,6 +20,7 @@
 #include "Checkpoints.h"
 #include "../CryptoNoteConfig.h"
 #include "Common/StringTools.h"
+#include "Common/DnsTools.h"
 
 using namespace Logging;
 
@@ -88,4 +89,70 @@ bool Checkpoints::is_alternative_block_allowed(uint32_t  blockchain_height, uint
   uint32_t  checkpoint_height = it->first;
   return checkpoint_height < block_height;
 }
+
+//---------------------------------------------------------------------------
+
+bool Checkpoints::load_checkpoints_from_dns()
+{
+  std::string domain("checkpoints.conceal.network");
+  std::vector<std::string>records;
+
+  logger(Logging::DEBUGGING) << "<< Checkpoints.cpp << " << "Fetching DNS checkpoint records from " << domain;
+
+  if (!Common::fetch_dns_txt(domain, records)) {
+    logger(Logging::INFO) << "<< Checkpoints.cpp << " << "Failed to lookup DNS checkpoint records from " << domain;
+  }
+
+  for (const auto& record : records) {
+    uint32_t height;
+    Crypto::Hash hash = NULL_HASH;
+    std::stringstream ss;
+    size_t del = record.find_first_of(':');
+    std::string height_str = record.substr(0, del), hash_str = record.substr(del + 1, 64);
+    ss.str(height_str);
+    ss >> height;
+    char c;
+    if (del == std::string::npos) continue;
+    if ((ss.fail() || ss.get(c)) || !Common::podFromHex(hash_str, hash)) {
+      logger(Logging::INFO) << "Failed to parse DNS checkpoint record: " << record;
+      continue;
+    }
+
+    if (!(0 == m_points.count(height))) {
+      logger(DEBUGGING) << "Checkpoint already exists for height: " << height << ". Ignoring DNS checkpoint.";
+    } else {
+      add_checkpoint(height, hash_str);
+	  logger(DEBUGGING) << "Added DNS checkpoint: " << height_str << ":" << hash_str;
+    }
+  }
+
+  return true;
+}
+
+//---------------------------------------------------------------------------
+bool Checkpoints::load_checkpoints_from_file(const std::string& fileName) {
+	std::ifstream file(fileName);
+	if (!file) {
+		logger(Logging::ERROR, BRIGHT_RED) << "Could not load checkpoints file: " << fileName;
+		return false;
+	}
+	std::string indexString;
+	std::string hash;
+	uint32_t height;
+	while (std::getline(file, indexString, ','), std::getline(file, hash)) {
+		try {
+			height = std::stoi(indexString);
+		} catch (const std::invalid_argument &)	{
+			logger(ERROR, BRIGHT_RED) << "Invalid checkpoint file format - "
+				<< "could not parse height as a number";
+			return false;
+		}
+		if (!add_checkpoint(height, hash)) {
+			return false;
+		}
+	}
+	logger(Logging::INFO) << "Loaded " << m_points.size() << " checkpoints from "	<< fileName;
+	return true;
+}
+
 }
