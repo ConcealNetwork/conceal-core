@@ -428,6 +428,8 @@ bool RpcServer::on_send_raw_tx(const COMMAND_RPC_SEND_RAW_TX::request& req, COMM
     return true;
   }
 
+  /* check tx for node fee
+
   if (!m_fee_address.empty() && m_view_key != NULL_SECRET_KEY) {
     if (!remotenode_check_incoming_tx(tx_blob)) {
       logger(INFO) << "<< rpcserver.cpp << " << "Transaction not relayed due to lack of remote node fee";		
@@ -436,10 +438,11 @@ bool RpcServer::on_send_raw_tx(const COMMAND_RPC_SEND_RAW_TX::request& req, COMM
     }
   }
 
+  */
+
   NOTIFY_NEW_TRANSACTIONS::request r;
   r.txs.push_back(asString(tx_blob));
   m_core.get_protocol()->relay_transactions(r);
-  //TODO: make sure that tx has reached other nodes here, probably wait to receive reflections from other nodes
   res.status = CORE_RPC_STATUS_OK;
   return true;
 }
