@@ -11,8 +11,10 @@
 // CryptoNote
 #include "Common/StringTools.h"
 #include "CryptoNoteCore/CryptoNoteTools.h"
+#include "CryptoNoteCore/CryptoNoteFormatUtils.h"
 #include "CryptoNoteCore/Core.h"
 #include "CryptoNoteCore/IBlock.h"
+#include "CryptoNoteCore/TransactionUtils.h"
 #include "CryptoNoteCore/Miner.h"
 #include "CryptoNoteCore/TransactionExtra.h"
 
@@ -85,9 +87,7 @@ std::unordered_map<std::string, RpcServer::RpcHandler<RpcServer::HandlerFunction
   { "/getheight", { jsonMethod<COMMAND_RPC_GET_HEIGHT>(&RpcServer::on_get_height), true } },
   { "/gettransactions", { jsonMethod<COMMAND_RPC_GET_TRANSACTIONS>(&RpcServer::on_get_transactions), false } },
   { "/sendrawtransaction", { jsonMethod<COMMAND_RPC_SEND_RAW_TX>(&RpcServer::on_send_raw_tx), false } },
-//  { "/start_mining", { jsonMethod<COMMAND_RPC_START_MINING>(&RpcServer::on_start_mining), false } },
-//  { "/stop_mining", { jsonMethod<COMMAND_RPC_STOP_MINING>(&RpcServer::on_stop_mining), false } },
-//  { "/stop_daemon", { jsonMethod<COMMAND_RPC_STOP_DAEMON>(&RpcServer::on_stop_daemon), true } },
+  { "/feeaddress", { jsonMethod<COMMAND_RPC_GET_FEE_ADDRESS>(&RpcServer::on_get_fee_address), true } },
 
   // json rpc
   { "/json_rpc", { std::bind(&RpcServer::processJsonRpcRequest, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3), true } }
@@ -241,6 +241,33 @@ bool RpcServer::on_query_blocks_lite(const COMMAND_RPC_QUERY_BLOCKS_LITE::reques
   res.startHeight = startHeight;
   res.currentHeight = currentHeight;
   res.fullOffset = fullOffset;
+  res.status = CORE_RPC_STATUS_OK;
+  return true;
+}
+
+bool RpcServer::setFeeAddress(const std::string& fee_address, const AccountPublicAddress& fee_acc) {
+  m_fee_address = fee_address;
+  m_fee_acc = fee_acc;
+  return true;
+}
+
+bool RpcServer::setViewKey(const std::string& view_key) {
+  Crypto::Hash private_view_key_hash;
+  size_t size;
+  if (!Common::fromHex(view_key, &private_view_key_hash, sizeof(private_view_key_hash), size) || size != sizeof(private_view_key_hash)) {
+    logger(INFO) << "Could not parse private view key";
+    return false;
+  }
+  m_view_key = *(struct Crypto::SecretKey *) &private_view_key_hash;
+  return true;
+}
+
+bool RpcServer::on_get_fee_address(const COMMAND_RPC_GET_FEE_ADDRESS::request& req, COMMAND_RPC_GET_FEE_ADDRESS::response& res) {
+  if (m_fee_address.empty()) {
+	  res.status = CORE_RPC_STATUS_OK;
+	  return false; 
+  }
+  res.fee_address = m_fee_address;
   res.status = CORE_RPC_STATUS_OK;
   return true;
 }
@@ -401,6 +428,13 @@ bool RpcServer::on_send_raw_tx(const COMMAND_RPC_SEND_RAW_TX::request& req, COMM
     return true;
   }
 
+  if (!m_fee_address.empty() && m_view_key != NULL_SECRET_KEY) {
+    if (!remotenode_check_incoming_tx(tx_blob)) {
+      logger(INFO) << "Transaction not relayed due to lack of remote node fee";		
+      res.status = "Not relayed due to lack of node fee";
+      return true;
+    }
+  }
 
   NOTIFY_NEW_TRANSACTIONS::request r;
   r.txs.push_back(asString(tx_blob));
@@ -424,6 +458,31 @@ bool RpcServer::on_start_mining(const COMMAND_RPC_START_MINING::request& req, CO
 
   res.status = CORE_RPC_STATUS_OK;
   return true;
+}
+
+bool RpcServer::remotenode_check_incoming_tx(const BinaryArray& tx_blob) {
+	Crypto::Hash tx_hash = NULL_HASH;
+	Crypto::Hash tx_prefixt_hash = NULL_HASH;
+	Transaction tx;
+	if (!parseAndValidateTransactionFromBinaryArray(tx_blob, tx, tx_hash, tx_prefixt_hash)) {
+		logger(INFO) << "Could not parse tx from blob";
+		return false;
+	}
+	CryptoNote::TransactionPrefix transaction = *static_cast<const TransactionPrefix*>(&tx);
+
+	std::vector<uint32_t> out;
+	uint64_t amount;
+
+	if (!CryptoNote::findOutputsToAccount(transaction, m_fee_acc, m_view_key, out, amount)) {
+		logger(INFO) << "Could not find outputs to remote node fee address";
+		return false;
+	}
+
+	if (amount != 0) {
+		logger(INFO) << "Masternode received relayed transaction fee: " << m_core.currency().formatAmount(amount) << " KRB";
+		return true;
+	}
+	return false;
 }
 
 bool RpcServer::on_stop_mining(const COMMAND_RPC_STOP_MINING::request& req, COMMAND_RPC_STOP_MINING::response& res) {
