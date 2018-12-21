@@ -9,21 +9,23 @@
 #include <unordered_map>
 
 // CryptoNote
+#include "BlockchainExplorerData.h"
 #include "Common/StringTools.h"
+#include "Common/Base58.h"
+#include "CryptoNoteCore/TransactionUtils.h"
 #include "CryptoNoteCore/CryptoNoteTools.h"
 #include "CryptoNoteCore/CryptoNoteFormatUtils.h"
 #include "CryptoNoteCore/Core.h"
 #include "CryptoNoteCore/IBlock.h"
-#include "CryptoNoteCore/TransactionUtils.h"
 #include "CryptoNoteCore/Miner.h"
 #include "CryptoNoteCore/TransactionExtra.h"
-
 #include "CryptoNoteProtocol/ICryptoNoteProtocolQuery.h"
 
 #include "P2p/NetNode.h"
 
 #include "CoreRpcServerErrorCodes.h"
 #include "JsonRpc.h"
+#include "version.h"
 
 #undef ERROR
 
@@ -88,6 +90,8 @@ std::unordered_map<std::string, RpcServer::RpcHandler<RpcServer::HandlerFunction
   { "/gettransactions", { jsonMethod<COMMAND_RPC_GET_TRANSACTIONS>(&RpcServer::on_get_transactions), false } },
   { "/sendrawtransaction", { jsonMethod<COMMAND_RPC_SEND_RAW_TX>(&RpcServer::on_send_raw_tx), false } },
   { "/feeaddress", { jsonMethod<COMMAND_RPC_GET_FEE_ADDRESS>(&RpcServer::on_get_fee_address), true } },
+  { "/peers", { jsonMethod<COMMAND_RPC_GET_PEER_LIST>(&RpcServer::on_get_peer_list), true } },
+  { "/getpeers", { jsonMethod<COMMAND_RPC_GET_PEER_LIST>(&RpcServer::on_get_peer_list), true } },
 
   // json rpc
   { "/json_rpc", { std::bind(&RpcServer::processJsonRpcRequest, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3), true } }
@@ -342,12 +346,27 @@ bool RpcServer::onGetPoolChangesLite(const COMMAND_RPC_GET_POOL_CHANGES_LITE::re
 // JSON handlers
 //
 
+
+bool RpcServer::on_get_peer_list(const COMMAND_RPC_GET_PEER_LIST::request& req, COMMAND_RPC_GET_PEER_LIST::response& res) {
+	std::list<PeerlistEntry> pl_wite;
+	std::list<PeerlistEntry> pl_gray;
+	m_p2p.getPeerlistManager().get_peerlist_full(pl_gray, pl_wite);
+	for (const auto& pe : pl_wite) {
+		std::stringstream ss;
+		ss << pe.adr;
+		res.peers.push_back(ss.str());
+	}
+	res.status = CORE_RPC_STATUS_OK;
+	return true;
+}
+
 bool RpcServer::on_get_info(const COMMAND_RPC_GET_INFO::request& req, COMMAND_RPC_GET_INFO::response& res) {
   res.height = m_core.get_current_blockchain_height();
   res.difficulty = m_core.getNextBlockDifficulty();
   res.tx_count = m_core.get_blockchain_total_transactions() - res.height; //without coinbase
   res.tx_pool_size = m_core.get_pool_transactions_count();
   res.alt_blocks_count = m_core.get_alternative_blocks_count();
+  res.fee_address = m_fee_address.empty() ? std::string() : m_fee_address;
   uint64_t total_conn = m_p2p.get_connections_count();
   res.outgoing_connections_count = m_p2p.get_outgoing_connections_count();
   res.incoming_connections_count = total_conn - res.outgoing_connections_count;
@@ -357,6 +376,37 @@ bool RpcServer::on_get_info(const COMMAND_RPC_GET_INFO::request& req, COMMAND_RP
   res.full_deposit_amount = m_core.fullDepositAmount();
   res.full_deposit_interest = m_core.fullDepositInterest();
   res.status = CORE_RPC_STATUS_OK;
+  Crypto::Hash last_block_hash = m_core.getBlockIdByHeight(m_core.get_current_blockchain_height() - 1);
+  res.top_block_hash = Common::podToHex(last_block_hash);
+  res.version = PROJECT_VERSION_LONG;
+
+  Block blk;
+  if (!m_core.getBlockByHash(last_block_hash, blk)) {
+	  throw JsonRpc::JsonRpcError{
+		CORE_RPC_ERROR_CODE_INTERNAL_ERROR,
+		"Internal error: can't get last block by hash." };
+  }
+
+  if (blk.baseTransaction.inputs.front().type() != typeid(BaseInput)) {
+	  throw JsonRpc::JsonRpcError{
+		CORE_RPC_ERROR_CODE_INTERNAL_ERROR,
+		"Internal error: coinbase transaction in the block has the wrong type" };
+  }
+
+  block_header_response block_header;
+  uint32_t last_block_height = boost::get<BaseInput>(blk.baseTransaction.inputs.front()).blockIndex;
+
+  Crypto::Hash tmp_hash = m_core.getBlockIdByHeight(last_block_height);
+  bool is_orphaned = last_block_hash != tmp_hash;
+  fill_block_header_response(blk, is_orphaned, last_block_height, last_block_hash, block_header);
+
+  res.block_major_version = block_header.major_version;
+  res.block_minor_version = block_header.minor_version;
+  res.last_block_timestamp = block_header.timestamp;
+  res.last_block_reward = block_header.reward;
+  m_core.getBlockDifficulty(static_cast<uint32_t>(last_block_height), res.last_block_difficulty);
+
+
   return true;
 }
 
