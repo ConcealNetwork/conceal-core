@@ -94,7 +94,7 @@ bool Checkpoints::is_alternative_block_allowed(uint32_t  blockchain_height, uint
 
 bool Checkpoints::load_checkpoints_from_dns()
 {
-  std::string domain("checkpoints.conceal.network");
+  std::string domain("conceal.network");
   std::vector<std::string>records;
 
   logger(Logging::DEBUGGING) << "<< Checkpoints.cpp << " << "Fetching DNS checkpoint records from " << domain;
