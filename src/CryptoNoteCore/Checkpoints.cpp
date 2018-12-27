@@ -94,10 +94,10 @@ bool Checkpoints::is_alternative_block_allowed(uint32_t  blockchain_height, uint
 
 bool Checkpoints::load_checkpoints_from_dns()
 {
-  std::string domain("checkpoints.conceal.network");
+  std::string domain("checkpoints.conceal.id");
   std::vector<std::string>records;
 
-  logger(Logging::DEBUGGING) << "<< Checkpoints.cpp << " << "Fetching DNS checkpoint records from " << domain;
+  logger(Logging::INFO) << "<< Checkpoints.cpp << " << "Fetching DNS checkpoint records from " << domain;
 
   if (!Common::fetch_dns_txt(domain, records)) {
     logger(Logging::INFO) << "<< Checkpoints.cpp << " << "Failed to lookup DNS checkpoint records from " << domain;
@@ -114,15 +114,15 @@ bool Checkpoints::load_checkpoints_from_dns()
     char c;
     if (del == std::string::npos) continue;
     if ((ss.fail() || ss.get(c)) || !Common::podFromHex(hash_str, hash)) {
-      logger(Logging::INFO) << "Failed to parse DNS checkpoint record: " << record;
+      logger(Logging::INFO) << "<< Checkpoints.cpp << " << "Failed to parse DNS checkpoint record: " << record;
       continue;
     }
 
     if (!(0 == m_points.count(height))) {
-      logger(DEBUGGING) << "Checkpoint already exists for height: " << height << ". Ignoring DNS checkpoint.";
+      logger(DEBUGGING) << "<< Checkpoints.cpp << " << "Checkpoint already exists for height: " << height << ". Ignoring DNS checkpoint.";
     } else {
       add_checkpoint(height, hash_str);
-	  logger(DEBUGGING) << "Added DNS checkpoint: " << height_str << ":" << hash_str;
+	  logger(INFO) << "<< Checkpoints.cpp << " << "Added DNS checkpoint: " << height_str << ":" << hash_str;
     }
   }
 

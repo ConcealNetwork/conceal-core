@@ -256,6 +256,9 @@ struct COMMAND_RPC_GET_INFO {
 
   struct response {
     std::string status;
+    std::string version;
+    std::string fee_address;
+    std::string top_block_hash;
     uint64_t height;
     uint64_t difficulty;
     uint64_t tx_count;
@@ -265,26 +268,54 @@ struct COMMAND_RPC_GET_INFO {
     uint64_t incoming_connections_count;
     uint64_t white_peerlist_size;
     uint64_t grey_peerlist_size;
+    uint8_t block_major_version;
+    uint8_t block_minor_version;
     uint32_t last_known_block_index;
     uint64_t full_deposit_amount;
     uint64_t full_deposit_interest;
+    uint64_t last_block_reward;
+    uint64_t last_block_timestamp;
+    uint64_t last_block_difficulty;
 
     void serialize(ISerializer &s) {
       KV_MEMBER(status)
       KV_MEMBER(height)
+      KV_MEMBER(version)
       KV_MEMBER(difficulty)
+      KV_MEMBER(top_block_hash)
       KV_MEMBER(tx_count)
       KV_MEMBER(tx_pool_size)
       KV_MEMBER(alt_blocks_count)
       KV_MEMBER(outgoing_connections_count)
+      KV_MEMBER(fee_address)
+      KV_MEMBER(block_major_version)
+      KV_MEMBER(block_minor_version)
       KV_MEMBER(incoming_connections_count)
       KV_MEMBER(white_peerlist_size)
       KV_MEMBER(grey_peerlist_size)
       KV_MEMBER(last_known_block_index)
       KV_MEMBER(full_deposit_amount)
       KV_MEMBER(full_deposit_interest)
+      KV_MEMBER(last_block_reward)
+      KV_MEMBER(last_block_timestamp)
+      KV_MEMBER(last_block_difficulty)
     }
   };
+};
+
+//-----------------------------------------------
+struct COMMAND_RPC_GET_PEER_LIST {
+	typedef EMPTY_STRUCT request;
+
+	struct response {
+		std::vector<std::string> peers;
+		std::string status;
+
+		void serialize(ISerializer &s) {
+			KV_MEMBER(peers)
+			KV_MEMBER(status)
+		}
+	};
 };
 
 //-----------------------------------------------
@@ -310,6 +341,20 @@ struct COMMAND_RPC_GETBLOCKCOUNT {
     void serialize(ISerializer &s) {
       KV_MEMBER(count)
       KV_MEMBER(status)
+    }
+  };
+};
+
+struct COMMAND_RPC_GET_FEE_ADDRESS {
+  typedef EMPTY_STRUCT request;
+
+  struct response {
+    std::string fee_address;
+	std::string status;
+
+    void serialize(ISerializer &s) {
+      KV_MEMBER(fee_address)
+	  KV_MEMBER(status)
     }
   };
 };

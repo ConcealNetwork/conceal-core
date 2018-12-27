@@ -1,4 +1,5 @@
 // Copyright (c) 2011-2017 The Cryptonote developers
+// Copyright (c) 2016-2018, The Karbo developers
 // Copyright (c) 2018 The Circle Foundation
 // Distributed under the MIT/X11 software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
@@ -43,12 +44,13 @@ namespace
   const command_line::arg_descriptor<std::string> arg_config_file = {"config-file", "Specify configuration file", std::string(CryptoNote::CRYPTONOTE_NAME) + ".conf"};
   const command_line::arg_descriptor<bool>        arg_os_version  = {"os-version", ""};
   const command_line::arg_descriptor<std::string> arg_log_file    = {"log-file", "", ""};
+  const command_line::arg_descriptor<std::string> arg_set_fee_address = { "fee-address", "Set a fee address for remote nodes", "" };
+  const command_line::arg_descriptor<std::string> arg_set_view_key = { "view-key", "Set secret view-key for remote node fee confirmation", "" };
   const command_line::arg_descriptor<int>         arg_log_level   = {"log-level", "", 2}; // info level
   const command_line::arg_descriptor<bool>        arg_console     = {"no-console", "Disable daemon console commands"};
   const command_line::arg_descriptor<bool>        arg_testnet_on  = {"testnet", "Used to deploy test nets. Checkpoints and hardcoded seeds are ignored, "
     "network id is changed. Use it with --data-dir flag. The wallet must be launched with --testnet flag.", false};
   const command_line::arg_descriptor<bool>        arg_print_genesis_tx = { "print-genesis-tx", "Prints genesis' block tx hex to insert it to config and exits" };
-  //const command_line::arg_descriptor<std::vector<std::string>> arg_genesis_block_reward_address = {"genesis-block-reward-address", ""};
 }
 
 bool command_line_preprocessor(const boost::program_options::variables_map& vm, LoggerRef& logger);
@@ -168,10 +170,11 @@ int main(int argc, char* argv[])
     command_line::add_arg(desc_cmd_only, arg_os_version);
     command_line::add_arg(desc_cmd_only, command_line::arg_data_dir, Tools::getDefaultDataDirectory());
     command_line::add_arg(desc_cmd_only, arg_config_file);
-
+	  command_line::add_arg(desc_cmd_sett, arg_set_fee_address);
     command_line::add_arg(desc_cmd_sett, arg_log_file);
     command_line::add_arg(desc_cmd_sett, arg_log_level);
     command_line::add_arg(desc_cmd_sett, arg_console);
+  	command_line::add_arg(desc_cmd_sett, arg_set_view_key);
     command_line::add_arg(desc_cmd_sett, arg_testnet_on);
     command_line::add_arg(desc_cmd_sett, arg_print_genesis_tx);
     //command_line::add_arg(desc_cmd_sett, arg_genesis_block_reward_address);
@@ -317,13 +320,6 @@ int main(int argc, char* argv[])
 
     logger(INFO) << "<< Daemon.cpp << " "P2p server initialized OK";
 
-    //logger(INFO) << "<< Daemon.cpp << " "Initializing core rpc server...";
-    //if (!rpc_server.init(vm)) {
-    //  logger(ERROR, BRIGHT_RED) << "Failed to initialize core rpc server.";
-    //  return 1;
-    //}
-    // logger(INFO, BRIGHT_GREEN) << "Core rpc server initialized OK on port: " << rpc_server.get_binded_port();
-
     // initialize core here
     logger(INFO) << "<< Daemon.cpp << " "Initializing core...";
     if (!ccore.init(coreConfig, minerConfig, true)) {
@@ -338,7 +334,33 @@ int main(int argc, char* argv[])
       dch.start_handling();
     }
 
-    logger(INFO) << "<< Daemon.cpp << " "Starting core rpc server on address " << rpcConfig.getBindAddress();
+    logger(INFO) << "<< Daemon.cpp << " << "Starting core rpc server on address " << rpcConfig.getBindAddress();
+  
+    /* set address for remote node fee */
+  	if (command_line::has_arg(vm, arg_set_fee_address)) {
+	  std::string addr_str = command_line::get_arg(vm, arg_set_fee_address);
+	  if (!addr_str.empty()) {
+        AccountPublicAddress acc = boost::value_initialized<AccountPublicAddress>();
+        if (!currency.parseAccountAddressString(addr_str, acc)) {
+          logger(ERROR, BRIGHT_RED) << "Bad fee address: " << addr_str;
+          return 1;
+        }
+        rpcServer.setFeeAddress(addr_str, acc);
+        logger(INFO, BRIGHT_YELLOW) << "<< Daemon.cpp << " << "Remote node fee address set: " << addr_str;
+
+      }
+	  }
+  
+    /* set secret view-key to confirm remote node fee */
+    if (command_line::has_arg(vm, arg_set_view_key)) {
+      std::string vk_str = command_line::get_arg(vm, arg_set_view_key);
+	    if (!vk_str.empty()) {
+        rpcServer.setViewKey(vk_str);
+        logger(INFO, BRIGHT_YELLOW) << "<< Daemon.cpp << " << "Secret view key set: " << vk_str;
+      }
+    }
+ 
+  
     rpcServer.start(rpcConfig.bindIp, rpcConfig.bindPort);
     logger(INFO) << "<< Daemon.cpp << " "Core rpc server started ok";
 
