@@ -513,6 +513,8 @@ bool RpcServer::on_start_mining(const COMMAND_RPC_START_MINING::request& req, CO
   return true;
 }
 
+/*
+
 bool RpcServer::remotenode_check_incoming_tx(const BinaryArray& tx_blob) {
 	Crypto::Hash tx_hash = NULL_HASH;
 	Crypto::Hash tx_prefixt_hash = NULL_HASH;
@@ -537,6 +539,8 @@ bool RpcServer::remotenode_check_incoming_tx(const BinaryArray& tx_blob) {
 	}
 	return false;
 }
+
+*/
 
 bool RpcServer::on_stop_mining(const COMMAND_RPC_STOP_MINING::request& req, COMMAND_RPC_STOP_MINING::response& res) {
   if (!m_core.get_miner().stop()) {
