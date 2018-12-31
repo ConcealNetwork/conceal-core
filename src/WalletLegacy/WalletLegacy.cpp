@@ -543,8 +543,8 @@ TransactionId WalletLegacy::sendTransaction(Crypto::SecretKey& transactionSK,
   std::deque<std::unique_ptr<WalletLegacyEvent>> events;
   throwIfNotInitialised();
 
-  if (fee < 10) {
-    fee = 10;
+  if (fee < 100) {
+    fee = 100;
   }
 
   {
@@ -569,8 +569,8 @@ TransactionId WalletLegacy::deposit(uint32_t term, uint64_t amount, uint64_t fee
   std::unique_ptr<WalletRequest> request;
   std::deque<std::unique_ptr<WalletLegacyEvent>> events;
 
-  if (fee < 10) {
-    fee = 10;
+  if (fee < 100) {
+    fee = 100;
   }
 
   {
@@ -599,8 +599,8 @@ TransactionId WalletLegacy::withdrawDeposits(const std::vector<DepositId>& depos
   std::unique_ptr<WalletRequest> request;
   std::deque<std::unique_ptr<WalletLegacyEvent>> events;
 
-  if (fee < 10) {
-    fee = 10;
+  if (fee < 100) {
+    fee = 100;
   }
 
   {

@@ -873,8 +873,8 @@ std::error_code WalletService::sendTransaction(const SendTransaction::Request& r
       sendParams.extra = Common::asString(Common::fromHex(request.extra));
     }
 
-    if (sendParams.fee < 10) {
-      sendParams.fee = 10;
+    if (sendParams.fee < 100) {
+      sendParams.fee = 100;
     }
 
     sendParams.sourceAddresses = request.sourceAddresses;

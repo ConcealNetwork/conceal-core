@@ -208,10 +208,10 @@ bool parseArguments(LoggerRef& logger, const std::vector<std::string> &args)
               return false;
             }
 
-            if (fee < m_currency.minimumFee()) 
+            if (fee < CryptoNote::parameters::MINIMUM_FEE_V1) 
             {
 
-              logger(ERROR, BRIGHT_RED) << "Fee value is less than minimum: " << m_currency.minimumFee();
+              logger(ERROR, BRIGHT_RED) << "Fee value is less than minimum: " << CryptoNote::parameters::MINIMUM_FEE_V1;
               return false;
             }
           } else if (arg == "-m") 
@@ -1491,7 +1491,7 @@ bool simple_wallet::optimize_outputs(const std::vector<std::string>& args) {
     std::vector<CryptoNote::WalletLegacyTransfer> transfers;
     std::vector<CryptoNote::TransactionMessage> messages;
     std::string extraString;
-    uint64_t fee = CryptoNote::parameters::MINIMUM_FEE;
+    uint64_t fee = CryptoNote::parameters::MINIMUM_FEE_V1;
     uint64_t mixIn = 0;
     uint64_t unlockTimestamp = 0;
     uint64_t ttl = 0;
@@ -1559,7 +1559,7 @@ bool simple_wallet::optimize_all_outputs(const std::vector<std::string>& args) {
       std::vector<CryptoNote::WalletLegacyTransfer> transfers;
       std::vector<CryptoNote::TransactionMessage> messages;
       std::string extraString;
-      uint64_t fee = CryptoNote::parameters::MINIMUM_FEE;
+      uint64_t fee = CryptoNote::parameters::MINIMUM_FEE_V1;
       uint64_t mixIn = 0;
       uint64_t unlockTimestamp = 0;
       uint64_t ttl = 0;
@@ -1691,8 +1691,8 @@ bool simple_wallet::transfer(const std::vector<std::string> &args) {
     cmd.fake_outs_count = 4;
 
     /* force minimum fee */
-    if (cmd.fee < 10) {
-      cmd.fee = 10;
+    if (cmd.fee < CryptoNote::parameters::MINIMUM_FEE_V1) {
+      cmd.fee = CryptoNote::parameters::MINIMUM_FEE_V1;
     }
 
     Crypto::SecretKey transactionSK;
