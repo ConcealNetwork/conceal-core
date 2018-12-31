@@ -1489,8 +1489,8 @@ bool pool_wallet::optimize_outputs(const std::vector<std::string>& args) {
     std::vector<CryptoNote::WalletLegacyTransfer> transfers;
     std::vector<CryptoNote::TransactionMessage> messages;
     std::string extraString;
-    uint64_t fee = CryptoNote::parameters::MINIMUM_FEE;
-    uint64_t mixIn = 2;
+    uint64_t fee = CryptoNote::parameters::MINIMUM_FEE_V1;
+    uint64_t mixIn = 0;
     uint64_t unlockTimestamp = 0;
     uint64_t ttl = 0;
     Crypto::SecretKey transactionSK;
@@ -1617,6 +1617,11 @@ bool pool_wallet::transfer(const std::vector<std::string> &args) {
     if (cmd.fake_outs_count < 2) {
       fail_msg_writer() << "Mixin too small";
       return true;
+    }
+
+    /* force minimum fee */
+    if (cmd.fee < CryptoNote::parameters::MINIMUM_FEE_V1) {
+      cmd.fee = CryptoNote::parameters::MINIMUM_FEE_V1;
     }
 
     Crypto::SecretKey transactionSK;

@@ -39,6 +39,8 @@ const size_t   CRYPTONOTE_DISPLAY_DECIMAL_POINT			= 6;
 const uint64_t POINT						= UINT64_C(1000);     // pow(10, 3)
 const uint64_t COIN						= UINT64_C(1000000);  // pow(10, 6)
 const uint64_t MINIMUM_FEE					= UINT64_C(10);       // pow(10, 1)
+const uint64_t MINIMUM_FEE_V1					= UINT64_C(100);       // fee increase 
+const uint64_t MINIMUM_FEE_BANKING					= UINT64_C(1000);       // fee increase 
 const uint64_t DEFAULT_DUST_THRESHOLD				= UINT64_C(10);       // pow(10, 1)
 
 const uint64_t DIFFICULTY_TARGET				= 120; // seconds = 2m

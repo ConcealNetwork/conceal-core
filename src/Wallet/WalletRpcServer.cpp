@@ -191,8 +191,8 @@ bool wallet_rpc_server::on_transfer(const wallet_rpc::COMMAND_RPC_TRANSFER::requ
     ttl = static_cast<uint64_t>(time(nullptr)) + req.ttl;
   }
 
-  uint64_t actualFee = 10;
-  if (req.fee >= 10) {
+  uint64_t actualFee = 100;
+  if (req.fee >= 100) {
     actualFee = req.fee;
   }
 
@@ -230,8 +230,8 @@ bool wallet_rpc_server::on_optimize(const wallet_rpc::COMMAND_RPC_OPTIMIZE::requ
   std::vector<CryptoNote::WalletLegacyTransfer> transfers;
   std::vector<CryptoNote::TransactionMessage> messages;
   std::string extraString;
-  uint64_t fee = CryptoNote::parameters::MINIMUM_FEE;
-  uint64_t mixIn = 2;
+  uint64_t fee = CryptoNote::parameters::MINIMUM_FEE_V1;
+  uint64_t mixIn = 0;
   uint64_t unlockTimestamp = 0;
   uint64_t ttl = 0;
 

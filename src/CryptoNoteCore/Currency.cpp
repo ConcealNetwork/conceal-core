@@ -1004,7 +1004,9 @@ CurrencyBuilder::CurrencyBuilder(Logging::ILogger& log) : m_currency(log) {
 
   numberOfDecimalPlaces(parameters::CRYPTONOTE_DISPLAY_DECIMAL_POINT);
 
-  mininumFee(parameters::MINIMUM_FEE);
+  minimumFee(parameters::MINIMUM_FEE);
+  minimumFeeV1(parameters::MINIMUM_FEE_V1);
+  minimumFeeBanking(parameters::MINIMUM_FEE_BANKING);  
   defaultDustThreshold(parameters::DEFAULT_DUST_THRESHOLD);
 
   difficultyTarget(parameters::DIFFICULTY_TARGET);
