@@ -2440,6 +2440,37 @@ bool Blockchain::validateInput(const MultisignatureInput& input, const Crypto::H
   return true;
 }
 
+bool Blockchain::rollbackBlockchainTo(uint32_t height) {
+  logger(INFO) << "Rolling back blockchain to " << height;
+  while (height + 1 < m_blocks.size()) {
+    removeLastBlock();
+  }
+  logger(INFO) << "Rollback complete. Synchronization will resume.";  
+  return true;
+}
+
+bool Blockchain::removeLastBlock() {
+  if (m_blocks.empty()) {
+    logger(ERROR, BRIGHT_RED) <<
+      "Attempt to pop block from empty blockchain.";
+    return false;
+  }
+
+  logger(DEBUGGING) << "Removing last block with height " << m_blocks.back().height;
+  popTransactions(m_blocks.back(), getObjectHash(m_blocks.back().bl.baseTransaction));
+
+  Crypto::Hash blockHash = getBlockIdByHeight(m_blocks.back().height);
+  m_timestampIndex.remove(m_blocks.back().bl.timestamp, blockHash);
+  m_generatedTransactionsIndex.remove(m_blocks.back().bl);
+
+  m_blocks.pop_back();
+  m_blockIndex.pop();
+
+  assert(m_blockIndex.size() == m_blocks.size());
+  return true;
+}
+
+
 bool Blockchain::getLowerBound(uint64_t timestamp, uint64_t startOffset, uint32_t& height) {
   std::lock_guard<decltype(m_blockchain_lock)> lk(m_blockchain_lock);
 
