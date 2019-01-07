@@ -615,7 +615,7 @@ TransactionId WalletLegacy::withdrawDeposits(const std::vector<DepositId>& depos
   notifyClients(events);
 
   if (request != nullptr) {
-    m_asyncContextCounter.addAsyncContext();s
+    m_asyncContextCounter.addAsyncContext();
     request->perform(m_node, std::bind(&WalletLegacy::sendTransactionCallback, this, std::placeholders::_1, std::placeholders::_2));
   }
 
