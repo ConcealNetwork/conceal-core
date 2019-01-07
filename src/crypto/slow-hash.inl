@@ -1,57 +1,19 @@
-// Copyright (c) 2011-2017 The Cryptonote developers
-// Copyright (c) 2018 The Circle Foundation
-// Distributed under the MIT/X11 software license, see the accompanying
-// file COPYING or http://www.opensource.org/licenses/mit-license.php.
-
-#include <stdio.h>
-#if defined(WIN32)
-#include <io.h>
-#else
-#include <unistd.h>
-#endif
-
-// the functions for the cn variant
-#define xor64(a, b) *((uint64_t*)a) ^= b
-
-#define VARIANT1_1(p) \
-  do if (variant > 0) \
-  { \
-    const uint8_t tmp = ((const uint8_t*)(p))[11]; \
-    static const uint32_t table = 0x75310; \
-    const uint8_t index = (((tmp >> 3) & 6) | (tmp & 1)) << 1; \
-    ((uint8_t*)(p))[11] = tmp ^ ((table >> index) & 0x30); \
-  } while(0)
-
-#define VARIANT1_2(p) \
-  do if (variant > 0) \
-  { \
-    xor64(p, tweak1_2); \
-  } while(0)
-
-#define VARIANT1_CHECK() \
-  do if (length < 43) \
-  { \
-    fprintf(stderr, "Cryptonight variants need at least 43 bytes of data"); \
-    _exit(1); \
-  } while(0)
-
-#define NONCE_POINTER (((const uint8_t*)data)+35)
-
-#define VARIANT1_PORTABLE_INIT() \
-  uint8_t tweak1_2[8]; \
-  do if (variant > 0) \
-  { \
-    VARIANT1_CHECK(); \
-    memcpy(&tweak1_2, &state.hs.b[192], sizeof(tweak1_2)); \
-    xor64(tweak1_2, NONCE_POINTER); \
-  } while(0)
-
-#define VARIANT1_INIT64() \
-  if (variant > 0) \
-  { \
-    VARIANT1_CHECK(); \
-  } \
-  const uint64_t tweak1_2 = variant > 0 ? (ctx->state.hs.w[24] ^ (*((const uint64_t*)NONCE_POINTER))) : 0
+// Copyright (c) 2012-2016, The CryptoNote developers, The Bytecoin developers
+//
+// This file is part of Karbo.
+//
+// Karbo is free software: you can redistribute it and/or modify
+// it under the terms of the GNU Lesser General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+//
+// Karbo is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU Lesser General Public License for more details.
+//
+// You should have received a copy of the GNU Lesser General Public License
+// along with Karbo.  If not, see <http://www.gnu.org/licenses/>.
 
 static void
 #if defined(AESNI)
@@ -59,23 +21,16 @@ cn_slow_hash_aesni
 #else
 cn_slow_hash_noaesni
 #endif
-(void *restrict context, const void *restrict data, size_t length, void *restrict hash, int variant)
+(void *restrict context, const void *restrict data, size_t length, void *restrict hash)
 {
 #define ctx ((struct cn_ctx *) context)
   ALIGNED_DECL(uint8_t ExpandedKey[256], 16);
   size_t i;
   __m128i *longoutput, *expkey, *xmminput, b_x;
   ALIGNED_DECL(uint64_t a[2], 16);
-
-
   hash_process(&ctx->state.hs, (const uint8_t*) data, length);
+
   memcpy(ctx->text, ctx->state.init, INIT_SIZE_BYTE);
-
-  // set the iterations based on variant
-  size_t iterations = variant > 0 ? 0x40000 : 0x80000;
-
-  VARIANT1_INIT64();
-
 #if defined(AESNI)
   memcpy(ExpandedKey, ctx->state.hs.b, AES_KEY_SIZE);
   ExpandAESKey256(ExpandedKey);
@@ -136,7 +91,7 @@ cn_slow_hash_noaesni
   a[0] = ctx->a[0];
   a[1] = ctx->a[1];
 
-  for(i = 0; likely(i < iterations); i++)
+  for(i = 0; likely(i < 0x80000); i++)
   {
     __m128i c_x = _mm_load_si128((__m128i *)&ctx->long_state[a[0] & 0x1FFFF0]);
     __m128i a_x = _mm_load_si128((__m128i *)a);
@@ -155,8 +110,6 @@ cn_slow_hash_noaesni
 
     b_x = _mm_xor_si128(b_x, c_x);
     _mm_store_si128((__m128i *)&ctx->long_state[a[0] & 0x1FFFF0], b_x);
-
-    VARIANT1_1(&ctx->long_state[a[0] & 0x1FFFF0]);
 
     nextblock = (uint64_t *)&ctx->long_state[c[0] & 0x1FFFF0];
     b[0] = nextblock[0];
@@ -186,9 +139,6 @@ cn_slow_hash_noaesni
 
     a[0] ^= b[0];
     a[1] ^= b[1];
-
-    VARIANT1_2(dst + 1);
-
     b_x = c_x;
     //__builtin_prefetch(&ctx->long_state[a[0] & 0x1FFFF0], 0, 3);
   }
@@ -248,4 +198,7 @@ cn_slow_hash_noaesni
   memcpy(ctx->state.init, ctx->text, INIT_SIZE_BYTE);
   hash_permutation(&ctx->state.hs);
   extra_hashes[ctx->state.hs.b[0] & 3](&ctx->state, 200, hash);
+#ifdef FORCE_USE_HEAP
+    free(long_state);
+#endif
 }
