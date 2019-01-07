@@ -1,7 +1,8 @@
 // Copyright (c) 2014-2018, The Monero Project
 // Copyright (c) 2018, The TurtleCoin Developers
-//
-// Please see the included LICENSE file for more information.
+// Copyright (c) 2018 The Circle Foundation
+// Distributed under the MIT/X11 software license, see the accompanying
+// file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #ifndef VARIANT2_INT_SQRT_H
 #define VARIANT2_INT_SQRT_H
