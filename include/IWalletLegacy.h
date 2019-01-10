@@ -123,6 +123,7 @@ public:
   virtual std::string getAddress() = 0;
 
   virtual uint64_t actualBalance() = 0;
+  virtual uint64_t dustBalance() = 0;
 
   virtual uint64_t pendingBalance() = 0;
   virtual uint64_t actualDepositBalance() = 0;

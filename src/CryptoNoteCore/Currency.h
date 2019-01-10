@@ -21,6 +21,8 @@ class AccountBase;
 
 class Currency {
 public:
+  static const std::vector<uint64_t> PRETTY_AMOUNTS;
+
   uint64_t maxBlockHeight() const { return m_maxBlockHeight; }
   size_t maxBlockBlobSize() const { return m_maxBlockBlobSize; }
   size_t maxTxSize() const { return m_maxTxSize; }
@@ -251,7 +253,6 @@ private:
   std::string m_txPoolFileName;
   std::string m_blockchinIndicesFileName;
 
-  static const std::vector<uint64_t> PRETTY_AMOUNTS;
   static const std::vector<uint64_t> REWARD_INCREASING_FACTOR;
 
   bool m_testnet;

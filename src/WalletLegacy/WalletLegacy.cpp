@@ -622,6 +622,26 @@ TransactionId WalletLegacy::withdrawDeposits(const std::vector<DepositId>& depos
   return txId;
 }
 
+/* go through all unlocked outputs and return a total of 
+  everything below the dust threshold */
+uint64_t WalletLegacy::dustBalance() {
+	std::unique_lock<std::mutex> lock(m_cacheMutex);
+	throwIfNotInitialised();
+	std::vector<TransactionOutputInformation> outputs;
+	m_transferDetails->getOutputs(outputs, ITransfersContainer::IncludeKeyUnlocked);
+	uint64_t money = 0;
+	for (size_t i = 0; i < outputs.size(); ++i) {
+		const auto& out = outputs[i];
+		if (!m_transactionsCache.isUsed(out)) {
+			if (out.amount < m_currency.defaultDustThreshold()) {
+				money += out.amount;
+			}
+		}
+	}
+	return money;
+}
+
+
 void WalletLegacy::sendTransactionCallback(WalletRequest::Callback callback, std::error_code ec) {
   ContextCounterHolder counterHolder(m_asyncContextCounter);
   std::deque<std::unique_ptr<WalletLegacyEvent> > events;
