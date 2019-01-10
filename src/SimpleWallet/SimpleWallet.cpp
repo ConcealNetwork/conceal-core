@@ -146,7 +146,7 @@ struct TransferCommand {
     m_currency(currency), fake_outs_count(0), fee(currency.minimumFee()), ttl(0) {
   }
 
-/* PARSE ARGUMENTS */
+
 /* parses arguments from the transfer command */
 
 bool parseArguments(LoggerRef& logger, const std::vector<std::string> &args) 
@@ -658,6 +658,7 @@ simple_wallet::simple_wallet(System::Dispatcher& dispatcher, const CryptoNote::C
   m_consoleHandler.setHandler("sweep_dust", boost::bind(&simple_wallet::sweep_dust, this, _1), "Sweep unmixable dust");
   m_consoleHandler.setHandler("outputs", boost::bind(&simple_wallet::show_num_unlocked_outputs, this, _1), "Show the number of unlocked outputs available for a transaction");
   m_consoleHandler.setHandler("optimize", boost::bind(&simple_wallet::optimize_outputs, this, _1), "Combine many available outputs into a few by sending a transaction to self");
+  m_consoleHandler.setHandler("change_password", boost::bind(&simple_wallet::change_password, this, _1), "Change wallet password");
   m_consoleHandler.setHandler("optimize_all", boost::bind(&simple_wallet::optimize_all_outputs, this, _1), "Optimize your wallet several times so you can send large transactions");  
   m_consoleHandler.setHandler("transfer", boost::bind(&simple_wallet::transfer, this, _1),
     "transfer <mixin_count> <addr_1> <amount_1> [<addr_2> <amount_2> ... <addr_N> <amount_N>] [-p payment_id] [-f fee]"
@@ -1287,18 +1288,12 @@ bool simple_wallet::show_balance(const std::vector<std::string>& args/* = std::v
   return true;
 }
 
-/* ------------------------------------------------------------------------------------------- */
-
-/* CREATE INTEGRATED ADDRESS */
-/* take a payment Id as an argument and generate an integrated wallet address */
-
-bool simple_wallet::create_integrated(const std::vector<std::string>& args/* = std::vector<std::string>()*/) 
-{
-
-  /* check if there is a payment id */
-  if (args.empty()) 
-  {
-
+/* This generates an integrated address using a
+   payment ID that you enter */
+bool simple_wallet::create_integrated(const std::vector<std::string>& args/* = std::vector<std::string>()*/) {
+  
+    /* check if there is a payment id */
+  if (args.empty()) {
     fail_msg_writer() << "Please enter a payment ID";
     return true;
   }
@@ -1323,32 +1318,53 @@ bool simple_wallet::create_integrated(const std::vector<std::string>& args/* = s
   );
 
   std::cout << std::endl << "Integrated address: " << integratedAddress << std::endl << std::endl;
-
   return true;
 }
 
-/* ---------------------------------------------------------------------------------------- */
+/* This changes the wallet password */
+bool simple_wallet::change_password(const std::vector<std::string>& args) {
+  std::cout << "Old password: ";
+  m_consoleHandler.pause();
+  if (!pwd_container.read_and_validate()) {
+    std::cout << "Incorrect password!" << std::endl;
+    m_consoleHandler.unpause();
+    return false;
+  }
+  const auto oldpwd = pwd_container.password();
 
+  std::cout << "New password: ";
+  pwd_container.read_password(true);
+  const auto newpwd = pwd_container.password();
+  m_consoleHandler.unpause();
 
+  try
+	{
+		m_wallet->changePassword(oldpwd, newpwd);
+	}
+	catch (const std::exception& e) {
+		fail_msg_writer() << "Unsuccesful password change: " << e.what();
+		return false;
+	}
+	success_msg_writer(true) << "New password set.";
+	return true;
+}
+
+/* This shows all the private keys of the current wallet, including
+   the mnemonic seed if the it the wallet is deterministic */
 bool simple_wallet::export_keys(const std::vector<std::string>& args/* = std::vector<std::string>()*/) {
   AccountKeys keys;
   m_wallet->getAccountKeys(keys);
-
   std::string secretKeysData = std::string(reinterpret_cast<char*>(&keys.spendSecretKey), sizeof(keys.spendSecretKey)) + std::string(reinterpret_cast<char*>(&keys.viewSecretKey), sizeof(keys.viewSecretKey));
   std::string guiKeys = Tools::Base58::encode_addr(CryptoNote::parameters::CRYPTONOTE_PUBLIC_ADDRESS_BASE58_PREFIX, secretKeysData);
-
   std::cout << std::endl << "Spend secret key: " << Common::podToHex(keys.spendSecretKey) << std::endl;
   std::cout << "View secret key: " <<  Common::podToHex(keys.viewSecretKey) << std::endl;
   std::cout << "GUI key: " <<  guiKeys << std::endl;
-
   Crypto::PublicKey unused_dummy_variable;
   Crypto::SecretKey deterministic_private_view_key;
-
   AccountBase::generateViewFromSpend(keys.spendSecretKey, deterministic_private_view_key, unused_dummy_variable);
-
   bool deterministic_private_keys = deterministic_private_view_key == keys.viewSecretKey;
 
-/* dont show a mnemonic seed if it is an old non-deterministic wallet */
+  /* dont show a mnemonic seed if it is an old non-deterministic wallet */
   if (deterministic_private_keys) {
     std::cout << "Mnemonic seed: " << generate_mnemonic(keys.spendSecretKey) << std::endl << std::endl;
   }
