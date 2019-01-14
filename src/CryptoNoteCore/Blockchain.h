@@ -184,6 +184,8 @@ namespace CryptoNote {
       }
     };
 
+bool rollbackBlockchainTo(uint32_t height);
+
   private:
 
     struct MultisignatureOutputUsage {
@@ -308,7 +310,8 @@ namespace CryptoNote {
     void popTransaction(const Transaction& transaction, const Crypto::Hash& transactionHash);
     void popTransactions(const BlockEntry& block, const Crypto::Hash& minerTransactionHash);
     bool validateInput(const MultisignatureInput& input, const Crypto::Hash& transactionHash, const Crypto::Hash& transactionPrefixHash, const std::vector<Crypto::Signature>& transactionSignatures);
-
+    bool removeLastBlock();
+    bool checkCheckpoints(uint32_t& lastValidCheckpointHeight);    
     bool storeBlockchainIndices();
     bool loadBlockchainIndices();
 

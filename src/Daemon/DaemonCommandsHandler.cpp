@@ -27,6 +27,7 @@ DaemonCommandsHandler::DaemonCommandsHandler(CryptoNote::core& core, CryptoNote:
   m_consoleHandler.setHandler("exit", boost::bind(&DaemonCommandsHandler::exit, this, _1), "Shutdown the daemon");
   m_consoleHandler.setHandler("help", boost::bind(&DaemonCommandsHandler::help, this, _1), "Show this help");
   m_consoleHandler.setHandler("print_pl", boost::bind(&DaemonCommandsHandler::print_pl, this, _1), "Print peer list");
+  m_consoleHandler.setHandler("rollback_chain", boost::bind(&DaemonCommandsHandler::rollback_chain, this, _1), "Rollback chain to specific height, rollback_chain <height>");
   m_consoleHandler.setHandler("print_cn", boost::bind(&DaemonCommandsHandler::print_cn, this, _1), "Print connections");
   m_consoleHandler.setHandler("print_bc", boost::bind(&DaemonCommandsHandler::print_bc, this, _1), "Print blockchain info in a given blocks range, print_bc <begin_height> [<end_height>]");
   m_consoleHandler.setHandler("print_block", boost::bind(&DaemonCommandsHandler::print_block, this, _1), "Print block, print_block <block_hash> | <block_height>");
@@ -191,6 +192,26 @@ bool DaemonCommandsHandler::print_block_by_height(uint32_t height)
     return false;
   }
 
+  return true;
+}
+
+//--------------------------------------------------------------------------------
+bool DaemonCommandsHandler::rollback_chain(const std::vector<std::string> &args) {
+  if (args.empty()) {
+    std::cout << "expected: rollback_chain <block_height>" << std::endl;
+    return true;
+  }
+
+  const std::string &arg = args.front();
+  uint32_t height = boost::lexical_cast<uint32_t>(arg);
+  rollbackchainto(height);
+  return true;
+}
+
+//--------------------------------------------------------------------------------
+bool DaemonCommandsHandler::rollbackchainto(uint32_t height)
+{
+  m_core.rollback_chain_to(height);
   return true;
 }
 //--------------------------------------------------------------------------------
