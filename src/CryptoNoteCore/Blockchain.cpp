@@ -457,6 +457,15 @@ bool Blockchain::init(const std::string& config_folder, bool load_existing) {
     }
   }
 
+  /* If the currrent checkpoint is invalid, then rollback the chain to the last 
+     valid checkpoint and try again. */
+  uint32_t lastValidCheckpointHeight = 0;
+  if (!checkCheckpoints(lastValidCheckpointHeight)) {
+    logger(WARNING, BRIGHT_YELLOW) << "Invalid checkpoint. Rollback blockchain to last valid checkpoint at height " << lastValidCheckpointHeight;
+    rollbackBlockchainTo(lastValidCheckpointHeight);
+  }
+
+
   if (!m_upgradeDetectorV2.init()) {
     logger(ERROR, BRIGHT_RED) << "<< Blockchain.cpp << " << "Failed to initialize upgrade detector";
     return false;
