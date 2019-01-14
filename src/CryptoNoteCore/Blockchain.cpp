@@ -496,6 +496,23 @@ bool Blockchain::init(const std::string& config_folder, bool load_existing) {
   return true;
 }
 
+bool Blockchain::checkCheckpoints(uint32_t& lastValidCheckpointHeight) {
+  std::vector<uint32_t> checkpointHeights = m_checkpoints.getCheckpointHeights();
+  for (const auto& checkpointHeight : checkpointHeights) {
+    if (m_blocks.size() <= checkpointHeight) {
+      return true;
+    }
+
+    if(m_checkpoints.check_block(checkpointHeight, getBlockIdByHeight(checkpointHeight))) {
+      lastValidCheckpointHeight = checkpointHeight;
+    } else {
+      return false;
+    }
+  }
+
+  return true;
+}
+
 void Blockchain::rebuildCache() {
   logger(INFO, BRIGHT_WHITE) << "<< Blockchain.cpp << " << "Rebuilding cache";
 
