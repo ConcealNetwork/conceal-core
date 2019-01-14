@@ -135,6 +135,7 @@ private:
   uint64_t calculateActualInvestmentBalance();
   uint64_t calculatePendingDepositBalance();
   uint64_t calculatePendingInvestmentBalance();  
+  uint64_t dustBalance();
 
   uint64_t calculateActualBalance();
   uint64_t calculatePendingBalance();
