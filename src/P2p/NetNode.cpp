@@ -31,6 +31,7 @@
 #include "Common/Util.h"
 #include "crypto/crypto.h"
 
+#include <CryptoNoteConfig.h>
 #include "ConnectionContext.h"
 #include "LevinProtocol.h"
 #include "P2pProtocolDefinitions.h"
@@ -564,40 +565,24 @@ namespace CryptoNote
     COMMAND_HANDSHAKE::response rsp;
     get_local_node_data(arg.node_data);
     m_payload_handler.get_payload_sync_data(arg.payload_data);
-	/*
-	auto logArgAndResp = [this,arg,rsp]() {
-		logger(Logging::TRACE) << "HANDSHAKE COMM DETAILS " <<
-			"arg.node_data.local_time=" << arg.node_data.local_time << ", " <<
-			"arg.node_data.my_port=" << arg.node_data.my_port << ", " <<
-			"arg.node_data.network_id=" << arg.node_data.network_id << ", " <<
-			"arg.node_data.peer_id=" << arg.node_data.peer_id << ", " <<
-			"arg.node_data.version=" << static_cast<uint32_t>(arg.node_data.version) << "; " <<
-			"arg.payload_data.current_height=" << arg.payload_data.current_height << ", " <<
-			"arg.payload_data.top_id=" << Common::podToHex(arg.payload_data.top_id) << "; " <<
-			"rsp.node_data.local_time=" << rsp.node_data.local_time << ", " <<
-			"rsp.node_data.my_port=" << rsp.node_data.my_port << ", " <<
-			"rsp.node_data.network_id=" << rsp.node_data.network_id << ", " <<
-			"rsp.node_data.peer_id=" << rsp.node_data.peer_id << ", " <<
-			"rsp.node_data.version=" << static_cast<uint32_t>(rsp.node_data.version) << "; " <<
-			"rsp.payload_data.current_height=" << rsp.payload_data.current_height << ", " <<
-			"rsp.payload_data.top_id=" << Common::podToHex(rsp.payload_data.top_id) << "; ";
-	};
-	*/
 
     if (!proto.invoke(COMMAND_HANDSHAKE::ID, arg, rsp)) {
       logger(Logging::ERROR) << context << "Failed to invoke COMMAND_HANDSHAKE, closing connection.";
-	  //logArgAndResp();
       return false;
     }
-	//else {
-	//  logArgAndResp();
-	//}
 
     context.version = rsp.node_data.version;
 
     if (rsp.node_data.network_id != m_network_id) {
       logger(Logging::ERROR) << context << "COMMAND_HANDSHAKE Failed, wrong network!  (" << rsp.node_data.network_id << "), closing connection.";
       return false;
+    }
+
+    if (rsp.node_data.version < CryptoNote::P2P_MINIMUM_VERSION) {
+      logger(Logging::DEBUGGING) << context << "COMMAND_HANDSHAKE Failed, peer is wrong version! (" << std::to_string(rsp.node_data.version) << "), closing connection.";
+      return false;
+    } else if ((rsp.node_data.version - CryptoNote::P2P_CURRENT_VERSION) >= CryptoNote::P2P_UPGRADE_WINDOW) {
+      logger(Logging::WARNING) << context << "COMMAND_HANDSHAKE Warning, your software may be out of date. Please upgrare to the latest version.";
     }
 
     if (!handle_remote_peerlist(rsp.local_peerlist, rsp.node_data.local_time, context)) {
@@ -969,7 +954,7 @@ namespace CryptoNote
 
   bool NodeServer::get_local_node_data(basic_node_data& node_data)
   {
-    node_data.version = P2PProtocolVersion::CURRENT;
+    node_data.version = CryptoNote::P2P_CURRENT_VERSION;
     time_t local_time;
     time(&local_time);
     node_data.local_time = local_time;
@@ -1159,6 +1144,14 @@ namespace CryptoNote
       logger(Logging::INFO) << context << "WRONG NETWORK AGENT CONNECTED! id=" << arg.node_data.network_id;
       context.m_state = CryptoNoteConnectionContext::state_shutdown;
       return 1;
+    }
+
+    if (arg.node_data.version < CryptoNote::P2P_MINIMUM_VERSION) {
+      logger(Logging::DEBUGGING) << context << "UNSUPPORTED NETWORK AGENT VERSION CONNECTED! version=" << std::to_string(arg.node_data.version);
+      context.m_state = CryptoNoteConnectionContext::state_shutdown;
+      return 1;
+    } else if (arg.node_data.version > CryptoNote::P2P_CURRENT_VERSION) {
+      logger(Logging::WARNING) << context << "Warning, your software may be out of date. Please upgrare to the latest version.";
     }
 
     if(!context.m_is_income) {
