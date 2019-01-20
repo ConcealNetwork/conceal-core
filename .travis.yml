@@ -1,0 +1,20 @@
+sudo: true
+
+language: cpp
+
+matrix:
+    include:
+    - os: linux
+      addons:
+        apt:
+            sources:
+            - ubuntu-toolchain-r-test
+            packages:
+            - g++-4.9
+            - libboost1.55-all-dev
+            
+script:
+    - mkdir build
+    - cd build
+    - cmake ..
+    - make
