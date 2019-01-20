@@ -1,5 +1,8 @@
 ![image](https://github.com/ConcealNetwork/conceal-assets/blob/master/splash.png)
 
+#### Master Build Status
+[![Build Status](https://travis-ci.org/ConcealNetwork/conceal-core.svg?branch=master)](https://travis-ci.org/ConcealNetwork/conceal-core)
+
 # Conceal Core (CLI)
 Latest Release: v5.1.9
 Maintained by The Circle Team.
