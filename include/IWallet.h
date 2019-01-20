@@ -138,6 +138,7 @@ public:
   virtual std::string createAddress(const Crypto::PublicKey& spendPublicKey) = 0;
   virtual void deleteAddress(const std::string& address) = 0;
 
+
   virtual uint64_t getActualBalance() const = 0;
   virtual uint64_t getActualBalance(const std::string& address) const = 0;
   virtual uint64_t getPendingBalance() const = 0;

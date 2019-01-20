@@ -12,109 +12,104 @@
 namespace CryptoNote {
 namespace parameters {
 
-const uint64_t CRYPTONOTE_MAX_BLOCK_NUMBER			= 500000000;
-const size_t   CRYPTONOTE_MAX_BLOCK_BLOB_SIZE			= 500000000;
-const size_t   CRYPTONOTE_MAX_TX_SIZE				= 1000000000;
-const uint64_t CRYPTONOTE_PUBLIC_ADDRESS_BASE58_PREFIX		= 0x7ad4; // addresses start with "ccx7"
-const size_t   CRYPTONOTE_MINED_MONEY_UNLOCK_WINDOW		= 10; // 20m unlock
-const uint64_t CRYPTONOTE_BLOCK_FUTURE_TIME_LIMIT		= 60 * 60 * 2; // was 2 hours, not 3 * T
-const uint64_t CRYPTONOTE_BLOCK_FUTURE_TIME_LIMIT_V1	= 360; // LWMA3
-const uint64_t CRYPTONOTE_DEFAULT_TX_SPENDABLE_AGE		= 10; // 20m unlock
+const uint64_t CRYPTONOTE_MAX_BLOCK_NUMBER													= 500000000;
+const size_t   CRYPTONOTE_MAX_BLOCK_BLOB_SIZE												= 500000000;
+const size_t   CRYPTONOTE_MAX_TX_SIZE														= 1000000000;
+const uint64_t CRYPTONOTE_PUBLIC_ADDRESS_BASE58_PREFIX										= 0x7ad4; /* ccx7 address prefix */
+const size_t   CRYPTONOTE_MINED_MONEY_UNLOCK_WINDOW											= 10; /* 20 minutes */
+const uint64_t CRYPTONOTE_BLOCK_FUTURE_TIME_LIMIT											= 60 * 60 * 2; /* two hours */
+const uint64_t CRYPTONOTE_BLOCK_FUTURE_TIME_LIMIT_V1										= 360; /* changed for LWMA3 */
+const uint64_t CRYPTONOTE_DEFAULT_TX_SPENDABLE_AGE											= 10; /* 20 minutes */
 
-const size_t   BLOCKCHAIN_TIMESTAMP_CHECK_WINDOW		= 30;
-const size_t   BLOCKCHAIN_TIMESTAMP_CHECK_WINDOW_V1		= 11; // LWMA3
+const size_t   BLOCKCHAIN_TIMESTAMP_CHECK_WINDOW											= 30;
+const size_t   BLOCKCHAIN_TIMESTAMP_CHECK_WINDOW_V1											= 11; /* changed for LWMA3 */
 
-const uint64_t MONEY_SUPPLY					= UINT64_C(200000000000000); // max supply: 200M (Consensus II)
+const uint64_t MONEY_SUPPLY																	= UINT64_C(200000000000000); /* max supply: 200M (Consensus II) */
 
-const uint32_t ZAWY_DIFFICULTY_BLOCK_INDEX			= 0;
-const size_t   ZAWY_DIFFICULTY_FIX				= 1;
-const uint8_t  ZAWY_DIFFICULTY_BLOCK_VERSION			= 0;
+const uint32_t ZAWY_DIFFICULTY_BLOCK_INDEX													= 0;
+const size_t   ZAWY_DIFFICULTY_FIX															= 1;
+const uint8_t  ZAWY_DIFFICULTY_BLOCK_VERSION												= 0;
 
-const size_t   CRYPTONOTE_REWARD_BLOCKS_WINDOW			= 100;
-const size_t   CRYPTONOTE_BLOCK_GRANTED_FULL_REWARD_ZONE	= 100000; // size of block (bytes): after which reward is calculated using block size
-const size_t   CRYPTONOTE_COINBASE_BLOB_RESERVED_SIZE		= 600;
-const size_t   CRYPTONOTE_DISPLAY_DECIMAL_POINT			= 6;
+const size_t   CRYPTONOTE_REWARD_BLOCKS_WINDOW												= 100;
+const size_t   CRYPTONOTE_BLOCK_GRANTED_FULL_REWARD_ZONE									= 100000; /* size of block in bytes, after which reward is calculated using block size */
+const size_t   CRYPTONOTE_COINBASE_BLOB_RESERVED_SIZE										= 600;
+const size_t   CRYPTONOTE_DISPLAY_DECIMAL_POINT												= 6;
 
-// COIN - number of smallest units in one coin
-const uint64_t POINT						= UINT64_C(1000);     // pow(10, 3)
-const uint64_t COIN						= UINT64_C(1000000);  // pow(10, 6)
-const uint64_t MINIMUM_FEE					= UINT64_C(10);       // pow(10, 1)
-const uint64_t MINIMUM_FEE_V1					= UINT64_C(100);       // fee increase 
-const uint64_t MINIMUM_FEE_BANKING					= UINT64_C(1000);       // fee increase 
-const uint64_t DEFAULT_DUST_THRESHOLD				= UINT64_C(10);       // pow(10, 1)
+const uint64_t POINT																		= UINT64_C(1000); 
+const uint64_t COIN																			= UINT64_C(1000000); /* smallest atomic unit */
+const uint64_t MINIMUM_FEE																	= UINT64_C(10); /* 0.000010 CCX */
+const uint64_t MINIMUM_FEE_V1																= UINT64_C(100); /* 0.000100 CCX */
+const uint64_t MINIMUM_FEE_BANKING															= UINT64_C(1000); /* 0.001000 CCX */
+const uint64_t DEFAULT_DUST_THRESHOLD														= UINT64_C(10); /* 0.000010 CCX */  
 
-const uint64_t DIFFICULTY_TARGET				= 120; // seconds = 2m
-const uint64_t EXPECTED_NUMBER_OF_BLOCKS_PER_DAY		= 24 * 60 * 60 / DIFFICULTY_TARGET;
-const size_t   DIFFICULTY_WINDOW				= EXPECTED_NUMBER_OF_BLOCKS_PER_DAY; // blocks
-const size_t   DIFFICULTY_WINDOW_V1				= DIFFICULTY_WINDOW;
-const size_t   DIFFICULTY_WINDOW_V2				= DIFFICULTY_WINDOW;
-const size_t   DIFFICULTY_WINDOW_V3				= 60; // LWMA3
-const size_t   DIFFICULTY_BLOCKS_COUNT			= DIFFICULTY_WINDOW_V3 + 1; // LWMA3
-const size_t   DIFFICULTY_CUT					= 60; // timestamps to cut after sorting
-const size_t   DIFFICULTY_CUT_V1				= DIFFICULTY_CUT;
-const size_t   DIFFICULTY_CUT_V2				= DIFFICULTY_CUT;
-const size_t   DIFFICULTY_LAG					= 15; 
-const size_t   DIFFICULTY_LAG_V1				= DIFFICULTY_LAG;
-const size_t   DIFFICULTY_LAG_V2				= DIFFICULTY_LAG;
+const uint64_t DIFFICULTY_TARGET															= 120; /* two minutes */
+const uint64_t EXPECTED_NUMBER_OF_BLOCKS_PER_DAY											= 24 * 60 * 60 / DIFFICULTY_TARGET; /* 720 blocks */
+const size_t   DIFFICULTY_WINDOW															= EXPECTED_NUMBER_OF_BLOCKS_PER_DAY; 	
+const size_t   DIFFICULTY_WINDOW_V1															= DIFFICULTY_WINDOW;
+const size_t   DIFFICULTY_WINDOW_V2															= DIFFICULTY_WINDOW;
+const size_t   DIFFICULTY_WINDOW_V3															= 60; /* changed for LWMA3 */
+const size_t   DIFFICULTY_BLOCKS_COUNT														= DIFFICULTY_WINDOW_V3 + 1; /* added for LWMA3 */
+const size_t   DIFFICULTY_CUT																= 60; /* timestamps to cut after sorting */
+const size_t   DIFFICULTY_CUT_V1															= DIFFICULTY_CUT;
+const size_t   DIFFICULTY_CUT_V2															= DIFFICULTY_CUT;
+const size_t   DIFFICULTY_LAG																= 15; 
+const size_t   DIFFICULTY_LAG_V1															= DIFFICULTY_LAG;
+const size_t   DIFFICULTY_LAG_V2															= DIFFICULTY_LAG;
 
 static_assert(2 * DIFFICULTY_CUT <= DIFFICULTY_WINDOW - 2, "Bad DIFFICULTY_WINDOW or DIFFICULTY_CUT");
 
-const uint64_t DEPOSIT_MIN_AMOUNT				= 1 * COIN; // minimun mmount for a valid deposit
-const uint32_t DEPOSIT_MIN_TERM					= 5040; // ~1 week
-const uint32_t DEPOSIT_MAX_TERM					= 1 * 12 * 21900; // ~1 year
-const uint32_t DEPOSIT_MAX_TERM_V1					= 64800 * 20; // ~5 year
-const uint64_t DEPOSIT_MIN_TOTAL_RATE_FACTOR			= 0; // rate is constant
-const uint64_t DEPOSIT_MAX_TOTAL_RATE				= 4; // percentage rate for DEPOSIT_MAX_TERM
+const uint64_t DEPOSIT_MIN_AMOUNT															= 1 * COIN; 
+const uint32_t DEPOSIT_MIN_TERM																= 5040; /* one week */	
+const uint32_t DEPOSIT_MAX_TERM																= 1 * 12 * 21900; /* legacy deposts - one year */
+const uint32_t DEPOSIT_MAX_TERM_V1															= 64800 * 20; /* five years */
+const uint64_t DEPOSIT_MIN_TOTAL_RATE_FACTOR												= 0; /* constant rate */
+const uint64_t DEPOSIT_MAX_TOTAL_RATE														= 4; /* legacy deposits */
 
 static_assert(DEPOSIT_MIN_TERM > 0, "Bad DEPOSIT_MIN_TERM");
 static_assert(DEPOSIT_MIN_TERM <= DEPOSIT_MAX_TERM, "Bad DEPOSIT_MAX_TERM");
 static_assert(DEPOSIT_MIN_TERM * DEPOSIT_MAX_TOTAL_RATE > DEPOSIT_MIN_TOTAL_RATE_FACTOR, "Bad DEPOSIT_MIN_TOTAL_RATE_FACTOR or DEPOSIT_MAX_TOTAL_RATE");
 
-const uint64_t MULTIPLIER_FACTOR				= 100;
-const uint32_t END_MULTIPLIER_BLOCK				= 12750;
+const uint64_t MULTIPLIER_FACTOR															= 100; /* legacy deposits */
+const uint32_t END_MULTIPLIER_BLOCK															= 12750; /* legacy deposits */
 
-const size_t   MAX_BLOCK_SIZE_INITIAL				= CRYPTONOTE_BLOCK_GRANTED_FULL_REWARD_ZONE * 10;
-const uint64_t MAX_BLOCK_SIZE_GROWTH_SPEED_NUMERATOR		= 100 * 1024;
-const uint64_t MAX_BLOCK_SIZE_GROWTH_SPEED_DENOMINATOR		= 365 * 24 * 60 * 60 / DIFFICULTY_TARGET;
+const size_t   MAX_BLOCK_SIZE_INITIAL														= CRYPTONOTE_BLOCK_GRANTED_FULL_REWARD_ZONE * 10;
+const uint64_t MAX_BLOCK_SIZE_GROWTH_SPEED_NUMERATOR										= 100 * 1024;
+const uint64_t MAX_BLOCK_SIZE_GROWTH_SPEED_DENOMINATOR										= 365 * 24 * 60 * 60 / DIFFICULTY_TARGET;
 
-const uint64_t CRYPTONOTE_LOCKED_TX_ALLOWED_DELTA_BLOCKS	= 1;
-const uint64_t CRYPTONOTE_LOCKED_TX_ALLOWED_DELTA_SECONDS	= DIFFICULTY_TARGET * CRYPTONOTE_LOCKED_TX_ALLOWED_DELTA_BLOCKS;
+const uint64_t CRYPTONOTE_LOCKED_TX_ALLOWED_DELTA_BLOCKS									= 1;
+const uint64_t CRYPTONOTE_LOCKED_TX_ALLOWED_DELTA_SECONDS									= DIFFICULTY_TARGET * CRYPTONOTE_LOCKED_TX_ALLOWED_DELTA_BLOCKS;
 
-const size_t   CRYPTONOTE_MAX_TX_SIZE_LIMIT			= (CRYPTONOTE_BLOCK_GRANTED_FULL_REWARD_ZONE / 4) - CRYPTONOTE_COINBASE_BLOB_RESERVED_SIZE;
-const size_t   CRYPTONOTE_OPTIMIZE_SIZE				= 100; // proportional to CRYPTONOTE_MAX_TX_SIZE_LIMIT
+const size_t   CRYPTONOTE_MAX_TX_SIZE_LIMIT													= (CRYPTONOTE_BLOCK_GRANTED_FULL_REWARD_ZONE / 4) - CRYPTONOTE_COINBASE_BLOB_RESERVED_SIZE; /* maximum transaction size */
+const size_t   CRYPTONOTE_OPTIMIZE_SIZE														= 100; /* proportional to CRYPTONOTE_MAX_TX_SIZE_LIMIT */
 
-const uint64_t CRYPTONOTE_MEMPOOL_TX_LIVETIME			= (60 * 60 * 12); // seconds, 12 hours
-const uint64_t CRYPTONOTE_MEMPOOL_TX_FROM_ALT_BLOCK_LIVETIME	= (60 * 60 * 24); // seconds, 1 day
-const uint64_t CRYPTONOTE_NUMBER_OF_PERIODS_TO_FORGET_TX_DELETED_FROM_POOL = 7; // CRYPTONOTE_NUMBER_OF_PERIODS_TO_FORGET_TX_DELETED_FROM_POOL * CRYPTONOTE_MEMPOOL_TX_LIVETIME = time to forget tx
+const uint64_t CRYPTONOTE_MEMPOOL_TX_LIVETIME												= (60 * 60 * 12); /* 12 hours in seconds */
+const uint64_t CRYPTONOTE_MEMPOOL_TX_FROM_ALT_BLOCK_LIVETIME								= (60 * 60 * 24); /* 23 hours in seconds */
+const uint64_t CRYPTONOTE_NUMBER_OF_PERIODS_TO_FORGET_TX_DELETED_FROM_POOL 					= 7; /* CRYPTONOTE_NUMBER_OF_PERIODS_TO_FORGET_TX_DELETED_FROM_POOL * CRYPTONOTE_MEMPOOL_TX_LIVETIME = time to forget tx */
 
-const size_t   FUSION_TX_MAX_SIZE				= CRYPTONOTE_MAX_TX_SIZE_LIMIT * 2;
-const size_t   FUSION_TX_MIN_INPUT_COUNT			= 12;
-const size_t   FUSION_TX_MIN_IN_OUT_COUNT_RATIO			= 4;
+const size_t   FUSION_TX_MAX_SIZE															= CRYPTONOTE_MAX_TX_SIZE_LIMIT * 2;
+const size_t   FUSION_TX_MIN_INPUT_COUNT													= 12;
+const size_t   FUSION_TX_MIN_IN_OUT_COUNT_RATIO												= 4;
 
-static constexpr uint64_t POISSON_CHECK_TRIGGER = 10;  // Reorg size that triggers poisson timestamp check
-static constexpr uint64_t POISSON_CHECK_DEPTH = 60;   // Main-chain depth of the poisson check. The attacker will have to tamper 50% of those blocks
-static constexpr double POISSON_LOG_P_REJECT = -75.0; // Reject reorg if the probablity that the timestamps are genuine is below e^x, -75 = 10^-33
-
-const uint64_t UPGRADE_HEIGHT					= 1;
-const uint64_t UPGRADE_HEIGHT_V2				= 1;
-const uint64_t UPGRADE_HEIGHT_V3				= 12750; // CN Fast fork
-const uint64_t UPGRADE_HEIGHT_V4				= 45000; // Mixin >2 fork
-const uint64_t UPGRADE_HEIGHT_V5				= 98160; // Deposits 2.0, Investments 1.0
-const uint64_t UPGRADE_HEIGHT_V6				= 104200; // LWMA3
-const unsigned UPGRADE_VOTING_THRESHOLD				= 90; // percent
-const size_t   UPGRADE_VOTING_WINDOW				= EXPECTED_NUMBER_OF_BLOCKS_PER_DAY; // blocks
-const size_t   UPGRADE_WINDOW					= EXPECTED_NUMBER_OF_BLOCKS_PER_DAY; // blocks
+const uint64_t UPGRADE_HEIGHT																= 1;
+const uint64_t UPGRADE_HEIGHT_V2															= 1;
+const uint64_t UPGRADE_HEIGHT_V3															= 12750; /* Cryptonight-Fast */
+const uint64_t UPGRADE_HEIGHT_V4															= 45000; /* MixIn 2 */
+const uint64_t UPGRADE_HEIGHT_V5															= 98160; /* Deposits 2.0, Investments 1.0 */
+const uint64_t UPGRADE_HEIGHT_V6															= 104200; /* LWMA3 */
+const unsigned UPGRADE_VOTING_THRESHOLD														= 90; // percent
+const size_t   UPGRADE_VOTING_WINDOW														= EXPECTED_NUMBER_OF_BLOCKS_PER_DAY; 
+const size_t   UPGRADE_WINDOW																= EXPECTED_NUMBER_OF_BLOCKS_PER_DAY; 
 
 static_assert(0 < UPGRADE_VOTING_THRESHOLD && UPGRADE_VOTING_THRESHOLD <= 100, "Bad UPGRADE_VOTING_THRESHOLD");
 static_assert(UPGRADE_VOTING_WINDOW > 1, "Bad UPGRADE_VOTING_WINDOW");
 
-const char     CRYPTONOTE_BLOCKS_FILENAME[]			= "blocks.dat";
-const char     CRYPTONOTE_BLOCKINDEXES_FILENAME[]		= "blockindexes.dat";
-const char     CRYPTONOTE_BLOCKSCACHE_FILENAME[]		= "blockscache.dat";
-const char     CRYPTONOTE_POOLDATA_FILENAME[]			= "poolstate.bin";
-const char     P2P_NET_DATA_FILENAME[]				= "p2pstate.bin";
-const char     CRYPTONOTE_BLOCKCHAIN_INDICES_FILENAME[]      	= "blockchainindices.dat";
-const char     MINER_CONFIG_FILE_NAME[]                      	= "miner_conf.json";
+const char     CRYPTONOTE_BLOCKS_FILENAME[]													= "blocks.dat";
+const char     CRYPTONOTE_BLOCKINDEXES_FILENAME[]											= "blockindexes.dat";
+const char     CRYPTONOTE_BLOCKSCACHE_FILENAME[]											= "blockscache.dat";
+const char     CRYPTONOTE_POOLDATA_FILENAME[]												= "poolstate.bin";
+const char     P2P_NET_DATA_FILENAME[]														= "p2pstate.bin";
+const char     CRYPTONOTE_BLOCKCHAIN_INDICES_FILENAME[]      								= "blockchainindices.dat";
+const char     MINER_CONFIG_FILE_NAME[]                      								= "miner_conf.json";
 
 } // parameters
 
@@ -147,7 +142,7 @@ const int      RPC_DEFAULT_PORT					= 16000;
 const size_t   P2P_LOCAL_WHITE_PEERLIST_LIMIT			= 1000;
 const size_t   P2P_LOCAL_GRAY_PEERLIST_LIMIT			= 5000;
 
-const size_t   P2P_CONNECTION_MAX_WRITE_BUFFER_SIZE		= 64 * 1024 * 1024; // 16MB
+const size_t   P2P_CONNECTION_MAX_WRITE_BUFFER_SIZE		= 64 * 1024 * 1024; // 64MB
 const uint32_t P2P_DEFAULT_CONNECTIONS_COUNT			= 8;
 const size_t   P2P_DEFAULT_WHITELIST_CONNECTIONS_PERCENT	= 70; // percent
 const uint32_t P2P_DEFAULT_HANDSHAKE_INTERVAL			= 60; // seconds
@@ -207,11 +202,12 @@ const std::initializer_list<CheckpointData> CHECKPOINTS = {
 		{115000, "6000e495db0cdf043f474949e3e708a8c670f99f1232711be4789fecffbfb4d8"},
 		{120000, "f621bd615716b75716eb89714d60481077a16b1df4046bf829f6d09b1c8e58a6"},
 		{125000, "0a783373ed67adbd3bc3904496e813bc481018e9f5a91681ff74416de0f805e4"},
-		{128844, "32995417568bdeb9c24ba9bbcfd6124882c8acae0fd10e9f8d052637bbafcc19"},
-		{128850, "7b8c9784d2639d61d41149095d4a9cd23ab579b780e42b45bc77863a457ac84e"},
 		{130000, "deb2514d03e2faf1c63b55f707b1524665ca4bd71cace3f4e8f0de58f32ecc41"},
 		{135000, "466d509486fe791b7af6d222c026eba29848b66302c6fd44dd26386d98acaa5a"},
-		{140000, "c439524c13187bb6008acb1e9999317aa44e8d1cd75c96faae78831f6b961bac"}
+		{140000, "c439524c13187bb6008acb1e9999317aa44e8d1cd75c96faae78831f6b961bac"},
+		{145000, "9e1c4319e40a2c61abc5d405399f2add93a1394d77eb8eeaf4115f41a06e1d7b"},
+		{150000, "90cc70379ea81d47df998e8b9928ba9191968035ae79ec1cb429c64a55497e03"},
+		{155000, "c2f913d25d0367927419c85d28c934bdc56cd8f951e638f1dc50c3a125def561"}
 };
 
 } // CryptoNote
