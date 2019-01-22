@@ -113,46 +113,46 @@ const char     MINER_CONFIG_FILE_NAME[]                      								= "miner_co
 
 } // parameters
 
-const uint64_t START_BLOCK_REWARD				= (UINT64_C(5000) * parameters::POINT); // start reward (Consensus I)
-const uint64_t FOUNDATION_TRUST					= (UINT64_C(12000000) * parameters::COIN); // locked funds to secure network  (Consensus II)
-const uint64_t MAX_BLOCK_REWARD					= (UINT64_C(20) * parameters::COIN); // max reward (Consensus I)
-const uint64_t REWARD_INCREASE_INTERVAL				= (UINT64_C(21900)); // aprox. 1 month (+ 0.25 CCX increment per month)
+const uint64_t START_BLOCK_REWARD															= (UINT64_C(5000) * parameters::POINT); /* (Consensus I) */
+const uint64_t FOUNDATION_TRUST																= (UINT64_C(12000000) * parameters::COIN); /* locked funds to secure network  (Consensus II) */
+const uint64_t MAX_BLOCK_REWARD																= (UINT64_C(20) * parameters::COIN); /* max reward (Consensus I) */
+const uint64_t REWARD_INCREASE_INTERVAL														= (UINT64_C(21900)); /* Approximately 1 month (+ 0.25 CCX increment per month) */
 
-const char     CRYPTONOTE_NAME[]                             	= "conceal";
-const char     GENESIS_COINBASE_TX_HEX[]			= "010a01ff0001c096b102029b2e4c0281c0b02e7c53291a94d1d0cbff8883f8024f5142ee494ffbbd08807121017d6775185749e95ac2d70cae3f29e0e46f430ab648abbe9fdc61d8e7437c60f8";
-const uint32_t GENESIS_NONCE                         	        = 10000;
-const uint64_t GENESIS_TIMESTAMP				= 1527078920;
+const char     CRYPTONOTE_NAME[]                             								= "conceal";
+const char     GENESIS_COINBASE_TX_HEX[]													= "010a01ff0001c096b102029b2e4c0281c0b02e7c53291a94d1d0cbff8883f8024f5142ee494ffbbd08807121017d6775185749e95ac2d70cae3f29e0e46f430ab648abbe9fdc61d8e7437c60f8";
+const uint32_t GENESIS_NONCE                         	        							= 10000;
+const uint64_t GENESIS_TIMESTAMP															= 1527078920;
 
-const uint8_t  TRANSACTION_VERSION_1				=  1;
-const uint8_t  TRANSACTION_VERSION_2				=  2;
-const uint8_t  BLOCK_MAJOR_VERSION_1				=  1; // (Consensus I)
-const uint8_t  BLOCK_MAJOR_VERSION_2				=  2; // (Consensus II)
-const uint8_t  BLOCK_MAJOR_VERSION_3				=  3; // (Consensus III)
-const uint8_t  BLOCK_MAJOR_VERSION_4				=  4; // LWMA3
-const uint8_t  BLOCK_MINOR_VERSION_0				=  0;
-const uint8_t  BLOCK_MINOR_VERSION_1				=  1;
+const uint8_t  TRANSACTION_VERSION_1														=  1;
+const uint8_t  TRANSACTION_VERSION_2														=  2;
+const uint8_t  BLOCK_MAJOR_VERSION_1														=  1; // (Consensus I)
+const uint8_t  BLOCK_MAJOR_VERSION_2														=  2; // (Consensus II)
+const uint8_t  BLOCK_MAJOR_VERSION_3														=  3; // (Consensus III)
+const uint8_t  BLOCK_MAJOR_VERSION_4														=  4; // LWMA3
+const uint8_t  BLOCK_MINOR_VERSION_0														=  0;
+const uint8_t  BLOCK_MINOR_VERSION_1														=  1;
 
-const size_t   BLOCKS_IDS_SYNCHRONIZING_DEFAULT_COUNT		= 10000; // by default, blocks ids count in synchronizing
-const size_t   BLOCKS_SYNCHRONIZING_DEFAULT_COUNT		= 128; // by default, blocks count in blocks downloading
-const size_t   COMMAND_RPC_GET_BLOCKS_FAST_MAX_COUNT		= 1000;
+const size_t   BLOCKS_IDS_SYNCHRONIZING_DEFAULT_COUNT										= 10000; // by default, blocks ids count in synchronizing
+const size_t   BLOCKS_SYNCHRONIZING_DEFAULT_COUNT											= 128; // by default, blocks count in blocks downloading
+const size_t   COMMAND_RPC_GET_BLOCKS_FAST_MAX_COUNT										= 1000;
 
-const int      P2P_DEFAULT_PORT					= 15000;
-const int      RPC_DEFAULT_PORT					= 16000;
+const int      P2P_DEFAULT_PORT																= 15000;
+const int      RPC_DEFAULT_PORT																= 16000;
 
-const size_t   P2P_LOCAL_WHITE_PEERLIST_LIMIT			= 1000;
-const size_t   P2P_LOCAL_GRAY_PEERLIST_LIMIT			= 5000;
+const size_t   P2P_LOCAL_WHITE_PEERLIST_LIMIT												= 1000;
+const size_t   P2P_LOCAL_GRAY_PEERLIST_LIMIT												= 5000;
 
-const size_t   P2P_CONNECTION_MAX_WRITE_BUFFER_SIZE		= 64 * 1024 * 1024; // 64MB
-const uint32_t P2P_DEFAULT_CONNECTIONS_COUNT			= 8;
-const size_t   P2P_DEFAULT_WHITELIST_CONNECTIONS_PERCENT	= 70; // percent
-const uint32_t P2P_DEFAULT_HANDSHAKE_INTERVAL			= 60; // seconds
-const uint32_t P2P_DEFAULT_PACKET_MAX_SIZE			= 50000000; // 50000000 bytes maximum packet size
-const uint32_t P2P_DEFAULT_PEERS_IN_HANDSHAKE			= 250;
-const uint32_t P2P_DEFAULT_CONNECTION_TIMEOUT			= 5000; // 5 seconds
-const uint32_t P2P_DEFAULT_PING_CONNECTION_TIMEOUT		= 2000; // 2 seconds
-const uint64_t P2P_DEFAULT_INVOKE_TIMEOUT			= 60 * 2 * 1000; // 2 minutes
-const size_t   P2P_DEFAULT_HANDSHAKE_INVOKE_TIMEOUT		= 5000; // 5 seconds
-const char     P2P_STAT_TRUSTED_PUB_KEY[]			= "f7061e9a5f0d30549afde49c9bfbaa52ac60afdc46304642b460a9ea34bf7a4e";
+const size_t   P2P_CONNECTION_MAX_WRITE_BUFFER_SIZE											= 64 * 1024 * 1024; // 64MB
+const uint32_t P2P_DEFAULT_CONNECTIONS_COUNT												= 8;
+const size_t   P2P_DEFAULT_WHITELIST_CONNECTIONS_PERCENT									= 70; // percent
+const uint32_t P2P_DEFAULT_HANDSHAKE_INTERVAL												= 60; // seconds
+const uint32_t P2P_DEFAULT_PACKET_MAX_SIZE													= 50000000; // 50000000 bytes maximum packet size
+const uint32_t P2P_DEFAULT_PEERS_IN_HANDSHAKE												= 250;
+const uint32_t P2P_DEFAULT_CONNECTION_TIMEOUT												= 5000; // 5 seconds
+const uint32_t P2P_DEFAULT_PING_CONNECTION_TIMEOUT											= 2000; // 2 seconds
+const uint64_t P2P_DEFAULT_INVOKE_TIMEOUT													= 60 * 2 * 1000; // 2 minutes
+const size_t   P2P_DEFAULT_HANDSHAKE_INVOKE_TIMEOUT											= 5000; // 5 seconds
+const char     P2P_STAT_TRUSTED_PUB_KEY[]													= "f7061e9a5f0d30549afde49c9bfbaa52ac60afdc46304642b460a9ea34bf7a4e";
 
 // Seed Nodes
 const std::initializer_list<const char*> SEED_NODES = {
