@@ -582,7 +582,7 @@ namespace CryptoNote
       logger(Logging::DEBUGGING) << context << "COMMAND_HANDSHAKE Failed, peer is wrong version! (" << std::to_string(rsp.node_data.version) << "), closing connection.";
       return false;
     } else if ((rsp.node_data.version - CryptoNote::P2P_CURRENT_VERSION) >= CryptoNote::P2P_UPGRADE_WINDOW) {
-      logger(Logging::WARNING) << context << "COMMAND_HANDSHAKE Warning, your software may be out of date. Please upgrare to the latest version.";
+      logger(Logging::WARNING) << context << "COMMAND_HANDSHAKE Warning, your software may be out of date. Please upgrade to the latest version.";
     }
 
     if (!handle_remote_peerlist(rsp.local_peerlist, rsp.node_data.local_time, context)) {
@@ -741,7 +741,7 @@ namespace CryptoNote
         });
 
         if (!handshakeContext.get()) {
-          logger(WARNING) << "Failed to HANDSHAKE with peer " << na;
+          logger(DEBUGGING) << "Failed to HANDSHAKE with peer " << na;
           return false;
         }
       } catch (System::InterruptedException&) {
