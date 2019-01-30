@@ -538,6 +538,12 @@ void P2pNode::handleNodeData(const basic_node_data& node, P2pContext& context) {
     throw std::runtime_error(msg.str());
   }
 
+  if (node.version < CryptoNote::P2P_MINIMUM_VERSION) { 
+    std::ostringstream msg;
+    msg << context << "COMMAND_HANDSHAKE Failed, peer is wrong version! (" << std::to_string(node.version) << ")";
+    throw std::runtime_error(msg.str());
+  }
+
   if (node.peer_id == m_myPeerId)  {
     throw std::runtime_error("Connection to self detected");
   }
