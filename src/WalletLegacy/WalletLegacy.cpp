@@ -5,10 +5,18 @@
 
 #include "WalletLegacy.h"
 
+#include <algorithm>
+#include <numeric>
+#include <random>
+#include <set>
+#include <tuple>
+#include <utility>
 #include <numeric>
 #include <string.h>
 #include <time.h>
 
+#include "crypto/crypto.h"
+#include "Common/ShuffleGenerator.h"
 #include "WalletLegacy/WalletHelper.h"
 #include "WalletLegacy/WalletLegacySerialization.h"
 #include "WalletLegacy/WalletLegacySerializer.h"
@@ -560,6 +568,25 @@ TransactionId WalletLegacy::sendTransaction(Crypto::SecretKey& transactionSK,
   }
 
   return txId;
+}
+
+size_t WalletLegacy::estimateFusion(const uint64_t& threshold) {
+  size_t fusionReadyCount = 0;
+  std::vector<TransactionOutputInformation> outputs;
+  m_transferDetails->getOutputs(outputs, ITransfersContainer::IncludeKeyUnlocked);
+  std::array<size_t, std::numeric_limits<uint64_t>::digits10 + 1> bucketSizes;
+  bucketSizes.fill(0);
+  for (auto& out : outputs) {
+    uint8_t powerOfTen = 0;
+    assert(powerOfTen < std::numeric_limits<uint64_t>::digits10 + 1);
+    bucketSizes[powerOfTen]++;
+  }
+  for (auto bucketSize : bucketSizes) {
+    if (bucketSize >= m_currency.fusionTxMinInputCount()) {
+      fusionReadyCount += bucketSize;
+    }
+  }
+  return fusionReadyCount;
 }
 
 TransactionId WalletLegacy::deposit(uint32_t term, uint64_t amount, uint64_t fee, uint64_t mixIn) {

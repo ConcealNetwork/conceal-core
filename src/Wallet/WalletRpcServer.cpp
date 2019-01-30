@@ -122,6 +122,7 @@ void wallet_rpc_server::processRequest(const CryptoNote::HttpRequest& request, C
       { "get_height", makeMemberMethod(&wallet_rpc_server::on_get_height) },
       { "get_outputs", makeMemberMethod(&wallet_rpc_server::on_get_outputs) },
       { "optimize", makeMemberMethod(&wallet_rpc_server::on_optimize) },
+      { "estimate_fusion"  , makeMemberMethod(&wallet_rpc_server::on_estimate_fusion)   },
       { "reset", makeMemberMethod(&wallet_rpc_server::on_reset) }
     };
 
@@ -259,6 +260,21 @@ bool wallet_rpc_server::on_optimize(const wallet_rpc::COMMAND_RPC_OPTIMIZE::requ
 
   } catch (const std::exception& e) {
     throw JsonRpc::JsonRpcError(WALLET_RPC_ERROR_CODE_GENERIC_TRANSFER_ERROR, e.what());
+  }
+  return true;
+}
+//------------------------------------------------------------------------------------------------------------------------------
+bool wallet_rpc_server::on_estimate_fusion(const wallet_rpc::COMMAND_RPC_ESTIMATE_FUSION::request& req, wallet_rpc::COMMAND_RPC_ESTIMATE_FUSION::response& res)
+{
+  if (req.threshold <= m_currency.defaultDustThreshold()) {
+    throw JsonRpc::JsonRpcError(WALLET_RPC_ERROR_CODE_UNKNOWN_ERROR, std::string("Fusion transaction threshold is too small. Threshold: " + 
+      m_currency.formatAmount(req.threshold)) + ", minimum threshold " + m_currency.formatAmount(m_currency.defaultDustThreshold() + 1));
+  }
+  try {
+    res.fusion_ready_count = m_wallet.estimateFusion(req.threshold);
+  }
+  catch (std::exception &e) {
+    throw JsonRpc::JsonRpcError(WALLET_RPC_ERROR_CODE_UNKNOWN_ERROR, std::string("Failed to estimate fusion ready count: ") + e.what());
   }
   return true;
 }

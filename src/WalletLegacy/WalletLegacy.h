@@ -91,6 +91,7 @@ public:
                                         uint64_t unlockTimestamp = 0,
                                         const std::vector<TransactionMessage>& messages = std::vector<TransactionMessage>(),
                                         uint64_t ttl = 0) override;
+  virtual size_t estimateFusion(const uint64_t& threshold);
   virtual TransactionId deposit(uint32_t term, uint64_t amount, uint64_t fee, uint64_t mixIn = 0) override;
   virtual TransactionId withdrawDeposits(const std::vector<DepositId>& depositIds, uint64_t fee) override;
   virtual std::error_code cancelTransaction(size_t transactionId) override;

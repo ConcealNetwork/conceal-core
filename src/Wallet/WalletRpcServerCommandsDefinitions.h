@@ -281,6 +281,28 @@ using CryptoNote::ISerializer;
     };
   };
 
+  struct COMMAND_RPC_ESTIMATE_FUSION
+  {
+    struct request
+    {
+      uint64_t threshold;
+
+      void serialize(ISerializer& s)
+      {
+        KV_MEMBER(threshold)
+      }
+    };
+
+    struct response
+    {
+      size_t fusion_ready_count;
+
+      void serialize(ISerializer& s) {
+        KV_MEMBER(fusion_ready_count)
+      }
+    };
+  };
+
   struct COMMAND_RPC_RESET {
     typedef CryptoNote::EMPTY_STRUCT request;
     typedef CryptoNote::EMPTY_STRUCT response;
