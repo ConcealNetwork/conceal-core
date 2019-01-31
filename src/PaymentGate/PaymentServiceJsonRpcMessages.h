@@ -383,4 +383,19 @@ struct EstimateFusion {
   };
 };
 
+struct SendFusionTransaction {
+  struct Request {
+    uint64_t threshold;
+    uint32_t mixin;
+
+    void serialize(CryptoNote::ISerializer& serializer);
+  };
+
+  struct Response {
+    std::string transactionHash;
+
+    void serialize(CryptoNote::ISerializer& serializer);
+  };
+};
+
 } //namespace PaymentService

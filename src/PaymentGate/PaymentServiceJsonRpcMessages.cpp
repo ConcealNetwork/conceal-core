@@ -321,4 +321,17 @@ void EstimateFusion::Response::serialize(CryptoNote::ISerializer& serializer) {
   serializer(totalOutputCount, "totalOutputCount");
 }
 
+void SendFusionTransaction::Request::serialize(CryptoNote::ISerializer& serializer) {
+  if (!serializer(threshold, "threshold")) {
+    throw RequestSerializationError();
+  }
+  if (!serializer(mixin, "mixin")) {
+    throw RequestSerializationError();
+  }
+}
+
+void SendFusionTransaction::Response::serialize(CryptoNote::ISerializer& serializer) {
+  serializer(transactionHash, "transactionHash");
+}
+
 }
