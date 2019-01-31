@@ -1367,9 +1367,11 @@ bool simple_wallet::create_integrated(const std::vector<std::string>& args/* = s
   CryptoNote::AccountPublicAddress addr;
 
   /* get the spend and view public keys from the address */
-  const bool valid = CryptoNote::parseAccountAddressString(prefix, 
-                                                          addr,
-                                                          address);
+  if(!CryptoNote::parseAccountAddressString(prefix, addr, address))
+  {
+    logger(ERROR, BRIGHT_RED) << "Failed to parse account address from string";
+    return true;
+  }
 
   CryptoNote::BinaryArray ba;
   CryptoNote::toBinaryArray(addr, ba);
@@ -1434,7 +1436,7 @@ bool simple_wallet::listTransfers(const std::vector<std::string>& args) {
   bool haveTransfers = false;
   bool haveBlockHeight = false;
   std::string blockHeightString = ""; 
-  int blockHeight;
+  uint blockHeight = 0;
   WalletLegacyTransaction txInfo;
 
 
@@ -1462,7 +1464,7 @@ bool simple_wallet::listTransfers(const std::vector<std::string>& args) {
       haveTransfers = true;
     }
 
-    if (haveBlockHeight = false) {
+    if (haveBlockHeight == false) {
       printListTransfersItem(logger, txInfo, *m_wallet, m_currency);
     } else {
       if (txInfo.blockHeight >= blockHeight) {
