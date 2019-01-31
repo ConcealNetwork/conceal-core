@@ -1367,9 +1367,11 @@ bool simple_wallet::create_integrated(const std::vector<std::string>& args/* = s
   CryptoNote::AccountPublicAddress addr;
 
   /* get the spend and view public keys from the address */
-  const bool valid = CryptoNote::parseAccountAddressString(prefix, 
-                                                          addr,
-                                                          address);
+  if(!CryptoNote::parseAccountAddressString(prefix, addr, address))
+  {
+    logger(ERROR, BRIGHT_RED) << "Failed to parse account address from string";
+    return true;
+  }
 
   CryptoNote::BinaryArray ba;
   CryptoNote::toBinaryArray(addr, ba);
