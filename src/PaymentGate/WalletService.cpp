@@ -1158,6 +1158,26 @@ std::error_code WalletService::estimateFusion(uint64_t threshold,
   return std::error_code();
 }
 
+std::error_code WalletService::sendFusionTransaction(uint64_t threshold, uint32_t mixin, std::string& transactionHash) {
+
+  try {
+    System::EventLock lk(readyEvent);
+
+    size_t transactionId = fusionManager.createFusionTransaction(threshold, mixin);
+    transactionHash = Common::podToHex(wallet.getTransaction(transactionId).hash);
+
+    logger(Logging::DEBUGGING) << "Fusion transaction " << transactionHash << " has been sent";
+  } catch (std::system_error& x) {
+    logger(Logging::WARNING, Logging::BRIGHT_YELLOW) << "Error while sending fusion transaction: " << x.what();
+    return x.code();
+  } catch (std::exception& x) {
+    logger(Logging::WARNING, Logging::BRIGHT_YELLOW) << "Error while sending fusion transaction: " << x.what();
+    return make_error_code(CryptoNote::error::INTERNAL_WALLET_ERROR);
+  }
+
+  return std::error_code();
+}
+
 void WalletService::reset() {
   PaymentService::secureSaveWallet(wallet, config.walletFile, false, false);
   wallet.stop();

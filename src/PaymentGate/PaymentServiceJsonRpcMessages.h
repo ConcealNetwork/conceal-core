@@ -368,4 +368,19 @@ struct GetMessagesFromExtra {
   };
 };
 
+struct EstimateFusion {
+  struct Request {
+    uint64_t threshold;
+
+    void serialize(CryptoNote::ISerializer& serializer);
+  };
+
+  struct Response {
+    uint32_t fusionReadyCount;
+    uint32_t totalOutputCount;
+
+    void serialize(CryptoNote::ISerializer& serializer);
+  };
+};
+
 } //namespace PaymentService

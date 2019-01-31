@@ -310,4 +310,15 @@ void GetMessagesFromExtra::Response::serialize(CryptoNote::ISerializer& serializ
   serializer(messages, "messages");
 }
 
+void EstimateFusion::Request::serialize(CryptoNote::ISerializer& serializer) {
+  if (!serializer(threshold, "threshold")) {
+    throw RequestSerializationError();
+  }
+}
+
+void EstimateFusion::Response::serialize(CryptoNote::ISerializer& serializer) {
+  serializer(fusionReadyCount, "fusionReadyCount");
+  serializer(totalOutputCount, "totalOutputCount");
+}
+
 }
