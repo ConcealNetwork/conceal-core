@@ -19,6 +19,7 @@
 #include "Rpc/RpcServer.h"
 #include "PaymentGate/WalletFactory.h"
 #include <System/Context.h>
+#include "Wallet/WalletGreen.h"
 
 #ifdef ERROR
 #undef ERROR
@@ -221,9 +222,9 @@ void PaymentGateService::runWalletService(const CryptoNote::Currency& currency, 
     config.gateConfiguration.containerPassword
   };
 
-  std::unique_ptr<CryptoNote::IWallet> wallet (WalletFactory::createWallet(currency, node, *dispatcher));
+  std::unique_ptr<CryptoNote::WalletGreen> wallet(new CryptoNote::WalletGreen(*dispatcher, currency, node));
 
-  service = new PaymentService::WalletService(currency, *dispatcher, node, *wallet, walletConfiguration, logger);
+  service = new PaymentService::WalletService(currency, *dispatcher, node, *wallet, *wallet, walletConfiguration, logger);
   std::unique_ptr<PaymentService::WalletService> serviceGuard(service);
   try {
     service->init();
