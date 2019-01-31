@@ -1,0 +1,11 @@
+os: Visual Studio 2017
+
+environment:
+    BOOST_ROOT: C:\Libraries\boost_1_67_0
+    BOOST_LIBRARYDIR: C:\Libraries\boost_1_67_0\lib64-msvc-14
+
+build_script:
+    - md build
+    - cd build
+    - cmake -G "Visual Studio 15 2017 Win64" ..
+    - MSBuild concealX.sln /p:Configuration=Release /m
