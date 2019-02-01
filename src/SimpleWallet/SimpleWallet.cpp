@@ -12,6 +12,7 @@
 #include <thread>
 #include <set>
 #include <sstream>
+#include <regex>
 
 #include <boost/bind.hpp>
 #include <boost/lexical_cast.hpp>
@@ -650,6 +651,8 @@ simple_wallet::simple_wallet(System::Dispatcher& dispatcher, const CryptoNote::C
   m_consoleHandler.setHandler("create_integrated", boost::bind(&simple_wallet::create_integrated, this, _1), "create_integrated <payment_id> - Create an integrated address with a payment ID");
   m_consoleHandler.setHandler("export_keys", boost::bind(&simple_wallet::export_keys, this, _1), "Show the secret keys of the current wallet");
   m_consoleHandler.setHandler("balance", boost::bind(&simple_wallet::show_balance, this, _1), "Show current wallet balance");
+  m_consoleHandler.setHandler("sign_message", boost::bind(&simple_wallet::sign_message, this, _1), "Sign a message with your wallet keys");
+  m_consoleHandler.setHandler("verify_signature", boost::bind(&simple_wallet::verify_signature, this, _1), "Verify a signed message");
   m_consoleHandler.setHandler("incoming_transfers", boost::bind(&simple_wallet::show_incoming_transfers, this, _1), "Show incoming transfers");
   m_consoleHandler.setHandler("list_transfers", boost::bind(&simple_wallet::listTransfers, this, _1), "list_transfers <height> - Show all known transfers from a certain (optional) block height");
   m_consoleHandler.setHandler("payments", boost::bind(&simple_wallet::show_payments, this, _1), "payments <payment_id_1> [<payment_id_2> ... <payment_id_N>] - Show payments <payment_id_1>, ... <payment_id_N>");
@@ -1286,6 +1289,63 @@ bool simple_wallet::show_balance(const std::vector<std::string>& args/* = std::v
   return true;
 }
 
+bool simple_wallet::sign_message(const std::vector<std::string>& args)
+{
+  if(args.size() < 1)
+  {
+    fail_msg_writer() << "Use: sign_message <message>";
+    return true;
+  }
+    
+  AccountKeys keys;
+  m_wallet->getAccountKeys(keys);
+
+  Crypto::Hash message_hash;
+  Crypto::Signature sig;
+  Crypto::cn_fast_hash(args[0].data(), args[0].size(), message_hash);
+  Crypto::generate_signature(message_hash, keys.address.spendPublicKey, keys.spendSecretKey, sig);
+  
+  success_msg_writer() << "Sig" << Tools::Base58::encode(std::string(reinterpret_cast<char*>(&sig)));
+
+  return true;	
+}
+
+bool simple_wallet::verify_signature(const std::vector<std::string>& args)
+{
+  if (args.size() != 3)
+  {
+    fail_msg_writer() << "Use: verify_signature <message> <address> <signature>";
+    return true;
+  }
+  
+  std::string encodedSig = args[2];
+  const size_t prefix_size = strlen("Sig");
+  
+  if(encodedSig.substr(0, prefix_size) != "Sig")
+  {
+    fail_msg_writer() << "Invalid signature prefix";
+    return true;
+  } 
+  
+  Crypto::Hash message_hash;
+  Crypto::cn_fast_hash(args[0].data(), args[0].size(), message_hash);
+  
+  std::string decodedSig;
+  Crypto::Signature sig;
+  Tools::Base58::decode(encodedSig.substr(prefix_size), decodedSig);
+  memcpy(&sig, decodedSig.data(), sizeof(sig));
+  
+  uint64_t prefix;
+  CryptoNote::AccountPublicAddress addr;
+  CryptoNote::parseAccountAddressString(prefix, addr, args[1]);
+  
+  if(Crypto::check_signature(message_hash, addr.spendPublicKey, sig))
+    success_msg_writer() << "Valid";
+  else
+    success_msg_writer() << "Invalid";
+  return true;
+}
+
 /* ------------------------------------------------------------------------------------------- */
 
 /* CREATE INTEGRATED ADDRESS */
@@ -1303,14 +1363,23 @@ bool simple_wallet::create_integrated(const std::vector<std::string>& args/* = s
   }
 
   std::string paymentID = args[0];
+  std::regex hexChars("^[0-9a-f]+$");
+  if(paymentID.size() != 64 || !regex_match(paymentID, hexChars))
+  {
+    fail_msg_writer() << "Invalid payment ID";
+    return true;
+  }
+
   std::string address = m_wallet->getAddress();
   uint64_t prefix;
   CryptoNote::AccountPublicAddress addr;
 
   /* get the spend and view public keys from the address */
-  const bool valid = CryptoNote::parseAccountAddressString(prefix, 
-                                                          addr,
-                                                          address);
+  if(!CryptoNote::parseAccountAddressString(prefix, addr, address))
+  {
+    logger(ERROR, BRIGHT_RED) << "Failed to parse account address from string";
+    return true;
+  }
 
   CryptoNote::BinaryArray ba;
   CryptoNote::toBinaryArray(addr, ba);
@@ -1375,7 +1444,7 @@ bool simple_wallet::listTransfers(const std::vector<std::string>& args) {
   bool haveTransfers = false;
   bool haveBlockHeight = false;
   std::string blockHeightString = ""; 
-  int blockHeight;
+  uint32_t blockHeight = 0;
   WalletLegacyTransaction txInfo;
 
 
@@ -1403,7 +1472,7 @@ bool simple_wallet::listTransfers(const std::vector<std::string>& args) {
       haveTransfers = true;
     }
 
-    if (haveBlockHeight = false) {
+    if (haveBlockHeight == false) {
       printListTransfersItem(logger, txInfo, *m_wallet, m_currency);
     } else {
       if (txInfo.blockHeight >= blockHeight) {
