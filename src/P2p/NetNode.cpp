@@ -31,6 +31,7 @@
 #include "Common/Util.h"
 #include "crypto/crypto.h"
 
+#include <CryptoNoteConfig.h>
 #include "ConnectionContext.h"
 #include "LevinProtocol.h"
 #include "P2pProtocolDefinitions.h"
@@ -564,44 +565,28 @@ namespace CryptoNote
     COMMAND_HANDSHAKE::response rsp;
     get_local_node_data(arg.node_data);
     m_payload_handler.get_payload_sync_data(arg.payload_data);
-	/*
-	auto logArgAndResp = [this,arg,rsp]() {
-		logger(Logging::TRACE) << "HANDSHAKE COMM DETAILS " <<
-			"arg.node_data.local_time=" << arg.node_data.local_time << ", " <<
-			"arg.node_data.my_port=" << arg.node_data.my_port << ", " <<
-			"arg.node_data.network_id=" << arg.node_data.network_id << ", " <<
-			"arg.node_data.peer_id=" << arg.node_data.peer_id << ", " <<
-			"arg.node_data.version=" << static_cast<uint32_t>(arg.node_data.version) << "; " <<
-			"arg.payload_data.current_height=" << arg.payload_data.current_height << ", " <<
-			"arg.payload_data.top_id=" << Common::podToHex(arg.payload_data.top_id) << "; " <<
-			"rsp.node_data.local_time=" << rsp.node_data.local_time << ", " <<
-			"rsp.node_data.my_port=" << rsp.node_data.my_port << ", " <<
-			"rsp.node_data.network_id=" << rsp.node_data.network_id << ", " <<
-			"rsp.node_data.peer_id=" << rsp.node_data.peer_id << ", " <<
-			"rsp.node_data.version=" << static_cast<uint32_t>(rsp.node_data.version) << "; " <<
-			"rsp.payload_data.current_height=" << rsp.payload_data.current_height << ", " <<
-			"rsp.payload_data.top_id=" << Common::podToHex(rsp.payload_data.top_id) << "; ";
-	};
-	*/
 
     if (!proto.invoke(COMMAND_HANDSHAKE::ID, arg, rsp)) {
       logger(Logging::ERROR) << context << "Failed to invoke COMMAND_HANDSHAKE, closing connection.";
-	  //logArgAndResp();
       return false;
     }
-	//else {
-	//  logArgAndResp();
-	//}
 
     context.version = rsp.node_data.version;
 
     if (rsp.node_data.network_id != m_network_id) {
-      logger(Logging::ERROR) << context << "COMMAND_HANDSHAKE Failed, wrong network!  (" << rsp.node_data.network_id << "), closing connection.";
+      logger(Logging::DEBUGGING) << context << "COMMAND_HANDSHAKE Failed, wrong network!  (" << rsp.node_data.network_id << "), closing connection.";
       return false;
     }
 
+    if (rsp.node_data.version < CryptoNote::P2P_MINIMUM_VERSION) {
+      logger(Logging::DEBUGGING) << context << "COMMAND_HANDSHAKE Failed, peer is wrong version! (" << std::to_string(rsp.node_data.version) << "), closing connection.";
+      return false;
+    } else if ((rsp.node_data.version - CryptoNote::P2P_CURRENT_VERSION) >= CryptoNote::P2P_UPGRADE_WINDOW) {
+      logger(Logging::WARNING) << context << "COMMAND_HANDSHAKE Warning, your software may be out of date. Please upgrade to the latest version.";
+    }
+
     if (!handle_remote_peerlist(rsp.local_peerlist, rsp.node_data.local_time, context)) {
-      logger(Logging::ERROR) << context << "COMMAND_HANDSHAKE: failed to handle_remote_peerlist(...), closing connection.";
+      logger(Logging::DEBUGGING) << context << "COMMAND_HANDSHAKE: failed to handle_remote_peerlist(...), closing connection.";
       return false;
     }
 
@@ -610,7 +595,7 @@ namespace CryptoNote
     }
 
     if (!m_payload_handler.process_payload_sync_data(rsp.payload_data, context, true)) {
-      logger(Logging::ERROR) << context << "COMMAND_HANDSHAKE invoked, but process_payload_sync_data returned false, dropping connection.";
+      logger(Logging::DEBUGGING) << context << "COMMAND_HANDSHAKE invoked, but process_payload_sync_data returned false, dropping connection.";
       return false;
     }
 
@@ -756,7 +741,7 @@ namespace CryptoNote
         });
 
         if (!handshakeContext.get()) {
-          logger(WARNING) << "Failed to HANDSHAKE with peer " << na;
+          logger(DEBUGGING) << "Failed to HANDSHAKE with peer " << na;
           return false;
         }
       } catch (System::InterruptedException&) {
@@ -945,7 +930,7 @@ namespace CryptoNote
     {
       if(be.last_seen > uint64_t(local_time))
       {
-        logger(ERROR) << "FOUND FUTURE peerlist for entry " << be.adr << " last_seen: " << be.last_seen << ", local_time(on remote node):" << local_time;
+        logger(DEBUGGING) << "FOUND FUTURE peerlist for entry " << be.adr << " last_seen: " << be.last_seen << ", local_time(on remote node):" << local_time;
         return false;
       }
       be.last_seen += delta;
@@ -969,7 +954,7 @@ namespace CryptoNote
 
   bool NodeServer::get_local_node_data(basic_node_data& node_data)
   {
-    node_data.version = P2PProtocolVersion::CURRENT;
+    node_data.version = CryptoNote::P2P_CURRENT_VERSION;
     time_t local_time;
     time(&local_time);
     node_data.local_time = local_time;
@@ -1137,7 +1122,7 @@ namespace CryptoNote
   int NodeServer::handle_timed_sync(int command, COMMAND_TIMED_SYNC::request& arg, COMMAND_TIMED_SYNC::response& rsp, P2pConnectionContext& context)
   {
     if(!m_payload_handler.process_payload_sync_data(arg.payload_data, context, false)) {
-      logger(Logging::ERROR) << context << "Failed to process_payload_sync_data(), dropping connection";
+      logger(Logging::DEBUGGING) << context << "Failed to process_payload_sync_data(), dropping connection";
       context.m_state = CryptoNoteConnectionContext::state_shutdown;
       return 1;
     }
@@ -1161,20 +1146,28 @@ namespace CryptoNote
       return 1;
     }
 
+    if (arg.node_data.version < CryptoNote::P2P_MINIMUM_VERSION) {
+      logger(Logging::DEBUGGING) << context << "UNSUPPORTED NETWORK AGENT VERSION CONNECTED! version=" << std::to_string(arg.node_data.version);
+      context.m_state = CryptoNoteConnectionContext::state_shutdown;
+      return 1;
+    } else if (arg.node_data.version > CryptoNote::P2P_CURRENT_VERSION) {
+      logger(Logging::WARNING) << context << "Warning, your software may be out of date. Please upgrare to the latest version.";
+    }
+
     if(!context.m_is_income) {
-      logger(Logging::ERROR) << context << "COMMAND_HANDSHAKE came not from incoming connection";
+      logger(Logging::DEBUGGING) << context << "COMMAND_HANDSHAKE came not from incoming connection";
       context.m_state = CryptoNoteConnectionContext::state_shutdown;
       return 1;
     }
 
     if(context.peerId) {
-      logger(Logging::ERROR) << context << "COMMAND_HANDSHAKE came, but seems that connection already have associated peer_id (double COMMAND_HANDSHAKE?)";
+      logger(Logging::DEBUGGING) << context << "COMMAND_HANDSHAKE came, but seems that connection already have associated peer_id (double COMMAND_HANDSHAKE?)";
       context.m_state = CryptoNoteConnectionContext::state_shutdown;
       return 1;
     }
 
     if(!m_payload_handler.process_payload_sync_data(arg.payload_data, context, true))  {
-      logger(Logging::ERROR) << context << "COMMAND_HANDSHAKE came, but process_payload_sync_data returned false, dropping connection.";
+      logger(Logging::DEBUGGING) << context << "COMMAND_HANDSHAKE came, but process_payload_sync_data returned false, dropping connection.";
       context.m_state = CryptoNoteConnectionContext::state_shutdown;
       return 1;
     }
@@ -1336,7 +1329,7 @@ namespace CryptoNote
     } catch (System::InterruptedException&) {
       logger(DEBUGGING) << "onIdle() is interrupted";
     } catch (std::exception& e) {
-      logger(WARNING) << "Exception in onIdle: " << e.what();
+      logger(DEBUGGING) << "Exception in onIdle: " << e.what();
     }
 
     logger(DEBUGGING) << "onIdle finished";
@@ -1351,7 +1344,7 @@ namespace CryptoNote
         for (auto& kv : m_connections) {
           auto& ctx = kv.second;
           if (ctx.writeDuration(now) > P2P_DEFAULT_INVOKE_TIMEOUT) {
-            logger(WARNING) << ctx << "write operation timed out, stopping connection";
+            logger(DEBUGGING) << ctx << "write operation timed out, stopping connection";
             safeInterrupt(ctx);
           }
         }
@@ -1359,7 +1352,7 @@ namespace CryptoNote
     } catch (System::InterruptedException&) {
       logger(DEBUGGING) << "timeoutLoop() is interrupted";
     } catch (std::exception& e) {
-      logger(WARNING) << "Exception in timeoutLoop: " << e.what();
+      logger(DEBUGGING) << "Exception in timeoutLoop: " << e.what();
     }
   }
 
@@ -1372,7 +1365,7 @@ namespace CryptoNote
     } catch (System::InterruptedException&) {
       logger(DEBUGGING) << "timedSyncLoop() is interrupted";
     } catch (std::exception& e) {
-      logger(WARNING) << "Exception in timedSyncLoop: " << e.what();
+      logger(DEBUGGING) << "Exception in timedSyncLoop: " << e.what();
     }
 
     logger(DEBUGGING) << "timedSyncLoop finished";
@@ -1476,7 +1469,7 @@ namespace CryptoNote
       // connection stopped
       logger(DEBUGGING) << ctx << "writeHandler() is interrupted";
     } catch (std::exception& e) {
-      logger(WARNING) << ctx << "error during write: " << e.what();
+      logger(DEBUGGING) << ctx << "error during write: " << e.what();
       safeInterrupt(ctx); // stop connection on write error
     }
 
@@ -1488,9 +1481,9 @@ namespace CryptoNote
     try {
       obj.interrupt();
     } catch (std::exception& e) {
-      logger(WARNING) << "interrupt() throws exception: " << e.what();
+      logger(DEBUGGING) << "interrupt() throws exception: " << e.what();
     } catch (...) {
-      logger(WARNING) << "interrupt() throws unknown exception";
+      logger(DEBUGGING) << "interrupt() throws unknown exception";
     }
   }
 
