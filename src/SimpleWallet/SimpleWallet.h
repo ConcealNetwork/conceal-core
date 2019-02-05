@@ -73,6 +73,8 @@ namespace CryptoNote
     bool show_dust(const std::vector<std::string> &args);
     bool stop_mining(const std::vector<std::string> &args);
     bool show_balance(const std::vector<std::string> &args = std::vector<std::string>());
+    bool sign_message(const std::vector<std::string> &args);
+    bool verify_signature(const std::vector<std::string> &args);
     bool export_keys(const std::vector<std::string> &args = std::vector<std::string>());
     bool create_integrated(const std::vector<std::string> &args = std::vector<std::string>());
     bool show_incoming_transfers(const std::vector<std::string> &args);
