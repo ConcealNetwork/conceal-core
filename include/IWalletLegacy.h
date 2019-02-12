@@ -140,7 +140,6 @@ public:
   virtual size_t getNumUnlockedOutputs() = 0;
 
   virtual TransactionId findTransactionByTransferId(TransferId transferId) = 0;
-  virtual bool getSeed(std::string& electrum_words) = 0;
   virtual void getAccountKeys(AccountKeys& keys) = 0;
   virtual bool getTransaction(TransactionId transactionId, WalletLegacyTransaction& transaction) = 0;
   virtual bool getTransfer(TransferId transferId, WalletLegacyTransfer& transfer) = 0;
