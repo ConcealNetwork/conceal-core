@@ -99,10 +99,10 @@ public:
   bool getDepositInTransactionInfo(DepositId depositId, Crypto::Hash& transactionHash, uint32_t& outputInTransaction);
 
   std::vector<Payments> getTransactionsByPaymentIds(const std::vector<PaymentId>& paymentIds) const;
-
+  TransactionId findTransactionByHash(const Crypto::Hash& hash);
 private:
 
-  TransactionId findTransactionByHash(const Crypto::Hash& hash);
+
   TransactionId insertTransaction(WalletLegacyTransaction&& Transaction);
   TransferId insertTransfers(const std::vector<WalletLegacyTransfer>& transfers);
   void updateUnconfirmedTransactions();

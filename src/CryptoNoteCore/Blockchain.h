@@ -185,6 +185,7 @@ namespace CryptoNote {
     };
 
 bool rollbackBlockchainTo(uint32_t height);
+bool have_tx_keyimg_as_spent(const Crypto::KeyImage &key_im);
 
   private:
 
@@ -300,7 +301,7 @@ bool rollbackBlockchainTo(uint32_t height);
     bool checkTransactionInputs(const Transaction& tx, const Crypto::Hash& tx_prefix_hash, uint32_t* pmax_used_block_height = NULL);
     bool checkTransactionInputs(const Transaction& tx, uint32_t* pmax_used_block_height = NULL);
     bool check_tx_outputs(const Transaction& tx) const;
-    bool have_tx_keyimg_as_spent(const Crypto::KeyImage &key_im);
+
     const TransactionEntry& transactionByIndex(TransactionIndex index);
     bool pushBlock(const Block& blockData, block_verification_context& bvc, uint32_t height);
     bool pushBlock(const Block& blockData, const std::vector<Transaction>& transactions, block_verification_context& bvc);

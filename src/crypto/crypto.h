@@ -78,6 +78,10 @@ struct EllipticCurveScalar {
     friend void hash_data_to_ec(const uint8_t*, std::size_t, PublicKey&);
     static void generate_ring_signature(const Hash &, const KeyImage &,
       const PublicKey *const *, size_t, const SecretKey &, size_t, Signature *);
+	  static void generate_tx_proof(const Hash &, const PublicKey &, const PublicKey &, const PublicKey &, const SecretKey &, Signature &);
+	friend void generate_tx_proof(const Hash &, const PublicKey &, const PublicKey &, const PublicKey &, const SecretKey &, Signature &);
+	static bool check_tx_proof(const Hash &, const PublicKey &, const PublicKey &, const PublicKey &, const Signature &);
+	friend bool check_tx_proof(const Hash &, const PublicKey &, const PublicKey &, const PublicKey &, const Signature &);      
 
     friend void generate_ring_signature(const Hash &, const KeyImage &,
       const PublicKey *const *, size_t, const SecretKey &, size_t, Signature *);
@@ -209,6 +213,16 @@ struct EllipticCurveScalar {
   inline bool check_signature(const Hash &prefix_hash, const PublicKey &pub, const Signature &sig) {
     return crypto_ops::check_signature(prefix_hash, pub, sig);
   }
+
+  /* Generation and checking of a tx proof; given a tx pubkey R, the recipient's view pubkey A, and the key
+   * derivation D, the signature proves the knowledge of the tx secret key r such that R=r*G and D=r*A
+   */
+  inline void generate_tx_proof(const Hash &prefix_hash, const PublicKey &R, const PublicKey &A, const PublicKey &D, const SecretKey &r, Signature &sig) {
+    crypto_ops::generate_tx_proof(prefix_hash, R, A, D, r, sig);
+  }
+  inline bool check_tx_proof(const Hash &prefix_hash, const PublicKey &R, const PublicKey &A, const PublicKey &D, const Signature &sig) {
+    return crypto_ops::check_tx_proof(prefix_hash, R, A, D, sig);
+  }	
 
   /* To send money to a key:
    * * The sender generates an ephemeral key and includes it in transaction output.

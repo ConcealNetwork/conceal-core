@@ -397,7 +397,7 @@ std::unique_ptr<WalletRequest> WalletTransactionSender::doSendTransaction(std::s
     constructTx(m_keys, sources, splittedDests, transaction.extra, transaction.unlockTime, m_upperTransactionSizeLimit, tx, context->messages, context->ttl, transactionSK);
 
     getObjectHash(tx, transaction.hash);
-    transaction.transactionSK = transactionSK;
+    transaction.secretKey = transactionSK;
 
     m_transactionsCache.updateTransaction(context->transactionId, tx, totalAmount, context->selectedTransfers);
 

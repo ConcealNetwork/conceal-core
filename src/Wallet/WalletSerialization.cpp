@@ -8,7 +8,7 @@
 #include <string>
 #include <sstream>
 #include <type_traits>
-
+#include <boost/optional.hpp>
 #include "Common/MemoryInputStream.h"
 #include "Common/StdInputStream.h"
 #include "Common/StdOutputStream.h"
@@ -84,6 +84,7 @@ struct WalletTransactionDto {
   uint64_t creationTime;
   uint64_t unlockTime;
   std::string extra;
+  boost::optional<Crypto::SecretKey> secretKey = CryptoNote::NULL_SECRET_KEY;
 };
 
 //DO NOT CHANGE IT
