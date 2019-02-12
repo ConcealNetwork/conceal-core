@@ -121,6 +121,8 @@ void wallet_rpc_server::processRequest(const CryptoNote::HttpRequest& request, C
       { "get_transfers", makeMemberMethod(&wallet_rpc_server::on_get_transfers) },
       { "get_height", makeMemberMethod(&wallet_rpc_server::on_get_height) },
       { "get_outputs", makeMemberMethod(&wallet_rpc_server::on_get_outputs) },
+      { "get_tx_proof"     , makeMemberMethod(&wallet_rpc_server::on_get_tx_proof)      },
+      { "get_reserve_proof", makeMemberMethod(&wallet_rpc_server::on_get_reserve_proof) },      
       { "optimize", makeMemberMethod(&wallet_rpc_server::on_optimize) },
       { "estimate_fusion"  , makeMemberMethod(&wallet_rpc_server::on_estimate_fusion) },
       { "send_fusion"      , makeMemberMethod(&wallet_rpc_server::on_send_fusion) },
@@ -228,6 +230,68 @@ bool wallet_rpc_server::on_transfer(const wallet_rpc::COMMAND_RPC_TRANSFER::requ
   return true;
 }
 //------------------------------------------------------------------------------------------------------------------------------
+
+bool wallet_rpc_server::on_get_tx_proof(const wallet_rpc::COMMAND_RPC_GET_TX_PROOF::request& req,
+	wallet_rpc::COMMAND_RPC_GET_TX_PROOF::response& res) {
+	Crypto::Hash txid;
+	if (!parse_hash256(req.tx_hash, txid)) {
+		throw JsonRpc::JsonRpcError(WALLET_RPC_ERROR_CODE_UNKNOWN_ERROR, std::string("Failed to parse tx_hash"));
+	}
+	CryptoNote::AccountPublicAddress dest_address;
+	if (!m_currency.parseAccountAddressString(req.dest_address, dest_address)) {
+		throw JsonRpc::JsonRpcError(WALLET_RPC_ERROR_CODE_WRONG_ADDRESS, std::string("Failed to parse address"));
+	}
+
+	Crypto::SecretKey tx_key, tx_key2;
+	bool r = m_wallet.get_tx_key(txid, tx_key);
+
+	if (!req.tx_key.empty()) {
+		Crypto::Hash tx_key_hash;
+		size_t size;
+		if (!Common::fromHex(req.tx_key, &tx_key_hash, sizeof(tx_key_hash), size) || size != sizeof(tx_key_hash)) {
+			throw JsonRpc::JsonRpcError(WALLET_RPC_ERROR_CODE_UNKNOWN_ERROR, std::string("Failed to parse tx_key"));
+		}
+		tx_key2 = *(struct Crypto::SecretKey *) &tx_key_hash;
+
+		if (r) {
+			if (tx_key != tx_key2) {
+				throw JsonRpc::JsonRpcError(WALLET_RPC_ERROR_CODE_UNKNOWN_ERROR, 
+					std::string("Tx secret key was found for the given txid, but you've also provided another tx secret key which doesn't match the found one."));
+			}
+		}
+		tx_key = tx_key2;
+	}
+	else {
+		if (!r) {
+			throw JsonRpc::JsonRpcError(WALLET_RPC_ERROR_CODE_UNKNOWN_ERROR,
+				std::string("Tx secret key wasn't found in the wallet file. Provide it as the optional <tx_key> parameter if you have it elsewhere."));
+		}
+	}
+	
+	std::string sig_str;
+	if (m_wallet.getTxProof(txid, dest_address, tx_key, sig_str)) {
+		res.signature = sig_str;
+	}
+	else {
+		throw JsonRpc::JsonRpcError(WALLET_RPC_ERROR_CODE_UNKNOWN_ERROR, std::string("Failed to get transaction proof"));
+	}
+
+	return true;
+}
+
+bool wallet_rpc_server::on_get_reserve_proof(const wallet_rpc::COMMAND_RPC_GET_BALANCE_PROOF::request& req,
+	wallet_rpc::COMMAND_RPC_GET_BALANCE_PROOF::response& res) {
+
+	try {
+		res.signature = m_wallet.getReserveProof(req.amount != 0 ? req.amount : m_wallet.actualBalance(), !req.message.empty() ? req.message : "");
+	}
+	catch (const std::exception &e) {
+		throw JsonRpc::JsonRpcError(WALLET_RPC_ERROR_CODE_UNKNOWN_ERROR, e.what());
+	}
+
+	return true;
+}
+
 bool wallet_rpc_server::on_optimize(const wallet_rpc::COMMAND_RPC_OPTIMIZE::request& req, wallet_rpc::COMMAND_RPC_OPTIMIZE::response& res) {
   std::vector<CryptoNote::WalletLegacyTransfer> transfers;
   std::vector<CryptoNote::TransactionMessage> messages;
