@@ -173,6 +173,8 @@ uint32_t Currency::upgradeHeight(uint8_t majorVersion) const {
     return m_upgradeHeightV3;
   } else if (majorVersion == BLOCK_MAJOR_VERSION_4) {
     return m_upgradeHeightV6;
+      } else if (majorVersion == BLOCK_MAJOR_VERSION_7) {
+    return m_upgradeHeightV7;
   } else {
     return static_cast<uint32_t>(-1);
   }
