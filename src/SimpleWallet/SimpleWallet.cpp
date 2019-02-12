@@ -656,6 +656,7 @@ simple_wallet::simple_wallet(System::Dispatcher& dispatcher, const CryptoNote::C
   m_consoleHandler.setHandler("incoming_transfers", boost::bind(&simple_wallet::show_incoming_transfers, this, _1), "Show incoming transfers");
   m_consoleHandler.setHandler("list_transfers", boost::bind(&simple_wallet::listTransfers, this, _1), "list_transfers <height> - Show all known transfers from a certain (optional) block height");
   m_consoleHandler.setHandler("payments", boost::bind(&simple_wallet::show_payments, this, _1), "payments <payment_id_1> [<payment_id_2> ... <payment_id_N>] - Show payments <payment_id_1>, ... <payment_id_N>");
+  m_consoleHandler.setHandler("get_tx_proof", boost::bind(&simple_wallet::get_tx_proof, this, _1), "Generate a signature to prove payment: <txid> <address> [<txkey>]");
   m_consoleHandler.setHandler("bc_height", boost::bind(&simple_wallet::show_blockchain_height, this, _1), "Show blockchain height");
   m_consoleHandler.setHandler("show_dust", boost::bind(&simple_wallet::show_dust, this, _1), "Show the number of unmixable dust outputs");
   m_consoleHandler.setHandler("outputs", boost::bind(&simple_wallet::show_num_unlocked_outputs, this, _1), "Show the number of unlocked outputs available for a transaction");
@@ -1270,6 +1271,62 @@ bool simple_wallet::get_reserve_proof(const std::vector<std::string> &args)
 	}
 
 	return true;
+}
+
+
+bool simple_wallet::get_tx_proof(const std::vector<std::string> &args)
+{
+  if(args.size() != 2 && args.size() != 3) {
+    fail_msg_writer() << "Usage: get_tx_proof <txid> <dest_address> [<txkey>]";
+    return true;
+  }
+
+  const std::string &str_hash = args[0];
+  Crypto::Hash txid;
+  if (!parse_hash256(str_hash, txid)) {
+    fail_msg_writer() << "Failed to parse txid";
+    return true;
+  }
+
+  const std::string address_string = args[1];
+  CryptoNote::AccountPublicAddress address;
+  if (!m_currency.parseAccountAddressString(address_string, address)) {
+     fail_msg_writer() << "Failed to parse address " << address_string;
+     return true;
+  }
+
+  std::string sig_str;
+  Crypto::SecretKey tx_key, tx_key2;
+  bool r = m_wallet->get_tx_key(txid, tx_key);
+
+  if (args.size() == 3) {
+    Crypto::Hash tx_key_hash;
+    size_t size;
+    if (!Common::fromHex(args[2], &tx_key_hash, sizeof(tx_key_hash), size) || size != sizeof(tx_key_hash)) {
+      fail_msg_writer() << "failed to parse tx_key";
+      return true;
+    }
+    tx_key2 = *(struct Crypto::SecretKey *) &tx_key_hash;
+
+    if (r) {
+      if (args.size() == 3 && tx_key != tx_key2) {
+        fail_msg_writer() << "Tx secret key was found for the given txid, but you've also provided another tx secret key which doesn't match the found one.";
+        return true;
+      }
+    }
+	tx_key = tx_key2;
+  } else {
+    if (!r) {
+      fail_msg_writer() << "Tx secret key wasn't found in the wallet file. Provide it as the optional third parameter if you have it elsewhere.";
+      return true;
+    }
+  }
+
+  if (m_wallet->getTxProof(txid, address, tx_key, sig_str)) {
+    success_msg_writer() << "Signature: " << sig_str << std::endl;
+  }
+
+  return true;
 }
 
 //----------------------------------------------------------------------------------------------------
