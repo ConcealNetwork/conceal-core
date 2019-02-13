@@ -58,6 +58,7 @@ If the build is successful the binaries will be in the src folder.
 ##### Building
 
 - From the start menu, open 'x64 Native Tools Command Prompt for vs2017' or run "C:\Program Files (x86)\Microsoft Visual Studio\2017\Community\Common7\Tools\VsMSBuildCmd.bat" from any command prompt.
+
 - `git clone https://github.com/ConcealNetwork/conceal-core`
 - `cd conceal-core`
 - `mkdir build`

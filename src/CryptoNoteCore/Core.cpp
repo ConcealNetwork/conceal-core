@@ -1069,6 +1069,10 @@ std::unique_ptr<IBlock> core::getBlock(const Crypto::Hash& blockId) {
   return std::move(blockPtr);
 }
 
+bool core::is_key_image_spent(const Crypto::KeyImage& key_im) {
+  return m_blockchain.have_tx_keyimg_as_spent(key_im);
+}
+
 bool core::addMessageQueue(MessageQueue<BlockchainMessage>& messageQueue) {
   return m_blockchain.addMessageQueue(messageQueue);
 }
