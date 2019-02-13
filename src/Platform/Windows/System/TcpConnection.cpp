@@ -5,27 +5,32 @@
 
 #include "TcpConnection.h"
 #include <cassert>
-
-#include <netinet/in.h>
-#include <sys/stdint.h>
-#include <sys/types.h>
-#include <sys/event.h>
-#include <sys/errno.h>
-#include <sys/socket.h>
-#include <unistd.h>
-
-#include "Dispatcher.h"
-#include <System/ErrorMessage.h>
+#ifndef WIN32_LEAN_AND_MEAN
+#define WIN32_LEAN_AND_MEAN
+#endif
+#include <winsock2.h>
+#include <ws2ipdef.h>
 #include <System/InterruptedException.h>
 #include <System/Ipv4Address.h>
+#include "Dispatcher.h"
+#include "ErrorMessage.h"
 
 namespace System {
+
+namespace {
+
+struct TcpConnectionContext : public OVERLAPPED {
+  NativeContext* context;
+  bool interrupted;
+};
+
+}
 
 TcpConnection::TcpConnection() : dispatcher(nullptr) {
 }
 
 TcpConnection::TcpConnection(TcpConnection&& other) : dispatcher(other.dispatcher) {
-  if (other.dispatcher != nullptr) {
+  if (dispatcher != nullptr) {
     assert(other.readContext == nullptr);
     assert(other.writeContext == nullptr);
     connection = other.connection;
@@ -39,8 +44,8 @@ TcpConnection::~TcpConnection() {
   if (dispatcher != nullptr) {
     assert(readContext == nullptr);
     assert(writeContext == nullptr);
-    int result = close(connection);
-    assert(result != -1);
+    int result = closesocket(connection);
+    assert(result == 0);
   }
 }
 
@@ -48,13 +53,13 @@ TcpConnection& TcpConnection::operator=(TcpConnection&& other) {
   if (dispatcher != nullptr) {
     assert(readContext == nullptr);
     assert(writeContext == nullptr);
-    if (close(connection) == -1) {
-      throw std::runtime_error("TcpConnection::operator=, close failed, " + lastErrorMessage());
+    if (closesocket(connection) != 0) {
+      throw std::runtime_error("TcpConnection::operator=, closesocket failed, " + errorMessage(WSAGetLastError()));
     }
   }
 
   dispatcher = other.dispatcher;
-  if (other.dispatcher != nullptr) {
+  if (dispatcher != nullptr) {
     assert(other.readContext == nullptr);
     assert(other.writeContext == nullptr);
     connection = other.connection;
@@ -73,63 +78,58 @@ size_t TcpConnection::read(uint8_t* data, size_t size) {
     throw InterruptedException();
   }
 
-  std::string message;
-  ssize_t transferred = ::recv(connection, (void *)data, size, 0);
-  if (transferred == -1) {
-    if (errno != EAGAIN  && errno != EWOULDBLOCK) {
-      message = "recv failed, " + lastErrorMessage();
-    } else {
-      OperationContext context;
-      context.context = dispatcher->getCurrentContext();
-      context.interrupted = false;
-      struct kevent event;
-      EV_SET(&event, connection, EVFILT_READ, EV_ADD | EV_ENABLE | EV_CLEAR | EV_ONESHOT, 0, 0, &context);
-      if (kevent(dispatcher->getKqueue(), &event, 1, NULL, 0, NULL) == -1) {
-        message = "kevent failed, " + lastErrorMessage();
-      } else {
-        readContext = &context;
-        dispatcher->getCurrentContext()->interruptProcedure = [&] {
-          assert(dispatcher != nullptr);
-          assert(readContext != nullptr);
-          OperationContext* context = static_cast<OperationContext*>(readContext);
-          if (!context->interrupted) {
-            struct kevent event;
-            EV_SET(&event, connection, EVFILT_READ, EV_DELETE | EV_DISABLE, 0, 0, NULL);
-            
-            if (kevent(dispatcher->getKqueue(), &event, 1, NULL, 0, NULL) == -1) {
-              throw std::runtime_error("TcpListener::interruptionProcedure, kevent failed, " + lastErrorMessage());
-            }
-            
-            context->interrupted = true;
-            dispatcher->pushContext(context->context);
-          }
-        };
-        
-        dispatcher->dispatch();
-        dispatcher->getCurrentContext()->interruptProcedure = nullptr;
-        assert(dispatcher != nullptr);
-        assert(context.context == dispatcher->getCurrentContext());
-        assert(readContext == &context);
-        readContext = nullptr;
-        context.context = nullptr;
-        if (context.interrupted) {
-          throw InterruptedException();
-        }
-
-        ssize_t transferred = ::recv(connection, (void *)data, size, 0);
-        if (transferred == -1) {
-          message = "recv failed, " + lastErrorMessage();
-        } else {
-          assert(transferred <= static_cast<ssize_t>(size));
-          return transferred;
-        }
-      }
+  WSABUF buf{static_cast<ULONG>(size), reinterpret_cast<char*>(data)};
+  DWORD flags = 0;
+  TcpConnectionContext context;
+  context.hEvent = NULL;
+  if (WSARecv(connection, &buf, 1, NULL, &flags, &context, NULL) != 0) {
+    int lastError = WSAGetLastError();
+    if (lastError != WSA_IO_PENDING) {
+      throw std::runtime_error("TcpConnection::read, WSARecv failed, " + errorMessage(lastError));
     }
-
-    throw std::runtime_error("TcpConnection::read, " + message);
   }
 
-  assert(transferred <= static_cast<ssize_t>(size));
+  assert(flags == 0);
+  context.context = dispatcher->getCurrentContext();
+  context.interrupted = false;
+  readContext = &context;
+  dispatcher->getCurrentContext()->interruptProcedure = [&]() {
+    assert(dispatcher != nullptr);
+    assert(readContext != nullptr);
+    TcpConnectionContext* context = static_cast<TcpConnectionContext*>(readContext);
+    if (!context->interrupted) {
+      if (CancelIoEx(reinterpret_cast<HANDLE>(connection), context) != TRUE) {
+        DWORD lastError = GetLastError();
+        if (lastError != ERROR_NOT_FOUND) {
+          throw std::runtime_error("TcpConnection::stop, CancelIoEx failed, " + lastErrorMessage());
+        }
+
+        context->context->interrupted = true;
+      }
+
+      context->interrupted = true;
+    }
+  };
+
+  dispatcher->dispatch();
+  dispatcher->getCurrentContext()->interruptProcedure = nullptr;
+  assert(context.context == dispatcher->getCurrentContext());
+  assert(dispatcher != nullptr);
+  assert(readContext == &context);
+  readContext = nullptr;
+  DWORD transferred;
+  if (WSAGetOverlappedResult(connection, &context, &transferred, FALSE, &flags) != TRUE) {
+    int lastError = WSAGetLastError();
+    if (lastError != ERROR_OPERATION_ABORTED) {
+      throw std::runtime_error("TcpConnection::read, WSAGetOverlappedResult failed, " + errorMessage(lastError));
+    }
+
+    assert(context.interrupted);
+    throw InterruptedException();
+  }
+
+  assert(transferred <= size);
+  assert(flags == 0);
   return transferred;
 }
 
@@ -140,90 +140,80 @@ size_t TcpConnection::write(const uint8_t* data, size_t size) {
     throw InterruptedException();
   }
 
-  std::string message;
   if (size == 0) {
-    if (shutdown(connection, SHUT_WR) == -1) {
-      throw std::runtime_error("TcpConnection::write, shutdown failed, " + lastErrorMessage());
+    if (shutdown(connection, SD_SEND) != 0) {
+      throw std::runtime_error("TcpConnection::write, shutdown failed, " + errorMessage(WSAGetLastError()));
     }
 
     return 0;
   }
 
-  ssize_t transferred = ::send(connection, (void *)data, size, 0);
-  if (transferred == -1) {
-    if (errno != EAGAIN  && errno != EWOULDBLOCK) {
-      message = "send failed, " + lastErrorMessage();
-    } else {
-      OperationContext context;
-      context.context = dispatcher->getCurrentContext();
-      context.interrupted = false;
-      struct kevent event;
-      EV_SET(&event, connection, EVFILT_WRITE, EV_ADD | EV_ENABLE, 0, 0, &context);
-      if (kevent(dispatcher->getKqueue(), &event, 1, NULL, 0, NULL) == -1) {
-        message = "kevent failed, " + lastErrorMessage();
-      } else {
-        writeContext = &context;
-        dispatcher->getCurrentContext()->interruptProcedure = [&] {
-          assert(dispatcher != nullptr);
-          assert(writeContext != nullptr);
-          OperationContext* context = static_cast<OperationContext*>(writeContext);
-          if (!context->interrupted) {
-            struct kevent event;
-            EV_SET(&event, connection, EVFILT_WRITE, EV_DELETE | EV_DISABLE, 0, 0, NULL);
-            
-            if (kevent(dispatcher->getKqueue(), &event, 1, NULL, 0, NULL) == -1) {
-              throw std::runtime_error("TcpListener::stop, kevent failed, " + lastErrorMessage());
-            }
-            
-            context->interrupted = true;
-            dispatcher->pushContext(context->context);            
-          }
-        };
-        
-        dispatcher->dispatch();
-        dispatcher->getCurrentContext()->interruptProcedure = nullptr;
-        assert(dispatcher != nullptr);
-        assert(context.context == dispatcher->getCurrentContext());
-        assert(writeContext == &context);
-        writeContext = nullptr;
-        context.context = nullptr;
-        if (context.interrupted) {
-          throw InterruptedException();
-        }
-
-        ssize_t transferred = ::send(connection, (void *)data, size, 0);
-        if (transferred == -1) {
-          message = "send failed, " + lastErrorMessage();
-        } else {
-          assert(transferred <= static_cast<ssize_t>(size));
-          return transferred;
-        }
-      }
+  WSABUF buf{static_cast<ULONG>(size), reinterpret_cast<char*>(const_cast<uint8_t*>(data))};
+  TcpConnectionContext context;
+  context.hEvent = NULL;
+  if (WSASend(connection, &buf, 1, NULL, 0, &context, NULL) != 0) {
+    int lastError = WSAGetLastError();
+    if (lastError != WSA_IO_PENDING) {
+      throw std::runtime_error("TcpConnection::write, WSASend failed, " + errorMessage(lastError));
     }
-
-    throw std::runtime_error("TcpConnection::write, " + message);
   }
 
-  assert(transferred <= static_cast<ssize_t>(size));
+  context.context = dispatcher->getCurrentContext();
+  context.interrupted = false;
+  writeContext = &context;
+  dispatcher->getCurrentContext()->interruptProcedure = [&]() {
+    assert(dispatcher != nullptr);
+    assert(writeContext != nullptr);
+    TcpConnectionContext* context = static_cast<TcpConnectionContext*>(writeContext);
+    if (!context->interrupted) {
+      if (CancelIoEx(reinterpret_cast<HANDLE>(connection), context) != TRUE) {
+        DWORD lastError = GetLastError();
+        if (lastError != ERROR_NOT_FOUND) {
+          throw std::runtime_error("TcpConnection::stop, CancelIoEx failed, " + lastErrorMessage());
+        }
+
+        context->context->interrupted = true;
+      }
+
+      context->interrupted = true;
+    }
+  };
+
+  dispatcher->dispatch();
+  dispatcher->getCurrentContext()->interruptProcedure = nullptr;
+  assert(context.context == dispatcher->getCurrentContext());
+  assert(dispatcher != nullptr);
+  assert(writeContext == &context);
+  writeContext = nullptr;
+  DWORD transferred;
+  DWORD flags;
+  if (WSAGetOverlappedResult(connection, &context, &transferred, FALSE, &flags) != TRUE) {
+    int lastError = WSAGetLastError();
+    if (lastError != ERROR_OPERATION_ABORTED) {
+      throw std::runtime_error("TcpConnection::write, WSAGetOverlappedResult failed, " + errorMessage(lastError));
+    }
+
+    assert(context.interrupted);
+    throw InterruptedException();
+  }
+
+  assert(transferred == size);
+  assert(flags == 0);
   return transferred;
 }
 
 std::pair<Ipv4Address, uint16_t> TcpConnection::getPeerAddressAndPort() const {
-  sockaddr_in addr;
-  socklen_t size = sizeof(addr);
-  if (getpeername(connection, reinterpret_cast<sockaddr*>(&addr), &size) != 0) {
-    throw std::runtime_error("TcpConnection::getPeerAddress, getpeername failed, " + lastErrorMessage());
+  sockaddr_in address;
+  int size = sizeof(address);
+  if (getpeername(connection, reinterpret_cast<sockaddr*>(&address), &size) != 0) {
+    throw std::runtime_error("TcpConnection::getPeerAddress, getpeername failed, " + errorMessage(WSAGetLastError()));
   }
 
   assert(size == sizeof(sockaddr_in));
-  return std::make_pair(Ipv4Address(htonl(addr.sin_addr.s_addr)), htons(addr.sin_port));
+  return std::make_pair(Ipv4Address(htonl(address.sin_addr.S_un.S_addr)), htons(address.sin_port));
 }
 
-TcpConnection::TcpConnection(Dispatcher& dispatcher, int socket) : dispatcher(&dispatcher), connection(socket), readContext(nullptr), writeContext(nullptr) {
-  int val = 1;
-  if (setsockopt(connection, SOL_SOCKET, SO_NOSIGPIPE, (void*)&val, sizeof val) == -1) {
-    throw std::runtime_error("TcpConnection::TcpConnection, setsockopt failed, " + lastErrorMessage());
-  }
+TcpConnection::TcpConnection(Dispatcher& dispatcher, size_t connection) : dispatcher(&dispatcher), connection(connection), readContext(nullptr), writeContext(nullptr) {
 }
 
 }
