@@ -346,7 +346,7 @@ bool core::get_block_template(Block& b, const AccountPublicAddress& adr, difficu
     b = boost::value_initialized<Block>();
     b.majorVersion = m_blockchain.get_block_major_version_for_height(height);
 
-	if (b.majorVersion < BLOCK_MAJOR_VERSION_4) {
+	if (b.majorVersion < BLOCK_MAJOR_VERSION_7) {
       if (b.majorVersion == BLOCK_MAJOR_VERSION_1) {
         b.minorVersion = m_currency.upgradeHeight(BLOCK_MAJOR_VERSION_2) == UpgradeDetectorBase::UNDEF_HEIGHT ? BLOCK_MINOR_VERSION_1 : BLOCK_MINOR_VERSION_0;
       } else {
@@ -1067,6 +1067,10 @@ std::unique_ptr<IBlock> core::getBlock(const Crypto::Hash& blockId) {
   }
 
   return std::move(blockPtr);
+}
+
+bool core::is_key_image_spent(const Crypto::KeyImage& key_im) {
+  return m_blockchain.have_tx_keyimg_as_spent(key_im);
 }
 
 bool core::addMessageQueue(MessageQueue<BlockchainMessage>& messageQueue) {

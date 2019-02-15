@@ -14,10 +14,10 @@
 #include <type_traits>
 #include <vector>
 #include <list>
-
+#include <boost/optional.hpp>
 #include "CryptoNote.h"
 #include "CryptoNoteCore/CryptoNoteBasic.h"
-
+#include "Rpc/CoreRpcServerCommandsDefinitions.h"
 #include "ITransfersContainer.h"
 
 namespace CryptoNote {
@@ -60,7 +60,7 @@ struct WalletLegacyTransaction {
   uint64_t         sentTime;
   uint64_t         unlockTime;
   Crypto::Hash     hash;
-  Crypto::SecretKey transactionSK = NULL_SECRET_KEY;
+  boost::optional<Crypto::SecretKey> secretKey = CryptoNote::NULL_SECRET_KEY;
 
   bool             isCoinbase;
   uint32_t         blockHeight;
@@ -140,12 +140,15 @@ public:
   virtual size_t getNumUnlockedOutputs() = 0;
 
   virtual TransactionId findTransactionByTransferId(TransferId transferId) = 0;
-
+  virtual void getAccountKeys(AccountKeys& keys) = 0;
   virtual bool getTransaction(TransactionId transactionId, WalletLegacyTransaction& transaction) = 0;
   virtual bool getTransfer(TransferId transferId, WalletLegacyTransfer& transfer) = 0;
   virtual bool getDeposit(DepositId depositId, Deposit& deposit) = 0;
   virtual std::vector<Payments> getTransactionsByPaymentIds(const std::vector<PaymentId>& paymentIds) const = 0;
-
+  virtual bool getTxProof(Crypto::Hash& txid, CryptoNote::AccountPublicAddress& address, Crypto::SecretKey& tx_key, std::string& sig_str) = 0;
+  virtual std::string getReserveProof(const uint64_t &reserve, const std::string &message) = 0;
+  virtual Crypto::SecretKey getTxKey(Crypto::Hash& txid) = 0;
+  virtual bool get_tx_key(Crypto::Hash& txid, Crypto::SecretKey& txSecretKey) = 0;
   virtual TransactionId sendTransaction(Crypto::SecretKey& transactionSK, const WalletLegacyTransfer& transfer, uint64_t fee, const std::string& extra = "", uint64_t mixIn = 0, uint64_t unlockTimestamp = 0, const std::vector<TransactionMessage>& messages = std::vector<TransactionMessage>(), uint64_t ttl = 0) = 0;
   virtual TransactionId sendTransaction(Crypto::SecretKey& transactionSK, std::vector<WalletLegacyTransfer>& transfers, uint64_t fee, const std::string& extra = "", uint64_t mixIn = 0, uint64_t unlockTimestamp = 0, const std::vector<TransactionMessage>& messages = std::vector<TransactionMessage>(), uint64_t ttl = 0) = 0;
   virtual size_t estimateFusion(const uint64_t& threshold) = 0;
@@ -155,7 +158,6 @@ public:
   virtual TransactionId withdrawDeposits(const std::vector<DepositId>& depositIds, uint64_t fee) = 0;
   virtual std::error_code cancelTransaction(size_t transferId) = 0;
 
-  virtual void getAccountKeys(AccountKeys& keys) = 0;
 };
 
 }

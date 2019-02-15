@@ -173,6 +173,8 @@ uint32_t Currency::upgradeHeight(uint8_t majorVersion) const {
     return m_upgradeHeightV3;
   } else if (majorVersion == BLOCK_MAJOR_VERSION_4) {
     return m_upgradeHeightV6;
+  } else if (majorVersion == BLOCK_MAJOR_VERSION_7) {
+    return m_upgradeHeightV7;
   } else {
     return static_cast<uint32_t>(-1);
   }
@@ -203,11 +205,8 @@ bool Currency::getBlockReward(size_t medianSize, size_t currentBlockSize, uint64
 
 /* ---------------------------------------------------------------------------------------------------- */
 
-uint64_t Currency::calculateInterest(uint64_t amount, uint32_t term, uint32_t height) const 
-{
-
+uint64_t Currency::calculateInterest(uint64_t amount, uint32_t term, uint32_t height) const {
   assert(m_depositMinTerm <= term);
-
   uint64_t amount4Humans = amount / 1000000;
 
   /* deposits 2.0 and investments 1.0 */
@@ -243,8 +242,7 @@ uint64_t Currency::calculateInterest(uint64_t amount, uint32_t term, uint32_t he
 
 /* ---------------------------------------------------------------------------------------------------- */
 
-uint64_t Currency::calculateInterestV2(uint64_t amount, uint32_t term) const 
-{
+uint64_t Currency::calculateInterestV2(uint64_t amount, uint32_t term) const {
   /* investments */
   if (term % 64800 == 0) {    
 
@@ -312,7 +310,6 @@ uint64_t Currency::calculateInterestV2(uint64_t amount, uint32_t term) const
 
   /* weekly deposits */
   if (term % 5040 == 0) {    
-
     uint64_t actualAmount = amount;
     float weeks = term / 5040;
     float baseInterest = 0.0696;
