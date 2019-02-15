@@ -90,7 +90,6 @@ Dispatcher::Dispatcher() {
           mainContext.group = &contextGroup;
           mainContext.groupPrev = nullptr;
           mainContext.groupNext = nullptr;
-          mainContext.inExecutionQueue = false;
           contextGroup.firstContext = nullptr;
           contextGroup.lastContext = nullptr;
           contextGroup.firstWaiter = nullptr;
@@ -171,8 +170,6 @@ void Dispatcher::dispatch() {
     if (firstResumingContext != nullptr) {
       context = firstResumingContext;
       firstResumingContext = context->next;
-      assert(context->inExecutionQueue);
-      context->inExecutionQueue = false;
       break;
     }
 
@@ -255,10 +252,7 @@ bool Dispatcher::interrupted() {
 
 void Dispatcher::pushContext(NativeContext* context) {
   assert(context != nullptr);
-  if (context->inExecutionQueue)
-    return;
   context->next = nullptr;
-  context->inExecutionQueue = true;
   if(firstResumingContext != nullptr) {
     assert(lastResumingContext != nullptr);
     lastResumingContext->next = context;
@@ -431,7 +425,6 @@ void Dispatcher::contextProcedure(void* ucontext) {
   context.ucontext = ucontext;
   context.interrupted = false;
   context.next = nullptr;
-  context.inExecutionQueue = false;
   firstReusableContext = &context;
   ucontext_t* oldContext = static_cast<ucontext_t*>(context.ucontext);
   if (swapcontext(oldContext, static_cast<ucontext_t*>(currentContext->ucontext)) == -1) {
