@@ -96,7 +96,7 @@ const uint64_t UPGRADE_HEIGHT_V3															= 12750; /* Cryptonight-Fast */
 const uint64_t UPGRADE_HEIGHT_V4															= 45000; /* MixIn 2 */
 const uint64_t UPGRADE_HEIGHT_V5															= 98160; /* Deposits 2.0, Investments 1.0 */
 const uint64_t UPGRADE_HEIGHT_V6															= 104200; /* LWMA3 */
-const uint64_t UPGRADE_HEIGHT_V7															= 190670; /* Cryptoight Conceal */
+const uint64_t UPGRADE_HEIGHT_V7															= 195500; /* Cryptoight Conceal */
 const unsigned UPGRADE_VOTING_THRESHOLD														= 90; // percent
 const size_t   UPGRADE_VOTING_WINDOW														= EXPECTED_NUMBER_OF_BLOCKS_PER_DAY; 
 const size_t   UPGRADE_WINDOW																= EXPECTED_NUMBER_OF_BLOCKS_PER_DAY; 
@@ -114,8 +114,8 @@ const char     MINER_CONFIG_FILE_NAME[]                      								= "miner_co
 
 } // parameters
 
-const uint64_t START_BLOCK_REWARD				= (UINT64_C(5000) * parameters::POINT); // start reward (Consensus I)
-const uint64_t FOUNDATION_TRUST					= (UINT64_C(12000000) * parameters::COIN); // locked funds to secure network  (Consensus II)
+const uint64_t START_BLOCK_REWARD															= (UINT64_C(5000) * parameters::POINT); // start reward (Consensus I)
+const uint64_t FOUNDATION_TRUST																= (UINT64_C(12000000) * parameters::COIN); // locked funds to secure network  (Consensus II)
 const uint64_t MAX_BLOCK_REWARD					= (UINT64_C(20) * parameters::COIN); // max reward (Consensus I)
 const uint64_t REWARD_INCREASE_INTERVAL				= (UINT64_C(21900)); // aprox. 1 month (+ 0.25 CCX increment per month)
 
