@@ -346,7 +346,7 @@ bool core::get_block_template(Block& b, const AccountPublicAddress& adr, difficu
     b = boost::value_initialized<Block>();
     b.majorVersion = m_blockchain.get_block_major_version_for_height(height);
 
-	if (b.majorVersion < BLOCK_MAJOR_VERSION_4) {
+	if (b.majorVersion < BLOCK_MAJOR_VERSION_7) {
       if (b.majorVersion == BLOCK_MAJOR_VERSION_1) {
         b.minorVersion = m_currency.upgradeHeight(BLOCK_MAJOR_VERSION_2) == UpgradeDetectorBase::UNDEF_HEIGHT ? BLOCK_MINOR_VERSION_1 : BLOCK_MINOR_VERSION_0;
       } else {

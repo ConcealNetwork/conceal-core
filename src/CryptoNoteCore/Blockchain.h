@@ -265,7 +265,8 @@ bool have_tx_keyimg_as_spent(const Crypto::KeyImage &key_im);
 	UpgradeDetector m_upgradeDetectorV2;
 	UpgradeDetector m_upgradeDetectorV3;
   UpgradeDetector m_upgradeDetectorV4;
-
+  UpgradeDetector m_upgradeDetectorV7;  
+  
     PaymentIdIndex m_paymentIdIndex;
     TimestampBlocksIndex m_timestampIndex;
     GeneratedTransactionsIndex m_generatedTransactionsIndex;
