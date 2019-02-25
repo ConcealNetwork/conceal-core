@@ -686,7 +686,7 @@ bool Blockchain::getBlockByHash(const Crypto::Hash& blockHash, Block& b) {
     return true;
   }
 
-  logger(WARNING) << "<< Blockchain.cpp << " << blockHash;
+  logger(DEBUGGING) << "<< Blockchain.cpp << " << blockHash;
 
   auto blockByHashIterator = m_alternative_chains.find(blockHash);
   if (blockByHashIterator != m_alternative_chains.end()) {
