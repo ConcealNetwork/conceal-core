@@ -46,7 +46,7 @@ inline bool hw_check_aes()
 {
 	int32_t cpu_info[4];
 	cpuid(1, 0, cpu_info);
-	return (cpu_info[2] & (1 << 25)) != 0;
+	return cpu_info[2] & (1 << 25);
 }
 
 struct cryptonight_ctx
