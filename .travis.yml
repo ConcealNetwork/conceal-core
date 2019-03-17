@@ -1,8 +1,9 @@
 sudo: true
-
+os: linux
 language: cpp
 
 matrix:
+  include:
     - env: COMPILER=g++-6 BUILD=Debug STANDARD=14
       compiler: gcc
       addons:
@@ -25,7 +26,7 @@ matrix:
           packages:
             - g++-6
             - boost1.67
-            
+         
 script:
     - mkdir build
     - cd build
