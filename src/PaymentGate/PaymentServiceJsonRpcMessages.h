@@ -371,6 +371,7 @@ struct GetMessagesFromExtra {
 struct EstimateFusion {
   struct Request {
     uint64_t threshold;
+    std::vector<std::string> addresses;
 
     void serialize(CryptoNote::ISerializer& serializer);
   };
