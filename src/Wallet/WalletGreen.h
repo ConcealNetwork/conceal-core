@@ -77,7 +77,7 @@ public:
 
   virtual size_t createFusionTransaction(uint64_t threshold, uint64_t mixin) override;
   virtual bool isFusionTransaction(size_t transactionId) const override;
-  virtual IFusionManager::EstimateResult estimate(uint64_t threshold) const override;
+  virtual IFusionManager::EstimateResult estimate(uint64_t threshold, const std::vector<std::string>& sourceAddresses = {}) const override;
 
 protected:
   void throwIfNotInitialized() const;
@@ -152,8 +152,8 @@ protected:
   void transactionDeleteEnd(Crypto::Hash transactionHash);
 
   std::vector<WalletOuts> pickWalletsWithMoney() const;
-  WalletOuts pickWallet(const std::string& address);
-  std::vector<WalletOuts> pickWallets(const std::vector<std::string>& addresses);
+  WalletOuts pickWallet(const std::string& address) const;
+  std::vector<WalletOuts> pickWallets(const std::vector<std::string>& addresses) const;
 
   void updateBalance(CryptoNote::ITransfersContainer* container);
   void unlockBalances(uint32_t height);
@@ -187,7 +187,7 @@ protected:
     const CryptoNote::AccountPublicAddress& changeDestinationAddress,
     PreparedTransaction& preparedTransaction,
     Crypto::SecretKey& transactionSK);
-
+  void validateSourceAddresses(const std::vector<std::string>& sourceAddresses) const;
   void validateTransactionParameters(const TransactionParameters& transactionParameters);
   size_t doTransfer(const TransactionParameters& transactionParameters, Crypto::SecretKey& transactionSK);
 

@@ -1473,7 +1473,7 @@ std::vector<WalletGreen::WalletOuts> WalletGreen::pickWalletsWithMoney() const {
   return walletOuts;
 }
 
-WalletGreen::WalletOuts WalletGreen::pickWallet(const std::string& address) {
+WalletGreen::WalletOuts WalletGreen::pickWallet(const std::string& address) const {
   const auto& wallet = getWalletRecord(address);
 
   ITransfersContainer* container = wallet.container;
@@ -1484,7 +1484,7 @@ WalletGreen::WalletOuts WalletGreen::pickWallet(const std::string& address) {
   return outs;
 }
 
-std::vector<WalletGreen::WalletOuts> WalletGreen::pickWallets(const std::vector<std::string>& addresses) {
+std::vector<WalletGreen::WalletOuts> WalletGreen::pickWallets(const std::vector<std::string>& addresses) const {
   std::vector<WalletOuts> wallets;
   wallets.reserve(addresses.size());
 
@@ -2219,18 +2219,34 @@ bool WalletGreen::isFusionTransaction(const WalletTransaction& walletTx) const {
   }
 }
 
-IFusionManager::EstimateResult WalletGreen::estimate(uint64_t threshold) const {
+void WalletGreen::validateSourceAddresses(const std::vector<std::string>& sourceAddresses) const {
+  //validateAddresses(sourceAddresses);
+
+  auto badAddr = std::find_if(sourceAddresses.begin(), sourceAddresses.end(), [this](const std::string& addr) {
+    return !isMyAddress(addr);
+  });
+
+  if (badAddr != sourceAddresses.end()) {
+    throw std::system_error(make_error_code(error::BAD_ADDRESS), "Source address must belong to current container: " + *badAddr);
+  }
+}
+
+IFusionManager::EstimateResult WalletGreen::estimate(uint64_t threshold, const std::vector<std::string>& sourceAddresses) const {
+  System::EventLock lk(m_readyEvent);
+
   throwIfNotInitialized();
   throwIfStopped();
 
+  validateSourceAddresses(sourceAddresses);
+
   IFusionManager::EstimateResult result{0, 0};
-  auto walletOuts = pickWalletsWithMoney();
+  auto walletOuts = sourceAddresses.empty() ? pickWalletsWithMoney() : pickWallets(sourceAddresses);
   std::array<size_t, std::numeric_limits<uint64_t>::digits10 + 1> bucketSizes;
   bucketSizes.fill(0);
   for (size_t walletIndex = 0; walletIndex < walletOuts.size(); ++walletIndex) {
     for (auto& out : walletOuts[walletIndex].outs) {
       uint8_t powerOfTen = 0;
-      if (m_currency.isAmountApplicableInFusionTransactionInput(out.amount, threshold, powerOfTen)) {
+      if (m_currency.isAmountApplicableInFusionTransactionInput(out.amount, threshold, powerOfTen, m_node.getLastKnownBlockHeight())) {
         assert(powerOfTen < std::numeric_limits<uint64_t>::digits10 + 1);
         bucketSizes[powerOfTen]++;
       }
@@ -2247,6 +2263,7 @@ IFusionManager::EstimateResult WalletGreen::estimate(uint64_t threshold) const {
 
   return result;
 }
+
 
 std::vector<WalletGreen::OutputToTransfer> WalletGreen::pickRandomFusionInputs(uint64_t threshold, size_t minInputCount, size_t maxInputCount) {
   std::vector<WalletGreen::OutputToTransfer> allFusionReadyOuts;
