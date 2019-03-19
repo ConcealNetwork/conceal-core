@@ -314,6 +314,8 @@ void EstimateFusion::Request::serialize(CryptoNote::ISerializer& serializer) {
   if (!serializer(threshold, "threshold")) {
     throw RequestSerializationError();
   }
+
+  serializer(addresses, "addresses");
 }
 
 void EstimateFusion::Response::serialize(CryptoNote::ISerializer& serializer) {
