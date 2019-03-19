@@ -1138,13 +1138,15 @@ void WalletService::refresh() {
   }
 }
 
-std::error_code WalletService::estimateFusion(uint64_t threshold,
+std::error_code WalletService::estimateFusion(uint64_t threshold, const std::vector<std::string>& addresses,
   uint32_t& fusionReadyCount, uint32_t& totalOutputCount) {
 
   try {
     System::EventLock lk(readyEvent);
 
-    auto estimateResult = fusionManager.estimate(threshold);
+    validateAddresses(addresses, currency, logger);
+
+    auto estimateResult = fusionManager.estimate(threshold, addresses);
     fusionReadyCount = static_cast<uint32_t>(estimateResult.fusionReadyCount);
     totalOutputCount = static_cast<uint32_t>(estimateResult.totalOutputCount);
   } catch (std::system_error& x) {
