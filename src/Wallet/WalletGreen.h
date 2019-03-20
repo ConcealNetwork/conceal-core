@@ -75,7 +75,8 @@ public:
   virtual void stop() override;
   virtual WalletEvent getEvent() override;
 
-  virtual size_t createFusionTransaction(uint64_t threshold, uint64_t mixin) override;
+  virtual size_t createFusionTransaction(uint64_t threshold, uint64_t mixin,
+    const std::vector<std::string>& sourceAddresses = {}, const std::string& destinationAddress = "") override;
   virtual bool isFusionTransaction(size_t transactionId) const override;
   virtual IFusionManager::EstimateResult estimate(uint64_t threshold, const std::vector<std::string>& sourceAddresses = {}) const override;
 
@@ -188,7 +189,10 @@ protected:
     PreparedTransaction& preparedTransaction,
     Crypto::SecretKey& transactionSK);
   void validateSourceAddresses(const std::vector<std::string>& sourceAddresses) const;
-  void validateTransactionParameters(const TransactionParameters& transactionParameters);
+  void validateChangeDestination(const std::vector<std::string>& sourceAddresses, const std::string& changeDestination, bool isFusion) const;
+  void validateOrders(const std::vector<WalletOrder>& orders) const;
+
+  void validateTransactionParameters(const TransactionParameters& transactionParameters) const;
   size_t doTransfer(const TransactionParameters& transactionParameters, Crypto::SecretKey& transactionSK);
 
   void requestMixinOuts(const std::vector<OutputToTransfer>& selectedTransfers,
@@ -242,8 +246,10 @@ protected:
   void unsafeLoad(std::istream& source, const std::string& password);
   void unsafeSave(std::ostream& destination, bool saveDetails, bool saveCache);
 
-  std::vector<OutputToTransfer> pickRandomFusionInputs(uint64_t threshold, size_t minInputCount, size_t maxInputCount);
-  ReceiverAmounts decomposeFusionOutputs(uint64_t inputsAmount);
+std::vector<OutputToTransfer> pickRandomFusionInputs(const std::vector<std::string>& addresses,
+    uint64_t threshold, size_t minInputCount, size_t maxInputCount);
+    
+  static ReceiverAmounts decomposeFusionOutputs(const AccountPublicAddress& address, uint64_t inputsAmount);
 
   enum class WalletState {
     INITIALIZED,
