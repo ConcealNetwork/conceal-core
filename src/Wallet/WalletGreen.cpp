@@ -52,14 +52,6 @@ void parseAddressString(const std::string& string, const CryptoNote::Currency& c
   }
 }
 
-void validateAddresses(const std::vector<std::string>& addresses, const CryptoNote::Currency& currency) {
-  for (const auto& address: addresses) {
-    if (!CryptoNote::validateAddress(address, currency)) {
-      throw std::system_error(make_error_code(CryptoNote::error::BAD_ADDRESS));
-    }
-  }
-}
-
 uint64_t countNeededMoney(const std::vector<CryptoNote::WalletTransfer>& destinations, uint64_t fee) {
   uint64_t neededMoney = 0;
   for (const auto& transfer: destinations) {
@@ -257,6 +249,14 @@ void WalletGreen::validateOrders(const std::vector<WalletOrder>& orders) const {
     if (order.amount >= static_cast<uint64_t>(std::numeric_limits<int64_t>::max())) {
       std::string message = "Order amount must not exceed " + m_currency.formatAmount(std::numeric_limits<int64_t>::max());
       throw std::system_error(make_error_code(CryptoNote::error::WRONG_AMOUNT), message);
+    }
+  }
+}
+
+void WalletGreen::validateAddresses(const std::vector<std::string>& addresses) const {
+  for (const auto& address : addresses) {
+    if (!CryptoNote::validateAddress(address, m_currency)) {
+      throw std::system_error(make_error_code(CryptoNote::error::BAD_ADDRESS));
     }
   }
 }
@@ -2235,7 +2235,7 @@ void WalletGreen::validateChangeDestination(const std::vector<std::string>& sour
 
 
 void WalletGreen::validateSourceAddresses(const std::vector<std::string>& sourceAddresses) const {
-  //validateAddresses(sourceAddresses);
+  validateAddresses(sourceAddresses);
 
   auto badAddr = std::find_if(sourceAddresses.begin(), sourceAddresses.end(), [this](const std::string& addr) {
     return !isMyAddress(addr);

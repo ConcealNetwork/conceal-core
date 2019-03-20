@@ -188,6 +188,7 @@ protected:
     const CryptoNote::AccountPublicAddress& changeDestinationAddress,
     PreparedTransaction& preparedTransaction,
     Crypto::SecretKey& transactionSK);
+  void validateAddresses(const std::vector<std::string>& addresses) const;
   void validateSourceAddresses(const std::vector<std::string>& sourceAddresses) const;
   void validateChangeDestination(const std::vector<std::string>& sourceAddresses, const std::string& changeDestination, bool isFusion) const;
   void validateOrders(const std::vector<WalletOrder>& orders) const;
