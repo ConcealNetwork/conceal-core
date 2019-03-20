@@ -387,7 +387,9 @@ struct EstimateFusion {
 struct SendFusionTransaction {
   struct Request {
     uint64_t threshold;
-    uint32_t mixin;
+    uint32_t anonymity = 0;
+    std::vector<std::string> addresses;
+    std::string destinationAddress;
 
     void serialize(CryptoNote::ISerializer& serializer);
   };
