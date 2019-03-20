@@ -1138,13 +1138,15 @@ void WalletService::refresh() {
   }
 }
 
-std::error_code WalletService::estimateFusion(uint64_t threshold,
+std::error_code WalletService::estimateFusion(uint64_t threshold, const std::vector<std::string>& addresses,
   uint32_t& fusionReadyCount, uint32_t& totalOutputCount) {
 
   try {
     System::EventLock lk(readyEvent);
 
-    auto estimateResult = fusionManager.estimate(threshold);
+    validateAddresses(addresses, currency, logger);
+
+    auto estimateResult = fusionManager.estimate(threshold, addresses);
     fusionReadyCount = static_cast<uint32_t>(estimateResult.fusionReadyCount);
     totalOutputCount = static_cast<uint32_t>(estimateResult.totalOutputCount);
   } catch (std::system_error& x) {
@@ -1158,12 +1160,18 @@ std::error_code WalletService::estimateFusion(uint64_t threshold,
   return std::error_code();
 }
 
-std::error_code WalletService::sendFusionTransaction(uint64_t threshold, uint32_t mixin, std::string& transactionHash) {
+std::error_code WalletService::sendFusionTransaction(uint64_t threshold, uint32_t anonymity, const std::vector<std::string>& addresses,
+  const std::string& destinationAddress, std::string& transactionHash) {
 
   try {
     System::EventLock lk(readyEvent);
 
-    size_t transactionId = fusionManager.createFusionTransaction(threshold, mixin);
+    validateAddresses(addresses, currency, logger);
+    if (!destinationAddress.empty()) {
+      validateAddresses({ destinationAddress }, currency, logger);
+    }
+
+    size_t transactionId = fusionManager.createFusionTransaction(threshold, anonymity, addresses, destinationAddress);
     transactionHash = Common::podToHex(wallet.getTransaction(transactionId).hash);
 
     logger(Logging::DEBUGGING) << "Fusion transaction " << transactionHash << " has been sent";

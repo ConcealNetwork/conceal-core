@@ -314,6 +314,8 @@ void EstimateFusion::Request::serialize(CryptoNote::ISerializer& serializer) {
   if (!serializer(threshold, "threshold")) {
     throw RequestSerializationError();
   }
+
+  serializer(addresses, "addresses");
 }
 
 void EstimateFusion::Response::serialize(CryptoNote::ISerializer& serializer) {
@@ -325,9 +327,13 @@ void SendFusionTransaction::Request::serialize(CryptoNote::ISerializer& serializ
   if (!serializer(threshold, "threshold")) {
     throw RequestSerializationError();
   }
-  if (!serializer(mixin, "mixin")) {
+
+  if (!serializer(anonymity, "anonymity")) {
     throw RequestSerializationError();
   }
+
+  serializer(addresses, "addresses");
+  serializer(destinationAddress, "destinationAddress");
 }
 
 void SendFusionTransaction::Response::serialize(CryptoNote::ISerializer& serializer) {
