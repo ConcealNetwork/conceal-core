@@ -19,3 +19,4 @@ version/
 
 miniupnpcstrings.h
 compile_commands.json
+*.ipch
