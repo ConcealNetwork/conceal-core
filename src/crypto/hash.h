@@ -1,4 +1,4 @@
-// Copyright (c) 2011-2017 The Cryptonote developers
+// Copyright (c) 2012-2016, The CryptoNote developers, The Bytecoin developers
 // Copyright (c) 2018 The Circle Foundation
 // Distributed under the MIT/X11 software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
@@ -9,6 +9,17 @@
 
 #include <CryptoTypes.h>
 #include "generic-ops.h"
+#include <boost/align/aligned_alloc.hpp>
+
+/* Standard Cryptonight */
+#define CN_PAGE_SIZE                    2097152
+#define CN_SCRATCHPAD                   2097152
+#define CN_ITERATIONS                   1048576
+
+/* Cryptonight Fast */
+#define CN_FAST_PAGE_SIZE               2097152
+#define CN_FAST_SCRATCHPAD              2097152
+#define CN_FAST_ITERATIONS              524288
 
 namespace Crypto {
 
@@ -33,22 +44,30 @@ namespace Crypto {
   class cn_context {
   public:
 
-    cn_context();
-    ~cn_context();
+    cn_context()
+    {
+        long_state = (uint8_t*)boost::alignment::aligned_alloc(4096, CN_PAGE_SIZE);
+        hash_state = (uint8_t*)boost::alignment::aligned_alloc(4096, 4096);
+    }
 
-#if !defined(_MSC_VER) || _MSC_VER >= 1800
+    ~cn_context()
+    {
+        if(long_state != nullptr)
+            boost::alignment::aligned_free(long_state);
+        if(hash_state != nullptr)
+            boost::alignment::aligned_free(hash_state);
+    }
+
     cn_context(const cn_context &) = delete;
     void operator=(const cn_context &) = delete;
-#endif
 
-  private:
-    void *data;
-    friend inline void cn_slow_hash(cn_context &, const void *, size_t, Hash &, int);
+     uint8_t* long_state = nullptr;
+     uint8_t* hash_state = nullptr;
   };
 
-  inline void cn_slow_hash(cn_context &context, const void *data, size_t length, Hash &hash, int variant = 0) {
-    (*cn_slow_hash_f)(context.data, data, length, reinterpret_cast<void *>(&hash), variant);
-  }
+  void cn_slow_hash(cn_context &context, const void *data, size_t length, Hash &hash);
+  void cn_fast_slow_hash_v1(cn_context &context, const void *data, size_t length, Hash &hash);
+  void cn_conceal_slow_hash_v0(cn_context &context, const void *data, size_t length, Hash &hash);  
 
   inline void tree_hash(const Hash *hashes, size_t count, Hash &root_hash) {
     tree_hash(reinterpret_cast<const char (*)[HASH_SIZE]>(hashes), count, reinterpret_cast<char *>(&root_hash));

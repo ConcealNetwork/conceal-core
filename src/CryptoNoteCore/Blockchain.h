@@ -184,6 +184,9 @@ namespace CryptoNote {
       }
     };
 
+bool rollbackBlockchainTo(uint32_t height);
+bool have_tx_keyimg_as_spent(const Crypto::KeyImage &key_im);
+
   private:
 
     struct MultisignatureOutputUsage {
@@ -259,10 +262,11 @@ namespace CryptoNote {
     CryptoNote::DepositIndex m_depositIndex;
     TransactionMap m_transactionMap;
     MultisignatureOutputsContainer m_multisignatureOutputs;
-	UpgradeDetector m_upgradeDetectorV2;
-	UpgradeDetector m_upgradeDetectorV3;
-  UpgradeDetector m_upgradeDetectorV4;
-
+    UpgradeDetector m_upgradeDetectorV2;
+    UpgradeDetector m_upgradeDetectorV3;
+    UpgradeDetector m_upgradeDetectorV4;
+    UpgradeDetector m_upgradeDetectorV7;  
+  
     PaymentIdIndex m_paymentIdIndex;
     TimestampBlocksIndex m_timestampIndex;
     GeneratedTransactionsIndex m_generatedTransactionsIndex;
@@ -298,7 +302,7 @@ namespace CryptoNote {
     bool checkTransactionInputs(const Transaction& tx, const Crypto::Hash& tx_prefix_hash, uint32_t* pmax_used_block_height = NULL);
     bool checkTransactionInputs(const Transaction& tx, uint32_t* pmax_used_block_height = NULL);
     bool check_tx_outputs(const Transaction& tx) const;
-    bool have_tx_keyimg_as_spent(const Crypto::KeyImage &key_im);
+
     const TransactionEntry& transactionByIndex(TransactionIndex index);
     bool pushBlock(const Block& blockData, block_verification_context& bvc, uint32_t height);
     bool pushBlock(const Block& blockData, const std::vector<Transaction>& transactions, block_verification_context& bvc);
@@ -308,7 +312,8 @@ namespace CryptoNote {
     void popTransaction(const Transaction& transaction, const Crypto::Hash& transactionHash);
     void popTransactions(const BlockEntry& block, const Crypto::Hash& minerTransactionHash);
     bool validateInput(const MultisignatureInput& input, const Crypto::Hash& transactionHash, const Crypto::Hash& transactionPrefixHash, const std::vector<Crypto::Signature>& transactionSignatures);
-
+    bool removeLastBlock();
+    bool checkCheckpoints(uint32_t& lastValidCheckpointHeight);    
     bool storeBlockchainIndices();
     bool loadBlockchainIndices();
 

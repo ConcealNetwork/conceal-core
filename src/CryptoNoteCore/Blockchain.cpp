@@ -318,7 +318,8 @@ m_is_in_checkpoint_zone(false),
 m_checkpoints(logger),
 m_upgradeDetectorV2(currency, m_blocks, BLOCK_MAJOR_VERSION_2, logger),
 m_upgradeDetectorV3(currency, m_blocks, BLOCK_MAJOR_VERSION_3, logger),
-m_upgradeDetectorV4(currency, m_blocks, BLOCK_MAJOR_VERSION_4, logger)
+m_upgradeDetectorV4(currency, m_blocks, BLOCK_MAJOR_VERSION_4, logger),
+m_upgradeDetectorV7(currency, m_blocks, BLOCK_MAJOR_VERSION_7, logger)
 {
 
   m_outputs.set_deleted_key(0);
@@ -457,6 +458,15 @@ bool Blockchain::init(const std::string& config_folder, bool load_existing) {
     }
   }
 
+  /* If the currrent checkpoint is invalid, then rollback the chain to the last 
+     valid checkpoint and try again. */
+  uint32_t lastValidCheckpointHeight = 0;
+  if (!checkCheckpoints(lastValidCheckpointHeight)) {
+    logger(WARNING, BRIGHT_YELLOW) << "Invalid checkpoint. Rollback blockchain to last valid checkpoint at height " << lastValidCheckpointHeight;
+    rollbackBlockchainTo(lastValidCheckpointHeight);
+  }
+
+
   if (!m_upgradeDetectorV2.init()) {
     logger(ERROR, BRIGHT_RED) << "<< Blockchain.cpp << " << "Failed to initialize upgrade detector";
     return false;
@@ -472,6 +482,12 @@ bool Blockchain::init(const std::string& config_folder, bool load_existing) {
     return false;
   }
 
+  if (!m_upgradeDetectorV7.init()) {
+    logger(ERROR, BRIGHT_RED) << "<< Blockchain.cpp << " << "Failed to initialize upgrade detector";
+    return false;
+  }
+
+
   update_next_comulative_size_limit();
 
   uint64_t timestamp_diff = time(NULL) - m_blocks.back().bl.timestamp;
@@ -483,6 +499,23 @@ bool Blockchain::init(const std::string& config_folder, bool load_existing) {
     << "<< Blockchain.cpp << " << "Blockchain initialized. last block: " << m_blocks.size() - 1 << ", "
     << Common::timeIntervalToString(timestamp_diff)
     << " time ago, current difficulty: " << getDifficultyForNextBlock();
+
+  return true;
+}
+
+bool Blockchain::checkCheckpoints(uint32_t& lastValidCheckpointHeight) {
+  std::vector<uint32_t> checkpointHeights = m_checkpoints.getCheckpointHeights();
+  for (const auto& checkpointHeight : checkpointHeights) {
+    if (m_blocks.size() <= checkpointHeight) {
+      return true;
+    }
+
+    if(m_checkpoints.check_block(checkpointHeight, getBlockIdByHeight(checkpointHeight))) {
+      lastValidCheckpointHeight = checkpointHeight;
+    } else {
+      return false;
+    }
+  }
 
   return true;
 }
@@ -689,7 +722,7 @@ difficulty_type Blockchain::getDifficultyForNextBlock() {
   uint32_t block_index = m_blocks.size();
   uint8_t block_major_version = get_block_major_version_for_height(block_index + 1);
 
-  if (block_major_version == 4) {
+  if (block_major_version >= 4) {
     return m_currency.nextDifficultyLWMA3(timestamps, commulative_difficulties);
   } else {
     return m_currency.nextDifficulty(block_major_version, block_index, timestamps, commulative_difficulties);
@@ -728,7 +761,9 @@ difficulty_type Blockchain::difficultyAtHeight(uint64_t height) {
 }
 
 uint8_t Blockchain::get_block_major_version_for_height(uint64_t height) const {
-  if (height > m_upgradeDetectorV4.upgradeHeight()) {
+  if (height > m_upgradeDetectorV7.upgradeHeight()) {
+    return m_upgradeDetectorV7.targetVersion();
+  } else if (height > m_upgradeDetectorV4.upgradeHeight()) {
     return m_upgradeDetectorV4.targetVersion();
   } else if (height > m_upgradeDetectorV3.upgradeHeight()) {
     return m_upgradeDetectorV3.targetVersion();
@@ -876,7 +911,9 @@ bool Blockchain::switch_to_alternative_blockchain(std::list<blocks_ext_by_hash::
 
 
 uint8_t Blockchain::getBlockMajorVersionForHeight(uint32_t height) const {
-  if (height > m_upgradeDetectorV4.upgradeHeight()) {
+if (height > m_upgradeDetectorV7.upgradeHeight()) {
+    return m_upgradeDetectorV7.targetVersion();
+  } else if (height > m_upgradeDetectorV4.upgradeHeight()) {
     return m_upgradeDetectorV4.targetVersion();
   } else if (height > m_upgradeDetectorV3.upgradeHeight()) {
     return m_upgradeDetectorV3.targetVersion();
@@ -936,7 +973,7 @@ difficulty_type Blockchain::get_next_difficulty_for_alternative_chain(const std:
   uint32_t block_index = m_blocks.size();
   uint8_t block_major_version = get_block_major_version_for_height(block_index + 1);
 
-  if (block_major_version == 4) {
+  if (block_major_version >= 4) {
     return m_currency.nextDifficultyLWMA3(timestamps, commulative_difficulties);
   } else {
     return m_currency.nextDifficulty(block_major_version, block_index, timestamps, commulative_difficulties);
@@ -949,6 +986,12 @@ bool Blockchain::prevalidate_miner_transaction(const Block& b, uint32_t height) 
     logger(ERROR, BRIGHT_RED)
       << "coinbase transaction in the block has no inputs";
 
+    return false;
+  }
+
+  if (!(b.baseTransaction.signatures.empty())) {
+    logger(ERROR, BRIGHT_RED)
+      < "<< Blockchain.cpp << " << "coinbase transaction should not contain signatures";
     return false;
   }
 
@@ -2091,6 +2134,7 @@ bool Blockchain::pushBlock(const Block& blockData, const std::vector<Transaction
   m_upgradeDetectorV2.blockPushed();
   m_upgradeDetectorV3.blockPushed();
   m_upgradeDetectorV4.blockPushed();
+  m_upgradeDetectorV7.blockPushed();  
   update_next_comulative_size_limit();
 
   return true;
@@ -2184,6 +2228,7 @@ void Blockchain::popBlock(const Crypto::Hash& blockHash) {
   m_upgradeDetectorV2.blockPopped();
   m_upgradeDetectorV3.blockPopped();
   m_upgradeDetectorV4.blockPopped();  
+  m_upgradeDetectorV7.blockPopped();    
 }
 
 bool Blockchain::pushTransaction(BlockEntry& block, const Crypto::Hash& transactionHash, TransactionIndex transactionIndex) {
@@ -2439,6 +2484,37 @@ bool Blockchain::validateInput(const MultisignatureInput& input, const Crypto::H
 
   return true;
 }
+
+bool Blockchain::rollbackBlockchainTo(uint32_t height) {
+  logger(INFO) << "Rolling back blockchain to " << height;
+  while (height + 1 < m_blocks.size()) {
+    removeLastBlock();
+  }
+  logger(INFO) << "Rollback complete. Synchronization will resume.";  
+  return true;
+}
+
+bool Blockchain::removeLastBlock() {
+  if (m_blocks.empty()) {
+    logger(ERROR, BRIGHT_RED) <<
+      "Attempt to pop block from empty blockchain.";
+    return false;
+  }
+
+  logger(DEBUGGING) << "Removing last block with height " << m_blocks.back().height;
+  popTransactions(m_blocks.back(), getObjectHash(m_blocks.back().bl.baseTransaction));
+
+  Crypto::Hash blockHash = getBlockIdByHeight(m_blocks.back().height);
+  m_timestampIndex.remove(m_blocks.back().bl.timestamp, blockHash);
+  m_generatedTransactionsIndex.remove(m_blocks.back().bl);
+
+  m_blocks.pop_back();
+  m_blockIndex.pop();
+
+  assert(m_blockIndex.size() == m_blocks.size());
+  return true;
+}
+
 
 bool Blockchain::getLowerBound(uint64_t timestamp, uint64_t startOffset, uint32_t& height) {
   std::lock_guard<decltype(m_blockchain_lock)> lk(m_blockchain_lock);

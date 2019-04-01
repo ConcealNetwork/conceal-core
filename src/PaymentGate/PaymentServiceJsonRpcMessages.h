@@ -368,4 +368,37 @@ struct GetMessagesFromExtra {
   };
 };
 
+struct EstimateFusion {
+  struct Request {
+    uint64_t threshold;
+    std::vector<std::string> addresses;
+
+    void serialize(CryptoNote::ISerializer& serializer);
+  };
+
+  struct Response {
+    uint32_t fusionReadyCount;
+    uint32_t totalOutputCount;
+
+    void serialize(CryptoNote::ISerializer& serializer);
+  };
+};
+
+struct SendFusionTransaction {
+  struct Request {
+    uint64_t threshold;
+    uint32_t anonymity = 0;
+    std::vector<std::string> addresses;
+    std::string destinationAddress;
+
+    void serialize(CryptoNote::ISerializer& serializer);
+  };
+
+  struct Response {
+    std::string transactionHash;
+
+    void serialize(CryptoNote::ISerializer& serializer);
+  };
+};
+
 } //namespace PaymentService

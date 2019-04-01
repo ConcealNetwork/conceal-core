@@ -12,6 +12,7 @@
 #include <thread>
 #include <set>
 #include <sstream>
+#include <regex>
 
 #include <boost/bind.hpp>
 #include <boost/lexical_cast.hpp>
@@ -616,10 +617,14 @@ simple_wallet::simple_wallet(System::Dispatcher& dispatcher, const CryptoNote::C
   m_consoleHandler.setHandler("create_integrated", boost::bind(&simple_wallet::create_integrated, this, _1), "create_integrated <payment_id> - Create an integrated address with a payment ID");
   m_consoleHandler.setHandler("export_keys", boost::bind(&simple_wallet::export_keys, this, _1), "Show the secret keys of the current wallet");
   m_consoleHandler.setHandler("balance", boost::bind(&simple_wallet::show_balance, this, _1), "Show current wallet balance");
+  m_consoleHandler.setHandler("sign_message", boost::bind(&simple_wallet::sign_message, this, _1), "Sign a message with your wallet keys");
+  m_consoleHandler.setHandler("verify_signature", boost::bind(&simple_wallet::verify_signature, this, _1), "Verify a signed message");
   m_consoleHandler.setHandler("incoming_transfers", boost::bind(&simple_wallet::show_incoming_transfers, this, _1), "Show incoming transfers");
   m_consoleHandler.setHandler("list_transfers", boost::bind(&simple_wallet::listTransfers, this, _1), "list_transfers <height> - Show all known transfers from a certain (optional) block height");
   m_consoleHandler.setHandler("payments", boost::bind(&simple_wallet::show_payments, this, _1), "payments <payment_id_1> [<payment_id_2> ... <payment_id_N>] - Show payments <payment_id_1>, ... <payment_id_N>");
+  m_consoleHandler.setHandler("get_tx_proof", boost::bind(&simple_wallet::get_tx_proof, this, _1), "Generate a signature to prove payment: <txid> <address> [<txkey>]");
   m_consoleHandler.setHandler("bc_height", boost::bind(&simple_wallet::show_blockchain_height, this, _1), "Show blockchain height");
+  m_consoleHandler.setHandler("show_dust", boost::bind(&simple_wallet::show_dust, this, _1), "Show the number of unmixable dust outputs");
   m_consoleHandler.setHandler("outputs", boost::bind(&simple_wallet::show_num_unlocked_outputs, this, _1), "Show the number of unlocked outputs available for a transaction");
   m_consoleHandler.setHandler("optimize", boost::bind(&simple_wallet::optimize_outputs, this, _1), "Combine many available outputs into a few by sending a transaction to self");
   m_consoleHandler.setHandler("optimize_all", boost::bind(&simple_wallet::optimize_all_outputs, this, _1), "Optimize your wallet several times so you can send large transactions");  
@@ -632,8 +637,17 @@ simple_wallet::simple_wallet(System::Dispatcher& dispatcher, const CryptoNote::C
   m_consoleHandler.setHandler("save", boost::bind(&simple_wallet::save, this, _1), "Save wallet synchronized data");
   m_consoleHandler.setHandler("reset", boost::bind(&simple_wallet::reset, this, _1), "Discard cache data and start synchronizing from the start");
   m_consoleHandler.setHandler("help", boost::bind(&simple_wallet::help, this, _1), "Show this help");
-  m_consoleHandler.setHandler("exit", boost::bind(&simple_wallet::exit, this, _1), "Close wallet");
+  m_consoleHandler.setHandler("exit", boost::bind(&simple_wallet::exit, this, _1), "Close wallet");  
+  m_consoleHandler.setHandler("get_reserve_proof", boost::bind(&simple_wallet::get_reserve_proof, this, _1), "all|<amount> [<message>] - Generate a signature proving that you own at least <amount>, optionally with a challenge string <message>. ");
 }
+
+/* This function shows the number of outputs in the wallet
+  that are below the dust threshold */
+bool simple_wallet::show_dust(const std::vector<std::string>& args) {
+  logger(INFO, BRIGHT_WHITE) << "Dust outputs: " << m_wallet->dustBalance() << std::endl;
+	return true;
+}
+
 //----------------------------------------------------------------------------------------------------
 bool simple_wallet::set_log(const std::vector<std::string> &args) {
   if (args.size() != 1) {
@@ -1183,6 +1197,107 @@ bool simple_wallet::stop_mining(const std::vector<std::string>& args)
 
   return true;
 }
+
+bool simple_wallet::get_reserve_proof(const std::vector<std::string> &args)
+{
+	if (args.size() != 1 && args.size() != 2) {
+		fail_msg_writer() << "Usage: get_reserve_proof (all|<amount>) [<message>]";
+		return true;
+	}
+
+
+	uint64_t reserve = 0;
+	if (args[0] != "all") {
+		if (!m_currency.parseAmount(args[0], reserve)) {
+			fail_msg_writer() << "amount is wrong: " << args[0];
+			return true;
+		}
+	} else {
+		reserve = m_wallet->actualBalance();
+	}
+
+	try {
+		const std::string sig_str = m_wallet->getReserveProof(reserve, args.size() == 2 ? args[1] : "");
+		
+		//logger(INFO, BRIGHT_WHITE) << "\n\n" << sig_str << "\n\n" << std::endl;
+
+		const std::string filename = "reserve_proof_" + args[0] + "_CCX.txt";
+		boost::system::error_code ec;
+		if (boost::filesystem::exists(filename, ec)) {
+			boost::filesystem::remove(filename, ec);
+		}
+
+		std::ofstream proofFile(filename, std::ios::out | std::ios::trunc | std::ios::binary);
+		if (!proofFile.good()) {
+			return false;
+		}
+		proofFile << sig_str;
+
+		success_msg_writer() << "signature file saved to: " << filename;
+
+	} catch (const std::exception &e) {
+		fail_msg_writer() << e.what();
+	}
+
+	return true;
+}
+
+
+bool simple_wallet::get_tx_proof(const std::vector<std::string> &args)
+{
+  if(args.size() != 2 && args.size() != 3) {
+    fail_msg_writer() << "Usage: get_tx_proof <txid> <dest_address> [<txkey>]";
+    return true;
+  }
+
+  const std::string &str_hash = args[0];
+  Crypto::Hash txid;
+  if (!parse_hash256(str_hash, txid)) {
+    fail_msg_writer() << "Failed to parse txid";
+    return true;
+  }
+
+  const std::string address_string = args[1];
+  CryptoNote::AccountPublicAddress address;
+  if (!m_currency.parseAccountAddressString(address_string, address)) {
+     fail_msg_writer() << "Failed to parse address " << address_string;
+     return true;
+  }
+
+  std::string sig_str;
+  Crypto::SecretKey tx_key, tx_key2;
+  bool r = m_wallet->get_tx_key(txid, tx_key);
+
+  if (args.size() == 3) {
+    Crypto::Hash tx_key_hash;
+    size_t size;
+    if (!Common::fromHex(args[2], &tx_key_hash, sizeof(tx_key_hash), size) || size != sizeof(tx_key_hash)) {
+      fail_msg_writer() << "failed to parse tx_key";
+      return true;
+    }
+    tx_key2 = *(struct Crypto::SecretKey *) &tx_key_hash;
+
+    if (r) {
+      if (args.size() == 3 && tx_key != tx_key2) {
+        fail_msg_writer() << "Tx secret key was found for the given txid, but you've also provided another tx secret key which doesn't match the found one.";
+        return true;
+      }
+    }
+	tx_key = tx_key2;
+  } else {
+    if (!r) {
+      fail_msg_writer() << "Tx secret key wasn't found in the wallet file. Provide it as the optional third parameter if you have it elsewhere.";
+      return true;
+    }
+  }
+
+  if (m_wallet->getTxProof(txid, address, tx_key, sig_str)) {
+    success_msg_writer() << "Signature: " << sig_str << std::endl;
+  }
+
+  return true;
+}
+
 //----------------------------------------------------------------------------------------------------
 void simple_wallet::initCompleted(std::error_code result) {
   if (m_initResultPromise.get() != nullptr) {
@@ -1246,6 +1361,63 @@ bool simple_wallet::show_balance(const std::vector<std::string>& args/* = std::v
   return true;
 }
 
+bool simple_wallet::sign_message(const std::vector<std::string>& args)
+{
+  if(args.size() < 1)
+  {
+    fail_msg_writer() << "Use: sign_message <message>";
+    return true;
+  }
+    
+  AccountKeys keys;
+  m_wallet->getAccountKeys(keys);
+
+  Crypto::Hash message_hash;
+  Crypto::Signature sig;
+  Crypto::cn_fast_hash(args[0].data(), args[0].size(), message_hash);
+  Crypto::generate_signature(message_hash, keys.address.spendPublicKey, keys.spendSecretKey, sig);
+  
+  success_msg_writer() << "Sig" << Tools::Base58::encode(std::string(reinterpret_cast<char*>(&sig)));
+
+  return true;	
+}
+
+bool simple_wallet::verify_signature(const std::vector<std::string>& args)
+{
+  if (args.size() != 3)
+  {
+    fail_msg_writer() << "Use: verify_signature <message> <address> <signature>";
+    return true;
+  }
+  
+  std::string encodedSig = args[2];
+  const size_t prefix_size = strlen("Sig");
+  
+  if(encodedSig.substr(0, prefix_size) != "Sig")
+  {
+    fail_msg_writer() << "Invalid signature prefix";
+    return true;
+  } 
+  
+  Crypto::Hash message_hash;
+  Crypto::cn_fast_hash(args[0].data(), args[0].size(), message_hash);
+  
+  std::string decodedSig;
+  Crypto::Signature sig;
+  Tools::Base58::decode(encodedSig.substr(prefix_size), decodedSig);
+  memcpy(&sig, decodedSig.data(), sizeof(sig));
+  
+  uint64_t prefix;
+  CryptoNote::AccountPublicAddress addr;
+  CryptoNote::parseAccountAddressString(prefix, addr, args[1]);
+  
+  if(Crypto::check_signature(message_hash, addr.spendPublicKey, sig))
+    success_msg_writer() << "Valid";
+  else
+    success_msg_writer() << "Invalid";
+  return true;
+}
+
 /* ------------------------------------------------------------------------------------------- */
 
 /* CREATE INTEGRATED ADDRESS */
@@ -1263,14 +1435,23 @@ bool simple_wallet::create_integrated(const std::vector<std::string>& args/* = s
   }
 
   std::string paymentID = args[0];
+  std::regex hexChars("^[0-9a-f]+$");
+  if(paymentID.size() != 64 || !regex_match(paymentID, hexChars))
+  {
+    fail_msg_writer() << "Invalid payment ID";
+    return true;
+  }
+
   std::string address = m_wallet->getAddress();
   uint64_t prefix;
   CryptoNote::AccountPublicAddress addr;
 
   /* get the spend and view public keys from the address */
-  const bool valid = CryptoNote::parseAccountAddressString(prefix, 
-                                                          addr,
-                                                          address);
+  if(!CryptoNote::parseAccountAddressString(prefix, addr, address))
+  {
+    logger(ERROR, BRIGHT_RED) << "Failed to parse account address from string";
+    return true;
+  }
 
   CryptoNote::BinaryArray ba;
   CryptoNote::toBinaryArray(addr, ba);
@@ -1335,7 +1516,7 @@ bool simple_wallet::listTransfers(const std::vector<std::string>& args) {
   bool haveTransfers = false;
   bool haveBlockHeight = false;
   std::string blockHeightString = ""; 
-  int blockHeight;
+  uint32_t blockHeight = 0;
   WalletLegacyTransaction txInfo;
 
 
@@ -1363,7 +1544,7 @@ bool simple_wallet::listTransfers(const std::vector<std::string>& args) {
       haveTransfers = true;
     }
 
-    if (haveBlockHeight = false) {
+    if (haveBlockHeight == false) {
       printListTransfersItem(logger, txInfo, *m_wallet, m_currency);
     } else {
       if (txInfo.blockHeight >= blockHeight) {
@@ -1458,7 +1639,7 @@ bool simple_wallet::optimize_outputs(const std::vector<std::string>& args) {
     std::vector<CryptoNote::WalletLegacyTransfer> transfers;
     std::vector<CryptoNote::TransactionMessage> messages;
     std::string extraString;
-    uint64_t fee = CryptoNote::parameters::MINIMUM_FEE_V1;
+    uint64_t fee = CryptoNote::parameters::MINIMUM_FEE;
     uint64_t mixIn = 0;
     uint64_t unlockTimestamp = 0;
     uint64_t ttl = 0;
@@ -1526,7 +1707,7 @@ bool simple_wallet::optimize_all_outputs(const std::vector<std::string>& args) {
       std::vector<CryptoNote::WalletLegacyTransfer> transfers;
       std::vector<CryptoNote::TransactionMessage> messages;
       std::string extraString;
-      uint64_t fee = CryptoNote::parameters::MINIMUM_FEE_V1;
+      uint64_t fee = CryptoNote::parameters::MINIMUM_FEE;
       uint64_t mixIn = 0;
       uint64_t unlockTimestamp = 0;
       uint64_t ttl = 0;

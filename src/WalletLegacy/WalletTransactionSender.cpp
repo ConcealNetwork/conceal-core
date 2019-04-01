@@ -283,6 +283,40 @@ std::unique_ptr<WalletRequest> WalletTransactionSender::makeWithdrawDepositReque
   return doSendDepositWithdrawTransaction(std::move(context), events, depositIds);
 }
 
+std::shared_ptr<WalletRequest> WalletTransactionSender::makeSendFusionRequest(TransactionId& transactionId, std::deque<std::unique_ptr<WalletLegacyEvent>>& events,
+  const std::vector<WalletLegacyTransfer>& transfers, const std::list<TransactionOutputInformation>& fusionInputs, uint64_t fee, const std::string& extra, uint64_t mixIn, uint64_t unlockTimestamp) {
+
+  using namespace CryptoNote;
+
+  throwIf(transfers.empty(), error::ZERO_DESTINATION);
+  validateTransfersAddresses(transfers);
+  uint64_t neededMoney = countNeededMoney(fee, transfers);
+
+  std::shared_ptr<SendTransactionContext> context = std::make_shared<SendTransactionContext>();
+
+  for (auto& out : fusionInputs) {
+    context->foundMoney += out.amount;
+  }
+  
+  std::vector<TransactionOutputInformation> fusionInputsVec{std::begin(fusionInputs), std::end(fusionInputs)};
+  
+  throwIf(context->foundMoney < neededMoney, error::WRONG_AMOUNT);
+  context->selectedTransfers = fusionInputsVec;
+  
+  const std::vector<TransactionMessage> messages;
+
+  transactionId = m_transactionsCache.addNewTransaction(neededMoney, fee, extra, transfers, unlockTimestamp, messages);
+  context->transactionId = transactionId;
+  context->mixIn = mixIn;
+  Crypto::SecretKey transactionSK;
+
+  if (context->mixIn) {
+    return makeGetRandomOutsRequest(std::move(context), false, transactionSK);
+  }
+
+  return doSendTransaction(std::move(context), events, transactionSK);
+}
+
 std::unique_ptr<WalletRequest> WalletTransactionSender::makeGetRandomOutsRequest(std::shared_ptr<SendTransactionContext>&& context, bool isMultisigTransaction, Crypto::SecretKey& transactionSK) {
   uint64_t outsCount = context->mixIn + 1;// add one to make possible (if need) to skip real output key
   std::vector<uint64_t> amounts;
@@ -363,7 +397,7 @@ std::unique_ptr<WalletRequest> WalletTransactionSender::doSendTransaction(std::s
     constructTx(m_keys, sources, splittedDests, transaction.extra, transaction.unlockTime, m_upperTransactionSizeLimit, tx, context->messages, context->ttl, transactionSK);
 
     getObjectHash(tx, transaction.hash);
-    transaction.transactionSK = transactionSK;
+    transaction.secretKey = transactionSK;
 
     m_transactionsCache.updateTransaction(context->transactionId, tx, totalAmount, context->selectedTransfers);
 

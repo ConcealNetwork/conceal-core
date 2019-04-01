@@ -677,6 +677,9 @@ void CryptoNoteProtocolHandler::recalculateMaxObservedHeight(const CryptoNoteCon
   Crypto::Hash ignore;
   m_core.get_blockchain_top(localHeight, ignore);
   m_observedHeight = std::max(peerHeight, localHeight + 1);
+  if (context.m_state == CryptoNoteConnectionContext::state_normal) {
+    m_observedHeight = localHeight;
+  }  
 }
 
 uint32_t CryptoNoteProtocolHandler::getObservedHeight() const {

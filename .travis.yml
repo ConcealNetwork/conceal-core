@@ -1,0 +1,34 @@
+sudo: true
+os: linux
+language: cpp
+
+matrix:
+  include:
+    - env: COMPILER=g++-6 BUILD=Debug STANDARD=14
+      compiler: gcc
+      addons:
+        apt:
+          update: true
+          sources:
+            - sourceline: 'ppa:mhier/libboost-latest'
+            - ubuntu-toolchain-r-test
+          packages:
+            - g++-6
+            - boost1.67
+    - env: COMPILER=g++-6 BUILD=Release STANDARD=14
+      compiler: gcc
+      addons:
+        apt:
+          update: true
+          sources:
+            - sourceline: 'ppa:mhier/libboost-latest'
+            - ubuntu-toolchain-r-test
+          packages:
+            - g++-6
+            - boost1.67
+         
+script:
+    - mkdir build
+    - cd build
+    - cmake ..
+    - make

@@ -173,6 +173,8 @@ uint32_t Currency::upgradeHeight(uint8_t majorVersion) const {
     return m_upgradeHeightV3;
   } else if (majorVersion == BLOCK_MAJOR_VERSION_4) {
     return m_upgradeHeightV6;
+  } else if (majorVersion == BLOCK_MAJOR_VERSION_7) {
+    return m_upgradeHeightV7;
   } else {
     return static_cast<uint32_t>(-1);
   }
@@ -203,11 +205,8 @@ bool Currency::getBlockReward(size_t medianSize, size_t currentBlockSize, uint64
 
 /* ---------------------------------------------------------------------------------------------------- */
 
-uint64_t Currency::calculateInterest(uint64_t amount, uint32_t term, uint32_t height) const 
-{
-
+uint64_t Currency::calculateInterest(uint64_t amount, uint32_t term, uint32_t height) const {
   assert(m_depositMinTerm <= term);
-
   uint64_t amount4Humans = amount / 1000000;
 
   /* deposits 2.0 and investments 1.0 */
@@ -243,8 +242,7 @@ uint64_t Currency::calculateInterest(uint64_t amount, uint32_t term, uint32_t he
 
 /* ---------------------------------------------------------------------------------------------------- */
 
-uint64_t Currency::calculateInterestV2(uint64_t amount, uint32_t term) const 
-{
+uint64_t Currency::calculateInterestV2(uint64_t amount, uint32_t term) const {
   /* investments */
   if (term % 64800 == 0) {    
 
@@ -312,7 +310,6 @@ uint64_t Currency::calculateInterestV2(uint64_t amount, uint32_t term) const
 
   /* weekly deposits */
   if (term % 5040 == 0) {    
-
     uint64_t actualAmount = amount;
     float weeks = term / 5040;
     float baseInterest = 0.0696;
@@ -567,30 +564,28 @@ bool Currency::isFusionTransaction(const Transaction& transaction) const {
 
 /* ---------------------------------------------------------------------------------------------------- */
 
-bool Currency::isAmountApplicableInFusionTransactionInput(uint64_t amount, uint64_t threshold) const {
-  uint8_t ignore;
-  return isAmountApplicableInFusionTransactionInput(amount, threshold, ignore);
-}
+	bool Currency::isAmountApplicableInFusionTransactionInput(uint64_t amount, uint64_t threshold, uint32_t height) const {
+		uint8_t ignore;
+		return isAmountApplicableInFusionTransactionInput(amount, threshold, ignore, height);
+	}
 
-/* ---------------------------------------------------------------------------------------------------- */
+	bool Currency::isAmountApplicableInFusionTransactionInput(uint64_t amount, uint64_t threshold, uint8_t& amountPowerOfTen, uint32_t height) const {
+		if (amount >= threshold) {
+			return false;
+		}
 
-bool Currency::isAmountApplicableInFusionTransactionInput(uint64_t amount, uint64_t threshold, uint8_t& amountPowerOfTen) const {
-  if (amount >= threshold) {
-    return false;
-  }
+		if (height < CryptoNote::parameters::UPGRADE_HEIGHT_V4 && amount < defaultDustThreshold()) {
+			return false;
+		}
 
-  if (amount < defaultDustThreshold()) {
-    return false;
-  }
+		auto it = std::lower_bound(PRETTY_AMOUNTS.begin(), PRETTY_AMOUNTS.end(), amount);
+		if (it == PRETTY_AMOUNTS.end() || amount != *it) {
+			return false;
+		}
 
-  auto it = std::lower_bound(PRETTY_AMOUNTS.begin(), PRETTY_AMOUNTS.end(), amount);
-  if (it == PRETTY_AMOUNTS.end() || amount != *it) {
-    return false;
-  }
-
-  amountPowerOfTen = static_cast<uint8_t>(std::distance(PRETTY_AMOUNTS.begin(), it) / 9);
-  return true;
-}
+		amountPowerOfTen = static_cast<uint8_t>(std::distance(PRETTY_AMOUNTS.begin(), it) / 9);
+		return true;
+	}
 
 /* ---------------------------------------------------------------------------------------------------- */
 
@@ -1035,6 +1030,7 @@ CurrencyBuilder::CurrencyBuilder(Logging::ILogger& log) : m_currency(log) {
   upgradeHeightV2(parameters::UPGRADE_HEIGHT_V2);
   upgradeHeightV3(parameters::UPGRADE_HEIGHT_V3);
   upgradeHeightV6(parameters::UPGRADE_HEIGHT_V6);
+  upgradeHeightV7(parameters::UPGRADE_HEIGHT_V7);  
   upgradeVotingThreshold(parameters::UPGRADE_VOTING_THRESHOLD);
   upgradeVotingWindow(parameters::UPGRADE_VOTING_WINDOW);
   upgradeWindow(parameters::UPGRADE_WINDOW);

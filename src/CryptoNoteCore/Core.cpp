@@ -101,9 +101,14 @@ void core::get_blockchain_top(uint32_t& height, Crypto::Hash& top_id) {
   top_id = m_blockchain.getTailId(height);
 }
 
+bool core::rollback_chain_to(uint32_t height) {
+  return m_blockchain.rollbackBlockchainTo(height);
+}
+
 bool core::get_blocks(uint32_t start_offset, uint32_t count, std::list<Block>& blocks, std::list<Transaction>& txs) {
   return m_blockchain.getBlocks(start_offset, count, blocks, txs);
 }
+
 
 bool core::get_blocks(uint32_t start_offset, uint32_t count, std::list<Block>& blocks) {
   return m_blockchain.getBlocks(start_offset, count, blocks);
@@ -341,7 +346,7 @@ bool core::get_block_template(Block& b, const AccountPublicAddress& adr, difficu
     b = boost::value_initialized<Block>();
     b.majorVersion = m_blockchain.get_block_major_version_for_height(height);
 
-	if (b.majorVersion < BLOCK_MAJOR_VERSION_4) {
+	if (b.majorVersion < BLOCK_MAJOR_VERSION_7) {
       if (b.majorVersion == BLOCK_MAJOR_VERSION_1) {
         b.minorVersion = m_currency.upgradeHeight(BLOCK_MAJOR_VERSION_2) == UpgradeDetectorBase::UNDEF_HEIGHT ? BLOCK_MINOR_VERSION_1 : BLOCK_MINOR_VERSION_0;
       } else {
@@ -1062,6 +1067,10 @@ std::unique_ptr<IBlock> core::getBlock(const Crypto::Hash& blockId) {
   }
 
   return std::move(blockPtr);
+}
+
+bool core::is_key_image_spent(const Crypto::KeyImage& key_im) {
+  return m_blockchain.have_tx_keyimg_as_spent(key_im);
 }
 
 bool core::addMessageQueue(MessageQueue<BlockchainMessage>& messageQueue) {

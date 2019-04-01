@@ -21,6 +21,8 @@ class AccountBase;
 
 class Currency {
 public:
+  static const std::vector<uint64_t> PRETTY_AMOUNTS;
+
   uint64_t maxBlockHeight() const { return m_maxBlockHeight; }
   size_t maxBlockBlobSize() const { return m_maxBlockBlobSize; }
   size_t maxTxSize() const { return m_maxTxSize; }
@@ -148,8 +150,8 @@ public:
   bool isFusionTransaction(const Transaction& transaction) const;
   bool isFusionTransaction(const Transaction& transaction, size_t size) const;
   bool isFusionTransaction(const std::vector<uint64_t>& inputsAmounts, const std::vector<uint64_t>& outputsAmounts, size_t size) const;
-  bool isAmountApplicableInFusionTransactionInput(uint64_t amount, uint64_t threshold) const;
-  bool isAmountApplicableInFusionTransactionInput(uint64_t amount, uint64_t threshold, uint8_t& amountPowerOfTen) const;
+  bool isAmountApplicableInFusionTransactionInput(uint64_t amount, uint64_t threshold, uint32_t height) const;
+  bool isAmountApplicableInFusionTransactionInput(uint64_t amount, uint64_t threshold, uint8_t& amountPowerOfTen, uint32_t height) const;
 
   std::string accountAddressAsString(const AccountBase& account) const;
   std::string accountAddressAsString(const AccountPublicAddress& accountPublicAddress) const;
@@ -235,6 +237,7 @@ private:
   uint32_t m_upgradeHeightV2;
   uint32_t m_upgradeHeightV3;
   uint32_t m_upgradeHeightV6;
+  uint32_t m_upgradeHeightV7;  
 
   unsigned int m_upgradeVotingThreshold;
   uint32_t m_upgradeVotingWindow;
@@ -251,7 +254,6 @@ private:
   std::string m_txPoolFileName;
   std::string m_blockchinIndicesFileName;
 
-  static const std::vector<uint64_t> PRETTY_AMOUNTS;
   static const std::vector<uint64_t> REWARD_INCREASING_FACTOR;
 
   bool m_testnet;
@@ -336,6 +338,7 @@ public:
   CurrencyBuilder& upgradeHeightV2(uint64_t val) { m_currency.m_upgradeHeightV2 = val; return *this; }
   CurrencyBuilder& upgradeHeightV3(uint64_t val) { m_currency.m_upgradeHeightV3 = val; return *this; }
   CurrencyBuilder& upgradeHeightV6(uint64_t val) { m_currency.m_upgradeHeightV6 = val; return *this; }
+  CurrencyBuilder& upgradeHeightV7(uint64_t val) { m_currency.m_upgradeHeightV7 = val; return *this; }  
   CurrencyBuilder& upgradeVotingThreshold(unsigned int val);
   CurrencyBuilder& upgradeVotingWindow(size_t val) { m_currency.m_upgradeVotingWindow = val; return *this; }
   CurrencyBuilder& upgradeWindow(size_t val);

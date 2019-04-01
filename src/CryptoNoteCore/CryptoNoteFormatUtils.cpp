@@ -18,6 +18,7 @@
 #include "CryptoNoteSerialization.h"
 #include "TransactionExtra.h"
 #include "CryptoNoteTools.h"
+#include "Currency.h"
 
 #include "CryptoNoteConfig.h"
 
@@ -486,7 +487,14 @@ bool get_block_longhash(cn_context &context, const Block& b, Hash& res) {
     return false;
   }
 
-  cn_slow_hash(context, bd.data(), bd.size(), res, b.majorVersion >= 3 ? 1 : 0); // k0x - major.version patch
+if (b.majorVersion >= 7) {
+    cn_conceal_slow_hash_v0(context, bd.data(), bd.size(), res);
+  } else if (b.majorVersion >= 3) {
+    cn_fast_slow_hash_v1(context, bd.data(), bd.size(), res);
+  } else {
+    cn_slow_hash(context, bd.data(), bd.size(), res);
+  }
+  
 
   return true;
 }
@@ -528,6 +536,14 @@ Hash get_tx_tree_hash(const Block& b) {
     txs_ids.push_back(th);
   }
   return get_tx_tree_hash(txs_ids);
+}
+
+bool is_valid_decomposed_amount(uint64_t amount) {
+  auto it = std::lower_bound(Currency::PRETTY_AMOUNTS.begin(), Currency::PRETTY_AMOUNTS.end(), amount);
+  if (it == Currency::PRETTY_AMOUNTS.end() || amount != *it) {
+	  return false;
+  }
+  return true;
 }
 
 }

@@ -8,6 +8,7 @@
 #include <limits>
 #include <string>
 #include <vector>
+#include <boost/optional.hpp>
 #include "CryptoNote.h"
 
 namespace CryptoNote {
@@ -59,6 +60,7 @@ struct WalletTransaction {
   uint64_t timestamp;
   uint32_t blockHeight;
   Crypto::Hash hash;
+  boost::optional<Crypto::SecretKey> secretKey;
   int64_t totalAmount;
   uint64_t fee;
   uint64_t creationTime;
@@ -137,6 +139,7 @@ public:
   virtual std::string createAddress(const Crypto::SecretKey& spendSecretKey) = 0;
   virtual std::string createAddress(const Crypto::PublicKey& spendPublicKey) = 0;
   virtual void deleteAddress(const std::string& address) = 0;
+
 
   virtual uint64_t getActualBalance() const = 0;
   virtual uint64_t getActualBalance(const std::string& address) const = 0;

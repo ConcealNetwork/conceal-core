@@ -1,7 +1,13 @@
 ![image](https://github.com/ConcealNetwork/conceal-assets/blob/master/splash.png)
 
+#### Master Build Status
+[![Build Status](https://travis-ci.org/ConcealNetwork/conceal-core.svg?branch=master)](https://travis-ci.org/ConcealNetwork/conceal-core) [![Build status](https://ci.appveyor.com/api/projects/status/github/concealnetwork/conceal-core?branch=master&svg=true)](https://ci.appveyor.com/project/cryptokatz/conceal-core)
+
+#### Development Build Status
+[![Build Status](https://travis-ci.org/ConcealNetwork/conceal-core.svg?branch=dev)](https://travis-ci.org/ConcealNetwork/conceal-core) [![Build status](https://ci.appveyor.com/api/projects/status/github/concealnetwork/conceal-core?branch=dev&svg=true)](https://ci.appveyor.com/project/cryptokatz/conceal-core)
+
 # Conceal Core (CLI)
-Latest Release: v5.1.7
+Latest Release: v5.2.5
 Maintained by The Circle Team.
 
 ## Information
@@ -52,6 +58,7 @@ If the build is successful the binaries will be in the src folder.
 ##### Building
 
 - From the start menu, open 'x64 Native Tools Command Prompt for vs2017' or run "C:\Program Files (x86)\Microsoft Visual Studio\2017\Community\Common7\Tools\VsMSBuildCmd.bat" from any command prompt.
+
 - `git clone https://github.com/ConcealNetwork/conceal-core`
 - `cd conceal-core`
 - `mkdir build`

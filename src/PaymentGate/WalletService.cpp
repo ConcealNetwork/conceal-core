@@ -29,6 +29,7 @@
 #include "WalletFactory.h"
 #include "NodeFactory.h"
 
+#include "Wallet/WalletGreen.h"
 #include "Wallet/LegacyKeysImporter.h"
 #include "Wallet/WalletErrors.h"
 #include "Wallet/WalletUtils.h"
@@ -412,7 +413,7 @@ void generateNewWallet(const CryptoNote::Currency &currency, const WalletConfigu
   CryptoNote::INode* nodeStub = NodeFactory::createNodeStub();
   std::unique_ptr<CryptoNote::INode> nodeGuard(nodeStub);
 
-  CryptoNote::IWallet* wallet = WalletFactory::createWallet(currency, *nodeStub, dispatcher);
+  CryptoNote::IWallet* wallet = new CryptoNote::WalletGreen(dispatcher, currency, *nodeStub);
   std::unique_ptr<CryptoNote::IWallet> walletGuard(wallet);
 
   log(Logging::INFO) << "Generating new wallet";
@@ -443,9 +444,10 @@ void importLegacyKeys(const std::string &legacyKeysFile, const WalletConfigurati
 }
 
 WalletService::WalletService(const CryptoNote::Currency& currency, System::Dispatcher& sys, CryptoNote::INode& node,
-  CryptoNote::IWallet& wallet, const WalletConfiguration& conf, Logging::ILogger& logger) :
+  CryptoNote::IWallet& wallet, CryptoNote::IFusionManager& fusionManager, const WalletConfiguration& conf, Logging::ILogger& logger) :
     currency(currency),
     wallet(wallet),
+    fusionManager(fusionManager),
     node(node),
     config(conf),
     inited(false),
@@ -1134,6 +1136,54 @@ void WalletService::refresh() {
   } catch (std::exception& e) {
     logger(Logging::WARNING) << "exception thrown in refresh(): " << e.what();
   }
+}
+
+std::error_code WalletService::estimateFusion(uint64_t threshold, const std::vector<std::string>& addresses,
+  uint32_t& fusionReadyCount, uint32_t& totalOutputCount) {
+
+  try {
+    System::EventLock lk(readyEvent);
+
+    validateAddresses(addresses, currency, logger);
+
+    auto estimateResult = fusionManager.estimate(threshold, addresses);
+    fusionReadyCount = static_cast<uint32_t>(estimateResult.fusionReadyCount);
+    totalOutputCount = static_cast<uint32_t>(estimateResult.totalOutputCount);
+  } catch (std::system_error& x) {
+    logger(Logging::WARNING, Logging::BRIGHT_YELLOW) << "Failed to estimate number of fusion outputs: " << x.what();
+    return x.code();
+  } catch (std::exception& x) {
+    logger(Logging::WARNING, Logging::BRIGHT_YELLOW) << "Failed to estimate number of fusion outputs: " << x.what();
+    return make_error_code(CryptoNote::error::INTERNAL_WALLET_ERROR);
+  }
+
+  return std::error_code();
+}
+
+std::error_code WalletService::sendFusionTransaction(uint64_t threshold, uint32_t anonymity, const std::vector<std::string>& addresses,
+  const std::string& destinationAddress, std::string& transactionHash) {
+
+  try {
+    System::EventLock lk(readyEvent);
+
+    validateAddresses(addresses, currency, logger);
+    if (!destinationAddress.empty()) {
+      validateAddresses({ destinationAddress }, currency, logger);
+    }
+
+    size_t transactionId = fusionManager.createFusionTransaction(threshold, anonymity, addresses, destinationAddress);
+    transactionHash = Common::podToHex(wallet.getTransaction(transactionId).hash);
+
+    logger(Logging::DEBUGGING) << "Fusion transaction " << transactionHash << " has been sent";
+  } catch (std::system_error& x) {
+    logger(Logging::WARNING, Logging::BRIGHT_YELLOW) << "Error while sending fusion transaction: " << x.what();
+    return x.code();
+  } catch (std::exception& x) {
+    logger(Logging::WARNING, Logging::BRIGHT_YELLOW) << "Error while sending fusion transaction: " << x.what();
+    return make_error_code(CryptoNote::error::INTERNAL_WALLET_ERROR);
+  }
+
+  return std::error_code();
 }
 
 void WalletService::reset() {
