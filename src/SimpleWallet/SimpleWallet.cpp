@@ -255,7 +255,6 @@ struct TransferCommand {
             return false;
           }
 
-          /* The argument is not a Conceal ID alias */
           if (aliasUrl.empty()) {
             destination.address = arg;
             destination.amount = de.amount;
@@ -264,15 +263,10 @@ struct TransferCommand {
             aliases[aliasUrl].emplace_back(WalletLegacyTransfer{"", static_cast<int64_t>(de.amount)});
           }
 
-          /* For remote node connections we calculate the fee as a one percent
-             of the total amount, capped at 10CCX 
-             we need to determine the remote node fee*/
+          /* Remote node transactions fees are 1000 X */
           if (!remote_fee_address.empty()) {
-            destination.address = remote_fee_address;
-            int64_t remote_node_fee = static_cast<int64_t>(de.amount * 0.01);
-            if (remote_node_fee > 10000000)
-                remote_node_fee = 10000000;            
-            destination.amount = remote_node_fee;
+            destination.address = remote_fee_address;                     
+            destination.amount = 1000;
             dsts.push_back(destination);
           }
 
@@ -619,8 +613,6 @@ simple_wallet::simple_wallet(System::Dispatcher& dispatcher, const CryptoNote::C
   m_refresh_progress_reporter(*this),
   m_initResultPromise(nullptr),
   m_walletSynchronized(false) {
-//  m_consoleHandler.setHandler("start_mining", boost::bind(&simple_wallet::start_mining, this, _1), "start_mining [<number_of_threads>] - Start mining in daemon");
-//  m_consoleHandler.setHandler("stop_mining", boost::bind(&simple_wallet::stop_mining, this, _1), "Stop mining in daemon");
   m_consoleHandler.setHandler("create_integrated", boost::bind(&simple_wallet::create_integrated, this, _1), "create_integrated <payment_id> - Create an integrated address with a payment ID");
   m_consoleHandler.setHandler("export_keys", boost::bind(&simple_wallet::export_keys, this, _1), "Show the secret keys of the current wallet");
   m_consoleHandler.setHandler("balance", boost::bind(&simple_wallet::show_balance, this, _1), "Show current wallet balance");
