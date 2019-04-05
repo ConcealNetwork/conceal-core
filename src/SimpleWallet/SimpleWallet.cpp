@@ -151,10 +151,12 @@ struct TransferCommand {
   bool parseArguments(LoggerRef& logger, const std::vector<std::string> &args) {
     ArgumentReader<std::vector<std::string>::const_iterator> ar(args.begin(), args.end());
 
-    try {
+    try 
+    {
       /* We expect mixin to be the first argument */
       auto mixin_str = ar.next();
-      if (!Common::fromString(mixin_str, fake_outs_count)) {
+      if (!Common::fromString(mixin_str, fake_outs_count)) 
+      {
         logger(ERROR, BRIGHT_RED) << "The mixin value should be non-negative integer, got " << mixin_str;
         return false;
       }
@@ -162,10 +164,12 @@ struct TransferCommand {
       bool ttlFound = false;
 
       /* Parse the remaining arguments */
-      while (!ar.eof()) {
+      while (!ar.eof()) 
+      {
         auto arg = ar.next();
 
-        if (arg.size() && arg[0] == '-') {          
+        if (arg.size() && arg[0] == '-') 
+        {          
           const auto& value = ar.next();
           if (arg == "-p") {
             if (!createTxExtraWithPaymentId(value, extra)) {
@@ -240,6 +244,7 @@ struct TransferCommand {
           }
 
           WalletLegacyTransfer destination;
+          WalletLegacyTransfer feeDestination;          
           CryptoNote::TransactionDestinationEntry de;
           std::string aliasUrl;
 
@@ -681,6 +686,37 @@ bool simple_wallet::init(const boost::program_options::variables_map& vm) {
     return false;
   }
 
+  if (m_daemon_host.empty())
+    m_daemon_host = "localhost";
+  if (!m_daemon_port)
+    m_daemon_port = RPC_DEFAULT_PORT;
+
+  if (!m_daemon_address.empty()) 
+  {
+    if (!parseUrlAddress(m_daemon_address, m_daemon_host, m_daemon_port)) 
+    {
+      fail_msg_writer() << "failed to parse daemon address: " << m_daemon_address;
+      return false;
+    }
+    remote_fee_address = getFeeAddress();
+    logger(INFO, BRIGHT_WHITE) << "Connected to remote node: " << m_daemon_host;
+    if (!remote_fee_address.empty()) 
+    {
+      logger(INFO, BRIGHT_WHITE) << "Fee address: " << remote_fee_address;
+    }    
+  } 
+  else 
+  {
+    if (!m_daemon_host.empty()) 
+      remote_fee_address = getFeeAddress();
+		m_daemon_address = std::string("http://") + m_daemon_host + ":" + std::to_string(m_daemon_port);
+    logger(INFO, BRIGHT_WHITE) << "Connected to remote node: " << m_daemon_host;
+    if (!remote_fee_address.empty()) 
+    {
+      logger(INFO, BRIGHT_WHITE) << "Fee address: " << remote_fee_address;
+    }   
+  }
+
   if (m_generate_new.empty() && m_wallet_file_arg.empty()) {
     std::cout << "  " << ENDL
     << "  " << ENDL
@@ -754,22 +790,7 @@ bool simple_wallet::init(const boost::program_options::variables_map& vm) {
     }
   }
 
-  if (m_daemon_host.empty())
-    m_daemon_host = "localhost";
-  if (!m_daemon_port)
-    m_daemon_port = RPC_DEFAULT_PORT;
 
-  if (!m_daemon_address.empty()) {
-    if (!parseUrlAddress(m_daemon_address, m_daemon_host, m_daemon_port)) {
-      fail_msg_writer() << "failed to parse daemon address: " << m_daemon_address;
-      return false;
-    }
-    remote_fee_address = getFeeAddress();
-  } else {
-if (!m_daemon_host.empty())
-			remote_fee_address = getFeeAddress();
-		m_daemon_address = std::string("http://") + m_daemon_host + ":" + std::to_string(m_daemon_port);
-  }
 
   Tools::PasswordContainer pwd_container;
   if (command_line::has_arg(vm, arg_password)) {
@@ -1983,12 +2004,12 @@ int main(int argc, char* argv[]) {
       CryptoNote::Currency tmp_currency = CryptoNote::CurrencyBuilder(logManager).currency();
       CryptoNote::simple_wallet tmp_wallet(dispatcher, tmp_currency, logManager);
 
-      std::cout << CRYPTONOTE_NAME << " wallet v" << PROJECT_VERSION_LONG << std::endl;
-      std::cout << "Usage: simplewallet [--wallet-file=<file>|--generate-new-wallet=<file>] [--daemon-address=<host>:<port>] [<COMMAND>]";
+      std::cout << "Conceal Wallet v" << PROJECT_VERSION_LONG << std::endl;
+      std::cout << "Usage: concealwallet [--wallet-file=<file>|--generate-new-wallet=<file>] [--daemon-address=<host>:<port>] [<COMMAND>]";
       std::cout << desc_all << '\n' << tmp_wallet.get_commands_str();
       return false;
     } else if (command_line::get_arg(vm, command_line::arg_version))  {
-      std::cout << CRYPTONOTE_NAME << " wallet v" << PROJECT_VERSION_LONG;
+      std::cout << "Conceal Wallet v" << PROJECT_VERSION_LONG << std::endl;
       return false;
     }
 
@@ -2010,7 +2031,7 @@ int main(int argc, char* argv[]) {
 
   logManager.configure(buildLoggerConfiguration(logLevel, Common::ReplaceExtenstion(argv[0], ".log")));
 
-  logger(INFO, BRIGHT_WHITE) << CRYPTONOTE_NAME << " wallet v" << PROJECT_VERSION_LONG;
+  logger(INFO, BRIGHT_GREEN) << "Conceal Wallet v" << PROJECT_VERSION_LONG;
 
   CryptoNote::Currency currency = CryptoNote::CurrencyBuilder(logManager).
     testnet(command_line::get_arg(vm, arg_testnet)).currency();
