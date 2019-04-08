@@ -74,9 +74,10 @@ public:
   std::error_code getUnconfirmedTransactionHashes(const std::vector<std::string>& addresses, std::vector<std::string>& transactionHashes);
   std::error_code getStatus(uint32_t& blockCount, uint32_t& knownBlockCount, std::string& lastBlockHash, uint32_t& peerCount);
   std::error_code getMessagesFromExtra(const std::string& extra, std::vector<std::string>& messges);
-  std::error_code estimateFusion(uint64_t threshold, uint32_t& fusionReadyCount, uint32_t& totalOutputCount);
-  std::error_code sendFusionTransaction(uint64_t threshold, uint32_t mixin, std::string& transactionHash);
-
+  std::error_code estimateFusion(uint64_t threshold, const std::vector<std::string>& addresses, uint32_t& fusionReadyCount, uint32_t& totalOutputCount);
+std::error_code sendFusionTransaction(uint64_t threshold, uint32_t anonymity, const std::vector<std::string>& addresses,
+    const std::string& destinationAddress, std::string& transactionHash);
+  
 private:
   void refresh();
   void reset();

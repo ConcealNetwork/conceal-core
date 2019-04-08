@@ -43,7 +43,9 @@ enum WalletErrorCodes {
   DEPOSIT_TERM_TOO_BIG,
   DEPOSIT_AMOUNT_TOO_SMALL,
   DEPOSIT_DOESNOT_EXIST,
-  DEPOSIT_LOCKED
+  DEPOSIT_LOCKED,
+  DESTINATION_ADDRESS_REQUIRED,
+  DESTINATION_ADDRESS_NOT_FOUND
 };
 
 // custom category:
@@ -90,6 +92,8 @@ public:
     case DEPOSIT_TERM_TOO_BIG:     return "Deposit term is too big";
     case DEPOSIT_AMOUNT_TOO_SMALL: return "Deposit amount is too small";
     case DEPOSIT_DOESNOT_EXIST:    return "Deposit doesn't exist";
+  case DESTINATION_ADDRESS_REQUIRED:  return  "Destination address required";
+    case DESTINATION_ADDRESS_NOT_FOUND: return "Destination address not found";
     case DEPOSIT_LOCKED:           return "Deposit is locked";
     default:                       return "Unknown error";
     }

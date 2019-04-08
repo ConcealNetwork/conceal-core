@@ -213,11 +213,12 @@ std::error_code PaymentServiceJsonRpcServer::handleGetMessagesFromExtra(const Ge
 }
 
 std::error_code PaymentServiceJsonRpcServer::handleEstimateFusion(const EstimateFusion::Request& request, EstimateFusion::Response& response) {
-  return service.estimateFusion(request.threshold, response.fusionReadyCount, response.totalOutputCount);
+  return service.estimateFusion(request.threshold, request.addresses, response.fusionReadyCount, response.totalOutputCount);
 }
 
+
 std::error_code PaymentServiceJsonRpcServer::handleSendFusionTransaction(const SendFusionTransaction::Request& request, SendFusionTransaction::Response& response) {
-  return service.sendFusionTransaction(request.threshold, request.mixin, response.transactionHash);
+  return service.sendFusionTransaction(request.threshold, request.anonymity, request.addresses, request.destinationAddress, response.transactionHash);
 }
 
 }

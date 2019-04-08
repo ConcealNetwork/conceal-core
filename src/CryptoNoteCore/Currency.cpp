@@ -564,30 +564,28 @@ bool Currency::isFusionTransaction(const Transaction& transaction) const {
 
 /* ---------------------------------------------------------------------------------------------------- */
 
-bool Currency::isAmountApplicableInFusionTransactionInput(uint64_t amount, uint64_t threshold) const {
-  uint8_t ignore;
-  return isAmountApplicableInFusionTransactionInput(amount, threshold, ignore);
-}
+	bool Currency::isAmountApplicableInFusionTransactionInput(uint64_t amount, uint64_t threshold, uint32_t height) const {
+		uint8_t ignore;
+		return isAmountApplicableInFusionTransactionInput(amount, threshold, ignore, height);
+	}
 
-/* ---------------------------------------------------------------------------------------------------- */
+	bool Currency::isAmountApplicableInFusionTransactionInput(uint64_t amount, uint64_t threshold, uint8_t& amountPowerOfTen, uint32_t height) const {
+		if (amount >= threshold) {
+			return false;
+		}
 
-bool Currency::isAmountApplicableInFusionTransactionInput(uint64_t amount, uint64_t threshold, uint8_t& amountPowerOfTen) const {
-  if (amount >= threshold) {
-    return false;
-  }
+		if (height < CryptoNote::parameters::UPGRADE_HEIGHT_V4 && amount < defaultDustThreshold()) {
+			return false;
+		}
 
-  if (amount < defaultDustThreshold()) {
-    return false;
-  }
+		auto it = std::lower_bound(PRETTY_AMOUNTS.begin(), PRETTY_AMOUNTS.end(), amount);
+		if (it == PRETTY_AMOUNTS.end() || amount != *it) {
+			return false;
+		}
 
-  auto it = std::lower_bound(PRETTY_AMOUNTS.begin(), PRETTY_AMOUNTS.end(), amount);
-  if (it == PRETTY_AMOUNTS.end() || amount != *it) {
-    return false;
-  }
-
-  amountPowerOfTen = static_cast<uint8_t>(std::distance(PRETTY_AMOUNTS.begin(), it) / 9);
-  return true;
-}
+		amountPowerOfTen = static_cast<uint8_t>(std::distance(PRETTY_AMOUNTS.begin(), it) / 9);
+		return true;
+	}
 
 /* ---------------------------------------------------------------------------------------------------- */
 
