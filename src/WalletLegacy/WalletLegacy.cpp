@@ -555,7 +555,7 @@ TransactionId WalletLegacy::sendTransaction(Crypto::SecretKey& transactionSK,
   std::deque<std::unique_ptr<WalletLegacyEvent>> events;
   throwIfNotInitialised();
 
-  if (fee < 100) {
+  if ((fee < 100) && (ttl == 0)) {
     fee = 100;
   }
 

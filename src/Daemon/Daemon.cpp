@@ -336,7 +336,7 @@ int main(int argc, char* argv[])
 
     logger(INFO) << "<< Daemon.cpp << " << "Starting core rpc server on address " << rpcConfig.getBindAddress();
   
-    /* set address for remote node fee */
+    /* Set address for remote node fee */
   	if (command_line::has_arg(vm, arg_set_fee_address)) {
 	  std::string addr_str = command_line::get_arg(vm, arg_set_fee_address);
 	  if (!addr_str.empty()) {
@@ -351,7 +351,8 @@ int main(int argc, char* argv[])
       }
 	  }
   
-    /* set secret view-key to confirm remote node fee */
+    /* This sets the view-key so we can confirm that
+       the fee is part of the transaction blob */       
     if (command_line::has_arg(vm, arg_set_view_key)) {
       std::string vk_str = command_line::get_arg(vm, arg_set_view_key);
 	    if (!vk_str.empty()) {
@@ -360,7 +361,6 @@ int main(int argc, char* argv[])
       }
     }
  
-  
     rpcServer.start(rpcConfig.bindIp, rpcConfig.bindPort);
     logger(INFO) << "<< Daemon.cpp << " "Core rpc server started ok";
 
