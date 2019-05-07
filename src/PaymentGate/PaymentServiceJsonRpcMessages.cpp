@@ -152,6 +152,7 @@ void TransactionRpcInfo::serialize(CryptoNote::ISerializer& serializer) {
   serializer(transfers, "transfers");
   serializer(extra, "extra");
   serializer(paymentId, "paymentId");
+  serializer(messages, "messages");
 }
 
 void GetTransaction::Request::serialize(CryptoNote::ISerializer& serializer) {
