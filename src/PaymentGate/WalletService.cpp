@@ -861,7 +861,10 @@ std::error_code WalletService::getTransaction(const std::string& transactionHash
       messages.insert(std::end(messages), std::begin(m), std::end(m));
     }
 
-    transaction.messages = messages;
+    if (!messages.empty()) 
+    {
+      transaction.message = messages[0];
+    }
 
     for (const CryptoNote::WalletTransfer& transfer: transactionWithTransfers.transfers) 
     {
