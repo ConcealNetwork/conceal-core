@@ -188,6 +188,7 @@ struct TransferRpcInfo {
   uint8_t type;
   std::string address;
   int64_t amount;
+  std::string message;  
 
   void serialize(CryptoNote::ISerializer& serializer);
 };
@@ -205,7 +206,6 @@ struct TransactionRpcInfo {
   std::vector<TransferRpcInfo> transfers;
   std::string extra;
   std::string paymentId;
-  std::string message;  
 
   void serialize(CryptoNote::ISerializer& serializer);
 };

@@ -855,16 +855,6 @@ std::error_code WalletService::getTransaction(const std::string& transactionHash
     std::vector<uint8_t> extraBin = Common::fromHex(transaction.extra);
     Crypto::PublicKey publicKey = CryptoNote::getTransactionPublicKeyFromExtra(extraBin);
     messages.clear();
-    for (size_t i = 0; i < wallet.getAddressCount(); ++i) {
-      Crypto::SecretKey secretKey = wallet.getAddressSpendKey(wallet.getAddress(i)).secretKey;
-      std::vector<std::string> m = CryptoNote::get_messages_from_extra(extraBin, publicKey, &secretKey);
-      messages.insert(std::end(messages), std::begin(m), std::end(m));
-    }
-
-    if (!messages.empty()) 
-    {
-      transaction.message = messages[0];
-    }
 
     for (const CryptoNote::WalletTransfer& transfer: transactionWithTransfers.transfers) 
     {
@@ -872,6 +862,18 @@ std::error_code WalletService::getTransaction(const std::string& transactionHash
       rpcTransfer.address = transfer.address;
       rpcTransfer.amount = transfer.amount;
       rpcTransfer.type = static_cast<uint8_t>(transfer.type);
+
+      for (size_t i = 0; i < wallet.getAddressCount(); ++i) {
+        if (wallet.getAddress(i) == rpcTransfer.address)
+        {        
+          Crypto::SecretKey secretKey = wallet.getAddressSpendKey(wallet.getAddress(i)).secretKey;
+          std::vector<std::string> m = CryptoNote::get_messages_from_extra(extraBin, publicKey, &secretKey);
+          if (!m.empty()) 
+          {
+            rpcTransfer.message = m[0];
+          }          
+        }
+      }
       transaction.transfers.push_back(std::move(rpcTransfer));
     }
   } 
