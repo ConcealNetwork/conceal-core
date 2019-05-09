@@ -11,7 +11,7 @@
 
 #include "CryptoNoteConfig.h"
 
-#ifdef WIN32
+#ifdef _WIN32
 #include <windows.h>
 #include <shlobj.h>
 #include <strsafe.h>
@@ -22,7 +22,7 @@
 
 namespace Tools
 {
-#ifdef WIN32
+#ifdef _WIN32
   std::string get_windows_version_display_string()
   {
     typedef void (WINAPI *PGNSI)(LPSYSTEM_INFO);
@@ -262,7 +262,7 @@ std::string get_nix_version_display_string()
 
   std::string get_os_version_string()
   {
-#ifdef WIN32
+#ifdef _WIN32
     return get_windows_version_display_string();
 #else
     return get_nix_version_display_string();
@@ -271,7 +271,7 @@ std::string get_nix_version_display_string()
 
 
 
-#ifdef WIN32
+#ifdef _WIN32
   std::string get_special_folder_path(int nfolder, bool iscreate)
   {
     namespace fs = boost::filesystem;
@@ -293,7 +293,7 @@ std::string get_nix_version_display_string()
     // Mac: ~/Library/Application Support/CRYPTONOTE_NAME
     // Unix: ~/.CRYPTONOTE_NAME
     std::string config_folder;
-#ifdef WIN32
+#ifdef _WIN32
     // Windows
     config_folder = get_special_folder_path(CSIDL_APPDATA, true) + "/" + CryptoNote::CRYPTONOTE_NAME;
 #else
