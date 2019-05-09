@@ -46,6 +46,7 @@
 
 #if defined(WIN32)
 #include <crtdbg.h>
+#include "../Common/DnsTools.h"
 #endif
 
 using namespace CryptoNote;
@@ -495,41 +496,40 @@ bool writeAddressFile(const std::string& addressFilename, const std::string& add
   return true;
 }
 
-bool processServerAliasResponse(const std::string& response, std::string& address) {
+bool processServerAliasResponse(const std::string& s, std::string& address) {
   try {
-    std::stringstream stream(response);
-    JsonValue json;
-    stream >> json;
-
-    auto rootIt = json.getObject().find("digitalname1");
-    if (rootIt == json.getObject().end()) {
-      return false;
+  //   
+  // Courtesy of Monero Project
+		// make sure the txt record has "oa1:ccx" and find it
+		auto pos = s.find("oa1:ccx");
+		if (pos == std::string::npos)
+			return false;
+		// search from there to find "recipient_address="
+		pos = s.find("recipient_address=", pos);
+		if (pos == std::string::npos)
+			return false;
+		pos += 18; // move past "recipient_address="
+		// find the next semicolon
+		auto pos2 = s.find(";", pos);
+		if (pos2 != std::string::npos)
+		{
+			// length of address == 95, we can at least validate that much here
+			if (pos2 - pos == 98)
+			{
+				address = s.substr(pos, 98);
+			} else {
+				return false;
+			}
+		}
     }
+	catch (std::exception&) {
+		return false;
+	}
 
-    if (!rootIt->second.isArray()) {
-      return false;
-    }
-
-    if (rootIt->second.size() == 0) {
-      return false;
-    }
-
-    if (!rootIt->second[0].isObject()) {
-      return false;
-    }
-
-    auto xdnIt = rootIt->second[0].getObject().find("xdn");
-    if (xdnIt == rootIt->second[0].getObject().end()) {
-      return false;
-    }
-
-    address = xdnIt->second.getString();
-  } catch (std::exception&) {
-    return false;
-  }
-
-  return true;
+	return true;
 }
+
+
 
 bool splitUrlToHostAndUri(const std::string& aliasUrl, std::string& host, std::string& uri) {
   size_t protoBegin = aliasUrl.find("http://");
@@ -1773,30 +1773,20 @@ bool simple_wallet::optimize_all_outputs(const std::vector<std::string>& args) {
 
 std::string simple_wallet::resolveAlias(const std::string& aliasUrl) {
   std::string host;
-  std::string uri;
+	std::string uri;
+	std::vector<std::string>records;
+	std::string address;
 
-  if (!splitUrlToHostAndUri(aliasUrl, host, uri)) {
-    throw std::runtime_error("Invalid url");
-  }
+	if (!Common::fetch_dns_txt(aliasUrl, records)) {
+		throw std::runtime_error("Failed to lookup DNS record");
+	}
 
-  HttpClient httpClient(m_dispatcher, host, 80);
-
-  HttpRequest req;
-  HttpResponse res;
-
-  req.setUrl(uri);
-  httpClient.request(req, res);
-
-  if (res.getStatus() != HttpResponse::STATUS_200) {
-    throw std::runtime_error("Remote server returned code " + std::to_string(res.getStatus()));
-  }
-
-  std::string address;
-  if (!processServerAliasResponse(res.getBody(), address)) {
-    throw std::runtime_error("Failed to parse server response");
-  }
-
-  return address;
+	for (const auto& record : records) {
+		if (processServerAliasResponse(record, address)) {
+			return address;
+		}
+	}
+	throw std::runtime_error("Failed to parse server response");
 }
 //----------------------------------------------------------------------------------------------------
 
