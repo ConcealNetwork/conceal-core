@@ -27,6 +27,7 @@
 #include "Common/StringTools.h"
 #include "Common/PathTools.h"
 #include "Common/Util.h"
+#include "Common/DnsTools.h"
 #include "CryptoNoteCore/CryptoNoteFormatUtils.h"
 #include "CryptoNoteProtocol/CryptoNoteProtocolHandler.h"
 #include "NodeRpcProxy/NodeRpcProxy.h"
@@ -46,7 +47,6 @@
 
 #if defined(WIN32)
 #include <crtdbg.h>
-#include "../Common/DnsTools.h"
 #endif
 
 using namespace CryptoNote;
