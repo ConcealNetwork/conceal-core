@@ -244,11 +244,12 @@ std::vector<CryptoNote::TransactionsInBlockInfo> filterTransactions(
   return result;
 }
 
-PaymentService::TransactionRpcInfo convertTransactionWithTransfersToTransactionRpcInfo(
-  const CryptoNote::WalletTransactionWithTransfers& transactionWithTransfers) {
 
+ //KD2
+
+PaymentService::TransactionRpcInfo convertTransactionWithTransfersToTransactionRpcInfo(const CryptoNote::WalletTransactionWithTransfers& transactionWithTransfers) 
+{
   PaymentService::TransactionRpcInfo transactionInfo;
-
   transactionInfo.state = static_cast<uint8_t>(transactionWithTransfers.transaction.state);
   transactionInfo.transactionHash = Common::podToHex(transactionWithTransfers.transaction.hash);
   transactionInfo.blockIndex = transactionWithTransfers.transaction.blockHeight;
@@ -260,15 +261,14 @@ PaymentService::TransactionRpcInfo convertTransactionWithTransfersToTransactionR
   transactionInfo.extra = Common::toHex(transactionWithTransfers.transaction.extra.data(), transactionWithTransfers.transaction.extra.size());
   transactionInfo.paymentId = getPaymentIdStringFromExtra(transactionWithTransfers.transaction.extra);
 
-  for (const CryptoNote::WalletTransfer& transfer: transactionWithTransfers.transfers) {
+  for (const CryptoNote::WalletTransfer& transfer: transactionWithTransfers.transfers) 
+  {
     PaymentService::TransferRpcInfo rpcTransfer;
     rpcTransfer.address = transfer.address;
     rpcTransfer.amount = transfer.amount;
     rpcTransfer.type = static_cast<uint8_t>(transfer.type);
-
     transactionInfo.transfers.push_back(std::move(rpcTransfer));
   }
-
   return transactionInfo;
 }
 
@@ -816,27 +816,77 @@ std::error_code WalletService::getTransactions(const std::vector<std::string>& a
   return std::error_code();
 }
 
-std::error_code WalletService::getTransaction(const std::string& transactionHash, TransactionRpcInfo& transaction) {
-  try {
+//KD1
+
+std::error_code WalletService::getTransaction(const std::string& transactionHash, TransactionRpcInfo& transaction) 
+{
+  try 
+  {
     System::EventLock lk(readyEvent);
     Crypto::Hash hash = parseHash(transactionHash, logger);
 
     CryptoNote::WalletTransactionWithTransfers transactionWithTransfers = wallet.getTransaction(hash);
 
-    if (transactionWithTransfers.transaction.state == CryptoNote::WalletTransactionState::DELETED) {
+    if (transactionWithTransfers.transaction.state == CryptoNote::WalletTransactionState::DELETED) 
+    {
       logger(Logging::WARNING) << "Transaction " << transactionHash << " is deleted";
       return make_error_code(CryptoNote::error::OBJECT_NOT_FOUND);
     }
 
-    transaction = convertTransactionWithTransfersToTransactionRpcInfo(transactionWithTransfers);
-  } catch (std::system_error& x) {
+    /* Pull all the transaction information and add it to the transaction reponse */    
+    transaction.state = static_cast<uint8_t>(transactionWithTransfers.transaction.state);
+    transaction.transactionHash = Common::podToHex(transactionWithTransfers.transaction.hash);
+    transaction.blockIndex = transactionWithTransfers.transaction.blockHeight;
+    transaction.timestamp = transactionWithTransfers.transaction.timestamp;
+    transaction.isBase = transactionWithTransfers.transaction.isBase;
+    transaction.unlockTime = transactionWithTransfers.transaction.unlockTime;
+    transaction.amount = transactionWithTransfers.transaction.totalAmount;
+    transaction.fee = transactionWithTransfers.transaction.fee;
+    transaction.extra = Common::toHex(transactionWithTransfers.transaction.extra.data(), transactionWithTransfers.transaction.extra.size());
+    transaction.paymentId = getPaymentIdStringFromExtra(transactionWithTransfers.transaction.extra);
+
+    /* Calculate the number of confirmations for the transaction */
+    uint32_t knownBlockCount = node.getKnownBlockCount();
+    transaction.confirmations = knownBlockCount - transaction.blockIndex;
+
+    /* Cycle through all the transfers in the transaction and extract the address, 
+       amount, and pull any messages from Extra */
+    std::vector<std::string> messages;
+    std::vector<uint8_t> extraBin = Common::fromHex(transaction.extra);
+    Crypto::PublicKey publicKey = CryptoNote::getTransactionPublicKeyFromExtra(extraBin);
+    messages.clear();
+
+    for (const CryptoNote::WalletTransfer& transfer: transactionWithTransfers.transfers) 
+    {
+      PaymentService::TransferRpcInfo rpcTransfer;
+      rpcTransfer.address = transfer.address;
+      rpcTransfer.amount = transfer.amount;
+      rpcTransfer.type = static_cast<uint8_t>(transfer.type);
+
+      for (size_t i = 0; i < wallet.getAddressCount(); ++i) {
+        if (wallet.getAddress(i) == rpcTransfer.address)
+        {        
+          Crypto::SecretKey secretKey = wallet.getAddressSpendKey(wallet.getAddress(i)).secretKey;
+          std::vector<std::string> m = CryptoNote::get_messages_from_extra(extraBin, publicKey, &secretKey);
+          if (!m.empty()) 
+          {
+            rpcTransfer.message = m[0];
+          }          
+        }
+      }
+      transaction.transfers.push_back(std::move(rpcTransfer));
+    }
+  } 
+  catch (std::system_error& x) 
+  {
     logger(Logging::WARNING) << "Error while getting transaction: " << x.what();
     return x.code();
-  } catch (std::exception& x) {
+  } 
+  catch (std::exception& x) 
+  {
     logger(Logging::WARNING) << "Error while getting transaction: " << x.what();
     return make_error_code(CryptoNote::error::INTERNAL_WALLET_ERROR);
   }
-
   return std::error_code();
 }
 
