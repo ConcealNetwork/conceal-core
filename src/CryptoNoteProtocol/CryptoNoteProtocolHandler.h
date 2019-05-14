@@ -46,6 +46,7 @@ namespace CryptoNote
     // ICore& get_core() { return m_core; }
     virtual bool isSynchronized() const override { return m_synchronized; }
     void log_connections();
+    std::vector<std::string> all_connections();
 
     // Interface t_payload_net_handler, where t_payload_net_handler is template argument of nodetool::node_server
     void stop();
