@@ -1644,8 +1644,11 @@ bool simple_wallet::show_blockchain_height(const std::vector<std::string>& args)
 //----------------------------------------------------------------------------------------------------
 bool simple_wallet::show_num_unlocked_outputs(const std::vector<std::string>& args) {
   try {
-    size_t num_unlocked_outputs = m_wallet->getNumUnlockedOutputs();
-    success_msg_writer() << num_unlocked_outputs;
+    std::vector<TransactionOutputInformation> unlocked_outputs = m_wallet->getUnspentOutputs();
+    success_msg_writer() << "Count: " << unlocked_outputs.size();
+    for (const auto& out : unlocked_outputs) {
+      success_msg_writer() << "Key: " << out.transactionPublicKey << " amount: " << m_currency.formatAmount(out.amount);
+    }
   } catch (std::exception &e) {
     fail_msg_writer() << "failed to get outputs: " << e.what();
   }

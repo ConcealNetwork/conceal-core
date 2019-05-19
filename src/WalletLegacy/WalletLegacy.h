@@ -68,6 +68,7 @@ public:
   virtual size_t getTransferCount() override;
   virtual size_t getDepositCount() override;
   virtual size_t getNumUnlockedOutputs() override;
+  virtual std::vector<TransactionOutputInformation> getUnspentOutputs() override;
   virtual bool isTrackingWallet();
   virtual TransactionId findTransactionByTransferId(TransferId transferId) override;
   virtual bool getTxProof(Crypto::Hash& txid, CryptoNote::AccountPublicAddress& address, Crypto::SecretKey& tx_key, std::string& sig_str) override;
