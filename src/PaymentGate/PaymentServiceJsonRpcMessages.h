@@ -21,6 +21,16 @@ public:
   virtual const char* what() const throw() override { return "Request error"; }
 };
 
+struct Save {
+  struct Request {
+    void serialize(CryptoNote::ISerializer& serializer);
+  };
+
+  struct Response {
+    void serialize(CryptoNote::ISerializer& serializer);
+  };
+};
+
 struct Reset {
   struct Request {
     std::string viewSecretKey;
