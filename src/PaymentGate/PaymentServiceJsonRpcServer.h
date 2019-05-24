@@ -61,6 +61,7 @@ private:
   std::unordered_map<std::string, HandlerFunction> handlers;
 
   std::error_code handleReset(const Reset::Request& request, Reset::Response& response);
+  std::error_code handleSave(const Save::Request& request, Save::Response& response);
   std::error_code handleCreateIntegrated(const CreateIntegrated::Request& request, CreateIntegrated::Response& response);
   std::error_code handleCreateAddress(const CreateAddress::Request& request, CreateAddress::Response& response);
   std::error_code handleDeleteAddress(const DeleteAddress::Request& request, DeleteAddress::Response& response);

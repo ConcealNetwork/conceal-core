@@ -478,8 +478,33 @@ void WalletService::init() {
 }
 
 void WalletService::saveWallet() {
+  logger(Logging::INFO) << "Saving wallet...";
   PaymentService::secureSaveWallet(wallet, config.walletFile, true, true);
   logger(Logging::INFO) << "Wallet is saved";
+}
+
+std::error_code WalletService::saveWalletNoThrow() {
+  try {
+    System::EventLock lk(readyEvent);
+
+    logger(Logging::INFO, Logging::BRIGHT_WHITE) << "Saving wallet...";
+
+    if (!inited) {
+      logger(Logging::WARNING, Logging::BRIGHT_YELLOW) << "Save impossible: Wallet Service is not initialized";
+      return make_error_code(CryptoNote::error::NOT_INITIALIZED);
+    }
+
+    PaymentService::secureSaveWallet(wallet, config.walletFile, true, true);
+    logger(Logging::INFO) << "Wallet is saved";
+  } catch (std::system_error& x) {
+    logger(Logging::WARNING, Logging::BRIGHT_YELLOW) << "Error while saving wallet: " << x.what();
+    return x.code();
+  } catch (std::exception& x) {
+    logger(Logging::WARNING, Logging::BRIGHT_YELLOW) << "Error while saving wallet: " << x.what();
+    return make_error_code(CryptoNote::error::INTERNAL_WALLET_ERROR);
+  }
+
+  return std::error_code();
 }
 
 void WalletService::loadWallet() {
