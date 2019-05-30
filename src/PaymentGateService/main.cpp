@@ -13,7 +13,7 @@
 #include "PaymentGateService.h"
 #include "version.h"
 
-#ifdef WIN32
+#ifdef _WIN32
 #include <windows.h>
 #include <winsvc.h>
 #else
@@ -29,7 +29,7 @@
 
 PaymentGateService* ppg;
 
-#ifdef WIN32
+#ifdef _WIN32
 SERVICE_STATUS_HANDLE serviceStatusHandle;
 
 std::string GetLastErrorMessage(DWORD errorMessageID)
@@ -120,7 +120,7 @@ int daemonize() {
 #endif
 
 int runDaemon() {
-#ifdef WIN32
+#ifdef _WIN32
 
   SERVICE_TABLE_ENTRY serviceTable[] {
     { "Payment Gate", serviceMain },
@@ -156,7 +156,7 @@ int runDaemon() {
 }
 
 int registerService() {
-#ifdef WIN32
+#ifdef _WIN32
   Logging::LoggerRef logRef(ppg->getLogger(), "ServiceRegistrator");
 
   char pathBuff[MAX_PATH];
@@ -213,7 +213,7 @@ int registerService() {
 }
 
 int unregisterService() {
-#ifdef WIN32
+#ifdef _WIN32
   Logging::LoggerRef logRef(ppg->getLogger(), "ServiceDeregistrator");
 
   SC_HANDLE scManager = NULL;
