@@ -1,11 +1,20 @@
-concealX CCX
-=====================
+[ Conceal.Network ]
 
-Intro
------
-concealX is a free open source privacy protected peer-to-peer digital cash system 
-that is completely decentralized, without the need for a central server or trusted
-parties.  Users hold the crypto keys to their own money and transact directly
-with each other, with the help of a P2P network to check for double-spending.
-concealX has a decentralized blockchain banking in core as well as instant 
-untraceable crypto messages that can be decrypted with recipient`s private key.
+DECENTRALIZED BANKING, PRIVATE TRANSACTIONS & SECURE MESSAGING
+
+
+{ What's Conceal.Network? }
+
+Conceal.Network is a decentralized blockchain bank, with deposits and investments paying interest rates, without involvement of financial institutions, powered by 100% open source code.
+
+Conceal.Network enables untraceable and anonymous messaging, and a secure way to transfer funds. Using a distributed public ledger, the sender and receiver are kept anonymous, a key concern in a post Snowden world. Hackers cannot trace money or messages when the messages are sent across public networks.
+
+Conceal Cryptocurrency (₡CCX) is based on the Cryptonote protocol and runs on a secure peer-to-peer network technology to operate with no central authority. You control the private keys to your funds.
+
+Conceal is accessible by anyone in the world regardless of their geographic location or status. Our blockchain is resistant to any kind of analysis. All your CCX transactions and messages are anonymous.
+
+Conceal avoids many concerns, e.g. technological, environment impact, reputational and security, of Bitcoin, and provides a glimpse of the future.
+
+Conceal is open-source, community driven and truly decentralized.
+
+No one owns Conceal, everyone can take part.
