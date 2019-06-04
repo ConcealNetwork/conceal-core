@@ -520,6 +520,12 @@ size_t WalletLegacy::getNumUnlockedOutputs() {
   return outputs.size();
 }
 
+std::vector<TransactionOutputInformation> WalletLegacy::getUnspentOutputs() {
+  std::vector<TransactionOutputInformation> outputs;
+  m_transferDetails->getOutputs(outputs, ITransfersContainer::IncludeKeyUnlocked);
+  return outputs;
+}
+
 TransactionId WalletLegacy::sendTransaction(Crypto::SecretKey& transactionSK,
                                             const WalletLegacyTransfer& transfer,
                                             uint64_t fee,
