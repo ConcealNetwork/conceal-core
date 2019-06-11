@@ -50,6 +50,7 @@ bool fromBinaryArray(T& object, const BinaryArray& binaryArray) {
     serialize(object, serializer);
     result = stream.endOfStream(); // check that all data was consumed
   } catch (std::exception&) {
+    return result;
   }
 
   return result;
