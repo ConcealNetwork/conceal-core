@@ -1027,11 +1027,11 @@ bool simple_wallet::new_wallet(const std::string &wallet_file, const std::string
     std::string guiKeys = Tools::Base58::encode_addr(CryptoNote::parameters::CRYPTONOTE_PUBLIC_ADDRESS_BASE58_PREFIX, secretKeysData);
 
     logger(INFO, BRIGHT_WHITE) <<
-      "Generated new wallet: " << m_wallet->getAddress() << std::endl <<
-      "View secret key: " << Common::podToHex(keys.viewSecretKey) << std::endl <<
-      "Spend secret key: " << Common::podToHex(keys.spendSecretKey) << std::endl <<
-      "GUI key: " << guiKeys << std::endl <<
-      "Mnemonic seed: " << generate_mnemonic(keys.spendSecretKey) << std::endl << std::endl;
+      "Wallet Address: " << m_wallet->getAddress() << std::endl <<
+      "Private View Key: " << Common::podToHex(keys.viewSecretKey) << std::endl <<
+      "Private Spend Key: " << Common::podToHex(keys.spendSecretKey) << std::endl <<
+      // "GUI Key: " << guiKeys << std::endl <<
+      "Mnemonic Seed: " << generate_mnemonic(keys.spendSecretKey) << std::endl << std::endl;
 
   }
   catch (const std::exception& e) {
