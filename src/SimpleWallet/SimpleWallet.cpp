@@ -1,5 +1,6 @@
 // Copyright (c) 2011-2017 The Cryptonote developers
-// Copyright (c) 2018 The Circle Foundation
+// Copyright (c) 2017-2018 The Circle Foundation & Conceal Devs
+// Copyright (c) 2018-2019 Conceal Network & Conceal Devs
 // Distributed under the MIT/X11 software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -26,6 +27,7 @@
 #include "Common/StringTools.h"
 #include "Common/PathTools.h"
 #include "Common/Util.h"
+#include "Common/DnsTools.h"
 #include "CryptoNoteCore/CryptoNoteFormatUtils.h"
 #include "CryptoNoteProtocol/CryptoNoteProtocolHandler.h"
 #include "NodeRpcProxy/NodeRpcProxy.h"
@@ -147,98 +149,61 @@ struct TransferCommand {
     m_currency(currency), fake_outs_count(0), fee(currency.minimumFee()), ttl(0) {
   }
 
-/* PARSE ARGUMENTS */
-/* parses arguments from the transfer command */
-
-bool parseArguments(LoggerRef& logger, const std::vector<std::string> &args) 
-{
-
+/* This parses arguments from the transfer command */
+  bool parseArguments(LoggerRef& logger, const std::vector<std::string> &args) {
     ArgumentReader<std::vector<std::string>::const_iterator> ar(args.begin(), args.end());
 
     try 
     {
-
+      /* We expect mixin to be the first argument */
       auto mixin_str = ar.next();
-
       if (!Common::fromString(mixin_str, fake_outs_count)) 
       {
-
-        logger(ERROR, BRIGHT_RED) << "mixin_count should be non-negative integer, got " << mixin_str;
+        logger(ERROR, BRIGHT_RED) << "The mixin value should be non-negative integer, got " << mixin_str;
         return false;
       }
-
       bool feeFound = false;
       bool ttlFound = false;
 
+      /* Parse the remaining arguments */
       while (!ar.eof()) 
       {
-
         auto arg = ar.next();
 
         if (arg.size() && arg[0] == '-') 
-        {
-            
+        {          
           const auto& value = ar.next();
-
-          if (arg == "-p") 
-          {
-
-            if (!createTxExtraWithPaymentId(value, extra)) 
-            {
-
+          if (arg == "-p") {
+            if (!createTxExtraWithPaymentId(value, extra)) {
               logger(ERROR, BRIGHT_RED) << "payment ID has invalid format: \"" << value << "\", expected 64-character string";
               return false;
             }
-          } else if (arg == "-f") 
-          {
-
+          } else if (arg == "-f") {
               feeFound = true;
-
-            if (ttlFound) 
-            {
-
+            if (ttlFound) {
               logger(ERROR, BRIGHT_RED) << "Transaction with TTL can not have fee";
               return false;
             }
-
             bool ok = m_currency.parseAmount(value, fee);
-            if (!ok) 
-            {
-
+            if (!ok) {
               logger(ERROR, BRIGHT_RED) << "Fee value is invalid: " << value;
               return false;
             }
-
-            if (fee < CryptoNote::parameters::MINIMUM_FEE_V1) 
-            {
-
-              logger(ERROR, BRIGHT_RED) << "Fee value is less than minimum: " << CryptoNote::parameters::MINIMUM_FEE_V1;
+            if (fee < CryptoNote::parameters::MINIMUM_FEE_V1) {
+              logger(ERROR, BRIGHT_RED) << "Fee value is less than the minimum fee: " << CryptoNote::parameters::MINIMUM_FEE_V1;
               return false;
             }
-          } else if (arg == "-m") 
-          {
-
+          } else if (arg == "-m") {
             messages.emplace_back(value);
-
-          } else if (arg == "-ttl") 
-          {
-
+          } else if (arg == "-ttl") {
             ttlFound = true;
-
-            if (feeFound) 
-            {
-
+            if (feeFound) {
               logger(ERROR, BRIGHT_RED) << "Transaction with fee can not have TTL";
               return false;
-            } else 
-            {
-
+            } else {
               fee = 0;
             }
-
-            if (!Common::fromString(value, ttl) || ttl < 1 || ttl * 60 > m_currency.mempoolTxLiveTime()) 
-            {
-
+            if (!Common::fromString(value, ttl) || ttl < 1 || ttl * 60 > m_currency.mempoolTxLiveTime()) {
               logger(ERROR, BRIGHT_RED) << "TTL has invalid format: \"" << value << "\", " <<
                 "enter time from 1 to " << (m_currency.mempoolTxLiveTime() / 60) << " minutes";
               return false;
@@ -246,28 +211,22 @@ bool parseArguments(LoggerRef& logger, const std::vector<std::string> &args)
           }
         } else {
 
-          /* integrated address check */
-          if (arg.length() == 186) 
-          {
-
+          /* Integrated address check */
+          if (arg.length() == 186) {
             std::string paymentID;
             std::string spendPublicKey;
             std::string viewPublicKey;
             const uint64_t paymentIDLen = 64;
 
-            /* extract the payment id */
+            /* Extract the payment id */
             std::string decoded;
             uint64_t prefix;
-            if (Tools::Base58::decode_addr(arg, prefix, decoded)) 
-            {
-              
+            if (Tools::Base58::decode_addr(arg, prefix, decoded)) {
               paymentID = decoded.substr(0, paymentIDLen);
             }
 
-            /* validate and add the payment ID to extra */
-            if (!createTxExtraWithPaymentId(paymentID, extra)) 
-            {
-
+            /* Validate and add the payment ID to extra */
+            if (!createTxExtraWithPaymentId(paymentID, extra)) {
               logger(ERROR, BRIGHT_RED) << "Integrated payment ID has invalid format: \"" << paymentID << "\", expected 64-character string";
               return false;
             }
@@ -277,62 +236,56 @@ bool parseArguments(LoggerRef& logger, const std::vector<std::string> &args)
             CryptoNote::AccountPublicAddress addr;
             CryptoNote::BinaryArray ba = Common::asBinaryArray(keys);
 
-            if (!CryptoNote::fromBinaryArray(addr, ba))
-            {
-
+            if (!CryptoNote::fromBinaryArray(addr, ba)) {
               return true;
             }
 
             std::string address = CryptoNote::getAccountAddressAsStr(CryptoNote::parameters::CRYPTONOTE_PUBLIC_ADDRESS_BASE58_PREFIX, 
                                                                     addr);   
-
             arg = address;
-
           }
 
           WalletLegacyTransfer destination;
+          WalletLegacyTransfer feeDestination;          
           CryptoNote::TransactionDestinationEntry de;
           std::string aliasUrl;
 
-          if (!m_currency.parseAccountAddressString(arg, de.addr)) 
-          {
-
+          if (!m_currency.parseAccountAddressString(arg, de.addr)) {
             aliasUrl = arg;
           }
 
           auto value = ar.next();
           bool ok = m_currency.parseAmount(value, de.amount);
-          if (!ok || 0 == de.amount) 
-          {
 
+          if (!ok || 0 == de.amount) {
             logger(ERROR, BRIGHT_RED) << "amount is wrong: " << arg << ' ' << value <<
               ", expected number from 0 to " << m_currency.formatAmount(std::numeric_limits<uint64_t>::max());
             return false;
           }
 
-          if (aliasUrl.empty()) 
-          {
-
+          if (aliasUrl.empty()) {
             destination.address = arg;
             destination.amount = de.amount;
             dsts.push_back(destination);
-          } else 
-          {
-
+          } else {
             aliases[aliasUrl].emplace_back(WalletLegacyTransfer{"", static_cast<int64_t>(de.amount)});
           }
+
+          /* Remote node transactions fees are 1000 X */
+          if (!remote_fee_address.empty()) {
+            destination.address = remote_fee_address;                     
+            destination.amount = 1000;
+            dsts.push_back(destination);
+          }
+
         }
       }
 
-      if (dsts.empty() && aliases.empty()) 
-      {
-
+      if (dsts.empty() && aliases.empty()) {
         logger(ERROR, BRIGHT_RED) << "At least one destination address is required";
         return false;
       }
-    } catch (const std::exception& e) 
-    {
-
+    } catch (const std::exception& e) {
       logger(ERROR, BRIGHT_RED) << e.what();
       return false;
     }
@@ -543,41 +496,40 @@ bool writeAddressFile(const std::string& addressFilename, const std::string& add
   return true;
 }
 
-bool processServerAliasResponse(const std::string& response, std::string& address) {
+bool processServerAliasResponse(const std::string& s, std::string& address) {
   try {
-    std::stringstream stream(response);
-    JsonValue json;
-    stream >> json;
-
-    auto rootIt = json.getObject().find("digitalname1");
-    if (rootIt == json.getObject().end()) {
-      return false;
+  //   
+  // Courtesy of Monero Project
+		// make sure the txt record has "oa1:ccx" and find it
+		auto pos = s.find("oa1:ccx");
+		if (pos == std::string::npos)
+			return false;
+		// search from there to find "recipient_address="
+		pos = s.find("recipient_address=", pos);
+		if (pos == std::string::npos)
+			return false;
+		pos += 18; // move past "recipient_address="
+		// find the next semicolon
+		auto pos2 = s.find(";", pos);
+		if (pos2 != std::string::npos)
+		{
+			// length of address == 95, we can at least validate that much here
+			if (pos2 - pos == 98)
+			{
+				address = s.substr(pos, 98);
+			} else {
+				return false;
+			}
+		}
     }
+	catch (std::exception&) {
+		return false;
+	}
 
-    if (!rootIt->second.isArray()) {
-      return false;
-    }
-
-    if (rootIt->second.size() == 0) {
-      return false;
-    }
-
-    if (!rootIt->second[0].isObject()) {
-      return false;
-    }
-
-    auto xdnIt = rootIt->second[0].getObject().find("xdn");
-    if (xdnIt == rootIt->second[0].getObject().end()) {
-      return false;
-    }
-
-    address = xdnIt->second.getString();
-  } catch (std::exception&) {
-    return false;
-  }
-
-  return true;
+	return true;
 }
+
+
 
 bool splitUrlToHostAndUri(const std::string& aliasUrl, std::string& host, std::string& uri) {
   size_t protoBegin = aliasUrl.find("http://");
@@ -617,6 +569,26 @@ bool askAliasesTransfersConfirmation(const std::map<std::string, std::vector<Wal
   return answer == "y" || answer == "Y";
 }
 
+}
+
+bool processServerFeeAddressResponse(const std::string& response, std::string& fee_address) {
+    try {
+        std::stringstream stream(response);
+        JsonValue json;
+        stream >> json;
+
+        auto rootIt = json.getObject().find("fee_address");
+        if (rootIt == json.getObject().end()) {
+            return false;
+        }
+
+        fee_address = rootIt->second.getString();
+    }
+    catch (std::exception&) {
+        return false;
+    }
+
+    return true;
 }
 
 std::string simple_wallet::get_commands_str() {
@@ -715,6 +687,37 @@ bool simple_wallet::init(const boost::program_options::variables_map& vm) {
     return false;
   }
 
+  if (m_daemon_host.empty())
+    m_daemon_host = "localhost";
+  if (!m_daemon_port)
+    m_daemon_port = RPC_DEFAULT_PORT;
+
+  if (!m_daemon_address.empty()) 
+  {
+    if (!parseUrlAddress(m_daemon_address, m_daemon_host, m_daemon_port)) 
+    {
+      fail_msg_writer() << "failed to parse daemon address: " << m_daemon_address;
+      return false;
+    }
+    remote_fee_address = getFeeAddress();
+    logger(INFO, BRIGHT_WHITE) << "Connected to remote node: " << m_daemon_host;
+    if (!remote_fee_address.empty()) 
+    {
+      logger(INFO, BRIGHT_WHITE) << "Fee address: " << remote_fee_address;
+    }    
+  } 
+  else 
+  {
+    if (!m_daemon_host.empty()) 
+      remote_fee_address = getFeeAddress();
+		m_daemon_address = std::string("http://") + m_daemon_host + ":" + std::to_string(m_daemon_port);
+    logger(INFO, BRIGHT_WHITE) << "Connected to remote node: " << m_daemon_host;
+    if (!remote_fee_address.empty()) 
+    {
+      logger(INFO, BRIGHT_WHITE) << "Fee address: " << remote_fee_address;
+    }   
+  }
+
   if (m_generate_new.empty() && m_wallet_file_arg.empty()) {
     std::cout << "  " << ENDL
     << "  " << ENDL
@@ -788,19 +791,7 @@ bool simple_wallet::init(const boost::program_options::variables_map& vm) {
     }
   }
 
-  if (m_daemon_host.empty())
-    m_daemon_host = "localhost";
-  if (!m_daemon_port)
-    m_daemon_port = RPC_DEFAULT_PORT;
 
-  if (!m_daemon_address.empty()) {
-    if (!parseUrlAddress(m_daemon_address, m_daemon_host, m_daemon_port)) {
-      fail_msg_writer() << "failed to parse daemon address: " << m_daemon_address;
-      return false;
-    }
-  } else {
-    m_daemon_address = std::string("http://") + m_daemon_host + ":" + std::to_string(m_daemon_port);
-  }
 
   Tools::PasswordContainer pwd_container;
   if (command_line::has_arg(vm, arg_password)) {
@@ -1653,8 +1644,11 @@ bool simple_wallet::show_blockchain_height(const std::vector<std::string>& args)
 //----------------------------------------------------------------------------------------------------
 bool simple_wallet::show_num_unlocked_outputs(const std::vector<std::string>& args) {
   try {
-    size_t num_unlocked_outputs = m_wallet->getNumUnlockedOutputs();
-    success_msg_writer() << num_unlocked_outputs;
+    std::vector<TransactionOutputInformation> unlocked_outputs = m_wallet->getUnspentOutputs();
+    success_msg_writer() << "Count: " << unlocked_outputs.size();
+    for (const auto& out : unlocked_outputs) {
+      success_msg_writer() << "Key: " << out.transactionPublicKey << " amount: " << m_currency.formatAmount(out.amount);
+    }
   } catch (std::exception &e) {
     fail_msg_writer() << "failed to get outputs: " << e.what();
   }
@@ -1782,32 +1776,52 @@ bool simple_wallet::optimize_all_outputs(const std::vector<std::string>& args) {
 
 std::string simple_wallet::resolveAlias(const std::string& aliasUrl) {
   std::string host;
-  std::string uri;
+	std::string uri;
+	std::vector<std::string>records;
+	std::string address;
 
-  if (!splitUrlToHostAndUri(aliasUrl, host, uri)) {
-    throw std::runtime_error("Invalid url");
-  }
+	if (!Common::fetch_dns_txt(aliasUrl, records)) {
+		throw std::runtime_error("Failed to lookup DNS record");
+	}
 
-  HttpClient httpClient(m_dispatcher, host, 80);
+	for (const auto& record : records) {
+		if (processServerAliasResponse(record, address)) {
+			return address;
+		}
+	}
+	throw std::runtime_error("Failed to parse server response");
+}
+//----------------------------------------------------------------------------------------------------
+
+/* This extracts the fee address from the remote node */
+std::string simple_wallet::getFeeAddress() {
+  
+  HttpClient httpClient(m_dispatcher, m_daemon_host, m_daemon_port);
 
   HttpRequest req;
   HttpResponse res;
 
-  req.setUrl(uri);
-  httpClient.request(req, res);
+  req.setUrl("/feeaddress");
+  try {
+	  httpClient.request(req, res);
+  }
+  catch (const std::exception& e) {
+	  fail_msg_writer() << "Error connecting to the remote node: " << e.what();
+  }
 
   if (res.getStatus() != HttpResponse::STATUS_200) {
-    throw std::runtime_error("Remote server returned code " + std::to_string(res.getStatus()));
+	  fail_msg_writer() << "Remote node returned code " + std::to_string(res.getStatus());
   }
 
   std::string address;
-  if (!processServerAliasResponse(res.getBody(), address)) {
-    throw std::runtime_error("Failed to parse server response");
+  if (!processServerFeeAddressResponse(res.getBody(), address)) {
+	  fail_msg_writer() << "Failed to parse remote node response";
   }
 
   return address;
 }
-//----------------------------------------------------------------------------------------------------
+
+
 bool simple_wallet::transfer(const std::vector<std::string> &args) {
   try {
     TransferCommand cmd(m_currency);
@@ -1945,7 +1959,7 @@ void simple_wallet::printConnectionError() const {
 
 
 int main(int argc, char* argv[]) {
-#ifdef WIN32
+#ifdef _WIN32
   _CrtSetDbgFlag(_CRTDBG_ALLOC_MEM_DF | _CRTDBG_LEAK_CHECK_DF);
 #endif
 
@@ -1984,12 +1998,12 @@ int main(int argc, char* argv[]) {
       CryptoNote::Currency tmp_currency = CryptoNote::CurrencyBuilder(logManager).currency();
       CryptoNote::simple_wallet tmp_wallet(dispatcher, tmp_currency, logManager);
 
-      std::cout << CRYPTONOTE_NAME << " wallet v" << PROJECT_VERSION_LONG << std::endl;
-      std::cout << "Usage: simplewallet [--wallet-file=<file>|--generate-new-wallet=<file>] [--daemon-address=<host>:<port>] [<COMMAND>]";
+      std::cout << "Conceal Wallet v" << PROJECT_VERSION_LONG << std::endl;
+      std::cout << "Usage: concealwallet [--wallet-file=<file>|--generate-new-wallet=<file>] [--daemon-address=<host>:<port>] [<COMMAND>]";
       std::cout << desc_all << '\n' << tmp_wallet.get_commands_str();
       return false;
     } else if (command_line::get_arg(vm, command_line::arg_version))  {
-      std::cout << CRYPTONOTE_NAME << " wallet v" << PROJECT_VERSION_LONG;
+      std::cout << "Conceal Wallet v" << PROJECT_VERSION_LONG << std::endl;
       return false;
     }
 
@@ -2011,7 +2025,7 @@ int main(int argc, char* argv[]) {
 
   logManager.configure(buildLoggerConfiguration(logLevel, Common::ReplaceExtenstion(argv[0], ".log")));
 
-  logger(INFO, BRIGHT_WHITE) << CRYPTONOTE_NAME << " wallet v" << PROJECT_VERSION_LONG;
+  logger(INFO, BRIGHT_GREEN) << "Conceal Wallet v" << PROJECT_VERSION_LONG;
 
   CryptoNote::Currency currency = CryptoNote::CurrencyBuilder(logManager).
     testnet(command_line::get_arg(vm, arg_testnet)).currency();

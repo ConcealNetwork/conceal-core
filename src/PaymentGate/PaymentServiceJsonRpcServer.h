@@ -1,5 +1,6 @@
 // Copyright (c) 2011-2017 The Cryptonote developers
-// Copyright (c) 2018 The Circle Foundation
+// Copyright (c) 2017-2018 The Circle Foundation & Conceal Devs
+// Copyright (c) 2018-2019 Conceal Network & Conceal Devs
 // Distributed under the MIT/X11 software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -60,6 +61,7 @@ private:
   std::unordered_map<std::string, HandlerFunction> handlers;
 
   std::error_code handleReset(const Reset::Request& request, Reset::Response& response);
+  std::error_code handleSave(const Save::Request& request, Save::Response& response);
   std::error_code handleCreateIntegrated(const CreateIntegrated::Request& request, CreateIntegrated::Response& response);
   std::error_code handleCreateAddress(const CreateAddress::Request& request, CreateAddress::Response& response);
   std::error_code handleDeleteAddress(const DeleteAddress::Request& request, DeleteAddress::Response& response);

@@ -1,5 +1,6 @@
 // Copyright (c) 2011-2017 The Cryptonote developers
-// Copyright (c) 2018 The Circle Foundation
+// Copyright (c) 2017-2018 The Circle Foundation & Conceal Devs
+// Copyright (c) 2018-2019 Conceal Network & Conceal Devs
 // Distributed under the MIT/X11 software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -45,6 +46,7 @@ namespace CryptoNote
     // ICore& get_core() { return m_core; }
     virtual bool isSynchronized() const override { return m_synchronized; }
     void log_connections();
+    std::vector<std::string> all_connections();
 
     // Interface t_payload_net_handler, where t_payload_net_handler is template argument of nodetool::node_server
     void stop();

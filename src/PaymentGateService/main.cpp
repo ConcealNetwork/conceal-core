@@ -1,5 +1,6 @@
 // Copyright (c) 2011-2017 The Cryptonote developers
-// Copyright (c) 2018 The Circle Foundation
+// Copyright (c) 2017-2018 The Circle Foundation & Conceal Devs
+// Copyright (c) 2018-2019 Conceal Network & Conceal Devs
 // Distributed under the MIT/X11 software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -12,7 +13,7 @@
 #include "PaymentGateService.h"
 #include "version.h"
 
-#ifdef WIN32
+#ifdef _WIN32
 #include <windows.h>
 #include <winsvc.h>
 #else
@@ -28,7 +29,7 @@
 
 PaymentGateService* ppg;
 
-#ifdef WIN32
+#ifdef _WIN32
 SERVICE_STATUS_HANDLE serviceStatusHandle;
 
 std::string GetLastErrorMessage(DWORD errorMessageID)
@@ -119,7 +120,7 @@ int daemonize() {
 #endif
 
 int runDaemon() {
-#ifdef WIN32
+#ifdef _WIN32
 
   SERVICE_TABLE_ENTRY serviceTable[] {
     { "Payment Gate", serviceMain },
@@ -155,7 +156,7 @@ int runDaemon() {
 }
 
 int registerService() {
-#ifdef WIN32
+#ifdef _WIN32
   Logging::LoggerRef logRef(ppg->getLogger(), "ServiceRegistrator");
 
   char pathBuff[MAX_PATH];
@@ -212,7 +213,7 @@ int registerService() {
 }
 
 int unregisterService() {
-#ifdef WIN32
+#ifdef _WIN32
   Logging::LoggerRef logRef(ppg->getLogger(), "ServiceDeregistrator");
 
   SC_HANDLE scManager = NULL;

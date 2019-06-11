@@ -1,5 +1,6 @@
 // Copyright (c) 2011-2017 The Cryptonote developers
-// Copyright (c) 2018 The Circle Foundation
+// Copyright (c) 2017-2018 The Circle Foundation & Conceal Devs
+// Copyright (c) 2018-2019 Conceal Network & Conceal Devs
 // Distributed under the MIT/X11 software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -67,6 +68,7 @@ public:
   virtual size_t getTransferCount() override;
   virtual size_t getDepositCount() override;
   virtual size_t getNumUnlockedOutputs() override;
+  virtual std::vector<TransactionOutputInformation> getUnspentOutputs() override;
   virtual bool isTrackingWallet();
   virtual TransactionId findTransactionByTransferId(TransferId transferId) override;
   virtual bool getTxProof(Crypto::Hash& txid, CryptoNote::AccountPublicAddress& address, Crypto::SecretKey& tx_key, std::string& sig_str) override;

@@ -1,5 +1,6 @@
 // Copyright (c) 2011-2017 The Cryptonote developers
-// Copyright (c) 2018 The Circle Foundation
+// Copyright (c) 2017-2018 The Circle Foundation & Conceal Devs
+// Copyright (c) 2018-2019 Conceal Network & Conceal Devs
 // Distributed under the MIT/X11 software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -276,6 +277,7 @@ struct COMMAND_RPC_GET_INFO {
     uint64_t last_block_reward;
     uint64_t last_block_timestamp;
     uint64_t last_block_difficulty;
+    std::vector<std::string> connections;
 
     void serialize(ISerializer &s) {
       KV_MEMBER(status)
@@ -299,6 +301,7 @@ struct COMMAND_RPC_GET_INFO {
       KV_MEMBER(last_block_reward)
       KV_MEMBER(last_block_timestamp)
       KV_MEMBER(last_block_difficulty)
+      KV_MEMBER(connections)      
     }
   };
 };

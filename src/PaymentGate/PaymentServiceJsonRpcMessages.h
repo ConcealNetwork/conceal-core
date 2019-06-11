@@ -1,5 +1,6 @@
 // Copyright (c) 2011-2017 The Cryptonote developers
-// Copyright (c) 2018 The Circle Foundation
+// Copyright (c) 2017-2018 The Circle Foundation & Conceal Devs
+// Copyright (c) 2018-2019 Conceal Network & Conceal Devs
 // Distributed under the MIT/X11 software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -18,6 +19,16 @@ const uint32_t DEFAULT_ANONYMITY_LEVEL = 6;
 class RequestSerializationError: public std::exception {
 public:
   virtual const char* what() const throw() override { return "Request error"; }
+};
+
+struct Save {
+  struct Request {
+    void serialize(CryptoNote::ISerializer& serializer);
+  };
+
+  struct Response {
+    void serialize(CryptoNote::ISerializer& serializer);
+  };
 };
 
 struct Reset {
@@ -187,6 +198,7 @@ struct TransferRpcInfo {
   uint8_t type;
   std::string address;
   int64_t amount;
+  std::string message;  
 
   void serialize(CryptoNote::ISerializer& serializer);
 };
@@ -196,6 +208,7 @@ struct TransactionRpcInfo {
   std::string transactionHash;
   uint32_t blockIndex;
   uint64_t timestamp;
+  uint32_t confirmations;
   bool isBase;
   uint64_t unlockTime;
   int64_t amount;

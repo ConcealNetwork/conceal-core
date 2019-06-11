@@ -1,6 +1,7 @@
 // Copyright (c) 2011-2017 The Cryptonote developers
 // Copyright (c) 2016-2018, The Karbo developers
-// Copyright (c) 2018 The Circle Foundation
+// Copyright (c) 2017-2018 The Circle Foundation & Conceal Devs
+// Copyright (c) 2018-2019 Conceal Network & Conceal Devs
 
 // Distributed under the MIT/X11 software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
@@ -686,7 +687,7 @@ bool Blockchain::getBlockByHash(const Crypto::Hash& blockHash, Block& b) {
     return true;
   }
 
-  logger(WARNING) << "<< Blockchain.cpp << " << blockHash;
+  logger(DEBUGGING) << "<< Blockchain.cpp << " << blockHash;
 
   auto blockByHashIterator = m_alternative_chains.find(blockHash);
   if (blockByHashIterator != m_alternative_chains.end()) {

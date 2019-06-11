@@ -1,5 +1,6 @@
 // Copyright (c) 2011-2017 The Cryptonote developers
-// Copyright (c) 2018 The Circle Foundation
+// Copyright (c) 2017-2018 The Circle Foundation & Conceal Devs
+// Copyright (c) 2018-2019 Conceal Network & Conceal Devs
 // Distributed under the MIT/X11 software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -7,6 +8,12 @@
 #include "Serialization/SerializationOverloads.h"
 
 namespace PaymentService {
+
+void Save::Request::serialize(CryptoNote::ISerializer& /*serializer*/) {
+}
+
+void Save::Response::serialize(CryptoNote::ISerializer& /*serializer*/) {
+}
 
 void Reset::Request::serialize(CryptoNote::ISerializer& serializer) {
   serializer(viewSecretKey, "viewSecretKey");
@@ -136,12 +143,14 @@ void TransferRpcInfo::serialize(CryptoNote::ISerializer& serializer) {
   serializer(type, "type");
   serializer(address, "address");
   serializer(amount, "amount");
+  serializer(message, "message");  
 }
 
 void TransactionRpcInfo::serialize(CryptoNote::ISerializer& serializer) {
   serializer(state, "state");
   serializer(transactionHash, "transactionHash");
   serializer(blockIndex, "blockIndex");
+  serializer(confirmations, "confirmations");  
   serializer(timestamp, "timestamp");
   serializer(isBase, "isBase");
   serializer(unlockTime, "unlockTime");
@@ -150,6 +159,7 @@ void TransactionRpcInfo::serialize(CryptoNote::ISerializer& serializer) {
   serializer(transfers, "transfers");
   serializer(extra, "extra");
   serializer(paymentId, "paymentId");
+
 }
 
 void GetTransaction::Request::serialize(CryptoNote::ISerializer& serializer) {

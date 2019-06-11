@@ -7,7 +7,7 @@
 [![Build Status](https://travis-ci.org/ConcealNetwork/conceal-core.svg?branch=dev)](https://travis-ci.org/ConcealNetwork/conceal-core) [![Build status](https://ci.appveyor.com/api/projects/status/github/concealnetwork/conceal-core?branch=dev&svg=true)](https://ci.appveyor.com/project/cryptokatz/conceal-core)
 
 # Conceal Core (CLI)
-Latest Release: v5.2.5
+Latest Release: v5.3.4
 Maintained by The Circle Team.
 
 ## Information
@@ -67,6 +67,37 @@ If the build is successful the binaries will be in the src folder.
 - `msbuild concealX.sln /p:Configuration=Release /m`
 
 If the build is successful the binaries will be in the src/Release folder.
+
+### macOS
+
+#### Prerequisites
+
+In order to install prerequisites, [XCode](https://developer.apple.com/xcode/) and [Homebrew](https://brew.sh/) needs to be installed.
+Once both are ready, open terminal app, run following command:
+
+```bash
+$ xcode-select --install
+```
+
+and install all tools. On newer macOS versions (v10.14 and higher) this step is done through Software Update app.
+
+After that, proceed with installing dependencies:
+
+```bash
+$ brew install git python cmake gcc boost
+```
+
+When all dependencies are installed, build Conceal Core binaries:
+
+```bash
+$ git clone https://github.com/ConcealNetwork/conceal-core
+$ cd conceal-core
+$ mkdir build && cd $_
+$ cmake ..
+$ make
+```
+
+If the build is successful the binaries will be located in `src` directory.
 
 #### Special Thanks
 Special thanks goes out to the developers from Cryptonote, Bytecoin, Monero, Forknote, TurtleCoin, and Masari.

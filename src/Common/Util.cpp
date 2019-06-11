@@ -1,5 +1,6 @@
 // Copyright (c) 2011-2017 The Cryptonote developers
-// Copyright (c) 2018 The Circle Foundation
+// Copyright (c) 2017-2018 The Circle Foundation & Conceal Devs
+// Copyright (c) 2018-2019 Conceal Network & Conceal Devs
 // Distributed under the MIT/X11 software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -10,7 +11,7 @@
 
 #include "CryptoNoteConfig.h"
 
-#ifdef WIN32
+#ifdef _WIN32
 #include <windows.h>
 #include <shlobj.h>
 #include <strsafe.h>
@@ -21,7 +22,7 @@
 
 namespace Tools
 {
-#ifdef WIN32
+#ifdef _WIN32
   std::string get_windows_version_display_string()
   {
     typedef void (WINAPI *PGNSI)(LPSYSTEM_INFO);
@@ -261,7 +262,7 @@ std::string get_nix_version_display_string()
 
   std::string get_os_version_string()
   {
-#ifdef WIN32
+#ifdef _WIN32
     return get_windows_version_display_string();
 #else
     return get_nix_version_display_string();
@@ -270,7 +271,7 @@ std::string get_nix_version_display_string()
 
 
 
-#ifdef WIN32
+#ifdef _WIN32
   std::string get_special_folder_path(int nfolder, bool iscreate)
   {
     namespace fs = boost::filesystem;
@@ -292,7 +293,7 @@ std::string get_nix_version_display_string()
     // Mac: ~/Library/Application Support/CRYPTONOTE_NAME
     // Unix: ~/.CRYPTONOTE_NAME
     std::string config_folder;
-#ifdef WIN32
+#ifdef _WIN32
     // Windows
     config_folder = get_special_folder_path(CSIDL_APPDATA, true) + "/" + CryptoNote::CRYPTONOTE_NAME;
 #else

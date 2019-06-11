@@ -1,5 +1,6 @@
 // Copyright (c) 2011-2017 The Cryptonote developers
-// Copyright (c) 2018 The Circle Foundation
+// Copyright (c) 2017-2018 The Circle Foundation & Conceal Devs
+// Copyright (c) 2018-2019 Conceal Network & Conceal Devs
 // Distributed under the MIT/X11 software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -519,6 +520,12 @@ size_t WalletLegacy::getNumUnlockedOutputs() {
   return outputs.size();
 }
 
+std::vector<TransactionOutputInformation> WalletLegacy::getUnspentOutputs() {
+  std::vector<TransactionOutputInformation> outputs;
+  m_transferDetails->getOutputs(outputs, ITransfersContainer::IncludeKeyUnlocked);
+  return outputs;
+}
+
 TransactionId WalletLegacy::sendTransaction(Crypto::SecretKey& transactionSK,
                                             const WalletLegacyTransfer& transfer,
                                             uint64_t fee,
@@ -555,7 +562,7 @@ TransactionId WalletLegacy::sendTransaction(Crypto::SecretKey& transactionSK,
   std::deque<std::unique_ptr<WalletLegacyEvent>> events;
   throwIfNotInitialised();
 
-  if (fee < 100) {
+  if ((fee < 100) && (ttl == 0)) {
     fee = 100;
   }
 

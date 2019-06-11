@@ -1,5 +1,6 @@
 // Copyright (c) 2011-2017 The Cryptonote developers
-// Copyright (c) 2018 The Circle Foundation
+// Copyright (c) 2017-2018 The Circle Foundation & Conceal Devs
+// Copyright (c) 2018-2019 Conceal Network & Conceal Devs
 // Distributed under the MIT/X11 software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -27,6 +28,7 @@
 #include <System/Dispatcher.h>
 #include <System/Ipv4Address.h>
 
+std::string remote_fee_address;
 namespace CryptoNote
 {
   /************************************************************************/
@@ -43,6 +45,7 @@ namespace CryptoNote
 
     bool process_command(const std::vector<std::string> &args);
     std::string get_commands_str();
+    std::string getFeeAddress();
 
     const CryptoNote::Currency& currency() const { return m_currency; }
 

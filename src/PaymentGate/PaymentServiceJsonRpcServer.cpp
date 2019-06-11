@@ -1,5 +1,6 @@
 // Copyright (c) 2011-2017 The Cryptonote developers
-// Copyright (c) 2018 The Circle Foundation
+// Copyright (c) 2017-2018 The Circle Foundation & Conceal Devs
+// Copyright (c) 2018-2019 Conceal Network & Conceal Devs
 // Distributed under the MIT/X11 software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -36,6 +37,7 @@ PaymentServiceJsonRpcServer::PaymentServiceJsonRpcServer(System::Dispatcher& sys
   , service(service)
   , logger(loggerGroup, "PaymentServiceJsonRpcServer")
 {
+  handlers.emplace("save", jsonHandler<Save::Request, Save::Response>(std::bind(&PaymentServiceJsonRpcServer::handleSave, this, std::placeholders::_1, std::placeholders::_2)));
   handlers.emplace("createIntegrated", jsonHandler<CreateIntegrated::Request, CreateIntegrated::Response>(std::bind(&PaymentServiceJsonRpcServer::handleCreateIntegrated, this, std::placeholders::_1, std::placeholders::_2)));
   handlers.emplace("reset", jsonHandler<Reset::Request, Reset::Response>(std::bind(&PaymentServiceJsonRpcServer::handleReset, this, std::placeholders::_1, std::placeholders::_2)));
   handlers.emplace("createAddress", jsonHandler<CreateAddress::Request, CreateAddress::Response>(std::bind(&PaymentServiceJsonRpcServer::handleCreateAddress, this, std::placeholders::_1, std::placeholders::_2)));
@@ -117,9 +119,11 @@ std::error_code PaymentServiceJsonRpcServer::handleCreateAddress(const CreateAdd
   }
 }
 
-/* ------------------------------------------------------------------------------ */
+std::error_code PaymentServiceJsonRpcServer::handleSave(const Save::Request& /*request*/, Save::Response& /*response*/) 
+{
+  return service.saveWalletNoThrow();
+}
 
-/* CREATE INTEGRATED */
 
 std::error_code PaymentServiceJsonRpcServer::handleCreateIntegrated(const CreateIntegrated::Request& request, CreateIntegrated::Response& response) 
 {
