@@ -16,7 +16,7 @@ void Save::Response::serialize(CryptoNote::ISerializer& /*serializer*/) {
 }
 
 void Reset::Request::serialize(CryptoNote::ISerializer& serializer) {
-  serializer(viewSecretKey, "secretViewKey");
+  serializer(viewSecretKey, "privateViewKey");
 }
 
 void Reset::Response::serialize(CryptoNote::ISerializer& serializer) {
@@ -26,7 +26,7 @@ void GetViewKey::Request::serialize(CryptoNote::ISerializer& serializer) {
 }
 
 void GetViewKey::Response::serialize(CryptoNote::ISerializer& serializer) {
-  serializer(viewSecretKey, "secretViewKey");
+  serializer(viewSecretKey, "privateViewKey");
 }
 
 void GetStatus::Request::serialize(CryptoNote::ISerializer& serializer) {
