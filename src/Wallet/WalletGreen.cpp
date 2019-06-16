@@ -508,6 +508,70 @@ std::string WalletGreen::createAddress(const Crypto::PublicKey& spendPublicKey) 
   return doCreateAddress(spendPublicKey, NULL_SECRET_KEY, 0);
 }
 
+std::vector<std::string> WalletGreen::createAddressList(const std::vector<Crypto::SecretKey>& spendSecretKeys, bool reset) {
+  std::vector<NewAddressData> addressDataList(spendSecretKeys.size());
+  for (size_t i = 0; i < spendSecretKeys.size(); ++i) {
+    Crypto::PublicKey spendPublicKey;
+    if (!Crypto::secret_key_to_public_key(spendSecretKeys[i], spendPublicKey)) {
+      //m_logger(ERROR, BRIGHT_RED) << "createAddressList(): failed to convert secret key to public key, secret key " << spendSecretKeys[i];
+      throw std::system_error(make_error_code(CryptoNote::error::KEY_GENERATION_ERROR));
+    }
+
+    addressDataList[i].spendSecretKey = spendSecretKeys[i];
+    addressDataList[i].spendPublicKey = spendPublicKey;
+    addressDataList[i].creationTimestamp = reset ? 0 : static_cast<uint64_t>(time(nullptr));
+  }
+
+  return doCreateAddressList(addressDataList);
+}
+
+std::vector<std::string> WalletGreen::doCreateAddressList(const std::vector<NewAddressData>& addressDataList) {
+  throwIfNotInitialized();
+  throwIfStopped();
+  stopBlockchainSynchronizer();
+
+  std::vector<std::string> addresses;
+  try {
+    uint64_t minCreationTimestamp = std::numeric_limits<uint64_t>::max();
+
+    {
+      if (addressDataList.size() > 1) {
+      }
+
+      Tools::ScopeExit exitHandler([this] {
+
+      });
+
+      for (auto& addressData : addressDataList) {
+        assert(addressData.creationTimestamp <= std::numeric_limits<uint64_t>::max() - m_currency.blockFutureTimeLimit());
+        std::string address = addWallet(addressData.spendPublicKey, addressData.spendSecretKey, addressData.creationTimestamp);
+        //m_logger(INFO, BRIGHT_WHITE) << "New wallet added " << address << ", creation timestamp " << addressData.creationTimestamp;
+        addresses.push_back(std::move(address));
+        minCreationTimestamp = std::min(minCreationTimestamp, addressData.creationTimestamp);
+      }
+    }
+
+
+    auto currentTime = static_cast<uint64_t>(time(nullptr));
+    if (minCreationTimestamp + m_currency.blockFutureTimeLimit() < currentTime) {
+    std::string password = m_password;
+    std::stringstream ss;
+    unsafeSave(ss, true, false);
+    shutdown();
+    load(ss, password);
+    shutdown();
+    }
+  } catch (const std::exception& e) {
+    //m_logger(ERROR, BRIGHT_RED) << "Failed to add wallets: " << e.what();
+    startBlockchainSynchronizer();
+    throw;
+  }
+
+  startBlockchainSynchronizer();
+
+  return addresses;
+}
+
 std::string WalletGreen::doCreateAddress(const Crypto::PublicKey& spendPublicKey, const Crypto::SecretKey& spendSecretKey, uint64_t creationTimestamp) {
   assert(creationTimestamp <= std::numeric_limits<uint64_t>::max() - m_currency.blockFutureTimeLimit());
 
