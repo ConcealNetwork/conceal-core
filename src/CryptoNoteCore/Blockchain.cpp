@@ -983,17 +983,25 @@ difficulty_type Blockchain::get_next_difficulty_for_alternative_chain(const std:
 
 bool Blockchain::prevalidate_miner_transaction(const Block& b, uint32_t height) {
 
-  if (!(b.baseTransaction.inputs.size() == 1)) {
-    logger(ERROR, BRIGHT_RED)
-      << "coinbase transaction in the block has no inputs";
-
+  /* The coinbase transaction should only have outputs */
+  if (!(b.baseTransaction.inputs.size() == 1)) 
+  {
+    logger(ERROR, BRIGHT_RED) << "coinbase transaction in the block has no inputs";
     return false;
   }
 
-  if (!(b.baseTransaction.inputs[0].type() == typeid(BaseInput))) {
-    logger(ERROR, BRIGHT_RED)
-      << "<< Blockchain.cpp << " << "coinbase transaction in the block has the wrong type";
+  /* The base transaction should not have more than one signature 
+     This is different to other coins which have 0 signatures for the coinbase transaction
+     because they do not do multisignature transactions as we do for our deposits */
+  if (b.baseTransaction.signatures.size() > 1) 
+  {
+    logger(ERROR, BRIGHT_RED) << "<< Blockchain.cpp << coinbase transaction in the block shouldn't have more than 1 signature. Signature count: " << b.baseTransaction.signatures.size();
+    return false;
+  }
 
+  if (!(b.baseTransaction.inputs[0].type() == typeid(BaseInput))) 
+  {
+    logger(ERROR, BRIGHT_RED) << "<< Blockchain.cpp << " << "coinbase transaction in the block has the wrong type";
     return false;
   }
 
