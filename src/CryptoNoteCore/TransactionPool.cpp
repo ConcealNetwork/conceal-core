@@ -388,10 +388,10 @@ namespace CryptoNote {
 
     BlockTemplate blockTemplate;
 
-    /* Process the latest deposit transactions first */
-    for (auto it = m_fee_index.rbegin(); it != m_fee_index.rend() && it->fee == 1000; ++it) 
+    /* Process the latest transactions with fees above 1000X first */
+    for (auto it = m_fee_index.rbegin(); it != m_fee_index.rend() && it->fee > 1000; ++it) 
     {
-      const auto& txd = *i;
+      const auto& txd = *it;
 
       if (m_ttlIndex.count(txd.id) > 0) 
       {
@@ -407,11 +407,31 @@ namespace CryptoNote {
       TransactionCheckInfo checkInfo(txd);
       bool ready = is_transaction_ready_to_go(txd.tx, checkInfo);
 
-      // update item state
-      m_fee_index.modify(i, [&checkInfo](TransactionCheckInfo& item) 
+      if (ready && blockTemplate.addTransaction(txd.id, txd.tx)) 
       {
-        item = checkInfo;
-      });
+        total_size += txd.blobSize;
+        fee += txd.fee;
+      }
+    }
+
+    /* Process the latest deposit transactions next */
+    for (auto it2 = m_fee_index.rbegin(); it2 != m_fee_index.rend() && it2->fee == 1000; ++it2) 
+    {
+      const auto& txd = *it2;
+
+      if (m_ttlIndex.count(txd.id) > 0) 
+      {
+        continue;
+      }
+
+      size_t blockSizeLimit = (txd.fee == 0) ? median_size : max_total_size;
+      if (blockSizeLimit < total_size + txd.blobSize) 
+      {
+        continue;
+      }
+
+      TransactionCheckInfo checkInfo(txd);
+      bool ready = is_transaction_ready_to_go(txd.tx, checkInfo);
 
       if (ready && blockTemplate.addTransaction(txd.id, txd.tx)) 
       {
@@ -420,7 +440,7 @@ namespace CryptoNote {
       }
     }
 
-    /* Process other transactions starting from the oldest */
+    /* Now we process other transactions starting from the oldest */
     for (auto i = m_fee_index.begin(); i != m_fee_index.end(); ++i) 
     {
       const auto& txd = *i;
