@@ -126,10 +126,11 @@ public:
   BlockchainSynchronizer& m_sync;
 };
 
-WalletLegacy::WalletLegacy(const CryptoNote::Currency& currency, INode& node) :
+WalletLegacy::WalletLegacy(const CryptoNote::Currency& currency, INode& node, Logging::ILogger& loggerGroup) :
   m_state(NOT_INITIALIZED),
   m_currency(currency),
   m_node(node),
+  m_loggerGroup(loggerGroup),  
   m_isStopping(false),
   m_lastNotifiedActualBalance(0),
   m_lastNotifiedPendingBalance(0),
@@ -138,7 +139,7 @@ WalletLegacy::WalletLegacy(const CryptoNote::Currency& currency, INode& node) :
   m_lastNotifiedActualInvestmentBalance(0),
   m_lastNotifiedPendingInvestmentBalance(0),  
   m_blockchainSync(node, currency.genesisBlockHash()),
-  m_transfersSync(currency, m_blockchainSync, node),
+  m_transfersSync(currency, m_loggerGroup, m_blockchainSync, node),
   m_transferDetails(nullptr),
   m_transactionsCache(m_currency.mempoolTxLiveTime()),
   m_sender(nullptr),

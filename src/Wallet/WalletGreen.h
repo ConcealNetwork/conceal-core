@@ -14,6 +14,7 @@
 #include "IFusionManager.h"
 #include "WalletIndices.h"
 
+#include "Logging/LoggerRef.h"
 #include <System/Dispatcher.h>
 #include <System/Event.h>
 #include "Transfers/TransfersSynchronizer.h"
@@ -27,7 +28,7 @@ class WalletGreen : public IWallet,
                     ITransfersSynchronizerObserver,
                     public IFusionManager {
 public:
-  WalletGreen(System::Dispatcher& dispatcher, const Currency& currency, INode& node, uint32_t transactionSoftLockTime = 1);
+  WalletGreen(System::Dispatcher& dispatcher, const Currency& currency, INode& node, Logging::ILogger& logger, uint32_t transactionSoftLockTime = 1);
   virtual ~WalletGreen();
 
   virtual void initialize(const std::string& password) override;
@@ -283,6 +284,7 @@ std::vector<OutputToTransfer> pickRandomFusionInputs(const std::vector<std::stri
   System::Dispatcher& m_dispatcher;
   const Currency& m_currency;
   INode& m_node;
+  mutable Logging::LoggerRef m_logger;  
   bool m_stopped;
 
   WalletsContainer m_walletsContainer;

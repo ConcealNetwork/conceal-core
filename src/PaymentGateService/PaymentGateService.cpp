@@ -18,7 +18,6 @@
 #include "CryptoNoteProtocol/CryptoNoteProtocolHandler.h"
 #include "P2p/NetNode.h"
 #include "Rpc/RpcServer.h"
-#include "PaymentGate/WalletFactory.h"
 #include <System/Context.h>
 #include "Wallet/WalletGreen.h"
 
@@ -223,7 +222,7 @@ void PaymentGateService::runWalletService(const CryptoNote::Currency& currency, 
     config.gateConfiguration.containerPassword
   };
 
-  std::unique_ptr<CryptoNote::WalletGreen> wallet(new CryptoNote::WalletGreen(*dispatcher, currency, node));
+  std::unique_ptr<CryptoNote::WalletGreen> wallet(new CryptoNote::WalletGreen(*dispatcher, currency, node, logger));
 
   service = new PaymentService::WalletService(currency, *dispatcher, node, *wallet, *wallet, walletConfiguration, logger);
   std::unique_ptr<PaymentService::WalletService> serviceGuard(service);
