@@ -517,7 +517,7 @@ bool Blockchain::checkCheckpoints(uint32_t& lastValidCheckpointHeight) {
       return false;
     }
   }
-
+  logger(INFO, BRIGHT_WHITE) << "<< Blockchain.cpp << " << "Checkpoints passed";
   return true;
 }
 
