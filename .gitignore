@@ -7,6 +7,7 @@ tags/
 Release/
 Debug/
 CMakeFiles/
+.vscode/
 
 # Mac OS
 *.DS_Store
