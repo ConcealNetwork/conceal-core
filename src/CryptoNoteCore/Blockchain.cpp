@@ -782,7 +782,7 @@ bool Blockchain::rollback_blockchain_switching(std::list<Block> &original_chain,
     popBlock(get_block_hash(m_blocks.back().bl));
   }
 
-  uint32_t height = rollback_height - 1;
+  uint32_t height = static_cast<uint32_t>(rollback_height - 1);
 
   // return back original chain
   for (auto &bl : original_chain) {
@@ -854,7 +854,7 @@ bool Blockchain::switch_to_alternative_blockchain(std::list<blocks_ext_by_hash::
     disconnected_chain.push_front(b);
   }
 
-  uint32_t height = split_height - 1;
+  uint32_t height = static_cast<uint32_t>(split_height - 1);
 
   //connecting new alternative chain
   for (auto alt_ch_iter = alt_chain.begin(); alt_ch_iter != alt_chain.end(); alt_ch_iter++) {
