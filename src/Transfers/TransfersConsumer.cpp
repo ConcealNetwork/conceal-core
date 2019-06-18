@@ -501,7 +501,7 @@ std::error_code TransfersConsumer::preprocessOutputs(const TransactionBlockInfo&
 		  }
 	  }
 	  catch (const std::exception& e) {
-	//	  m_logger(ERROR, BRIGHT_RED) << "Failed to process transaction: " << e.what() << ", transaction hash " << Common::podToHex(tx.getTransactionHash());
+	    m_logger(ERROR, BRIGHT_RED) << "Failed to process transaction: " << e.what() << ", transaction hash " << Common::podToHex(tx.getTransactionHash());
 		  return std::error_code();
 	  }
     }
