@@ -97,6 +97,22 @@ struct CreateAddress {
   };
 };
 
+struct CreateAddressList 
+{
+  struct Request 
+  {
+    std::vector<std::string> spendSecretKeys;
+    bool reset;
+    void serialize(CryptoNote::ISerializer& serializer);
+  };
+
+  struct Response 
+  {
+    std::vector<std::string> addresses;
+    void serialize(CryptoNote::ISerializer& serializer);
+  };
+};
+
 struct DeleteAddress {
   struct Request {
     std::string address;

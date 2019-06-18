@@ -139,6 +139,7 @@ public:
   virtual std::string createAddress() = 0;
   virtual std::string createAddress(const Crypto::SecretKey& spendSecretKey) = 0;
   virtual std::string createAddress(const Crypto::PublicKey& spendPublicKey) = 0;
+  virtual std::vector<std::string> createAddressList(const std::vector<Crypto::SecretKey>& spendSecretKeys, bool reset = true) = 0;
   virtual void deleteAddress(const std::string& address) = 0;
 
 

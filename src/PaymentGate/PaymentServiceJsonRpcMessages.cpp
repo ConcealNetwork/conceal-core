@@ -16,7 +16,7 @@ void Save::Response::serialize(CryptoNote::ISerializer& /*serializer*/) {
 }
 
 void Reset::Request::serialize(CryptoNote::ISerializer& serializer) {
-  serializer(viewSecretKey, "secretViewKey");
+  serializer(viewSecretKey, "privateViewKey");
 }
 
 void Reset::Response::serialize(CryptoNote::ISerializer& serializer) {
@@ -26,7 +26,7 @@ void GetViewKey::Request::serialize(CryptoNote::ISerializer& serializer) {
 }
 
 void GetViewKey::Response::serialize(CryptoNote::ISerializer& serializer) {
-  serializer(viewSecretKey, "secretViewKey");
+  serializer(viewSecretKey, "privateViewKey");
 }
 
 void GetStatus::Request::serialize(CryptoNote::ISerializer& serializer) {
@@ -58,6 +58,19 @@ void CreateAddress::Request::serialize(CryptoNote::ISerializer& serializer) {
 
 void CreateAddress::Response::serialize(CryptoNote::ISerializer& serializer) {
   serializer(address, "address");
+}
+
+void CreateAddressList::Request::serialize(CryptoNote::ISerializer& serializer) 
+{
+  if (!serializer(spendSecretKeys, "spendSecretKeys")) 
+  {
+    throw RequestSerializationError();
+  }
+}
+
+void CreateAddressList::Response::serialize(CryptoNote::ISerializer& serializer) 
+{
+  serializer(addresses, "addresses");
 }
 
 void DeleteAddress::Request::serialize(CryptoNote::ISerializer& serializer) {
