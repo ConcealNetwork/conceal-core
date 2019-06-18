@@ -4,7 +4,7 @@
 [![Build Status](https://travis-ci.org/ConcealNetwork/conceal-core.svg?branch=master)](https://travis-ci.org/ConcealNetwork/conceal-core) [![Build status](https://ci.appveyor.com/api/projects/status/github/concealnetwork/conceal-core?branch=master&svg=true)](https://ci.appveyor.com/project/cryptokatz/conceal-core)
 
 #### Development Build Status
-[![Build Status](https://travis-ci.org/ConcealNetwork/conceal-core.svg?branch=dev)](https://travis-ci.org/ConcealNetwork/conceal-core) [![Build status](https://ci.appveyor.com/api/projects/status/github/concealnetwork/conceal-core?branch=dev&svg=true)](https://ci.appveyor.com/project/cryptokatz/conceal-core)
+[![Build Status](https://travis-ci.org/ConcealNetwork/conceal-core.svg?branch=development)](https://travis-ci.org/ConcealNetwork/conceal-core) [![Build status](https://ci.appveyor.com/api/projects/status/github/concealnetwork/conceal-core?branch=development&svg=true)](https://ci.appveyor.com/project/cryptokatz/conceal-core)
 
 # Conceal Core (CLI)
 Latest Release: v5.3.5
