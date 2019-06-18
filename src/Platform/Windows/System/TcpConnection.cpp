@@ -15,6 +15,7 @@
 #include <System/Ipv4Address.h>
 #include "Dispatcher.h"
 #include "ErrorMessage.h"
+#include <stdexcept>
 
 namespace System {
 

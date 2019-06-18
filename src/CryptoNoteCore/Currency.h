@@ -341,7 +341,7 @@ public:
   CurrencyBuilder& upgradeHeightV6(uint64_t val) { m_currency.m_upgradeHeightV6 = val; return *this; }
   CurrencyBuilder& upgradeHeightV7(uint64_t val) { m_currency.m_upgradeHeightV7 = val; return *this; }  
   CurrencyBuilder& upgradeVotingThreshold(unsigned int val);
-  CurrencyBuilder& upgradeVotingWindow(size_t val) { m_currency.m_upgradeVotingWindow = val; return *this; }
+  CurrencyBuilder& upgradeVotingWindow(uint32_t val) { m_currency.m_upgradeVotingWindow = val; return *this; }
   CurrencyBuilder& upgradeWindow(size_t val);
 
   CurrencyBuilder& transactionMaxSize(size_t val) { m_currency.m_transactionMaxSize = val; return *this; }

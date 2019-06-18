@@ -16,7 +16,7 @@ void Save::Response::serialize(CryptoNote::ISerializer& /*serializer*/) {
 }
 
 void Reset::Request::serialize(CryptoNote::ISerializer& serializer) {
-  serializer(viewSecretKey, "viewSecretKey");
+  serializer(viewSecretKey, "secretViewKey");
 }
 
 void Reset::Response::serialize(CryptoNote::ISerializer& serializer) {
@@ -26,7 +26,7 @@ void GetViewKey::Request::serialize(CryptoNote::ISerializer& serializer) {
 }
 
 void GetViewKey::Response::serialize(CryptoNote::ISerializer& serializer) {
-  serializer(viewSecretKey, "viewSecretKey");
+  serializer(viewSecretKey, "secretViewKey");
 }
 
 void GetStatus::Request::serialize(CryptoNote::ISerializer& serializer) {
@@ -47,8 +47,8 @@ void GetAddresses::Response::serialize(CryptoNote::ISerializer& serializer) {
 }
 
 void CreateAddress::Request::serialize(CryptoNote::ISerializer& serializer) {
-  bool hasSecretKey = serializer(spendSecretKey, "spendSecretKey");
-  bool hasPublicKey = serializer(spendPublicKey, "spendPublicKey");
+  bool hasSecretKey = serializer(spendSecretKey, "privateSpendKey");
+  bool hasPublicKey = serializer(spendPublicKey, "publicSpendKey");
 
   if (hasSecretKey && hasPublicKey) {
     //TODO: replace it with error codes
@@ -76,8 +76,8 @@ void GetSpendKeys::Request::serialize(CryptoNote::ISerializer& serializer) {
 }
 
 void GetSpendKeys::Response::serialize(CryptoNote::ISerializer& serializer) {
-  serializer(spendSecretKey, "spendSecretKey");
-  serializer(spendPublicKey, "spendPublicKey");
+  serializer(spendSecretKey, "privateSpendKey");
+  serializer(spendPublicKey, "publicSpendKey");
 }
 
 void GetBalance::Request::serialize(CryptoNote::ISerializer& serializer) {
