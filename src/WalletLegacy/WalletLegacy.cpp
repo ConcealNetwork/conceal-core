@@ -92,18 +92,30 @@ private:
 uint64_t calculateDepositsAmount(const std::vector<CryptoNote::TransactionOutputInformation>& transfers, const CryptoNote::Currency& currency, const std::vector<uint32_t> heights) {
 	int index = 0;
   return std::accumulate(transfers.begin(), transfers.end(), static_cast<uint64_t>(0), [&currency, &index, heights] (uint64_t sum, const CryptoNote::TransactionOutputInformation& deposit) {
-    if ((deposit.term % 64800 != 0) && (deposit.term > 0)) {
+    if (deposit.term % 64800 != 0) 
+    {
       return sum + deposit.amount + currency.calculateInterest(deposit.amount, deposit.term, heights[index++]);
-    }  
+    }
+    else
+    {
+      return sum;
+    }
+    
   });
 }
 
 uint64_t calculateInvestmentsAmount(const std::vector<CryptoNote::TransactionOutputInformation>& transfers, const CryptoNote::Currency& currency, const std::vector<uint32_t> heights) {
 	int index = 0;
   return std::accumulate(transfers.begin(), transfers.end(), static_cast<uint64_t>(0), [&currency, &index, heights] (uint64_t sum, const CryptoNote::TransactionOutputInformation& deposit) {
-    if ((deposit.term % 64800 == 0) && (deposit.term > 0)) {
+    if (deposit.term % 64800 == 0) 
+    {
       return sum + deposit.amount + currency.calculateInterest(deposit.amount, deposit.term, heights[index++]);
     }
+    else
+    {
+      return sum;
+    }
+    
   });
 }
 
@@ -1209,7 +1221,6 @@ bool WalletLegacy::get_tx_key(Crypto::Hash& txid, Crypto::SecretKey& txSecretKey
   getTransaction(ti, transaction);
   txSecretKey = transaction.secretKey.get();
   if (txSecretKey == NULL_SECRET_KEY) {
-    //m_loggerGroup("WalletLegacy", INFO, boost::posix_time::second_clock::local_time(), "Transaction secret key is not stored in wallet cache.");
     return false;
   }
 
@@ -1227,8 +1238,7 @@ bool WalletLegacy::getTxProof(Crypto::Hash& txid, CryptoNote::AccountPublicAddre
   try {
     Crypto::generate_tx_proof(txid, R, address.viewPublicKey, rA, tx_key, sig);
   }
-  catch (const std::runtime_error &e) {
-    //m_loggerGroup("WalletLegacy", INFO, boost::posix_time::second_clock::local_time(), "Proof generation error: " + *e.what());
+  catch (std::runtime_error) {
     return false;
   }
 
