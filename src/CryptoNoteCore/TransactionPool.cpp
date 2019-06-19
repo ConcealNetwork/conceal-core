@@ -440,7 +440,33 @@ namespace CryptoNote {
       }
     }
 
-    /* Now we process other transactions starting from the oldest */
+    /* Process regular transactions next */
+    for (auto it2 = m_fee_index.rbegin(); it2 != m_fee_index.rend() && it2->fee => 100; ++it2) 
+    {
+      const auto& txd = *it2;
+
+      if (m_ttlIndex.count(txd.id) > 0) 
+      {
+        continue;
+      }
+
+      size_t blockSizeLimit = (txd.fee == 0) ? median_size : max_total_size;
+      if (blockSizeLimit < total_size + txd.blobSize) 
+      {
+        continue;
+      }
+
+      TransactionCheckInfo checkInfo(txd);
+      bool ready = is_transaction_ready_to_go(txd.tx, checkInfo);
+
+      if (ready && blockTemplate.addTransaction(txd.id, txd.tx)) 
+      {
+        total_size += txd.blobSize;
+        fee += txd.fee;
+      }
+    }
+
+    /* Now we process everything else */
     for (auto i = m_fee_index.begin(); i != m_fee_index.end(); ++i) 
     {
       const auto& txd = *i;
