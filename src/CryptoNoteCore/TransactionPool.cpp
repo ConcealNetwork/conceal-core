@@ -441,7 +441,7 @@ namespace CryptoNote {
     }
 
     /* Process regular transactions next */
-    for (auto it2 = m_fee_index.rbegin(); it2 != m_fee_index.rend() && it2->fee => 100; ++it2) 
+    for (auto it2 = m_fee_index.rbegin(); it2 != m_fee_index.rend() && it2->fee >= 100; ++it2) 
     {
       const auto& txd = *it2;
 
