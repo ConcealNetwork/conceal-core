@@ -27,7 +27,6 @@
 #include <System/EventLock.h>
 
 #include "PaymentServiceJsonRpcMessages.h"
-#include "WalletFactory.h"
 #include "NodeFactory.h"
 
 #include "Wallet/WalletGreen.h"
@@ -414,7 +413,7 @@ void generateNewWallet(const CryptoNote::Currency &currency, const WalletConfigu
   CryptoNote::INode* nodeStub = NodeFactory::createNodeStub();
   std::unique_ptr<CryptoNote::INode> nodeGuard(nodeStub);
 
-  CryptoNote::IWallet* wallet = new CryptoNote::WalletGreen(dispatcher, currency, *nodeStub);
+    CryptoNote::IWallet* wallet = new CryptoNote::WalletGreen(dispatcher, currency, *nodeStub, logger);
   std::unique_ptr<CryptoNote::IWallet> walletGuard(wallet);
 
   log(Logging::INFO) << "Generating new wallet";
@@ -1200,7 +1199,7 @@ std::error_code WalletService::getStatus(uint32_t& blockCount, uint32_t& knownBl
     System::EventLock lk(readyEvent);
 
     knownBlockCount = node.getKnownBlockCount();
-    peerCount = node.getPeerCount();
+    peerCount = static_cast<uint32_t>(node.getPeerCount());
     blockCount = wallet.getBlockCount();
 
     auto lastHashes = wallet.getBlockHashes(blockCount - 1, 1);

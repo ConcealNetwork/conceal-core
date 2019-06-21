@@ -183,16 +183,19 @@ bool PeerlistManager::set_peer_just_seen(PeerIdType peer, uint32_t ip, uint32_t 
 
 bool PeerlistManager::set_peer_just_seen(PeerIdType peer, const NetworkAddress& addr)
 {
-  try {
+  try 
+  {
     //find in white list
     PeerlistEntry ple;
     ple.adr = addr;
     ple.id = peer;
     ple.last_seen = time(NULL);
     return append_with_peer_white(ple);
-  } catch (std::exception&) {
+  } 
+  catch (std::exception&) 
+  {
+    return false;
   }
-
   return false;
 }
 //--------------------------------------------------------------------------------------------------
@@ -220,6 +223,7 @@ bool PeerlistManager::append_with_peer_white(const PeerlistEntry& ple)
     }
     return true;
   } catch (std::exception&) {
+      return false;
   }
   return false;
 }
@@ -250,6 +254,7 @@ bool PeerlistManager::append_with_peer_gray(const PeerlistEntry& ple)
     }
     return true;
   } catch (std::exception&) {
+      return false;
   }
   return false;
 }

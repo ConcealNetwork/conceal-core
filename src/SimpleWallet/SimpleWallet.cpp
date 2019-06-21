@@ -896,7 +896,7 @@ if (key_import) {
       logger(WARNING, BRIGHT_RED) << "Couldn't write wallet address file: " + walletAddressFile;
     }
   } else {
-    m_wallet.reset(new WalletLegacy(m_currency, *m_node));
+    m_wallet.reset(new WalletLegacy(m_currency, *m_node, logManager));
 
     try {
       m_wallet_file = tryToOpenWalletOrLoadKeysOrThrow(logger, m_wallet, m_wallet_file_arg, pwd_container.password());
@@ -999,7 +999,7 @@ void simple_wallet::handle_command_line(const boost::program_options::variables_
 bool simple_wallet::new_wallet(const std::string &wallet_file, const std::string& password) {
   m_wallet_file = wallet_file;
 
-  m_wallet.reset(new WalletLegacy(m_currency, *m_node.get()));
+  m_wallet.reset(new WalletLegacy(m_currency, *m_node, logManager));
   m_node->addObserver(static_cast<INodeObserver*>(this));
   m_wallet->addObserver(this);
   try {
@@ -1053,7 +1053,7 @@ bool simple_wallet::new_wallet(const std::string &wallet_file, const std::string
 bool simple_wallet::new_wallet(Crypto::SecretKey &secret_key, Crypto::SecretKey &view_key, const std::string &wallet_file, const std::string& password) {
                 m_wallet_file = wallet_file;
 
-                m_wallet.reset(new WalletLegacy(m_currency, *m_node.get()));
+                m_wallet.reset(new WalletLegacy(m_currency, *m_node.get(), logManager));
                 m_node->addObserver(static_cast<INodeObserver*>(this));
                 m_wallet->addObserver(this);
                 try {
@@ -2075,7 +2075,7 @@ int main(int argc, char* argv[]) {
       return 1;
     }
 
-    std::unique_ptr<IWalletLegacy> wallet(new WalletLegacy(currency, *node.get()));
+    std::unique_ptr<IWalletLegacy> wallet(new WalletLegacy(currency, *node.get(), logManager));
 
     std::string walletFileName;
     try  {

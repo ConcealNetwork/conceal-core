@@ -132,11 +132,7 @@ std::error_code PaymentServiceJsonRpcServer::handleSave(const Save::Request& /*r
 
 std::error_code PaymentServiceJsonRpcServer::handleCreateIntegrated(const CreateIntegrated::Request& request, CreateIntegrated::Response& response) 
 {
-
-  if (!request.payment_id.empty() && !request.address.empty()) 
-  {
-    return service.createIntegratedAddress(request, response.integrated_address);
-  }
+  return service.createIntegratedAddress(request, response.integrated_address);
 }
 
 /* ----------------------------------------------------------------------------- */

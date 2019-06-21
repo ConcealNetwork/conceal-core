@@ -222,7 +222,7 @@ inline void cryptonight_monero_tweak(uint64_t* mem_out, __m128i tmp)
 	mem_out[0] = _mm_cvtsi128_si64(tmp);
 	tmp = _mm_castps_si128(_mm_movehl_ps(_mm_castsi128_ps(tmp), _mm_castsi128_ps(tmp)));
 	uint64_t vh = _mm_cvtsi128_si64(tmp);
-	uint8_t x = vh >> 24;
+	uint8_t x = static_cast<uint8_t>(vh >> 24);
 	static const uint16_t table = 0x7531;
 	const uint8_t index = (((x >> 3) & 6) | (x & 1)) << 1;
 	vh ^= ((table >> index) & 0x3) << 28;
@@ -249,7 +249,7 @@ void cryptonight_hash(const void* input, size_t len, void* output, cn_context& c
 		return;
 	}
 
-	keccak((const uint8_t *)input, len, ctx0.hash_state, 200);
+	keccak((const uint8_t *)input, static_cast<uint8_t>(len), ctx0.hash_state, 200);
 
 	uint64_t mc0;
 	if(MONERO_TWEAK)
