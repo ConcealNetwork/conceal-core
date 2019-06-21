@@ -184,8 +184,8 @@ namespace CryptoNote {
 
       uint32_t probableVotingCompleteHeight = probableUpgradeHeight > m_currency.maxUpgradeDistance() ? probableUpgradeHeight - m_currency.maxUpgradeDistance() : 0;
       for (size_t i = probableVotingCompleteHeight; i <= probableUpgradeHeight; ++i) {
-        if (isVotingComplete(i)) {
-          return i;
+        if (isVotingComplete(static_cast<uint32_t>(i))) {
+          return static_cast<uint32_t>(i);
         }
       }
 

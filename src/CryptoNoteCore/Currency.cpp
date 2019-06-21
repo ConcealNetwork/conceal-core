@@ -244,6 +244,9 @@ uint64_t Currency::calculateInterest(uint64_t amount, uint32_t term, uint32_t he
 /* ---------------------------------------------------------------------------------------------------- */
 
 uint64_t Currency::calculateInterestV2(uint64_t amount, uint32_t term) const {
+
+  uint64_t returnVal = 0;
+
   /* investments */
   if (term % 64800 == 0) {    
 
@@ -254,58 +257,58 @@ uint64_t Currency::calculateInterestV2(uint64_t amount, uint32_t term) const {
     /* quantity tiers */
     float qTier = 1;
     if(amount4Humans > 110000 && amount4Humans < 180000)
-      qTier = 1.01;
+      qTier = static_cast<float>(1.01);
       
     if(amount4Humans >= 180000 && amount4Humans < 260000)
-      qTier = 1.02;
+      qTier = static_cast<float>(1.02);
 
     if(amount4Humans >= 260000 && amount4Humans < 350000)
-      qTier = 1.03;
+      qTier = static_cast<float>(1.03);
 
     if(amount4Humans >= 350000 && amount4Humans < 450000)
-      qTier = 1.04;
+      qTier = static_cast<float>(1.04);
 
     if(amount4Humans >= 450000 && amount4Humans < 560000)
-      qTier = 1.05;
+      qTier = static_cast<float>(1.05);
 
     if(amount4Humans >= 560000 && amount4Humans < 680000)
-      qTier = 1.06;
+      qTier = static_cast<float>(1.06);
 
     if(amount4Humans >= 680000 && amount4Humans < 810000)
-      qTier = 1.07;
+      qTier = static_cast<float>(1.07);
 
     if(amount4Humans >= 810000 && amount4Humans < 950000)
-      qTier = 1.08;
+      qTier = static_cast<float>(1.08);
 
     if(amount4Humans >= 950000 && amount4Humans < 1100000)
-      qTier = 1.09;
+      qTier = static_cast<float>(1.09);
 
     if(amount4Humans >= 1100000 && amount4Humans < 1260000)
-      qTier = 1.1;
+      qTier = static_cast<float>(1.1);
 
     if(amount4Humans >= 1260000 && amount4Humans < 1430000)
-      qTier = 1.11;
+      qTier = static_cast<float>(1.11);
 
     if(amount4Humans >= 1430000 && amount4Humans < 1610000)
-      qTier = 1.12;
+      qTier = static_cast<float>(1.12);
 
     if(amount4Humans >= 1610000 && amount4Humans < 1800000)
-      qTier = 1.13;
+      qTier = static_cast<float>(1.13);
 
     if(amount4Humans >= 1800000 && amount4Humans < 2000000)
-      qTier = 1.14;
+      qTier = static_cast<float>(1.14);
 
     if(amount4Humans > 2000000)
-      qTier = 1.15;
+      qTier = static_cast<float>(1.15);
 
-    float mq = 1.4473;
+    float mq = static_cast<float>(1.4473);
     float termQuarters = term / 64800;
     float m8 = 100.0*pow(1.0+(mq/100.0), termQuarters)-100.0;
     float m5 = termQuarters * 0.5;
     float m7 = m8 * (1 + (m5/100));
     float rate = m7 * qTier;
     float interest = amount * (rate/100);
-    uint64_t returnVal = static_cast<uint64_t>(interest);
+    returnVal = static_cast<uint64_t>(interest);
     return returnVal;
   } 
 
@@ -313,13 +316,16 @@ uint64_t Currency::calculateInterestV2(uint64_t amount, uint32_t term) const {
   if (term % 5040 == 0) {    
     uint64_t actualAmount = amount;
     float weeks = term / 5040;
-    float baseInterest = 0.0696;
-    float interestPerWeek = 0.0002;
+    float baseInterest = static_cast<float>(0.0696);
+    float interestPerWeek = static_cast<float>(0.0002);
     float interestRate = baseInterest + (weeks * interestPerWeek);
     float interest = actualAmount * ((weeks * interestRate) / 100);
-    uint64_t returnVal = static_cast<uint64_t>(interest);
+    returnVal = static_cast<uint64_t>(interest);
     return returnVal;
   } 
+
+  return returnVal;
+
 } /* Currency::calculateInterestV2 */
 
 /* ---------------------------------------------------------------------------------------------------- */
@@ -1096,7 +1102,7 @@ CurrencyBuilder& CurrencyBuilder::upgradeVotingThreshold(unsigned int val) {
 
 /* ---------------------------------------------------------------------------------------------------- */
 
-CurrencyBuilder& CurrencyBuilder::upgradeWindow(size_t val) {
+CurrencyBuilder& CurrencyBuilder::upgradeWindow(uint32_t val) {
   if (val <= 0) {
     throw std::invalid_argument("val at upgradeWindow()");
   }

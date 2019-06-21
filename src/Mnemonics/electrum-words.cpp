@@ -277,7 +277,7 @@ namespace crypto
         return false;
       }
       language_name = language->get_language_name();
-      uint32_t word_list_length = language->get_word_list().size();
+      uint32_t word_list_length = static_cast<uint32_t>(language->get_word_list().size());
 
       if (has_checksum)
       {
@@ -409,7 +409,7 @@ namespace crypto
       // To store the words for random access to add the checksum word later.
       std::vector<std::string> words_store;
 
-      uint32_t word_list_length = word_list.size();
+      uint32_t word_list_length = static_cast<uint32_t>(word_list.size());
       // 4 bytes -> 3 words.  8 digits base 16 -> 3 digits base 1626
       for (unsigned int i=0; i < len/4; i++, words += ' ')
       {
