@@ -108,7 +108,7 @@ set(Boost_USE_STATIC_LIBS ON)
 set(Boost_USE_STATIC_RUNTIME ON)
 
 #set(Boost_DEBUG on)
-find_package(Boost 1.67 REQUIRED COMPONENTS system filesystem thread date_time chrono regex serialization program_options)
+find_package(Boost 1.55 REQUIRED COMPONENTS system filesystem thread date_time chrono regex serialization program_options)
 include_directories(SYSTEM ${Boost_INCLUDE_DIRS})
 
 if(MINGW)
