@@ -4,18 +4,7 @@ language: cpp
 
 matrix:
   include:
-    - env: COMPILER=g++-6 BUILD=Debug STANDARD=14
-      compiler: gcc
-      addons:
-        apt:
-          update: true
-          sources:
-            - sourceline: 'ppa:mhier/libboost-latest'
-            - ubuntu-toolchain-r-test
-          packages:
-            - g++-6
-            - boost1.67
-    - env: COMPILER=g++-6 BUILD=Release STANDARD=14
+    - env: COMPILER=g++-6 BUILD=Release STANDARD=11
       compiler: gcc
       addons:
         apt:
@@ -30,5 +19,5 @@ matrix:
 script:
     - mkdir build
     - cd build
-    - cmake ..
+    - cmake -DCMAKE_BUILD_TYPE=Release -DSTATIC=true ..
     - make
