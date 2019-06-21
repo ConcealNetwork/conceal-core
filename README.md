@@ -41,7 +41,7 @@ Conceal is open-source, community driven and truly decentralized. No one owns it
 - `git clone https://github.com/ConcealNetwork/conceal-core`
 - `cd conceal-core`
 - `mkdir build && cd $_`
-- `cmake ..`
+- `cmake -DCMAKE_BUILD_TYPE=Release -DSTATIC=true ..`
 - `make`
 
 If the build is successful the binaries will be in the src folder.
