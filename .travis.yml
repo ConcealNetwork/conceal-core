@@ -1,23 +1,28 @@
 sudo: true
-os: linux
 language: cpp
 
 matrix:
   include:
-    - env: COMPILER=g++-6 BUILD=Release STANDARD=11
-      compiler: gcc
-      addons:
+
+  # Ubuntu, g++-6
+  - os: linux
+    dist: xenial
+    compiler: gcc
+    addons:
         apt:
           update: true
           sources:
-            - sourceline: 'ppa:mhier/libboost-latest'
             - ubuntu-toolchain-r-test
           packages:
+            - libboost-all-dev
             - g++-6
-            - boost1.67
-         
+    env:
+    - MATRIX_EVAL="CC=gcc-6 && CXX=g++-6"
+    - LABEL="linux"
+    - _DEPLOY="true"
+
 script:
-    - mkdir build
-    - cd build
-    - cmake -DCMAKE_BUILD_TYPE=Release -DSTATIC=true ..
-    - make
+  - mkdir build
+  - cd build
+  - cmake -DCMAKE_BUILD_TYPE=Release -DSTATIC=true ..
+  - make
