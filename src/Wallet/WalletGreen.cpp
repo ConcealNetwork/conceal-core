@@ -514,7 +514,7 @@ std::vector<std::string> WalletGreen::createAddressList(const std::vector<Crypto
   for (size_t i = 0; i < spendSecretKeys.size(); ++i) {
     Crypto::PublicKey spendPublicKey;
     if (!Crypto::secret_key_to_public_key(spendSecretKeys[i], spendPublicKey)) {
-      //m_logger(ERROR, BRIGHT_RED) << "createAddressList(): failed to convert secret key to public key, secret key " << spendSecretKeys[i];
+      m_logger(Logging::ERROR) << "createAddressList(): failed to convert secret key to public key";
       throw std::system_error(make_error_code(CryptoNote::error::KEY_GENERATION_ERROR));
     }
 
@@ -546,7 +546,7 @@ std::vector<std::string> WalletGreen::doCreateAddressList(const std::vector<NewA
       for (auto& addressData : addressDataList) {
         assert(addressData.creationTimestamp <= std::numeric_limits<uint64_t>::max() - m_currency.blockFutureTimeLimit());
         std::string address = addWallet(addressData.spendPublicKey, addressData.spendSecretKey, addressData.creationTimestamp);
-        //m_logger(INFO, BRIGHT_WHITE) << "New wallet added " << address << ", creation timestamp " << addressData.creationTimestamp;
+        m_logger(Logging::INFO) << "New wallet added " << address << ", creation timestamp " << addressData.creationTimestamp;
         addresses.push_back(std::move(address));
         minCreationTimestamp = std::min(minCreationTimestamp, addressData.creationTimestamp);
       }
@@ -563,7 +563,7 @@ std::vector<std::string> WalletGreen::doCreateAddressList(const std::vector<NewA
     shutdown();
     }
   } catch (const std::exception& e) {
-    //m_logger(ERROR, BRIGHT_RED) << "Failed to add wallets: " << e.what();
+    m_logger(Logging::ERROR) << "Failed to add wallets: " << e.what();
     startBlockchainSynchronizer();
     throw;
   }
