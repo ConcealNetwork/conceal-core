@@ -175,3 +175,5 @@ const std::initializer_list<const char*> SEED_NODES  = {
 
 
 } // CryptoNote
+
+#define ALLOW_DEBUG_COMMANDS
