@@ -14,6 +14,7 @@
 
 #include "Common/SignalHandler.h"
 #include "Common/PathTools.h"
+#include "CheckpointsConfig.h"
 #include "crypto/hash.h"
 #include "CryptoNoteCore/Core.h"
 #include "CryptoNoteCore/CoreConfig.h"

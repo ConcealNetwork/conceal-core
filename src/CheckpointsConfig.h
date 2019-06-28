@@ -1,0 +1,56 @@
+// Copyright (c) 2011-2017 The Cryptonote Developers
+// Copyright (c) 2017-2018 The Circle Foundation & Conceal Devs
+// Copyright (c) 2018-2019 Conceal Network & Conceal Devs
+//
+// Distributed under the MIT/X11 software license, see the accompanying
+// file COPYING or http://www.opensource.org/licenses/mit-license.php.
+
+#pragma once
+
+#include <cstdint>
+#include <initializer_list>
+
+namespace CryptoNote {
+
+struct CheckpointData {
+  uint32_t height;
+  const char* blockId;
+};
+
+#ifdef __GNUC__
+__attribute__((unused))
+#endif
+
+// Blockchain Checkpoints:
+// {<block height>, "<block hash>"},
+const std::initializer_list<CheckpointData> CHECKPOINTS  = {
+	{0, "b9dc432e56e37b52771970ce014dd23fda517cfd4fc5a9b296f1954b7d4505de"},
+	{10000, "55cf271a5c97785fb35fea7ed177cb75f47c18688bd86fc01ae66508878029d6"},
+	{20000, "52533de7f1596154c6954530ae8331fe4f92e92d476f097c6d7d20ebab1c2748"},
+	{30000, "50b5d84ac0b8abfe25669aac8514505c4c5f7ffd8e2bba0b52ab64f600d90796"},
+	{40000, "ae2ed29163a57396f11c743400e55fba3f6b8e6bb6473f421c48ff8c87447ad0"},
+	{50000, "8ad7969ca5d3cf48f784d33b60d1ea00bfb35b632447584e5181b194f3bb9cd6"},
+	{60000, "22b1a161de2318b1a83ae0e3d1d04a2c420accccadd861aa8ad6365ec630ce04"},
+	{70000, "4ef8a3c59b04ad8ae335fee0b5df0c1b114dda57d13232741d82c4984bf22bed"},
+	{80000, "a60bd6b446c5b09997b5b70f31c56f35358657a673dcf56213a163fb6516750d"},
+	{90000, "9985f631d4b2c15388e8c3797a1384b4610b13ff3852bc6d8f125ea4e13fdd22"},
+	{100000, "1ccef60fb31646fc1745ccb42167f2e2efcf953a83b99ff4b6a39c99eb37d0e5"},
+	{110000, "1b80bf8355ea023de7ed3367881ef111dfdb3aaeb25db3a0d6cad4c3cc0bb4bd"},
+	{120000, "f621bd615716b75716eb89714d60481077a16b1df4046bf829f6d09b1c8e58a6"},
+	{130000, "deb2514d03e2faf1c63b55f707b1524665ca4bd71cace3f4e8f0de58f32ecc41"},
+	{140000, "c439524c13187bb6008acb1e9999317aa44e8d1cd75c96faae78831f6b961bac"},
+	{150000, "90cc70379ea81d47df998e8b9928ba9191968035ae79ec1cb429c64a55497e03"},
+	{160000, "4176bdff06416934d7766a6c2f6279d048cfdc516019a0580ea19c1d003038cc"},
+	{170000, "50e3af756e96115011c8e4d138852e1f4835da805ca5ccd826f81593a53f4bd3"},
+	{180000, "e1672173a2794245830a742d1df38b5fe5006fe6f00707e1b776bf29316ab18b"},
+	{190000, "763eaa3c049ef46479144924b41cc9cb37346da88b0a3ae32a10e026c6f7984c"},
+	{200000, "2ef304bec067c3a94f04440a593a13903a1487890493d15f74ec79c0ae585109"},
+	{210000, "90dd7aca026ec5f9fdfd2fa9cd0c114c1c6c6bfc0536fb6490c804ac7ef72425"},
+	{220000, "8de5278fc6703933e32e062b14496b0e1562c941e7e3c5b93147a3b39491fac5"},
+	{230000, "f8ed2680d912a7f3aeb452d4eb8023f93f6387ff4c6927615691f66701d05d32"},
+	{240000, "4445874d16b3dd8d5b0f9dee287e47219022c2b214c459e03be2bb71e4a12e3d"},
+	{250000, "c579d2ad4f95a6c34180a89b32aa9fbe6ab2ecba9f3714ddde90fd5d9f85f6e9"},
+	{260000, "ce63d00de7546f1dee417b2391692b367dc5c2cfe19ea43c98cf932d3838c5ec"}    
+};
+
+} // CryptoNote
