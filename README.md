@@ -4,10 +4,10 @@
 [![Build Status](https://travis-ci.org/ConcealNetwork/conceal-core.svg?branch=master)](https://travis-ci.org/ConcealNetwork/conceal-core) [![Build status](https://ci.appveyor.com/api/projects/status/github/concealnetwork/conceal-core?branch=master&svg=true)](https://ci.appveyor.com/project/cryptokatz/conceal-core)
 
 #### Development Build Status
-[![Build Status](https://travis-ci.org/ConcealNetwork/conceal-core.svg?branch=dev)](https://travis-ci.org/ConcealNetwork/conceal-core) [![Build status](https://ci.appveyor.com/api/projects/status/github/concealnetwork/conceal-core?branch=dev&svg=true)](https://ci.appveyor.com/project/cryptokatz/conceal-core)
+[![Build Status](https://travis-ci.org/ConcealNetwork/conceal-core.svg?branch=development)](https://travis-ci.org/ConcealNetwork/conceal-core) [![Build status](https://ci.appveyor.com/api/projects/status/github/concealnetwork/conceal-core?branch=development&svg=true)](https://ci.appveyor.com/project/cryptokatz/conceal-core)
 
 # Conceal Core (CLI)
-Latest Release: v5.3.5
+Latest Release: v5.3.6
 Maintained by The Circle Team.
 
 ## Information
@@ -41,7 +41,7 @@ Conceal is open-source, community driven and truly decentralized. No one owns it
 - `git clone https://github.com/ConcealNetwork/conceal-core`
 - `cd conceal-core`
 - `mkdir build && cd $_`
-- `cmake ..`
+- `cmake -DCMAKE_BUILD_TYPE=Release -DSTATIC=true ..`
 - `make`
 
 If the build is successful the binaries will be in the src folder.
