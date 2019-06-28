@@ -14,6 +14,7 @@
 #include "IFusionManager.h"
 #include "WalletIndices.h"
 
+#include "Logging/LoggerRef.h"
 #include <System/Dispatcher.h>
 #include <System/Event.h>
 #include "Transfers/TransfersSynchronizer.h"
@@ -27,7 +28,7 @@ class WalletGreen : public IWallet,
                     ITransfersSynchronizerObserver,
                     public IFusionManager {
 public:
-  WalletGreen(System::Dispatcher& dispatcher, const Currency& currency, INode& node, uint32_t transactionSoftLockTime = 1);
+  WalletGreen(System::Dispatcher& dispatcher, const Currency& currency, INode& node, Logging::ILogger& logger, uint32_t transactionSoftLockTime = 1);
   virtual ~WalletGreen();
 
   virtual void initialize(const std::string& password) override;
@@ -46,6 +47,8 @@ public:
   virtual std::string createAddress() override;
   virtual std::string createAddress(const Crypto::SecretKey& spendSecretKey) override;
   virtual std::string createAddress(const Crypto::PublicKey& spendPublicKey) override;
+  virtual std::vector<std::string> createAddressList(const std::vector<Crypto::SecretKey>& spendSecretKeys, bool reset = true) override;
+
   virtual void deleteAddress(const std::string& address) override;
 
   virtual uint64_t getActualBalance() const override;
@@ -82,6 +85,12 @@ public:
   virtual IFusionManager::EstimateResult estimate(uint64_t threshold, const std::vector<std::string>& sourceAddresses = {}) const override;
 
 protected:
+  struct NewAddressData {
+    Crypto::PublicKey spendPublicKey;
+    Crypto::SecretKey spendSecretKey;
+    uint64_t creationTimestamp;
+  };
+
   void throwIfNotInitialized() const;
   void throwIfStopped() const;
   void throwIfTrackingMode() const;
@@ -89,6 +98,8 @@ protected:
   void clearCaches();
   void initWithKeys(const Crypto::PublicKey& viewPublicKey, const Crypto::SecretKey& viewSecretKey, const std::string& password);
   std::string doCreateAddress(const Crypto::PublicKey& spendPublicKey, const Crypto::SecretKey& spendSecretKey, uint64_t creationTimestamp);
+  std::vector<std::string> doCreateAddressList(const std::vector<NewAddressData>& addressDataList);
+
 
   struct InputInfo {
     TransactionTypes::InputKeyInfo keyInfo;
@@ -283,6 +294,7 @@ std::vector<OutputToTransfer> pickRandomFusionInputs(const std::vector<std::stri
   System::Dispatcher& m_dispatcher;
   const Currency& m_currency;
   INode& m_node;
+  mutable Logging::LoggerRef m_logger;  
   bool m_stopped;
 
   WalletsContainer m_walletsContainer;

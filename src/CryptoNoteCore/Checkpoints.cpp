@@ -57,7 +57,6 @@ bool Checkpoints::check_block(uint32_t  height, const Crypto::Hash &h, bool &is_
     return true;
 
   if (it->second == h) {
-    logger(Logging::INFO, Logging::GREEN) << "<< Checkpoints.cpp << " << "Checkpoint passed for height " << height << " " << h;
     return true;
   } else {
     logger(Logging::ERROR) << "<< Checkpoints.cpp << " << "Checkpoint failed for height " << height

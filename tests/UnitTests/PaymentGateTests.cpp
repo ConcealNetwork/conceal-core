@@ -11,7 +11,6 @@
 #include <Logging/ConsoleLogger.h>
 
 #include "PaymentGate/WalletService.h"
-#include "PaymentGate/WalletFactory.h"
 
 // test helpers
 #include "INodeStubs.h"
@@ -34,8 +33,8 @@ public:
   }
 
   std::unique_ptr<WalletService> createWalletService(const WalletConfiguration& cfg) {
-    wallet.reset(WalletFactory::createWallet(currency, nodeStub, dispatcher));
-    std::unique_ptr<WalletService> service(new WalletService(currency, dispatcher, nodeStub, *wallet, cfg, logger));
+    WalletGreen* walletGreen = new CryptoNote::WalletGreen(dispatcher, currency, nodeStub, logger);
+    wallet.reset(walletGreen);
     service->init();
     return service;
   }

@@ -364,7 +364,7 @@ bool core::get_block_template(Block& b, const AccountPublicAddress& adr, difficu
 // Fix by Jagerman
     if(height >= m_currency.timestampCheckWindow()) {
       std::vector<uint64_t> timestamps;
-      for(size_t offset = height - m_currency.timestampCheckWindow(); offset < height; ++offset) {
+      for(uint32_t offset = height - static_cast<uint32_t>(m_currency.timestampCheckWindow()); offset < height; ++offset) {
         timestamps.push_back(m_blockchain.getBlockTimestamp(offset));
       }
       uint64_t median_ts = Common::medianValue(timestamps);

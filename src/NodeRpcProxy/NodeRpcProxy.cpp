@@ -61,10 +61,7 @@ NodeRpcProxy::NodeRpcProxy(const std::string& nodeHost, unsigned short nodePort)
 }
 
 NodeRpcProxy::~NodeRpcProxy() {
-  try {
     shutdown();
-  } catch (std::exception&) {
-  }
 }
 
 void NodeRpcProxy::resetInternalState() {

@@ -27,7 +27,6 @@
 #include <System/EventLock.h>
 
 #include "PaymentServiceJsonRpcMessages.h"
-#include "WalletFactory.h"
 #include "NodeFactory.h"
 
 #include "Wallet/WalletGreen.h"
@@ -414,7 +413,7 @@ void generateNewWallet(const CryptoNote::Currency &currency, const WalletConfigu
   CryptoNote::INode* nodeStub = NodeFactory::createNodeStub();
   std::unique_ptr<CryptoNote::INode> nodeGuard(nodeStub);
 
-  CryptoNote::IWallet* wallet = new CryptoNote::WalletGreen(dispatcher, currency, *nodeStub);
+    CryptoNote::IWallet* wallet = new CryptoNote::WalletGreen(dispatcher, currency, *nodeStub, logger);
   std::unique_ptr<CryptoNote::IWallet> walletGuard(wallet);
 
   log(Logging::INFO) << "Generating new wallet";
@@ -607,22 +606,61 @@ std::error_code WalletService::createAddress(const std::string& spendSecretKeyTe
   return std::error_code();
 }
 
-std::error_code WalletService::createAddress(std::string& address) {
-  try {
+std::error_code WalletService::createAddress(std::string& address) 
+{
+  try 
+  {
     System::EventLock lk(readyEvent);
-
     logger(Logging::DEBUGGING) << "Creating address";
-	
-	saveWallet();
-
+	  saveWallet();
     address = wallet.createAddress();
-  } catch (std::system_error& x) {
+  } 
+  catch (std::system_error& x) 
+  {
     logger(Logging::WARNING) << "Error while creating address: " << x.what();
     return x.code();
   }
 
   logger(Logging::DEBUGGING) << "Created address " << address;
+  return std::error_code();
+}
 
+std::error_code WalletService::createAddressList(const std::vector<std::string>& spendSecretKeysText, bool reset, std::vector<std::string>& addresses) 
+{
+  try 
+  {
+    System::EventLock lk(readyEvent);
+    logger(Logging::DEBUGGING) << "Creating " << spendSecretKeysText.size() << " addresses...";
+    std::vector<Crypto::SecretKey> secretKeys;
+    std::unordered_set<std::string> unique;
+    secretKeys.reserve(spendSecretKeysText.size());
+    unique.reserve(spendSecretKeysText.size());
+    for (auto& keyText : spendSecretKeysText) 
+    {
+      auto insertResult = unique.insert(keyText);
+      if (!insertResult.second) 
+      {
+        logger(Logging::WARNING, Logging::BRIGHT_YELLOW) << "Not unique key";
+        return make_error_code(CryptoNote::error::WalletServiceErrorCode::DUPLICATE_KEY);
+      }
+
+      Crypto::SecretKey key;
+      if (!Common::podFromHex(keyText, key)) 
+      {
+        logger(Logging::WARNING, Logging::BRIGHT_YELLOW) << "Wrong key format: " << keyText;
+        return make_error_code(CryptoNote::error::WalletServiceErrorCode::WRONG_KEY_FORMAT);
+      }
+      secretKeys.push_back(std::move(key));
+    }
+    addresses = wallet.createAddressList(secretKeys, reset);
+  } 
+  catch (std::system_error& x) 
+  {
+    logger(Logging::WARNING, Logging::BRIGHT_YELLOW) << "Error while creating addresses: " << x.what();
+    return x.code();
+  }
+
+  logger(Logging::DEBUGGING) << "Created " << addresses.size() << " addresses";
   return std::error_code();
 }
 
@@ -1161,7 +1199,7 @@ std::error_code WalletService::getStatus(uint32_t& blockCount, uint32_t& knownBl
     System::EventLock lk(readyEvent);
 
     knownBlockCount = node.getKnownBlockCount();
-    peerCount = node.getPeerCount();
+    peerCount = static_cast<uint32_t>(node.getPeerCount());
     blockCount = wallet.getBlockCount();
 
     auto lastHashes = wallet.getBlockHashes(blockCount - 1, 1);
