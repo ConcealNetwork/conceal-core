@@ -586,7 +586,10 @@ TransactionId WalletLegacy::sendTransaction(Crypto::SecretKey& transactionSK,
   if ((fee < 100) && (ttl == 0)) 
   {
     fee = 100;
-  }
+    if (optimize) {
+      fee = 50;
+    }
+  } 
 
   {
     std::unique_lock<std::mutex> lock(m_cacheMutex);
