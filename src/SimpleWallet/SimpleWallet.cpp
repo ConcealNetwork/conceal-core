@@ -628,7 +628,7 @@ simple_wallet::simple_wallet(System::Dispatcher& dispatcher, const CryptoNote::C
   m_consoleHandler.setHandler("incoming_transfers", boost::bind(&simple_wallet::show_incoming_transfers, this, _1), "Show incoming transfers");
   m_consoleHandler.setHandler("list_transfers", boost::bind(&simple_wallet::listTransfers, this, _1), "list_transfers <height> - Show all known transfers from a certain (optional) block height");
   m_consoleHandler.setHandler("payments", boost::bind(&simple_wallet::show_payments, this, _1), "payments <payment_id_1> [<payment_id_2> ... <payment_id_N>] - Show payments <payment_id_1>, ... <payment_id_N>");
-  m_consoleHandler.setHandler("get_tx_proof", boost::bind(&simple_wallet::get_tx_proof, this, _1), "Generate a signature to prove payment: <txid> <address> [<txkey>]");
+  // m_consoleHandler.setHandler("get_tx_proof", boost::bind(&simple_wallet::get_tx_proof, this, _1), "Generate a signature to prove payment: <txid> <address> [<txkey>]");
   m_consoleHandler.setHandler("bc_height", boost::bind(&simple_wallet::show_blockchain_height, this, _1), "Show blockchain height");
   m_consoleHandler.setHandler("show_dust", boost::bind(&simple_wallet::show_dust, this, _1), "Show the number of unmixable dust outputs");
   m_consoleHandler.setHandler("outputs", boost::bind(&simple_wallet::show_num_unlocked_outputs, this, _1), "Show the number of unlocked outputs available for a transaction");
@@ -732,7 +732,7 @@ bool simple_wallet::init(const boost::program_options::variables_map& vm) {
     << "      @@@@@@    @@@@@@(   .@@(   @@@,    @@@@@  @@@@@@@@ @@@    (@@@ @@@@@@@@#  " << ENDL
     << "  " << ENDL
     << "  " << ENDL;
-    std::cout << "How you would like to proceed?\n\n\t[O]pen an existing wallet\n\t[G]enerate a new wallet file\n\t[I]mport wallet from keys\n\t[M]nemonic seed import\n\t[E]xit.\n\n";
+    std::cout << "How would you like to proceed?\n\n\t[O]pen an existing wallet\n\t[G]enerate a new wallet file\n\t[I]mport wallet from keys\n\t[M]nemonic seed import\n\t[E]xit.\n\n";
     char c;
     do {
       std::string answer;
@@ -1501,7 +1501,7 @@ bool simple_wallet::export_keys(const std::vector<std::string>& args/* = std::ve
 
   std::cout << std::endl << "Spend secret key: " << Common::podToHex(keys.spendSecretKey) << std::endl;
   std::cout << "View secret key: " <<  Common::podToHex(keys.viewSecretKey) << std::endl;
-  std::cout << "GUI key: " <<  guiKeys << std::endl;
+  // std::cout << "GUI key: " <<  guiKeys << std::endl;
 
   Crypto::PublicKey unused_dummy_variable;
   Crypto::SecretKey deterministic_private_view_key;
@@ -1850,8 +1850,10 @@ bool simple_wallet::transfer(const std::vector<std::string> &args) {
     }
 
     if (!cmd.aliases.empty()) {
-      if (!askAliasesTransfersConfirmation(cmd.aliases, m_currency)) {
-        return true;
+      for (const auto& kv: cmd.aliases) {
+        for (const auto& transfer: kv.second) {
+          std::cout << transfer.address << " " << std::setw(21) << m_currency.formatAmount(transfer.amount) << "  " << kv.first << std::endl;
+        }
       }
 
       for (auto& kv: cmd.aliases) {
