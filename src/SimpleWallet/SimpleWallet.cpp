@@ -1852,7 +1852,16 @@ bool simple_wallet::transfer(const std::vector<std::string> &args) {
     if (!cmd.aliases.empty()) {
       for (const auto& kv: cmd.aliases) {
         for (const auto& transfer: kv.second) {
-          std::cout << transfer.address << " " << std::setw(21) << m_currency.formatAmount(transfer.amount) << "  " << kv.first << std::endl;
+			success_msg_writer() 
+					  << "  " << ENDL
+					  << "    [[  ******************* CONCEAL ID TRANSFER DETECTED! *******************  ]]" << ENDL
+					  << "    [[  Sending Conceal to: " << kv.first <<ENDL
+					  << "    [[  Address: " << transfer.address << ENDL
+					  << "    [[  Amount:  " << m_currency.formatAmount(transfer.amount) << ENDL
+					  << "    [[  ********************************************************************** ]]"
+					  << "  " << ENDL
+					  << "  " << ENDL;
+	
         }
       }
 
