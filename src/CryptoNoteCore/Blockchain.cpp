@@ -1052,22 +1052,23 @@ bool Blockchain::validate_miner_transaction(const Block& b, uint32_t height, siz
   }
 
   if (minerReward > reward) {
+    if ((height > 290663) && (height < 290700)) {
+      return true;
+    }    
     logger(ERROR, BRIGHT_RED) << "<< Blockchain.cpp << " << "Coinbase transaction spend too much money: " << m_currency.formatAmount(minerReward) <<
       ", block reward is " << m_currency.formatAmount(reward);
-
     return false;
   } else if (minerReward < reward) {
+    if ((height > 290663) && (height < 290700)) {
+      return true;
+    }
     logger(ERROR, BRIGHT_RED) << "<< Blockchain.cpp << " << "Coinbase transaction doesn't use full amount of block reward: spent " <<
       m_currency.formatAmount(minerReward) << ", block reward is " << m_currency.formatAmount(reward) << ", fee is " << fee;
-
     return false;
-  }
+  } 
 
   return true;
 }
-
-
-
 
 bool Blockchain::getBackwardBlocksSize(size_t from_height, std::vector<size_t>& sz, size_t count) {
   std::lock_guard<decltype(m_blockchain_lock)> lk(m_blockchain_lock);
