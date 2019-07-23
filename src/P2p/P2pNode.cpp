@@ -200,7 +200,7 @@ void P2pNode::acceptLoop() {
     } catch (InterruptedException&) {
       break;
     } catch (const std::exception& e) {
-      logger(WARNING) << "Exception in acceptLoop: " << e.what();
+      logger(DEBUGGING) << "Exception in acceptLoop: " << e.what();
     }
   }
 
@@ -215,7 +215,7 @@ void P2pNode::connectorLoop() {
     } catch (InterruptedException&) {
       break;
     } catch (const std::exception& e) {
-      logger(WARNING) << "Exception in connectorLoop: " << e.what();
+      logger(DEBUGGING) << "Exception in connectorLoop: " << e.what();
     }
   }
 }
