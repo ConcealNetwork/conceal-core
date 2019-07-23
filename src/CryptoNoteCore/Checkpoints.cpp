@@ -76,7 +76,7 @@ bool Checkpoints::is_alternative_block_allowed(uint32_t  blockchain_height, uint
     return false;
 
   if (block_height < blockchain_height - CryptoNote::parameters::CRYPTONOTE_MINED_MONEY_UNLOCK_WINDOW && !is_in_checkpoint_zone(block_height)) {
-    logger(Logging::WARNING, Logging::WHITE)
+    logger(Logging::DEBUGGING, Logging::WHITE)
       << "<< Checkpoints.cpp << " << "Reorganization depth too deep : " << (blockchain_height - block_height) << ". Block Rejected";
     return false;
   }
@@ -107,10 +107,10 @@ bool Checkpoints::load_checkpoints_from_dns()
   std::string domain("checkpoints.conceal.id");
   std::vector<std::string>records;
 
-  logger(Logging::INFO) << "<< Checkpoints.cpp << " << "Fetching DNS checkpoint records from " << domain;
+  logger(Logging::DEBUGGING) << "<< Checkpoints.cpp << " << "Fetching DNS checkpoint records from " << domain;
 
   if (!Common::fetch_dns_txt(domain, records)) {
-    logger(Logging::INFO) << "<< Checkpoints.cpp << " << "Failed to lookup DNS checkpoint records from " << domain;
+    logger(Logging::DEBUGGING) << "<< Checkpoints.cpp << " << "Failed to lookup DNS checkpoint records from " << domain;
   }
 
   for (const auto& record : records) {
@@ -132,7 +132,7 @@ bool Checkpoints::load_checkpoints_from_dns()
       logger(DEBUGGING) << "<< Checkpoints.cpp << " << "Checkpoint already exists for height: " << height << ". Ignoring DNS checkpoint.";
     } else {
       add_checkpoint(height, hash_str);
-	  logger(INFO) << "<< Checkpoints.cpp << " << "Added DNS checkpoint: " << height_str << ":" << hash_str;
+	    logger(INFO) << "<< Checkpoints.cpp << " << "Added DNS checkpoint: " << height_str << ":" << hash_str;
     }
   }
 
