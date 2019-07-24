@@ -2016,8 +2016,6 @@ bool Blockchain::pushBlock(const Block& blockData, const std::vector<Transaction
   Crypto::Hash proof_of_work = NULL_HASH;
   if (m_checkpoints.is_in_checkpoint_zone(getCurrentBlockchainHeight())) {
     if (!m_checkpoints.check_block(getCurrentBlockchainHeight(), blockHash)) {
-      logger(ERROR, BRIGHT_RED) <<
-        "CHECKPOINT VALIDATION FAILED";
       bvc.m_verification_failed = true;
       return false;
     }
