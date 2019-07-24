@@ -497,16 +497,16 @@ std::string WalletGreen::createAddress(const Crypto::SecretKey& spendSecretKey) 
   if (!Crypto::secret_key_to_public_key(spendSecretKey, spendPublicKey) ) {
     throw std::system_error(make_error_code(CryptoNote::error::KEY_GENERATION_ERROR));
   }
-
-  return doCreateAddress(spendPublicKey, spendSecretKey, 0);
+  uint64_t creationTimestamp = static_cast<uint64_t>(time(nullptr));
+  return doCreateAddress(spendPublicKey, spendSecretKey, creationTimestamp);
 }
 
 std::string WalletGreen::createAddress(const Crypto::PublicKey& spendPublicKey) {
   if (!Crypto::check_key(spendPublicKey)) {
     throw std::system_error(make_error_code(error::WRONG_PARAMETERS), "Wrong public key format");
   }
-
-  return doCreateAddress(spendPublicKey, NULL_SECRET_KEY, 0);
+  uint64_t creationTimestamp = static_cast<uint64_t>(time(nullptr));
+  return doCreateAddress(spendPublicKey, NULL_SECRET_KEY, creationTimestamp);
 }
 
 std::vector<std::string> WalletGreen::createAddressList(const std::vector<Crypto::SecretKey>& spendSecretKeys, bool reset) {
