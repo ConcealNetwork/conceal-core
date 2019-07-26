@@ -7,7 +7,7 @@
 [![Build Status](https://travis-ci.org/ConcealNetwork/conceal-core.svg?branch=development)](https://travis-ci.org/ConcealNetwork/conceal-core) [![Build status](https://ci.appveyor.com/api/projects/status/github/concealnetwork/conceal-core?branch=development&svg=true)](https://ci.appveyor.com/project/cryptokatz/conceal-core)
 
 # Conceal Core (CLI)
-Latest Release: v5.3.7
+Latest Release: v5.3.8
 Maintained by The Circle Team.
 
 ## Information
