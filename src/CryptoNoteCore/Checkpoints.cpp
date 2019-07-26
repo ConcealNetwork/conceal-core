@@ -139,7 +139,15 @@ bool Checkpoints::load_checkpoints_from_dns()
   return true;
 }
 
-//---------------------------------------------------------------------------
+bool Checkpoints::load_checkpoints()
+{
+  for (const auto& cp : CryptoNote::CHECKPOINTS) 
+  {
+    add_checkpoint(cp.height, cp.blockId);    
+  }
+  return true;
+}
+
 bool Checkpoints::load_checkpoints_from_file(const std::string& fileName) {
 	std::ifstream file(fileName);
 	if (!file) {
