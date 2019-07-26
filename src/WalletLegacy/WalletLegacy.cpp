@@ -564,6 +564,14 @@ TransactionId WalletLegacy::sendTransaction(Crypto::SecretKey& transactionSK,
                                             uint64_t ttl) 
                                             {
   
+  /* Regular transaction fees should be at least 100 X. In this case we also check
+     to ensure that it is not a self-destructive message, which will have a TTL that
+     is larger than 0 */
+  if ((fee < 100) && (ttl == 0)) 
+  {
+    fee = 100;
+  }
+
   /* This is the logic that determins if it is an optimization transaction */
   bool optimize = false;
   if (transfers.empty()) 
@@ -573,6 +581,7 @@ TransactionId WalletLegacy::sendTransaction(Crypto::SecretKey& transactionSK,
     transfer.amount = 0;
     transfers.push_back(transfer);
     optimize = true;
+    fee = 50;
   }
 
   TransactionId txId = 0;
@@ -580,13 +589,7 @@ TransactionId WalletLegacy::sendTransaction(Crypto::SecretKey& transactionSK,
   std::deque<std::unique_ptr<WalletLegacyEvent>> events;
   throwIfNotInitialised();
 
-  /* Regular transaction fees should be at least 100 X. In this case we also check
-     to ensure that it is not a self-destructive message, which will have a TTL that
-     is larger than 0 */
-  if ((fee < 100) && (ttl == 0)) 
-  {
-    fee = 100;
-  }
+
 
   {
     std::unique_lock<std::mutex> lock(m_cacheMutex);
