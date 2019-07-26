@@ -271,18 +271,7 @@ int main(int argc, char* argv[])
     CryptoNote::Currency currency = currencyBuilder.currency();
     CryptoNote::core ccore(currency, nullptr, logManager);
 
-    CryptoNote::Checkpoints checkpoints(logManager);
-    for (const auto& cp : CryptoNote::CHECKPOINTS) {
-      checkpoints.add_checkpoint(cp.height, cp.blockId);
-    }
-
-    checkpoints.load_checkpoints_from_dns();
-
-    if (!testnet_mode) {
-      ccore.set_checkpoints(std::move(checkpoints));
-    }
-
-    CoreConfig coreConfig;
+     CoreConfig coreConfig;
     coreConfig.init(vm);
     NetNodeConfig netNodeConfig;
     netNodeConfig.init(vm);
