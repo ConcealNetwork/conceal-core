@@ -942,12 +942,12 @@ std::error_code WalletService::getTransaction(const std::string& transactionHash
   } 
   catch (std::system_error& x) 
   {
-    logger(Logging::WARNING) << "Error while getting transaction: " << x.what();
+    logger(Logging::WARNING) << "Error while getting transaction: " << transactionHash << x.what();
     return x.code();
   } 
   catch (std::exception& x) 
   {
-    logger(Logging::WARNING) << "Error while getting transaction: " << x.what();
+    logger(Logging::WARNING) << "Error while getting transaction: " << transactionHash << x.what();
     return make_error_code(CryptoNote::error::INTERNAL_WALLET_ERROR);
   }
   return std::error_code();

@@ -131,19 +131,19 @@ bool core::init(const CoreConfig& config, const MinerConfig& minerConfig, bool l
   bool r = m_mempool.init(m_config_folder);
 
   if (!(r)) {
-    logger(ERROR, BRIGHT_RED) << "Failed to initialize memory pool";
+    logger(ERROR, BRIGHT_RED) << "<< Core.cpp << " << "Failed to initialize memory pool";
     return false;
   }
 
   r = m_blockchain.init(m_config_folder, load_existing);
   if (!(r)) {
-    logger(ERROR, BRIGHT_RED) << "Failed to initialize blockchain storage";
+    logger(ERROR, BRIGHT_RED) << "<< Core.cpp << " << "Failed to initialize blockchain storage";
     return false;
   }
 
   r = m_miner->init(minerConfig);
   if (!(r)) {
-    logger(ERROR, BRIGHT_RED) << "Failed to initialize blockchain storage";
+    logger(ERROR, BRIGHT_RED) << "<< Core.cpp << " << "Failed to initialize blockchain storage";
     return false;
   }
 
@@ -180,7 +180,7 @@ size_t core::addChain(const std::vector<const IBlock*>& chain) {
       tx_verification_context tvc = boost::value_initialized<tx_verification_context>();
 
       if (!handleIncomingTransaction(tx, txHash, blobSize, tvc, true, get_block_height(block->getBlock()))) {
-        logger(ERROR, BRIGHT_RED) << "core::addChain() failed to handle transaction " << txHash << " from block " << blocksCounter << "/" << chain.size();
+        logger(ERROR, BRIGHT_RED) << "<< Core.cpp << " << "core::addChain() failed to handle transaction " << txHash << " from block " << blocksCounter << "/" << chain.size();
         allTransactionsAdded = false;
         break;
       }
@@ -193,7 +193,7 @@ size_t core::addChain(const std::vector<const IBlock*>& chain) {
     block_verification_context bvc = boost::value_initialized<block_verification_context>();
     m_blockchain.addNewBlock(block->getBlock(), bvc);
     if (bvc.m_marked_as_orphaned || bvc.m_verification_failed) {
-      logger(ERROR, BRIGHT_RED) << "core::addChain() failed to handle incoming block " << get_block_hash(block->getBlock()) <<
+      logger(ERROR, BRIGHT_RED) << "<< Core.cpp << " << "core::addChain() failed to handle incoming block " << get_block_hash(block->getBlock()) <<
         ", " << blocksCounter << "/" << chain.size();
 
       break;
@@ -211,7 +211,7 @@ bool core::handle_incoming_tx(const BinaryArray& tx_blob, tx_verification_contex
   //want to process all transactions sequentially
 
   if (tx_blob.size() > m_currency.maxTxSize()) {
-    logger(INFO) << "WRONG TRANSACTION BLOB, too big size " << tx_blob.size() << ", rejected";
+    logger(INFO) << "<< Core.cpp << " << "WRONG TRANSACTION BLOB, too big size " << tx_blob.size() << "<< Core.cpp << " << ", rejected";
     tvc.m_verification_failed = true;
     return false;
   }
@@ -221,7 +221,7 @@ bool core::handle_incoming_tx(const BinaryArray& tx_blob, tx_verification_contex
   Transaction tx;
 
   if (!parse_tx_from_blob(tx, tx_hash, tx_prefixt_hash, tx_blob)) {
-    logger(INFO) << "WRONG TRANSACTION BLOB, Failed to parse, rejected";
+    logger(INFO) << "<< Core.cpp << " << "WRONG TRANSACTION BLOB, Failed to parse, rejected";
     tvc.m_verification_failed = true;
     return false;
   }
@@ -245,23 +245,23 @@ bool core::get_stat_info(core_stat_info& st_inf) {
 
 bool core::check_tx_semantic(const Transaction& tx, bool keeped_by_block, uint32_t &height) {
   if (!tx.inputs.size()) {
-    logger(ERROR) << "tx with empty inputs, rejected for tx id= " << getObjectHash(tx);
+    logger(ERROR) << "<< Core.cpp << " << "tx with empty inputs, rejected for tx id= " << getObjectHash(tx);
     return false;
   }
 
   if (!check_inputs_types_supported(tx)) {
-    logger(ERROR) << "unsupported input types for tx id= " << getObjectHash(tx);
+    logger(ERROR) << "<< Core.cpp << " << "unsupported input types for tx id= " << getObjectHash(tx);
     return false;
   }
 
   std::string errmsg;
   if (!check_outs_valid(tx, &errmsg)) {
-    logger(ERROR) << "tx with invalid outputs, rejected for tx id= " << getObjectHash(tx) << ": " << errmsg;
+    logger(ERROR) << "<< Core.cpp << " << "tx with invalid outputs, rejected for tx id= " << getObjectHash(tx) << "<< Core.cpp << " << ": " << errmsg;
     return false;
   }
 
   if (!check_money_overflow(tx)) {
-    logger(ERROR) << "tx have money overflow, rejected for tx id= " << getObjectHash(tx);
+    logger(ERROR) << "<< Core.cpp << " << "tx have money overflow, rejected for tx id= " << getObjectHash(tx);
     return false;
   }
 
@@ -273,7 +273,7 @@ bool core::check_tx_semantic(const Transaction& tx, bool keeped_by_block, uint32
 	  uint32_t testHeight = height > parameters::END_MULTIPLIER_BLOCK ? 0 : (uint32_t)(-1); //try other mode
 	  amount_in = m_currency.getTransactionAllInputsAmount(tx, testHeight);
 	  if (amount_in < amount_out) {
-		logger(ERROR) << "tx with wrong amounts: ins " << amount_in << ", outs " << amount_out << ", rejected for tx id= " << getObjectHash(tx);
+		logger(ERROR) << "<< Core.cpp << " << "tx with wrong amounts: ins " << amount_in << ", outs " << amount_out << ", rejected for tx id= " << getObjectHash(tx);
 		return false;
 	  } else {
 		  height = testHeight;
@@ -282,12 +282,12 @@ bool core::check_tx_semantic(const Transaction& tx, bool keeped_by_block, uint32
 
   //check if tx use different key images
   if (!check_tx_inputs_keyimages_diff(tx)) {
-    logger(ERROR) << "tx has a few inputs with identical keyimages";
+    logger(ERROR) << "<< Core.cpp << " << "tx has a few inputs with identical keyimages";
     return false;
   }
 
   if (!checkMultisignatureInputsDiff(tx)) {
-    logger(ERROR) << "tx has a few multisignature inputs with identical output indexes";
+    logger(ERROR) << "<< Core.cpp << " << "tx has a few multisignature inputs with identical output indexes";
     return false;
   }
 
@@ -320,12 +320,12 @@ bool core::add_new_tx(const Transaction& tx, const Crypto::Hash& tx_hash, size_t
   LockedBlockchainStorage lbs(m_blockchain);
 
   if (m_blockchain.haveTransaction(tx_hash)) {
-    logger(TRACE) << "tx " << tx_hash << " is already in blockchain";
+    logger(TRACE) << "<< Core.cpp << " << "tx " << tx_hash << " is already in blockchain";
     return true;
   }
 
   if (m_mempool.have_tx(tx_hash)) {
-    logger(TRACE) << "tx " << tx_hash << " is already in transaction pool";
+    logger(TRACE) << "<< Core.cpp << " << "tx " << tx_hash << " is already in transaction pool";
     return true;
   }
   return m_mempool.add_tx(tx, tx_hash, blob_size, tvc, keeped_by_block, height);
@@ -340,7 +340,7 @@ bool core::get_block_template(Block& b, const AccountPublicAddress& adr, difficu
     height = m_blockchain.getCurrentBlockchainHeight();
     diffic = m_blockchain.getDifficultyForNextBlock();
     if (!(diffic)) {
-      logger(ERROR, BRIGHT_RED) << "difficulty overhead.";
+      logger(ERROR, BRIGHT_RED) << "<< Core.cpp << " << "difficulty overhead.";
       return false;
     }
 
@@ -391,7 +391,7 @@ bool core::get_block_template(Block& b, const AccountPublicAddress& adr, difficu
   //make blocks coin-base tx looks close to real coinbase tx to get truthful blob size
   bool r = m_currency.constructMinerTx(height, median_size, already_generated_coins, txs_size, fee, adr, b.baseTransaction, ex_nonce, 11);
   if (!r) {
-    logger(ERROR, BRIGHT_RED) << "Failed to construct miner tx, first chance";
+    logger(ERROR, BRIGHT_RED) << "<< Core.cpp << " << "Failed to construct miner tx, first chance";
     return false;
   }
 
@@ -399,7 +399,7 @@ bool core::get_block_template(Block& b, const AccountPublicAddress& adr, difficu
   for (size_t try_count = 0; try_count != 10; ++try_count) {
     r = m_currency.constructMinerTx(height, median_size, already_generated_coins, cumulative_size, fee, adr, b.baseTransaction, ex_nonce, 11);
 
-    if (!(r)) { logger(ERROR, BRIGHT_RED) << "Failed to construct miner tx, second chance"; return false; }
+    if (!(r)) { logger(ERROR, BRIGHT_RED) << "<< Core.cpp << " << "Failed to construct miner tx, second chance"; return false; }
     size_t coinbase_blob_size = getObjectBinarySize(b.baseTransaction);
     if (coinbase_blob_size > cumulative_size - txs_size) {
       cumulative_size = txs_size + coinbase_blob_size;
@@ -411,7 +411,7 @@ bool core::get_block_template(Block& b, const AccountPublicAddress& adr, difficu
       b.baseTransaction.extra.insert(b.baseTransaction.extra.end(), delta, 0);
       //here  could be 1 byte difference, because of extra field counter is varint, and it can become from 1-byte len to 2-bytes len.
       if (cumulative_size != txs_size + getObjectBinarySize(b.baseTransaction)) {
-        if (!(cumulative_size + 1 == txs_size + getObjectBinarySize(b.baseTransaction))) { logger(ERROR, BRIGHT_RED) << "unexpected case: cumulative_size=" << cumulative_size << " + 1 is not equal txs_cumulative_size=" << txs_size << " + get_object_blobsize(b.baseTransaction)=" << getObjectBinarySize(b.baseTransaction); return false; }
+        if (!(cumulative_size + 1 == txs_size + getObjectBinarySize(b.baseTransaction))) { logger(ERROR, BRIGHT_RED) << "<< Core.cpp << " << "unexpected case: cumulative_size=" << cumulative_size << " + 1 is not equal txs_cumulative_size=" << txs_size << " + get_object_blobsize(b.baseTransaction)=" << getObjectBinarySize(b.baseTransaction); return false; }
           b.baseTransaction.extra.resize(b.baseTransaction.extra.size() - 1);
           if (cumulative_size != txs_size + getObjectBinarySize(b.baseTransaction)) {
             //fuck, not lucky, -1 makes varint-counter size smaller, in that case we continue to grow with cumulative_size
@@ -422,12 +422,12 @@ bool core::get_block_template(Block& b, const AccountPublicAddress& adr, difficu
             continue;
         }
         logger(DEBUGGING, BRIGHT_GREEN) <<
-          "Setting extra for block: " << b.baseTransaction.extra.size() << ", try_count=" << try_count;
+          "Setting extra for block: " << b.baseTransaction.extra.size() << "<< Core.cpp << " << ", try_count=" << try_count;
       }
     }
 
     if (!(cumulative_size == txs_size + getObjectBinarySize(b.baseTransaction))) {
-      logger(ERROR, BRIGHT_RED) << "unexpected case: cumulative_size=" << cumulative_size << " is not equal txs_cumulative_size=" << txs_size << " + get_object_blobsize(b.baseTransaction)=" << getObjectBinarySize(b.baseTransaction);
+      logger(ERROR, BRIGHT_RED) << "<< Core.cpp << " << "unexpected case: cumulative_size=" << cumulative_size << " is not equal txs_cumulative_size=" << txs_size << " + get_object_blobsize(b.baseTransaction)=" << getObjectBinarySize(b.baseTransaction);
       return false;
     }
 
@@ -487,7 +487,7 @@ bool core::handle_block_found(Block& b) {
   handle_incoming_block(b, bvc, true, true);
 
   if (bvc.m_verification_failed) {
-    logger(ERROR) << "mined block failed verification";
+    logger(ERROR) << "<< Core.cpp << " << "mined block failed verification";
   }
 
   return bvc.m_added_to_main_chain;
@@ -534,14 +534,14 @@ void core::getPoolChanges(const std::vector<Crypto::Hash>& knownTxsIds, std::vec
 
 bool core::handle_incoming_block_blob(const BinaryArray& block_blob, block_verification_context& bvc, bool control_miner, bool relay_block) {
   if (block_blob.size() > m_currency.maxBlockBlobSize()) {
-    logger(INFO) << "WRONG BLOCK BLOB, too big size " << block_blob.size() << ", rejected";
+    logger(INFO) << "<< Core.cpp << " << "WRONG BLOCK BLOB, too big size " << block_blob.size() << "<< Core.cpp << " << ", rejected";
     bvc.m_verification_failed = true;
     return false;
   }
 
   Block b;
   if (!fromBinaryArray(b, block_blob)) {
-    logger(INFO) << "Failed to parse and validate new block";
+    logger(INFO) << "<< Core.cpp << " << "Failed to parse and validate new block";
     bvc.m_verification_failed = true;
     return false;
   }
@@ -565,11 +565,11 @@ bool core::handle_incoming_block(const Block& b, block_verification_context& bvc
     std::list<Transaction> txs;
     m_blockchain.getTransactions(b.transactionHashes, txs, missed_txs);
     if (!missed_txs.empty() && getBlockIdByHeight(get_block_height(b)) != get_block_hash(b)) {
-      logger(INFO) << "Block added, but it seems that reorganize just happened after that, do not relay this block";
+      logger(INFO) << "<< Core.cpp << " << "Block added, but it seems that reorganize just happened after that, do not relay this block";
     } else {
       if (!(txs.size() == b.transactionHashes.size() && missed_txs.empty())) {
-        logger(ERROR, BRIGHT_RED) << "can't find some transactions in found block:" <<
-          get_block_hash(b) << " txs.size()=" << txs.size() << ", b.transactionHashes.size()=" << b.transactionHashes.size() << ", missed_txs.size()" << missed_txs.size(); return false;
+        logger(ERROR, BRIGHT_RED) << "<< Core.cpp << " << "can't find some transactions in found block:" <<
+          get_block_hash(b) << "<< Core.cpp << " << " txs.size()=" << txs.size() << "<< Core.cpp << " << ", b.transactionHashes.size()=" << b.transactionHashes.size() << "<< Core.cpp << " << ", missed_txs.size()" << missed_txs.size(); return false;
       }
 
       NOTIFY_NEW_BLOCK::request arg;
@@ -577,7 +577,7 @@ bool core::handle_incoming_block(const Block& b, block_verification_context& bvc
       arg.current_blockchain_height = m_blockchain.getCurrentBlockchainHeight();
       BinaryArray blockBa;
       bool r = toBinaryArray(b, blockBa);
-      if (!(r)) { logger(ERROR, BRIGHT_RED) << "failed to serialize block"; return false; }
+      if (!(r)) { logger(ERROR, BRIGHT_RED) << "<< Core.cpp << " << "failed to serialize block"; return false; }
       arg.b.block = asString(blockBa);
       for (auto& tx : txs) {
         arg.b.txs.push_back(asString(toBinaryArray(tx)));
@@ -774,12 +774,12 @@ bool core::findStartAndFullOffsets(const std::vector<Crypto::Hash>& knownBlockId
   LockedBlockchainStorage lbs(m_blockchain);
 
   if (knownBlockIds.empty()) {
-    logger(ERROR, BRIGHT_RED) << "knownBlockIds is empty";
+    logger(ERROR, BRIGHT_RED) << "<< Core.cpp << " << "knownBlockIds is empty";
     return false;
   }
 
   if (knownBlockIds.back() != m_blockchain.getBlockIdByHeight(0)) {
-    logger(ERROR, BRIGHT_RED) << "knownBlockIds doesn't end with genesis block hash: " << knownBlockIds.back();
+    logger(ERROR, BRIGHT_RED) << "<< Core.cpp << " << "knownBlockIds doesn't end with genesis block hash: " << knownBlockIds.back();
     return false;
   }
 
@@ -1017,13 +1017,13 @@ uint64_t core::depositInterestAtHeight(size_t height) const {
 
 bool core::handleIncomingTransaction(const Transaction& tx, const Crypto::Hash& txHash, size_t blobSize, tx_verification_context& tvc, bool keptByBlock, uint32_t height) {
   if (!check_tx_syntax(tx)) {
-    logger(INFO) << "WRONG TRANSACTION BLOB, Failed to check tx " << txHash << " syntax, rejected";
+    logger(INFO) << "<< Core.cpp << " << "WRONG TRANSACTION BLOB, Failed to check tx " << txHash << " syntax, rejected";
     tvc.m_verification_failed = true;
     return false;
   }
 
   if (!check_tx_semantic(tx, keptByBlock, height)) {
-    logger(INFO) << "WRONG TRANSACTION BLOB, Failed to check tx " << txHash << " semantic, rejected";
+    logger(INFO) << "<< Core.cpp << " << "WRONG TRANSACTION BLOB, Failed to check tx " << txHash << " semantic, rejected";
     tvc.m_verification_failed = true;
     return false;
   }
@@ -1031,16 +1031,16 @@ bool core::handleIncomingTransaction(const Transaction& tx, const Crypto::Hash& 
   bool r = add_new_tx(tx, txHash, blobSize, tvc, keptByBlock, height);
   if (tvc.m_verification_failed) {
     if (!tvc.m_tx_fee_too_small) {
-      logger(ERROR) << "Transaction verification failed: " << txHash;
+      logger(ERROR) << "<< Core.cpp << " << "Transaction verification failed: " << txHash;
     } else {
-      logger(INFO) << "Transaction verification failed: " << txHash;
+      logger(INFO) << "<< Core.cpp << " << "Transaction verification failed: " << txHash;
     }
   } else if (tvc.m_verification_impossible) {
-    logger(ERROR) << "Transaction verification impossible: " << txHash;
+    logger(ERROR) << "<< Core.cpp << " << "Transaction verification impossible: " << txHash;
   }
 
   if (tvc.m_added_to_pool) {
-    logger(DEBUGGING) << "tx added: " << txHash;
+    logger(DEBUGGING) << "<< Core.cpp << " << "tx added: " << txHash;
     poolUpdated();
   }
 
@@ -1053,7 +1053,7 @@ std::unique_ptr<IBlock> core::getBlock(const Crypto::Hash& blockId) {
 
   std::unique_ptr<BlockWithTransactions> blockPtr(new BlockWithTransactions());
   if (!lbs->getBlockByHash(blockId, blockPtr->block)) {
-    logger(DEBUGGING) << "Can't find block: " << blockId;
+    logger(DEBUGGING) << "<< Core.cpp << " << "Can't find block: " << blockId;
     return std::unique_ptr<BlockWithTransactions>(nullptr);
   }
 
@@ -1063,7 +1063,7 @@ std::unique_ptr<IBlock> core::getBlock(const Crypto::Hash& blockId) {
   assert(missedTxs.empty() || !lbs->isBlockInMainChain(blockId)); //if can't find transaction for blockchain block -> error
 
   if (!missedTxs.empty()) {
-    logger(DEBUGGING) << "Can't find transactions for block: " << blockId;
+    logger(DEBUGGING) << "<< Core.cpp << " << "Can't find transactions for block: " << blockId;
     return std::unique_ptr<BlockWithTransactions>(nullptr);
   }
 

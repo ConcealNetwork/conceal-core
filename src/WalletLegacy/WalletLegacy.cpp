@@ -561,23 +561,35 @@ TransactionId WalletLegacy::sendTransaction(Crypto::SecretKey& transactionSK,
                                             uint64_t mixIn,
                                             uint64_t unlockTimestamp,
                                             const std::vector<TransactionMessage>& messages,
-                                            uint64_t ttl) {
+                                            uint64_t ttl) 
+                                            {
+  
+  /* Regular transaction fees should be at least 100 X. In this case we also check
+     to ensure that it is not a self-destructive message, which will have a TTL that
+     is larger than 0 */
+  if ((fee < 100) && (ttl == 0)) 
+  {
+    fee = 100;
+  }
+
+  /* This is the logic that determins if it is an optimization transaction */
   bool optimize = false;
-  if (transfers.empty()) {
+  if (transfers.empty()) 
+  {
     CryptoNote::WalletLegacyTransfer transfer;
     transfer.address = getAddress();
     transfer.amount = 0;
     transfers.push_back(transfer);
     optimize = true;
+    fee = 50;
   }
+
   TransactionId txId = 0;
   std::unique_ptr<WalletRequest> request;
   std::deque<std::unique_ptr<WalletLegacyEvent>> events;
   throwIfNotInitialised();
 
-  if ((fee < 100) && (ttl == 0)) {
-    fee = 100;
-  }
+
 
   {
     std::unique_lock<std::mutex> lock(m_cacheMutex);
@@ -590,7 +602,6 @@ TransactionId WalletLegacy::sendTransaction(Crypto::SecretKey& transactionSK,
     m_asyncContextCounter.addAsyncContext();
     request->perform(m_node, std::bind(&WalletLegacy::sendTransactionCallback, this, std::placeholders::_1, std::placeholders::_2));
   }
-
   return txId;
 }
 
@@ -688,6 +699,13 @@ TransactionId WalletLegacy::sendFusionTransaction(const std::list<TransactionOut
   std::vector<WalletLegacyTransfer> transfers;
   WalletLegacyTransfer destination;
   destination.amount = 0;
+
+  /* For transaction pool differentiation, fusion and optimization should be 50 X */
+  if (fee < 50) 
+  {
+    fee = 50;
+  }
+
   for (auto& out : fusionInputs) {
     destination.amount += out.amount;
   }
@@ -716,8 +734,10 @@ TransactionId WalletLegacy::deposit(uint32_t term, uint64_t amount, uint64_t fee
   std::unique_ptr<WalletRequest> request;
   std::deque<std::unique_ptr<WalletLegacyEvent>> events;
 
-  if (fee < 100) {
-    fee = 100;
+  /* Deposit fees should be at least 1000 X */
+  if (fee < 1000) 
+  {
+    fee = 1000;
   }
 
   {
@@ -746,7 +766,9 @@ TransactionId WalletLegacy::withdrawDeposits(const std::vector<DepositId>& depos
   std::unique_ptr<WalletRequest> request;
   std::deque<std::unique_ptr<WalletLegacyEvent>> events;
 
-  if (fee < 100) {
+  /* Deposit widthrawal fees should be 100 X */
+  if (fee < 100) 
+  {
     fee = 100;
   }
 
@@ -771,16 +793,20 @@ TransactionId WalletLegacy::withdrawDeposits(const std::vector<DepositId>& depos
 
 /* go through all unlocked outputs and return a total of 
   everything below the dust threshold */
-uint64_t WalletLegacy::dustBalance() {
+uint64_t WalletLegacy::dustBalance() 
+{
 	std::unique_lock<std::mutex> lock(m_cacheMutex);
 	throwIfNotInitialised();
 	std::vector<TransactionOutputInformation> outputs;
 	m_transferDetails->getOutputs(outputs, ITransfersContainer::IncludeKeyUnlocked);
 	uint64_t money = 0;
-	for (size_t i = 0; i < outputs.size(); ++i) {
+	for (size_t i = 0; i < outputs.size(); ++i) 
+  {
 		const auto& out = outputs[i];
-		if (!m_transactionsCache.isUsed(out)) {
-			if (out.amount < m_currency.defaultDustThreshold()) {
+		if (!m_transactionsCache.isUsed(out)) 
+    {
+			if (out.amount < m_currency.defaultDustThreshold()) 
+      {
 				money += out.amount;
 			}
 		}

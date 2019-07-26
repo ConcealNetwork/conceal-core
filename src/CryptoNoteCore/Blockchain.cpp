@@ -434,6 +434,11 @@ bool Blockchain::init(const std::string& config_folder, bool load_existing) {
     }
 
     loadBlockchainIndices();
+    m_checkpoints.load_checkpoints();
+    logger(Logging::INFO) << "<< Blockchain.cpp << " << "Loading checkpoints...";
+    m_checkpoints.load_checkpoints_from_dns();    
+    logger(Logging::INFO) << "<< Blockchain.cpp << " << "Loading DNS checkpoints...";
+
   } else {
     m_blocks.clear();
   }
@@ -2016,8 +2021,6 @@ bool Blockchain::pushBlock(const Block& blockData, const std::vector<Transaction
   Crypto::Hash proof_of_work = NULL_HASH;
   if (m_checkpoints.is_in_checkpoint_zone(getCurrentBlockchainHeight())) {
     if (!m_checkpoints.check_block(getCurrentBlockchainHeight(), blockHash)) {
-      logger(ERROR, BRIGHT_RED) <<
-        "CHECKPOINT VALIDATION FAILED";
       bvc.m_verification_failed = true;
       return false;
     }

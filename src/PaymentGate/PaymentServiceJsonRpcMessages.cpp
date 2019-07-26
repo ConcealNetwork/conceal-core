@@ -62,7 +62,7 @@ void CreateAddress::Response::serialize(CryptoNote::ISerializer& serializer) {
 
 void CreateAddressList::Request::serialize(CryptoNote::ISerializer& serializer) 
 {
-  if (!serializer(spendSecretKeys, "spendSecretKeys")) 
+  if (!serializer(spendSecretKeys, "privateSpendKeys")) 
   {
     throw RequestSerializationError();
   }
