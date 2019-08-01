@@ -14,7 +14,7 @@ all-debug: build-debug
 
 cmake-release:
 	mkdir -p build/release
-	cd build/release && cmake -DCMAKE_BUILD_TYPE=Release -DSTATIC=true ../..
+	cd build/release && cmake ../..
 
 build-release: cmake-release
 	cd build/release && $(MAKE)

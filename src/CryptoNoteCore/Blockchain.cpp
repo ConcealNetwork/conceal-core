@@ -434,6 +434,11 @@ bool Blockchain::init(const std::string& config_folder, bool load_existing) {
     }
 
     loadBlockchainIndices();
+    m_checkpoints.load_checkpoints();
+    logger(Logging::INFO) << "<< Blockchain.cpp << " << "Loading checkpoints...";
+    m_checkpoints.load_checkpoints_from_dns();    
+    logger(Logging::INFO) << "<< Blockchain.cpp << " << "Loading DNS checkpoints...";
+
   } else {
     m_blocks.clear();
   }
@@ -1052,22 +1057,23 @@ bool Blockchain::validate_miner_transaction(const Block& b, uint32_t height, siz
   }
 
   if (minerReward > reward) {
+    if (height < 290700) {
+      return true;
+    }    
     logger(ERROR, BRIGHT_RED) << "<< Blockchain.cpp << " << "Coinbase transaction spend too much money: " << m_currency.formatAmount(minerReward) <<
       ", block reward is " << m_currency.formatAmount(reward);
-
     return false;
   } else if (minerReward < reward) {
+    if (height < 290700) {
+      return true;
+    }
     logger(ERROR, BRIGHT_RED) << "<< Blockchain.cpp << " << "Coinbase transaction doesn't use full amount of block reward: spent " <<
       m_currency.formatAmount(minerReward) << ", block reward is " << m_currency.formatAmount(reward) << ", fee is " << fee;
-
     return false;
-  }
+  } 
 
   return true;
 }
-
-
-
 
 bool Blockchain::getBackwardBlocksSize(size_t from_height, std::vector<size_t>& sz, size_t count) {
   std::lock_guard<decltype(m_blockchain_lock)> lk(m_blockchain_lock);
@@ -2015,8 +2021,6 @@ bool Blockchain::pushBlock(const Block& blockData, const std::vector<Transaction
   Crypto::Hash proof_of_work = NULL_HASH;
   if (m_checkpoints.is_in_checkpoint_zone(getCurrentBlockchainHeight())) {
     if (!m_checkpoints.check_block(getCurrentBlockchainHeight(), blockHash)) {
-      logger(ERROR, BRIGHT_RED) <<
-        "CHECKPOINT VALIDATION FAILED";
       bvc.m_verification_failed = true;
       return false;
     }

@@ -1,6 +1,9 @@
 cmake_minimum_required(VERSION 2.8.6)
 
 set(VERSION "0.1")
+# Packaged from main commits
+set(COMMIT 72946d9)
+set(REFS " (HEAD -> master)")
 
 set(CMAKE_CXX_STANDARD 11)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
@@ -84,32 +87,14 @@ else()
   else()
     set(DEBUG_FLAGS "-g3 -O0")
   endif()
-  set(RELEASE_FLAGS "-DNDEBUG")
-  if(NOT APPLE)
-    # There is a clang bug that does not allow to compile code that uses AES-NI intrinsics if -flto is enabled
-    if (CMAKE_C_COMPILER_ID STREQUAL "GNU" AND CMAKE_SYSTEM_NAME STREQUAL "Linux"
-        AND CMAKE_BUILD_TYPE STREQUAL "Release" AND ((CMAKE_C_COMPILER_VERSION VERSION_GREATER 4.9) OR (CMAKE_C_COMPILER_VERSION VERSION_EQUAL 4.9)))
-      # On linux, to build in lto mode, check that ld.gold linker is used: 'update-alternatives --install /usr/bin/ld ld /usr/bin/ld.gold HIGHEST_PRIORITY'
-      set(CMAKE_AR gcc-ar)
-      set(CMAKE_RANLIB gcc-ranlib)
-    endif()
-    set(RELEASE_FLAGS "${RELEASE_FLAGS} -flto")
-  endif()
-  #if(CMAKE_C_COMPILER_ID STREQUAL "GNU" AND NOT MINGW)
-  #  set(RELEASE_FLAGS "${RELEASE_FLAGS} -fno-fat-lto-objects")
-  #endif()
-  set(CMAKE_C_FLAGS_DEBUG "${CMAKE_C_FLAGS_DEBUG} ${DEBUG_FLAGS}")
-  set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} ${DEBUG_FLAGS}")
-  set(CMAKE_C_FLAGS_RELEASE "${CMAKE_C_FLAGS_RELEASE} ${RELEASE_FLAGS}")
-  set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} ${RELEASE_FLAGS}")
-  if(STATIC AND NOT APPLE)
-    set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -static-libgcc -static-libstdc++")
-  endif()
+  set(RELEASE_FLAGS "-O1 -DNDEBUG")
+  
 endif()
 
-
-set(Boost_USE_STATIC_LIBS ON)
-set(Boost_USE_STATIC_RUNTIME ON)
+if(STATIC)
+  set(Boost_USE_STATIC_LIBS ON)
+  set(Boost_USE_STATIC_RUNTIME ON)
+endif()
 
 #set(Boost_DEBUG on)
 find_package(Boost 1.55 REQUIRED COMPONENTS system filesystem thread date_time chrono regex serialization program_options)
@@ -151,3 +136,4 @@ endif()
 
 add_subdirectory(external)
 add_subdirectory(src)
+#add_subdirectory(tests)
