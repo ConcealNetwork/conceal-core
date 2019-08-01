@@ -1498,8 +1498,8 @@ bool simple_wallet::export_keys(const std::vector<std::string>& args/* = std::ve
   std::string secretKeysData = std::string(reinterpret_cast<char*>(&keys.spendSecretKey), sizeof(keys.spendSecretKey)) + std::string(reinterpret_cast<char*>(&keys.viewSecretKey), sizeof(keys.viewSecretKey));
   std::string guiKeys = Tools::Base58::encode_addr(CryptoNote::parameters::CRYPTONOTE_PUBLIC_ADDRESS_BASE58_PREFIX, secretKeysData);
 
-  std::cout << std::endl << "Spend secret key: " << Common::podToHex(keys.spendSecretKey) << std::endl;
-  std::cout << "View secret key: " <<  Common::podToHex(keys.viewSecretKey) << std::endl;
+  std::cout << std::endl << "Private spend key: " << Common::podToHex(keys.spendSecretKey) << std::endl;
+  std::cout << "Private view key: " <<  Common::podToHex(keys.viewSecretKey) << std::endl;
 
   Crypto::PublicKey unused_dummy_variable;
   Crypto::SecretKey deterministic_private_view_key;
