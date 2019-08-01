@@ -589,8 +589,6 @@ TransactionId WalletLegacy::sendTransaction(Crypto::SecretKey& transactionSK,
   std::deque<std::unique_ptr<WalletLegacyEvent>> events;
   throwIfNotInitialised();
 
-
-
   {
     std::unique_lock<std::mutex> lock(m_cacheMutex);
     request = m_sender->makeSendRequest(transactionSK, optimize, txId, events, transfers, fee, extra, mixIn, unlockTimestamp, messages, ttl);
