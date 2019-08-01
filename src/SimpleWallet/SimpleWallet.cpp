@@ -1030,7 +1030,6 @@ bool simple_wallet::new_wallet(const std::string &wallet_file, const std::string
       "Wallet Address: " << m_wallet->getAddress() << std::endl <<
       "Private View Key: " << Common::podToHex(keys.viewSecretKey) << std::endl <<
       "Private Spend Key: " << Common::podToHex(keys.spendSecretKey) << std::endl <<
-      // "GUI Key: " << guiKeys << std::endl <<
       "Mnemonic Seed: " << generate_mnemonic(keys.spendSecretKey) << std::endl << std::endl;
 
   }
@@ -1501,7 +1500,6 @@ bool simple_wallet::export_keys(const std::vector<std::string>& args/* = std::ve
 
   std::cout << std::endl << "Spend secret key: " << Common::podToHex(keys.spendSecretKey) << std::endl;
   std::cout << "View secret key: " <<  Common::podToHex(keys.viewSecretKey) << std::endl;
-  std::cout << "GUI key: " <<  guiKeys << std::endl;
 
   Crypto::PublicKey unused_dummy_variable;
   Crypto::SecretKey deterministic_private_view_key;
