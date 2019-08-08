@@ -372,7 +372,7 @@ bool wallet_rpc_server::on_send_fusion(const wallet_rpc::COMMAND_RPC_SEND_FUSION
     CryptoNote::WalletHelper::SendCompleteResultObserver sent;
     WalletHelper::IWalletRemoveObserverGuard removeGuard(m_wallet, sent);
 
-    CryptoNote::TransactionId tx = m_wallet.sendFusionTransaction(fusionInputs, 0, extraString, req.mixin, req.unlock_time);
+    CryptoNote::TransactionId tx = m_wallet.sendFusionTransaction(fusionInputs, 50, extraString, req.mixin, req.unlock_time);
     if (tx == WALLET_LEGACY_INVALID_TRANSACTION_ID)
       throw std::runtime_error("Couldn't send fusion transaction");
 
