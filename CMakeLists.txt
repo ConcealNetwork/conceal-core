@@ -87,7 +87,7 @@ else()
   else()
     set(DEBUG_FLAGS "-g3 -O0")
   endif()
-  set(RELEASE_FLAGS "-O1 -DNDEBUG")
+  set(RELEASE_FLAGS "-DNDEBUG")
   
 endif()
 
@@ -136,4 +136,3 @@ endif()
 
 add_subdirectory(external)
 add_subdirectory(src)
-#add_subdirectory(tests)
