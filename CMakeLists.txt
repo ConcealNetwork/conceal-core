@@ -87,7 +87,7 @@ else()
   else()
     set(DEBUG_FLAGS "-g3 -O0")
   endif()
-  set(RELEASE_FLAGS "-DNDEBUG")
+  set(RELEASE_FLAGS "-0")
   
 endif()
 
