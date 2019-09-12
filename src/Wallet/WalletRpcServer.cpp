@@ -347,7 +347,7 @@ bool wallet_rpc_server::on_estimate_fusion(const wallet_rpc::COMMAND_RPC_ESTIMAT
 //------------------------------------------------------------------------------------------------------------------------------
 bool wallet_rpc_server::on_send_fusion(const wallet_rpc::COMMAND_RPC_SEND_FUSION::request& req, wallet_rpc::COMMAND_RPC_SEND_FUSION::response& res)
 {
-  const size_t MAX_FUSION_OUTPUT_COUNT = 4;
+  const size_t MAX_FUSION_OUTPUT_COUNT = 8;
 
   if (req.threshold <= m_currency.defaultDustThreshold()) {
     throw JsonRpc::JsonRpcError(WALLET_RPC_ERROR_CODE_UNKNOWN_ERROR, std::string("Fusion transaction threshold is too small. Threshold: " +

@@ -1369,7 +1369,7 @@ size_t WalletGreen::validateSaveAndSendTransaction(const ITransactionReader& tra
     throw std::system_error(make_error_code(error::INTERNAL_WALLET_ERROR), "Failed to deserialize created transaction");
   }
 
-  uint64_t fee = transaction.getInputTotalAmount() < transaction.getOutputTotalAmount() ? CryptoNote::parameters::MINIMUM_FEE : transaction.getInputTotalAmount() - transaction.getOutputTotalAmount();
+  uint64_t fee = transaction.getInputTotalAmount() < transaction.getOutputTotalAmount() ? CryptoNote::parameters::MINIMUM_FEE_V1 : transaction.getInputTotalAmount() - transaction.getOutputTotalAmount();
   size_t transactionId = insertOutgoingTransactionAndPushEvent(transaction.getTransactionHash(), fee, transaction.getExtra(), transaction.getUnlockTime());
   Tools::ScopeExit rollbackTransactionInsertion([this, transactionId] {
     updateTransactionStateAndPushEvent(transactionId, WalletTransactionState::FAILED);
@@ -2137,16 +2137,16 @@ size_t WalletGreen::createFusionTransaction(uint64_t threshold, uint64_t mixin,
   validateSourceAddresses(sourceAddresses);
   validateChangeDestination(sourceAddresses, destinationAddress, true);
 
-  const size_t MAX_FUSION_OUTPUT_COUNT = 4;
+  const size_t MAX_FUSION_OUTPUT_COUNT = 8;
 
   uint64_t fusionTreshold = m_currency.defaultDustThreshold();
 
   if (threshold <= fusionTreshold) {
-    throw std::runtime_error("Threshold must be greater than " + m_currency.formatAmount(fusionTreshold));
+    throw std::system_error(make_error_code(error::THRESHOLD_TOO_LOW));
   }
 
   if (m_walletsContainer.get<RandomAccessIndex>().size() == 0) {
-    throw std::runtime_error("You must have at least one address");
+    throw std::system_error(make_error_code(error::MINIMUM_ONE_ADDRESS));
   }
 
   size_t estimatedFusionInputsCount = m_currency.getApproximateMaximumInputCount(m_currency.fusionTxMaxSize(), MAX_FUSION_OUTPUT_COUNT, mixin);
@@ -2157,6 +2157,7 @@ size_t WalletGreen::createFusionTransaction(uint64_t threshold, uint64_t mixin,
   auto fusionInputs = pickRandomFusionInputs(sourceAddresses, threshold, m_currency.fusionTxMinInputCount(), estimatedFusionInputsCount);
   if (fusionInputs.size() < m_currency.fusionTxMinInputCount()) {
     //nothing to optimize
+    throw std::system_error(make_error_code(error::NOTHING_TO_OPTIMIZE));
     return WALLET_INVALID_TRANSACTION_ID;
   }
 
@@ -2199,7 +2200,7 @@ size_t WalletGreen::createFusionTransaction(uint64_t threshold, uint64_t mixin,
   } while (transactionSize > m_currency.fusionTxMaxSize() && fusionInputs.size() >= m_currency.fusionTxMinInputCount());
 
   if (fusionInputs.size() < m_currency.fusionTxMinInputCount()) {
-    throw std::runtime_error("Unable to create fusion transaction");
+    throw std::system_error(make_error_code(error::MINIMUM_INPUT_COUNT));
   }
 
   id = validateSaveAndSendTransaction(*fusionTransaction, {}, true, true);
