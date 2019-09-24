@@ -26,3 +26,5 @@ script:
   - cd build
   - cmake -DCMAKE_BUILD_TYPE=Release -DSTATIC=true ..
   - make
+  - strip "src/concealwallet" "src/walletd" "src/conceald"
+  
