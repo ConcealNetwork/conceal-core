@@ -1,11 +1,13 @@
 // Copyright (c) 2011-2017 The Cryptonote developers
-// Copyright (c) 2017-2018 The Circle Foundation & Conceal Devs
-// Copyright (c) 2018-2019 Conceal Network & Conceal Devs
+// Copyright (c) 2014-2017 XDN developers
+// Copyright (c) 2016-2017 BXC developers
+// Copyright (c) 2017 UltraNote developers
 // Distributed under the MIT/X11 software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #include "JsonValue.h"
 #include <iomanip>
+#include <iostream>
 #include <sstream>
 
 namespace Common {
@@ -564,6 +566,17 @@ JsonValue JsonValue::fromString(const std::string& source) {
   JsonValue jsonValue;
   std::istringstream stream(source);
   stream >> jsonValue;
+  if (stream.fail()) {
+    throw std::runtime_error("Unable to parse JsonValue");
+  }
+
+  return jsonValue;
+}
+
+JsonValue JsonValue::fromStringWithWhiteSpaces(const std::string& source) {
+  JsonValue jsonValue;
+  std::istringstream stream(source);
+  stream >> std::noskipws >> jsonValue;
   if (stream.fail()) {
     throw std::runtime_error("Unable to parse JsonValue");
   }

@@ -1,17 +1,30 @@
-// Copyright (c) 2011-2017 The Cryptonote developers
-// Copyright (c) 2017-2018 The Circle Foundation & Conceal Devs
-// Copyright (c) 2018-2019 Conceal Network & Conceal Devs
-// Distributed under the MIT/X11 software license, see the accompanying
-// file COPYING or http://www.opensource.org/licenses/mit-license.php.
+// Copyright (c) 2012-2016, The CryptoNote developers, The Bytecoin developers
+//
+// This file is part of Karbo.
+//
+// Karbo is free software: you can redistribute it and/or modify
+// it under the terms of the GNU Lesser General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+//
+// Karbo is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU Lesser General Public License for more details.
+//
+// You should have received a copy of the GNU Lesser General Public License
+// along with Karbo.  If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
 
 #include <memory>
 
+#include <Common/Base64.h>
 #include <HTTP/HttpRequest.h>
 #include <HTTP/HttpResponse.h>
 #include <System/TcpConnection.h>
 #include <System/TcpStream.h>
+#include "JsonRpc.h"
 
 #include "Serialization/SerializationTools.h"
 
@@ -45,10 +58,14 @@ private:
 };
 
 template <typename Request, typename Response>
-void invokeJsonCommand(HttpClient& client, const std::string& url, const Request& req, Response& res) {
+void invokeJsonCommand(HttpClient& client, const std::string& url, const Request& req, Response& res, const std::string& user = "", const std::string& password = "") {
   HttpRequest hreq;
   HttpResponse hres;
 
+  hreq.addHeader("Content-Type", "application/json");
+  if (!user.empty() || !password.empty()) {
+    hreq.addHeader("Authorization", "Basic " + Tools::Base64::encode(user + ":" + password));
+  }
   hreq.setUrl(url);
   hreq.setBody(storeToJson(req));
   client.request(hreq, hres);
@@ -63,10 +80,50 @@ void invokeJsonCommand(HttpClient& client, const std::string& url, const Request
 }
 
 template <typename Request, typename Response>
-void invokeBinaryCommand(HttpClient& client, const std::string& url, const Request& req, Response& res) {
+void invokeJsonRpcCommand(HttpClient& client, const std::string& method, const Request& req, Response& res, const std::string& user = "", const std::string& password = "") {
+  try {
+
+    JsonRpc::JsonRpcRequest jsReq;
+
+    jsReq.setMethod(method);
+    jsReq.setParams(req);
+
+    HttpRequest httpReq;
+    HttpResponse httpRes;
+
+    httpReq.addHeader("Content-Type", "application/json");
+    if (!user.empty() || !password.empty()) {
+      httpReq.addHeader("Authorization", "Basic " + Tools::Base64::encode(user + ":" + password));
+    }
+    httpReq.setUrl("/json_rpc");
+    httpReq.setBody(jsReq.getBody());
+
+    client.request(httpReq, httpRes);
+
+    JsonRpc::JsonRpcResponse jsRes;
+
+    //if (httpRes.getStatus() == HttpResponse::STATUS_200) {
+      jsRes.parse(httpRes.getBody());
+      if (!jsRes.getResult(res)) {
+        throw std::runtime_error("HTTP status: " + std::to_string(httpRes.getStatus()));
+      }
+    //}
+
+  } catch (const ConnectException&) {
+    throw std::runtime_error("HTTP status: CONNECT_ERROR");
+  } catch (const std::exception&) {
+    throw std::runtime_error("HTTP status: NETWORK_ERROR");
+  }
+}
+
+template <typename Request, typename Response>
+void invokeBinaryCommand(HttpClient& client, const std::string& url, const Request& req, Response& res, const std::string& user = "", const std::string& password = "") {
   HttpRequest hreq;
   HttpResponse hres;
 
+  if (!user.empty() || !password.empty()) {
+    hreq.addHeader("Authorization", "Basic " + Tools::Base64::encode(user + ":" + password));
+  }
   hreq.setUrl(url);
   hreq.setBody(storeToBinaryKeyValue(req));
   client.request(hreq, hres);
@@ -75,5 +132,5 @@ void invokeBinaryCommand(HttpClient& client, const std::string& url, const Reque
     throw std::runtime_error("Failed to parse binary response");
   }
 }
-
+  
 }

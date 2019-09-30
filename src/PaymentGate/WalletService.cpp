@@ -1288,7 +1288,7 @@ std::error_code WalletService::sendFusionTransaction(uint64_t threshold, uint32_
     size_t transactionId = fusionManager.createFusionTransaction(threshold, anonymity, addresses, destinationAddress);
     transactionHash = Common::podToHex(wallet.getTransaction(transactionId).hash);
 
-    logger(Logging::DEBUGGING) << "Fusion transaction " << transactionHash << " has been sent";
+    logger(Logging::INFO) << "Fusion transaction " << transactionHash << " has been sent";
   } catch (std::system_error& x) {
     logger(Logging::WARNING, Logging::BRIGHT_YELLOW) << "Error while sending fusion transaction: " << x.what();
     return x.code();

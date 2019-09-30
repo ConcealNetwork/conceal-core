@@ -20,6 +20,10 @@ enum WalletErrorCodes {
   WRONG_PASSWORD,
   INTERNAL_WALLET_ERROR,
   MIXIN_COUNT_TOO_BIG,
+  NOTHING_TO_OPTIMIZE,
+  MINIMUM_INPUT_COUNT,
+  MINIMUM_ONE_ADDRESS,
+  THRESHOLD_TOO_LOW,
   BAD_ADDRESS,
   TRANSACTION_SIZE_TOO_BIG,
   WRONG_AMOUNT,
@@ -69,6 +73,10 @@ public:
     case ALREADY_INITIALIZED:      return "The object is already initialized";
     case INTERNAL_WALLET_ERROR:    return "Internal error occurred";
     case MIXIN_COUNT_TOO_BIG:      return "MixIn count is too big";
+    case NOTHING_TO_OPTIMIZE:      return "There are no inputs to optimize";
+    case THRESHOLD_TOO_LOW:        return "Threshold must be greater than 10";    
+    case MINIMUM_ONE_ADDRESS:       return "You should have at least one address";
+    case MINIMUM_INPUT_COUNT:      return "Not enough inputs to optimizne, minimum 12";    
     case BAD_ADDRESS:              return "Bad address";
     case TRANSACTION_SIZE_TOO_BIG: return "Transaction size is too big, please optimize your wallet.";
     case WRONG_AMOUNT:             return "Wrong amount";
