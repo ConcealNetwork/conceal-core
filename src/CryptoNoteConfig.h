@@ -170,7 +170,10 @@ const std::initializer_list<const char*> SEED_NODES  = {
 	"188.213.165.210:15000", // Omega
 	"89.40.118.85:15000", // Delta
 	"94.177.245.107:15000", // Lambda
-	"199.175.54.195:15000" // Godspeed
+	"199.175.54.195:15000", // Godspeed
+	"173.212.196.43:15000", // Katz
+	"192.3.114.99:15000", // Katz, US
+	"139.99.42.182:15000" // Katz, Singapore
 };
 
 struct CheckpointData {
@@ -225,7 +228,8 @@ const std::initializer_list<CheckpointData> CHECKPOINTS  = {
 	{310000, "4a896f5de4f782c59f1f4691505aba0df87a20f2e06499b59496b8d7ffb025fe"},
 	{320000, "c68d15c181bdfc6c5b7fe5c46c6432a03b95d640caa425a5cb3aa675c1d8f8fd"},	
 	{330000, "af9e972f98bed57579a6691c3d21443d3cbff35005e984044bc99cee82d93922"},
-	{340000, "6fce13dd473f3673cd08b28171902e281d7fdbbd8b8ba34e0019ae18f597d22f"}		
+	{340000, "6fce13dd473f3673cd08b28171902e281d7fdbbd8b8ba34e0019ae18f597d22f"},
+	{350000, "f08aad1562ceee3a6c8147846bb3e5dd15b3168007f588ab68bd8ee816eb386d"}		
 };
 
 } // CryptoNote
