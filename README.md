@@ -18,10 +18,10 @@ Conceal is based on the Cryptonote protocol and runs on a secure peer-to-peer ne
 Conceal is open-source, community driven and truly decentralized. No one owns it, everyone can take part.
 
 ## Resources
-- Web: [conceal.network](https://conceal.network/)
+- Web: [http://conceal.network](https://conceal.network/)
 - GitHub: [https://github.com/ConcealNetwork/conceal-core](https://github.com/ConcealNetwork/conceal-core)
-- Wiki: [https://conceal.network/wiki/doku.php](https://conceal.network/wiki)
-- Explorer: [https://explorer.conceal.network/index.html](https://explorer.conceal.network)
+- Wiki: [https://conceal.network/wiki](https://conceal.network/wiki/doku.php)
+- Explorer: [https://explorer.conceal.network](https://explorer.conceal.network)
 - Paperwallet: [https://conceal.network/paperwallet](https://conceal.network/paperwallet/)
 - Discord: [https://discord.gg/YbpHVSd](https://discord.gg/YbpHVSd)
 - Twitter: [https://twitter.com/ConcealNetwork](https://twitter.com/ConcealNetwork)
