@@ -211,6 +211,12 @@ uint64_t Currency::calculateInterest(uint64_t amount, uint32_t term, uint32_t he
   uint64_t amount4Humans = amount / 1000000;
 
   /* deposits 2.0 and investments 1.0 */
+  // CryptoNote::parameters::DEPOSIT_HEIGHT_V3
+  if (height > 100000) {
+   return calculateInterestV3(amount, term);
+  }
+
+  /* deposits 2.0 and investments 1.0 */
   if (term % 64800 == 0) {
     return calculateInterestV2(amount, term);
   }
@@ -328,6 +334,41 @@ uint64_t Currency::calculateInterestV2(uint64_t amount, uint32_t term) const {
 
 } /* Currency::calculateInterestV2 */
 
+
+uint64_t Currency::calculateInterestV3(uint64_t amount, uint32_t term) const {
+
+  uint64_t returnVal = 0;
+  uint64_t amount4Humans = amount / 1000000;
+
+  if(amount4Humans > 0 && amount4Humans < 5000)
+    float baseInterest = static_cast<float>(0.04);
+    
+  if(amount4Humans >= 5000 && amount4Humans < 10000)
+    float baseInterest = static_cast<float>(0.045);
+
+  if(amount4Humans >= 10000 && amount4Humans < 15000)
+    float baseInterest = static_cast<float>(0.05);
+
+  if(amount4Humans >= 15000 && amount4Humans < 20000)
+    float baseInterest = static_cast<float>(0.055);
+
+  if(amount4Humans >= 20000)
+    float baseInterest = static_cast<float>(0.06);
+
+  /* Consensus 2019 - Monthly deposits */
+  if (term % 21900 == 0) {    
+    float months = term / 21900;
+    if (months > 12) {
+      months = 12;
+    }
+    float baseInterest = static_cast<float>(0.06);
+    float period = months/12;
+    float interest = (amount*pow(1+baseInterest,period))-amount;
+    returnVal = static_cast<uint64_t>(interest);
+  } 
+  return returnVal;
+} /* Currency::calculateInterestV3 */
+
 /* ---------------------------------------------------------------------------------------------------- */
 
 uint64_t Currency::calculateTotalTransactionInterest(const Transaction& tx, uint32_t height) const {
@@ -396,6 +437,7 @@ bool Currency::getTransactionFee(const Transaction& tx, uint64_t& fee, uint32_t 
     // interest shows up in the output of the W/D transactions and W/Ds always have min fee
     if (tx.inputs.size() > 0 && tx.outputs.size() > 0 && amount_out > amount_in + parameters::MINIMUM_FEE) {
       fee = parameters::MINIMUM_FEE;
+      logger(INFO) << "TRIGGERED: Currency.cpp getTransactionFee";
     } else {
       return false;
     }
