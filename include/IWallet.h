@@ -101,8 +101,8 @@ struct TransactionParameters {
   std::vector<std::string> sourceAddresses;
   std::vector<WalletOrder> destinations;
   std::vector<WalletMessage> messages;
-  uint64_t fee = 0;
-  uint64_t mixIn = 0;
+  uint64_t fee = 1000;
+  uint64_t mixIn = 4;
   std::string extra;
   uint64_t unlockTimestamp = 0;
   DonationSettings donation;

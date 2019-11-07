@@ -182,10 +182,7 @@ bool pool_rpc_server::on_transfer(const wallet_rpc::COMMAND_RPC_TRANSFER::reques
     ttl = static_cast<uint64_t>(time(nullptr)) + req.ttl;
   }
 
-  uint64_t actualFee = 100;
-  if (req.fee >= 100) {
-    actualFee = req.fee;
-  }
+  uint64_t actualFee = 1000;
 
   std::string extraString;
   std::copy(extra.begin(), extra.end(), std::back_inserter(extraString));
@@ -221,8 +218,8 @@ bool pool_rpc_server::on_optimize(const wallet_rpc::COMMAND_RPC_OPTIMIZE::reques
   std::vector<CryptoNote::WalletLegacyTransfer> transfers;
   std::vector<CryptoNote::TransactionMessage> messages;
   std::string extraString;
-  uint64_t fee = CryptoNote::parameters::MINIMUM_FEE_V1;
-  uint64_t mixIn = 0;
+  uint64_t fee = 1000;
+  uint64_t mixIn = 4;
   uint64_t unlockTimestamp = 0;
   uint64_t ttl = 0;
 

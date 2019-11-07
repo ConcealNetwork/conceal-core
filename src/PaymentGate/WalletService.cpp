@@ -989,9 +989,8 @@ std::error_code WalletService::sendTransaction(const SendTransaction::Request& r
       sendParams.extra = Common::asString(Common::fromHex(request.extra));
     }
 
-    if (sendParams.fee < 100) {
-      sendParams.fee = 100;
-    }
+    sendParams.fee = 1000;
+
 
     sendParams.sourceAddresses = request.sourceAddresses;
     sendParams.destinations = convertWalletRpcOrdersToWalletOrders(request.transfers);
