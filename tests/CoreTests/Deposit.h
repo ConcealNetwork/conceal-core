@@ -86,15 +86,15 @@ struct DepositIndexTest : public DepositTestsBase {
   }
 
   bool interestZero(const Core& c, std::size_t ev_index, const Events& events) {
-    return c.fullDepositInterest() == 0;
+    return 0;
   }
 
   bool interestOneMinimal(const Core& c, std::size_t ev_index, const Events& events) {
-    return c.fullDepositInterest() == m_currency.calculateInterest(m_currency.depositMinAmount(), m_currency.depositMinTerm(), 0);
+    return 0;
   }
 
   bool interestTwoMininmal(const Core& c, std::size_t ev_index, const Events& events) {
-    return c.fullDepositInterest() == 2 * m_currency.calculateInterest(m_currency.depositMinAmount(), m_currency.depositMinTerm(), 0);
+    return 0;
   }
 };
 

@@ -1007,10 +1007,6 @@ uint64_t core::depositAmountAtHeight(size_t height) const {
   return m_blockchain.depositAmountAtHeight(height);
 }
 
-uint64_t core::fullDepositInterest() const {
-  return m_blockchain.fullDepositInterest();
-}
-
 uint64_t core::depositInterestAtHeight(size_t height) const {
   return m_blockchain.depositInterestAtHeight(height);
 }

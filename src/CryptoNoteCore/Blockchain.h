@@ -112,7 +112,6 @@ namespace CryptoNote {
     bool isBlockInMainChain(const Crypto::Hash& blockId);
     uint64_t fullDepositAmount() const;
     uint64_t depositAmountAtHeight(size_t height) const;
-    uint64_t fullDepositInterest() const;
     uint64_t depositInterestAtHeight(size_t height) const;
     uint64_t coinsEmittedAtHeight(uint64_t height);
     uint64_t difficultyAtHeight(uint64_t height);

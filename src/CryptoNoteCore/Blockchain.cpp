@@ -2157,11 +2157,6 @@ uint64_t Blockchain::depositAmountAtHeight(size_t height) const {
   return m_depositIndex.depositAmountAtHeight(static_cast<DepositIndex::DepositHeight>(height));
 }
 
-uint64_t Blockchain::fullDepositInterest() const {
-  std::lock_guard<decltype(m_blockchain_lock)> lk(m_blockchain_lock);
-  return m_depositIndex.fullInterestAmount();
-}
-
 uint64_t Blockchain::depositInterestAtHeight(size_t height) const {
   std::lock_guard<decltype(m_blockchain_lock)> lk(m_blockchain_lock);
   return m_depositIndex.depositInterestAtHeight(static_cast<DepositIndex::DepositHeight>(height));
