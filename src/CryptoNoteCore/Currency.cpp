@@ -335,7 +335,8 @@ uint64_t Currency::calculateInterestV2(uint64_t amount, uint32_t term) const {
 } /* Currency::calculateInterestV2 */
 
 
-uint64_t Currency::calculateInterestV3(uint64_t amount, uint32_t term) const {
+uint64_t Currency::calculateInterestV3(uint64_t amount, uint32_t term) const
+{
 
   uint64_t returnVal = 0;
   uint64_t amount4Humans = amount / 1000000;
