@@ -174,7 +174,6 @@ const std::initializer_list<const char*> SEED_NODES  = {
 	"188.213.165.210:15000", // Omega
 	"89.40.118.85:15000", // Delta
 	"94.177.245.107:15000", // Lambda
-	"199.175.54.195:15000", // Godspeed
 	"173.212.196.43:15000", // Katz
 	"192.3.114.99:15000", // Katz, US
 	"139.99.42.182:15000" // Katz, Singapore
