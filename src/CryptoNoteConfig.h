@@ -124,7 +124,7 @@ const uint64_t FOUNDATION_TRUST = (UINT64_C(12000000) * parameters::COIN); // lo
 const uint64_t MAX_BLOCK_REWARD = (UINT64_C(20) * parameters::COIN); // max reward (Consensus I)
 const uint64_t REWARD_INCREASE_INTERVAL = (UINT64_C(21900)); // aprox. 1 month (+ 0.25 CCX increment per month)
 
-const char     CRYPTONOTE_NAME[] = "conceal";
+const char     CRYPTONOTE_NAME[] = "conceal3";
 const char     GENESIS_COINBASE_TX_HEX[] = "010a01ff0001c096b102029b2e4c0281c0b02e7c53291a94d1d0cbff8883f8024f5142ee494ffbbd08807121017d6775185749e95ac2d70cae3f29e0e46f430ab648abbe9fdc61d8e7437c60f8";
 const uint32_t GENESIS_NONCE = 10000;
 const uint64_t GENESIS_TIMESTAMP = 1527078920;
@@ -143,8 +143,8 @@ const size_t   BLOCKS_IDS_SYNCHRONIZING_DEFAULT_COUNT = 10000; // by default, bl
 const size_t   BLOCKS_SYNCHRONIZING_DEFAULT_COUNT = 128; // by default, blocks count in blocks downloading
 const size_t   COMMAND_RPC_GET_BLOCKS_FAST_MAX_COUNT = 1000;
 
-const int      P2P_DEFAULT_PORT = 15000;
-const int      RPC_DEFAULT_PORT = 16000;
+const int      P2P_DEFAULT_PORT = 25000;
+const int      RPC_DEFAULT_PORT = 26000;
 
 
 /* P2P Network Configuration Section - This defines our current P2P network version
@@ -170,13 +170,8 @@ const char     P2P_STAT_TRUSTED_PUB_KEY[] = "f7061e9a5f0d30549afde49c9bfbaa52ac6
 
 // Seed Nodes
 const std::initializer_list<const char*> SEED_NODES  = {
-	"212.237.59.97:15000", // Gamma
-	"188.213.165.210:15000", // Omega
-	"89.40.118.85:15000", // Delta
-	"94.177.245.107:15000", // Lambda
-	"173.212.196.43:15000", // Katz
-	"192.3.114.99:15000", // Katz, US
-	"139.99.42.182:15000" // Katz, Singapore
+	"172.245.74.158:25000", 
+	"172.245.74.203:25000" 
 };
 
 struct CheckpointData {
