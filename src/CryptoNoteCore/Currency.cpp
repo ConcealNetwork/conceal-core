@@ -208,11 +208,10 @@ bool Currency::getBlockReward(size_t medianSize, size_t currentBlockSize, uint64
 
 uint64_t Currency::calculateInterest(uint64_t amount, uint32_t term, uint32_t height) const {
   assert(m_depositMinTerm <= term);
-  uint64_t amount4Humans = amount / 1000000;
 
   /* deposits 2.0 and investments 1.0 */
   // CryptoNote::parameters::DEPOSIT_HEIGHT_V3
-  if ((term % 21900 == 0) && (height > 360000)) {
+  if ((term % 21900 == 0) && (height > CryptoNote::parameters::DEPOSIT_HEIGHT_V3)) {
    return calculateInterestV3(amount, term);
   }
 
