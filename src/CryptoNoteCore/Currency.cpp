@@ -212,7 +212,7 @@ uint64_t Currency::calculateInterest(uint64_t amount, uint32_t term, uint32_t he
 
   /* deposits 2.0 and investments 1.0 */
   // CryptoNote::parameters::DEPOSIT_HEIGHT_V3
-  if (height > 100000) {
+  if ((term % 21900 == 0) && (height > 360000)) {
    return calculateInterestV3(amount, term);
   }
 
@@ -221,7 +221,7 @@ uint64_t Currency::calculateInterest(uint64_t amount, uint32_t term, uint32_t he
     return calculateInterestV2(amount, term);
   }
 
-  if ( term % 5040 == 0) {
+  if (term % 5040 == 0) {
     return calculateInterestV2(amount, term);
   }
 
@@ -340,21 +340,14 @@ uint64_t Currency::calculateInterestV3(uint64_t amount, uint32_t term) const
 
   uint64_t returnVal = 0;
   uint64_t amount4Humans = amount / 1000000;
+  
+  float baseInterest = static_cast<float>(0.029);
 
-  if(amount4Humans > 0 && amount4Humans < 5000)
-    float baseInterest = static_cast<float>(0.04);
-    
-  if(amount4Humans >= 5000 && amount4Humans < 10000)
-    float baseInterest = static_cast<float>(0.045);
-
-  if(amount4Humans >= 10000 && amount4Humans < 15000)
-    float baseInterest = static_cast<float>(0.05);
-
-  if(amount4Humans >= 15000 && amount4Humans < 20000)
-    float baseInterest = static_cast<float>(0.055);
+  if(amount4Humans >= 10000 && amount4Humans < 20000)
+    baseInterest = static_cast<float>(0.039);
 
   if(amount4Humans >= 20000)
-    float baseInterest = static_cast<float>(0.06);
+    baseInterest = static_cast<float>(0.049);
 
   /* Consensus 2019 - Monthly deposits */
   if (term % 21900 == 0) {    
@@ -362,10 +355,9 @@ uint64_t Currency::calculateInterestV3(uint64_t amount, uint32_t term) const
     if (months > 12) {
       months = 12;
     }
-    float baseInterest = static_cast<float>(0.06);
-    float period = months/12;
-    float interest = (amount*pow(1+baseInterest,period))-amount;
-    returnVal = static_cast<uint64_t>(interest);
+    float ear = baseInterest + (months - 1) * 0.001;
+    float eir = (ear/12) * months;
+    returnVal = static_cast<uint64_t>(eir);
   } 
   return returnVal;
 } /* Currency::calculateInterestV3 */
