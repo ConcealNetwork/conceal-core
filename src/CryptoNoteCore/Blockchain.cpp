@@ -728,7 +728,7 @@ difficulty_type Blockchain::getDifficultyForNextBlock() {
   uint32_t block_index = m_blocks.size();
   uint8_t block_major_version = get_block_major_version_for_height(block_index + 1);
 
-  if ((blockHeight >= 308688) && (blockHeight >= 309688)) 
+  if ((getBlockHeight >= 308688) && (getBlockHeight >= 309688)) 
   {
     return 200;
   }
