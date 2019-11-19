@@ -211,7 +211,7 @@ uint64_t Currency::calculateInterest(uint64_t amount, uint32_t term, uint32_t he
 
   /* deposits 2.0 and investments 1.0 */
   // CryptoNote::parameters::DEPOSIT_HEIGHT_V3
-  if ((term % 21900 == 0) && (height > CryptoNote::parameters::DEPOSIT_HEIGHT_V3)) {
+  if ((term % 21900 == 0) && (height > 308687)) {
    return calculateInterestV3(amount, term);
   }
 
@@ -349,15 +349,17 @@ uint64_t Currency::calculateInterestV3(uint64_t amount, uint32_t term) const
     baseInterest = static_cast<float>(0.049);
 
   /* Consensus 2019 - Monthly deposits */
-  if (term % 21900 == 0) {    
-    float months = term / 21900;
-    if (months > 12) {
-      months = 12;
-    }
-    float ear = baseInterest + (months - 1) * 0.001;
-    float eir = (ear/12) * months;
-    returnVal = static_cast<uint64_t>(eir);
-  } 
+   
+  float months = term / 21900;
+  if (months > 12) {
+    months = 12;
+  }
+  float ear = baseInterest + (months - 1) * 0.001;
+  float eir = (ear/12) * months;
+  returnVal = static_cast<uint64_t>(eir);
+
+  float interest = amount * eir;
+  returnVal = static_cast<uint64_t>(interest);
   return returnVal;
 } /* Currency::calculateInterestV3 */
 
