@@ -728,7 +728,7 @@ difficulty_type Blockchain::getDifficultyForNextBlock() {
   uint32_t block_index = m_blocks.size();
   uint8_t block_major_version = get_block_major_version_for_height(block_index + 1);
 
-  if ((block_index > 308688) && (block_index < 309688)) 
+  if (block_index > 308687) 
   {
     return 200;
   }
@@ -984,11 +984,10 @@ difficulty_type Blockchain::get_next_difficulty_for_alternative_chain(const std:
   uint32_t block_index = m_blocks.size();
   uint8_t block_major_version = get_block_major_version_for_height(block_index + 1);
 
-  if ((block_index > 308688) && (block_index < 309688)) 
+  if (block_index > 308687) 
   {
     return 200;
   }
-
   if (block_major_version >= 4) {
     return m_currency.nextDifficultyLWMA3(timestamps, commulative_difficulties);
   } else {
