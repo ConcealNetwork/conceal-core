@@ -12,6 +12,7 @@
 #include "../Common/int-util.h"
 #include "../Common/StringTools.h"
 
+#include "CryptoNoteConfig.h"
 #include "Account.h"
 #include "CryptoNoteBasicImpl.h"
 #include "CryptoNoteFormatUtils.h"
@@ -210,8 +211,7 @@ uint64_t Currency::calculateInterest(uint64_t amount, uint32_t term, uint32_t he
   assert(m_depositMinTerm <= term);
 
   /* deposits 2.0 and investments 1.0 */
-  // CryptoNote::parameters::DEPOSIT_HEIGHT_V3
-  if ((term % 21900 == 0) && (height > 308687)) {
+  if ((term % 21900 == 0) && (height > parameters::DEPOSIT_HEIGHT_V3)) {
    return calculateInterestV3(amount, term);
   }
 
