@@ -22,6 +22,7 @@
 #include "Serialization/BinarySerializationTools.h"
 #include "CryptoNoteTools.h"
 #include "TransactionExtra.h"
+#include "CryptoNoteConfig.h"
 
 using namespace Logging;
 using namespace Common;
@@ -728,7 +729,7 @@ difficulty_type Blockchain::getDifficultyForNextBlock() {
   uint32_t block_index = m_blocks.size();
   uint8_t block_major_version = get_block_major_version_for_height(block_index + 1);
 
-  if (block_index > 308687) 
+  if (block_index > parameters::DEPOSIT_HEIGHT_V3) 
   {
     return 200;
   }
@@ -984,7 +985,8 @@ difficulty_type Blockchain::get_next_difficulty_for_alternative_chain(const std:
   uint32_t block_index = m_blocks.size();
   uint8_t block_major_version = get_block_major_version_for_height(block_index + 1);
 
-  if (block_index > 308687) 
+  //TESTNET STATIC DIFF
+  if (block_index > parameters::DEPOSIT_HEIGHT_V3) 
   {
     return 200;
   }
