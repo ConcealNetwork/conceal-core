@@ -57,6 +57,7 @@ const size_t   DIFFICULTY_CUT_V2 = DIFFICULTY_CUT;
 const size_t   DIFFICULTY_LAG = 15; 
 const size_t   DIFFICULTY_LAG_V1 = DIFFICULTY_LAG;
 const size_t   DIFFICULTY_LAG_V2 = DIFFICULTY_LAG;
+const size_t   MINIMUM_MIXIN = 4;
 
 static_assert(2 * DIFFICULTY_CUT <= DIFFICULTY_WINDOW - 2, "Bad DIFFICULTY_WINDOW or DIFFICULTY_CUT");
 
@@ -66,7 +67,7 @@ const uint32_t DEPOSIT_MAX_TERM = 1 * 12 * 21900; /* legacy deposts - one year *
 const uint32_t DEPOSIT_MAX_TERM_V1 = 64800 * 20; /* five years */
 const uint32_t DEPOSIT_MIN_TERM_V3 = 21900; /* consensus 2019 - one month */
 const uint32_t DEPOSIT_MAX_TERM_V3 = 1 * 12 * 21900; /* consensus 2019 - one year */
-const uint32_t DEPOSIT_HEIGHT_V3 = 308000; /* consensus 2019 - effective height */
+const uint32_t DEPOSIT_HEIGHT_V3 = 308687; /* consensus 2019 - effective height */
 const uint64_t DEPOSIT_MIN_TOTAL_RATE_FACTOR = 0; /* constant rate */
 const uint64_t DEPOSIT_MAX_TOTAL_RATE = 4; /* legacy deposits */
 
