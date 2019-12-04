@@ -389,62 +389,32 @@ namespace CryptoNote {
 
     BlockTemplate blockTemplate;
 
-    if (height > CryptoNote::parameters::DEPOSIT_HEIGHT_V3) 
+
+    for (auto it2 = m_fee_index.rbegin(); it2 != m_fee_index.rend(); ++it2) 
     {
-      /* Process only transactions with a fee of 1000, which is the new static fee */
-      for (auto it2 = m_fee_index.rbegin(); it2 != m_fee_index.rend() && it2->fee == 1000; ++it2) 
+      const auto& txd = *it2;
+
+      if (m_ttlIndex.count(txd.id) > 0) 
       {
-        const auto& txd = *it2;
-
-        if (m_ttlIndex.count(txd.id) > 0) 
-        {
-          continue;
-        }
-
-        size_t blockSizeLimit = (txd.fee == 0) ? median_size : max_total_size;
-        if (blockSizeLimit < total_size + txd.blobSize) 
-        {
-          continue;
-        }
-
-        TransactionCheckInfo checkInfo(txd);
-        bool ready = is_transaction_ready_to_go(txd.tx, checkInfo);
-
-        if (ready && blockTemplate.addTransaction(txd.id, txd.tx)) 
-        {
-          total_size += txd.blobSize;
-          fee += txd.fee;
-        }
+        continue;
       }
-    } 
-    else
-    {
-      /* Pre-Deposits 3.0 Upgrade - Process any transactions */
-      for (auto it2 = m_fee_index.rbegin(); it2 != m_fee_index.rend(); ++it2) 
+
+      size_t blockSizeLimit = (txd.fee == 0) ? median_size : max_total_size;
+      if (blockSizeLimit < total_size + txd.blobSize) 
       {
-        const auto& txd = *it2;
+        continue;
+      }
 
-        if (m_ttlIndex.count(txd.id) > 0) 
-        {
-          continue;
-        }
+      TransactionCheckInfo checkInfo(txd);
+      bool ready = is_transaction_ready_to_go(txd.tx, checkInfo);
 
-        size_t blockSizeLimit = (txd.fee == 0) ? median_size : max_total_size;
-        if (blockSizeLimit < total_size + txd.blobSize) 
-        {
-          continue;
-        }
-
-        TransactionCheckInfo checkInfo(txd);
-        bool ready = is_transaction_ready_to_go(txd.tx, checkInfo);
-
-        if (ready && blockTemplate.addTransaction(txd.id, txd.tx)) 
-        {
-          total_size += txd.blobSize;
-          fee += txd.fee;
-        }
+      if (ready && blockTemplate.addTransaction(txd.id, txd.tx)) 
+      {
+        total_size += txd.blobSize;
+        fee += txd.fee;
       }
     }
+
     
 
     bl.transactionHashes = blockTemplate.getTransactions();
