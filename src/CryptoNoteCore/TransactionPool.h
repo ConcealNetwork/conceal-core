@@ -98,7 +98,7 @@ namespace CryptoNote {
     void unlock() const;
     std::unique_lock<std::recursive_mutex> obtainGuard() const;
 
-    bool fill_block_template(Block &bl, size_t median_size, size_t maxCumulativeSize, uint64_t already_generated_coins, size_t &total_size, uint64_t &fee);
+    bool fill_block_template(Block &bl, size_t median_size, size_t maxCumulativeSize, uint64_t already_generated_coins, size_t &total_size, uint64_t &fee, uint32_t& height);
 
     void get_transactions(std::list<Transaction>& txs) const;
     void get_difference(const std::vector<Crypto::Hash>& known_tx_ids, std::vector<Crypto::Hash>& new_tx_ids, std::vector<Crypto::Hash>& deleted_tx_ids) const;
