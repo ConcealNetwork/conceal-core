@@ -989,13 +989,10 @@ std::error_code WalletService::sendTransaction(const SendTransaction::Request& r
       sendParams.extra = Common::asString(Common::fromHex(request.extra));
     }
 
-    sendParams.fee = CryptoNote::parameters::MINIMUM_FEE_V2;
-
-
     sendParams.sourceAddresses = request.sourceAddresses;
     sendParams.destinations = convertWalletRpcOrdersToWalletOrders(request.transfers);
     sendParams.messages = convertWalletRpcMessagesToWalletMessages(messages);
-    sendParams.fee = request.fee;
+    sendParams.fee = 1000;
     sendParams.mixIn = request.anonymity;
     sendParams.unlockTimestamp = request.unlockTime;
     sendParams.changeDestination = request.changeAddress;
