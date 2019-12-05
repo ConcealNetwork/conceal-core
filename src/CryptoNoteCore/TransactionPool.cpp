@@ -381,7 +381,6 @@ namespace CryptoNote {
                                           uint32_t& height)                                      
   {
     std::lock_guard<std::recursive_mutex> lock(m_transactions_lock);
-
     total_size = 0;
     fee = 0;
     size_t max_total_size = (125 * median_size) / 100 - m_currency.minerTxBlobReservedSize();
@@ -389,7 +388,36 @@ namespace CryptoNote {
 
     BlockTemplate blockTemplate;
 
+  if (height > CryptoNote::parameters::DEPOSIT_HEIGHT_V3) 
+  {
+    /* Process only transactions with a fee of 1000, which is the new static fee */
+    for (auto it2 = m_fee_index.rbegin(); it2 != m_fee_index.rend() && it2->fee == 1000; ++it2) 
+    {
+      const auto& txd = *it2;
 
+      if (m_ttlIndex.count(txd.id) > 0) 
+      {
+        continue;
+      }
+
+      size_t blockSizeLimit = (txd.fee == 0) ? median_size : max_total_size;
+      if (blockSizeLimit < total_size + txd.blobSize) 
+      {
+        continue;
+      }
+
+      TransactionCheckInfo checkInfo(txd);
+      bool ready = is_transaction_ready_to_go(txd.tx, checkInfo);
+
+      if (ready && blockTemplate.addTransaction(txd.id, txd.tx)) 
+      {
+        total_size += txd.blobSize;
+        fee += txd.fee;
+      }
+    }
+  } 
+  else 
+  {
     for (auto it2 = m_fee_index.rbegin(); it2 != m_fee_index.rend(); ++it2) 
     {
       const auto& txd = *it2;
@@ -414,8 +442,12 @@ namespace CryptoNote {
         fee += txd.fee;
       }
     }
+  }
 
-    
+
+
+
+   
 
     bl.transactionHashes = blockTemplate.getTransactions();
     return true;
