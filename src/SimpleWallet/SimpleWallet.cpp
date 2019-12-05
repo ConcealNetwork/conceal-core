@@ -189,8 +189,8 @@ struct TransferCommand {
               logger(ERROR, BRIGHT_RED) << "Fee value is invalid: " << value;
               return false;
             }
-            if (fee < CryptoNote::parameters::MINIMUM_FEE_V1) {
-              logger(ERROR, BRIGHT_RED) << "Fee value is less than the minimum fee: " << CryptoNote::parameters::MINIMUM_FEE_V1;
+            if (fee < CryptoNote::parameters::MINIMUM_FEE_V2) {
+              logger(ERROR, BRIGHT_RED) << "Fee value is less than the minimum fee: " << CryptoNote::parameters::MINIMUM_FEE_V2;
               return false;
             }
           } else if (arg == "-m") {
