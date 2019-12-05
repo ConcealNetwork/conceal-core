@@ -699,11 +699,8 @@ TransactionId WalletLegacy::sendFusionTransaction(const std::list<TransactionOut
   destination.amount = 0;
 
   /* For transaction pool differentiation, fusion and optimization should be 50 X */
-  if (fee < 50) 
-  {
-    fee = 50;
-  }
-
+  fee = CryptoNote::parameters::MINIMUM_FEE_V2;
+  
   for (auto& out : fusionInputs) {
     destination.amount += out.amount;
   }
