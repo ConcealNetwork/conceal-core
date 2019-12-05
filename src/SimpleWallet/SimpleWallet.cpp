@@ -189,8 +189,8 @@ struct TransferCommand {
               logger(ERROR, BRIGHT_RED) << "Fee value is invalid: " << value;
               return false;
             }
-            if (fee < CryptoNote::parameters::MINIMUM_FEE_V1) {
-              logger(ERROR, BRIGHT_RED) << "Fee value is less than the minimum fee: " << CryptoNote::parameters::MINIMUM_FEE_V1;
+            if (fee < CryptoNote::parameters::MINIMUM_FEE_V2) {
+              logger(ERROR, BRIGHT_RED) << "Fee value is less than the minimum fee: " << CryptoNote::parameters::MINIMUM_FEE_V2;
               return false;
             }
           } else if (arg == "-m") {
@@ -1666,8 +1666,8 @@ bool simple_wallet::optimize_outputs(const std::vector<std::string>& args) {
     std::vector<CryptoNote::WalletLegacyTransfer> transfers;
     std::vector<CryptoNote::TransactionMessage> messages;
     std::string extraString;
-    uint64_t fee = CryptoNote::parameters::MINIMUM_FEE;
-    uint64_t mixIn = 0;
+    uint64_t fee = CryptoNote::parameters::MINIMUM_FEE_V2;
+    uint64_t mixIn = CryptoNote::parameters::MINIMUM_MIXIN;
     uint64_t unlockTimestamp = 0;
     uint64_t ttl = 0;
     Crypto::SecretKey transactionSK;
@@ -1734,8 +1734,8 @@ bool simple_wallet::optimize_all_outputs(const std::vector<std::string>& args) {
       std::vector<CryptoNote::WalletLegacyTransfer> transfers;
       std::vector<CryptoNote::TransactionMessage> messages;
       std::string extraString;
-      uint64_t fee = CryptoNote::parameters::MINIMUM_FEE;
-      uint64_t mixIn = 0;
+      uint64_t fee = CryptoNote::parameters::MINIMUM_FEE_V2;
+      uint64_t mixIn = CryptoNote::parameters::MINIMUM_MIXIN;
       uint64_t unlockTimestamp = 0;
       uint64_t ttl = 0;
       Crypto::SecretKey transactionSK;
@@ -1883,11 +1883,11 @@ bool simple_wallet::transfer(const std::vector<std::string> &args) {
     WalletHelper::IWalletRemoveObserverGuard removeGuard(*m_wallet, sent);
 
     /* set static mixin of 4*/
-    cmd.fake_outs_count = 4;
+    cmd.fake_outs_count = CryptoNote::parameters::MINIMUM_MIXIN;
 
     /* force minimum fee */
-    if (cmd.fee < CryptoNote::parameters::MINIMUM_FEE_V1) {
-      cmd.fee = CryptoNote::parameters::MINIMUM_FEE_V1;
+    if (cmd.fee < CryptoNote::parameters::MINIMUM_FEE_V2) {
+      cmd.fee = CryptoNote::parameters::MINIMUM_FEE_V2;
     }
 
     Crypto::SecretKey transactionSK;

@@ -273,7 +273,6 @@ struct COMMAND_RPC_GET_INFO {
     uint8_t block_minor_version;
     uint32_t last_known_block_index;
     uint64_t full_deposit_amount;
-    uint64_t full_deposit_interest;
     uint64_t last_block_reward;
     uint64_t last_block_timestamp;
     uint64_t last_block_difficulty;
@@ -297,7 +296,6 @@ struct COMMAND_RPC_GET_INFO {
       KV_MEMBER(grey_peerlist_size)
       KV_MEMBER(last_known_block_index)
       KV_MEMBER(full_deposit_amount)
-      KV_MEMBER(full_deposit_interest)
       KV_MEMBER(last_block_reward)
       KV_MEMBER(last_block_timestamp)
       KV_MEMBER(last_block_difficulty)

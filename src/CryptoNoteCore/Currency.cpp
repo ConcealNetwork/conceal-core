@@ -12,6 +12,7 @@
 #include "../Common/int-util.h"
 #include "../Common/StringTools.h"
 
+#include "CryptoNoteConfig.h"
 #include "Account.h"
 #include "CryptoNoteBasicImpl.h"
 #include "CryptoNoteFormatUtils.h"
@@ -208,14 +209,18 @@ bool Currency::getBlockReward(size_t medianSize, size_t currentBlockSize, uint64
 
 uint64_t Currency::calculateInterest(uint64_t amount, uint32_t term, uint32_t height) const {
   assert(m_depositMinTerm <= term);
-  uint64_t amount4Humans = amount / 1000000;
+
+  /* deposits 2.0 and investments 1.0 */
+  if ((term % 21900 == 0) && (height > parameters::DEPOSIT_HEIGHT_V3)) {
+   return calculateInterestV3(amount, term);
+  }
 
   /* deposits 2.0 and investments 1.0 */
   if (term % 64800 == 0) {
     return calculateInterestV2(amount, term);
   }
 
-  if ( term % 5040 == 0) {
+  if (term % 5040 == 0) {
     return calculateInterestV2(amount, term);
   }
 
@@ -328,6 +333,36 @@ uint64_t Currency::calculateInterestV2(uint64_t amount, uint32_t term) const {
 
 } /* Currency::calculateInterestV2 */
 
+
+uint64_t Currency::calculateInterestV3(uint64_t amount, uint32_t term) const
+{
+
+  uint64_t returnVal = 0;
+  uint64_t amount4Humans = amount / 1000000;
+  
+  float baseInterest = static_cast<float>(0.029);
+
+  if(amount4Humans >= 10000 && amount4Humans < 20000)
+    baseInterest = static_cast<float>(0.039);
+
+  if(amount4Humans >= 20000)
+    baseInterest = static_cast<float>(0.049);
+
+  /* Consensus 2019 - Monthly deposits */
+   
+  float months = term / 21900;
+  if (months > 12) {
+    months = 12;
+  }
+  float ear = baseInterest + (months - 1) * 0.001;
+  float eir = (ear/12) * months;
+  returnVal = static_cast<uint64_t>(eir);
+
+  float interest = amount * eir;
+  returnVal = static_cast<uint64_t>(interest);
+  return returnVal;
+} /* Currency::calculateInterestV3 */
+
 /* ---------------------------------------------------------------------------------------------------- */
 
 uint64_t Currency::calculateTotalTransactionInterest(const Transaction& tx, uint32_t height) const {
@@ -396,6 +431,7 @@ bool Currency::getTransactionFee(const Transaction& tx, uint64_t& fee, uint32_t 
     // interest shows up in the output of the W/D transactions and W/Ds always have min fee
     if (tx.inputs.size() > 0 && tx.outputs.size() > 0 && amount_out > amount_in + parameters::MINIMUM_FEE) {
       fee = parameters::MINIMUM_FEE;
+      logger(INFO) << "TRIGGERED: Currency.cpp getTransactionFee";
     } else {
       return false;
     }

@@ -22,6 +22,7 @@
 #include "Serialization/BinarySerializationTools.h"
 #include "CryptoNoteTools.h"
 #include "TransactionExtra.h"
+#include "CryptoNoteConfig.h"
 
 using namespace Logging;
 using namespace Common;
@@ -2155,11 +2156,6 @@ uint64_t Blockchain::fullDepositAmount() const {
 uint64_t Blockchain::depositAmountAtHeight(size_t height) const {
   std::lock_guard<decltype(m_blockchain_lock)> lk(m_blockchain_lock);
   return m_depositIndex.depositAmountAtHeight(static_cast<DepositIndex::DepositHeight>(height));
-}
-
-uint64_t Blockchain::fullDepositInterest() const {
-  std::lock_guard<decltype(m_blockchain_lock)> lk(m_blockchain_lock);
-  return m_depositIndex.fullInterestAmount();
 }
 
 uint64_t Blockchain::depositInterestAtHeight(size_t height) const {

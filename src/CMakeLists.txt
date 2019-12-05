@@ -21,6 +21,7 @@ file(GLOB_RECURSE WalletLegacy WalletLegacy/*)
 file(GLOB_RECURSE JsonRpcServer JsonRpcServer/*)
 file(GLOB_RECURSE PaymentGate PaymentGate/*)
 file(GLOB_RECURSE PaymentGateService PaymentGateService/*)
+file(GLOB_RECURSE Miner Miner/*)
 
 
 if(MSVC)
@@ -54,6 +55,7 @@ add_executable(Daemon ${Daemon})
 add_executable(SimpleWallet ${SimpleWallet})
 add_executable(PaymentGateService ${PaymentGateService})
 add_executable(Optimizer ${Optimizer})
+add_executable(Miner ${Miner})
 
 if (MSVC)
   target_link_libraries(System ws2_32)
@@ -63,6 +65,7 @@ target_link_libraries(Daemon CryptoNoteCore P2P Rpc System Http Logging Common C
 target_link_libraries(SimpleWallet Wallet NodeRpcProxy Transfers Rpc Http CryptoNoteCore System Logging Common Crypto ${Boost_LIBRARIES} Serialization)
 target_link_libraries(PaymentGateService PaymentGate JsonRpcServer Wallet NodeRpcProxy Transfers CryptoNoteCore Crypto P2P Rpc Http System Logging Common InProcessNode upnpc-static BlockchainExplorer ${Boost_LIBRARIES} Serialization)
 target_link_libraries(Optimizer PaymentGate Rpc Http CryptoNoteCore Logging Serialization Crypto System Common ${Boost_LIBRARIES})
+target_link_libraries(Miner CryptoNoteCore Rpc System Http Logging Common Crypto ${Boost_LIBRARIES} Serialization)
 
 
 if (${CMAKE_SYSTEM_NAME} STREQUAL "Linux" OR APPLE AND NOT ANDROID)
@@ -81,3 +84,4 @@ set_property(TARGET SimpleWallet PROPERTY OUTPUT_NAME "concealwallet")
 set_property(TARGET PaymentGateService PROPERTY OUTPUT_NAME "walletd")
 set_property(TARGET Daemon PROPERTY OUTPUT_NAME "conceald")
 set_property(TARGET Optimizer PROPERTY OUTPUT_NAME "optimizer")
+set_property(TARGET Miner PROPERTY OUTPUT_NAME "concealminer")

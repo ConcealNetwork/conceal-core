@@ -40,6 +40,7 @@ const uint64_t POINT = UINT64_C(1000);
 const uint64_t COIN = UINT64_C(1000000); /* smallest atomic unit */
 const uint64_t MINIMUM_FEE = UINT64_C(10); /* 0.000010 CCX */
 const uint64_t MINIMUM_FEE_V1 = UINT64_C(100); /* 0.000100 CCX */
+const uint64_t MINIMUM_FEE_V2 = UINT64_C(1000); /* 0.001000 CCX */
 const uint64_t MINIMUM_FEE_BANKING = UINT64_C(1000); /* 0.001000 CCX */
 const uint64_t DEFAULT_DUST_THRESHOLD = UINT64_C(10); /* 0.000010 CCX */  
 
@@ -56,6 +57,7 @@ const size_t   DIFFICULTY_CUT_V2 = DIFFICULTY_CUT;
 const size_t   DIFFICULTY_LAG = 15; 
 const size_t   DIFFICULTY_LAG_V1 = DIFFICULTY_LAG;
 const size_t   DIFFICULTY_LAG_V2 = DIFFICULTY_LAG;
+const size_t   MINIMUM_MIXIN = 4;
 
 static_assert(2 * DIFFICULTY_CUT <= DIFFICULTY_WINDOW - 2, "Bad DIFFICULTY_WINDOW or DIFFICULTY_CUT");
 
@@ -63,6 +65,9 @@ const uint64_t DEPOSIT_MIN_AMOUNT = 1 * COIN;
 const uint32_t DEPOSIT_MIN_TERM = 5040; /* one week */
 const uint32_t DEPOSIT_MAX_TERM = 1 * 12 * 21900; /* legacy deposts - one year */
 const uint32_t DEPOSIT_MAX_TERM_V1 = 64800 * 20; /* five years */
+const uint32_t DEPOSIT_MIN_TERM_V3 = 21900; /* consensus 2019 - one month */
+const uint32_t DEPOSIT_MAX_TERM_V3 = 1 * 12 * 21900; /* consensus 2019 - one year */
+const uint32_t DEPOSIT_HEIGHT_V3 = 413400; /* consensus 2019 - deposts v3.0 */
 const uint64_t DEPOSIT_MIN_TOTAL_RATE_FACTOR = 0; /* constant rate */
 const uint64_t DEPOSIT_MAX_TOTAL_RATE = 4; /* legacy deposits */
 
@@ -120,7 +125,7 @@ const uint64_t FOUNDATION_TRUST = (UINT64_C(12000000) * parameters::COIN); // lo
 const uint64_t MAX_BLOCK_REWARD = (UINT64_C(20) * parameters::COIN); // max reward (Consensus I)
 const uint64_t REWARD_INCREASE_INTERVAL = (UINT64_C(21900)); // aprox. 1 month (+ 0.25 CCX increment per month)
 
-const char     CRYPTONOTE_NAME[] = "conceal";
+const char     CRYPTONOTE_NAME[] = "conceal3";
 const char     GENESIS_COINBASE_TX_HEX[] = "010a01ff0001c096b102029b2e4c0281c0b02e7c53291a94d1d0cbff8883f8024f5142ee494ffbbd08807121017d6775185749e95ac2d70cae3f29e0e46f430ab648abbe9fdc61d8e7437c60f8";
 const uint32_t GENESIS_NONCE = 10000;
 const uint64_t GENESIS_TIMESTAMP = 1527078920;
@@ -170,8 +175,6 @@ const std::initializer_list<const char*> SEED_NODES  = {
 	"188.213.165.210:15000", // Omega
 	"89.40.118.85:15000", // Delta
 	"94.177.245.107:15000", // Lambda
-	"199.175.54.195:15000", // Godspeed
-	"173.212.196.43:15000", // Katz
 	"192.3.114.99:15000", // Katz, US
 	"139.99.42.182:15000" // Katz, Singapore
 };

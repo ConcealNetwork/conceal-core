@@ -564,12 +564,12 @@ TransactionId WalletLegacy::sendTransaction(Crypto::SecretKey& transactionSK,
                                             uint64_t ttl) 
                                             {
   
-  /* Regular transaction fees should be at least 100 X. In this case we also check
+  /* Regular transaction fees should be at least 1000 X as of Consensus 2019. In this case we also check
      to ensure that it is not a self-destructive message, which will have a TTL that
      is larger than 0 */
-  if ((fee < 100) && (ttl == 0)) 
+  if (ttl == 0) 
   {
-    fee = 100;
+    fee = CryptoNote::parameters::MINIMUM_FEE_V2;
   }
 
   /* This is the logic that determins if it is an optimization transaction */
@@ -581,7 +581,7 @@ TransactionId WalletLegacy::sendTransaction(Crypto::SecretKey& transactionSK,
     transfer.amount = 0;
     transfers.push_back(transfer);
     optimize = true;
-    fee = 50;
+    fee = CryptoNote::parameters::MINIMUM_FEE_V2;
   }
 
   TransactionId txId = 0;
@@ -699,11 +699,8 @@ TransactionId WalletLegacy::sendFusionTransaction(const std::list<TransactionOut
   destination.amount = 0;
 
   /* For transaction pool differentiation, fusion and optimization should be 50 X */
-  if (fee < 50) 
-  {
-    fee = 50;
-  }
-
+  fee = CryptoNote::parameters::MINIMUM_FEE_V2;
+  
   for (auto& out : fusionInputs) {
     destination.amount += out.amount;
   }
@@ -732,11 +729,7 @@ TransactionId WalletLegacy::deposit(uint32_t term, uint64_t amount, uint64_t fee
   std::unique_ptr<WalletRequest> request;
   std::deque<std::unique_ptr<WalletLegacyEvent>> events;
 
-  /* Deposit fees should be at least 1000 X */
-  if (fee < 1000) 
-  {
-    fee = 1000;
-  }
+  fee = CryptoNote::parameters::MINIMUM_FEE_V2;
 
   {
     std::unique_lock<std::mutex> lock(m_cacheMutex);
@@ -764,11 +757,7 @@ TransactionId WalletLegacy::withdrawDeposits(const std::vector<DepositId>& depos
   std::unique_ptr<WalletRequest> request;
   std::deque<std::unique_ptr<WalletLegacyEvent>> events;
 
-  /* Deposit widthrawal fees should be 100 X */
-  if (fee < 100) 
-  {
-    fee = 100;
-  }
+  fee = CryptoNote::parameters::MINIMUM_FEE_V2;
 
   {
     std::unique_lock<std::mutex> lock(m_cacheMutex);
