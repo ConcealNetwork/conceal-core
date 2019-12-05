@@ -144,8 +144,8 @@ const size_t   BLOCKS_IDS_SYNCHRONIZING_DEFAULT_COUNT = 10000; // by default, bl
 const size_t   BLOCKS_SYNCHRONIZING_DEFAULT_COUNT = 128; // by default, blocks count in blocks downloading
 const size_t   COMMAND_RPC_GET_BLOCKS_FAST_MAX_COUNT = 1000;
 
-const int      P2P_DEFAULT_PORT = 25000;
-const int      RPC_DEFAULT_PORT = 26000;
+const int      P2P_DEFAULT_PORT = 15000;
+const int      RPC_DEFAULT_PORT = 16000;
 
 
 /* P2P Network Configuration Section - This defines our current P2P network version
@@ -171,8 +171,12 @@ const char     P2P_STAT_TRUSTED_PUB_KEY[] = "f7061e9a5f0d30549afde49c9bfbaa52ac6
 
 // Seed Nodes
 const std::initializer_list<const char*> SEED_NODES  = {
-	"172.245.74.158:25000", 
-	"172.245.74.203:25000" 
+	"212.237.59.97:15000", // Gamma
+	"188.213.165.210:15000", // Omega
+	"89.40.118.85:15000", // Delta
+	"94.177.245.107:15000", // Lambda
+	"192.3.114.99:15000", // Katz, US
+	"139.99.42.182:15000" // Katz, Singapore
 };
 
 struct CheckpointData {
@@ -223,7 +227,12 @@ const std::initializer_list<CheckpointData> CHECKPOINTS  = {
 	{290676, "0b25026f8c7fb194776c081f2bb32874b82f4298bd0d71c2d0a986117b97fa1e"},
 	{290720, "36572a88fbed4654f4291f6d7a35a732b81f61e87ec27ce58f38047981b84e09"},
 	{300000, "2a984212cc42ef62cd2229b624e05aa72926f0e89006e976c88b52d99ea14225"},
-	{305000, "46104ab66387ab6ca6a3889e81c7b9810e27f547a8684659aeb62c438a3b6cf0"}
+	{305000, "46104ab66387ab6ca6a3889e81c7b9810e27f547a8684659aeb62c438a3b6cf0"},
+	{310000, "4a896f5de4f782c59f1f4691505aba0df87a20f2e06499b59496b8d7ffb025fe"},
+	{320000, "c68d15c181bdfc6c5b7fe5c46c6432a03b95d640caa425a5cb3aa675c1d8f8fd"},	
+	{330000, "af9e972f98bed57579a6691c3d21443d3cbff35005e984044bc99cee82d93922"},
+	{340000, "6fce13dd473f3673cd08b28171902e281d7fdbbd8b8ba34e0019ae18f597d22f"},
+	{350000, "f08aad1562ceee3a6c8147846bb3e5dd15b3168007f588ab68bd8ee816eb386d"}		
 };
 
 } // CryptoNote
