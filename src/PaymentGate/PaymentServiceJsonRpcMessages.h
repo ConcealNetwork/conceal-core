@@ -10,7 +10,6 @@
 #include <limits>
 #include <vector>
 
-#include "CryptoNoteConfig.h"
 #include "Serialization/ISerializer.h"
 
 namespace PaymentService {
