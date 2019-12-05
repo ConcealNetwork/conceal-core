@@ -388,7 +388,7 @@ namespace CryptoNote {
 
     BlockTemplate blockTemplate;
 
-  if (m_blockchain.getCurrentBlockchainHeight() > CryptoNote::parameters::DEPOSIT_HEIGHT_V3) 
+  if (height > CryptoNote::parameters::DEPOSIT_HEIGHT_V3) 
   {
 
   /* Process the latest deposit transactions first */
@@ -423,7 +423,8 @@ namespace CryptoNote {
       }
     }
   }
-  else
+
+  if (height < CryptoNote::parameters::DEPOSIT_HEIGHT_V3) 
   {
     /* Process other transactions starting from the oldest */
     for (auto i = m_fee_index.begin(); i != m_fee_index.end(); ++i) 
