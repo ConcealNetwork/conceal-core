@@ -388,7 +388,7 @@ namespace CryptoNote {
 
     BlockTemplate blockTemplate;
 
-    for (auto it = m_fee_index.rbegin(); it != m_fee_index.rend() && it->fee == 1000; ++it) 
+    for (auto it = m_fee_index.rbegin(); it != m_fee_index.rend(); ++it) 
     {
       const auto& txd = *it;
 
