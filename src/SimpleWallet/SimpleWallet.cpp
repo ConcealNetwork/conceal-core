@@ -274,7 +274,7 @@ struct TransferCommand {
           /* Remote node transactions fees are 1000 X */
           if (!remote_fee_address.empty()) {
             destination.address = remote_fee_address;                     
-            destination.amount = 1000;
+            destination.amount = 10000;
             dsts.push_back(destination);
           }
 
