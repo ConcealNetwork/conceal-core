@@ -377,10 +377,10 @@ namespace CryptoNote {
                                           size_t maxCumulativeSize,
                                           uint64_t already_generated_coins, 
                                           size_t& total_size, 
-                                          uint64_t& fee)                                      
+                                          uint64_t& fee,
+                                          uint32_t& height)                                      
   {
     std::lock_guard<std::recursive_mutex> lock(m_transactions_lock);
-
     total_size = 0;
     fee = 0;
     size_t max_total_size = (125 * median_size) / 100 - m_currency.minerTxBlobReservedSize();
@@ -388,8 +388,7 @@ namespace CryptoNote {
 
     BlockTemplate blockTemplate;
 
-    /* Process the latest transactions with fees above 1000X first */
-    for (auto it = m_fee_index.rbegin(); it != m_fee_index.rend() && it->fee > 1000; ++it) 
+    for (auto it = m_fee_index.rbegin(); it != m_fee_index.rend(); ++it) 
     {
       const auto& txd = *it;
 
@@ -413,92 +412,6 @@ namespace CryptoNote {
         fee += txd.fee;
       }
     }
-
-    /* Process the latest deposit transactions next */
-    for (auto it2 = m_fee_index.rbegin(); it2 != m_fee_index.rend() && it2->fee == 1000; ++it2) 
-    {
-      const auto& txd = *it2;
-
-      if (m_ttlIndex.count(txd.id) > 0) 
-      {
-        continue;
-      }
-
-      size_t blockSizeLimit = (txd.fee == 0) ? median_size : max_total_size;
-      if (blockSizeLimit < total_size + txd.blobSize) 
-      {
-        continue;
-      }
-
-      TransactionCheckInfo checkInfo(txd);
-      bool ready = is_transaction_ready_to_go(txd.tx, checkInfo);
-
-      if (ready && blockTemplate.addTransaction(txd.id, txd.tx)) 
-      {
-        total_size += txd.blobSize;
-        fee += txd.fee;
-      }
-    }
-
-    /* Process regular transactions next */
-    for (auto it2 = m_fee_index.rbegin(); it2 != m_fee_index.rend() && it2->fee >= 100; ++it2) 
-    {
-      const auto& txd = *it2;
-
-      if (m_ttlIndex.count(txd.id) > 0) 
-      {
-        continue;
-      }
-
-      size_t blockSizeLimit = (txd.fee == 0) ? median_size : max_total_size;
-      if (blockSizeLimit < total_size + txd.blobSize) 
-      {
-        continue;
-      }
-
-      TransactionCheckInfo checkInfo(txd);
-      bool ready = is_transaction_ready_to_go(txd.tx, checkInfo);
-
-      if (ready && blockTemplate.addTransaction(txd.id, txd.tx)) 
-      {
-        total_size += txd.blobSize;
-        fee += txd.fee;
-      }
-    }
-
-    /* Now we process everything else */
-    for (auto i = m_fee_index.begin(); i != m_fee_index.end(); ++i) 
-    {
-      const auto& txd = *i;
-
-      if (m_ttlIndex.count(txd.id) > 0) 
-      {
-        continue;
-      }
-
-      size_t blockSizeLimit = (txd.fee == 0) ? median_size : max_total_size;
-      if (blockSizeLimit < total_size + txd.blobSize) 
-      {
-        continue;
-      }
-
-      TransactionCheckInfo checkInfo(txd);
-      bool ready = is_transaction_ready_to_go(txd.tx, checkInfo);
-
-      // update item state
-      m_fee_index.modify(i, [&checkInfo](TransactionCheckInfo& item) 
-      {
-        item = checkInfo;
-      });
-
-      if (ready && blockTemplate.addTransaction(txd.id, txd.tx)) 
-      {
-        total_size += txd.blobSize;
-        fee += txd.fee;
-      }
-    }
-
-
 
     bl.transactionHashes = blockTemplate.getTransactions();
     return true;

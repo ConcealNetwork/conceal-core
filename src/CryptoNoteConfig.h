@@ -40,6 +40,7 @@ const uint64_t POINT = UINT64_C(1000);
 const uint64_t COIN = UINT64_C(1000000); /* smallest atomic unit */
 const uint64_t MINIMUM_FEE = UINT64_C(10); /* 0.000010 CCX */
 const uint64_t MINIMUM_FEE_V1 = UINT64_C(100); /* 0.000100 CCX */
+const uint64_t MINIMUM_FEE_V2 = UINT64_C(1000); /* 0.001000 CCX */
 const uint64_t MINIMUM_FEE_BANKING = UINT64_C(1000); /* 0.001000 CCX */
 const uint64_t DEFAULT_DUST_THRESHOLD = UINT64_C(10); /* 0.000010 CCX */  
 
@@ -56,6 +57,7 @@ const size_t   DIFFICULTY_CUT_V2 = DIFFICULTY_CUT;
 const size_t   DIFFICULTY_LAG = 15; 
 const size_t   DIFFICULTY_LAG_V1 = DIFFICULTY_LAG;
 const size_t   DIFFICULTY_LAG_V2 = DIFFICULTY_LAG;
+const size_t   MINIMUM_MIXIN = 4;
 
 static_assert(2 * DIFFICULTY_CUT <= DIFFICULTY_WINDOW - 2, "Bad DIFFICULTY_WINDOW or DIFFICULTY_CUT");
 
@@ -63,6 +65,9 @@ const uint64_t DEPOSIT_MIN_AMOUNT = 1 * COIN;
 const uint32_t DEPOSIT_MIN_TERM = 5040; /* one week */
 const uint32_t DEPOSIT_MAX_TERM = 1 * 12 * 21900; /* legacy deposts - one year */
 const uint32_t DEPOSIT_MAX_TERM_V1 = 64800 * 20; /* five years */
+const uint32_t DEPOSIT_MIN_TERM_V3 = 21900; /* consensus 2019 - one month */
+const uint32_t DEPOSIT_MAX_TERM_V3 = 1 * 12 * 21900; /* consensus 2019 - one year */
+const uint32_t DEPOSIT_HEIGHT_V3 = 413400; /* consensus 2019 - deposts v3.0 */
 const uint64_t DEPOSIT_MIN_TOTAL_RATE_FACTOR = 0; /* constant rate */
 const uint64_t DEPOSIT_MAX_TOTAL_RATE = 4; /* legacy deposits */
 
@@ -170,8 +175,6 @@ const std::initializer_list<const char*> SEED_NODES  = {
 	"188.213.165.210:15000", // Omega
 	"89.40.118.85:15000", // Delta
 	"94.177.245.107:15000", // Lambda
-	"199.175.54.195:15000", // Godspeed
-	"173.212.196.43:15000", // Katz
 	"192.3.114.99:15000", // Katz, US
 	"139.99.42.182:15000" // Katz, Singapore
 };
@@ -229,7 +232,11 @@ const std::initializer_list<CheckpointData> CHECKPOINTS  = {
 	{320000, "c68d15c181bdfc6c5b7fe5c46c6432a03b95d640caa425a5cb3aa675c1d8f8fd"},	
 	{330000, "af9e972f98bed57579a6691c3d21443d3cbff35005e984044bc99cee82d93922"},
 	{340000, "6fce13dd473f3673cd08b28171902e281d7fdbbd8b8ba34e0019ae18f597d22f"},
-	{350000, "f08aad1562ceee3a6c8147846bb3e5dd15b3168007f588ab68bd8ee816eb386d"}		
+	{350000, "f08aad1562ceee3a6c8147846bb3e5dd15b3168007f588ab68bd8ee816eb386d"},
+	{360000, "cd910715be7dccc155ad3e8a6311f1bbcfaffe3ee25186c454ed27ee61faa977"},
+	{370000, "6c4a86be9a1f697cadc38d21718803c43f49bf60c71ae253293e29ebac6efe31"},
+	{380000, "620709892437c28deb72a56e6a91960f481aa682d8dd8652f792fb33e6683ef5"},
+	{390000, "d2ff4c39b4aed7ef08a99a00b9823bed44581e866180ae3daa8b8e990b57ec63"}
 };
 
 } // CryptoNote

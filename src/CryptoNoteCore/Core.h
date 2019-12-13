@@ -143,7 +143,6 @@ namespace CryptoNote {
      uint64_t getNextBlockDifficulty();
      uint64_t getTotalGeneratedAmount();
      uint64_t fullDepositAmount() const;
-     uint64_t fullDepositInterest() const;
      uint64_t depositAmountAtHeight(size_t height) const;
      uint64_t investmentAmountAtHeight(size_t height) const;
      uint64_t depositInterestAtHeight(size_t height) const;

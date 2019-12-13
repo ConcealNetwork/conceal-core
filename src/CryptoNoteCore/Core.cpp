@@ -18,6 +18,7 @@
 #include "../Logging/LoggerRef.h"
 #include "../Rpc/CoreRpcServerCommandsDefinitions.h"
 #include "CryptoNoteFormatUtils.h"
+
 #include "CryptoNoteTools.h"
 #include "CryptoNoteStatInfo.h"
 #include "Miner.h"
@@ -379,8 +380,7 @@ bool core::get_block_template(Block& b, const AccountPublicAddress& adr, difficu
 
   size_t txs_size;
   uint64_t fee;
-  if (!m_mempool.fill_block_template(b, median_size, m_currency.maxBlockCumulativeSize(height), already_generated_coins,
-    txs_size, fee)) {
+  if (!m_mempool.fill_block_template(b, median_size, m_currency.maxBlockCumulativeSize(height), already_generated_coins, txs_size, fee, height)) {
     return false;
   }
 
@@ -1005,10 +1005,6 @@ uint64_t core::fullDepositAmount() const {
 
 uint64_t core::depositAmountAtHeight(size_t height) const {
   return m_blockchain.depositAmountAtHeight(height);
-}
-
-uint64_t core::fullDepositInterest() const {
-  return m_blockchain.fullDepositInterest();
 }
 
 uint64_t core::depositInterestAtHeight(size_t height) const {
