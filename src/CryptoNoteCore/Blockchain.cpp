@@ -316,7 +316,6 @@ logger(logger, "Blockchain"),
 m_currency(currency),
 m_tx_pool(tx_pool),
 m_current_block_cumul_sz_limit(0),
-m_is_in_checkpoint_zone(false),
 m_checkpoints(logger),
 m_upgradeDetectorV2(currency, m_blocks, BLOCK_MAJOR_VERSION_2, logger),
 m_upgradeDetectorV3(currency, m_blocks, BLOCK_MAJOR_VERSION_3, logger),
@@ -1676,16 +1675,20 @@ bool Blockchain::checkTransactionInputs(const Transaction& tx, const Crypto::Has
         return false;
       }
 
-      if (!check_tx_input(in_to_key, tx_prefix_hash, tx.signatures[inputIndex], pmax_used_block_height)) {
-        logger(DEBUGGING) <<
-          "Failed to check ring signature for tx " << transactionHash;
-        return false;
+      if (!isInCheckpointZone(getCurrentBlockchainHeight())) {
+        if (!check_tx_input(in_to_key, tx_prefix_hash, tx.signatures[inputIndex], pmax_used_block_height)) {
+          logger(INFO, BRIGHT_WHITE) <<
+            "Failed to check input in transaction " << transactionHash;
+          return false;
+        }
       }
 
       ++inputIndex;
     } else if (txin.type() == typeid(MultisignatureInput)) {
-      if (!validateInput(::boost::get<MultisignatureInput>(txin), transactionHash, tx_prefix_hash, tx.signatures[inputIndex])) {
-        return false;
+      if (!isInCheckpointZone(getCurrentBlockchainHeight())) {
+        if (!validateInput(::boost::get<MultisignatureInput>(txin), transactionHash, tx_prefix_hash, tx.signatures[inputIndex])) {
+          return false;
+        }
       }
 
       ++inputIndex;
@@ -1769,7 +1772,7 @@ bool Blockchain::check_tx_input(const KeyInput& txin, const Crypto::Hash& tx_pre
   }
 
   if (!(sig.size() == output_keys.size())) { logger(ERROR, BRIGHT_RED) << "internal error: tx signatures count=" << sig.size() << " mismatch with outputs keys count for inputs=" << output_keys.size(); return false; }
-  if (m_is_in_checkpoint_zone) {
+  if (isInCheckpointZone(getCurrentBlockchainHeight())) {
     return true;
   }
 
@@ -2726,6 +2729,10 @@ void Blockchain::sendMessage(const BlockchainMessage& message) {
 
 bool Blockchain::isBlockInMainChain(const Crypto::Hash& blockId) {
   return m_blockIndex.hasBlock(blockId);
+}
+
+bool Blockchain::isInCheckpointZone(const uint32_t height) {
+  return m_checkpoints.is_in_checkpoint_zone(height);
 }
 
 }
