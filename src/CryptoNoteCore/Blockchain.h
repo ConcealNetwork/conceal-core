@@ -305,8 +305,8 @@ bool have_tx_keyimg_as_spent(const Crypto::KeyImage &key_im);
     bool check_tx_outputs(const Transaction& tx) const;
 
     const TransactionEntry& transactionByIndex(TransactionIndex index);
-    bool pushBlock(const Block& blockData, block_verification_context& bvc, uint32_t height);
-    bool pushBlock(const Block& blockData, const std::vector<Transaction>& transactions, block_verification_context& bvc);
+    bool pushBlock(const Block& blockData, const Crypto::Hash& id, block_verification_context& bvc, uint32_t height);
+    bool pushBlock(const Block& blockData, const std::vector<Transaction>& transactions, const Crypto::Hash& id, block_verification_context& bvc);
     bool pushBlock(BlockEntry& block);
     void popBlock(const Crypto::Hash& blockHash);
     bool pushTransaction(BlockEntry& block, const Crypto::Hash& transactionHash, TransactionIndex transactionIndex);

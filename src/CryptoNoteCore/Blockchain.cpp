@@ -1970,6 +1970,8 @@ bool Blockchain::pushBlock(const Block& blockData, const std::vector<Transaction
 
   auto blockProcessingStart = std::chrono::steady_clock::now();
 
+  Crypto::Hash blockHash = id;
+
   if (m_blockIndex.hasBlock(blockHash)) {
     logger(ERROR, BRIGHT_RED) <<
       "Block " << blockHash << " already exists in blockchain.";
