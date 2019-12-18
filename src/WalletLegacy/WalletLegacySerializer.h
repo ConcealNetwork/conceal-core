@@ -28,6 +28,7 @@ public:
 
   void serialize(std::ostream& stream, const std::string& password, bool saveDetailed, const std::string& cache);
   void deserialize(std::istream& stream, const std::string& password, std::string& cache);
+  bool deserialize(std::istream& stream, const std::string& password);  
 
 private:
   void saveKeys(CryptoNote::ISerializer& serializer);

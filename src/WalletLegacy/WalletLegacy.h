@@ -50,6 +50,7 @@ public:
   virtual void initWithKeys(const AccountKeys& accountKeys, const std::string& password) override;
   virtual void shutdown() override;
   virtual void reset() override;
+  virtual bool checkWalletPassword(std::istream& source, const std::string& password) override;
 
   virtual void save(std::ostream& destination, bool saveDetailed = true, bool saveCache = true) override;
 

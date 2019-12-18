@@ -1385,4 +1385,10 @@ std::string WalletLegacy::getReserveProof(const uint64_t &reserve, const std::st
 	return ret;
 }
 
+bool WalletLegacy::checkWalletPassword(std::istream& source, const std::string& password) {
+  std::unique_lock<std::mutex> lock(m_cacheMutex);
+  WalletLegacySerializer serializer(m_account, m_transactionsCache);
+  return serializer.deserialize(source, password);
+}
+
 } //namespace CryptoNote

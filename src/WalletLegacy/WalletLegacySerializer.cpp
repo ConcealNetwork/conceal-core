@@ -154,6 +154,75 @@ void WalletLegacySerializer::deserialize(std::istream& stream, const std::string
   serializer.binary(cache, "cache");
 }
 
+bool WalletLegacySerializer::deserialize(std::istream& stream, const std::string& password) {
+  try {
+    StdInputStream stdStream(stream);
+    CryptoNote::BinaryInputStreamSerializer serializerEncrypted(stdStream);
+
+    serializerEncrypted.beginObject("wallet");
+
+    uint32_t version;
+    serializerEncrypted(version, "version");
+
+    Crypto::chacha_iv iv;
+    serializerEncrypted(iv, "iv");
+
+    std::string cipher;
+    serializerEncrypted(cipher, "data");
+
+    serializerEncrypted.endObject();
+
+    std::string plain;
+    decrypt(cipher, plain, iv, password);
+
+    MemoryInputStream decryptedStream(plain.data(), plain.size());
+    CryptoNote::BinaryInputStreamSerializer serializer(decryptedStream);
+
+    CryptoNote::KeysStorage keys;
+    try {
+      keys.serialize(serializer, "keys");
+    }
+    catch (const std::runtime_error&) {
+      return false;
+    }
+    CryptoNote::AccountKeys acc;
+    acc.address.spendPublicKey = keys.spendPublicKey;
+    acc.spendSecretKey = keys.spendSecretKey;
+    acc.address.viewPublicKey = keys.viewPublicKey;
+    acc.viewSecretKey = keys.viewSecretKey;
+
+    Crypto::PublicKey pub;
+    bool r = Crypto::secret_key_to_public_key(acc.viewSecretKey, pub);
+    if (!r || acc.address.viewPublicKey != pub) {
+      return false;
+    }
+
+    if (acc.spendSecretKey != NULL_SECRET_KEY) {
+      Crypto::PublicKey pub;
+      bool r = Crypto::secret_key_to_public_key(acc.spendSecretKey, pub);
+      if (!r || acc.address.spendPublicKey != pub) {
+        return false;
+      }
+    }
+    else {
+      if (!Crypto::check_key(acc.address.spendPublicKey)) {
+        return false;
+      }
+    }
+  }
+  catch (std::system_error&) {
+    return false;
+  }
+  catch (std::exception&) {
+    return false;
+  }
+
+  return true;
+}
+
+
+
+
 void WalletLegacySerializer::decrypt(const std::string& cipher, std::string& plain, Crypto::chacha_iv iv, const std::string& password) {
   Crypto::chacha_key key;
   Crypto::cn_context context;
