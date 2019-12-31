@@ -61,7 +61,7 @@ size_t get_random_index_with_fixed_probability(size_t max_index) {
 
 void addPortMapping(Logging::LoggerRef& logger, uint32_t port) {
   // Add UPnP port mapping
-  logger(INFO) <<  "<< NetNode.cpp << "  << "Attempting to add IGD port mapping.";
+  logger(INFO) <<  "Attempting to add IGD port mapping.";
   int result;
   UPNPDev* deviceList = upnpDiscover(1000, NULL, NULL, 0, 0, &result);
   UPNPUrls urls;
@@ -80,16 +80,16 @@ void addPortMapping(Logging::LoggerRef& logger, uint32_t port) {
         logger(INFO, BRIGHT_GREEN) << "Added IGD port mapping.";
       }
     } else if (result == 2) {
-      logger(INFO) <<  "<< NetNode.cpp << "  << "IGD was found but reported as not connected.";
+      logger(INFO) <<  "IGD was found but reported as not connected.";
     } else if (result == 3) {
-      logger(INFO) <<  "<< NetNode.cpp << "  << "UPnP device was found but not recoginzed as IGD.";
+      logger(INFO) <<  "UPnP device was found but not recoginzed as IGD.";
     } else {
       logger(ERROR) << "UPNP_GetValidIGD returned an unknown result code.";
     }
 
     FreeUPNPUrls(&urls);
   } else {
-    logger(INFO) <<  "<< NetNode.cpp << "  << "No IGD was found.";
+    logger(INFO) <<  "No IGD was found.";
   }
 }
 
@@ -466,7 +466,7 @@ namespace CryptoNote
     // m_net_server.get_config_object().m_invoke_timeout = CryptoNote::P2P_DEFAULT_INVOKE_TIMEOUT;
 
     //try to bind
-    logger(INFO) <<  "<< NetNode.cpp << "  << "Binding on " << m_bind_ip << ":" << m_port;
+    logger(INFO) <<  "Binding on " << m_bind_ip << ":" << m_port;
     m_listeningPort = Common::fromString<uint16_t>(m_port);
 
     m_listener = System::TcpListener(m_dispatcher, System::Ipv4Address(m_bind_ip), static_cast<uint16_t>(m_listeningPort));
@@ -474,7 +474,7 @@ namespace CryptoNote
     logger(INFO, BRIGHT_GREEN) << "<< Netnode.cpp << Net service bound on " << m_bind_ip << ":" << m_listeningPort;
 
     if(m_external_port) {
-      logger(INFO) <<  "<< NetNode.cpp << "  << "External port defined as " << m_external_port;
+      logger(INFO) <<  "External port defined as " << m_external_port;
     }
 
     addPortMapping(logger, m_listeningPort);
@@ -490,7 +490,7 @@ namespace CryptoNote
   //-----------------------------------------------------------------------------------
 
   bool NodeServer::run() {
-    logger(INFO) <<  "<< NetNode.cpp << "  << "Starting node_server";
+    logger(INFO) <<  "Starting node_server";
 
     m_workingContextGroup.spawn(std::bind(&NodeServer::acceptLoop, this));
     m_workingContextGroup.spawn(std::bind(&NodeServer::onIdle, this));
@@ -499,11 +499,11 @@ namespace CryptoNote
 
     m_stopEvent.wait();
 
-    logger(INFO) <<  "<< NetNode.cpp << "  << "Stopping NodeServer and it's, " << m_connections.size() << " connections...";
+    logger(INFO) <<  "Stopping NodeServer and it's, " << m_connections.size() << " connections...";
     safeInterrupt(m_workingContextGroup);
     m_workingContextGroup.wait();
 
-    logger(INFO) <<  "<< NetNode.cpp << "  << "NodeServer loop stopped";
+    logger(INFO) <<  "NodeServer loop stopped";
     return true;
   }
 
@@ -524,7 +524,7 @@ namespace CryptoNote
   {
     try {
       if (!Tools::create_directories_if_necessary(m_config_folder)) {
-        logger(INFO) <<  "<< NetNode.cpp << "  << "Failed to create data directory: " << m_config_folder;
+        logger(INFO) <<  "Failed to create data directory: " << m_config_folder;
         return false;
       }
 
@@ -532,7 +532,7 @@ namespace CryptoNote
       std::ofstream p2p_data;
       p2p_data.open(state_file_path, std::ios_base::binary | std::ios_base::out | std::ios::trunc);
       if (p2p_data.fail())  {
-        logger(INFO) <<  "<< NetNode.cpp << "  << "Failed to save config to file " << state_file_path;
+        logger(INFO) <<  "Failed to save config to file " << state_file_path;
         return false;
       };
 
@@ -1216,13 +1216,13 @@ namespace CryptoNote
     std::list<PeerlistEntry> pl_wite;
     std::list<PeerlistEntry> pl_gray;
     m_peerlist.get_peerlist_full(pl_gray, pl_wite);
-    logger(INFO) <<  "<< NetNode.cpp << "  << ENDL << "Peerlist white:" << ENDL << print_peerlist_to_string(pl_wite) << ENDL << "Peerlist gray:" << ENDL << print_peerlist_to_string(pl_gray) ;
+    logger(INFO) <<  ENDL << "Peerlist white:" << ENDL << print_peerlist_to_string(pl_wite) << ENDL << "Peerlist gray:" << ENDL << print_peerlist_to_string(pl_gray) ;
     return true;
   }
   //-----------------------------------------------------------------------------------
 
   bool NodeServer::log_connections() {
-    logger(INFO) <<  "<< NetNode.cpp << "  << "Connections: \r\n" << print_connections_container() ;
+    logger(INFO) <<  "Connections: \r\n" << print_connections_container() ;
     return true;
   }
   //-----------------------------------------------------------------------------------
