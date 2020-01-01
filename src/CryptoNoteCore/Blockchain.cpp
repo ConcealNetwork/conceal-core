@@ -171,7 +171,7 @@ public:
 
     std::string operation;
     if (s.type() == ISerializer::INPUT) {
-      operation = "- loading ";
+      operation = "loading ";
       Crypto::Hash blockHash;
       s(blockHash, "last_block");
 
@@ -184,22 +184,22 @@ public:
       s(m_lastBlockHash, "last_block");
     }
 
-    logger(INFO) << operation << "block index...";
+    logger(INFO) << operation << "block index";
     s(m_bs.m_blockIndex, "block_index");
 
-    logger(INFO) << operation << "transaction map...";
+    logger(INFO) << operation << "transaction map";
     s(m_bs.m_transactionMap, "transactions");
 
-    logger(INFO) << operation << "spent keys...";
+    logger(INFO) << operation << "spent keys";
     s(m_bs.m_spent_keys, "spent_keys");
 
-    logger(INFO) << operation << "outputs...";
+    logger(INFO) << operation << "outputs";
     s(m_bs.m_outputs, "outputs");
 
-    logger(INFO) << operation << "multi-signature outputs...";
+    logger(INFO) << operation << "multi-signature outputs";
     s(m_bs.m_multisignatureOutputs, "multisig_outputs");
 
-    logger(INFO) << operation << "deposit index...";
+    logger(INFO) << operation << "deposit index";
     s(m_bs.m_depositIndex, "deposit_index");
 
     auto dur = std::chrono::steady_clock::now() - start;
@@ -240,7 +240,7 @@ public:
     std::string operation;
 
     if (s.type() == ISerializer::INPUT) {
-      operation = "- loading ";
+      operation = "loading ";
 
       Crypto::Hash blockHash;
       s(blockHash, "blockHash");
@@ -254,13 +254,13 @@ public:
       s(m_lastBlockHash, "blockHash");
     }
 
-    logger(INFO) << operation << "paymentID index...";
+    logger(INFO) << operation << "paymentID index";
     s(m_bs.m_paymentIdIndex, "paymentIdIndex");
 
-    logger(INFO) << operation << "timestamp index...";
+    logger(INFO) << operation << "timestamp index";
     s(m_bs.m_timestampIndex, "timestampIndex");
 
-    logger(INFO) << operation << "generated transactions index...";
+    logger(INFO) << operation << "generated transactions index";
     s(m_bs.m_generatedTransactionsIndex, "generatedTransactionsIndex");
 
     m_loaded = true;
@@ -274,7 +274,7 @@ public:
 
     std::string operation;
     if (Archive::is_loading::value) {
-      operation = "- loading ";
+      operation = "loading ";
       Crypto::Hash blockHash;
       ar & blockHash;
 
@@ -287,13 +287,13 @@ public:
       ar & m_lastBlockHash;
     }
 
-    logger(INFO) << operation << "paymentID index...";
+    logger(INFO) << operation << "paymentID index";
     ar & m_bs.m_paymentIdIndex;
 
-    logger(INFO) << operation << "timestamp index...";
+    logger(INFO) << operation << "timestamp index";
     ar & m_bs.m_timestampIndex;
 
-    logger(INFO) << operation << "generated transactions index...";
+    logger(INFO) << operation << "generated transactions index";
     ar & m_bs.m_generatedTransactionsIndex;
 
     m_loaded = true;
@@ -424,20 +424,20 @@ bool Blockchain::init(const std::string& config_folder, bool load_existing) {
   }
 
   if (load_existing && !m_blocks.empty()) {
-    logger(INFO, BRIGHT_WHITE) << "<< Blockchain.cpp << Loading blockchain...";
+    logger(INFO, BRIGHT_WHITE) << "<< Blockchain.cpp << Loading blockchain";
     BlockCacheSerializer loader(*this, get_block_hash(m_blocks.back().bl), logger.getLogger());
     loader.load(appendPath(config_folder, m_currency.blocksCacheFileName()));
 
     if (!loader.loaded()) {
-      logger(WARNING, BRIGHT_YELLOW) << "<< Blockchain.cpp << No actual blockchain cache found, rebuilding internal structures...";
+      logger(WARNING, BRIGHT_YELLOW) << "<< Blockchain.cpp << No actual blockchain cache found, rebuilding internal structures";
       rebuildCache();
     }
 
     loadBlockchainIndices();
     m_checkpoints.load_checkpoints();
-    logger(Logging::INFO) << "Loading checkpoints...";
+    logger(Logging::INFO) << "Loading checkpoints";
     m_checkpoints.load_checkpoints_from_dns();    
-    logger(Logging::INFO) << "Loading DNS checkpoints...";
+    logger(Logging::INFO) << "Loading DNS checkpoints";
 
   } else {
     m_blocks.clear();
@@ -584,7 +584,7 @@ void Blockchain::rebuildCache() {
 bool Blockchain::storeCache() {
   std::lock_guard<decltype(m_blockchain_lock)> lk(m_blockchain_lock);
 
-  logger(INFO, BRIGHT_WHITE) << "Saving blockchain...";
+  logger(INFO, BRIGHT_WHITE) << "Saving blockchain";
   BlockCacheSerializer ser(*this, getTailId(), logger.getLogger());
   if (!ser.save(appendPath(m_config_folder, m_currency.blocksCacheFileName()))) {
     logger(ERROR, BRIGHT_RED) << "Failed to save blockchain cache";
@@ -2618,7 +2618,7 @@ bool Blockchain::getMultisigOutputReference(const MultisignatureInput& txInMulti
 bool Blockchain::storeBlockchainIndices() {
   std::lock_guard<decltype(m_blockchain_lock)> lk(m_blockchain_lock);
 
-  logger(INFO, BRIGHT_WHITE) << "Saving blockchain indices...";
+  logger(INFO, BRIGHT_WHITE) << "Saving blockchain indices";
   BlockchainIndicesSerializer ser(*this, getTailId(), logger.getLogger());
 
   if (!storeToBinaryFile(ser, appendPath(m_config_folder, m_currency.blockchinIndicesFileName()))) {
@@ -2632,13 +2632,13 @@ bool Blockchain::storeBlockchainIndices() {
 bool Blockchain::loadBlockchainIndices() {
   std::lock_guard<decltype(m_blockchain_lock)> lk(m_blockchain_lock);
 
-  logger(INFO, BRIGHT_WHITE) << "Loading blockchain indices for BlockchainExplorer...";
+  logger(INFO, BRIGHT_WHITE) << "Loading blockchain indices for BlockchainExplorer";
   BlockchainIndicesSerializer loader(*this, get_block_hash(m_blocks.back().bl), logger.getLogger());
 
   loadFromBinaryFile(loader, appendPath(m_config_folder, m_currency.blockchinIndicesFileName()));
 
   if (!loader.loaded()) {
-    logger(WARNING, BRIGHT_YELLOW) << "No actual blockchain indices for BlockchainExplorer found, rebuilding...";
+    logger(WARNING, BRIGHT_YELLOW) << "No actual blockchain indices for BlockchainExplorer found, rebuilding";
     std::chrono::steady_clock::time_point timePoint = std::chrono::steady_clock::now();
 
     m_paymentIdIndex.clear();
