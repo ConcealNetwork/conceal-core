@@ -155,16 +155,6 @@ struct TransferCommand {
 
     try 
     {
-      /* We expect mixin to be the first argument */
-      auto mixin_str = ar.next();
-      if (!Common::fromString(mixin_str, fake_outs_count)) 
-      {
-        logger(ERROR, BRIGHT_RED) << "The mixin value should be non-negative integer, got " << mixin_str;
-        return false;
-      }
-      bool feeFound = false;
-      bool ttlFound = false;
-
       /* Parse the remaining arguments */
       while (!ar.eof()) 
       {
@@ -178,31 +168,10 @@ struct TransferCommand {
               logger(ERROR, BRIGHT_RED) << "payment ID has invalid format: \"" << value << "\", expected 64-character string";
               return false;
             }
-          } else if (arg == "-f") {
-              feeFound = true;
-            if (ttlFound) {
-              logger(ERROR, BRIGHT_RED) << "Transaction with TTL can not have fee";
-              return false;
-            }
-            bool ok = m_currency.parseAmount(value, fee);
-            if (!ok) {
-              logger(ERROR, BRIGHT_RED) << "Fee value is invalid: " << value;
-              return false;
-            }
-            if (fee < CryptoNote::parameters::MINIMUM_FEE_V2) {
-              logger(ERROR, BRIGHT_RED) << "Fee value is less than the minimum fee: " << CryptoNote::parameters::MINIMUM_FEE_V2;
-              return false;
-            }
           } else if (arg == "-m") {
             messages.emplace_back(value);
           } else if (arg == "-ttl") {
-            ttlFound = true;
-            if (feeFound) {
-              logger(ERROR, BRIGHT_RED) << "Transaction with fee can not have TTL";
-              return false;
-            } else {
-              fee = 0;
-            }
+            fee = 0;
             if (!Common::fromString(value, ttl) || ttl < 1 || ttl * 60 > m_currency.mempoolTxLiveTime()) {
               logger(ERROR, BRIGHT_RED) << "TTL has invalid format: \"" << value << "\", " <<
                 "enter time from 1 to " << (m_currency.mempoolTxLiveTime() / 60) << " minutes";
@@ -635,9 +604,8 @@ simple_wallet::simple_wallet(System::Dispatcher& dispatcher, const CryptoNote::C
   m_consoleHandler.setHandler("optimize", boost::bind(&simple_wallet::optimize_outputs, this, _1), "Combine many available outputs into a few by sending a transaction to self");
   m_consoleHandler.setHandler("optimize_all", boost::bind(&simple_wallet::optimize_all_outputs, this, _1), "Optimize your wallet several times so you can send large transactions");  
   m_consoleHandler.setHandler("transfer", boost::bind(&simple_wallet::transfer, this, _1),
-    "transfer <mixin_count> <addr_1> <amount_1> [<addr_2> <amount_2> ... <addr_N> <amount_N>] [-p payment_id] [-f fee]"
-    " - Transfer <amount_1>,... <amount_N> to <address_1>,... <address_N>, respectively. "
-    "<mixin_count> is the number of transactions yours is indistinguishable from (from 0 to maximum available)");
+    "transfer <addr_1> <amount_1> [<addr_2> <amount_2> ... <addr_N> <amount_N>] [-p payment_id]"
+    " - Transfer <amount_1>,... <amount_N> to <address_1>,... <address_N>, respectively. ");
   m_consoleHandler.setHandler("set_log", boost::bind(&simple_wallet::set_log, this, _1), "set_log <level> - Change current log level, <level> is a number 0-4");
   m_consoleHandler.setHandler("address", boost::bind(&simple_wallet::print_address, this, _1), "Show current wallet public address");
   m_consoleHandler.setHandler("save", boost::bind(&simple_wallet::save, this, _1), "Save wallet synchronized data");
