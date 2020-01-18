@@ -15,6 +15,7 @@ jobs:
       - name: Build
         id: build
         run: |
+          BOOST_ROOT=
           sudo apt install -y libboost-all-dev
           build_folder="build/debug"
           ccx_ver=$(echo "$GITHUB_REF" | sed 's|refs/tags/v||')
