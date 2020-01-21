@@ -3,7 +3,7 @@ name: Ubuntu 18.04
 on:
   push:
     tags:
-    - 'v*'
+    - '*'
 
 jobs:
   build-ubuntu16:
@@ -18,7 +18,7 @@ jobs:
           BOOST_ROOT=
           sudo apt install -y libboost-all-dev
           build_folder="build/debug"
-          ccx_ver=$(echo "$GITHUB_REF" | sed 's|refs/tags/v||')
+          ccx_ver=$(echo "$GITHUB_REF" | sed 's|refs/tags/||')
           release_name=ccx-cli-ubuntu18.04-v"$ccx_ver"
           mkdir -p "$build_folder"
           cd "$build_folder"

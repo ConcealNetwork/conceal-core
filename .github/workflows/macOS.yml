@@ -3,7 +3,7 @@ name: macOS
 on:
   push:
     tags:
-    - 'v*'
+    - '*'
 
 jobs:
   build-macos:
@@ -16,7 +16,7 @@ jobs:
         id: build
         run: |
           build_folder="build/"
-          ccx_ver=$(echo ${{ github.ref }} | sed 's|refs/tags/v||')
+          ccx_ver=$(echo ${{ github.ref }} | sed 's|refs/tags/||')
           release_name="ccx-cli-macOS-v$ccx_ver"
           brew install gcc boost@1.60
           brew link boost@1.60 --force
