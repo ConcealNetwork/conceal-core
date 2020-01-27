@@ -1,10 +1,9 @@
 ![image](https://github.com/ConcealNetwork/conceal-assets/blob/master/splash.png)
 
-#### Master Build Status
-[![Build Status](https://travis-ci.org/ConcealNetwork/conceal-core.svg?branch=master)](https://travis-ci.org/ConcealNetwork/conceal-core) [![Build status](https://ci.appveyor.com/api/projects/status/github/concealnetwork/conceal-core?branch=master&svg=true)](https://ci.appveyor.com/project/cryptokatz/conceal-core)
-
-#### Development Build Status
-[![Build Status](https://travis-ci.org/ConcealNetwork/conceal-core.svg?branch=development)](https://travis-ci.org/ConcealNetwork/conceal-core) [![Build status](https://ci.appveyor.com/api/projects/status/github/concealnetwork/conceal-core?branch=development&svg=true)](https://ci.appveyor.com/project/cryptokatz/conceal-core)
+![](https://github.com/bomb-on/conceal-core/workflows/Ubuntu%2016.04/badge.svg)  
+![](https://github.com/bomb-on/conceal-core/workflows/Ubuntu%2018.04/badge.svg)  
+![](https://github.com/bomb-on/conceal-core/workflows/Windows/badge.svg)  
+![](https://github.com/bomb-on/conceal-core/workflows/macOS/badge.svg)
 
 # Conceal Core (CLI)
 Latest Release: v6.0.0
@@ -88,7 +87,13 @@ and install all tools. On newer macOS versions (v10.14 and higher) this step is 
 After that, proceed with installing dependencies:
 
 ```bash
-$ brew install git python cmake gcc boost
+$ brew install git python cmake gcc boost@1.60
+```
+
+Ensure that Boost is properly linked:
+
+```bash
+$ brew link --force boost@1.60
 ```
 
 When all dependencies are installed, build Conceal Core binaries:
