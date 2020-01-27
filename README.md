@@ -3,7 +3,7 @@
 ![](https://github.com/bomb-on/conceal-core/workflows/Ubuntu%2016.04/badge.svg)  
 ![](https://github.com/bomb-on/conceal-core/workflows/Ubuntu%2018.04/badge.svg)  
 ![](https://github.com/bomb-on/conceal-core/workflows/Windows/badge.svg)  
-![](https://github.com/bomb-on/conceal-core/workflows/macOSsou/badge.svg)
+![](https://github.com/bomb-on/conceal-core/workflows/macOS/badge.svg)
 
 # Conceal Core (CLI)
 Latest Release: v6.0.0
@@ -87,7 +87,13 @@ and install all tools. On newer macOS versions (v10.14 and higher) this step is 
 After that, proceed with installing dependencies:
 
 ```bash
-$ brew install git python cmake gcc boost
+$ brew install git python cmake gcc boost@1.60
+```
+
+Ensure that Boost is properly linked:
+
+```bash
+$ brew link --force boost@1.60
 ```
 
 When all dependencies are installed, build Conceal Core binaries:
