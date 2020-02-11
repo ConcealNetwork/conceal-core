@@ -220,7 +220,7 @@ bool pool_rpc_server::on_optimize(const wallet_rpc::COMMAND_RPC_OPTIMIZE::reques
   std::vector<CryptoNote::TransactionMessage> messages;
   std::string extraString;
   uint64_t fee = CryptoNote::parameters::MINIMUM_FEE_V2;
-  uint64_t mixIn = CryptoNote::parameters::MINIMUM_MIXIN;
+  uint64_t mixIn = 0;
   uint64_t unlockTimestamp = 0;
   uint64_t ttl = 0;
 
