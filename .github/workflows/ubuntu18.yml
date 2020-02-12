@@ -17,7 +17,7 @@ jobs:
         run: |
           BOOST_ROOT=
           sudo apt-get purge '*boost*'
-          sudo apt install -y libboost1.65-all-dev
+          sudo apt install -y libboost-all-dev
           build_folder="build/debug"
           ccx_ver=$(echo "$GITHUB_REF" | sed 's|refs/tags/||')
           ccx_ver_folder=$(echo $ccx_ver | sed 's/\.//g')
