@@ -416,7 +416,7 @@ struct EstimateFusion {
 struct SendFusionTransaction {
   struct Request {
     uint64_t threshold;
-    uint32_t anonymity = 4;
+    uint32_t anonymity = 0;
     std::vector<std::string> addresses;
     std::string destinationAddress;
 

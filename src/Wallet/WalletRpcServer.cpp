@@ -296,7 +296,7 @@ bool wallet_rpc_server::on_optimize(const wallet_rpc::COMMAND_RPC_OPTIMIZE::requ
   std::vector<CryptoNote::TransactionMessage> messages;
   std::string extraString;
   uint64_t fee = CryptoNote::parameters::MINIMUM_FEE_V2;
-  uint64_t mixIn = CryptoNote::parameters::MINIMUM_MIXIN;
+  uint64_t mixIn = 0;
   uint64_t unlockTimestamp = 0;
   uint64_t ttl = 0;
 
@@ -370,7 +370,7 @@ bool wallet_rpc_server::on_send_fusion(const wallet_rpc::COMMAND_RPC_SEND_FUSION
     CryptoNote::WalletHelper::SendCompleteResultObserver sent;
     WalletHelper::IWalletRemoveObserverGuard removeGuard(m_wallet, sent);
 
-    CryptoNote::TransactionId tx = m_wallet.sendFusionTransaction(fusionInputs, 50, extraString, req.mixin, req.unlock_time);
+    CryptoNote::TransactionId tx = m_wallet.sendFusionTransaction(fusionInputs, 50, extraString, 0, req.unlock_time);
     if (tx == WALLET_LEGACY_INVALID_TRANSACTION_ID)
       throw std::runtime_error("Couldn't send fusion transaction");
 
