@@ -709,7 +709,7 @@ TransactionId WalletLegacy::sendFusionTransaction(const std::list<TransactionOut
 
   {
     std::unique_lock<std::mutex> lock(m_cacheMutex);
-    request = m_sender->makeSendFusionRequest(txId, events, transfers, fusionInputs, fee, extra, mixIn, unlockTimestamp);
+    request = m_sender->makeSendFusionRequest(txId, events, transfers, fusionInputs, fee, extra, 0, unlockTimestamp);
   }
 
   notifyClients(events);
