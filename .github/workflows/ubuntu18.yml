@@ -16,14 +16,15 @@ jobs:
         id: build
         run: |
           BOOST_ROOT=
-          sudo apt install -y libboost-all-dev
+          sudo apt-get purge '*boost*'
+          sudo apt install -y libboost1.65-all-dev
           build_folder="build/debug"
           ccx_ver=$(echo "$GITHUB_REF" | sed 's|refs/tags/||')
           ccx_ver_folder=$(echo $ccx_ver | sed 's/\.//g')
-          release_name=ccx-cli-ubuntu18.04-v"$ccx_ver"
+          release_name=ccx-cli-ubuntu-18.04-v"$ccx_ver"
           mkdir -p "$build_folder"
           cd "$build_folder"
-          cmake -D CMAKE_BUILD_TYPE=Debug ../..
+          cmake -D ARCH=default -D ../..
           make
           mkdir -p "$release_name/$ccx_ver_folder"
           exeFiles=()
