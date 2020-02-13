@@ -25,7 +25,7 @@ jobs:
           mkdir -p "$build_folder"
           cd "$build_folder"
           cmake ../..
-          make
+          make -j2
           mkdir -p "$release_name/$ccx_ver_folder"
           exeFiles=()
           for f in src/*; do [[ -x $f && -f $f ]] && exeFiles+=( "$f" ); done
