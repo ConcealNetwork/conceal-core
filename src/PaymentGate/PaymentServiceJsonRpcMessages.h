@@ -205,6 +205,21 @@ struct CreateIntegrated {
 
   struct Response {
     std::string integrated_address;
+    void serialize(CryptoNote::ISerializer& serializer);
+  };
+};
+
+struct SplitIntegrated {
+  struct Request {
+    std::string integrated_address;
+
+    void serialize(CryptoNote::ISerializer& serializer);    
+
+  };
+
+  struct Response {
+    std::string address;
+    std::string payment_id;
 
     void serialize(CryptoNote::ISerializer& serializer);
   };

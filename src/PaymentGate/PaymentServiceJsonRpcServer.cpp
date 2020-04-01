@@ -39,6 +39,7 @@ PaymentServiceJsonRpcServer::PaymentServiceJsonRpcServer(System::Dispatcher& sys
 {
   handlers.emplace("save", jsonHandler<Save::Request, Save::Response>(std::bind(&PaymentServiceJsonRpcServer::handleSave, this, std::placeholders::_1, std::placeholders::_2)));
   handlers.emplace("createIntegrated", jsonHandler<CreateIntegrated::Request, CreateIntegrated::Response>(std::bind(&PaymentServiceJsonRpcServer::handleCreateIntegrated, this, std::placeholders::_1, std::placeholders::_2)));
+  handlers.emplace("splitIntegrated", jsonHandler<SplitIntegrated::Request, SplitIntegrated::Response>(std::bind(&PaymentServiceJsonRpcServer::handleSplitIntegrated, this, std::placeholders::_1, std::placeholders::_2)));
   handlers.emplace("reset", jsonHandler<Reset::Request, Reset::Response>(std::bind(&PaymentServiceJsonRpcServer::handleReset, this, std::placeholders::_1, std::placeholders::_2)));
   handlers.emplace("createAddress", jsonHandler<CreateAddress::Request, CreateAddress::Response>(std::bind(&PaymentServiceJsonRpcServer::handleCreateAddress, this, std::placeholders::_1, std::placeholders::_2)));
   handlers.emplace("createAddressList", jsonHandler<CreateAddressList::Request, CreateAddressList::Response>(std::bind(&PaymentServiceJsonRpcServer::handleCreateAddressList, this, std::placeholders::_1, std::placeholders::_2)));
@@ -135,8 +136,10 @@ std::error_code PaymentServiceJsonRpcServer::handleCreateIntegrated(const Create
   return service.createIntegratedAddress(request, response.integrated_address);
 }
 
-/* ----------------------------------------------------------------------------- */
-
+std::error_code PaymentServiceJsonRpcServer::handleSplitIntegrated(const SplitIntegrated::Request& request, SplitIntegrated::Response& response) 
+{
+  return service.splitIntegratedAddress(request, response.address, response.payment_id);
+}
 std::error_code PaymentServiceJsonRpcServer::handleDeleteAddress(const DeleteAddress::Request& request, DeleteAddress::Response& response) {
   return service.deleteAddress(request.address);
 }
