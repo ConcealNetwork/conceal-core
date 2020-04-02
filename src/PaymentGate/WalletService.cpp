@@ -1250,7 +1250,7 @@ std::error_code WalletService::createIntegratedAddress(const CreateIntegrated::R
   uint64_t prefix;
   CryptoNote::AccountPublicAddress addr;
 
-  /* get the spend and view public keys from the address */
+  /* Get the spend and view public keys from the address */
   const bool valid = CryptoNote::parseAccountAddressString(prefix,
                                                            addr,
                                                            address_str);
@@ -1259,7 +1259,9 @@ std::error_code WalletService::createIntegratedAddress(const CreateIntegrated::R
   CryptoNote::toBinaryArray(addr, ba);
   std::string keys = Common::asString(ba);
 
-  /* create the integrated address the same way you make a public address */
+  logger(Logging::INFO) << "keys:" + keys;
+
+  /* Create the integrated address the same way you make a public address */
   integrated_address = Tools::Base58::encode_addr(
       CryptoNote::parameters::CRYPTONOTE_PUBLIC_ADDRESS_BASE58_PREFIX,
       payment_id_str + keys);
@@ -1271,34 +1273,39 @@ std::error_code WalletService::splitIntegratedAddress(const SplitIntegrated::Req
 {
   std::string integrated_address_str = request.integrated_address;
 
+  /* Check that the integrated address the correct length */
   if (integrated_address_str.length() != 186)
   {
     return make_error_code(CryptoNote::error::BAD_INTEGRATED_ADDRESS);
   }
 
-  std::string spendPublicKey;
-  std::string viewPublicKey;
-  const uint64_t paymentIDLen = 64;
-
-  /* Extract the payment id */
+  /* Decode the address and extract the payment id */
   std::string decoded;
   uint64_t prefix;
   if (Tools::Base58::decode_addr(integrated_address_str, prefix, decoded))
   {
-      payment_id = decoded.substr(0, paymentIDLen);
+    payment_id = decoded.substr(0, 64);
   }
 
-  /* create the address from the public keys */
-  std::string keys = decoded.substr(paymentIDLen, std::string::npos);
+  /* Check if the prefix is correct */
+  if (prefix != CryptoNote::parameters::CRYPTONOTE_PUBLIC_ADDRESS_BASE58_PREFIX)
+  {
+    return make_error_code(CryptoNote::error::BAD_PREFIX);
+  }
+
+  /* Create the address from the public keys */
+  std::string keys = decoded.substr(64, 192);
   CryptoNote::AccountPublicAddress addr;
   CryptoNote::BinaryArray ba = Common::asBinaryArray(keys);
 
-  address = CryptoNote::getAccountAddressAsStr(CryptoNote::parameters::CRYPTONOTE_PUBLIC_ADDRESS_BASE58_PREFIX, addr);
-
+  /* Make sure the address is valid */
   if (!CryptoNote::fromBinaryArray(addr, ba))
   {
-    return std::error_code();
+    return make_error_code(CryptoNote::error::BAD_ADDRESS);
   }
+
+  /* Build the address */
+  address = CryptoNote::getAccountAddressAsStr(prefix, addr);
 
   return std::error_code();
 }
