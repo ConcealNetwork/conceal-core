@@ -25,8 +25,10 @@ enum WalletErrorCodes {
   MINIMUM_ONE_ADDRESS,
   THRESHOLD_TOO_LOW,
   BAD_ADDRESS,
+  BAD_INTEGRATED_ADDRESS,
   TRANSACTION_SIZE_TOO_BIG,
   WRONG_AMOUNT,
+  BAD_PREFIX,
   SUM_OVERFLOW,
   ZERO_DESTINATION,
   TX_CANCEL_IMPOSSIBLE,
@@ -78,8 +80,10 @@ public:
     case MINIMUM_ONE_ADDRESS:       return "You should have at least one address";
     case MINIMUM_INPUT_COUNT:      return "Not enough inputs to optimizne, minimum 12";    
     case BAD_ADDRESS:              return "Bad address";
+    case BAD_INTEGRATED_ADDRESS:   return "Integrated address should be 186 characters";    
     case TRANSACTION_SIZE_TOO_BIG: return "Transaction size is too big, please optimize your wallet.";
     case WRONG_AMOUNT:             return "Wrong amount";
+    case BAD_PREFIX:               return "Address has incorrect prefix";    
     case SUM_OVERFLOW:             return "Sum overflow";
     case ZERO_DESTINATION:         return "The destination is empty";
     case TX_CANCEL_IMPOSSIBLE:     return "Impossible to cancel transaction";
