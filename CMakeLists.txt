@@ -13,9 +13,6 @@ set(CMAKE_CONFIGURATION_TYPES Debug RelWithDebInfo Release CACHE TYPE INTERNAL)
 set(CMAKE_SKIP_INSTALL_RULES ON)
 set(CMAKE_SKIP_PACKAGE_ALL_DEPENDENCY ON)
 set(CMAKE_SUPPRESS_REGENERATION ON)
-enable_testing()
-# copy CTestCustom.cmake to build dir to disable long running tests in 'make test'
-configure_file(${CMAKE_SOURCE_DIR}/CTestCustom.cmake ${CMAKE_BINARY_DIR})
 
 project(concealX)
 
@@ -106,6 +103,13 @@ elseif(APPLE)
   set(Boost_LIBRARIES "${Boost_LIBRARIES}")
 elseif(NOT MSVC)
   set(Boost_LIBRARIES "${Boost_LIBRARIES};rt")
+endif()
+
+# option(BUILD_TESTS "Build tests." ON)
+
+if(BUILD_TESTS)
+  add_subdirectory(tests)
+  enable_testing()
 endif()
 
 set(COMMIT_ID_IN_VERSION ON CACHE BOOL "Include commit ID in version")
