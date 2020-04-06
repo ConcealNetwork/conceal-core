@@ -145,7 +145,8 @@ bool gen_uint_overflow_2::generate(std::vector<test_event_entry>& events) const
   destinations.push_back(TransactionDestinationEntry(sources.front().amount - std::numeric_limits<uint64_t>::max() - std::numeric_limits<uint64_t>::max() + 1 - m_currency.minimumFee(), bob_addr));
 
   CryptoNote::Transaction tx_1;
-  if (!constructTransaction(miner_account.getAccountKeys(), sources, destinations, std::vector<uint8_t>(), tx_1, 0, m_logger))
+  Crypto::SecretKey txSK;
+  if (!constructTransaction(miner_account.getAccountKeys(), sources, destinations, std::vector<uint8_t>(), tx_1, 0, m_logger, txSK))
     return false;
   events.push_back(tx_1);
 
@@ -171,7 +172,8 @@ bool gen_uint_overflow_2::generate(std::vector<test_event_entry>& events) const
   destinations.push_back(de);
 
   CryptoNote::Transaction tx_2;
-  if (!constructTransaction(bob_account.getAccountKeys(), sources, destinations, std::vector<uint8_t>(), tx_2, 0, m_logger))
+  Crypto::SecretKey txSK2;
+  if (!constructTransaction(bob_account.getAccountKeys(), sources, destinations, std::vector<uint8_t>(), tx_2, 0, m_logger, txSK2))
     return false;
   events.push_back(tx_2);
 
