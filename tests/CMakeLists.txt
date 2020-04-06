@@ -3,6 +3,7 @@ add_definitions(-DSTATICLIB)
 include_directories(${gtest_SOURCE_DIR}/include ${gtest_SOURCE_DIR} ../version)
 
 file(GLOB_RECURSE CoreTests CoreTests/*)
+file(GLOB_RECURSE IntegrationTestLibrary IntegrationTestLib/*)
 file(GLOB_RECURSE FunctionalTests FunctionalTests/*)
 file(GLOB_RECURSE NodeRpcProxyTests NodeRpcProxyTests/*)
 file(GLOB_RECURSE PerformanceTests PerformanceTests/*)
@@ -14,6 +15,7 @@ file(GLOB_RECURSE P2p ../src/P2p/*)
 source_group("" FILES ${CoreTests} ${CryptoTests} ${FunctionalTests} ${NodeRpcProxyTests} ${PerformanceTests} ${SystemTests} ${TestGenerator} )
 source_group("" FILES ${CryptoNoteProtocol} ${P2p})
 
+add_library(IntegrationTestLibrary ${IntegrationTestLibrary})
 add_library(TestGenerator ${TestGenerator})
 
 add_executable(CoreTests ${CoreTests})
@@ -39,6 +41,7 @@ add_custom_target(tests DEPENDS NodeRpcProxyTests PerformanceTests SystemTests D
 set_property(TARGET
   tests
   CoreTests
+  IntegrationTestLibrary
   TestGenerator
   NodeRpcProxyTests
   PerformanceTests
