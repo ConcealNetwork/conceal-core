@@ -86,7 +86,7 @@ std::error_code TestWalletLegacy::sendTransaction(const std::string &address, ui
   m_wallet->addObserver(&transactionSendingWaiter);
 
   WalletLegacyTransfer transfer{address, static_cast<int64_t>(amount)};
-    std::vector<CryptoNote::TransactionMessage> messages;
+  std::vector<CryptoNote::TransactionMessage> messages;
   std::string extraString;
   uint64_t fee = CryptoNote::parameters::MINIMUM_FEE_V2;
   uint64_t mixIn = 0;

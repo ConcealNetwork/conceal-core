@@ -1,5 +1,6 @@
-// Copyright (c) 2011-2016 The Cryptonote developers
-// Copyright (c) 2014-2016 SDN developers
+// Copyright (c) 2011-2017 The Cryptonote developers
+// Copyright (c) 2017-2018 The Circle Foundation & Conceal Devs
+// Copyright (c) 2018-2019 Conceal Network & Conceal Devs
 // Distributed under the MIT/X11 software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -28,59 +29,72 @@
 using namespace Tests;
 using namespace CryptoNote;
 
-namespace CryptoNote {
-  void serialize(BlockShortEntry& v, ISerializer& s) {
-    s(v.blockHash, "hash");
-    
-    if (s.type() == ISerializer::INPUT) {
-      std::string blockBinary;
-      if (s.binary(blockBinary, "block")) {
-        fromBinaryArray(v.block, Common::asBinaryArray(blockBinary));
-        v.hasBlock = true;
-      }
-    } else {
-      if (v.hasBlock) {
-        std::string blockBinary(Common::asString(toBinaryArray(v.block)));
-        s.binary(blockBinary, "block");
-      }
+namespace CryptoNote
+{
+void serialize(BlockShortEntry &v, ISerializer &s)
+{
+  s(v.blockHash, "hash");
+
+  if (s.type() == ISerializer::INPUT)
+  {
+    std::string blockBinary;
+    if (s.binary(blockBinary, "block"))
+    {
+      fromBinaryArray(v.block, Common::asBinaryArray(blockBinary));
+      v.hasBlock = true;
     }
-
-    s(v.txsShortInfo, "transactions");
+  }
+  else
+  {
+    if (v.hasBlock)
+    {
+      std::string blockBinary(Common::asString(toBinaryArray(v.block)));
+      s.binary(blockBinary, "block");
+    }
   }
 
-  void serialize(TransactionShortInfo& v, ISerializer& s) {
-    s(v.txId, "hash");
-    s(v.txPrefix, "prefix");
-  }
-
-  bool operator == (const BlockShortEntry& a, const BlockShortEntry& b) {
-    return
-      a.blockHash == b.blockHash &&
-      a.hasBlock == b.hasBlock &&
-      // a.block == b.block &&
-      a.txsShortInfo == b.txsShortInfo;
-  }
-
-  bool operator == (const TransactionShortInfo& a, const TransactionShortInfo& b) {
-    return a.txId == b.txId;
-  }
+  s(v.txsShortInfo, "transactions");
 }
 
-struct BlockchainInfo {
+void serialize(TransactionShortInfo &v, ISerializer &s)
+{
+  s(v.txId, "hash");
+  s(v.txPrefix, "prefix");
+}
+
+bool operator==(const BlockShortEntry &a, const BlockShortEntry &b)
+{
+  return a.blockHash == b.blockHash &&
+         a.hasBlock == b.hasBlock &&
+         // a.block == b.block &&
+         a.txsShortInfo == b.txsShortInfo;
+}
+
+bool operator==(const TransactionShortInfo &a, const TransactionShortInfo &b)
+{
+  return a.txId == b.txId;
+}
+} // namespace CryptoNote
+
+struct BlockchainInfo
+{
   std::list<BlockShortEntry> blocks;
   std::unordered_map<Crypto::Hash, std::vector<uint32_t>> globalOutputs;
 
-  bool operator == (const BlockchainInfo& other) const {
+  bool operator==(const BlockchainInfo &other) const
+  {
     return blocks == other.blocks && globalOutputs == other.globalOutputs;
   }
 
-  void serialize(ISerializer& s) {
+  void serialize(ISerializer &s)
+  {
     s(blocks, "blocks");
     s(globalOutputs, "outputs");
   }
 };
 
-void storeBlockchainInfo(const std::string& filename, BlockchainInfo& bc) {
+void storeBlockchainInfo(const std::string &filename, BlockchainInfo &bc)
+{
   JsonOutputStreamSerializer s;
   serialize(bc, s);
 
@@ -88,26 +102,28 @@ void storeBlockchainInfo(const std::string& filename, BlockchainInfo& bc) {
   jsonBlocks << s.getValue();
 }
 
-void loadBlockchainInfo(const std::string& filename, BlockchainInfo& bc) {
+void loadBlockchainInfo(const std::string &filename, BlockchainInfo &bc)
+{
   std::ifstream jsonBlocks(filename);
   JsonInputStreamSerializer s(jsonBlocks);
   serialize(bc, s);
 }
 
-
-class NodeTest: public BaseTest {
+class NodeTest : public BaseTest
+{
 
 protected:
-
-  void startNetworkWithBlockchain(const std::string& sourcePath);
-  void readBlockchainInfo(INode& node, BlockchainInfo& bc);
-  void dumpBlockchainInfo(INode& node);
+  void startNetworkWithBlockchain(const std::string &sourcePath);
+  void readBlockchainInfo(INode &node, BlockchainInfo &bc);
+  void dumpBlockchainInfo(INode &node);
 };
 
-void NodeTest::startNetworkWithBlockchain(const std::string& sourcePath) {
+void NodeTest::startNetworkWithBlockchain(const std::string &sourcePath)
+{
   auto networkCfg = TestNetworkBuilder(2, Topology::Ring).build();
 
-  for (auto& node : networkCfg) {
+  for (auto &node : networkCfg)
+  {
     node.blockchainLocation = sourcePath;
   }
 
@@ -115,18 +131,19 @@ void NodeTest::startNetworkWithBlockchain(const std::string& sourcePath) {
   network.waitNodesReady();
 }
 
-void NodeTest::readBlockchainInfo(INode& node, BlockchainInfo& bc) {
-  std::vector<Crypto::Hash> history = { currency.genesisBlockHash() };
+void NodeTest::readBlockchainInfo(INode &node, BlockchainInfo &bc)
+{
+  std::vector<Crypto::Hash> history = {currency.genesisBlockHash()};
   uint64_t timestamp = 0;
   uint32_t startHeight = 0;
   size_t itemsAdded = 0;
   NodeCallback cb;
 
   bc.blocks = {
-    BlockShortEntry{ currency.genesisBlockHash(), true, currency.genesisBlock() }
-  };
+      BlockShortEntry{currency.genesisBlockHash(), true, currency.genesisBlock()}};
 
-  do {
+  do
+  {
     itemsAdded = 0;
     std::vector<BlockShortEntry> blocks;
     node.queryBlocks(std::vector<Crypto::Hash>(history.rbegin(), history.rend()), timestamp, blocks, startHeight, cb.callback());
@@ -135,12 +152,16 @@ void NodeTest::readBlockchainInfo(INode& node, BlockchainInfo& bc) {
 
     uint64_t currentHeight = startHeight;
 
-    for (auto& entry : blocks) {
+    for (auto &entry : blocks)
+    {
 
-      if (currentHeight < history.size()) {
+      if (currentHeight < history.size())
+      {
         // detach no expected
         ASSERT_EQ(entry.blockHash, history[currentHeight]);
-      } else {
+      }
+      else
+      {
         auto txHash = getObjectHash(entry.block.baseTransaction);
 
         std::vector<uint32_t> globalIndices;
@@ -160,28 +181,29 @@ void NodeTest::readBlockchainInfo(INode& node, BlockchainInfo& bc) {
   } while (itemsAdded > 0);
 }
 
-void NodeTest::dumpBlockchainInfo(INode& node) {
+void NodeTest::dumpBlockchainInfo(INode &node)
+{
   BlockchainInfo bc;
   ASSERT_NO_FATAL_FAILURE(readBlockchainInfo(node, bc));
   storeBlockchainInfo("blocks.js", bc);
 }
 
+TEST_F(NodeTest, generateBlockchain)
+{
 
-TEST_F(NodeTest, generateBlockchain) {
-  
   auto networkCfg = TestNetworkBuilder(2, Topology::Ring).build();
   networkCfg[0].cleanupDataDir = false;
   network.addNodes(networkCfg);
   network.waitNodesReady();
 
-  auto& daemon = network.getNode(0);
+  auto &daemon = network.getNode(0);
 
   {
     std::unique_ptr<INode> mainNode;
     ASSERT_TRUE(daemon.makeINode(mainNode));
 
     std::string password = "pass";
-    CryptoNote::WalletGreen wallet(dispatcher, currency, *mainNode);
+    CryptoNote::WalletGreen wallet(dispatcher, currency, *mainNode, logger);
 
     wallet.initialize(password);
 
@@ -190,7 +212,8 @@ TEST_F(NodeTest, generateBlockchain) {
 
     System::Timer timer(dispatcher);
 
-    while (daemon.getLocalHeight() < 300) {
+    while (daemon.getLocalHeight() < 300)
+    {
       std::cout << "Waiting for block..." << std::endl;
       timer.sleep(std::chrono::seconds(10));
     }
@@ -202,17 +225,19 @@ TEST_F(NodeTest, generateBlockchain) {
     wallet.shutdown();
 
     dumpBlockchainInfo(*mainNode);
- }
+  }
 }
 
-TEST_F(NodeTest, dumpBlockchain) {
+TEST_F(NodeTest, dumpBlockchain)
+{
   startNetworkWithBlockchain("testnet_300");
-  auto& daemon = network.getNode(0);
+  auto &daemon = network.getNode(0);
   auto mainNode = network.getNode(0).makeINode();
   dumpBlockchainInfo(*mainNode);
 }
 
-TEST_F(NodeTest, addMoreBlocks) {
+TEST_F(NodeTest, addMoreBlocks)
+{
   auto networkCfg = TestNetworkBuilder(2, Topology::Ring).build();
   networkCfg[0].cleanupDataDir = false;
   networkCfg[0].blockchainLocation = "testnet_300";
@@ -220,7 +245,7 @@ TEST_F(NodeTest, addMoreBlocks) {
   network.addNodes(networkCfg);
   network.waitNodesReady();
 
-  auto& daemon = network.getNode(0);
+  auto &daemon = network.getNode(0);
 
   {
     std::unique_ptr<INode> mainNode;
@@ -229,7 +254,7 @@ TEST_F(NodeTest, addMoreBlocks) {
     auto startHeight = daemon.getLocalHeight();
 
     std::string password = "pass";
-    CryptoNote::WalletGreen wallet(dispatcher, currency, *mainNode);
+    CryptoNote::WalletGreen wallet(dispatcher, currency, *mainNode, logger);
 
     {
       std::ifstream walletFile("wallet.bin", std::ios::binary);
@@ -241,7 +266,8 @@ TEST_F(NodeTest, addMoreBlocks) {
 
     System::Timer timer(dispatcher);
 
-    while (daemon.getLocalHeight() <= startHeight + 3) {
+    while (daemon.getLocalHeight() <= startHeight + 3)
+    {
       std::cout << "Waiting for block..." << std::endl;
       timer.sleep(std::chrono::seconds(1));
     }
@@ -256,14 +282,14 @@ TEST_F(NodeTest, addMoreBlocks) {
   }
 }
 
-
-TEST_F(NodeTest, queryBlocks) {
+TEST_F(NodeTest, queryBlocks)
+{
   BlockchainInfo knownBc, nodeBc;
 
   loadBlockchainInfo("blocks.js", knownBc);
 
   startNetworkWithBlockchain("testnet_300");
-  auto& daemon = network.getNode(0);
+  auto &daemon = network.getNode(0);
   std::unique_ptr<INode> mainNode;
 
   // check full sync
@@ -285,39 +311,40 @@ TEST_F(NodeTest, queryBlocks) {
   std::vector<BlockShortEntry> blocks;
 
   std::cout << "Requesting timestamp: " << timestamp << std::endl;
-  
+
   NodeCallback cb;
-  mainNode->queryBlocks({ currency.genesisBlockHash() }, timestamp, blocks, startHeight, cb.callback());
+  mainNode->queryBlocks({currency.genesisBlockHash()}, timestamp, blocks, startHeight, cb.callback());
   ASSERT_TRUE(!cb.get());
 
   EXPECT_EQ(0, startHeight);
   EXPECT_EQ(knownBc.blocks.begin()->blockHash, blocks.begin()->blockHash);
   EXPECT_EQ(knownBc.blocks.size(), blocks.size());
 
-  auto startBlockIter = std::find_if(blocks.begin(), blocks.end(), [](const BlockShortEntry& e) { return e.hasBlock; });
+  auto startBlockIter = std::find_if(blocks.begin(), blocks.end(), [](const BlockShortEntry &e) { return e.hasBlock; });
   ASSERT_TRUE(startBlockIter != blocks.end());
 
-  const Block& startBlock = startBlockIter->block;
+  const Block &startBlock = startBlockIter->block;
 
   std::cout << "Starting block timestamp: " << startBlock.timestamp << std::endl;
   auto startFullIndex = std::distance(blocks.begin(), startBlockIter);
   EXPECT_EQ(pivotBlockIndex, startFullIndex);
 
   auto it = blocks.begin();
-  for (const auto& item : knownBc.blocks) {
+  for (const auto &item : knownBc.blocks)
+  {
     ASSERT_EQ(item.blockHash, it->blockHash);
     ++it;
   }
 }
 
-
-TEST_F(NodeTest, observerHeightNotifications) {
+TEST_F(NodeTest, observerHeightNotifications)
+{
   BlockchainInfo extraBlocks;
   loadBlockchainInfo("blocks_extra.js", extraBlocks);
 
   startNetworkWithBlockchain("testnet_300");
 
-  auto& daemon = network.getNode(0);
+  auto &daemon = network.getNode(0);
 
   {
     std::unique_ptr<INode> mainNode;
@@ -363,6 +390,5 @@ TEST_F(NodeTest, observerHeightNotifications) {
 
     EXPECT_EQ(newLocalHeight, mainNode->getLastLocalBlockHeight());
     EXPECT_EQ(newKnownHeight, mainNode->getLastKnownBlockHeight());
-
   }
 }

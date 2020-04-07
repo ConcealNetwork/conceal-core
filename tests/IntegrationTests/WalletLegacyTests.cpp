@@ -1,5 +1,6 @@
-// Copyright (c) 2011-2016 The Cryptonote developers
-// Copyright (c) 2014-2016 SDN developers
+// Copyright (c) 2011-2017 The Cryptonote developers
+// Copyright (c) 2017-2018 The Circle Foundation & Conceal Devs
+// Copyright (c) 2018-2019 Conceal Network & Conceal Devs
 // Distributed under the MIT/X11 software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -12,24 +13,24 @@
 using namespace Tests;
 using namespace CryptoNote;
 
-class WalletLegacyTests : public BaseTest {
-
+class WalletLegacyTests : public BaseTest
+{
 };
 
-
-TEST_F(WalletLegacyTests, checkNetworkShutdown) {
-  auto networkCfg = TestNetworkBuilder(3, Topology::Star).
-    setBlockchain("testnet_300").build();
+TEST_F(WalletLegacyTests, checkNetworkShutdown)
+{
+  auto networkCfg = TestNetworkBuilder(3, Topology::Star).setBlockchain("testnet_300").build();
 
   networkCfg[0].nodeType = NodeType::InProcess;
   network.addNodes(networkCfg);
   network.waitNodesReady();
 
-  auto& daemon = network.getNode(0);
+  auto &daemon = network.getNode(0);
 
   {
+    Logging::ConsoleLogger m_logger;
     auto node = daemon.makeINode();
-    WalletLegacy wallet(currency, *node);
+    WalletLegacy wallet(currency, *node, m_logger);
     wallet.initAndGenerate("pass");
 
     WalletLegacyObserver observer;
@@ -48,6 +49,6 @@ TEST_F(WalletLegacyTests, checkNetworkShutdown) {
     System::Timer(dispatcher).sleep(std::chrono::seconds(10));
 
     // check that sync progress was not updated
-    ASSERT_EQ(syncProgress, observer.getSyncProgress()); 
+    ASSERT_EQ(syncProgress, observer.getSyncProgress());
   }
 }

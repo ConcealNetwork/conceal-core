@@ -14,18 +14,21 @@
 #include "WalletLegacy/WalletLegacy.h"
 #include <Logging/ConsoleLogger.h>
 
-namespace Tests {
-namespace Common {
+namespace Tests
+{
+namespace Common
+{
 
-class TestWalletLegacy : private CryptoNote::IWalletLegacyObserver {
+class TestWalletLegacy : private CryptoNote::IWalletLegacyObserver
+{
 public:
-  TestWalletLegacy(System::Dispatcher& dispatcher, const CryptoNote::Currency& currency, CryptoNote::INode& node);
+  TestWalletLegacy(System::Dispatcher &dispatcher, const CryptoNote::Currency &currency, CryptoNote::INode &node);
   ~TestWalletLegacy();
 
   std::error_code init();
-  std::error_code sendTransaction(const std::string& address, uint64_t amount, Crypto::Hash& txHash);
+  std::error_code sendTransaction(const std::string &address, uint64_t amount, Crypto::Hash &txHash);
   void waitForSynchronizationToHeight(uint32_t height);
-  CryptoNote::IWalletLegacy* wallet();
+  CryptoNote::IWalletLegacy *wallet();
   CryptoNote::AccountPublicAddress address() const;
 
 protected:
@@ -33,12 +36,12 @@ protected:
   virtual void synchronizationProgressUpdated(uint32_t current, uint32_t total) override;
 
 private:
-  System::Dispatcher& m_dispatcher;
+  System::Dispatcher &m_dispatcher;
   System::Event m_synchronizationCompleted;
   System::Event m_someTransactionUpdated;
 
-  CryptoNote::INode& m_node;
-  const CryptoNote::Currency& m_currency;
+  CryptoNote::INode &m_node;
+  const CryptoNote::Currency &m_currency;
   Logging::ConsoleLogger m_logger;
   std::unique_ptr<CryptoNote::IWalletLegacy> m_wallet;
   std::unique_ptr<CryptoNote::IWalletLegacyObserver> m_walletObserver;
@@ -47,5 +50,5 @@ private:
   std::error_code m_lastSynchronizationResult;
 };
 
-}
-}
+} // namespace Common
+} // namespace Tests
