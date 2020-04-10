@@ -14,6 +14,13 @@ set(CMAKE_SKIP_INSTALL_RULES ON)
 set(CMAKE_SKIP_PACKAGE_ALL_DEPENDENCY ON)
 set(CMAKE_SUPPRESS_REGENERATION ON)
 
+if(DO_TESTS)
+  message(STATUS "BUILD TESTS: enabled")
+  enable_testing()
+else()
+  message(STATUS "BUILD TESTS: disabled")
+endif()
+
 project(concealX)
 
 include_directories(include src external "${CMAKE_BINARY_DIR}/version")
@@ -103,13 +110,6 @@ elseif(APPLE)
   set(Boost_LIBRARIES "${Boost_LIBRARIES}")
 elseif(NOT MSVC)
   set(Boost_LIBRARIES "${Boost_LIBRARIES};rt")
-endif()
-
-# option(BUILD_TESTS "Build tests." ON)
-
-if(BUILD_TESTS)
-  add_subdirectory(tests)
-  enable_testing()
 endif()
 
 set(COMMIT_ID_IN_VERSION ON CACHE BOOL "Include commit ID in version")
