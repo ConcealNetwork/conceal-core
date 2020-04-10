@@ -283,8 +283,8 @@ bool construct_tx_to_key(Logging::ILogger& logger, const std::vector<test_event_
   vector<TransactionSourceEntry> sources;
   vector<TransactionDestinationEntry> destinations;
   fill_tx_sources_and_destinations(events, blk_head, from, to, amount, fee, nmix, sources, destinations);
-
-  return constructTransaction(from.getAccountKeys(), sources, destinations, std::vector<uint8_t>(), tx, 0, logger);
+  Crypto::SecretKey txSK;
+  return constructTransaction(from.getAccountKeys(), sources, destinations, std::vector<uint8_t>(), tx, 0, logger, txSK);
 }
 
 Transaction construct_tx_with_fee(Logging::ILogger& logger, std::vector<test_event_entry>& events, const Block& blk_head,

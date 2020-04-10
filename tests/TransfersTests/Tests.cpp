@@ -301,11 +301,11 @@ TEST_F(TransfersTest, base) {
 
   CryptoNote::AccountBase dstAcc;
   dstAcc.generate();
-
+  Logging::ConsoleLogger m_logger; 
   AccountKeys dstKeys = reinterpret_cast<const AccountKeys&>(dstAcc.getAccountKeys());
 
   BlockchainSynchronizer blockSync(*node2.get(), currency.genesisBlockHash());
-  TransfersSyncronizer transferSync(currency, blockSync, *node2.get());
+  TransfersSyncronizer transferSync(currency, m_logger, blockSync, *node2.get());
   TransfersObserver transferObserver;
   WalletLegacyObserver walletObserver;
 
@@ -470,9 +470,9 @@ TEST_F(MultisignatureTest, createMulitisignatureTransaction) {
 
   nodeDaemons[0]->makeINode(node1);
   nodeDaemons[1]->makeINode(node2);
-
+  Logging::ConsoleLogger m_logger; 
   BlockchainSynchronizer blockSync(*node2.get(), currency.genesisBlockHash());
-  TransfersSyncronizer transferSync(currency, blockSync, *node2.get());
+  TransfersSyncronizer transferSync(currency, m_logger, blockSync, *node2.get());
   
   // add transaction collector
   TransactionConsumer txConsumer;

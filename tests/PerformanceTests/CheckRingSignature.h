@@ -37,8 +37,8 @@ public:
 
     std::vector<TransactionDestinationEntry> destinations;
     destinations.push_back(TransactionDestinationEntry(this->m_source_amount, m_alice.getAccountKeys().address));
-
-    if (!constructTransaction(this->m_miners[this->real_source_idx].getAccountKeys(), this->m_sources, destinations, std::vector<uint8_t>(), m_tx, 0, this->m_logger))
+    Crypto::SecretKey txSK;
+    if (!constructTransaction(this->m_miners[this->real_source_idx].getAccountKeys(), this->m_sources, destinations, std::vector<uint8_t>(), m_tx, 0, this->m_logger, txSK))
       return false;
 
     getObjectHash(*static_cast<TransactionPrefix*>(&m_tx), m_tx_prefix_hash);

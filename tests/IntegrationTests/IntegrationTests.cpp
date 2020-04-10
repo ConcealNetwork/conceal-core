@@ -59,8 +59,10 @@ public:
   }
 
   void makeWallets() {
+    Logging::ConsoleLogger m_logger;
     for (auto& n: inodes) {
-      std::unique_ptr<CryptoNote::IWalletLegacy> wallet(new CryptoNote::WalletLegacy(m_currency, *n));
+      
+      std::unique_ptr<CryptoNote::IWalletLegacy> wallet(new CryptoNote::WalletLegacy(m_currency, *n, m_logger));
       std::unique_ptr<WalletLegacyObserver> observer(new WalletLegacyObserver());
 
       wallet->initAndGenerate(walletPassword);
@@ -115,7 +117,14 @@ public:
     tr.amount = amount;
     std::error_code result;
 
-    auto txId = wallets[srcWallet]->sendTransaction(tr, fee);
+    std::vector<CryptoNote::TransactionMessage> messages;
+    std::string extraString;
+    fee = CryptoNote::parameters::MINIMUM_FEE_V2;
+    uint64_t mixIn = 0;
+    uint64_t unlockTimestamp = 0;
+    uint64_t ttl = 0;
+    Crypto::SecretKey transactionSK;
+    auto txId = wallets[srcWallet]->sendTransaction(transactionSK, tr, fee, extraString, mixIn, unlockTimestamp, messages, ttl);
 
     logger(DEBUGGING) << "Transaction id = " << txId;
 

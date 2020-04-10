@@ -1,5 +1,6 @@
-// Copyright (c) 2011-2016 The Cryptonote developers
-// Copyright (c) 2014-2016 SDN developers
+// Copyright (c) 2011-2017 The Cryptonote developers
+// Copyright (c) 2017-2018 The Circle Foundation & Conceal Devs
+// Copyright (c) 2018-2019 Conceal Network & Conceal Devs
 // Distributed under the MIT/X11 software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -67,7 +68,7 @@ namespace Tests {
 
       void init(po::options_description& desc) {
         desc.add_options()
-          ("daemon-dir,d", po::value<std::string>()->default_value("."), "path to daemon")
+          ("daemon-dir,d", po::value<std::string>()->default_value("."), "path to conceald.exe")
           ("data-dir,n", po::value<std::string>()->default_value("."), "path to daemon's data directory")
           ("add-daemons,a", po::value<std::vector<std::string>>()->multitoken(), "add daemon to topology");
       }
@@ -128,6 +129,7 @@ namespace Tests {
       std::vector< std::unique_ptr<TestNode> > nodeDaemons;
       System::Dispatcher& m_dispatcher;
       const CryptoNote::Currency& m_currency;
+	  Logging::ConsoleLogger m_logger;
 
       void launchTestnet(size_t count, Topology t = Line);
       void launchTestnetWithInprocNode(size_t count, Topology t = Line);
@@ -154,11 +156,9 @@ namespace Tests {
 
       bool prepareAndSubmitBlock(TestNode& node, CryptoNote::Block&& blockTemplate);
 
-    private:
 #ifdef __linux__
       std::vector<__pid_t> pids;
 #endif
-
 
       Logging::ConsoleLogger logger;
       std::unique_ptr<CryptoNote::INode> mainNode;
