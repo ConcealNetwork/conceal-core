@@ -481,6 +481,7 @@ void secureSaveWallet(CryptoNote::IWallet &wallet, const std::string &path, bool
   replaceWalletFiles(path, tempFilePath);
 }
 
+/* Generate a new wallet (-g) or import a new wallet if the secret keys have been specified */
 void generateNewWallet(const CryptoNote::Currency &currency, const WalletConfiguration &conf, Logging::ILogger &logger, System::Dispatcher &dispatcher)
 {
   Logging::LoggerRef log(logger, "generateNewWallet");
@@ -495,6 +496,9 @@ void generateNewWallet(const CryptoNote::Currency &currency, const WalletConfigu
   createWalletFile(walletFile, conf.walletFile);
 
   std::string address;
+
+  /* Create a new address and container since both view key and spend key
+     have not been specifiec */
   if (conf.secretSpendKey.empty() && conf.secretViewKey.empty())
   {
     log(Logging::INFO, Logging::BRIGHT_WHITE) << "Generating new wallet";
@@ -514,17 +518,22 @@ void generateNewWallet(const CryptoNote::Currency &currency, const WalletConfigu
     log(Logging::INFO, Logging::BRIGHT_WHITE) << "Secret spend key: " << Common::podToHex(spendKey.secretKey);
     log(Logging::INFO, Logging::BRIGHT_WHITE) << "Secret view key: " << Common::podToHex(private_view_key);
   }
+  /* We need both secret keys to import the wallet and create the container
+     so in the absence of either, display and error message and return */
   else if (conf.secretSpendKey.empty() || conf.secretViewKey.empty())
   {
     log(Logging::ERROR, Logging::BRIGHT_RED) << "Need both secret spend key and secret view key.";
     return;
   }
+  /* Both keys are present so attempt to import the wallet */
   else
   {
     log(Logging::INFO, Logging::BRIGHT_WHITE) << "Attemping to create container from keys";
     Crypto::Hash private_spend_key_hash;
     Crypto::Hash private_view_key_hash;
     uint64_t size;
+
+    /* Check if both keys are valid */
     if (!Common::fromHex(conf.secretSpendKey, &private_spend_key_hash, sizeof(private_spend_key_hash), size) || size != sizeof(private_spend_key_hash))
     {
       log(Logging::ERROR, Logging::BRIGHT_RED) << "Spend key is invalid";
@@ -535,6 +544,7 @@ void generateNewWallet(const CryptoNote::Currency &currency, const WalletConfigu
       log(Logging::ERROR, Logging::BRIGHT_RED) << "View key is invalid";
       return;
     }
+
     Crypto::SecretKey private_spend_key = *(struct Crypto::SecretKey *)&private_spend_key_hash;
     Crypto::SecretKey private_view_key = *(struct Crypto::SecretKey *)&private_view_key_hash;
 
@@ -544,6 +554,7 @@ void generateNewWallet(const CryptoNote::Currency &currency, const WalletConfigu
     log(Logging::INFO, Logging::BRIGHT_WHITE) << "Address: " << address;
   }
 
+  /* Save the container and exit */
   saveWallet(*wallet, walletFile, false, false);
   log(Logging::INFO) << "Wallet is saved";
 } // namespace PaymentService
