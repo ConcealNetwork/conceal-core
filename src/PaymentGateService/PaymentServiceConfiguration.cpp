@@ -27,6 +27,8 @@ Configuration::Configuration() {
   logLevel = Logging::INFO;
   bindAddress = "";
   bindPort = 0;
+  secretSpendKey = "";
+  secretViewKey = "";
 }
 
 void Configuration::initOptions(boost::program_options::options_description& desc) {
@@ -38,6 +40,8 @@ void Configuration::initOptions(boost::program_options::options_description& des
       ("container-file,w", po::value<std::string>(), "container file")
       ("container-password,p", po::value<std::string>(), "container password")
       ("generate-container,g", "generate new container file with one wallet and exit")
+      ("view-key", po::value<std::string>(),"Generate a wallet container with this secret view <key>")
+      ("spend-key", po::value<std::string>(),"Generate a wallet container with this secret spend <key>")
       ("daemon,d", "run as daemon in Unix or as service in Windows")
       ("log-file,l", po::value<std::string>(), "log file")
       ("server-root", po::value<std::string>(), "server root. The service will use it as working directory. Don't set it if don't want to change it")
@@ -100,6 +104,14 @@ void Configuration::init(const boost::program_options::variables_map& options) {
 
   if (options.count("container-file") != 0) {
     containerFile = options["container-file"].as<std::string>();
+  }
+
+  if (options.count("view-key") != 0) {
+    secretViewKey = options["view-key"].as<std::string>();
+  }
+
+  if (options.count("spend-key") != 0) {
+    secretSpendKey = options["spend-key"].as<std::string>();
   }
 
   if (options.count("container-password") != 0) {
