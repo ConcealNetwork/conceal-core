@@ -16,13 +16,17 @@
 #include <System/Timer.h>
 #include <System/InterruptedException.h>
 #include "Common/Util.h"
-
+#include "CryptoNoteCore/Account.h"
 #include "crypto/crypto.h"
 #include "CryptoNote.h"
 #include "CryptoNoteCore/CryptoNoteFormatUtils.h"
 #include "CryptoNoteCore/CryptoNoteBasicImpl.h"
 #include "CryptoNoteCore/TransactionExtra.h"
-
+#include "CryptoNoteCore/CryptoNoteBasicImpl.h"
+#include "CryptoNoteCore/Account.h"
+#include "CryptoNoteCore/CryptoNoteFormatUtils.h"
+#include "CryptoNoteCore/CryptoNoteTools.h"
+#include "CryptoNoteCore/Currency.h"
 #include <System/EventLock.h>
 
 #include "PaymentServiceJsonRpcMessages.h"
@@ -49,6 +53,8 @@
 #include "Common/StringTools.h"
 #include "Common/PathTools.h"
 #include "CryptoNoteProtocol/CryptoNoteProtocolHandler.h"
+
+using namespace CryptoNote;
 
 namespace PaymentService
 {
@@ -475,6 +481,7 @@ void secureSaveWallet(CryptoNote::IWallet &wallet, const std::string &path, bool
   replaceWalletFiles(path, tempFilePath);
 }
 
+/* Generate a new wallet (-g) or import a new wallet if the secret keys have been specified */
 void generateNewWallet(const CryptoNote::Currency &currency, const WalletConfiguration &conf, Logging::ILogger &logger, System::Dispatcher &dispatcher)
 {
   Logging::LoggerRef log(logger, "generateNewWallet");
@@ -485,19 +492,72 @@ void generateNewWallet(const CryptoNote::Currency &currency, const WalletConfigu
   CryptoNote::IWallet *wallet = new CryptoNote::WalletGreen(dispatcher, currency, *nodeStub, logger);
   std::unique_ptr<CryptoNote::IWallet> walletGuard(wallet);
 
-  log(Logging::INFO) << "Generating new wallet";
-
   std::fstream walletFile;
   createWalletFile(walletFile, conf.walletFile);
 
-  wallet->initialize(conf.walletPassword);
-  auto address = wallet->createAddress();
+  std::string address;
 
-  log(Logging::INFO) << "New wallet is generated. Address: " << address;
+  /* Create a new address and container since both view key and spend key
+     have not been specifiec */
+  if (conf.secretSpendKey.empty() && conf.secretViewKey.empty())
+  {
+    log(Logging::INFO, Logging::BRIGHT_WHITE) << "Generating new wallet";
+    log(Logging::INFO, Logging::BRIGHT_WHITE) << "Both spend key and view key are empty.";
+    Crypto::SecretKey private_view_key;
+    CryptoNote::KeyPair spendKey;
+    Crypto::PublicKey unused;
 
+    Crypto::generate_keys(spendKey.publicKey, spendKey.secretKey);
+    AccountBase::generateViewFromSpend(spendKey.secretKey, private_view_key, unused);
+
+    wallet->initializeWithViewKey(private_view_key, conf.walletPassword);
+    address = wallet->createAddress(spendKey.secretKey);
+
+    log(Logging::INFO, Logging::BRIGHT_WHITE) << "New wallet generated.";
+    log(Logging::INFO, Logging::BRIGHT_WHITE) << "Address: " << address;
+    log(Logging::INFO, Logging::BRIGHT_WHITE) << "Secret spend key: " << Common::podToHex(spendKey.secretKey);
+    log(Logging::INFO, Logging::BRIGHT_WHITE) << "Secret view key: " << Common::podToHex(private_view_key);
+  }
+  /* We need both secret keys to import the wallet and create the container
+     so in the absence of either, display and error message and return */
+  else if (conf.secretSpendKey.empty() || conf.secretViewKey.empty())
+  {
+    log(Logging::ERROR, Logging::BRIGHT_RED) << "Need both secret spend key and secret view key.";
+    return;
+  }
+  /* Both keys are present so attempt to import the wallet */
+  else
+  {
+    log(Logging::INFO, Logging::BRIGHT_WHITE) << "Attemping to create container from keys";
+    Crypto::Hash private_spend_key_hash;
+    Crypto::Hash private_view_key_hash;
+    uint64_t size;
+
+    /* Check if both keys are valid */
+    if (!Common::fromHex(conf.secretSpendKey, &private_spend_key_hash, sizeof(private_spend_key_hash), size) || size != sizeof(private_spend_key_hash))
+    {
+      log(Logging::ERROR, Logging::BRIGHT_RED) << "Spend key is invalid";
+      return;
+    }
+    if (!Common::fromHex(conf.secretViewKey, &private_view_key_hash, sizeof(private_view_key_hash), size) || size != sizeof(private_spend_key_hash))
+    {
+      log(Logging::ERROR, Logging::BRIGHT_RED) << "View key is invalid";
+      return;
+    }
+
+    Crypto::SecretKey private_spend_key = *(struct Crypto::SecretKey *)&private_spend_key_hash;
+    Crypto::SecretKey private_view_key = *(struct Crypto::SecretKey *)&private_view_key_hash;
+
+    wallet->initializeWithViewKey(private_view_key, conf.walletPassword);
+    address = wallet->createAddress(private_spend_key);
+    log(Logging::INFO, Logging::BRIGHT_WHITE) << "Imported wallet successfully.";
+    log(Logging::INFO, Logging::BRIGHT_WHITE) << "Address: " << address;
+  }
+
+  /* Save the container and exit */
   saveWallet(*wallet, walletFile, false, false);
   log(Logging::INFO) << "Wallet is saved";
-}
+} // namespace PaymentService
 
 void importLegacyKeys(const std::string &legacyKeysFile, const WalletConfiguration &conf)
 {
