@@ -9,3 +9,16 @@ build_script:
     - cd build
     - cmake -G "Visual Studio 15 2017 Win64" ..
     - MSBuild concealX.sln /p:Configuration=Release /m
+   
+after_build: 
+    - if not defined APPVEYOR_REPO_TAG_NAME (set APPVEYOR_REPO_TAG_NAME=%APPVEYOR_REPO_COMMIT%)
+    - cd src\Release
+    - mkdir conceal-%APPVEYOR_REPO_TAG_NAME%
+    - copy *.exe conceal-%APPVEYOR_REPO_TAG_NAME%
+    - copy ..\..\..\LICENSE conceal-%APPVEYOR_REPO_TAG_NAME%
+    - 7z a conceal-%APPVEYOR_REPO_TAG_NAME%-windows.zip conceal-%APPVEYOR_REPO_TAG_NAME%
+    - copy conceal-%APPVEYOR_REPO_TAG_NAME%-windows.zip ..\..\..\
+  
+artifacts:
+    - path: conceal-$(APPVEYOR_REPO_TAG_NAME)-windows.zip
+        name: ConcealRelease
