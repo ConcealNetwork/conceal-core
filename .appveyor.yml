@@ -21,4 +21,4 @@ after_build:
   
 artifacts:
     - path: conceal-$(APPVEYOR_REPO_TAG_NAME)-windows.zip
-        name: ConcealRelease
+      name: ConcealRelease
