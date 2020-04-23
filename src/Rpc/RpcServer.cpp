@@ -1,6 +1,8 @@
 // Copyright (c) 2011-2017 The Cryptonote developers
 // Copyright (c) 2017-2018 The Circle Foundation & Conceal Devs
 // Copyright (c) 2018-2019 Conceal Network & Conceal Devs
+// Copyright (c) 2019-2020 The Lithe Project Development Team
+//
 // Distributed under the MIT/X11 software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -107,6 +109,7 @@ RpcServer::RpcServer(System::Dispatcher& dispatcher, Logging::ILogger& log, core
 
 void RpcServer::processRequest(const HttpRequest& request, HttpResponse& response) {
   logger(TRACE) << "<< RpcServer.cpp << RPC request came: \n" << request << std::endl;
+  
   auto url = request.getUrl();
 
   auto it = s_handlers.find(url);
