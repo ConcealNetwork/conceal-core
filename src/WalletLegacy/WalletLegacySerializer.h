@@ -11,7 +11,7 @@
 #include <istream>
 
 #include "crypto/hash.h"
-#include "crypto/chacha.h"
+#include "crypto/chacha8.h"
 
 namespace CryptoNote {
 class AccountBase;
@@ -34,8 +34,8 @@ private:
   void saveKeys(CryptoNote::ISerializer& serializer);
   void loadKeys(CryptoNote::ISerializer& serializer);
 
-  Crypto::chacha_iv encrypt(const std::string& plain, const std::string& password, std::string& cipher);
-  void decrypt(const std::string& cipher, std::string& plain, Crypto::chacha_iv iv, const std::string& password);
+  Crypto::chacha8_iv encrypt(const std::string& plain, const std::string& password, std::string& cipher);
+  void decrypt(const std::string& cipher, std::string& plain, Crypto::chacha8_iv iv, const std::string& password);
 
   CryptoNote::AccountBase& account;
   WalletUserTransactionsCache& transactionsCache;
