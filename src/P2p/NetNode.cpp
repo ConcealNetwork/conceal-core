@@ -61,7 +61,7 @@ size_t get_random_index_with_fixed_probability(size_t max_index) {
 
 void addPortMapping(Logging::LoggerRef& logger, uint32_t port) {
   // Add UPnP port mapping
-  logger(INFO) <<  "Attempting to add IGD port mapping.";
+  logger(INFO, BRIGHT_YELLOW) <<  "<< NetNode.cpp << Attempting to add IGD port mapping.";
   int result;
   UPNPDev* deviceList = upnpDiscover(1000, NULL, NULL, 0, 0, &result);
   UPNPUrls urls;
@@ -75,21 +75,21 @@ void addPortMapping(Logging::LoggerRef& logger, uint32_t port) {
       portString << port;
       if (UPNP_AddPortMapping(urls.controlURL, igdData.first.servicetype, portString.str().c_str(),
         portString.str().c_str(), lanAddress, CryptoNote::CRYPTONOTE_NAME, "TCP", 0, "0") != 0) {
-        logger(ERROR) << "UPNP_AddPortMapping failed.";
+        logger(ERROR) << "<< NetNode.cpp << UPNP_AddPortMapping failed.";
       } else {
-        logger(INFO, BRIGHT_GREEN) << "Added IGD port mapping.";
+        logger(INFO, BRIGHT_GREEN) << "<< NetNode.cpp << Added IGD port mapping.";
       }
     } else if (result == 2) {
-      logger(INFO) <<  "IGD was found but reported as not connected.";
+      logger(INFO, YELLOW) <<  "<< NetNode.cpp << IGD was found but reported as not connected.";
     } else if (result == 3) {
-      logger(INFO) <<  "UPnP device was found but not recoginzed as IGD.";
+      logger(INFO, YELLOW) <<  "<< NetNode.cpp << UPnP device was found but not recoginzed as IGD.";
     } else {
-      logger(ERROR) << "UPNP_GetValidIGD returned an unknown result code.";
+      logger(ERROR) << "<< NetNode.cpp << UPNP_GetValidIGD returned an unknown result code.";
     }
 
     FreeUPNPUrls(&urls);
   } else {
-    logger(INFO) <<  "No IGD was found.";
+    logger(INFO, YELLOW) <<  "<< NetNode.cpp << No IGD was found.";
   }
 }
 
@@ -214,7 +214,7 @@ namespace CryptoNote
     s(version, "version");
 
     if (version != 1) {
-      return;
+      throw std::runtime_error("Unsupported version");
     }
 
     s(m_peerlist, "peerlist");
@@ -286,7 +286,8 @@ namespace CryptoNote
           CryptoNote::serialize(*this, a);
           loaded = true;
         }
-      } catch (std::exception&) {
+      } catch (const std::exception& e) {
+        logger(ERROR, BRIGHT_RED) << "<< NetNode.cpp << Failed to load config from file '" << state_file_path << "': " << e.what();
       }
 
       if (!loaded) {
@@ -304,7 +305,7 @@ namespace CryptoNote
 
       m_first_connection_maker_call = true;
     } catch (const std::exception& e) {
-      logger(ERROR) << "init_config failed: " << e.what();
+      logger(ERROR, BRIGHT_RED) << "<< NetNode.cpp << init_config failed: " << e.what();
       return false;
     }
     return true;
@@ -329,6 +330,7 @@ namespace CryptoNote
   bool NodeServer::make_default_config()
   {
     m_config.m_peer_id  = Crypto::rand<uint64_t>();
+    logger(INFO, YELLOW) << "<< NetNode.cpp << Generated new peer ID: " << m_config.m_peer_id;
     return true;
   }
 
@@ -466,7 +468,7 @@ namespace CryptoNote
     // m_net_server.get_config_object().m_invoke_timeout = CryptoNote::P2P_DEFAULT_INVOKE_TIMEOUT;
 
     //try to bind
-    logger(INFO) <<  "Binding on " << m_bind_ip << ":" << m_port;
+    logger(INFO, BRIGHT_YELLOW) <<  "<< NetNode.cpp << Binding on: " << m_bind_ip << ":" << m_port;
     m_listeningPort = Common::fromString<uint16_t>(m_port);
 
     m_listener = System::TcpListener(m_dispatcher, System::Ipv4Address(m_bind_ip), static_cast<uint16_t>(m_listeningPort));
@@ -490,7 +492,7 @@ namespace CryptoNote
   //-----------------------------------------------------------------------------------
 
   bool NodeServer::run() {
-    logger(INFO) <<  "Starting node_server";
+    logger(INFO, BRIGHT_GREEN) <<  "<< NetNode.cpp << Starting node_server";
 
     m_workingContextGroup.spawn(std::bind(&NodeServer::acceptLoop, this));
     m_workingContextGroup.spawn(std::bind(&NodeServer::onIdle, this));
