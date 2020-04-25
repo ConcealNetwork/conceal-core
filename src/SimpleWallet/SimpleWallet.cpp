@@ -595,6 +595,7 @@ simple_wallet::simple_wallet(System::Dispatcher& dispatcher, const CryptoNote::C
   m_consoleHandler.setHandler("sign_message", boost::bind(&simple_wallet::sign_message, this, _1), "Sign a message with your wallet keys");
   m_consoleHandler.setHandler("verify_signature", boost::bind(&simple_wallet::verify_signature, this, _1), "Verify a signed message");
   m_consoleHandler.setHandler("incoming_transfers", boost::bind(&simple_wallet::show_incoming_transfers, this, _1), "Show incoming transfers");
+  m_consoleHandler.setHandler("outgoing_transfers", boost::bind(&simple_wallet::show_outgoing_transfers, this, _1), "Show outgoing transfers");
   m_consoleHandler.setHandler("list_transfers", boost::bind(&simple_wallet::listTransfers, this, _1), "list_transfers <height> - Show all known transfers from a certain (optional) block height");
   m_consoleHandler.setHandler("payments", boost::bind(&simple_wallet::show_payments, this, _1), "payments <payment_id_1> [<payment_id_2> ... <payment_id_N>] - Show payments <payment_id_1>, ... <payment_id_N>");
   m_consoleHandler.setHandler("get_tx_proof", boost::bind(&simple_wallet::get_tx_proof, this, _1), "Generate a signature to prove payment: <txid> <address> [<txkey>]");
@@ -764,7 +765,7 @@ bool simple_wallet::init(const boost::program_options::variables_map& vm) {
   Tools::PasswordContainer pwd_container;
   if (command_line::has_arg(vm, arg_password)) {
     pwd_container.password(command_line::get_arg(vm, arg_password));
-  } else if (!pwd_container.read_password()) {
+  } else if (!pwd_container.read_password(!m_generate_new.empty() || !m_import_new.empty())) {
     fail_msg_writer() << "failed to read wallet password";
     return false;
   }
@@ -1347,7 +1348,8 @@ void simple_wallet::synchronizationProgressUpdated(uint32_t current, uint32_t to
 
 bool simple_wallet::show_balance(const std::vector<std::string>& args/* = std::vector<std::string>()*/) {
   success_msg_writer() << "available balance: " << m_currency.formatAmount(m_wallet->actualBalance()) <<
-    ", locked amount: " << m_currency.formatAmount(m_wallet->pendingBalance());
+    ", locked amount: " << m_currency.formatAmount(m_wallet->pendingBalance()) <<
+    ", total amount: " << m_currency.formatAmount(m_wallet->actualBalance() + m_wallet->pendingBalance());
 
   return true;
 }
@@ -1501,6 +1503,24 @@ bool simple_wallet::show_incoming_transfers(const std::vector<std::string>& args
   }
 
   if (!hasTransfers) success_msg_writer() << "No incoming transfers";
+  return true;
+}
+
+//----------------------------------------------------------------------------------------------------
+bool simple_wallet::show_outgoing_transfers(const std::vector<std::string>& args) {
+  bool hasTransfers = false;
+  size_t transactionsCount = m_wallet->getTransactionCount();
+  for (size_t trantransactionNumber = 0; trantransactionNumber < transactionsCount; ++trantransactionNumber) {
+    WalletLegacyTransaction txInfo;
+    m_wallet->getTransaction(trantransactionNumber, txInfo);
+    if (txInfo.totalAmount > 0) continue;
+    hasTransfers = true;
+    logger(INFO) << "        amount       \t                              tx id";
+    logger(INFO, MAGENTA) <<
+      std::setw(21) << m_currency.formatAmount(txInfo.totalAmount) << '\t' << Common::podToHex(txInfo.hash);
+  }
+
+  if (!hasTransfers) success_msg_writer() << "No outgoing transfers";
   return true;
 }
 
