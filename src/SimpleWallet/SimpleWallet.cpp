@@ -996,11 +996,10 @@ bool simple_wallet::new_wallet(const std::string &wallet_file, const std::string
 
     logger(INFO, BRIGHT_GREEN) << "ConcealWallet is an open-source, client-side, free wallet which allow you to send and receive CCX instantly on the blockchain. You are  in control of your funds & your keys. When you generate a new wallet, login, send, receive or deposit $CCX everything happens locally. Your seed is never transmitted, received or stored. That's why its imperative to write, print or save your seed somewhere safe. The backup of keys is your responsibility. If you lose your seed, your account can not be recovered. The Conceal Team doesn't take any responsibility for lost funds due to nonexistent/missing/lost private keys." << std::endl << std::endl;
 
-    logger(INFO, BRIGHT_WHITE) <<
-      "Wallet Address: " << m_wallet->getAddress() << std::endl <<
-      "Private View Key: " << Common::podToHex(keys.viewSecretKey) << std::endl <<
-      "Private Spend Key: " << Common::podToHex(keys.spendSecretKey) << std::endl <<
-      "Mnemonic Seed: " << generate_mnemonic(keys.spendSecretKey) << std::endl << std::endl;
+    std::cout << "Wallet Address: " << m_wallet->getAddress() << std::endl;
+    std::cout << "Private spend key: " << Common::podToHex(keys.spendSecretKey) << std::endl;
+    std::cout << "Private view key: " <<  Common::podToHex(keys.viewSecretKey) << std::endl;
+    std::cout << "Mnemonic Seed: " << generate_mnemonic(keys.spendSecretKey) << std::endl;
 
   }
   catch (const std::exception& e) {
