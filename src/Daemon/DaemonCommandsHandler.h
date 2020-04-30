@@ -72,5 +72,5 @@ private:
   
   bool status(const std::vector<std::string>& args);
   std::string get_mining_speed(uint32_t hr);
-  float get_sync_percentage(uint64_t height, uint64_t target_height);
+  std::string get_sync_percentage(uint64_t height, uint64_t target_height);
 };
