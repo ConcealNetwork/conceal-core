@@ -299,7 +299,7 @@ int main(int argc, char* argv[])
 
     cprotocol.set_p2p_endpoint(&p2psrv);
     ccore.set_cryptonote_protocol(&cprotocol);
-    DaemonCommandsHandler dch(ccore, p2psrv, logManager);
+    DaemonCommandsHandler dch(ccore, p2psrv, logManager, &rpcServer);
 
     // initialize objects
     logger(INFO) << "<< Daemon.cpp << " "Initializing p2p server...";

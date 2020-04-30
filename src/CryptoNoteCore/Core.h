@@ -6,6 +6,7 @@
 
 #pragma once
 
+#include <ctime>
 #include <boost/program_options/options_description.hpp>
 #include <boost/program_options/variables_map.hpp>
 
@@ -43,6 +44,8 @@ namespace CryptoNote {
      virtual i_cryptonote_protocol* get_protocol() override {return m_pprotocol;}
      virtual const Currency& currency() const override { return m_currency; }
 
+     virtual std::time_t getStartTime() const;
+
      //-------------------- IMinerHandler -----------------------
      virtual bool handle_block_found(Block& b) override;
      virtual bool get_block_template(Block& b, const AccountPublicAddress& adr, difficulty_type& diffic, uint32_t& height, const BinaryArray& ex_nonce) override;
@@ -55,6 +58,7 @@ namespace CryptoNote {
      bool init(const CoreConfig& config, const MinerConfig& minerConfig, bool load_existing);
      bool set_genesis_block(const Block& b);
      bool deinit();
+     time_t start_time;
 
      // ICore
      virtual size_t addChain(const std::vector<const IBlock*>& chain) override;
