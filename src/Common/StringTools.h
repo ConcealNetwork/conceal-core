@@ -97,9 +97,6 @@ template<typename T> void toString(const T& value, std::string& text) { // Does 
 bool loadFileToString(const std::string& filepath, std::string& buf);
 bool saveStringToFile(const std::string& filepath, const std::string& buf);
 
-
-std::string base64Decode(std::string const& encoded_string);
-
 std::string ipAddressToString(uint32_t ip);
 bool parseIpAddressAndPort(uint32_t& ip, uint32_t& port, const std::string& addr);
 
