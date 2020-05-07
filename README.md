@@ -36,15 +36,28 @@ Conceal is open-source, community driven and truly decentralized. No one owns it
 ##### Prerequisites
 
 - You will need the following dependencies to build the Conceal CLI: boost, cmake, git, gcc, g++, python, and make.
-- On Ubuntu: `sudo apt-get install -y build-essential python-dev gcc g++ git cmake libboost-all-dev`
+- On Ubuntu:
+
+```bash
+$ sudo add-apt-repository ppa:ubuntu-toolchain-r/test -y
+$ sudo apt-get update
+$ sudo apt-get install aptitude -y
+$ sudo aptitude install -y build-essential g++-8 gcc-8 git libboost-all-dev python-pip
+$ sudo pip install cmake
+$ sudo apt-get install -y build-essential python-dev g++-8 gcc-8 git cmake libboost-all-dev
+$ export CC=gcc-8
+$ export CXX=g++-8
+```
 
 #### Building
 
-- `git clone https://github.com/ConcealNetwork/conceal-core`
-- `cd conceal-core`
-- `mkdir build && cd $_`
-- `cmake ..`
-- `make`
+```bash
+$ git clone https://github.com/ConcealNetwork/conceal-core
+$ cd conceal-core
+$ mkdir build && cd $_
+$ cmake ..
+$ make
+```
 
 If the build is successful the binaries will be in the src folder.
 
@@ -60,14 +73,18 @@ If the build is successful the binaries will be in the src folder.
 
 ##### Building
 
-- From the start menu, open 'x64 Native Tools Command Prompt for vs2019' or run "C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\Common7\Tools\VsMSBuildCmd.bat" from any command prompt.
+- From the start menu, open `x64 Native Tools Command Prompt for vs2019` 
+    - OR run `C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\Common7\Tools\VsMSBuildCmd.bat` from any command prompt.
 
-- `git clone https://github.com/ConcealNetwork/conceal-core`
-- `cd conceal-core`
-- `mkdir build`
-- `cd build`
-- `cmake -G "Visual Studio 16 2017" -A x64 -DBOOST_LIBRARYDIR="c:\local\boost_1_70_0\lib64-msvc-14.2 ..` (Or your boost installed dir.)
-- `msbuild concealX.sln /p:Configuration=Release /m`
+```bash
+$ git clone https://github.com/ConcealNetwork/conceal-core
+$ cd conceal-core
+$ mkdir build
+$ cd build
+$ cmake -G "Visual Studio 16 2017" -A x64 -DBOOST_LIBRARYDIR="c:\local\boost_1_70_0\lib64-msvc-14.2" ..
+$ msbuild concealX.sln /p:Configuration=Release /m
+```
+*  (Or your boost installed dir with `-DBOOST_LIBRARYDIR=""`.)
 
 If the build is successful the binaries will be in the src/Release folder.
 
@@ -75,7 +92,10 @@ If the build is successful the binaries will be in the src/Release folder.
 
 #### Prerequisites
 
-In order to install prerequisites, [XCode](https://developer.apple.com/xcode/) and [Homebrew](https://brew.sh/) needs to be installed.
+- Install [cmake](https://cmake.org/). See [here](https://stackoverflow.com/questions/23849962/cmake-installer-for-mac-fails-to-create-usr-bin-symlinks) if you are unable to call cmake from the terminal after installing.
+- Install the [boost](http://www.boost.org/) libraries. Either compile boost manually or run brew install boost.
+- Install [XCode](https://developer.apple.com/xcode/) and [Homebrew](https://brew.sh/).
+
 Once both are ready, open terminal app, run following command:
 
 ```bash
@@ -106,7 +126,17 @@ $ cmake ..
 $ make
 ```
 
+OR `cmake -DBOOST_ROOT=<path_to_boost_install> ..` when building from a specific boost install. If you used brew to install boost, your path is most likely `/usr/local/include/boost`.
+
 If the build is successful the binaries will be located in `src` directory.
+
+- If your version of gcc is too old, you may need to run:
+
+```bash
+brew install gcc@8
+export CC=gcc-8
+export CXX=g++-8
+```
 
 #### Special Thanks
 Special thanks goes out to the developers from Cryptonote, Bytecoin, Monero, Forknote, TurtleCoin, Karbo and Masari.
