@@ -22,9 +22,9 @@ namespace std {
 
 template<>
 struct hash < CryptoNote::AccountPublicAddress > {
-  size_t operator()(const CryptoNote::AccountPublicAddress& val) const {
-    size_t spend = *(reinterpret_cast<const size_t*>(&val.spendPublicKey));
-    size_t view = *(reinterpret_cast<const size_t*>(&val.viewPublicKey));
+  uint64_t operator()(const CryptoNote::AccountPublicAddress& val) const {
+    uint64_t spend = *(reinterpret_cast<const uint64_t*>(&val.spendPublicKey));
+    uint64_t view = *(reinterpret_cast<const uint64_t*>(&val.viewPublicKey));
     return spend ^ view;
   }
 };

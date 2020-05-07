@@ -18,7 +18,7 @@ public:
   virtual bool removeObserver(ICryptoNoteProtocolObserver* observer) = 0;
 
   virtual uint32_t getObservedHeight() const = 0;
-  virtual size_t getPeerCount() const = 0;
+  virtual uint64_t getPeerCount() const = 0;
   virtual bool isSynchronized() const = 0;
 };
 

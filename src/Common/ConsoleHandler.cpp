@@ -159,7 +159,7 @@ std::string ConsoleHandler::getUsage() const {
   
   std::stringstream ss;
 
-  size_t maxlen = std::max_element(m_handlers.begin(), m_handlers.end(), [](
+  uint64_t maxlen = std::max_element(m_handlers.begin(), m_handlers.end(), [](
     CommandHandlersMap::const_reference& a, CommandHandlersMap::const_reference& b) { 
       return a.first.size() < b.first.size(); })->first.size();
 
@@ -203,14 +203,14 @@ void ConsoleHandler::handleCommand(const std::string& cmd) {
       if (parseString) {
         arg += ch;
       } else if (!arg.empty()) {
-        argList.emplace_back(std::move(arg));
+        argList.push_back(std::move(arg));
         arg.clear();
       }
       break;
 
     case '"':
       if (!arg.empty()) {
-        argList.emplace_back(std::move(arg));
+        argList.push_back(std::move(arg));
         arg.clear();
       }
 
@@ -223,7 +223,7 @@ void ConsoleHandler::handleCommand(const std::string& cmd) {
   }
 
   if (!arg.empty()) {
-    argList.emplace_back(std::move(arg));
+    argList.push_back(std::move(arg));
   }
 
   runCommand(argList);

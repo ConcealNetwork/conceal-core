@@ -478,21 +478,21 @@ uint64_t WalletLegacy::pendingDepositBalance() {
   return calculatePendingDepositBalance();
 }
 
-size_t WalletLegacy::getTransactionCount() {
+uint64_t WalletLegacy::getTransactionCount() {
   std::unique_lock<std::mutex> lock(m_cacheMutex);
   throwIfNotInitialised();
 
   return m_transactionsCache.getTransactionCount();
 }
 
-size_t WalletLegacy::getTransferCount() {
+uint64_t WalletLegacy::getTransferCount() {
   std::unique_lock<std::mutex> lock(m_cacheMutex);
   throwIfNotInitialised();
 
   return m_transactionsCache.getTransferCount();
 }
 
-size_t WalletLegacy::getDepositCount() {
+uint64_t WalletLegacy::getDepositCount() {
   std::unique_lock<std::mutex> lock(m_cacheMutex);
   throwIfNotInitialised();
 
@@ -527,7 +527,7 @@ bool WalletLegacy::getDeposit(DepositId depositId, Deposit& deposit) {
   return m_transactionsCache.getDeposit(depositId, deposit);
 }
 
-size_t WalletLegacy::getNumUnlockedOutputs() {
+uint64_t WalletLegacy::getNumUnlockedOutputs() {
   std::vector<TransactionOutputInformation> outputs;
   m_transferDetails->getOutputs(outputs, ITransfersContainer::IncludeKeyUnlocked);
   return outputs.size();
@@ -603,11 +603,11 @@ TransactionId WalletLegacy::sendTransaction(Crypto::SecretKey& transactionSK,
   return txId;
 }
 
-size_t WalletLegacy::estimateFusion(const uint64_t& threshold) {
-  size_t fusionReadyCount = 0;
+uint64_t WalletLegacy::estimateFusion(const uint64_t& threshold) {
+  uint64_t fusionReadyCount = 0;
   std::vector<TransactionOutputInformation> outputs;
   m_transferDetails->getOutputs(outputs, ITransfersContainer::IncludeKeyUnlocked);
-  std::array<size_t, std::numeric_limits<uint64_t>::digits10 + 1> bucketSizes;
+  std::array<uint64_t, std::numeric_limits<uint64_t>::digits10 + 1> bucketSizes;
   bucketSizes.fill(0);
   for (auto& out : outputs) {
     uint8_t powerOfTen = 0;
@@ -622,12 +622,12 @@ size_t WalletLegacy::estimateFusion(const uint64_t& threshold) {
   return fusionReadyCount;
 }
 
-std::list<TransactionOutputInformation> WalletLegacy::selectFusionTransfersToSend(uint64_t threshold, size_t minInputCount, size_t maxInputCount) {
+std::list<TransactionOutputInformation> WalletLegacy::selectFusionTransfersToSend(uint64_t threshold, uint64_t minInputCount, uint64_t maxInputCount) {
   std::list<TransactionOutputInformation> selectedOutputs;
   std::vector<TransactionOutputInformation> outputs;
   std::vector<TransactionOutputInformation> allFusionReadyOuts;
   m_transferDetails->getOutputs(outputs, ITransfersContainer::IncludeKeyUnlocked);
-  std::array<size_t, std::numeric_limits<uint64_t>::digits10 + 1> bucketSizes;
+  std::array<uint64_t, std::numeric_limits<uint64_t>::digits10 + 1> bucketSizes;
   bucketSizes.fill(0);
   for (auto& out : outputs) {
     uint8_t powerOfTen = 0;
@@ -640,7 +640,7 @@ std::list<TransactionOutputInformation> WalletLegacy::selectFusionTransfersToSen
   std::vector<uint8_t> bucketNumbers(bucketSizes.size());
   std::iota(bucketNumbers.begin(), bucketNumbers.end(), 0);
   std::shuffle(bucketNumbers.begin(), bucketNumbers.end(), std::default_random_engine{ Crypto::rand<std::default_random_engine::result_type>() });
-  size_t bucketNumberIndex = 0;
+  uint64_t bucketNumberIndex = 0;
   for (; bucketNumberIndex < bucketNumbers.size(); ++bucketNumberIndex) {
 	  if (bucketSizes[bucketNumbers[bucketNumberIndex]] >= minInputCount) {
 		  break;
@@ -651,18 +651,18 @@ std::list<TransactionOutputInformation> WalletLegacy::selectFusionTransfersToSen
 	  return {};
   }
 
-  size_t selectedBucket = bucketNumbers[bucketNumberIndex];
+  uint64_t selectedBucket = bucketNumbers[bucketNumberIndex];
   assert(selectedBucket < std::numeric_limits<uint64_t>::digits10 + 1);
   assert(bucketSizes[selectedBucket] >= minInputCount);
   uint64_t lowerBound = 1;
-  for (size_t i = 0; i < selectedBucket; ++i) {
+  for (uint64_t i = 0; i < selectedBucket; ++i) {
 	  lowerBound *= 10;
   }
 
   uint64_t upperBound = selectedBucket == std::numeric_limits<uint64_t>::digits10 ? UINT64_MAX : lowerBound * 10;
   std::vector<TransactionOutputInformation> selectedOuts;
   selectedOuts.reserve(bucketSizes[selectedBucket]);
-  for (size_t outIndex = 0; outIndex < allFusionReadyOuts.size(); ++outIndex) {
+  for (uint64_t outIndex = 0; outIndex < allFusionReadyOuts.size(); ++outIndex) {
 	  if (allFusionReadyOuts[outIndex].amount >= lowerBound && allFusionReadyOuts[outIndex].amount < upperBound) {
 		  selectedOuts.push_back(std::move(allFusionReadyOuts[outIndex]));
 	  }
@@ -677,10 +677,10 @@ std::list<TransactionOutputInformation> WalletLegacy::selectFusionTransfersToSen
 	  return selectedOutputs;
   }
 
-  ShuffleGenerator<size_t, Crypto::random_engine<size_t>> generator(selectedOuts.size());
+  ShuffleGenerator<uint64_t, Crypto::random_engine<uint64_t>> generator(selectedOuts.size());
   std::vector<TransactionOutputInformation> trimmedSelectedOuts;
   trimmedSelectedOuts.reserve(maxInputCount);
-  for (size_t i = 0; i < maxInputCount; ++i) {
+  for (uint64_t i = 0; i < maxInputCount; ++i) {
 	  trimmedSelectedOuts.push_back(std::move(selectedOuts[generator()]));
   }
 
@@ -787,7 +787,7 @@ uint64_t WalletLegacy::dustBalance()
 	std::vector<TransactionOutputInformation> outputs;
 	m_transferDetails->getOutputs(outputs, ITransfersContainer::IncludeKeyUnlocked);
 	uint64_t money = 0;
-	for (size_t i = 0; i < outputs.size(); ++i) 
+	for (uint64_t i = 0; i < outputs.size(); ++i) 
   {
 		const auto& out = outputs[i];
 		if (!m_transactionsCache.isUsed(out)) 
@@ -848,7 +848,7 @@ void WalletLegacy::synchronizationCallback(WalletRequest::Callback callback, std
   }
 }
 
-std::error_code WalletLegacy::cancelTransaction(size_t transactionId) {
+std::error_code WalletLegacy::cancelTransaction(uint64_t transactionId) {
   return make_error_code(CryptoNote::error::TX_CANCEL_IMPOSSIBLE);
 }
 
@@ -1290,7 +1290,7 @@ std::string WalletLegacy::getReserveProof(const uint64_t &reserve, const std::st
 	std::sort(selected_transfers.begin(), selected_transfers.end(), compareTransactionOutputInformationByAmount);
 	while (selected_transfers.size() >= 2 && selected_transfers[1].amount >= reserve)
 		selected_transfers.erase(selected_transfers.begin());
-	size_t sz = 0;
+	uint64_t sz = 0;
 	uint64_t total = 0;
 	while (total < reserve) {
 		total += selected_transfers[sz].amount;
@@ -1305,7 +1305,7 @@ std::string WalletLegacy::getReserveProof(const uint64_t &reserve, const std::st
 	std::vector<Crypto::KeyImage> kimages;
 	CryptoNote::KeyPair ephemeral;
 
-	for (size_t i = 0; i < selected_transfers.size(); ++i) {
+	for (uint64_t i = 0; i < selected_transfers.size(); ++i) {
 
 		// have to repeat this to get key image as we don't store m_key_image
 		// prefix_data.append((const char*)&m_transfers[selected_transfers[i]].m_key_image, sizeof(crypto::key_image));
@@ -1328,7 +1328,7 @@ std::string WalletLegacy::getReserveProof(const uint64_t &reserve, const std::st
 	// generate proof entries
 	std::vector<reserve_proof_entry> proofs(selected_transfers.size());
 	
-	for (size_t i = 0; i < selected_transfers.size(); ++i) {
+	for (uint64_t i = 0; i < selected_transfers.size(); ++i) {
 		const TransactionOutputInformation &td = selected_transfers[i];
 		reserve_proof_entry& proof = proofs[i];
 		proof.key_image = kimages[i];

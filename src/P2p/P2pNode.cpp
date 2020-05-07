@@ -7,6 +7,7 @@
 
 #include "P2pNode.h"
 
+#include <random>
 #include <boost/uuid/uuid_io.hpp>
 
 #include <System/ContextGroupTimeout.h>
@@ -39,12 +40,12 @@ namespace {
 class PeerIndexGenerator {
 public:
 
-  PeerIndexGenerator(size_t maxIndex)
+  PeerIndexGenerator(uint64_t maxIndex)
     : maxIndex(maxIndex), randCount(0) {
     assert(maxIndex > 0);
   }
 
-  bool generate(size_t& num) {
+  bool generate(uint64_t& num) {
     while (randCount < (maxIndex + 1) * 3) {
       ++randCount;
       auto idx = getRandomIndex();
@@ -60,19 +61,19 @@ public:
 
 private:
 
-  size_t getRandomIndex() {
+  uint64_t getRandomIndex() {
     //divide by zero workaround
     if (maxIndex == 0) {
       return 0;
     }
 
-    size_t x = Crypto::rand<size_t>() % (maxIndex + 1);
+    uint64_t x = Crypto::rand<uint64_t>() % (maxIndex + 1);
     return (x * x * x) / (maxIndex * maxIndex);
   }
 
-  const size_t maxIndex;
-  size_t randCount;
-  std::set<size_t> visited;
+  const uint64_t maxIndex;
+  uint64_t randCount;
+  std::set<uint64_t> visited;
 };
 
 NetworkAddress getRemoteAddress(const TcpConnection& connection) {
@@ -107,12 +108,11 @@ void doWithTimeoutAndThrow(System::Dispatcher& dispatcher, std::chrono::nanoseco
 
 }
 
-P2pNode::P2pNode(const P2pNodeConfig& cfg, Dispatcher& dispatcher, Logging::ILogger& log, const Crypto::Hash& genesisHash, PeerIdType peerId) :
+P2pNode::P2pNode(const P2pNodeConfig& cfg, Dispatcher& dispatcher, Logging::ILogger& log, const Crypto::Hash& genesisHash, uint64_t peerId) :
   logger(log, "P2pNode:" + std::to_string(cfg.getBindPort())),
   m_stopRequested(false),
   m_cfg(cfg),
   m_myPeerId(peerId),
-  m_genesisHash(genesisHash),
   m_genesisPayload(CORE_SYNC_DATA{ 1, genesisHash }),
   m_dispatcher(dispatcher),
   workingContextGroup(dispatcher),
@@ -229,7 +229,7 @@ void P2pNode::connectPeers() {
   // if white peer list is empty, get peers from seeds
   if (m_peerlist.get_white_peers_count() == 0 && !m_cfg.getSeedNodes().empty()) {
     auto seedNodes = m_cfg.getSeedNodes();
-    std::random_shuffle(seedNodes.begin(), seedNodes.end());
+    std::shuffle(seedNodes.begin(), seedNodes.end(), std::random_device{});
     for (const auto& seed : seedNodes) {
       auto conn = tryToConnectPeer(seed);
       if (conn != nullptr && fetchPeerList(std::move(conn))) {
@@ -240,9 +240,9 @@ void P2pNode::connectPeers() {
 
   connectPeerList(m_cfg.getPriorityNodes());
 
-  const size_t totalExpectedConnectionsCount = m_cfg.getExpectedOutgoingConnectionsCount();
-  const size_t expectedWhiteConnections = (totalExpectedConnectionsCount * m_cfg.getWhiteListConnectionsPercent()) / 100;
-  const size_t outgoingConnections = getOutgoingConnectionsCount();
+  const uint64_t totalExpectedConnectionsCount = m_cfg.getExpectedOutgoingConnectionsCount();
+  const uint64_t expectedWhiteConnections = (totalExpectedConnectionsCount * m_cfg.getWhiteListConnectionsPercent()) / 100;
+  const uint64_t outgoingConnections = getOutgoingConnectionsCount();
 
   if (outgoingConnections < totalExpectedConnectionsCount) {
     if (outgoingConnections < expectedWhiteConnections) {
@@ -259,7 +259,7 @@ void P2pNode::connectPeers() {
   }
 }
 
-void P2pNode::makeExpectedConnectionsCount(const PeerlistManager::Peerlist& peerlist, size_t connectionsCount) {
+void P2pNode::makeExpectedConnectionsCount(const Peerlist& peerlist, uint64_t connectionsCount) {
   while (getOutgoingConnectionsCount() < connectionsCount) {
     if (peerlist.count() == 0) {
       return;
@@ -271,11 +271,11 @@ void P2pNode::makeExpectedConnectionsCount(const PeerlistManager::Peerlist& peer
   }
 }
 
-bool P2pNode::makeNewConnectionFromPeerlist(const PeerlistManager::Peerlist& peerlist) {
-  size_t peerIndex;
+bool P2pNode::makeNewConnectionFromPeerlist(const Peerlist& peerlist) {
+  uint64_t peerIndex;
   PeerIndexGenerator idxGen(std::min<uint64_t>(peerlist.count() - 1, m_cfg.getPeerListConnectRange()));
 
-  for (size_t tryCount = 0; idxGen.generate(peerIndex) && tryCount < m_cfg.getPeerListGetTryCount(); ++tryCount) {
+  for (uint64_t tryCount = 0; idxGen.generate(peerIndex) && tryCount < m_cfg.getPeerListGetTryCount(); ++tryCount) {
     PeerlistEntry peer;
     if (!peerlist.get(peer, peerIndex)) {
       logger(WARNING) << "Failed to get peer from list, idx = " << peerIndex;
@@ -441,7 +441,7 @@ const CORE_SYNC_DATA& P2pNode::getGenesisPayload() const {
   return m_genesisPayload;
 }
 
-std::list<PeerlistEntry> P2pNode::getLocalPeerList() const {
+std::list<PeerlistEntry> P2pNode::getLocalPeerList() {
   std::list<PeerlistEntry> peerlist;
   m_peerlist.get_peerlist_head(peerlist);
   return peerlist;
@@ -463,12 +463,12 @@ basic_node_data P2pNode::getNodeData() const {
   return nodeData;
 }
 
-PeerIdType P2pNode::getPeerId() const {
+uint64_t P2pNode::getPeerId() const {
   return m_myPeerId;
 }
 
-size_t P2pNode::getOutgoingConnectionsCount() const {
-  size_t count = 0;
+uint64_t P2pNode::getOutgoingConnectionsCount() const {
+  uint64_t count = 0;
 
   for (const auto& ctx : m_contexts) {
     if (!ctx->isIncoming()) {

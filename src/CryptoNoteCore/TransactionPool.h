@@ -86,10 +86,10 @@ namespace CryptoNote {
     bool deinit();
 
     bool have_tx(const Crypto::Hash &id) const;
-    bool add_tx(const Transaction &tx, const Crypto::Hash &id, size_t blobSize, tx_verification_context& tvc, bool keeped_by_block, uint32_t height);
+    bool add_tx(const Transaction &tx, const Crypto::Hash &id, uint64_t blobSize, tx_verification_context& tvc, bool keeped_by_block, uint32_t height);
     bool add_tx(const Transaction &tx, tx_verification_context& tvc, bool keeped_by_block, uint32_t height);
     //gets tx and remove it from pool
-    bool take_tx(const Crypto::Hash &id, Transaction &tx, size_t& blobSize, uint64_t& fee);
+    bool take_tx(const Crypto::Hash &id, Transaction &tx, uint64_t& blobSize, uint64_t& fee);
 
     bool on_blockchain_inc(uint64_t new_block_height, const Crypto::Hash& top_block_id);
     bool on_blockchain_dec(uint64_t new_block_height, const Crypto::Hash& top_block_id);
@@ -98,11 +98,11 @@ namespace CryptoNote {
     void unlock() const;
     std::unique_lock<std::recursive_mutex> obtainGuard() const;
 
-    bool fill_block_template(Block &bl, size_t median_size, size_t maxCumulativeSize, uint64_t already_generated_coins, size_t &total_size, uint64_t &fee, uint32_t& height);
+    bool fill_block_template(Block &bl, uint64_t median_size, uint64_t maxCumulativeSize, uint64_t already_generated_coins, uint64_t &total_size, uint64_t &fee, uint32_t& height);
 
     void get_transactions(std::list<Transaction>& txs) const;
     void get_difference(const std::vector<Crypto::Hash>& known_tx_ids, std::vector<Crypto::Hash>& new_tx_ids, std::vector<Crypto::Hash>& deleted_tx_ids) const;
-    size_t get_transactions_count() const;
+    uint64_t get_transactions_count() const;
     std::string print_pool(bool short_format) const;
     void on_idle();
 
@@ -133,7 +133,7 @@ namespace CryptoNote {
     struct TransactionDetails : public TransactionCheckInfo {
       Crypto::Hash id;
       Transaction tx;
-      size_t blobSize;
+      uint64_t blobSize;
       uint64_t fee;
       bool keptByBlock;
       time_t receiveTime;

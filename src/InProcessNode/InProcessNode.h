@@ -40,7 +40,7 @@ public:
   virtual bool addObserver(INodeObserver* observer) override;
   virtual bool removeObserver(INodeObserver* observer) override;
 
-  virtual size_t getPeerCount() const override;
+  virtual uint64_t getPeerCount() const override;
   virtual uint32_t getLastLocalBlockHeight() const override;
   virtual uint32_t getLastKnownBlockHeight() const override;
   virtual uint32_t getLocalBlockCount() const override;
@@ -68,7 +68,7 @@ public:
   virtual void isSynchronized(bool& syncStatus, const Callback& callback) override;
 
 private:
-  virtual void peerCountUpdated(size_t count) override;
+  virtual void peerCountUpdated(uint64_t count) override;
   virtual void lastKnownBlockHeightUpdated(uint32_t height) override;
   virtual void blockchainSynchronized(uint32_t topHeight) override;
   virtual void blockchainUpdated() override;

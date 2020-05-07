@@ -99,7 +99,7 @@ class Queue {
   }
 
   // Gets the number of elements.
-  size_t Size() const { return size_; }
+  uint64_t Size() const { return size_; }
 
   // Gets the first element of the queue, or NULL if the queue is empty.
   QueueNode<E>* Head() { return head_; }
@@ -162,7 +162,7 @@ class Queue {
  private:
   QueueNode<E>* head_;  // The first node of the queue.
   QueueNode<E>* last_;  // The last node of the queue.
-  size_t size_;  // The number of elements in the queue.
+  uint64_t size_;  // The number of elements in the queue.
 
   // We disallow copying a queue.
   Queue(const Queue&);

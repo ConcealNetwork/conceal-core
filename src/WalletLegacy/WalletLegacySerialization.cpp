@@ -25,7 +25,7 @@ void serialize(UnconfirmedTransferDetails& utd, CryptoNote::ISerializer& seriali
   utd.sentTime = static_cast<time_t>(time);
   uint64_t txId = static_cast<uint64_t>(utd.transactionId);
   serializer(txId, "transaction_id");
-  utd.transactionId = static_cast<size_t>(txId);
+  utd.transactionId = static_cast<uint64_t>(txId);
 }
 
 void serialize(UnconfirmedSpentDepositDetails& details, ISerializer& serializer) {
@@ -40,19 +40,19 @@ void serialize(UnconfirmedSpentDepositDetails& details, ISerializer& serializer)
 void serialize(WalletLegacyTransaction& txi, CryptoNote::ISerializer& serializer) {
   uint64_t trId = static_cast<uint64_t>(txi.firstTransferId);
   serializer(trId, "first_transfer_id");
-  txi.firstTransferId = static_cast<size_t>(trId);
+  txi.firstTransferId = static_cast<uint64_t>(trId);
 
   uint64_t trCount = static_cast<uint64_t>(txi.transferCount);
   serializer(trCount, "transfer_count");
-  txi.transferCount = static_cast<size_t>(trCount);
+  txi.transferCount = static_cast<uint64_t>(trCount);
 
   uint64_t dtId = static_cast<uint64_t>(txi.firstDepositId);
   serializer(dtId, "first_deposit_id");
-  txi.firstDepositId = static_cast<size_t>(dtId);
+  txi.firstDepositId = static_cast<uint64_t>(dtId);
 
   uint64_t dtCount = static_cast<uint64_t>(txi.depositCount);
   serializer(dtCount, "deposit_count");
-  txi.depositCount = static_cast<size_t>(dtCount);
+  txi.depositCount = static_cast<uint64_t>(dtCount);
 
   serializer(txi.totalAmount, "total_amount");
 
@@ -86,11 +86,11 @@ void serialize(WalletLegacyTransfer& tr, CryptoNote::ISerializer& serializer) {
 void serialize(Deposit& deposit, CryptoNote::ISerializer& serializer) {
   uint64_t creatingTxId = static_cast<uint64_t>(deposit.creatingTransactionId);
   serializer(creatingTxId, "creating_transaction_id");
-  deposit.creatingTransactionId = static_cast<size_t>(creatingTxId);
+  deposit.creatingTransactionId = static_cast<uint64_t>(creatingTxId);
 
   uint64_t spendingTxIx = static_cast<uint64_t>(deposit.spendingTransactionId);
   serializer(spendingTxIx, "spending_transaction_id");
-  deposit.spendingTransactionId = static_cast<size_t>(spendingTxIx);
+  deposit.spendingTransactionId = static_cast<uint64_t>(spendingTxIx);
 
   serializer(deposit.term, "term");
   serializer(deposit.amount, "amount");

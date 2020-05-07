@@ -52,7 +52,7 @@ namespace CryptoNote {
     virtual bool checkTransactionInputs(const CryptoNote::Transaction& tx, BlockInfo& maxUsedBlock) override;
     virtual bool checkTransactionInputs(const CryptoNote::Transaction& tx, BlockInfo& maxUsedBlock, BlockInfo& lastFailed) override;
     virtual bool haveSpentKeyImages(const CryptoNote::Transaction& tx) override;
-    virtual bool checkTransactionSize(size_t blobSize) override;
+    virtual bool checkTransactionSize(uint64_t blobSize) override;
 
     bool init() { return init(Tools::getDefaultDataDirectory(), true); }
     bool init(const std::string& config_folder, bool load_existing);
@@ -85,34 +85,34 @@ namespace CryptoNote {
     bool addNewBlock(const Block& bl_, block_verification_context& bvc);
     bool resetAndSetGenesisBlock(const Block& b);
     bool haveBlock(const Crypto::Hash& id);
-    size_t getTotalTransactions();
+    uint64_t getTotalTransactions();
     std::vector<Crypto::Hash> buildSparseChain();
     std::vector<Crypto::Hash> buildSparseChain(const Crypto::Hash& startBlockId);
     uint32_t findBlockchainSupplement(const std::vector<Crypto::Hash>& qblock_ids); // !!!!
-    std::vector<Crypto::Hash> findBlockchainSupplement(const std::vector<Crypto::Hash>& remoteBlockIds, size_t maxCount,
+    std::vector<Crypto::Hash> findBlockchainSupplement(const std::vector<Crypto::Hash>& remoteBlockIds, uint64_t maxCount,
       uint32_t& totalBlockCount, uint32_t& startBlockIndex);
       uint8_t getBlockMajorVersionForHeight(uint32_t height) const;
 	uint8_t blockMajorVersion;
     bool handleGetObjects(NOTIFY_REQUEST_GET_OBJECTS_request& arg, NOTIFY_RESPONSE_GET_OBJECTS_request& rsp); //Deprecated. Should be removed with CryptoNoteProtocolHandler.
     bool getRandomOutsByAmount(const COMMAND_RPC_GET_RANDOM_OUTPUTS_FOR_AMOUNTS_request& req, COMMAND_RPC_GET_RANDOM_OUTPUTS_FOR_AMOUNTS_response& res);
-    bool getBackwardBlocksSize(size_t from_height, std::vector<size_t>& sz, size_t count);
+    bool getBackwardBlocksSize(uint64_t from_height, std::vector<uint64_t>& sz, uint64_t count);
     bool getTransactionOutputGlobalIndexes(const Crypto::Hash& tx_id, std::vector<uint32_t>& indexs);
     bool get_out_by_msig_gindex(uint64_t amount, uint64_t gindex, MultisignatureOutput& out);
     bool checkTransactionInputs(const Transaction& tx, uint32_t& pmax_used_block_height, Crypto::Hash& max_used_block_id, BlockInfo* tail = 0);
     uint64_t getCurrentCumulativeBlocksizeLimit();
-    uint64_t blockDifficulty(size_t i);
+    uint64_t blockDifficulty(uint64_t i);
     bool getBlockContainingTransaction(const Crypto::Hash& txId, Crypto::Hash& blockId, uint32_t& blockHeight);
     bool getAlreadyGeneratedCoins(const Crypto::Hash& hash, uint64_t& generatedCoins);
-    bool getBlockSize(const Crypto::Hash& hash, size_t& size);
-    bool getMultisigOutputReference(const MultisignatureInput& txInMultisig, std::pair<Crypto::Hash, size_t>& outputReference);
+    bool getBlockSize(const Crypto::Hash& hash, uint64_t& size);
+    bool getMultisigOutputReference(const MultisignatureInput& txInMultisig, std::pair<Crypto::Hash, uint64_t>& outputReference);
     bool getGeneratedTransactionsNumber(uint32_t height, uint64_t& generatedTransactions);
     bool getOrphanBlockIdsByHeight(uint32_t height, std::vector<Crypto::Hash>& blockHashes);
     bool getBlockIdsByTimestamp(uint64_t timestampBegin, uint64_t timestampEnd, uint32_t blocksNumberLimit, std::vector<Crypto::Hash>& hashes, uint32_t& blocksNumberWithinTimestamps);
     bool getTransactionIdsByPaymentId(const Crypto::Hash& paymentId, std::vector<Crypto::Hash>& transactionHashes);
     bool isBlockInMainChain(const Crypto::Hash& blockId);
     uint64_t fullDepositAmount() const;
-    uint64_t depositAmountAtHeight(size_t height) const;
-    uint64_t depositInterestAtHeight(size_t height) const;
+    uint64_t depositAmountAtHeight(uint64_t height) const;
+    uint64_t depositInterestAtHeight(uint64_t height) const;
     uint64_t coinsEmittedAtHeight(uint64_t height);
     uint64_t difficultyAtHeight(uint64_t height);
     bool isInCheckpointZone(const uint32_t height);
@@ -232,7 +232,7 @@ bool have_tx_keyimg_as_spent(const Crypto::KeyImage &key_im);
 
     typedef google::sparse_hash_set<Crypto::KeyImage> key_images_container;
     typedef std::unordered_map<Crypto::Hash, BlockEntry> blocks_ext_by_hash;
-    typedef google::sparse_hash_map<uint64_t, std::vector<std::pair<TransactionIndex, uint16_t>>> outputs_container; //Crypto::Hash - tx hash, size_t - index of out in transaction
+    typedef google::sparse_hash_map<uint64_t, std::vector<std::pair<TransactionIndex, uint16_t>>> outputs_container; //Crypto::Hash - tx hash, uint64_t - index of out in transaction
     typedef google::sparse_hash_map<uint64_t, std::vector<MultisignatureOutputUsage>> MultisignatureOutputsContainer;
 
     const Currency& m_currency;
@@ -242,7 +242,7 @@ bool have_tx_keyimg_as_spent(const Crypto::KeyImage &key_im);
     Tools::ObserverManager<IBlockchainStorageObserver> m_observerManager;
 
     key_images_container m_spent_keys;
-    size_t m_current_block_cumul_sz_limit;
+    uint64_t m_current_block_cumul_sz_limit;
     blocks_ext_by_hash m_alternative_chains; // Crypto::Hash -> block_extended_info
     outputs_container m_outputs;
 
@@ -284,20 +284,20 @@ bool have_tx_keyimg_as_spent(const Crypto::KeyImage &key_im);
     difficulty_type get_next_difficulty_for_alternative_chain(const std::list<blocks_ext_by_hash::iterator>& alt_chain, BlockEntry& bei);
     void pushToDepositIndex(const BlockEntry& block, uint64_t interest);
     bool prevalidate_miner_transaction(const Block& b, uint32_t height);
-    bool validate_miner_transaction(const Block& b, uint32_t height, size_t cumulativeBlockSize, uint64_t alreadyGeneratedCoins, uint64_t fee, uint64_t& reward, int64_t& emissionChange);
-    bool rollback_blockchain_switching(std::list<Block>& original_chain, size_t rollback_height);
-    bool get_last_n_blocks_sizes(std::vector<size_t>& sz, size_t count);
-    bool add_out_to_get_random_outs(std::vector<std::pair<TransactionIndex, uint16_t>>& amount_outs, COMMAND_RPC_GET_RANDOM_OUTPUTS_FOR_AMOUNTS_outs_for_amount& result_outs, uint64_t amount, size_t i);
+    bool validate_miner_transaction(const Block& b, uint32_t height, uint64_t cumulativeBlockSize, uint64_t alreadyGeneratedCoins, uint64_t fee, uint64_t& reward, int64_t& emissionChange);
+    bool rollback_blockchain_switching(std::list<Block>& original_chain, uint64_t rollback_height);
+    bool get_last_n_blocks_sizes(std::vector<uint64_t>& sz, uint64_t count);
+    bool add_out_to_get_random_outs(std::vector<std::pair<TransactionIndex, uint16_t>>& amount_outs, COMMAND_RPC_GET_RANDOM_OUTPUTS_FOR_AMOUNTS_outs_for_amount& result_outs, uint64_t amount, uint64_t i);
     bool is_tx_spendtime_unlocked(uint64_t unlock_time);
-    size_t find_end_of_allowed_index(const std::vector<std::pair<TransactionIndex, uint16_t>>& amount_outs);
+    uint64_t find_end_of_allowed_index(const std::vector<std::pair<TransactionIndex, uint16_t>>& amount_outs);
     bool check_block_timestamp_main(const Block& b);
     bool check_block_timestamp(std::vector<uint64_t> timestamps, const Block& b);
     uint64_t get_adjusted_time();
     bool complete_timestamps_vector(uint64_t start_height, std::vector<uint64_t>& timestamps);
     bool checkBlockVersion(const Block& b, const Crypto::Hash& blockHash);
-    bool checkCumulativeBlockSize(const Crypto::Hash& blockId, size_t cumulativeBlockSize, uint64_t height);
+    bool checkCumulativeBlockSize(const Crypto::Hash& blockId, uint64_t cumulativeBlockSize, uint64_t height);
     std::vector<Crypto::Hash> doBuildSparseChain(const Crypto::Hash& startBlockId) const;
-    bool getBlockCumulativeSize(const Block& block, size_t& cumulativeSize);
+    bool getBlockCumulativeSize(const Block& block, uint64_t& cumulativeSize);
     bool update_next_comulative_size_limit();
     bool check_tx_input(const KeyInput& txin, const Crypto::Hash& tx_prefix_hash, const std::vector<Crypto::Signature>& sig, uint32_t* pmax_related_block_height = NULL);
     bool checkTransactionInputs(const Transaction& tx, const Crypto::Hash& tx_prefix_hash, uint32_t* pmax_used_block_height = NULL);
@@ -350,7 +350,7 @@ bool have_tx_keyimg_as_spent(const Crypto::KeyImage &key_im);
 
     std::vector<uint32_t> absolute_offsets = relative_output_offsets_to_absolute(tx_in_to_key.outputIndexes);
     std::vector<std::pair<TransactionIndex, uint16_t>>& amount_outs_vec = it->second;
-    size_t count = 0;
+    uint64_t count = 0;
     for (uint64_t i : absolute_offsets) {
       if(i >= amount_outs_vec.size() ) {
         logger(Logging::INFO) << "Wrong index in transaction inputs: " << i << ", expected maximum " << amount_outs_vec.size() - 1;

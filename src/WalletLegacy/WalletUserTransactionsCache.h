@@ -26,8 +26,8 @@ class ISerializer;
 namespace std {
   template<>
   struct hash<std::tuple<Crypto::Hash, uint32_t>> {
-    size_t operator()(const std::tuple<Crypto::Hash, uint32_t>& item) const {
-      size_t hash = 0;
+    uint64_t operator()(const std::tuple<Crypto::Hash, uint32_t>& item) const {
+      uint64_t hash = 0;
       boost::hash_combine(hash, std::get<0>(item));
       boost::hash_combine(hash, std::get<1>(item));
       return hash;
@@ -53,9 +53,9 @@ public:
   uint64_t countUnconfirmedSpentDepositsProfit() const;
   uint64_t countUnconfirmedSpentDepositsTotalAmount() const;
 
-  size_t getTransactionCount() const;
-  size_t getTransferCount() const;
-  size_t getDepositCount() const;
+  uint64_t getTransactionCount() const;
+  uint64_t getTransferCount() const;
+  uint64_t getDepositCount() const;
 
   TransactionId addNewTransaction(uint64_t amount,
                                   uint64_t fee,
@@ -96,7 +96,7 @@ public:
 
   std::vector<TransactionId> deleteOutdatedTransactions();
 
-  DepositId insertDeposit(const Deposit& deposit, size_t depositIndexInTransaction, const Crypto::Hash& transactionHash);
+  DepositId insertDeposit(const Deposit& deposit, uint64_t depositIndexInTransaction, const Crypto::Hash& transactionHash);
   bool getDepositInTransactionInfo(DepositId depositId, Crypto::Hash& transactionHash, uint32_t& outputInTransaction);
 
   std::vector<Payments> getTransactionsByPaymentIds(const std::vector<PaymentId>& paymentIds) const;

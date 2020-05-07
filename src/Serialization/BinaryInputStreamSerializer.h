@@ -22,7 +22,7 @@ public:
   virtual bool beginObject(Common::StringView name) override;
   virtual void endObject() override;
 
-  virtual bool beginArray(size_t& size, Common::StringView name) override;
+  virtual bool beginArray(uint64_t& size, Common::StringView name) override;
   virtual void endArray() override;
 
   virtual bool operator()(uint8_t& value, Common::StringView name) override;
@@ -35,7 +35,7 @@ public:
   virtual bool operator()(double& value, Common::StringView name) override;
   virtual bool operator()(bool& value, Common::StringView name) override;
   virtual bool operator()(std::string& value, Common::StringView name) override;
-  virtual bool binary(void* value, size_t size, Common::StringView name) override;
+  virtual bool binary(void* value, uint64_t size, Common::StringView name) override;
   virtual bool binary(std::string& value, Common::StringView name) override;
 
   template<typename T>
@@ -45,7 +45,7 @@ public:
 
 private:
 
-  void checkedRead(char* buf, size_t size);
+  void checkedRead(char* buf, uint64_t size);
   Common::IInputStream& stream;
 };
 

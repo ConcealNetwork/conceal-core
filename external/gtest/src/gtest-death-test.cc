@@ -217,7 +217,7 @@ bool ExitedUnsuccessfully(int exit_status) {
 // one thread running, or cannot determine the number of threads, prior
 // to executing the given statement.  It is the responsibility of the
 // caller not to pass a thread_count of 1.
-static std::string DeathTestThreadWarning(size_t thread_count) {
+static std::string DeathTestThreadWarning(uint64_t thread_count) {
   Message msg;
   msg << "Death tests use fork(), which is unsafe particularly"
       << " in a threaded context. For this test, " << GTEST_NAME_ << " ";
@@ -495,8 +495,8 @@ void DeathTestImpl::Abort(AbortReason reason) {
 // much easier.
 static ::std::string FormatDeathTestOutput(const ::std::string& output) {
   ::std::string ret;
-  for (size_t at = 0; ; ) {
-    const size_t line_end = output.find('\n', at);
+  for (uint64_t at = 0; ; ) {
+    const uint64_t line_end = output.find('\n', at);
     ret += "[  DEATH   ] ";
     if (line_end == ::std::string::npos) {
       ret += output.substr(at);
@@ -724,11 +724,11 @@ DeathTest::TestRole WindowsDeathTest::AssumeRole() {
       "=" + file_ + "|" + StreamableToString(line_) + "|" +
       StreamableToString(death_test_index) + "|" +
       StreamableToString(static_cast<unsigned int>(::GetCurrentProcessId())) +
-      // size_t has the same width as pointers on both 32-bit and 64-bit
+      // uint64_t has the same width as pointers on both 32-bit and 64-bit
       // Windows platforms.
       // See http://msdn.microsoft.com/en-us/library/tcxf1dw6.aspx.
-      "|" + StreamableToString(reinterpret_cast<size_t>(write_handle)) +
-      "|" + StreamableToString(reinterpret_cast<size_t>(event_handle_.Get()));
+      "|" + StreamableToString(reinterpret_cast<uint64_t>(write_handle)) +
+      "|" + StreamableToString(reinterpret_cast<uint64_t>(event_handle_.Get()));
 
   char executable_path[_MAX_PATH + 1];  // NOLINT
   GTEST_DEATH_TEST_CHECK_(
@@ -823,7 +823,7 @@ class NoExecDeathTest : public ForkingDeathTest {
 // The AssumeRole process for a fork-and-run death test.  It implements a
 // straightforward fork, with a simple pipe to transmit the status byte.
 DeathTest::TestRole NoExecDeathTest::AssumeRole() {
-  const size_t thread_count = GetThreadCount();
+  const uint64_t thread_count = GetThreadCount();
   if (thread_count != 1) {
     GTEST_LOG_(WARNING) << DeathTestThreadWarning(thread_count);
   }
@@ -1064,7 +1064,7 @@ static pid_t ExecDeathTestSpawnChild(char* const* argv, int close_fd) {
 
   if (!use_fork) {
     static const bool stack_grows_down = StackGrowsDown();
-    const size_t stack_size = getpagesize();
+    const uint64_t stack_size = getpagesize();
     // MMAP_ANONYMOUS is not defined on Mac, so we use MAP_ANON instead.
     void* const stack = mmap(NULL, stack_size, PROT_READ | PROT_WRITE,
                              MAP_ANON | MAP_PRIVATE, -1, 0);
@@ -1076,7 +1076,7 @@ static pid_t ExecDeathTestSpawnChild(char* const* argv, int close_fd) {
     // about.  As far as I know there is no ABI with stack alignment greater
     // than 64.  We assume stack and stack_size already have alignment of
     // kMaxStackAlignment.
-    const size_t kMaxStackAlignment = 64;
+    const uint64_t kMaxStackAlignment = 64;
     void* const stack_top =
         static_cast<char*>(stack) +
             (stack_grows_down ? stack_size - kMaxStackAlignment : 0);
@@ -1219,8 +1219,8 @@ bool DefaultDeathTestFactory::Create(const char* statement, const RE* regex,
 // signals the event, and returns a file descriptor wrapped around the pipe
 // handle. This function is called in the child process only.
 static int GetStatusFileDescriptor(unsigned int parent_process_id,
-                                   size_t write_handle_as_size_t,
-                                   size_t event_handle_as_size_t) {
+                                   uint64_t write_handle_as_size_t,
+                                   uint64_t event_handle_as_size_t) {
   AutoHandle parent_process_handle(::OpenProcess(PROCESS_DUP_HANDLE,
                                                  FALSE,  // Non-inheritable.
                                                  parent_process_id));
@@ -1231,7 +1231,7 @@ static int GetStatusFileDescriptor(unsigned int parent_process_id,
 
   // TODO(vladl@google.com): Replace the following check with a
   // compile-time assertion when available.
-  GTEST_CHECK_(sizeof(HANDLE) <= sizeof(size_t));
+  GTEST_CHECK_(sizeof(HANDLE) <= sizeof(uint64_t));
 
   const HANDLE write_handle =
       reinterpret_cast<HANDLE>(write_handle_as_size_t);
@@ -1299,8 +1299,8 @@ InternalRunDeathTestFlag* ParseInternalRunDeathTestFlag() {
 # if GTEST_OS_WINDOWS
 
   unsigned int parent_process_id = 0;
-  size_t write_handle_as_size_t = 0;
-  size_t event_handle_as_size_t = 0;
+  uint64_t write_handle_as_size_t = 0;
+  uint64_t event_handle_as_size_t = 0;
 
   if (fields.size() != 6
       || !ParseNaturalNumber(fields[1], &line)

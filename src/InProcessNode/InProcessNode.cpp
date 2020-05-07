@@ -155,7 +155,7 @@ std::error_code InProcessNode::doGetNewBlocks(std::vector<Crypto::Hash>&& knownB
       be.block = asString(toBinaryArray(completeBlock->getBlock()));
 
       be.txs.reserve(completeBlock->getTransactionCount());
-      for (size_t i = 0; i < completeBlock->getTransactionCount(); ++i) {
+      for (uint64_t i = 0; i < completeBlock->getTransactionCount(); ++i) {
         be.txs.push_back(asString(toBinaryArray(completeBlock->getTransaction(i))));
       }
 
@@ -338,7 +338,7 @@ std::error_code InProcessNode::doRelayTransaction(const CryptoNote::Transaction&
   return std::error_code();
 }
 
-size_t InProcessNode::getPeerCount() const {
+uint64_t InProcessNode::getPeerCount() const {
   {
     std::unique_lock<std::mutex> lock(mutex);
     if (state != INITIALIZED) {
@@ -423,7 +423,7 @@ uint64_t InProcessNode::getLastLocalBlockTimestamp() const {
   return block.timestamp;
 }
 
-void InProcessNode::peerCountUpdated(size_t count) {
+void InProcessNode::peerCountUpdated(uint64_t count) {
   observerManager.notify(&INodeObserver::peerCountUpdated, count);
 }
 

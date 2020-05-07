@@ -11,7 +11,7 @@ namespace System {
 
 namespace {
 
-uint8_t readUint8(const std::string& source, size_t& offset) {
+uint8_t readUint8(const std::string& source, uint64_t& offset) {
   if (offset == source.size() || source[offset] < '0' || source[offset] > '9') {
     throw std::runtime_error("Unable to read value from string");
   }
@@ -47,7 +47,7 @@ Ipv4Address::Ipv4Address(uint32_t value) : value(value) {
 }
 
 Ipv4Address::Ipv4Address(const std::string& dottedDecimal) {
-  size_t offset = 0;
+  uint64_t offset = 0;
   value = readUint8(dottedDecimal, offset);
   if (offset == dottedDecimal.size() || dottedDecimal[offset] != '.') {
     throw std::runtime_error("Invalid Ipv4 address string");

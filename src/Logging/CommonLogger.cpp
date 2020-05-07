@@ -48,9 +48,9 @@ void CommonLogger::operator()(const std::string& category, Level level, boost::p
   if (level <= logLevel && disabledCategories.count(category) == 0) {
     std::string body2 = body;
     if (!pattern.empty()) {
-      size_t insertPos = 0;
+      uint64_t insertPos = 0;
       if (!body2.empty() && body2[0] == ILogger::COLOR_DELIMETER) {
-        size_t delimPos = body2.find(ILogger::COLOR_DELIMETER, 1);
+        uint64_t delimPos = body2.find(ILogger::COLOR_DELIMETER, 1);
         if (delimPos != std::string::npos) {
           insertPos = delimPos + 1;
         }

@@ -164,13 +164,13 @@ namespace CryptoNote {
       }
     }
 
-    size_t getNumberOfVotes(uint32_t height) {
+    uint64_t getNumberOfVotes(uint32_t height) {
       if (height < m_currency.upgradeVotingWindow() - 1) {
         return 0;
       }
 
-      size_t voteCounter = 0;
-      for (size_t i = height + 1 - m_currency.upgradeVotingWindow(); i <= height; ++i) {
+      uint64_t voteCounter = 0;
+      for (uint64_t i = height + 1 - m_currency.upgradeVotingWindow(); i <= height; ++i) {
         const auto& b = m_blockchain[i].bl;
         voteCounter += (b.majorVersion == m_targetVersion - 1) && (b.minorVersion == BLOCK_MINOR_VERSION_1) ? 1 : 0;
       }
@@ -183,7 +183,7 @@ namespace CryptoNote {
       assert(m_currency.upgradeHeight(m_targetVersion) == UNDEF_HEIGHT);
 
       uint32_t probableVotingCompleteHeight = probableUpgradeHeight > m_currency.maxUpgradeDistance() ? probableUpgradeHeight - m_currency.maxUpgradeDistance() : 0;
-      for (size_t i = probableVotingCompleteHeight; i <= probableUpgradeHeight; ++i) {
+      for (uint64_t i = probableVotingCompleteHeight; i <= probableUpgradeHeight; ++i) {
         if (isVotingComplete(static_cast<uint32_t>(i))) {
           return static_cast<uint32_t>(i);
         }
@@ -197,7 +197,7 @@ namespace CryptoNote {
       assert(m_currency.upgradeVotingWindow() > 1);
       assert(m_currency.upgradeVotingThreshold() > 0 && m_currency.upgradeVotingThreshold() <= 100);
 
-      size_t voteCounter = getNumberOfVotes(height);
+      uint64_t voteCounter = getNumberOfVotes(height);
       return m_currency.upgradeVotingThreshold() * m_currency.upgradeVotingWindow() <= 100 * voteCounter;
     }
 

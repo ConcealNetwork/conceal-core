@@ -21,14 +21,14 @@
 namespace CryptoNote {
 class ISerializer;
 
-typedef std::pair<Crypto::PublicKey, size_t> TransactionOutputId;
+typedef std::pair<Crypto::PublicKey, uint64_t> TransactionOutputId;
 }
 
 namespace std {
 
 template<> 
 struct hash<CryptoNote::TransactionOutputId> {
-  size_t operator()(const CryptoNote::TransactionOutputId &_v) const {    
+  uint64_t operator()(const CryptoNote::TransactionOutputId &_v) const {    
     return hash<Crypto::PublicKey>()(_v.first) ^ _v.second;
   } 
 }; 

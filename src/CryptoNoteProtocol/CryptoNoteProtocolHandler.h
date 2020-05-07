@@ -69,7 +69,7 @@ namespace CryptoNote
     bool get_payload_sync_data(CORE_SYNC_DATA& hshd);
     bool process_payload_sync_data(const CORE_SYNC_DATA& hshd, CryptoNoteConnectionContext& context, bool is_inital);
     int handleCommand(bool is_notify, int command, const BinaryArray& in_buff, BinaryArray& buff_out, CryptoNoteConnectionContext& context, bool& handled);
-    virtual size_t getPeerCount() const override;
+    virtual uint64_t getPeerCount() const override;
     virtual uint32_t getObservedHeight() const override;
     void requestMissingPoolTransactions(const CryptoNoteConnectionContext& context);
 
@@ -110,7 +110,7 @@ namespace CryptoNote
     mutable std::mutex m_observedHeightMutex;
     uint32_t m_observedHeight;
 
-    std::atomic<size_t> m_peersCount;
+    std::atomic<uint64_t> m_peersCount;
     Tools::ObserverManager<ICryptoNoteProtocolObserver> m_observerManager;
   };
 }

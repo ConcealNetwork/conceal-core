@@ -24,7 +24,7 @@ namespace CryptoNote {
 class INodeObserver {
 public:
   virtual ~INodeObserver() {}
-  virtual void peerCountUpdated(size_t count) {}
+  virtual void peerCountUpdated(uint64_t count) {}
   virtual void localBlockchainUpdated(uint32_t height) {}
   virtual void lastKnownBlockHeightUpdated(uint32_t height) {}
   virtual void poolChanged() {}
@@ -64,7 +64,7 @@ public:
   virtual void init(const Callback& callback) = 0;
   virtual bool shutdown() = 0;
 
-  virtual size_t getPeerCount() const = 0;
+  virtual uint64_t getPeerCount() const = 0;
   virtual uint32_t getLastLocalBlockHeight() const = 0;
   virtual uint32_t getLastKnownBlockHeight() const = 0;
   virtual uint32_t getLocalBlockCount() const = 0;

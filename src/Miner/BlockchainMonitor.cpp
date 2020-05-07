@@ -16,7 +16,7 @@
 #include "Rpc/JsonRpc.h"
 #include "Rpc/HttpClient.h"
 
-BlockchainMonitor::BlockchainMonitor(System::Dispatcher& dispatcher, const std::string& daemonHost, uint16_t daemonPort, size_t pollingInterval, Logging::ILogger& logger):
+BlockchainMonitor::BlockchainMonitor(System::Dispatcher& dispatcher, const std::string& daemonHost, uint16_t daemonPort, uint64_t pollingInterval, Logging::ILogger& logger):
   m_dispatcher(dispatcher),
   m_daemonHost(daemonHost),
   m_daemonPort(daemonPort),

@@ -15,7 +15,7 @@ namespace CryptoNote {
   Crypto::Hash BlockIndex::getBlockId(uint32_t height) const {
     assert(height < m_container.size());
 
-    return m_container[static_cast<size_t>(height)];
+    return m_container[static_cast<uint64_t>(height)];
   }
 
   std::vector<Crypto::Hash> BlockIndex::getBlockIds(uint32_t startBlockIndex, uint32_t maxCount) const {
@@ -24,9 +24,9 @@ namespace CryptoNote {
       return result;
     }
 
-    size_t count = std::min(static_cast<size_t>(maxCount), m_container.size() - static_cast<size_t>(startBlockIndex));
+    uint64_t count = std::min(static_cast<uint64_t>(maxCount), m_container.size() - static_cast<uint64_t>(startBlockIndex));
     result.reserve(count);
-    for (size_t i = 0; i < count; ++i) {
+    for (uint64_t i = 0; i < count; ++i) {
       result.push_back(m_container[startBlockIndex + i]);
     }
 
@@ -50,13 +50,13 @@ namespace CryptoNote {
     getBlockHeight(startBlockId, startBlockHeight);
 
     std::vector<Crypto::Hash> result;
-    size_t sparseChainEnd = static_cast<size_t>(startBlockHeight + 1);
-    for (size_t i = 1; i <= sparseChainEnd; i *= 2) {
-      result.emplace_back(m_container[sparseChainEnd - i]);
+    uint64_t sparseChainEnd = static_cast<uint64_t>(startBlockHeight + 1);
+    for (uint64_t i = 1; i <= sparseChainEnd; i *= 2) {
+      result.push_back(m_container[sparseChainEnd - i]);
     }
 
     if (result.back() != m_container[0]) {
-      result.emplace_back(m_container[0]);
+      result.push_back(m_container[0]);
     }
 
     return result;

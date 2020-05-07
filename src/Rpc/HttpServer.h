@@ -43,7 +43,7 @@ public:
   void stop();
 
   virtual void processRequest(const HttpRequest& request, HttpResponse& response) = 0;
-  virtual size_t get_connections_count() const;
+  virtual uint64_t get_connections_count() const;
 
 protected:
 

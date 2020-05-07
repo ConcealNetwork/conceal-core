@@ -40,7 +40,7 @@ bool parseAndValidateTransactionFromBinaryArray(const BinaryArray& tx_blob, Tran
   return true;
 }
 
-bool generate_key_image_helper(const AccountKeys& ack, const PublicKey& tx_public_key, size_t real_output_index, KeyPair& in_ephemeral, KeyImage& ki) {
+bool generate_key_image_helper(const AccountKeys& ack, const PublicKey& tx_public_key, uint64_t real_output_index, KeyPair& in_ephemeral, KeyImage& ki) {
   KeyDerivation recv_derivation;
   bool r = generate_key_derivation(tx_public_key, ack.viewSecretKey, recv_derivation);
 
@@ -146,7 +146,7 @@ bool constructTransaction(
 
   uint64_t summary_outs_money = 0;
   //fill outputs
-  size_t output_index = 0;
+  uint64_t output_index = 0;
   for (const TransactionDestinationEntry& dst_entr : shuffled_dsts) {
     if (!(dst_entr.amount > 0)) {
       logger(ERROR, BRIGHT_RED) << "Destination with wrong amount: " << dst_entr.amount;
@@ -190,7 +190,7 @@ bool constructTransaction(
     return false;
   }
 
-  for (size_t i = 0; i < messages.size(); i++) {
+  for (uint64_t i = 0; i < messages.size(); i++) {
     const tx_message_entry &msg = messages[i];
     tx_extra_message tag;
     if (!tag.encrypt(i, msg.message, msg.encrypt ? &msg.addr : NULL, txkey)) {
@@ -210,7 +210,7 @@ bool constructTransaction(
   Hash tx_prefix_hash;
   getObjectHash(*static_cast<TransactionPrefix*>(&tx), tx_prefix_hash);
 
-  size_t i = 0;
+  uint64_t i = 0;
   for (const TransactionSourceEntry& src_entr : sources) {
     std::vector<const PublicKey*> keys_ptrs;
     for (const TransactionSourceEntry::OutputEntry& o : src_entr.outputs) {
@@ -401,29 +401,29 @@ std::string short_hash_str(const Hash& h) {
   return res;
 }
 
-bool is_out_to_acc(const AccountKeys& acc, const KeyOutput& out_key, const KeyDerivation& derivation, size_t keyIndex) {
+bool is_out_to_acc(const AccountKeys& acc, const KeyOutput& out_key, const KeyDerivation& derivation, uint64_t keyIndex) {
   PublicKey pk;
   derive_public_key(derivation, keyIndex, acc.address.spendPublicKey, pk);
   return pk == out_key.key;
 }
 
-bool is_out_to_acc(const AccountKeys& acc, const KeyOutput& out_key, const PublicKey& tx_pub_key, size_t keyIndex) {
+bool is_out_to_acc(const AccountKeys& acc, const KeyOutput& out_key, const PublicKey& tx_pub_key, uint64_t keyIndex) {
   KeyDerivation derivation;
   generate_key_derivation(tx_pub_key, acc.viewSecretKey, derivation);
   return is_out_to_acc(acc, out_key, derivation, keyIndex);
 }
 
-bool lookup_acc_outs(const AccountKeys& acc, const Transaction& tx, std::vector<size_t>& outs, uint64_t& money_transfered) {
+bool lookup_acc_outs(const AccountKeys& acc, const Transaction& tx, std::vector<uint64_t>& outs, uint64_t& money_transfered) {
   PublicKey transactionPublicKey = getTransactionPublicKeyFromExtra(tx.extra);
   if (transactionPublicKey == NULL_PUBLIC_KEY)
     return false;
   return lookup_acc_outs(acc, tx, transactionPublicKey, outs, money_transfered);
 }
 
-bool lookup_acc_outs(const AccountKeys& acc, const Transaction& tx, const PublicKey& tx_pub_key, std::vector<size_t>& outs, uint64_t& money_transfered) {
+bool lookup_acc_outs(const AccountKeys& acc, const Transaction& tx, const PublicKey& tx_pub_key, std::vector<uint64_t>& outs, uint64_t& money_transfered) {
   money_transfered = 0;
-  size_t keyIndex = 0;
-  size_t outputIndex = 0;
+  uint64_t keyIndex = 0;
+  uint64_t outputIndex = 0;
 
   KeyDerivation derivation;
   generate_key_derivation(tx_pub_key, acc.viewSecretKey, derivation);
@@ -502,7 +502,7 @@ if (b.majorVersion >= 7) {
 
 std::vector<uint32_t> relative_output_offsets_to_absolute(const std::vector<uint32_t>& off) {
   std::vector<uint32_t> res = off;
-  for (size_t i = 1; i < res.size(); i++)
+  for (uint64_t i = 1; i < res.size(); i++)
     res[i] += res[i - 1];
   return res;
 }
@@ -512,7 +512,7 @@ std::vector<uint32_t> absolute_output_offsets_to_relative(const std::vector<uint
   if (!off.size())
     return res;
   std::sort(res.begin(), res.end());//just to be sure, actually it is already should be sorted
-  for (size_t i = res.size() - 1; i != 0; i--)
+  for (uint64_t i = res.size() - 1; i != 0; i--)
     res[i] -= res[i - 1];
 
   return res;

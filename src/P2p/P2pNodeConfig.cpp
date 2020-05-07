@@ -14,8 +14,8 @@ namespace CryptoNote {
 namespace {
 
 const std::chrono::nanoseconds P2P_DEFAULT_CONNECT_INTERVAL = std::chrono::seconds(2);
-const size_t P2P_DEFAULT_CONNECT_RANGE = 20;
-const size_t P2P_DEFAULT_PEERLIST_GET_TRY_COUNT = 10;
+const uint64_t P2P_DEFAULT_CONNECT_RANGE = 20;
+const uint64_t P2P_DEFAULT_PEERLIST_GET_TRY_COUNT = 10;
 
 }
 
@@ -49,11 +49,11 @@ std::chrono::nanoseconds P2pNodeConfig::getConnectTimeout() const {
   return connectTimeout;
 }
 
-size_t P2pNodeConfig::getExpectedOutgoingConnectionsCount() const {
+uint64_t P2pNodeConfig::getExpectedOutgoingConnectionsCount() const {
   return expectedOutgoingConnectionsCount;
 }
 
-size_t P2pNodeConfig::getWhiteListConnectionsPercent() const {
+uint64_t P2pNodeConfig::getWhiteListConnectionsPercent() const {
   return whiteListConnectionsPercent;
 }
 
@@ -66,11 +66,11 @@ boost::uuids::uuid P2pNodeConfig::getNetworkId() const {
   return networkId;
 }
 
-size_t P2pNodeConfig::getPeerListConnectRange() const {
+uint64_t P2pNodeConfig::getPeerListConnectRange() const {
   return peerListConnectRange;
 }
 
-size_t P2pNodeConfig::getPeerListGetTryCount() const {
+uint64_t P2pNodeConfig::getPeerListGetTryCount() const {
   return peerListGetTryCount;
 }
 
@@ -92,11 +92,11 @@ void P2pNodeConfig::setConnectTimeout(std::chrono::nanoseconds timeout) {
   connectTimeout = timeout;
 }
 
-void P2pNodeConfig::setExpectedOutgoingConnectionsCount(size_t count) {
+void P2pNodeConfig::setExpectedOutgoingConnectionsCount(uint64_t count) {
   expectedOutgoingConnectionsCount = count;
 }
 
-void P2pNodeConfig::setWhiteListConnectionsPercent(size_t percent) {
+void P2pNodeConfig::setWhiteListConnectionsPercent(uint64_t percent) {
   if (percent > 100) {
     throw std::invalid_argument("whiteListConnectionsPercent cannot be greater than 100");
   }
@@ -108,11 +108,11 @@ void P2pNodeConfig::setNetworkId(const boost::uuids::uuid& id) {
   networkId = id;
 }
 
-void P2pNodeConfig::setPeerListConnectRange(size_t range) {
+void P2pNodeConfig::setPeerListConnectRange(uint64_t range) {
   peerListConnectRange = range;
 }
 
-void P2pNodeConfig::setPeerListGetTryCount(size_t count) {
+void P2pNodeConfig::setPeerListGetTryCount(uint64_t count) {
   peerListGetTryCount = count;
 }
 

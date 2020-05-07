@@ -34,8 +34,7 @@ bool post_notify(IP2pEndpoint &p2p, typename t_parametr::request &arg, const Cry
 }
 
 template <class t_parametr>
-void relay_post_notify(IP2pEndpoint &p2p, typename t_parametr::request &arg, const net_connection_id *excludeConnection = nullptr)
-{
+void relay_post_notify(IP2pEndpoint& p2p, typename t_parametr::request& arg, const boost::uuids::uuid* excludeConnection = nullptr) {
   p2p.relay_notify_to_all(t_parametr::ID, LevinProtocol::encode(arg), excludeConnection);
 }
 
@@ -58,7 +57,7 @@ CryptoNoteProtocolHandler::CryptoNoteProtocolHandler(const Currency &currency, S
   }
 }
 
-size_t CryptoNoteProtocolHandler::getPeerCount() const
+uint64_t CryptoNoteProtocolHandler::getPeerCount() const
 {
   return m_peersCount;
 }
@@ -139,7 +138,7 @@ void CryptoNoteProtocolHandler::log_connections()
      << std::setw(25) << "State"
      << std::setw(20) << "Lifetime(seconds)" << ENDL;
 
-  m_p2p->for_each_connection([&](const CryptoNoteConnectionContext &cntxt, PeerIdType peer_id) {
+  m_p2p->for_each_connection([&](const CryptoNoteConnectionContext &cntxt, uint64_t peer_id) {
     ss << std::setw(25) << std::left << std::string(cntxt.m_is_income ? "[INC]" : "[OUT]") + Common::ipAddressToString(cntxt.m_remote_ip) + ":" + std::to_string(cntxt.m_remote_port)
        << std::setw(20) << std::hex << peer_id
        // << std::setw(25) << std::to_string(cntxt.m_recv_cnt) + "(" + std::to_string(time(NULL) - cntxt.m_last_recv) + ")" + "/" + std::to_string(cntxt.m_send_cnt) + "(" + std::to_string(time(NULL) - cntxt.m_last_send) + ")"
@@ -155,7 +154,7 @@ std::vector<std::string> CryptoNoteProtocolHandler::all_connections()
   std::vector<std::string> connections;
   std::string ipAddress;
   connections.clear();
-  m_p2p->for_each_connection([&](const CryptoNoteConnectionContext &cntxt, PeerIdType peer_id) {
+  m_p2p->for_each_connection([&](const CryptoNoteConnectionContext &cntxt, uint64_t peer_id) {
     ipAddress = Common::ipAddressToString(cntxt.m_remote_ip);
     connections.push_back(ipAddress);
   });
@@ -392,7 +391,7 @@ int CryptoNoteProtocolHandler::handle_response_get_objects(int command, NOTIFY_R
 
   context.m_remote_blockchain_height = arg.current_blockchain_height;
 
-  size_t count = 0;
+  uint64_t count = 0;
   std::vector<Crypto::Hash> block_hashes;
   block_hashes.reserve(arg.blocks.size());
   std::vector<parsed_block_entry> parsed_blocks;
@@ -513,7 +512,7 @@ int CryptoNoteProtocolHandler::processObjects(CryptoNoteConnectionContext& conte
     }
 
     //process transactions
-    for (size_t i = 0; i < block_entry.txs.size(); ++i) {
+    for (uint64_t i = 0; i < block_entry.txs.size(); ++i) {
       auto transactionBinary = block_entry.txs[i];
       Crypto::Hash transactionHash = Crypto::cn_fast_hash(transactionBinary.data(), transactionBinary.size());
       logger(DEBUGGING) << "transaction " << transactionHash << " came in processObjects";
@@ -600,7 +599,7 @@ bool CryptoNoteProtocolHandler::request_missing_objects(CryptoNoteConnectionCont
   {
     //we know objects that we need, request this objects
     NOTIFY_REQUEST_GET_OBJECTS::request req;
-    size_t count = 0;
+    uint64_t count = 0;
     auto it = context.m_needed_objects.begin();
 
     while (it != context.m_needed_objects.end() && count < BLOCKS_SYNCHRONIZING_DEFAULT_COUNT)
@@ -778,13 +777,13 @@ int CryptoNoteProtocolHandler::handleRequestTxPool(int command, NOTIFY_REQUEST_T
 void CryptoNoteProtocolHandler::relay_block(NOTIFY_NEW_BLOCK::request &arg)
 {
   auto buf = LevinProtocol::encode(arg);
-  m_p2p->externalRelayNotifyToAll(NOTIFY_NEW_BLOCK::ID, buf);
+  m_p2p->externalRelayNotifyToAll(NOTIFY_NEW_BLOCK::ID, buf, nullptr);
 }
 
 void CryptoNoteProtocolHandler::relay_transactions(NOTIFY_NEW_TRANSACTIONS::request &arg)
 {
   auto buf = LevinProtocol::encode(arg);
-  m_p2p->externalRelayNotifyToAll(NOTIFY_NEW_TRANSACTIONS::ID, buf);
+  m_p2p->externalRelayNotifyToAll(NOTIFY_NEW_TRANSACTIONS::ID, buf, nullptr);
 }
 
 void CryptoNoteProtocolHandler::requestMissingPoolTransactions(const CryptoNoteConnectionContext &context)
@@ -799,7 +798,7 @@ void CryptoNoteProtocolHandler::requestMissingPoolTransactions(const CryptoNoteC
   NOTIFY_REQUEST_TX_POOL::request notification;
   for (auto &tx : poolTxs)
   {
-    notification.txs.emplace_back(getObjectHash(tx));
+    notification.txs.push_back(getObjectHash(tx));
   }
 
   bool ok = post_notify<NOTIFY_REQUEST_TX_POOL>(*m_p2p, notification, context);
@@ -846,7 +845,7 @@ void CryptoNoteProtocolHandler::recalculateMaxObservedHeight(const CryptoNoteCon
 {
   //should be locked outside
   uint32_t peerHeight = 0;
-  m_p2p->for_each_connection([&peerHeight, &context](const CryptoNoteConnectionContext &ctx, PeerIdType peerId) {
+  m_p2p->for_each_connection([&peerHeight, &context](const CryptoNoteConnectionContext &ctx, uint64_t peerId) {
     if (ctx.m_connection_id != context.m_connection_id)
     {
       peerHeight = std::max(peerHeight, ctx.m_remote_blockchain_height);

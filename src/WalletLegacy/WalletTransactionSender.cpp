@@ -68,7 +68,7 @@ void constructTx(const AccountKeys keys, const std::vector<TransactionSourceEntr
   throwIf(getObjectBinarySize(tx) >= sizeLimit, error::TRANSACTION_SIZE_TOO_BIG);
 }
 
-std::unique_ptr<WalletLegacyEvent> makeCompleteEvent(WalletUserTransactionsCache& transactionCache, size_t transactionId, std::error_code ec) {
+std::unique_ptr<WalletLegacyEvent> makeCompleteEvent(WalletUserTransactionsCache& transactionCache, uint64_t transactionId, std::error_code ec) {
   transactionCache.updateTransactionSendingState(transactionId, ec);
   return std::unique_ptr<WalletSendTransactionCompletedEvent>(new WalletSendTransactionCompletedEvent(transactionId, ec));
 }
@@ -87,14 +87,14 @@ std::vector<TransactionTypes::InputKeyInfo> convertSources(std::vector<Transacti
       output.outputIndex = sourceOutput.first;
       output.targetKey = sourceOutput.second;
 
-      input.outputs.emplace_back(std::move(output));
+      input.outputs.push_back(std::move(output));
     }
 
     input.realOutput.transactionPublicKey = source.realTransactionPublicKey;
     input.realOutput.outputInTransaction = source.realOutputIndexInTransaction;
     input.realOutput.transactionIndex = source.realOutput;
 
-    inputs.emplace_back(std::move(input));
+    inputs.push_back(std::move(input));
   }
 
   return inputs;
@@ -110,7 +110,7 @@ std::vector<uint64_t> splitAmount(uint64_t amount, uint64_t dustThreshold) {
   return amounts;
 }
 
-Transaction convertTransaction(const ITransaction& transaction, size_t upperTransactionSizeLimit) {
+Transaction convertTransaction(const ITransaction& transaction, uint64_t upperTransactionSizeLimit) {
   BinaryArray serializedTransaction = transaction.getTransactionData();
   CryptoNote::throwIf(serializedTransaction.size() >= upperTransactionSizeLimit, error::TRANSACTION_SIZE_TOO_BIG);
 
@@ -452,7 +452,7 @@ std::unique_ptr<WalletRequest> WalletTransactionSender::doSendMultisigTransactio
       ephKeys.push_back(std::move(ephKey));
     }
 
-    for (size_t i = 0; i < inputs.size(); ++i) {
+    for (uint64_t i = 0; i < inputs.size(); ++i) {
       transaction->signInputKey(i, inputs[i], ephKeys[i]);
     }
 
@@ -470,7 +470,7 @@ std::unique_ptr<WalletRequest> WalletTransactionSender::doSendMultisigTransactio
     transactionInfo.firstDepositId = depositId;
     transactionInfo.depositCount = 1;
 
-    Transaction lowlevelTransaction = convertTransaction(*transaction, static_cast<size_t>(m_upperTransactionSizeLimit));
+    Transaction lowlevelTransaction = convertTransaction(*transaction, static_cast<uint64_t>(m_upperTransactionSizeLimit));
     m_transactionsCache.updateTransaction(context->transactionId, lowlevelTransaction, totalAmount, context->selectedTransfers);
     m_transactionsCache.addCreatedDeposit(depositId, deposit.amount + deposit.interest);
 
@@ -516,13 +516,13 @@ std::unique_ptr<WalletRequest> WalletTransactionSender::doSendDepositWithdrawTra
     transaction->setUnlockTime(transactionInfo.unlockTime);
 
     assert(inputs.size() == context->selectedTransfers.size());
-    for (size_t i = 0; i < inputs.size(); ++i) {
+    for (uint64_t i = 0; i < inputs.size(); ++i) {
       transaction->signInputMultisignature(i, context->selectedTransfers[i].transactionPublicKey, context->selectedTransfers[i].outputInTransaction, m_keys);
     }
 
     transactionInfo.hash = transaction->getTransactionHash();
 
-    Transaction lowlevelTransaction = convertTransaction(*transaction, static_cast<size_t>(m_upperTransactionSizeLimit));
+    Transaction lowlevelTransaction = convertTransaction(*transaction, static_cast<uint64_t>(m_upperTransactionSizeLimit));
 
     uint64_t interestsSum;
     uint64_t totalSum;
@@ -567,7 +567,7 @@ void WalletTransactionSender::relayDepositTransactionCallback(std::shared_ptr<Se
   events.push_back(std::unique_ptr<WalletDepositsUpdatedEvent>(new WalletDepositsUpdatedEvent(std::move(deposits))));
 }
 
-void WalletTransactionSender::splitDestinations(TransferId firstTransferId, size_t transfersCount, const TransactionDestinationEntry& changeDts,
+void WalletTransactionSender::splitDestinations(TransferId firstTransferId, uint64_t transfersCount, const TransactionDestinationEntry& changeDts,
   const TxDustPolicy& dustPolicy, std::vector<TransactionDestinationEntry>& splittedDests) {
   uint64_t dust = 0;
 
@@ -580,7 +580,7 @@ void WalletTransactionSender::splitDestinations(TransferId firstTransferId, size
 }
 
 
-void WalletTransactionSender::digitSplitStrategy(TransferId firstTransferId, size_t transfersCount,
+void WalletTransactionSender::digitSplitStrategy(TransferId firstTransferId, uint64_t transfersCount,
   const TransactionDestinationEntry& change_dst, uint64_t dust_threshold,
   std::vector<TransactionDestinationEntry>& splitted_dsts, uint64_t& dust) {
   splitted_dsts.clear();
@@ -610,7 +610,7 @@ void WalletTransactionSender::prepareKeyInputs(
   std::vector<COMMAND_RPC_GET_RANDOM_OUTPUTS_FOR_AMOUNTS::outs_for_amount>& outs,
   std::vector<TransactionSourceEntry>& sources, uint64_t mixIn) {
 
-  size_t i = 0;
+  uint64_t i = 0;
 
   for (const auto& td: selectedTransfers) {
     assert(td.type == TransactionTypes::OutputType::Key);
@@ -675,7 +675,7 @@ std::vector<MultisignatureInput> WalletTransactionSender::prepareMultisignatureI
     input.outputIndex = output.globalOutputIndex;
     input.term = output.term;
 
-    inputs.emplace_back(std::move(input));
+    inputs.push_back(std::move(input));
   }
 
   return inputs;
@@ -702,8 +702,8 @@ T popRandomValue(URNG& randomGenerator, std::vector<T>& vec) {
     return T();
   }
 
-  std::uniform_int_distribution<size_t> distribution(0, vec.size() - 1);
-  size_t idx = distribution(randomGenerator);
+  std::uniform_int_distribution<uint64_t> distribution(0, vec.size() - 1);
+  uint64_t idx = distribution(randomGenerator);
 
   T res = vec[idx];
   if (idx + 1 != vec.size()) {
@@ -717,12 +717,12 @@ T popRandomValue(URNG& randomGenerator, std::vector<T>& vec) {
 }
 
 uint64_t WalletTransactionSender::selectNTransfersToSend(std::vector<TransactionOutputInformation>& selectedTransfers) {
-  std::vector<size_t> unusedTransfers;
+  std::vector<uint64_t> unusedTransfers;
 
   std::vector<TransactionOutputInformation> outputs;
   m_transferDetails.getOutputs(outputs, ITransfersContainer::IncludeKeyUnlocked);
 
-  for (size_t i = 0; i < outputs.size(); ++i) {
+  for (uint64_t i = 0; i < outputs.size(); ++i) {
     if (!m_transactionsCache.isUsed(outputs[i])) {
         unusedTransfers.push_back(i);
     }
@@ -730,9 +730,9 @@ uint64_t WalletTransactionSender::selectNTransfersToSend(std::vector<Transaction
 
   std::default_random_engine randomGenerator(Crypto::rand<std::default_random_engine::result_type>());
   uint64_t foundMoney = 0;
-  size_t i = 0;
+  uint64_t i = 0;
   while (!unusedTransfers.empty() && i < CryptoNote::parameters::CRYPTONOTE_OPTIMIZE_SIZE) {
-    size_t idx = popRandomValue(randomGenerator, unusedTransfers);
+    uint64_t idx = popRandomValue(randomGenerator, unusedTransfers);
     selectedTransfers.push_back(outputs[idx]);
     foundMoney += outputs[idx].amount;
     ++i;
@@ -742,13 +742,13 @@ uint64_t WalletTransactionSender::selectNTransfersToSend(std::vector<Transaction
 }
 
 uint64_t WalletTransactionSender::selectTransfersToSend(uint64_t neededMoney, bool addDust, uint64_t dust, std::vector<TransactionOutputInformation>& selectedTransfers) {
-  std::vector<size_t> unusedTransfers;
-  std::vector<size_t> unusedDust;
+  std::vector<uint64_t> unusedTransfers;
+  std::vector<uint64_t> unusedDust;
 
   std::vector<TransactionOutputInformation> outputs;
   m_transferDetails.getOutputs(outputs, ITransfersContainer::IncludeKeyUnlocked);
 
-  for (size_t i = 0; i < outputs.size(); ++i) {
+  for (uint64_t i = 0; i < outputs.size(); ++i) {
     const auto& out = outputs[i];
     if (!m_transactionsCache.isUsed(out)) {
       if (dust < out.amount)
@@ -763,7 +763,7 @@ uint64_t WalletTransactionSender::selectTransfersToSend(uint64_t neededMoney, bo
   uint64_t foundMoney = 0;
 
   while (foundMoney < neededMoney && (!unusedTransfers.empty() || !unusedDust.empty())) {
-    size_t idx;
+    uint64_t idx;
     if (selectOneDust) {
       idx = popRandomValue(randomGenerator, unusedDust);
       selectOneDust = false;

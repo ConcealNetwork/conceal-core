@@ -52,11 +52,11 @@ namespace testing {
 // Consists of the parameter value and the integer parameter index.
 template <class ParamType>
 struct TestParamInfo {
-  TestParamInfo(const ParamType& a_param, size_t an_index) :
+  TestParamInfo(const ParamType& a_param, uint64_t an_index) :
     param(a_param),
     index(an_index) {}
   ParamType param;
-  size_t index;
+  uint64_t index;
 };
 
 // A builtin parameterized test name generator which returns the result of
@@ -555,7 +555,7 @@ class ParameterizedTestCaseInfo : public ParameterizedTestCaseInfoBase {
           test_case_name = instantiation_name + "/";
         test_case_name += test_info->test_case_base_name;
 
-        size_t i = 0;
+        uint64_t i = 0;
         std::set<std::string> test_param_names;
         for (typename ParamGenerator<ParamType>::iterator param_it =
                  generator.begin();

@@ -41,8 +41,8 @@ void LoggerManager::configure(const JsonValue& val) {
   if (val.contains("globalDisabledCategories")) {
     auto globalDisabledCategoriesList = val("globalDisabledCategories");
     if (globalDisabledCategoriesList.isArray()) {
-      size_t countOfCategories = globalDisabledCategoriesList.size();
-      for (size_t i = 0; i < countOfCategories; ++i) {
+      uint64_t countOfCategories = globalDisabledCategoriesList.size();
+      for (uint64_t i = 0; i < countOfCategories; ++i) {
         auto categoryVal = globalDisabledCategoriesList[i];
         if (categoryVal.isString()) {
           globalDisabledCategories.push_back(categoryVal.getString());
@@ -56,8 +56,8 @@ void LoggerManager::configure(const JsonValue& val) {
   if (val.contains("loggers")) {
     auto loggersList = val("loggers");
     if (loggersList.isArray()) {
-      size_t countOfLoggers = loggersList.size();
-      for (size_t i = 0; i < countOfLoggers; ++i) {
+      uint64_t countOfLoggers = loggersList.size();
+      for (uint64_t i = 0; i < countOfLoggers; ++i) {
         auto loggerConfiguration = loggersList[i];
         if (!loggerConfiguration.isObject()) {
           throw std::runtime_error("loggers element must be objects");
@@ -89,8 +89,8 @@ void LoggerManager::configure(const JsonValue& val) {
         std::vector<std::string> disabledCategories;
         if (loggerConfiguration.contains("disabledCategories")) {
           auto disabledCategoriesVal = loggerConfiguration("disabledCategories");
-          size_t countOfCategories = disabledCategoriesVal.size();
-          for (size_t i = 0; i < countOfCategories; ++i) {
+          uint64_t countOfCategories = disabledCategoriesVal.size();
+          for (uint64_t i = 0; i < countOfCategories; ++i) {
             auto categoryVal = disabledCategoriesVal[i];
             if (categoryVal.isString()) {
               logger->disableCategory(categoryVal.getString());
@@ -98,7 +98,7 @@ void LoggerManager::configure(const JsonValue& val) {
           }
         }
 
-        loggers.emplace_back(std::move(logger));
+        loggers.push_back(std::move(logger));
         addLogger(*loggers.back());
       }
     } else {

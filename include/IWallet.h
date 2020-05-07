@@ -15,8 +15,8 @@
 
 namespace CryptoNote {
 
-const size_t WALLET_INVALID_TRANSACTION_ID = std::numeric_limits<size_t>::max();
-const size_t WALLET_INVALID_TRANSFER_ID = std::numeric_limits<size_t>::max();
+const uint64_t WALLET_INVALID_TRANSACTION_ID = std::numeric_limits<uint64_t>::max();
+const uint64_t WALLET_INVALID_TRANSFER_ID = std::numeric_limits<uint64_t>::max();
 const uint32_t WALLET_UNCONFIRMED_TRANSACTION_HEIGHT = std::numeric_limits<uint32_t>::max();
 
 enum class WalletTransactionState : uint8_t {
@@ -36,11 +36,11 @@ enum WalletEventType {
 };
 
 struct WalletTransactionCreatedData {
-  size_t transactionIndex;
+  uint64_t transactionIndex;
 };
 
 struct WalletTransactionUpdatedData {
-  size_t transactionIndex;
+  uint64_t transactionIndex;
 };
 
 struct WalletSynchronizationProgressUpdated {
@@ -132,9 +132,9 @@ public:
   virtual void changePassword(const std::string& oldPassword, const std::string& newPassword) = 0;
   virtual void save(std::ostream& destination, bool saveDetails = true, bool saveCache = true) = 0;
 
-  virtual size_t getAddressCount() const = 0;
-  virtual std::string getAddress(size_t index) const = 0;
-  virtual KeyPair getAddressSpendKey(size_t index) const = 0;
+  virtual uint64_t getAddressCount() const = 0;
+  virtual std::string getAddress(uint64_t index) const = 0;
+  virtual KeyPair getAddressSpendKey(uint64_t index) const = 0;
   virtual KeyPair getAddressSpendKey(const std::string& address) const = 0;
   virtual KeyPair getViewKey() const = 0;
   virtual std::string createAddress() = 0;
@@ -149,24 +149,24 @@ public:
   virtual uint64_t getPendingBalance() const = 0;
   virtual uint64_t getPendingBalance(const std::string& address) const = 0;
 
-  virtual size_t getTransactionCount() const = 0;
-  virtual WalletTransaction getTransaction(size_t transactionIndex) const = 0;
-  virtual size_t getTransactionTransferCount(size_t transactionIndex) const = 0;
-  virtual WalletTransfer getTransactionTransfer(size_t transactionIndex, size_t transferIndex) const = 0;
+  virtual uint64_t getTransactionCount() const = 0;
+  virtual WalletTransaction getTransaction(uint64_t transactionIndex) const = 0;
+  virtual uint64_t getTransactionTransferCount(uint64_t transactionIndex) const = 0;
+  virtual WalletTransfer getTransactionTransfer(uint64_t transactionIndex, uint64_t transferIndex) const = 0;
 
   virtual WalletTransactionWithTransfers getTransaction(const Crypto::Hash& transactionHash) const = 0;
-  virtual std::vector<TransactionsInBlockInfo> getTransactions(const Crypto::Hash& blockHash, size_t count) const = 0;
-  virtual std::vector<TransactionsInBlockInfo> getTransactions(uint32_t blockIndex, size_t count) const = 0;
-  virtual std::vector<Crypto::Hash> getBlockHashes(uint32_t blockIndex, size_t count) const = 0;
+  virtual std::vector<TransactionsInBlockInfo> getTransactions(const Crypto::Hash& blockHash, uint64_t count) const = 0;
+  virtual std::vector<TransactionsInBlockInfo> getTransactions(uint32_t blockIndex, uint64_t count) const = 0;
+  virtual std::vector<Crypto::Hash> getBlockHashes(uint32_t blockIndex, uint64_t count) const = 0;
   virtual uint32_t getBlockCount() const  = 0;
   virtual std::vector<WalletTransactionWithTransfers> getUnconfirmedTransactions() const = 0;
-  virtual std::vector<size_t> getDelayedTransactionIds() const = 0;
+  virtual std::vector<uint64_t> getDelayedTransactionIds() const = 0;
 
-  virtual size_t transfer(const TransactionParameters& sendingTransaction, Crypto::SecretKey &transactionSK) = 0;
+  virtual uint64_t transfer(const TransactionParameters& sendingTransaction, Crypto::SecretKey &transactionSK) = 0;
 
-  virtual size_t makeTransaction(const TransactionParameters& sendingTransaction) = 0;
-  virtual void commitTransaction(size_t transactionId) = 0;
-  virtual void rollbackUncommitedTransaction(size_t transactionId) = 0;
+  virtual uint64_t makeTransaction(const TransactionParameters& sendingTransaction) = 0;
+  virtual void commitTransaction(uint64_t transactionId) = 0;
+  virtual void rollbackUncommitedTransaction(uint64_t transactionId) = 0;
 
   virtual void start() = 0;
   virtual void stop() = 0;

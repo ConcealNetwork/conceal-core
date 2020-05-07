@@ -46,7 +46,7 @@ public:
   virtual void init(const Callback& callback) override;
   virtual bool shutdown() override;
 
-  virtual size_t getPeerCount() const override;
+  virtual uint64_t getPeerCount() const override;
   virtual uint32_t getLastLocalBlockHeight() const override;
   virtual uint32_t getLastKnownBlockHeight() const override;
   virtual uint32_t getLocalBlockCount() const override;
@@ -81,7 +81,7 @@ private:
   void updateNodeStatus();
   void updateBlockchainStatus();
   bool updatePoolStatus();
-  void updatePeerCount(size_t peerCount);
+  void updatePeerCount(uint64_t peerCount);
   void updatePoolState(const std::vector<std::unique_ptr<ITransactionReader>>& addedTxs, const std::vector<Crypto::Hash>& deletedTxsIds);
 
   std::error_code doRelayTransaction(const CryptoNote::Transaction& transaction);
@@ -130,7 +130,7 @@ private:
 
   // Internal state
   bool m_stop = false;
-  std::atomic<size_t> m_peerCount;
+  std::atomic<uint64_t> m_peerCount;
   std::atomic<uint32_t> m_nodeHeight;
   std::atomic<uint32_t> m_networkHeight;
 

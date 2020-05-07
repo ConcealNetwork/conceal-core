@@ -34,7 +34,7 @@ struct TransactionOutputKey {
   Crypto::Hash transactionHash;
   uint32_t outputInTransaction;
 
-  size_t hash() const;
+  uint64_t hash() const;
   bool operator==(const TransactionOutputKey& rhs) const {
     if (transactionHash != rhs.transactionHash) {
       return false;
@@ -54,7 +54,7 @@ struct TransactionOutputKey {
 };
 
 struct TransactionOutputKeyHasher {
-  size_t operator() (const TransactionOutputKey& outputId) const {
+  uint64_t operator() (const TransactionOutputKey& outputId) const {
     return outputId.hash();
   }
 };
@@ -72,7 +72,7 @@ public:
   bool isValid() const;
 
   bool operator==(const SpentOutputDescriptor& other) const;
-  size_t hash() const;
+  uint64_t hash() const;
 
 private:
   TransactionTypes::OutputType m_type;
@@ -86,7 +86,7 @@ private:
 };
 
 struct SpentOutputDescriptorHasher {
-  size_t operator()(const SpentOutputDescriptor& descriptor) const {
+  uint64_t operator()(const SpentOutputDescriptor& descriptor) const {
     return descriptor.hash();
   }
 };
@@ -178,14 +178,14 @@ enum class KeyImageState {
 
 struct KeyOutputInfo {
   KeyImageState state;
-  size_t count;
+  uint64_t count;
 };
 
 class TransfersContainer : public ITransfersContainer {
 
 public:
 
-  TransfersContainer(const CryptoNote::Currency& currency, size_t transactionSpendableAge);
+  TransfersContainer(const CryptoNote::Currency& currency, uint64_t transactionSpendableAge);
 
   bool addTransaction(const TransactionBlockInfo& block, const ITransactionReader& tx,
                       const std::vector<TransactionOutputInformationIn>& transfers,
@@ -198,8 +198,8 @@ public:
   std::vector<TransactionOutputInformation> advanceHeight(uint32_t height);
 
   // ITransfersContainer
-  virtual size_t transfersCount() const override;
-  virtual size_t transactionsCount() const override;
+  virtual uint64_t transfersCount() const override;
+  virtual uint64_t transactionsCount() const override;
   virtual uint64_t balance(uint32_t flags) const override;
   virtual void getOutputs(std::vector<TransactionOutputInformation>& transfers, uint32_t flags) const override;
   virtual bool getTransactionInformation(const Crypto::Hash& transactionHash, TransactionInformation& info,
@@ -356,7 +356,7 @@ private:
     const std::vector<Crypto::Hash>& deletedTransactions, std::vector<TransactionOutputInformation>& lockingTransfers);
   TransactionOutputInformation getAvailableOutput(const TransactionOutputKey& transactionOutputKey) const;
 
-  void copyToSpent(const TransactionBlockInfo& block, const ITransactionReader& tx, size_t inputIndex, const TransactionOutputInformationEx& output);
+  void copyToSpent(const TransactionBlockInfo& block, const ITransactionReader& tx, uint64_t inputIndex, const TransactionOutputInformationEx& output);
 
   void rebuildTransfersUnlockJobs(TransfersUnlockMultiIndex& transfersUnlockJobs, const AvailableTransfersMultiIndex& availableTransfers,
                                   const SpentTransfersMultiIndex& spentTransfers);
@@ -371,7 +371,7 @@ private:
   //std::unordered_map<KeyImage, KeyOutputInfo, boost::hash<KeyImage>> m_keyImages;
 
   uint32_t m_currentHeight; // current height is needed to check if a transfer is unlocked
-  size_t m_transactionSpendableAge;
+  uint64_t m_transactionSpendableAge;
   const CryptoNote::Currency& m_currency;
   mutable std::mutex m_mutex;
 };

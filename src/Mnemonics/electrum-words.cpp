@@ -244,7 +244,7 @@ namespace crypto
      * \param  language_name   Language of the seed as found gets written here.
      * \return                 false if not a multiple of 3 words, or if word is not in the words list
      */
-    bool words_to_bytes(std::string words, std::string& dst, size_t len, bool duplicate,
+    bool words_to_bytes(std::string words, std::string& dst, uint64_t len, bool duplicate,
       std::string &language_name)
     {
       std::vector<std::string> seed;
@@ -259,7 +259,7 @@ namespace crypto
       if (len)
       {
         // error on non-compliant word list
-        const size_t expected = len * 8 * 3 / 32;
+        const uint64_t expected = len * 8 * 3 / 32;
         if (seed.size() != expected/2 && seed.size() != expected &&
           seed.size() != expected + 1)
         {
@@ -307,7 +307,7 @@ namespace crypto
 
       if (len > 0 && duplicate)
       {
-        const size_t expected = len * 3 / 32;
+        const uint64_t expected = len * 3 / 32;
         std::string wlist_copy = words;
         if (seed.size() == expected/2)
         {
@@ -346,7 +346,7 @@ namespace crypto
      * \param  language_name Seed language name
      * \return               true if successful false if not. Unsuccessful if wrong key size.
      */
-    bool bytes_to_words(const char *src, size_t len, std::string& words,
+    bool bytes_to_words(const char *src, uint64_t len, std::string& words,
       const std::string &language_name)
     {
 

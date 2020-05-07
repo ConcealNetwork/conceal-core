@@ -467,7 +467,7 @@ struct f_transaction_short_response {
 
 struct f_transaction_details_response {
   std::string hash;
-  size_t size;
+  uint64_t size;
   std::string paymentId;
   uint64_t mixin;
   uint64_t fee;
@@ -514,7 +514,7 @@ struct f_block_details_response {
   difficulty_type difficulty;
   uint64_t reward;
   uint64_t blockSize;
-  size_t sizeMedian;
+  uint64_t sizeMedian;
   uint64_t effectiveSizeMedian;
   uint64_t transactionsCumulativeSize;
   std::string alreadyGeneratedCoins;

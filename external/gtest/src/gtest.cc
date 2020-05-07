@@ -335,7 +335,7 @@ static bool GTestIsInitialized() { return GetArgvs().size() > 0; }
 static int SumOverTestCaseList(const std::vector<TestCase*>& case_list,
                                int (TestCase::*method)() const) {
   int sum = 0;
-  for (size_t i = 0; i < case_list.size(); i++) {
+  for (uint64_t i = 0; i < case_list.size(); i++) {
     sum += (case_list[i]->*method)();
   }
   return sum;
@@ -900,9 +900,9 @@ bool String::CStringEquals(const char * lhs, const char * rhs) {
 
 // Converts an array of wide chars to a narrow string using the UTF-8
 // encoding, and streams the result to the given Message object.
-static void StreamWideCharsToMessage(const wchar_t* wstr, size_t length,
+static void StreamWideCharsToMessage(const wchar_t* wstr, uint64_t length,
                                      Message* msg) {
-  for (size_t i = 0; i != length; ) {  // NOLINT
+  for (uint64_t i = 0; i != length; ) {  // NOLINT
     if (wstr[i] != L'\0') {
       *msg << WideStringToUtf8(wstr + i, static_cast<int>(length - i));
       while (i != length && wstr[i] != L'\0')
@@ -1022,26 +1022,26 @@ AssertionResult AssertionFailure(const Message& message) {
 namespace internal {
 
 namespace edit_distance {
-std::vector<EditType> CalculateOptimalEdits(const std::vector<size_t>& left,
-                                            const std::vector<size_t>& right) {
+std::vector<EditType> CalculateOptimalEdits(const std::vector<uint64_t>& left,
+                                            const std::vector<uint64_t>& right) {
   std::vector<std::vector<double> > costs(
       left.size() + 1, std::vector<double>(right.size() + 1));
   std::vector<std::vector<EditType> > best_move(
       left.size() + 1, std::vector<EditType>(right.size() + 1));
 
   // Populate for empty right.
-  for (size_t l_i = 0; l_i < costs.size(); ++l_i) {
+  for (uint64_t l_i = 0; l_i < costs.size(); ++l_i) {
     costs[l_i][0] = static_cast<double>(l_i);
     best_move[l_i][0] = kRemove;
   }
   // Populate for empty left.
-  for (size_t r_i = 1; r_i < costs[0].size(); ++r_i) {
+  for (uint64_t r_i = 1; r_i < costs[0].size(); ++r_i) {
     costs[0][r_i] = static_cast<double>(r_i);
     best_move[0][r_i] = kAdd;
   }
 
-  for (size_t l_i = 0; l_i < left.size(); ++l_i) {
-    for (size_t r_i = 0; r_i < right.size(); ++r_i) {
+  for (uint64_t l_i = 0; l_i < left.size(); ++l_i) {
+    for (uint64_t r_i = 0; r_i < right.size(); ++r_i) {
       if (left[l_i] == right[r_i]) {
         // Found a match. Consume it.
         costs[l_i + 1][r_i + 1] = costs[l_i][r_i];
@@ -1069,7 +1069,7 @@ std::vector<EditType> CalculateOptimalEdits(const std::vector<size_t>& left,
 
   // Reconstruct the best path. We do it in reverse order.
   std::vector<EditType> best_path;
-  for (size_t l_i = left.size(), r_i = right.size(); l_i > 0 || r_i > 0;) {
+  for (uint64_t l_i = left.size(), r_i = right.size(); l_i > 0 || r_i > 0;) {
     EditType move = best_move[l_i][r_i];
     best_path.push_back(move);
     l_i -= move != kAdd;
@@ -1084,15 +1084,15 @@ namespace {
 // Helper class to convert string into ids with deduplication.
 class InternalStrings {
  public:
-  size_t GetId(const std::string& str) {
+  uint64_t GetId(const std::string& str) {
     IdMap::iterator it = ids_.find(str);
     if (it != ids_.end()) return it->second;
-    size_t id = ids_.size();
+    uint64_t id = ids_.size();
     return ids_[str] = id;
   }
 
  private:
-  typedef std::map<std::string, size_t> IdMap;
+  typedef std::map<std::string, uint64_t> IdMap;
   IdMap ids_;
 };
 
@@ -1101,13 +1101,13 @@ class InternalStrings {
 std::vector<EditType> CalculateOptimalEdits(
     const std::vector<std::string>& left,
     const std::vector<std::string>& right) {
-  std::vector<size_t> left_ids, right_ids;
+  std::vector<uint64_t> left_ids, right_ids;
   {
     InternalStrings intern_table;
-    for (size_t i = 0; i < left.size(); ++i) {
+    for (uint64_t i = 0; i < left.size(); ++i) {
       left_ids.push_back(intern_table.GetId(left[i]));
     }
-    for (size_t i = 0; i < right.size(); ++i) {
+    for (uint64_t i = 0; i < right.size(); ++i) {
       right_ids.push_back(intern_table.GetId(right[i]));
     }
   }
@@ -1122,7 +1122,7 @@ namespace {
 // adds. It also adds the hunk header before printint into the stream.
 class Hunk {
  public:
-  Hunk(size_t left_start, size_t right_start)
+  Hunk(uint64_t left_start, uint64_t right_start)
       : left_start_(left_start),
         right_start_(right_start),
         adds_(),
@@ -1183,8 +1183,8 @@ class Hunk {
     *ss << " @@\n";
   }
 
-  size_t left_start_, right_start_;
-  size_t adds_, removes_, common_;
+  uint64_t left_start_, right_start_;
+  uint64_t adds_, removes_, common_;
   std::list<std::pair<char, const char*> > hunk_, hunk_adds_, hunk_removes_;
 };
 
@@ -1199,10 +1199,10 @@ class Hunk {
 // joined into one hunk.
 std::string CreateUnifiedDiff(const std::vector<std::string>& left,
                               const std::vector<std::string>& right,
-                              size_t context) {
+                              uint64_t context) {
   const std::vector<EditType> edits = CalculateOptimalEdits(left, right);
 
-  size_t l_i = 0, r_i = 0, edit_i = 0;
+  uint64_t l_i = 0, r_i = 0, edit_i = 0;
   std::stringstream ss;
   while (edit_i < edits.size()) {
     // Find first edit.
@@ -1213,15 +1213,15 @@ std::string CreateUnifiedDiff(const std::vector<std::string>& left,
     }
 
     // Find the first line to include in the hunk.
-    const size_t prefix_context = std::min(l_i, context);
+    const uint64_t prefix_context = std::min(l_i, context);
     Hunk hunk(l_i - prefix_context + 1, r_i - prefix_context + 1);
-    for (size_t i = prefix_context; i > 0; --i) {
+    for (uint64_t i = prefix_context; i > 0; --i) {
       hunk.PushLine(' ', left[l_i - i].c_str());
     }
 
     // Iterate the edits until we found enough suffix for the hunk or the input
     // is over.
-    size_t n_suffix = 0;
+    uint64_t n_suffix = 0;
     for (; edit_i < edits.size(); ++edit_i) {
       if (n_suffix >= context) {
         // Continue only if the next hunk is very close.
@@ -1268,13 +1268,13 @@ namespace {
 // characters the same.
 std::vector<std::string> SplitEscapedString(const std::string& str) {
   std::vector<std::string> lines;
-  size_t start = 0, end = str.size();
+  uint64_t start = 0, end = str.size();
   if (end > 2 && str[0] == '"' && str[end - 1] == '"') {
     ++start;
     --end;
   }
   bool escaped = false;
-  for (size_t i = start; i + 1 < end; ++i) {
+  for (uint64_t i = start; i + 1 < end; ++i) {
     if (escaped) {
       escaped = false;
       if (str[i] == 'n') {
@@ -1946,8 +1946,8 @@ bool String::CaseInsensitiveWideCStringEquals(const wchar_t* lhs,
 // Any string is considered to end with an empty suffix.
 bool String::EndsWithCaseInsensitive(
     const std::string& str, const std::string& suffix) {
-  const size_t str_len = str.length();
-  const size_t suffix_len = suffix.length();
+  const uint64_t str_len = str.length();
+  const uint64_t suffix_len = suffix.length();
   return (str_len >= suffix_len) &&
          CaseInsensitiveCStringEquals(str.c_str() + str_len - suffix_len,
                                       suffix.c_str());
@@ -2124,7 +2124,7 @@ static std::vector<std::string> GetReservedAttributesForElement(
 
 static std::string FormatWordList(const std::vector<std::string>& words) {
   Message word_list;
-  for (size_t i = 0; i < words.size(); ++i) {
+  for (uint64_t i = 0; i < words.size(); ++i) {
     if (i > 0 && words.size() > 2) {
       word_list << ", ";
     }
@@ -2791,7 +2791,7 @@ void TestCase::ShuffleTests(internal::Random* random) {
 
 // Restores the test order to before the first shuffle.
 void TestCase::UnshuffleTests() {
-  for (size_t i = 0; i < test_indices_.size(); i++) {
+  for (uint64_t i = 0; i < test_indices_.size(); i++) {
     test_indices_[i] = static_cast<int>(i);
   }
 }
@@ -3303,7 +3303,7 @@ void TestEventRepeater::Append(TestEventListener *listener) {
 
 // TODO(vladl@google.com): Factor the search functionality into Vector::Find.
 TestEventListener* TestEventRepeater::Release(TestEventListener *listener) {
-  for (size_t i = 0; i < listeners_.size(); ++i) {
+  for (uint64_t i = 0; i < listeners_.size(); ++i) {
     if (listeners_[i] == listener) {
       listeners_.erase(listeners_.begin() + i);
       return listener;
@@ -3318,7 +3318,7 @@ TestEventListener* TestEventRepeater::Release(TestEventListener *listener) {
 #define GTEST_REPEATER_METHOD_(Name, Type) \
 void TestEventRepeater::Name(const Type& parameter) { \
   if (forwarding_enabled_) { \
-    for (size_t i = 0; i < listeners_.size(); i++) { \
+    for (uint64_t i = 0; i < listeners_.size(); i++) { \
       listeners_[i]->Name(parameter); \
     } \
   } \
@@ -3352,7 +3352,7 @@ GTEST_REVERSE_REPEATER_METHOD_(OnTestProgramEnd, UnitTest)
 void TestEventRepeater::OnTestIterationStart(const UnitTest& unit_test,
                                              int iteration) {
   if (forwarding_enabled_) {
-    for (size_t i = 0; i < listeners_.size(); i++) {
+    for (uint64_t i = 0; i < listeners_.size(); i++) {
       listeners_[i]->OnTestIterationStart(unit_test, iteration);
     }
   }
@@ -3496,7 +3496,7 @@ std::string XmlUnitTestResultPrinter::EscapeXml(
     const std::string& str, bool is_attribute) {
   Message m;
 
-  for (size_t i = 0; i < str.size(); ++i) {
+  for (uint64_t i = 0; i < str.size(); ++i) {
     const char ch = str[i];
     switch (ch) {
       case '<':
@@ -4410,7 +4410,7 @@ void UnitTestImpl::ConfigureXmlOutput() {
 void UnitTestImpl::ConfigureStreamingOutput() {
   const std::string& target = GTEST_FLAG(stream_result_to);
   if (!target.empty()) {
-    const size_t pos = target.find(':');
+    const uint64_t pos = target.find(':');
     if (pos != std::string::npos) {
       listeners()->Append(new StreamingListener(target.substr(0, pos),
                                                 target.substr(pos+1)));
@@ -4793,12 +4793,12 @@ int UnitTestImpl::FilterTests(ReactionToSharding shard_tests) {
   // this shard.
   int num_runnable_tests = 0;
   int num_selected_tests = 0;
-  for (size_t i = 0; i < test_cases_.size(); i++) {
+  for (uint64_t i = 0; i < test_cases_.size(); i++) {
     TestCase* const test_case = test_cases_[i];
     const std::string &test_case_name = test_case->name();
     test_case->set_should_run(false);
 
-    for (size_t j = 0; j < test_case->test_info_list().size(); j++) {
+    for (uint64_t j = 0; j < test_case->test_info_list().size(); j++) {
       TestInfo* const test_info = test_case->test_info_list()[j];
       const std::string test_name(test_info->name());
       // A test is disabled if test case name or test name matches
@@ -4862,11 +4862,11 @@ void UnitTestImpl::ListTestsMatchingFilter() {
   // Print at most this many characters for each type/value parameter.
   const int kMaxParamLength = 250;
 
-  for (size_t i = 0; i < test_cases_.size(); i++) {
+  for (uint64_t i = 0; i < test_cases_.size(); i++) {
     const TestCase* const test_case = test_cases_[i];
     bool printed_test_case_name = false;
 
-    for (size_t j = 0; j < test_case->test_info_list().size(); j++) {
+    for (uint64_t j = 0; j < test_case->test_info_list().size(); j++) {
       const TestInfo* const test_info =
           test_case->test_info_list()[j];
       if (test_info->matches_filter_) {
@@ -4941,14 +4941,14 @@ void UnitTestImpl::ShuffleTests() {
                static_cast<int>(test_cases_.size()), &test_case_indices_);
 
   // Shuffles the tests inside each test case.
-  for (size_t i = 0; i < test_cases_.size(); i++) {
+  for (uint64_t i = 0; i < test_cases_.size(); i++) {
     test_cases_[i]->ShuffleTests(random());
   }
 }
 
 // Restores the test cases and tests to their order before the first shuffle.
 void UnitTestImpl::UnshuffleTests() {
-  for (size_t i = 0; i < test_cases_.size(); i++) {
+  for (uint64_t i = 0; i < test_cases_.size(); i++) {
     // Unshuffles the tests in each test case.
     test_cases_[i]->UnshuffleTests();
     // Resets the index of each test case.
@@ -4995,7 +4995,7 @@ bool AlwaysTrue() {
 // past the prefix and returns true; otherwise leaves *pstr unchanged
 // and returns false.  None of pstr, *pstr, and prefix can be NULL.
 bool SkipPrefix(const char* prefix, const char** pstr) {
-  const size_t prefix_len = strlen(prefix);
+  const uint64_t prefix_len = strlen(prefix);
   if (strncmp(*pstr, prefix, prefix_len) == 0) {
     *pstr += prefix_len;
     return true;
@@ -5016,7 +5016,7 @@ static const char* ParseFlagValue(const char* str,
 
   // The flag must start with "--" followed by GTEST_FLAG_PREFIX_.
   const std::string flag_str = std::string("--") + GTEST_FLAG_PREFIX_ + flag;
-  const size_t flag_len = flag_str.length();
+  const uint64_t flag_len = flag_str.length();
   if (strncmp(str, flag_str.c_str(), flag_len) != 0) return NULL;
 
   // Skips the flag name.
@@ -5260,7 +5260,7 @@ static void LoadFlagsFromFile(const std::string& path) {
   posix::FClose(flagfile);
   std::vector<std::string> lines;
   SplitString(contents, '\n', &lines);
-  for (size_t i = 0; i < lines.size(); ++i) {
+  for (uint64_t i = 0; i < lines.size(); ++i) {
     if (lines[i].empty())
       continue;
     if (!ParseGoogleTestFlag(lines[i].c_str()))

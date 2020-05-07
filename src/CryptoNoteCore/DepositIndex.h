@@ -23,7 +23,7 @@ public:
   void pushBlock(DepositAmount amount, DepositInterest interest); 
   void popBlock(); 
   void reserve(DepositHeight expectedHeight);
-  size_t popBlocks(DepositHeight from); 
+  uint64_t popBlocks(DepositHeight from); 
   DepositAmount depositAmountAtHeight(DepositHeight height) const;
   DepositAmount fullDepositAmount() const; 
   DepositInterest depositInterestAtHeight(DepositHeight height) const;

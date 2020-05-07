@@ -24,7 +24,7 @@ namespace {
 
 struct TcpConnectorContext : public OVERLAPPED {
   NativeContext* context;
-  size_t connection;
+  uint64_t connection;
   bool interrupted;
 };
 

@@ -30,7 +30,7 @@ namespace CryptoNote {
 class ISerializer;
 
 struct TransactionExtraPadding {
-  size_t size;
+  uint64_t size;
 };
 
 struct TransactionExtraPublicKey {
@@ -42,15 +42,15 @@ struct TransactionExtraNonce {
 };
 
 struct TransactionExtraMergeMiningTag {
-  size_t depth;
+  uint64_t depth;
   Crypto::Hash merkleRoot;
 };
 
 struct tx_extra_message {
   std::string data;
 
-  bool encrypt(std::size_t index, const std::string &message, const AccountPublicAddress* recipient, const KeyPair &txkey);
-  bool decrypt(std::size_t index, const Crypto::PublicKey &txkey, const Crypto::SecretKey *recepient_secret_key, std::string &message) const;
+  bool encrypt(std::uint64_t index, const std::string &message, const AccountPublicAddress* recipient, const KeyPair &txkey);
+  bool decrypt(std::uint64_t index, const Crypto::PublicKey &txkey, const Crypto::SecretKey *recepient_secret_key, std::string &message) const;
 
   bool serialize(ISerializer& serializer);
 };

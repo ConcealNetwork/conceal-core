@@ -14,7 +14,7 @@ namespace CryptoNote {
 
 class ICryptoNoteProtocolObserver {
 public:
-  virtual void peerCountUpdated(size_t count) {}
+  virtual void peerCountUpdated(uint64_t count) {}
   virtual void lastKnownBlockHeightUpdated(uint32_t height) {}
   virtual void blockchainSynchronized(uint32_t topHeight) {}
 };

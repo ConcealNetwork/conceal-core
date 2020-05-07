@@ -36,7 +36,7 @@ bool parseTransactionExtra(const std::vector<uint8_t> &transactionExtra, std::ve
       c = read<uint8_t>(iss);
       switch (c) {
       case TX_EXTRA_TAG_PADDING: {
-        size_t size = 1;
+        uint64_t size = 1;
         for (; !iss.endOfStream() && size <= TX_EXTRA_PADDING_MAX_COUNT; ++size) {
           if (read<uint8_t>(iss) != 0) {
             return false; // all bytes should be zero
@@ -173,7 +173,7 @@ bool addExtraNonceToTransactionExtra(std::vector<uint8_t>& tx_extra, const Binar
     return false;
   }
 
-  size_t start_pos = tx_extra.size();
+  uint64_t start_pos = tx_extra.size();
   tx_extra.resize(tx_extra.size() + 2 + extra_nonce.size());
   //write tag
   tx_extra[start_pos] = TX_EXTRA_NONCE;
@@ -223,7 +223,7 @@ std::vector<std::string> get_messages_from_extra(const std::vector<uint8_t> &ext
   if (!parseTransactionExtra(extra, tx_extra_fields)) {
     return result;
   }
-  size_t i = 0;
+  uint64_t i = 0;
   for (const auto& f : tx_extra_fields) {
     if (f.type() != typeid(tx_extra_message)) {
       continue;
@@ -312,8 +312,8 @@ struct message_key_data {
 #pragma pack(pop)
 static_assert(sizeof(message_key_data) == 34, "Invalid structure size");
 
-bool tx_extra_message::encrypt(size_t index, const std::string &message, const AccountPublicAddress *recipient, const KeyPair &txkey) {
-  size_t mlen = message.size();
+bool tx_extra_message::encrypt(uint64_t index, const std::string &message, const AccountPublicAddress *recipient, const KeyPair &txkey) {
+  uint64_t mlen = message.size();
   std::unique_ptr<char[]> buf(new char[mlen + TX_EXTRA_MESSAGE_CHECKSUM_SIZE]);
   memcpy(buf.get(), message.data(), mlen);
   memset(buf.get() + mlen, 0, TX_EXTRA_MESSAGE_CHECKSUM_SIZE);
@@ -327,14 +327,14 @@ bool tx_extra_message::encrypt(size_t index, const std::string &message, const A
     key_data.magic2 = 0;
     Hash h = cn_fast_hash(&key_data, sizeof(message_key_data));
     uint64_t nonce = SWAP64LE(index);
-    chacha(10, buf.get(), mlen, reinterpret_cast<uint8_t *>(&h), reinterpret_cast<uint8_t *>(&nonce), buf.get());
+    chacha8(10, buf.get(), mlen, reinterpret_cast<uint8_t *>(&h), reinterpret_cast<uint8_t *>(&nonce), buf.get());
   }
   data.assign(buf.get(), mlen);
   return true;
 }
 
-bool tx_extra_message::decrypt(size_t index, const Crypto::PublicKey &txkey, const Crypto::SecretKey *recepient_secret_key, std::string &message) const {
-  size_t mlen = data.size();
+bool tx_extra_message::decrypt(uint64_t index, const Crypto::PublicKey &txkey, const Crypto::SecretKey *recepient_secret_key, std::string &message) const {
+  uint64_t mlen = data.size();
   if (mlen < TX_EXTRA_MESSAGE_CHECKSUM_SIZE) {
     return false;
   }
@@ -351,13 +351,13 @@ bool tx_extra_message::decrypt(size_t index, const Crypto::PublicKey &txkey, con
     key_data.magic2 = 0;
     Hash h = cn_fast_hash(&key_data, sizeof(message_key_data));
     uint64_t nonce = SWAP64LE(index);
-    chacha(10, data.data(), mlen, reinterpret_cast<uint8_t *>(&h), reinterpret_cast<uint8_t *>(&nonce), ptr.get());
+    chacha8(10, data.data(), mlen, reinterpret_cast<uint8_t *>(&h), reinterpret_cast<uint8_t *>(&nonce), ptr.get());
     buf = ptr.get();
   } else {
     buf = data.data();
   }
   mlen -= TX_EXTRA_MESSAGE_CHECKSUM_SIZE;
-  for (size_t i = 0; i < TX_EXTRA_MESSAGE_CHECKSUM_SIZE; i++) {
+  for (uint64_t i = 0; i < TX_EXTRA_MESSAGE_CHECKSUM_SIZE; i++) {
     if (buf[mlen + i] != 0) {
       return false;
     }

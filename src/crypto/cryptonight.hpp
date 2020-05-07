@@ -123,7 +123,7 @@ inline void xor_shift(__m128i& x0, __m128i& x1, __m128i& x2, __m128i& x3, __m128
     x7 = _mm_xor_si128(x7, tmp0);
 }
 
-template<bool SOFT_AES, size_t MEMORY, cryptonight_algo ALGO>
+template<bool SOFT_AES, uint64_t MEMORY, cryptonight_algo ALGO>
 void cn_explode_scratchpad(const __m128i* input, __m128i* output)
 {
 	// This is more than we have registers, compiler will assign 2 keys on the stack
@@ -141,7 +141,7 @@ void cn_explode_scratchpad(const __m128i* input, __m128i* output)
 	xin6 = _mm_load_si128(input + 10);
 	xin7 = _mm_load_si128(input + 11);
 
-	for (size_t i = 0; i < MEMORY / sizeof(__m128i); i += 8)
+	for (uint64_t i = 0; i < MEMORY / sizeof(__m128i); i += 8)
 	{
 		aes_round<SOFT_AES>(k0, xin0, xin1, xin2, xin3, xin4, xin5, xin6, xin7);
 		aes_round<SOFT_AES>(k1, xin0, xin1, xin2, xin3, xin4, xin5, xin6, xin7);
@@ -165,7 +165,7 @@ void cn_explode_scratchpad(const __m128i* input, __m128i* output)
 	}
 }
 
-template<bool SOFT_AES, size_t MEMORY, cryptonight_algo ALGO>
+template<bool SOFT_AES, uint64_t MEMORY, cryptonight_algo ALGO>
 void cn_implode_scratchpad(const __m128i* input, __m128i* output)
 {
 	// This is more than we have registers, compiler will assign 2 keys on the stack
@@ -183,7 +183,7 @@ void cn_implode_scratchpad(const __m128i* input, __m128i* output)
 	xout6 = _mm_load_si128(output + 10);
 	xout7 = _mm_load_si128(output + 11);
 
-	for (size_t i = 0; i < MEMORY / sizeof(__m128i); i += 8)
+	for (uint64_t i = 0; i < MEMORY / sizeof(__m128i); i += 8)
 	{
 		xout0 = _mm_xor_si128(_mm_load_si128(input + i + 0), xout0);
 		xout1 = _mm_xor_si128(_mm_load_si128(input + i + 1), xout1);
@@ -235,9 +235,9 @@ inline __m128 _mm_set1_ps_epi32(uint32_t x)
 }
 
 template<bool SOFT_AES, cryptonight_algo ALGO>
-void cryptonight_hash(const void* input, size_t len, void* output, cn_context& ctx0)
+void cryptonight_hash(const void* input, uint64_t len, void* output, cn_context& ctx0)
 {
-	constexpr size_t MEMORY = cn_select_memory<ALGO>();
+	constexpr uint64_t MEMORY = cn_select_memory<ALGO>();
 	constexpr uint32_t MASK = cn_select_mask<ALGO>();
 	constexpr uint32_t ITER = cn_select_iter<ALGO>();
 	constexpr bool MONERO_TWEAK = ALGO == CRYPTONIGHT_FAST_V8;
@@ -271,7 +271,7 @@ void cryptonight_hash(const void* input, size_t len, void* output, cn_context& c
 
 	uint64_t idx0 = h0[0] ^ h0[4];
 	// Optim - 90% time boundary
-	for(size_t i = 0; i < ITER; i++)
+	for(uint64_t i = 0; i < ITER; i++)
 	{
 		__m128i cx;
 		cx = _mm_load_si128((__m128i *)&l0[idx0 & MASK]);

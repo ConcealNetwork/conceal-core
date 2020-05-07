@@ -49,7 +49,7 @@ bool PaymentIdIndex::find(const Crypto::Hash& paymentId, std::vector<Crypto::Has
   auto range = index.equal_range(paymentId);
   for (auto iter = range.first; iter != range.second; ++iter){
     found = true;
-    transactionHashes.emplace_back(iter->second);
+    transactionHashes.push_back(iter->second);
   }
   return found;
 }
@@ -93,7 +93,7 @@ bool TimestampBlocksIndex::find(uint64_t timestampBegin, uint64_t timestampEnd, 
 
   for (auto iter = begin; iter != end && hashesNumber < hashesNumberLimit; ++iter){
     ++hashesNumber;
-    hashes.emplace_back(iter->second);
+    hashes.push_back(iter->second);
   }
   return hashesNumber > 0;
 }
@@ -138,7 +138,7 @@ bool TimestampTransactionsIndex::find(uint64_t timestampBegin, uint64_t timestam
 
   for (auto iter = begin; iter != end && hashesNumber < hashesNumberLimit; ++iter) {
     ++hashesNumber;
-    hashes.emplace_back(iter->second);
+    hashes.push_back(iter->second);
   }
 
   return hashesNumber > 0;
@@ -242,7 +242,7 @@ bool OrphanBlocksIndex::find(uint32_t height, std::vector<Crypto::Hash>& blockHa
   auto range = index.equal_range(height);
   for (auto iter = range.first; iter != range.second; ++iter) {
     found = true;
-    blockHashes.emplace_back(iter->second);
+    blockHashes.push_back(iter->second);
   }
   return found;
 }

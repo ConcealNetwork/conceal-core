@@ -58,10 +58,10 @@ bool fromBinaryArray(T& object, const BinaryArray& binaryArray) {
 }
 
 template<class T>
-bool getObjectBinarySize(const T& object, size_t& size) {
+bool getObjectBinarySize(const T& object, uint64_t& size) {
   BinaryArray ba;
   if (!toBinaryArray(object, ba)) {
-    size = (std::numeric_limits<size_t>::max)();
+    size = (std::numeric_limits<uint64_t>::max)();
     return false;
   }
 
@@ -70,8 +70,8 @@ bool getObjectBinarySize(const T& object, size_t& size) {
 }
 
 template<class T>
-size_t getObjectBinarySize(const T& object) {
-  size_t size;
+uint64_t getObjectBinarySize(const T& object) {
+  uint64_t size;
   getObjectBinarySize(object, size);
   return size;
 }
@@ -89,11 +89,11 @@ bool getObjectHash(const T& object, Crypto::Hash& hash) {
 }
 
 template<class T>
-bool getObjectHash(const T& object, Crypto::Hash& hash, size_t& size) {
+bool getObjectHash(const T& object, Crypto::Hash& hash, uint64_t& size) {
   BinaryArray ba;
   if (!toBinaryArray(object, ba)) {
     hash = NULL_HASH;
-    size = (std::numeric_limits<size_t>::max)();
+    size = (std::numeric_limits<uint64_t>::max)();
     return false;
   }
 

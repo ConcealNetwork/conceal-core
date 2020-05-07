@@ -104,7 +104,7 @@ namespace CryptoNote {
     logger(log, "txpool") {
   }
   //---------------------------------------------------------------------------------
-  bool tx_memory_pool::add_tx(const Transaction &tx, /*const Crypto::Hash& tx_prefix_hash,*/ const Crypto::Hash &id, size_t blobSize, tx_verification_context& tvc, bool keptByBlock, uint32_t height) {
+  bool tx_memory_pool::add_tx(const Transaction &tx, const Crypto::Hash &id, uint64_t blobSize, tx_verification_context& tvc, bool keptByBlock, uint32_t height) {
     if (!check_inputs_types_supported(tx)) {
       tvc.m_verification_failed = true;
       return false;
@@ -236,12 +236,12 @@ namespace CryptoNote {
   //---------------------------------------------------------------------------------
   bool tx_memory_pool::add_tx(const Transaction &tx, tx_verification_context& tvc, bool keeped_by_block, uint32_t height) {
     Crypto::Hash h = NULL_HASH;
-    size_t blobSize = 0;
+    uint64_t blobSize = 0;
     getObjectHash(tx, h, blobSize);
     return add_tx(tx, h, blobSize, tvc, keeped_by_block, height);
   }
   //---------------------------------------------------------------------------------
-  bool tx_memory_pool::take_tx(const Crypto::Hash &id, Transaction &tx, size_t& blobSize, uint64_t& fee) {
+  bool tx_memory_pool::take_tx(const Crypto::Hash &id, Transaction &tx, uint64_t& blobSize, uint64_t& fee) {
     std::lock_guard<std::recursive_mutex> lock(m_transactions_lock);
     auto it = m_transactions.find(id);
     if (it == m_transactions.end()) {
@@ -258,7 +258,7 @@ namespace CryptoNote {
     return true;
   }
   //---------------------------------------------------------------------------------
-  size_t tx_memory_pool::get_transactions_count() const {
+  uint64_t tx_memory_pool::get_transactions_count() const {
     std::lock_guard<std::recursive_mutex> lock(m_transactions_lock);
     return m_transactions.size();
   }
@@ -373,17 +373,17 @@ namespace CryptoNote {
   }
   //---------------------------------------------------------------------------------
   bool tx_memory_pool::fill_block_template(Block& bl, 
-                                          size_t median_size, 
-                                          size_t maxCumulativeSize,
+                                          uint64_t median_size, 
+                                          uint64_t maxCumulativeSize,
                                           uint64_t already_generated_coins, 
-                                          size_t& total_size, 
+                                          uint64_t& total_size, 
                                           uint64_t& fee,
                                           uint32_t& height)                                      
   {
     std::lock_guard<std::recursive_mutex> lock(m_transactions_lock);
     total_size = 0;
     fee = 0;
-    size_t max_total_size = (125 * median_size) / 100 - m_currency.minerTxBlobReservedSize();
+    uint64_t max_total_size = (125 * median_size) / 100 - m_currency.minerTxBlobReservedSize();
     max_total_size = std::min(max_total_size, maxCumulativeSize);
 
     BlockTemplate blockTemplate;
@@ -397,7 +397,7 @@ namespace CryptoNote {
         continue;
       }
 
-      size_t blockSizeLimit = (txd.fee == 0) ? median_size : max_total_size;
+      uint64_t blockSizeLimit = (txd.fee == 0) ? median_size : max_total_size;
       if (blockSizeLimit < total_size + txd.blobSize) 
       {
         continue;

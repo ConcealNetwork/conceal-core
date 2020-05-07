@@ -199,7 +199,7 @@ void processWallets(po::variables_map& vm, std::vector<std::string>& containerAd
   bool previewMode = false;
   uint32_t count = 0;
   uint8_t steps = 0;
-  size_t total = containerAddresses.size();
+  uint64_t total = containerAddresses.size();
   if (total > 10000) {
     steps = 100;
   } else {

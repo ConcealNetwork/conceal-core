@@ -45,7 +45,7 @@ void Configuration::initOptions(boost::program_options::options_description& des
       ("daemon,d", "run as daemon in Unix or as service in Windows")
       ("log-file,l", po::value<std::string>(), "log file")
       ("server-root", po::value<std::string>(), "server root. The service will use it as working directory. Don't set it if don't want to change it")
-      ("log-level", po::value<size_t>(), "log level")
+      ("log-level", po::value<uint64_t>(), "log level")
       ("address", "print wallet addresses and exit");
 }
 
@@ -75,7 +75,7 @@ void Configuration::init(const boost::program_options::variables_map& options) {
   }
 
   if (options.count("log-level") != 0) {
-    logLevel = options["log-level"].as<size_t>();
+    logLevel = options["log-level"].as<uint64_t>();
     if (logLevel > Logging::TRACE) {
       std::string error = "log-level option must be in " + std::to_string(Logging::FATAL) +  ".." + std::to_string(Logging::TRACE) + " interval";
       throw ConfigurationError(error.c_str());

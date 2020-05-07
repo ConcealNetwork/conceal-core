@@ -63,13 +63,13 @@ bool BlockchainExplorerDataBuilder::fillTxExtra(const std::vector<uint8_t>& rawE
   return true;
 }
 
-size_t BlockchainExplorerDataBuilder::median(std::vector<size_t>& v) {
+uint64_t BlockchainExplorerDataBuilder::median(std::vector<uint64_t>& v) {
   if (v.empty())
-    return boost::value_initialized<size_t>();
+    return boost::value_initialized<uint64_t>();
   if (v.size() == 1)
     return v[0];
 
-  size_t n = (v.size()) / 2;
+  uint64_t n = (v.size()) / 2;
   std::sort(v.begin(), v.end());
   //nth_element(v.begin(), v.begin()+n-1, v.end());
   if (v.size() % 2) {//1, 3, 5...
@@ -106,20 +106,20 @@ bool BlockchainExplorerDataBuilder::fillBlockDetails(const Block &block, BlockDe
     return false;
   }
 
-  std::vector<size_t> blocksSizes;
+  std::vector<uint64_t> blocksSizes;
   if (!core.getBackwardBlocksSizes(blockDetails.height, blocksSizes, parameters::CRYPTONOTE_REWARD_BLOCKS_WINDOW)) {
     return false;
   }
   blockDetails.sizeMedian = median(blocksSizes);
 
-  size_t blockSize = 0;
+  uint64_t blockSize = 0;
   if (!core.getBlockSize(hash, blockSize)) {
     return false;
   }
   blockDetails.transactionsCumulativeSize = blockSize;
 
-  size_t blokBlobSize = getObjectBinarySize(block);
-  size_t minerTxBlobSize = getObjectBinarySize(block.baseTransaction);
+  uint64_t blokBlobSize = getObjectBinarySize(block);
+  uint64_t minerTxBlobSize = getObjectBinarySize(block.baseTransaction);
   blockDetails.blockSize = blokBlobSize + blockDetails.transactionsCumulativeSize - minerTxBlobSize;
 
   if (!core.getAlreadyGeneratedCoins(hash, blockDetails.alreadyGeneratedCoins)) {
@@ -266,7 +266,7 @@ bool BlockchainExplorerDataBuilder::fillTransactionDetails(const Transaction& tr
     } else if (txIn.type() == typeid(KeyInput)) {
       TransactionInputToKeyDetails txInToKeyDetails;
       const KeyInput& txInToKey = boost::get<KeyInput>(txIn);
-      std::list<std::pair<Crypto::Hash, size_t>> outputReferences;
+      std::list<std::pair<Crypto::Hash, uint64_t>> outputReferences;
       if (!core.scanOutputkeysForIndices(txInToKey, outputReferences)) {
         return false;
       }
@@ -282,7 +282,7 @@ bool BlockchainExplorerDataBuilder::fillTransactionDetails(const Transaction& tr
       const MultisignatureInput& txInMultisig = boost::get<MultisignatureInput>(txIn);
       txInDetails.amount = txInMultisig.amount;
       txInMultisigDetails.signatures = txInMultisig.signatureCount;
-      std::pair<Crypto::Hash, size_t> outputReference;
+      std::pair<Crypto::Hash, uint64_t> outputReference;
       if (!core.getMultisigOutputReference(txInMultisig, outputReference)) {
         return false;
       }
@@ -299,7 +299,7 @@ bool BlockchainExplorerDataBuilder::fillTransactionDetails(const Transaction& tr
   std::vector<uint32_t> globalIndices;
   globalIndices.reserve(transaction.outputs.size());
   if (!transactionDetails.inBlockchain || !core.get_tx_outputs_gindexs(hash, globalIndices)) {
-    for (size_t i = 0; i < transaction.outputs.size(); ++i) {
+    for (uint64_t i = 0; i < transaction.outputs.size(); ++i) {
       globalIndices.push_back(0);
     }
   }

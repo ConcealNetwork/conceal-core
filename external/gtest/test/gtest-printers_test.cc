@@ -418,7 +418,7 @@ TEST(PrintBuiltInTypeTest, Integer) {
 
 // Size types.
 TEST(PrintBuiltInTypeTest, Size_t) {
-  EXPECT_EQ("1", Print(sizeof('a')));  // size_t.
+  EXPECT_EQ("1", Print(sizeof('a')));  // uint64_t.
 #if !GTEST_OS_WINDOWS
   // Windows has no ssize_t type.
   EXPECT_EQ("-2", Print(static_cast<ssize_t>(-2)));  // ssize_t.
@@ -646,7 +646,7 @@ TEST(PrintPointerTest, MemberFunctionPointer) {
 
 // The difference between this and Print() is that it ensures that the
 // argument is a reference to an array.
-template <typename T, size_t N>
+template <typename T, uint64_t N>
 std::string PrintArrayHelper(T (&a)[N]) {
   return Print(a);
 }
@@ -911,7 +911,7 @@ TEST(PrintStlContainerTest, HashMultiSet) {
   // the numbers in the result.
   ASSERT_EQ(expected_pattern.length(), result.length());
   std::vector<int> numbers;
-  for (size_t i = 0; i != result.length(); i++) {
+  for (uint64_t i = 0; i != result.length(); i++) {
     if (expected_pattern[i] == 'd') {
       ASSERT_NE(isdigit(static_cast<unsigned char>(result[i])), 0);
       numbers.push_back(result[i] - '0');

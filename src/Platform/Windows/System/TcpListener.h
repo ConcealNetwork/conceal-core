@@ -28,7 +28,7 @@ public:
 
 private:
   Dispatcher* dispatcher;
-  size_t listener;
+  uint64_t listener;
   void* context;
 };
 

@@ -30,7 +30,7 @@ bool checkInputsKeyimagesDiff(const CryptoNote::TransactionPrefix& tx) {
 
 // TransactionInput helper functions
 
-size_t getRequiredSignaturesCount(const TransactionInput& in) {
+uint64_t getRequiredSignaturesCount(const TransactionInput& in) {
   if (in.type() == typeid(KeyInput)) {
     return boost::get<KeyInput>(in).outputIndexes.size();
   }
@@ -64,14 +64,14 @@ TransactionTypes::InputType getTransactionInputType(const TransactionInput& in) 
   return TransactionTypes::InputType::Invalid;
 }
 
-const TransactionInput& getInputChecked(const CryptoNote::TransactionPrefix& transaction, size_t index) {
+const TransactionInput& getInputChecked(const CryptoNote::TransactionPrefix& transaction, uint64_t index) {
   if (transaction.inputs.size() <= index) {
     throw std::runtime_error("Transaction input index out of range");
   }
   return transaction.inputs[index];
 }
 
-const TransactionInput& getInputChecked(const CryptoNote::TransactionPrefix& transaction, size_t index, TransactionTypes::InputType type) {
+const TransactionInput& getInputChecked(const CryptoNote::TransactionPrefix& transaction, uint64_t index, TransactionTypes::InputType type) {
   const auto& input = getInputChecked(transaction, index);
   if (getTransactionInputType(input) != type) {
     throw std::runtime_error("Unexpected transaction input type");
@@ -91,14 +91,14 @@ TransactionTypes::OutputType getTransactionOutputType(const TransactionOutputTar
   return TransactionTypes::OutputType::Invalid;
 }
 
-const TransactionOutput& getOutputChecked(const CryptoNote::TransactionPrefix& transaction, size_t index) {
+const TransactionOutput& getOutputChecked(const CryptoNote::TransactionPrefix& transaction, uint64_t index) {
   if (transaction.outputs.size() <= index) {
     throw std::runtime_error("Transaction output index out of range");
   }
   return transaction.outputs[index];
 }
 
-const TransactionOutput& getOutputChecked(const CryptoNote::TransactionPrefix& transaction, size_t index, TransactionTypes::OutputType type) {
+const TransactionOutput& getOutputChecked(const CryptoNote::TransactionPrefix& transaction, uint64_t index, TransactionTypes::OutputType type) {
   const auto& output = getOutputChecked(transaction, index);
   if (getTransactionOutputType(output.target) != type) {
     throw std::runtime_error("Unexpected transaction output target type");
@@ -106,7 +106,7 @@ const TransactionOutput& getOutputChecked(const CryptoNote::TransactionPrefix& t
   return output;
 }
 
-bool isOutToKey(const Crypto::PublicKey& spendPublicKey, const Crypto::PublicKey& outKey, const Crypto::KeyDerivation& derivation, size_t keyIndex) {
+bool isOutToKey(const Crypto::PublicKey& spendPublicKey, const Crypto::PublicKey& outKey, const Crypto::KeyDerivation& derivation, uint64_t keyIndex) {
   Crypto::PublicKey pk;
   derive_public_key(derivation, keyIndex, spendPublicKey, pk);
   return pk == outKey;
@@ -122,7 +122,7 @@ bool findOutputsToAccount(const CryptoNote::TransactionPrefix& transaction, cons
   Crypto::PublicKey txPubKey = getTransactionPublicKeyFromExtra(transaction.extra);
 
   amount = 0;
-  size_t keyIndex = 0;
+  uint64_t keyIndex = 0;
   uint32_t outputIndex = 0;
 
   Crypto::KeyDerivation derivation;
@@ -139,7 +139,7 @@ bool findOutputsToAccount(const CryptoNote::TransactionPrefix& transaction, cons
     } else if (o.target.type() == typeid(MultisignatureOutput)) {
       const auto& target = boost::get<MultisignatureOutput>(o.target);
       for (const auto& key : target.keys) {
-        if (isOutToKey(keys.address.spendPublicKey, key, derivation, static_cast<size_t>(outputIndex))) {
+        if (isOutToKey(keys.address.spendPublicKey, key, derivation, static_cast<uint64_t>(outputIndex))) {
           out.push_back(outputIndex);
         }
         ++keyIndex;

@@ -36,21 +36,21 @@ public:
   virtual BinaryArray getExtra() const override;
 
   // inputs
-  virtual size_t getInputCount() const override;
+  virtual uint64_t getInputCount() const override;
   virtual uint64_t getInputTotalAmount() const override;
-  virtual TransactionTypes::InputType getInputType(size_t index) const override;
-  virtual void getInput(size_t index, KeyInput& input) const override;
-  virtual void getInput(size_t index, MultisignatureInput& input) const override;
+  virtual TransactionTypes::InputType getInputType(uint64_t index) const override;
+  virtual void getInput(uint64_t index, KeyInput& input) const override;
+  virtual void getInput(uint64_t index, MultisignatureInput& input) const override;
 
   // outputs
-  virtual size_t getOutputCount() const override;
+  virtual uint64_t getOutputCount() const override;
   virtual uint64_t getOutputTotalAmount() const override;
-  virtual TransactionTypes::OutputType getOutputType(size_t index) const override;
-  virtual void getOutput(size_t index, KeyOutput& output, uint64_t& amount) const override;
-  virtual void getOutput(size_t index, MultisignatureOutput& output, uint64_t& amount) const override;
+  virtual TransactionTypes::OutputType getOutputType(uint64_t index) const override;
+  virtual void getOutput(uint64_t index, KeyOutput& output, uint64_t& amount) const override;
+  virtual void getOutput(uint64_t index, MultisignatureOutput& output, uint64_t& amount) const override;
 
   // signatures
-  virtual size_t getRequiredSignaturesCount(size_t inputIndex) const override;
+  virtual uint64_t getRequiredSignaturesCount(uint64_t inputIndex) const override;
   virtual bool findOutputsToAccount(const AccountPublicAddress& addr, const SecretKey& viewSecretKey, std::vector<uint32_t>& outs, uint64_t& outputAmount) const override;
 
   // various checks
@@ -126,7 +126,7 @@ BinaryArray TransactionPrefixImpl::getExtra() const {
   return m_txPrefix.extra;
 }
 
-size_t TransactionPrefixImpl::getInputCount() const {
+uint64_t TransactionPrefixImpl::getInputCount() const {
   return m_txPrefix.inputs.size();
 }
 
@@ -135,19 +135,19 @@ uint64_t TransactionPrefixImpl::getInputTotalAmount() const {
     return val + getTransactionInputAmount(in); });
 }
 
-TransactionTypes::InputType TransactionPrefixImpl::getInputType(size_t index) const {
+TransactionTypes::InputType TransactionPrefixImpl::getInputType(uint64_t index) const {
   return getTransactionInputType(getInputChecked(m_txPrefix, index));
 }
 
-void TransactionPrefixImpl::getInput(size_t index, KeyInput& input) const {
+void TransactionPrefixImpl::getInput(uint64_t index, KeyInput& input) const {
   input = boost::get<KeyInput>(getInputChecked(m_txPrefix, index, TransactionTypes::InputType::Key));
 }
 
-void TransactionPrefixImpl::getInput(size_t index, MultisignatureInput& input) const {
+void TransactionPrefixImpl::getInput(uint64_t index, MultisignatureInput& input) const {
   input = boost::get<MultisignatureInput>(getInputChecked(m_txPrefix, index, TransactionTypes::InputType::Multisignature));
 }
 
-size_t TransactionPrefixImpl::getOutputCount() const {
+uint64_t TransactionPrefixImpl::getOutputCount() const {
   return m_txPrefix.outputs.size();
 }
 
@@ -156,23 +156,23 @@ uint64_t TransactionPrefixImpl::getOutputTotalAmount() const {
     return val + out.amount; });
 }
 
-TransactionTypes::OutputType TransactionPrefixImpl::getOutputType(size_t index) const {
+TransactionTypes::OutputType TransactionPrefixImpl::getOutputType(uint64_t index) const {
   return getTransactionOutputType(getOutputChecked(m_txPrefix, index).target);
 }
 
-void TransactionPrefixImpl::getOutput(size_t index, KeyOutput& output, uint64_t& amount) const {
+void TransactionPrefixImpl::getOutput(uint64_t index, KeyOutput& output, uint64_t& amount) const {
   const auto& out = getOutputChecked(m_txPrefix, index, TransactionTypes::OutputType::Key);
   output = boost::get<KeyOutput>(out.target);
   amount = out.amount;
 }
 
-void TransactionPrefixImpl::getOutput(size_t index, MultisignatureOutput& output, uint64_t& amount) const {
+void TransactionPrefixImpl::getOutput(uint64_t index, MultisignatureOutput& output, uint64_t& amount) const {
   const auto& out = getOutputChecked(m_txPrefix, index, TransactionTypes::OutputType::Multisignature);
   output = boost::get<MultisignatureOutput>(out.target);
   amount = out.amount;
 }
 
-size_t TransactionPrefixImpl::getRequiredSignaturesCount(size_t inputIndex) const {
+uint64_t TransactionPrefixImpl::getRequiredSignaturesCount(uint64_t inputIndex) const {
   return ::CryptoNote::getRequiredSignaturesCount(getInputChecked(m_txPrefix, inputIndex));
 }
 

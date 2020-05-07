@@ -644,7 +644,7 @@ const uint64_t SKEIN_512_IV_256[] =
 
 #define ks              (kw+3)
 #define ts              (kw)
-static void Skein_512_Process_Block(skein_ctx* ctx,const uint8_t* blkPtr,size_t blkCnt,size_t byteCntAdd)
+static void Skein_512_Process_Block(skein_ctx* ctx,const uint8_t* blkPtr,uint64_t blkCnt,uint64_t byteCntAdd)
 {
 	uint64_t kw[8+4];
 	uint64_t X0,X1,X2,X3,X4,X5,X6,X7;
@@ -664,7 +664,7 @@ static void Skein_512_Process_Block(skein_ctx* ctx,const uint8_t* blkPtr,size_t 
 		ks[7] = ctx->X[7];
 		ks[8] = ks[0] ^ ks[1] ^ ks[2] ^ ks[3] ^ ks[4] ^ ks[5] ^ ks[6] ^ ks[7] ^ 2004413935125273122ull;
 		ts[2] = ts[0] ^ ts[1];
-		for(size_t n=0;n<64;n+=8)
+		for(uint64_t n=0;n<64;n+=8)
 			w[n/8] = (((uint64_t) blkPtr[n  ])      ) +
 					 (((uint64_t) blkPtr[n+1]) <<  8) +
 					 (((uint64_t) blkPtr[n+2]) << 16) +

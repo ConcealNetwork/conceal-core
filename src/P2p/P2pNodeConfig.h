@@ -6,8 +6,10 @@
 
 #pragma once
 
-#include <chrono>
 #include "NetNodeConfig.h"
+
+#include <chrono>
+#include <boost/uuid/uuid.hpp>
 
 namespace CryptoNote {
 
@@ -20,22 +22,22 @@ public:
   std::chrono::nanoseconds getHandshakeTimeout() const;
   std::chrono::nanoseconds getConnectInterval() const;
   std::chrono::nanoseconds getConnectTimeout() const;
-  size_t getExpectedOutgoingConnectionsCount() const;
-  size_t getWhiteListConnectionsPercent() const;
+  uint64_t getExpectedOutgoingConnectionsCount() const;
+  uint64_t getWhiteListConnectionsPercent() const;
   boost::uuids::uuid getNetworkId() const;
-  size_t getPeerListConnectRange() const;
-  size_t getPeerListGetTryCount() const;
+  uint64_t getPeerListConnectRange() const;
+  uint64_t getPeerListGetTryCount() const;
 
   // setters
   void setTimedSyncInterval(std::chrono::nanoseconds interval);
   void setHandshakeTimeout(std::chrono::nanoseconds timeout);
   void setConnectInterval(std::chrono::nanoseconds interval);
   void setConnectTimeout(std::chrono::nanoseconds timeout);
-  void setExpectedOutgoingConnectionsCount(size_t count);
-  void setWhiteListConnectionsPercent(size_t percent);
+  void setExpectedOutgoingConnectionsCount(uint64_t count);
+  void setWhiteListConnectionsPercent(uint64_t percent);
   void setNetworkId(const boost::uuids::uuid& id);
-  void setPeerListConnectRange(size_t range);
-  void setPeerListGetTryCount(size_t count);
+  void setPeerListConnectRange(uint64_t range);
+  void setPeerListGetTryCount(uint64_t count);
 
 private:
   std::chrono::nanoseconds timedSyncInterval;
@@ -43,10 +45,10 @@ private:
   std::chrono::nanoseconds connectInterval;
   std::chrono::nanoseconds connectTimeout;
   boost::uuids::uuid networkId;
-  size_t expectedOutgoingConnectionsCount;
-  size_t whiteListConnectionsPercent;
-  size_t peerListConnectRange;
-  size_t peerListGetTryCount;
+  uint64_t expectedOutgoingConnectionsCount;
+  uint64_t whiteListConnectionsPercent;
+  uint64_t peerListConnectRange;
+  uint64_t peerListGetTryCount;
 };
 
 }

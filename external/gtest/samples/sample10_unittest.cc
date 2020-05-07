@@ -50,12 +50,12 @@ class Water {
   // Normal Water declarations go here.
 
   // operator new and operator delete help us control water allocation.
-  void* operator new(size_t allocation_size) {
+  void* operator new(uint64_t allocation_size) {
     allocated_++;
     return malloc(allocation_size);
   }
 
-  void operator delete(void* block, size_t /* allocation_size */) {
+  void operator delete(void* block, uint64_t /* allocation_size */) {
     allocated_--;
     free(block);
   }

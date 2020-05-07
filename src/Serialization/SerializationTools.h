@@ -66,14 +66,14 @@ void loadFromJsonValue(T& v, const Common::JsonValue& js) {
 
 template <typename T>
 void loadFromJsonValue(std::vector<T>& v, const Common::JsonValue& js) {
-  for (size_t i = 0; i < js.size(); ++i) {
+  for (uint64_t i = 0; i < js.size(); ++i) {
     v.push_back(Common::getValueAs<T>(js[i]));
   }
 }
 
 template <typename T>
 void loadFromJsonValue(std::list<T>& v, const Common::JsonValue& js) {
-  for (size_t i = 0; i < js.size(); ++i) {
+  for (uint64_t i = 0; i < js.size(); ++i) {
     v.push_back(Common::getValueAs<T>(js[i]));
   }
 }

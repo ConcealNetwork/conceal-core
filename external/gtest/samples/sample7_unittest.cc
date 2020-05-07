@@ -55,7 +55,7 @@ PrimeTable* CreateOnTheFlyPrimeTable() {
   return new OnTheFlyPrimeTable();
 }
 
-template <size_t max_precalculated>
+template <uint64_t max_precalculated>
 PrimeTable* CreatePreCalculatedPrimeTable() {
   return new PreCalculatedPrimeTable(max_precalculated);
 }

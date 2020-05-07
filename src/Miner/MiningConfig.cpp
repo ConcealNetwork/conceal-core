@@ -23,9 +23,9 @@ namespace CryptoNote {
 
 namespace {
 
-const size_t DEFAULT_SCANT_PERIOD = 30;
+const uint64_t DEFAULT_SCANT_PERIOD = 30;
 const char* DEFAULT_DAEMON_HOST = "127.0.0.1";
-const size_t CONCURRENCY_LEVEL = std::thread::hardware_concurrency();
+const uint64_t CONCURRENCY_LEVEL = std::thread::hardware_concurrency();
 
 po::options_description cmdOptions;
 
@@ -59,10 +59,10 @@ MiningConfig::MiningConfig(): help(false) {
       ("daemon-host", po::value<std::string>()->default_value(DEFAULT_DAEMON_HOST), "Daemon host")
       ("daemon-rpc-port", po::value<uint16_t>()->default_value(static_cast<uint16_t>(RPC_DEFAULT_PORT)), "Daemon's RPC port")
       ("daemon-address", po::value<std::string>(), "Daemon host:port. If you use this option you must not use --daemon-host and --daemon-port options")
-      ("threads", po::value<size_t>()->default_value(CONCURRENCY_LEVEL), "Mining threads count. Must not be greater than you concurrency level. Default value is your hardware concurrency level")
-      ("scan-time", po::value<size_t>()->default_value(DEFAULT_SCANT_PERIOD), "Blockchain polling interval (seconds). How often miner will check blockchain for updates")
+      ("threads", po::value<uint64_t>()->default_value(CONCURRENCY_LEVEL), "Mining threads count. Must not be greater than you concurrency level. Default value is your hardware concurrency level")
+      ("scan-time", po::value<uint64_t>()->default_value(DEFAULT_SCANT_PERIOD), "Blockchain polling interval (seconds). How often miner will check blockchain for updates")
       ("log-level", po::value<int>()->default_value(1), "Log level. Must be 0..5")
-      ("limit", po::value<size_t>()->default_value(0), "Mine exact quantity of blocks. 0 means no limit")
+      ("limit", po::value<uint64_t>()->default_value(0), "Mine exact quantity of blocks. 0 means no limit")
       ("first-block-timestamp", po::value<uint64_t>()->default_value(0), "Set timestamp to the first mined block. 0 means leave timestamp unchanged")
       ("block-timestamp-interval", po::value<int64_t>()->default_value(0), "Timestamp step for each subsequent block. May be set only if --first-block-timestamp has been set."
                                                          " If not set blocks' timestamps remain unchanged");
@@ -95,12 +95,12 @@ void MiningConfig::parse(int argc, char** argv) {
     daemonPort = options["daemon-rpc-port"].as<uint16_t>();
   }
 
-  threadCount = options["threads"].as<size_t>();
+  threadCount = options["threads"].as<uint64_t>();
   if (threadCount == 0 || threadCount > CONCURRENCY_LEVEL) {
     throw std::runtime_error("--threads option must be 1.." + std::to_string(CONCURRENCY_LEVEL));
   }
 
-  scanPeriod = options["scan-time"].as<size_t>();
+  scanPeriod = options["scan-time"].as<uint64_t>();
   if (scanPeriod == 0) {
     throw std::runtime_error("--scan-time must not be zero");
   }
@@ -110,7 +110,7 @@ void MiningConfig::parse(int argc, char** argv) {
     throw std::runtime_error("--log-level value is too big");
   }
 
-  blocksLimit = options["limit"].as<size_t>();
+  blocksLimit = options["limit"].as<uint64_t>();
 
   if (!options["block-timestamp-interval"].defaulted() && options["first-block-timestamp"].defaulted()) {
     throw std::runtime_error("If you specify --block-timestamp-interval you must specify --first-block-timestamp either");

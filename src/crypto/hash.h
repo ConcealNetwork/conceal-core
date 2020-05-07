@@ -32,11 +32,11 @@ namespace Crypto {
     Cryptonight hash functions
   */
 
-  inline void cn_fast_hash(const void *data, size_t length, Hash &hash) {
+  inline void cn_fast_hash(const void *data, uint64_t length, Hash &hash) {
     cn_fast_hash(data, length, reinterpret_cast<char *>(&hash));
   }
 
-  inline Hash cn_fast_hash(const void *data, size_t length) {
+  inline Hash cn_fast_hash(const void *data, uint64_t length) {
     Hash h;
     cn_fast_hash(data, length, reinterpret_cast<char *>(&h));
     return h;
@@ -66,19 +66,19 @@ namespace Crypto {
      uint8_t* hash_state = nullptr;
   };
 
-  void cn_slow_hash(cn_context &context, const void *data, size_t length, Hash &hash);
-  void cn_fast_slow_hash_v1(cn_context &context, const void *data, size_t length, Hash &hash);
-  void cn_conceal_slow_hash_v0(cn_context &context, const void *data, size_t length, Hash &hash);  
+  void cn_slow_hash(cn_context &context, const void *data, uint64_t length, Hash &hash);
+  void cn_fast_slow_hash_v1(cn_context &context, const void *data, uint64_t length, Hash &hash);
+  void cn_conceal_slow_hash_v0(cn_context &context, const void *data, uint64_t length, Hash &hash);  
 
-  inline void tree_hash(const Hash *hashes, size_t count, Hash &root_hash) {
+  inline void tree_hash(const Hash *hashes, uint64_t count, Hash &root_hash) {
     tree_hash(reinterpret_cast<const char (*)[HASH_SIZE]>(hashes), count, reinterpret_cast<char *>(&root_hash));
   }
 
-  inline void tree_branch(const Hash *hashes, size_t count, Hash *branch) {
+  inline void tree_branch(const Hash *hashes, uint64_t count, Hash *branch) {
     tree_branch(reinterpret_cast<const char (*)[HASH_SIZE]>(hashes), count, reinterpret_cast<char (*)[HASH_SIZE]>(branch));
   }
 
-  inline void tree_hash_from_branch(const Hash *branch, size_t depth, const Hash &leaf, const void *path, Hash &root_hash) {
+  inline void tree_hash_from_branch(const Hash *branch, uint64_t depth, const Hash &leaf, const void *path, Hash &root_hash) {
     tree_hash_from_branch(reinterpret_cast<const char (*)[HASH_SIZE]>(branch), depth, reinterpret_cast<const char *>(&leaf), path, reinterpret_cast<char *>(&root_hash));
   }
 

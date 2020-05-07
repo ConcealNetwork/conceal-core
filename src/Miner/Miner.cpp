@@ -26,7 +26,7 @@ Miner::~Miner() {
   assert(m_state != MiningState::MINING_IN_PROGRESS);
 }
 
-Block Miner::mine(const BlockMiningParameters& blockMiningParameters, size_t threadCount) {
+Block Miner::mine(const BlockMiningParameters& blockMiningParameters, uint64_t threadCount) {
   if (threadCount == 0) {
     throw std::runtime_error("Miner requires at least one thread");
   }
@@ -59,7 +59,7 @@ void Miner::stop() {
   }
 }
 
-void Miner::runWorkers(BlockMiningParameters blockMiningParameters, size_t threadCount) {
+void Miner::runWorkers(BlockMiningParameters blockMiningParameters, uint64_t threadCount) {
   assert(threadCount > 0);
 
   m_logger(Logging::INFO) << "Starting mining for difficulty " << blockMiningParameters.difficulty;
@@ -67,8 +67,8 @@ void Miner::runWorkers(BlockMiningParameters blockMiningParameters, size_t threa
   try {
     blockMiningParameters.blockTemplate.nonce = Crypto::rand<uint32_t>();
 
-    for (size_t i = 0; i < threadCount; ++i) {
-      m_workers.emplace_back(std::unique_ptr<System::RemoteContext<void>> (
+    for (uint64_t i = 0; i < threadCount; ++i) {
+      m_workers.push_back(std::unique_ptr<System::RemoteContext<void>> (
         new System::RemoteContext<void>(m_dispatcher, std::bind(&Miner::workerFunc, this, blockMiningParameters.blockTemplate, blockMiningParameters.difficulty, threadCount)))
       );
 

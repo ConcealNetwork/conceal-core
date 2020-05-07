@@ -1,3 +1,9 @@
+// Copyright (c) 2011-2017 The Cryptonote developers
+// Copyright (c) 2017-2018 The Circle Foundation & Conceal Devs
+// Copyright (c) 2018-2019 Conceal Network & Conceal Devs
+// Distributed under the MIT/X11 software license, see the accompanying
+// file COPYING or http://www.opensource.org/licenses/mit-license.php.
+
 #pragma once
 
 #include <stdint.h>
@@ -15,7 +21,7 @@
 namespace Crypto {
   extern "C" {
 #endif
-    void chacha8(const void* data, size_t length, const uint8_t* key, const uint8_t* iv, char* cipher);
+    void chacha8(uint64_t doubleRounds, const void* data, uint64_t length, const uint8_t* key, const uint8_t* iv, char* cipher);
 #if defined(__cplusplus)
   }
 
@@ -37,8 +43,8 @@ namespace Crypto {
 
   static_assert(sizeof(chacha8_key) == CHACHA8_KEY_SIZE && sizeof(chacha8_iv) == CHACHA8_IV_SIZE, "Invalid structure size");
 
-  inline void chacha8(const void* data, size_t length, const chacha8_key& key, const chacha8_iv& iv, char* cipher) {
-    chacha8(data, length, reinterpret_cast<const uint8_t*>(&key), reinterpret_cast<const uint8_t*>(&iv), cipher);
+  inline void chacha8(const void* data, uint64_t length, const chacha8_key& key, const chacha8_iv& iv, char* cipher) {
+    chacha8(4, data, length, reinterpret_cast<const uint8_t*>(&key), reinterpret_cast<const uint8_t*>(&iv), cipher);
   }
 
   inline void generate_chacha8_key(Crypto::cn_context &context, const std::string& password, chacha8_key& key) {

@@ -83,7 +83,7 @@ void MinerManager::start() {
 }
 
 void MinerManager::eventLoop() {
-  size_t blocksMined = 0;
+  uint64_t blocksMined = 0;
 
   for (;;) {
     m_logger(Logging::DEBUGGING) << "waiting for event";
@@ -184,7 +184,7 @@ bool MinerManager::submitBlock(const Block& minedBlock, const std::string& daemo
     HttpClient client(m_dispatcher, daemonHost, daemonPort);
 
     COMMAND_RPC_SUBMITBLOCK::request request;
-    request.emplace_back(Common::toHex(toBinaryArray(minedBlock)));
+    request.push_back(Common::toHex(toBinaryArray(minedBlock)));
 
     COMMAND_RPC_SUBMITBLOCK::response response;
 

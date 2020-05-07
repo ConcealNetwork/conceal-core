@@ -112,17 +112,17 @@ void LevinProtocol::sendReply(uint32_t command, const BinaryArray& out, int32_t 
   writeStrict(writeBuffer.data(), writeBuffer.size());
 }
 
-void LevinProtocol::writeStrict(const uint8_t* ptr, size_t size) {
-  size_t offset = 0;
+void LevinProtocol::writeStrict(const uint8_t* ptr, uint64_t size) {
+  uint64_t offset = 0;
   while (offset < size) {
     offset += m_conn.write(ptr + offset, size - offset);
   }
 }
 
-bool LevinProtocol::readStrict(uint8_t* ptr, size_t size) {
-  size_t offset = 0;
+bool LevinProtocol::readStrict(uint8_t* ptr, uint64_t size) {
+  uint64_t offset = 0;
   while (offset < size) {
-    size_t read = m_conn.read(ptr + offset, size - offset);
+    uint64_t read = m_conn.read(ptr + offset, size - offset);
     if (read == 0) {
       return false;
     }

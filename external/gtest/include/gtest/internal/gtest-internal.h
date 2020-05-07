@@ -158,7 +158,7 @@ namespace edit_distance {
 // See http://en.wikipedia.org/wiki/Wagner-Fischer_algorithm
 enum EditType { kMatch, kAdd, kRemove, kReplace };
 GTEST_API_ std::vector<EditType> CalculateOptimalEdits(
-    const std::vector<size_t>& left, const std::vector<size_t>& right);
+    const std::vector<uint64_t>& left, const std::vector<uint64_t>& right);
 
 // Same as above, but the input is represented as strings.
 GTEST_API_ std::vector<EditType> CalculateOptimalEdits(
@@ -168,7 +168,7 @@ GTEST_API_ std::vector<EditType> CalculateOptimalEdits(
 // Create a diff of the input strings in Unified diff format.
 GTEST_API_ std::string CreateUnifiedDiff(const std::vector<std::string>& left,
                                          const std::vector<std::string>& right,
-                                         size_t context = 2);
+                                         uint64_t context = 2);
 
 }  // namespace edit_distance
 
@@ -178,7 +178,7 @@ GTEST_API_ std::string CreateUnifiedDiff(const std::vector<std::string>& left,
 // in left + right.
 GTEST_API_ std::string DiffStrings(const std::string& left,
                                    const std::string& right,
-                                   size_t* total_line_count);
+                                   uint64_t* total_line_count);
 
 // Constructs and returns the message for an equality assertion
 // (e.g. ASSERT_EQ, EXPECT_STREQ, etc) failure.
@@ -247,14 +247,14 @@ class FloatingPoint {
   // Constants.
 
   // # of bits in a number.
-  static const size_t kBitCount = 8*sizeof(RawType);
+  static const uint64_t kBitCount = 8*sizeof(RawType);
 
   // # of fraction bits in a number.
-  static const size_t kFractionBitCount =
+  static const uint64_t kFractionBitCount =
     std::numeric_limits<RawType>::digits - 1;
 
   // # of exponent bits in a number.
-  static const size_t kExponentBitCount = kBitCount - 1 - kFractionBitCount;
+  static const uint64_t kExponentBitCount = kBitCount - 1 - kFractionBitCount;
 
   // The mask for the sign bit.
   static const Bits kSignBitMask = static_cast<Bits>(1) << (kBitCount - 1);
@@ -278,7 +278,7 @@ class FloatingPoint {
   //
   // See the following article for more details on ULP:
   // http://randomascii.wordpress.com/2012/02/25/comparing-floating-point-numbers-2012-edition/
-  static const size_t kMaxUlps = 4;
+  static const uint64_t kMaxUlps = 4;
 
   // Constructs a FloatingPoint from a raw floating-point number.
   //
@@ -779,7 +779,7 @@ struct RemoveConst<const T> { typedef T type; };  // NOLINT
 // MSVC 8.0, Sun C++, and IBM XL C++ have a bug which causes the above
 // definition to fail to remove the const in 'const int[3]' and 'const
 // char[3][4]'.  The following specialization works around the bug.
-template <typename T, size_t N>
+template <typename T, uint64_t N>
 struct RemoveConst<const T[N]> {
   typedef typename RemoveConst<T>::type type[N];
 };
@@ -788,7 +788,7 @@ struct RemoveConst<const T[N]> {
 // This is the only specialization that allows VC++ 7.1 to remove const in
 // 'const int[3] and 'const int[3][4]'.  However, it causes trouble with GCC
 // and thus needs to be conditionally compiled.
-template <typename T, size_t N>
+template <typename T, uint64_t N>
 struct RemoveConst<T[N]> {
   typedef typename RemoveConst<T>::type type[N];
 };
@@ -958,14 +958,14 @@ template<> struct EnableIf<true> { typedef void type; };  // NOLINT
 // 0, ArrayEq() degenerates into comparing a single pair of values.
 
 template <typename T, typename U>
-bool ArrayEq(const T* lhs, size_t size, const U* rhs);
+bool ArrayEq(const T* lhs, uint64_t size, const U* rhs);
 
 // This generic version is used when k is 0.
 template <typename T, typename U>
 inline bool ArrayEq(const T& lhs, const U& rhs) { return lhs == rhs; }
 
 // This overload is used when k >= 1.
-template <typename T, typename U, size_t N>
+template <typename T, typename U, uint64_t N>
 inline bool ArrayEq(const T(&lhs)[N], const U(&rhs)[N]) {
   return internal::ArrayEq(lhs, N, rhs);
 }
@@ -974,8 +974,8 @@ inline bool ArrayEq(const T(&lhs)[N], const U(&rhs)[N]) {
 // the previous ArrayEq() function, arrays with different sizes would
 // lead to different copies of the template code.
 template <typename T, typename U>
-bool ArrayEq(const T* lhs, size_t size, const U* rhs) {
-  for (size_t i = 0; i != size; i++) {
+bool ArrayEq(const T* lhs, uint64_t size, const U* rhs) {
+  for (uint64_t i = 0; i != size; i++) {
     if (!internal::ArrayEq(lhs[i], rhs[i]))
       return false;
   }
@@ -998,14 +998,14 @@ Iter ArrayAwareFind(Iter begin, Iter end, const Element& elem) {
 // CopyArray() degenerates into copying a single value.
 
 template <typename T, typename U>
-void CopyArray(const T* from, size_t size, U* to);
+void CopyArray(const T* from, uint64_t size, U* to);
 
 // This generic version is used when k is 0.
 template <typename T, typename U>
 inline void CopyArray(const T& from, U* to) { *to = from; }
 
 // This overload is used when k >= 1.
-template <typename T, typename U, size_t N>
+template <typename T, typename U, uint64_t N>
 inline void CopyArray(const T(&from)[N], U(*to)[N]) {
   internal::CopyArray(from, N, *to);
 }
@@ -1014,8 +1014,8 @@ inline void CopyArray(const T(&from)[N], U(*to)[N]) {
 // the previous CopyArray() function, arrays with different sizes
 // would lead to different copies of the template code.
 template <typename T, typename U>
-void CopyArray(const T* from, size_t size, U* to) {
-  for (size_t i = 0; i != size; i++) {
+void CopyArray(const T* from, uint64_t size, U* to) {
+  for (uint64_t i = 0; i != size; i++) {
     internal::CopyArray(from[i], to + i);
   }
 }
@@ -1044,12 +1044,12 @@ class NativeArray {
   typedef const Element* const_iterator;
 
   // Constructs from a native array. References the source.
-  NativeArray(const Element* array, size_t count, RelationToSourceReference) {
+  NativeArray(const Element* array, uint64_t count, RelationToSourceReference) {
     InitRef(array, count);
   }
 
   // Constructs from a native array. Copies the source.
-  NativeArray(const Element* array, size_t count, RelationToSourceCopy) {
+  NativeArray(const Element* array, uint64_t count, RelationToSourceCopy) {
     InitCopy(array, count);
   }
 
@@ -1064,7 +1064,7 @@ class NativeArray {
   }
 
   // STL-style container methods.
-  size_t size() const { return size_; }
+  uint64_t size() const { return size_; }
   const_iterator begin() const { return array_; }
   const_iterator end() const { return array_ + size_; }
   bool operator==(const NativeArray& rhs) const {
@@ -1079,7 +1079,7 @@ class NativeArray {
   };
 
   // Initializes this object with a copy of the input.
-  void InitCopy(const Element* array, size_t a_size) {
+  void InitCopy(const Element* array, uint64_t a_size) {
     Element* const copy = new Element[a_size];
     CopyArray(array, a_size, copy);
     array_ = copy;
@@ -1088,15 +1088,15 @@ class NativeArray {
   }
 
   // Initializes this object with a reference of the input.
-  void InitRef(const Element* array, size_t a_size) {
+  void InitRef(const Element* array, uint64_t a_size) {
     array_ = array;
     size_ = a_size;
     clone_ = &NativeArray::InitRef;
   }
 
   const Element* array_;
-  size_t size_;
-  void (NativeArray::*clone_)(const Element*, size_t);
+  uint64_t size_;
+  void (NativeArray::*clone_)(const Element*, uint64_t);
 
   GTEST_DISALLOW_ASSIGN_(NativeArray);
 };

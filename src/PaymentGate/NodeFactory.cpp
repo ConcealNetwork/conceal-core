@@ -21,7 +21,7 @@ public:
   virtual void init(const Callback& callback) override { }
   virtual bool shutdown() override { return true; }
 
-  virtual size_t getPeerCount() const override { return 0; }
+  virtual uint64_t getPeerCount() const override { return 0; }
   virtual uint32_t getLastLocalBlockHeight() const override { return 0; }
   virtual uint32_t getLastKnownBlockHeight() const override { return 0; }
   virtual uint32_t getLocalBlockCount() const override { return 0; }

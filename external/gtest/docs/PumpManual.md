@@ -55,7 +55,7 @@ $for i [[
                $$ Meta loop.
 // Foo$i does blah for $i-ary predicates.
 $range j 1..i
-template <size_t N $for j [[, typename A$j]]>
+template <uint64_t N $for j [[, typename A$j]]>
 class Foo$i {
 $if i == 0 [[
   blah a;
@@ -73,25 +73,25 @@ will be translated by the Pump compiler to:
 
 ```
 // Foo0 does blah for 0-ary predicates.
-template <size_t N>
+template <uint64_t N>
 class Foo0 {
   blah a;
 };
 
 // Foo1 does blah for 1-ary predicates.
-template <size_t N, typename A1>
+template <uint64_t N, typename A1>
 class Foo1 {
   blah b;
 };
 
 // Foo2 does blah for 2-ary predicates.
-template <size_t N, typename A1, typename A2>
+template <uint64_t N, typename A1, typename A2>
 class Foo2 {
   blah b;
 };
 
 // Foo3 does blah for 3-ary predicates.
-template <size_t N, typename A1, typename A2, typename A3>
+template <uint64_t N, typename A1, typename A2, typename A3>
 class Foo3 {
   blah c;
 };

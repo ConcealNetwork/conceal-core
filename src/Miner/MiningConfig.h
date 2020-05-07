@@ -20,10 +20,10 @@ struct MiningConfig {
   std::string miningAddress;
   std::string daemonHost;
   uint16_t daemonPort;
-  size_t threadCount;
-  size_t scanPeriod;
+  uint64_t threadCount;
+  uint64_t scanPeriod;
   uint8_t logLevel;
-  size_t blocksLimit;
+  uint64_t blocksLimit;
   uint64_t firstBlockTimestamp;
   int64_t blockTimestampInterval;
   bool help;

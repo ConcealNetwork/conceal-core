@@ -10,4 +10,4 @@
 #include <stddef.h>
 #endif
 
-void generate_random_bytes(size_t n, void *result);
+void generate_random_bytes(uint64_t n, void *result);

@@ -96,7 +96,7 @@ private:
   NativeContext* firstResumingContext;
   NativeContext* lastResumingContext;
   NativeContext* firstReusableContext;
-  size_t runningContextCount;
+  uint64_t runningContextCount;
 
   void contextProcedure(void* uctx);
   static void contextProcedureStatic(intptr_t context);

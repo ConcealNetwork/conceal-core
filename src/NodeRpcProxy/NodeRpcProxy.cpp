@@ -237,7 +237,7 @@ void NodeRpcProxy::updateBlockchainStatus() {
   }
 }
 
-void NodeRpcProxy::updatePeerCount(size_t peerCount) {
+void NodeRpcProxy::updatePeerCount(uint64_t peerCount) {
   if (peerCount != m_peerCount) {
     m_peerCount = peerCount;
     m_observerManager.notify(&INodeObserver::peerCountUpdated, m_peerCount.load(std::memory_order_relaxed));
@@ -251,7 +251,7 @@ void NodeRpcProxy::updatePoolState(const std::vector<std::unique_ptr<ITransactio
 
   for (const auto& tx : addedTxs) {
     Hash hash = tx->getTransactionHash();
-    m_knownTxs.emplace(std::move(hash));
+    m_knownTxs.insert(std::move(hash));
   }
 }
 
@@ -275,7 +275,7 @@ bool NodeRpcProxy::removeObserver(CryptoNote::INodeRpcProxyObserver* observer) {
   return m_rpcProxyObserverManager.remove(observer);
 }
 
-size_t NodeRpcProxy::getPeerCount() const {
+uint64_t NodeRpcProxy::getPeerCount() const {
   return m_peerCount.load(std::memory_order_relaxed);
 }
 

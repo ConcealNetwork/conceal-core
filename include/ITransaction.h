@@ -29,8 +29,8 @@ namespace TransactionTypes {
 
   struct OutputKeyInfo {
     Crypto::PublicKey transactionPublicKey;
-    size_t transactionIndex;
-    size_t outputInTransaction;
+    uint64_t transactionIndex;
+    uint64_t outputInTransaction;
   };
 
   struct InputKeyInfo {
@@ -59,21 +59,21 @@ public:
   virtual BinaryArray getExtra() const = 0;
 
   // inputs
-  virtual size_t getInputCount() const = 0;
+  virtual uint64_t getInputCount() const = 0;
   virtual uint64_t getInputTotalAmount() const = 0;
-  virtual TransactionTypes::InputType getInputType(size_t index) const = 0;
-  virtual void getInput(size_t index, KeyInput& input) const = 0;
-  virtual void getInput(size_t index, MultisignatureInput& input) const = 0;
+  virtual TransactionTypes::InputType getInputType(uint64_t index) const = 0;
+  virtual void getInput(uint64_t index, KeyInput& input) const = 0;
+  virtual void getInput(uint64_t index, MultisignatureInput& input) const = 0;
 
   // outputs
-  virtual size_t getOutputCount() const = 0;
+  virtual uint64_t getOutputCount() const = 0;
   virtual uint64_t getOutputTotalAmount() const = 0;
-  virtual TransactionTypes::OutputType getOutputType(size_t index) const = 0;
-  virtual void getOutput(size_t index, KeyOutput& output, uint64_t& amount) const = 0;
-  virtual void getOutput(size_t index, MultisignatureOutput& output, uint64_t& amount) const = 0;
+  virtual TransactionTypes::OutputType getOutputType(uint64_t index) const = 0;
+  virtual void getOutput(uint64_t index, KeyOutput& output, uint64_t& amount) const = 0;
+  virtual void getOutput(uint64_t index, MultisignatureOutput& output, uint64_t& amount) const = 0;
 
   // signatures
-  virtual size_t getRequiredSignaturesCount(size_t inputIndex) const = 0;
+  virtual uint64_t getRequiredSignaturesCount(uint64_t inputIndex) const = 0;
   virtual bool findOutputsToAccount(const AccountPublicAddress& addr, const Crypto::SecretKey& viewSecretKey, std::vector<uint32_t>& outs, uint64_t& outputAmount) const = 0;
 
   // various checks
@@ -102,22 +102,22 @@ public:
   virtual void appendExtra(const BinaryArray& extraData) = 0;
 
   // Inputs/Outputs 
-  virtual size_t addInput(const KeyInput& input) = 0;
-  virtual size_t addInput(const MultisignatureInput& input) = 0;
-  virtual size_t addInput(const AccountKeys& senderKeys, const TransactionTypes::InputKeyInfo& info, KeyPair& ephKeys) = 0;
+  virtual uint64_t addInput(const KeyInput& input) = 0;
+  virtual uint64_t addInput(const MultisignatureInput& input) = 0;
+  virtual uint64_t addInput(const AccountKeys& senderKeys, const TransactionTypes::InputKeyInfo& info, KeyPair& ephKeys) = 0;
 
-  virtual size_t addOutput(uint64_t amount, const AccountPublicAddress& to) = 0;
-  virtual size_t addOutput(uint64_t amount, const std::vector<AccountPublicAddress>& to, uint32_t requiredSignatures, uint32_t term = 0) = 0;
-  virtual size_t addOutput(uint64_t amount, const KeyOutput& out) = 0;
-  virtual size_t addOutput(uint64_t amount, const MultisignatureOutput& out) = 0;
+  virtual uint64_t addOutput(uint64_t amount, const AccountPublicAddress& to) = 0;
+  virtual uint64_t addOutput(uint64_t amount, const std::vector<AccountPublicAddress>& to, uint32_t requiredSignatures, uint32_t term = 0) = 0;
+  virtual uint64_t addOutput(uint64_t amount, const KeyOutput& out) = 0;
+  virtual uint64_t addOutput(uint64_t amount, const MultisignatureOutput& out) = 0;
 
   // transaction info
   virtual void setTransactionSecretKey(const Crypto::SecretKey& key) = 0;
 
   // signing
-  virtual void signInputKey(size_t input, const TransactionTypes::InputKeyInfo& info, const KeyPair& ephKeys) = 0;
-  virtual void signInputMultisignature(size_t input, const Crypto::PublicKey& sourceTransactionKey, size_t outputIndex, const AccountKeys& accountKeys) = 0;
-  virtual void signInputMultisignature(size_t input, const KeyPair& ephemeralKeys) = 0;
+  virtual void signInputKey(uint64_t input, const TransactionTypes::InputKeyInfo& info, const KeyPair& ephKeys) = 0;
+  virtual void signInputMultisignature(uint64_t input, const Crypto::PublicKey& sourceTransactionKey, uint64_t outputIndex, const AccountKeys& accountKeys) = 0;
+  virtual void signInputMultisignature(uint64_t input, const KeyPair& ephemeralKeys) = 0;
 };
 
 class ITransaction : 

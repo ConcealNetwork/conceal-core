@@ -297,7 +297,7 @@ class TestingVector : public std::vector<int> {
 ::std::ostream& operator<<(::std::ostream& os,
                            const TestingVector& vector) {
   os << "{ ";
-  for (size_t i = 0; i < vector.size(); i++) {
+  for (uint64_t i = 0; i < vector.size(); i++) {
     os << vector[i] << " ";
   }
   os << "}";
@@ -835,7 +835,7 @@ class VectorShuffleTest : public Test {
     }
 
     bool found_in_vector[kVectorSize] = { false };
-    for (size_t i = 0; i < vector.size(); i++) {
+    for (uint64_t i = 0; i < vector.size(); i++) {
       const int e = vector[i];
       if (e < 0 || e >= kVectorSize || found_in_vector[e]) {
         return true;
@@ -2682,7 +2682,7 @@ class FloatingPointTest : public Test {
   typedef typename Floating::Bits Bits;
 
   virtual void SetUp() {
-    const size_t max_ulps = Floating::kMaxUlps;
+    const uint64_t max_ulps = Floating::kMaxUlps;
 
     // The bits that represent 0.0.
     const Bits zero_bits = Floating(0).bits();
@@ -3443,16 +3443,16 @@ TEST_F(NoFatalFailureTest, MessageIsStreamable) {
 
 std::string EditsToString(const std::vector<EditType>& edits) {
   std::string out;
-  for (size_t i = 0; i < edits.size(); ++i) {
+  for (uint64_t i = 0; i < edits.size(); ++i) {
     static const char kEdits[] = " +-/";
     out.append(1, kEdits[edits[i]]);
   }
   return out;
 }
 
-std::vector<size_t> CharsToIndices(const std::string& str) {
-  std::vector<size_t> out;
-  for (size_t i = 0; i < str.size(); ++i) {
+std::vector<uint64_t> CharsToIndices(const std::string& str) {
+  std::vector<uint64_t> out;
+  for (uint64_t i = 0; i < str.size(); ++i) {
     out.push_back(str[i]);
   }
   return out;
@@ -3460,7 +3460,7 @@ std::vector<size_t> CharsToIndices(const std::string& str) {
 
 std::vector<std::string> CharsToLines(const std::string& str) {
   std::vector<std::string> out;
-  for (size_t i = 0; i < str.size(); ++i) {
+  for (uint64_t i = 0; i < str.size(); ++i) {
     out.push_back(str.substr(i, 1));
   }
   return out;
@@ -5628,11 +5628,11 @@ class InitGoogleTestTest : public Test {
 
   // Asserts that two narrow or wide string arrays are equal.
   template <typename CharType>
-  static void AssertStringArrayEq(size_t size1, CharType** array1,
-                                  size_t size2, CharType** array2) {
+  static void AssertStringArrayEq(uint64_t size1, CharType** array1,
+                                  uint64_t size2, CharType** array2) {
     ASSERT_EQ(size1, size2) << " Array sizes different.";
 
-    for (size_t i = 0; i != size1; i++) {
+    for (uint64_t i = 0; i != size1; i++) {
       ASSERT_STREQ(array1[i], array2[i]) << " where i == " << i;
     }
   }

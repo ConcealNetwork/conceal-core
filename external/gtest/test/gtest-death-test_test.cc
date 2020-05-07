@@ -883,9 +883,9 @@ class MockDeathTestFactory : public DeathTestFactory {
   // Accessors.
   int AssumeRoleCalls() const { return assume_role_calls_; }
   int WaitCalls() const { return wait_calls_; }
-  size_t PassedCalls() const { return passed_args_.size(); }
+  uint64_t PassedCalls() const { return passed_args_.size(); }
   bool PassedArgument(int n) const { return passed_args_[n]; }
-  size_t AbortCalls() const { return abort_args_.size(); }
+  uint64_t AbortCalls() const { return abort_args_.size(); }
   DeathTest::AbortReason AbortArgument(int n) const {
     return abort_args_[n];
   }
@@ -1278,7 +1278,7 @@ TEST(EnvironmentTest, HandleFitsIntoSizeT) {
   // TODO(vladl@google.com): Remove this test after this condition is verified
   // in a static assertion in gtest-death-test.cc in the function
   // GetStatusFileDescriptor.
-  ASSERT_TRUE(sizeof(HANDLE) <= sizeof(size_t));
+  ASSERT_TRUE(sizeof(HANDLE) <= sizeof(uint64_t));
 }
 # endif  // GTEST_OS_WINDOWS
 

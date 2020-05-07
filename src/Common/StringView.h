@@ -21,7 +21,7 @@ namespace Common {
 class StringView {
 public:
   typedef char Object;
-  typedef size_t Size;
+  typedef uint64_t Size;
 
   const static Size INVALID;
   const static StringView EMPTY;

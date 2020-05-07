@@ -36,7 +36,7 @@ bool BinaryInputStreamSerializer::beginObject(Common::StringView name) {
 void BinaryInputStreamSerializer::endObject() {
 }
 
-bool BinaryInputStreamSerializer::beginArray(size_t& size, Common::StringView name) {
+bool BinaryInputStreamSerializer::beginArray(uint64_t& size, Common::StringView name) {
   readVarintAs<uint64_t>(stream, size);
 
   if (size > 100 * 1024 * 1024) {
@@ -108,7 +108,7 @@ bool BinaryInputStreamSerializer::operator()(std::string& value, Common::StringV
   return true;
 }
 
-bool BinaryInputStreamSerializer::binary(void* value, size_t size, Common::StringView name) {
+bool BinaryInputStreamSerializer::binary(void* value, uint64_t size, Common::StringView name) {
   checkedRead(static_cast<char*>(value), size);
   return true;
 }
@@ -123,7 +123,7 @@ bool BinaryInputStreamSerializer::operator()(double& value, Common::StringView n
   return false;
 }
 
-void BinaryInputStreamSerializer::checkedRead(char* buf, size_t size) {
+void BinaryInputStreamSerializer::checkedRead(char* buf, uint64_t size) {
   read(stream, buf, size);
 }
 

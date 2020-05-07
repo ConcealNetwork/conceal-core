@@ -94,8 +94,8 @@ public:
     TransferSpent
   };
 
-  virtual size_t transfersCount() const = 0;
-  virtual size_t transactionsCount() const = 0;
+  virtual uint64_t transfersCount() const = 0;
+  virtual uint64_t transactionsCount() const = 0;
   virtual uint64_t balance(uint32_t flags = IncludeDefault) const = 0;
   virtual void getOutputs(std::vector<TransactionOutputInformation>& transfers, uint32_t flags = IncludeDefault) const = 0;
   virtual bool getTransactionInformation(const Crypto::Hash& transactionHash, TransactionInformation& info,

@@ -39,7 +39,7 @@ namespace {
   public:
     TransferIteratorList(const TIterator& begin, const TIterator& end) : m_end(end) {
       for (auto it = begin; it != end; ++it) {
-        m_list.emplace_back(it);
+        m_list.push_back(it);
       }
     }
 
@@ -105,8 +105,8 @@ namespace {
   }
 }
 
-size_t TransactionOutputKey::hash() const {
-  size_t hash = 0;
+uint64_t TransactionOutputKey::hash() const {
+  uint64_t hash = 0;
   boost::hash_combine(hash, transactionHash);
   boost::hash_combine(hash, outputInTransaction);
 
@@ -165,12 +165,12 @@ bool SpentOutputDescriptor::operator==(const SpentOutputDescriptor& other) const
   }
 }
 
-size_t SpentOutputDescriptor::hash() const {
+uint64_t SpentOutputDescriptor::hash() const {
   if (m_type == TransactionTypes::OutputType::Key) {
-    static_assert(sizeof(size_t) < sizeof(*m_keyImage), "sizeof(size_t) < sizeof(*m_keyImage)");
-    return *reinterpret_cast<const size_t*>(m_keyImage->data);
+    static_assert(sizeof(uint64_t) < sizeof(*m_keyImage), "sizeof(uint64_t) < sizeof(*m_keyImage)");
+    return *reinterpret_cast<const uint64_t*>(m_keyImage->data);
   } else if (m_type == TransactionTypes::OutputType::Multisignature) {
-    size_t hashValue = boost::hash_value(m_amount);
+    uint64_t hashValue = boost::hash_value(m_amount);
     boost::hash_combine(hashValue, m_globalOutputIndex);
     return hashValue;
   } else {
@@ -180,7 +180,7 @@ size_t SpentOutputDescriptor::hash() const {
 }
 
 
-TransfersContainer::TransfersContainer(const Currency& currency, size_t transactionSpendableAge) :
+TransfersContainer::TransfersContainer(const Currency& currency, uint64_t transactionSpendableAge) :
   m_currentHeight(0),
   m_currency(currency),
   m_transactionSpendableAge(transactionSpendableAge) {
@@ -239,7 +239,7 @@ void TransfersContainer::addTransaction(const TransactionBlockInfo& block, const
     txInfo.paymentId = NULL_HASH;
   }
 
-  auto result = m_transactions.emplace(std::move(txInfo));
+  auto result = m_transactions.insert(std::move(txInfo));
   (void)result; // Disable unused warning
   assert(result.second);
 }
@@ -272,7 +272,7 @@ bool TransfersContainer::addTransactionOutputs(const TransactionBlockInfo& block
     info.visible = true;
 
     if (transferIsUnconfirmed) {
-      auto result = m_unconfirmedTransfers.emplace(std::move(info));
+      auto result = m_unconfirmedTransfers.insert(std::move(info));
       (void)result; // Disable unused warning
       assert(result.second);
     } else {
@@ -286,7 +286,7 @@ bool TransfersContainer::addTransactionOutputs(const TransactionBlockInfo& block
 
       addUnlockJob(info);
 
-      auto result = m_availableTransfers.emplace(std::move(info));
+      auto result = m_availableTransfers.insert(std::move(info));
       (void)result; // Disable unused warning
       assert(result.second);
     }
@@ -307,7 +307,7 @@ bool TransfersContainer::addTransactionOutputs(const TransactionBlockInfo& block
 bool TransfersContainer::addTransactionInputs(const TransactionBlockInfo& block, const ITransactionReader& tx) {
   bool inputsAdded = false;
 
-  for (size_t i = 0; i < tx.getInputCount(); ++i) {
+  for (uint64_t i = 0; i < tx.getInputCount(); ++i) {
     auto inputType = tx.getInputType(i);
 
     if (inputType == TransactionTypes::InputType::Key) {
@@ -322,8 +322,8 @@ bool TransfersContainer::addTransactionInputs(const TransactionBlockInfo& block,
 
       auto availableRange = m_availableTransfers.get<SpentOutputDescriptorIndex>().equal_range(descriptor);
       auto unconfirmedRange = m_unconfirmedTransfers.get<SpentOutputDescriptorIndex>().equal_range(descriptor);
-      size_t availableCount = std::distance(availableRange.first, availableRange.second);
-      size_t unconfirmedCount = std::distance(unconfirmedRange.first, unconfirmedRange.second);
+      uint64_t availableCount = std::distance(availableRange.first, availableRange.second);
+      uint64_t unconfirmedCount = std::distance(unconfirmedRange.first, unconfirmedRange.second);
 
       if (availableCount == 0) {
         if (unconfirmedCount > 0) {
@@ -436,7 +436,7 @@ bool TransfersContainer::markTransactionConfirmed(const TransactionBlockInfo& bl
 
     addUnlockJob(transfer);
 
-    auto result = m_availableTransfers.emplace(std::move(transfer));
+    auto result = m_availableTransfers.insert(std::move(transfer));
     (void)result; // Disable unused warning
     assert(result.second);
 
@@ -473,7 +473,7 @@ void TransfersContainer::deleteTransactionTransfers(const Crypto::Hash& transact
     const TransactionOutputInformationEx& unspendingTransfer = static_cast<const TransactionOutputInformationEx&>(*it);
 
     addUnlockJob(unspendingTransfer);
-    auto result = m_availableTransfers.emplace(unspendingTransfer);
+    auto result = m_availableTransfers.insert(unspendingTransfer);
     assert(result.second);
     it = spendingTransactionIndex.erase(it);
 
@@ -511,7 +511,7 @@ void TransfersContainer::deleteTransactionTransfers(const Crypto::Hash& transact
 /**
  * \pre m_mutex is locked.
  */
-void TransfersContainer::copyToSpent(const TransactionBlockInfo& block, const ITransactionReader& tx, size_t inputIndex,
+void TransfersContainer::copyToSpent(const TransactionBlockInfo& block, const ITransactionReader& tx, uint64_t inputIndex,
                                      const TransactionOutputInformationEx& output) {
   assert(output.blockHeight != WALLET_LEGACY_UNCONFIRMED_TRANSACTION_HEIGHT);
   assert(output.globalOutputIndex != UNCONFIRMED_TRANSACTION_GLOBAL_OUTPUT_INDEX);
@@ -521,7 +521,7 @@ void TransfersContainer::copyToSpent(const TransactionBlockInfo& block, const IT
   spentOutput.spendingBlock = block;
   spentOutput.spendingTransactionHash = tx.getTransactionHash();
   spentOutput.inputInTransaction = static_cast<uint32_t>(inputIndex);
-  auto result = m_spentTransfers.emplace(std::move(spentOutput));
+  auto result = m_spentTransfers.insert(std::move(spentOutput));
   (void)result; // Disable unused warning
   assert(result.second);
 }
@@ -555,7 +555,7 @@ void TransfersContainer::detach(uint32_t height, std::vector<Crypto::Hash>& dele
 
     if (doDelete) {
       deleteTransactionTransfers(it->transactionHash);
-      deletedTransactions.emplace_back(it->transactionHash);
+      deletedTransactions.push_back(it->transactionHash);
       it = blockHeightIndex.erase(it);
     }
   }
@@ -592,9 +592,9 @@ void TransfersContainer::updateTransfersVisibility(const KeyImage& keyImage) {
   auto availableRange = availableIndex.equal_range(descriptor);
   auto spentRange = spentIndex.equal_range(descriptor);
 
-  size_t unconfirmedCount = std::distance(unconfirmedRange.first, unconfirmedRange.second);
-  size_t availableCount = std::distance(availableRange.first, availableRange.second);
-  size_t spentCount = std::distance(spentRange.first, spentRange.second);
+  uint64_t unconfirmedCount = std::distance(unconfirmedRange.first, unconfirmedRange.second);
+  uint64_t availableCount = std::distance(availableRange.first, availableRange.second);
+  uint64_t spentCount = std::distance(spentRange.first, spentRange.second);
   assert(spentCount == 0 || spentCount == 1);
 
   if (spentCount > 0) {
@@ -636,12 +636,12 @@ std::vector<TransactionOutputInformation> TransfersContainer::doAdvanceHeight(ui
   return getUnlockingTransfers(prevHeight, m_currentHeight);
 }
 
-size_t TransfersContainer::transfersCount() const {
+uint64_t TransfersContainer::transfersCount() const {
   std::lock_guard<std::mutex> lk(m_mutex);
   return m_unconfirmedTransfers.size() + m_availableTransfers.size() + m_spentTransfers.size();
 }
 
-size_t TransfersContainer::transactionsCount() const {
+uint64_t TransfersContainer::transactionsCount() const {
   std::lock_guard<std::mutex> lk(m_mutex);
   return m_transactions.size();
 }
@@ -911,12 +911,12 @@ void TransfersContainer::rebuildTransfersUnlockJobs(TransfersUnlockMultiIndex& t
 
   for (auto it = availableTransfers.begin(); it != availableTransfers.end(); ++it) {
     TransferUnlockJob job = makeTransferUnlockJob(*it, static_cast<uint32_t>(m_transactionSpendableAge));
-    transfersUnlockJobs.emplace(std::move(job));
+    transfersUnlockJobs.insert(std::move(job));
   }
 
   for (auto it = spentTransfers.begin(); it != spentTransfers.end(); ++it) {
     TransferUnlockJob job = makeTransferUnlockJob(*it, static_cast<uint32_t>(m_transactionSpendableAge));
-    transfersUnlockJobs.emplace(std::move(job));
+    transfersUnlockJobs.insert(std::move(job));
   }
 }
 
@@ -970,7 +970,7 @@ bool TransfersContainer::isIncluded(const TransactionOutputInformationEx& output
 void TransfersContainer::addUnlockJob(const TransactionOutputInformationEx& output) {
   TransferUnlockJob job = makeTransferUnlockJob(output, static_cast<uint32_t>(m_transactionSpendableAge));
 
-  auto r = m_transfersUnlockJobs.emplace(std::move(job));
+  auto r = m_transfersUnlockJobs.insert(std::move(job));
   assert(r.second);
 }
 
@@ -1008,7 +1008,7 @@ std::vector<TransactionOutputInformation> TransfersContainer::getUnlockingTransf
 
   for (auto it = start; it != end; ++it) {
     TransactionOutputInformation output = getAvailableOutput(it->transactionOutputKey);
-    unlockingTransfers.emplace_back(std::move(output));
+    unlockingTransfers.push_back(std::move(output));
   }
 
   return unlockingTransfers;
@@ -1036,7 +1036,7 @@ void TransfersContainer::getLockingTransfers(uint32_t prevHeight, uint32_t curre
   lockingTransfers.reserve(lockingTransfers.size() + std::distance(start, end));
   for (auto it = start; it != end; ++it) {
     TransactionOutputInformation output = getAvailableOutput(it->transactionOutputKey);
-    lockingTransfers.emplace_back(std::move(output));
+    lockingTransfers.push_back(std::move(output));
   }
 }
 

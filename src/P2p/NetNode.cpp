@@ -49,19 +49,19 @@ using namespace CryptoNote;
 
 namespace {
 
-size_t get_random_index_with_fixed_probability(size_t max_index) {
+uint64_t get_random_index_with_fixed_probability(uint64_t max_index) {
   //divide by zero workaround
   if (!max_index) {
     return 0;
   }
 
-  size_t x = Crypto::rand<size_t>() % (max_index + 1);
+  uint64_t x = Crypto::rand<uint64_t>() % (max_index + 1);
   return (x * x * x ) / (max_index * max_index); //parabola \/
 }
 
 void addPortMapping(Logging::LoggerRef& logger, uint32_t port) {
   // Add UPnP port mapping
-  logger(INFO) <<  "Attempting to add IGD port mapping.";
+  logger(INFO, BRIGHT_YELLOW) <<  "<< NetNode.cpp << Attempting to add IGD port mapping.";
   int result;
   UPNPDev* deviceList = upnpDiscover(1000, NULL, NULL, 0, 0, &result);
   UPNPUrls urls;
@@ -75,21 +75,21 @@ void addPortMapping(Logging::LoggerRef& logger, uint32_t port) {
       portString << port;
       if (UPNP_AddPortMapping(urls.controlURL, igdData.first.servicetype, portString.str().c_str(),
         portString.str().c_str(), lanAddress, CryptoNote::CRYPTONOTE_NAME, "TCP", 0, "0") != 0) {
-        logger(ERROR) << "UPNP_AddPortMapping failed.";
+        logger(ERROR) << "<< NetNode.cpp << UPNP_AddPortMapping failed.";
       } else {
-        logger(INFO, BRIGHT_GREEN) << "Added IGD port mapping.";
+        logger(INFO, BRIGHT_GREEN) << "<< NetNode.cpp << Added IGD port mapping.";
       }
     } else if (result == 2) {
-      logger(INFO) <<  "IGD was found but reported as not connected.";
+      logger(INFO, YELLOW) <<  "<< NetNode.cpp << IGD was found but reported as not connected.";
     } else if (result == 3) {
-      logger(INFO) <<  "UPnP device was found but not recoginzed as IGD.";
+      logger(INFO, YELLOW) <<  "<< NetNode.cpp << UPnP device was found but not recoginzed as IGD.";
     } else {
-      logger(ERROR) << "UPNP_GetValidIGD returned an unknown result code.";
+      logger(ERROR) << "<< NetNode.cpp << UPNP_GetValidIGD returned an unknown result code.";
     }
 
     FreeUPNPUrls(&urls);
   } else {
-    logger(INFO) <<  "No IGD was found.";
+    logger(INFO, YELLOW) <<  "<< NetNode.cpp << No IGD was found.";
   }
 }
 
@@ -214,14 +214,15 @@ namespace CryptoNote
     s(version, "version");
 
     if (version != 1) {
-      return;
+      throw std::runtime_error("Unsupported version");
     }
 
     s(m_peerlist, "peerlist");
     s(m_config.m_peer_id, "peer_id");
   }
 
-#define INVOKE_HANDLER(CMD, Handler) case CMD::ID: { ret = invokeAdaptor<CMD>(cmd.buf, out, ctx,  boost::bind(Handler, this, _1, _2, _3, _4)); break; }
+  using namespace std::placeholders;
+  #define INVOKE_HANDLER(CMD, Handler) case CMD::ID: { ret = invokeAdaptor<CMD>(cmd.buf, out, ctx,  std::bind(Handler, this, _1, _2, _3, _4)); break; }
 
   int NodeServer::handleCommand(const LevinProtocol::Command& cmd, BinaryArray& out, P2pConnectionContext& ctx, bool& handled) {
     int ret = 0;
@@ -286,7 +287,8 @@ namespace CryptoNote
           CryptoNote::serialize(*this, a);
           loaded = true;
         }
-      } catch (std::exception&) {
+      } catch (const std::exception& e) {
+        logger(ERROR, BRIGHT_RED) << "<< NetNode.cpp << Failed to load config from file '" << state_file_path << "': " << e.what();
       }
 
       if (!loaded) {
@@ -304,14 +306,14 @@ namespace CryptoNote
 
       m_first_connection_maker_call = true;
     } catch (const std::exception& e) {
-      logger(ERROR) << "init_config failed: " << e.what();
+      logger(ERROR, BRIGHT_RED) << "<< NetNode.cpp << init_config failed: " << e.what();
       return false;
     }
     return true;
   }
 
   //-----------------------------------------------------------------------------------
-  void NodeServer::for_each_connection(std::function<void(CryptoNoteConnectionContext&, PeerIdType)> f)
+  void NodeServer::for_each_connection(std::function<void(CryptoNoteConnectionContext&, uint64_t)> f)
   {
     for (auto& ctx : m_connections) {
       f(ctx.second, ctx.second.peerId);
@@ -319,7 +321,7 @@ namespace CryptoNote
   }
 
   //-----------------------------------------------------------------------------------
-  void NodeServer::externalRelayNotifyToAll(int command, const BinaryArray& data_buff) {
+  void NodeServer::externalRelayNotifyToAll(int command, const BinaryArray& data_buff, const boost::uuids::uuid* excludeConnection) {
     m_dispatcher.remoteSpawn([this, command, data_buff] {
       relay_notify_to_all(command, data_buff, nullptr);
     });
@@ -329,6 +331,7 @@ namespace CryptoNote
   bool NodeServer::make_default_config()
   {
     m_config.m_peer_id  = Crypto::rand<uint64_t>();
+    logger(INFO, YELLOW) << "<< NetNode.cpp << Generated new peer ID: " << m_config.m_peer_id;
     return true;
   }
 
@@ -397,7 +400,7 @@ namespace CryptoNote
   }
 
   bool NodeServer::append_net_address(std::vector<NetworkAddress>& nodes, const std::string& addr) {
-    size_t pos = addr.find_last_of(':');
+    uint64_t pos = addr.find_last_of(':');
     if (!(std::string::npos != pos && addr.length() - 1 != pos && 0 != pos)) {
       logger(ERROR, BRIGHT_RED) << "Failed to parse seed address from string: '" << addr << '\'';
       return false;
@@ -466,7 +469,7 @@ namespace CryptoNote
     // m_net_server.get_config_object().m_invoke_timeout = CryptoNote::P2P_DEFAULT_INVOKE_TIMEOUT;
 
     //try to bind
-    logger(INFO) <<  "Binding on " << m_bind_ip << ":" << m_port;
+    logger(INFO, BRIGHT_YELLOW) <<  "<< NetNode.cpp << Binding on: " << m_bind_ip << ":" << m_port;
     m_listeningPort = Common::fromString<uint16_t>(m_port);
 
     m_listener = System::TcpListener(m_dispatcher, System::Ipv4Address(m_bind_ip), static_cast<uint16_t>(m_listeningPort));
@@ -490,7 +493,7 @@ namespace CryptoNote
   //-----------------------------------------------------------------------------------
 
   bool NodeServer::run() {
-    logger(INFO) <<  "Starting node_server";
+    logger(INFO, BRIGHT_GREEN) <<  "<< NetNode.cpp << Starting node_server";
 
     m_workingContextGroup.spawn(std::bind(&NodeServer::acceptLoop, this));
     m_workingContextGroup.spawn(std::bind(&NodeServer::onIdle, this));
@@ -785,19 +788,19 @@ namespace CryptoNote
   //-----------------------------------------------------------------------------------
   bool NodeServer::make_new_connection_from_peerlist(bool use_white_list)
   {
-    size_t local_peers_count = use_white_list ? m_peerlist.get_white_peers_count():m_peerlist.get_gray_peers_count();
+    uint64_t local_peers_count = use_white_list ? m_peerlist.get_white_peers_count():m_peerlist.get_gray_peers_count();
     if(!local_peers_count)
       return false;//no peers
 
-    size_t max_random_index = std::min<uint64_t>(local_peers_count -1, 20);
+    uint64_t max_random_index = std::min<uint64_t>(local_peers_count -1, 20);
 
-    std::set<size_t> tried_peers;
+    std::set<uint64_t> tried_peers;
 
-    size_t try_count = 0;
-    size_t rand_count = 0;
+    uint64_t try_count = 0;
+    uint64_t rand_count = 0;
     while(rand_count < (max_random_index+1)*3 &&  try_count < 10 && !m_stop) {
       ++rand_count;
-      size_t random_index = get_random_index_with_fixed_probability(max_random_index);
+      uint64_t random_index = get_random_index_with_fixed_probability(max_random_index);
       if (!(random_index < local_peers_count)) { logger(ERROR, BRIGHT_RED) << "random_starter_index < peers_local.size() failed!!"; return false; }
 
       if(tried_peers.count(random_index))
@@ -836,8 +839,8 @@ namespace CryptoNote
     }
 
     if(!m_peerlist.get_white_peers_count() && m_seed_nodes.size()) {
-      size_t try_count = 0;
-      size_t current_index = Crypto::rand<size_t>() % m_seed_nodes.size();
+      uint64_t try_count = 0;
+      uint64_t current_index = Crypto::rand<uint64_t>() % m_seed_nodes.size();
 
       while(true) {
         if(try_to_connect_and_handshake_with_new_peer(m_seed_nodes[current_index], true))
@@ -854,9 +857,9 @@ namespace CryptoNote
 
     if (!connect_to_peerlist(m_priority_peers)) return false;
 
-    size_t expected_white_connections = (m_config.m_net_config.connections_count * CryptoNote::P2P_DEFAULT_WHITELIST_CONNECTIONS_PERCENT) / 100;
+    uint64_t expected_white_connections = (m_config.m_net_config.connections_count * CryptoNote::P2P_DEFAULT_WHITELIST_CONNECTIONS_PERCENT) / 100;
 
-    size_t conn_count = get_outgoing_connections_count();
+    uint64_t conn_count = get_outgoing_connections_count();
     if(conn_count < m_config.m_net_config.connections_count)
     {
       if(conn_count < expected_white_connections)
@@ -881,10 +884,8 @@ namespace CryptoNote
     return true;
   }
   //-----------------------------------------------------------------------------------
-
-  bool NodeServer::make_expected_connections_count(bool white_list, size_t expected_connections)
-  {
-    size_t conn_count = get_outgoing_connections_count();
+  bool NodeServer::make_expected_connections_count(bool white_list, uint64_t expected_connections) {
+    uint64_t conn_count = get_outgoing_connections_count();
     //add new connections from white peers
     while(conn_count < expected_connections)
     {
@@ -899,8 +900,8 @@ namespace CryptoNote
   }
 
   //-----------------------------------------------------------------------------------
-  size_t NodeServer::get_outgoing_connections_count() {
-    size_t count = 0;
+  uint64_t NodeServer::get_outgoing_connections_count() {
+    uint64_t count = 0;
     for (const auto& cntxt : m_connections) {
       if (!cntxt.second.m_is_income)
         ++count;
@@ -1050,9 +1051,9 @@ namespace CryptoNote
 
   //-----------------------------------------------------------------------------------
 
-  void NodeServer::relay_notify_to_all(int command, const BinaryArray& data_buff, const net_connection_id* excludeConnection) {
-    net_connection_id excludeId = excludeConnection ? *excludeConnection : boost::value_initialized<net_connection_id>();
-
+  void NodeServer::relay_notify_to_all(int command, const BinaryArray& data_buff, const boost::uuids::uuid* excludeConnection) {
+    boost::uuids::uuid excludeId = excludeConnection ? *excludeConnection : boost::value_initialized<boost::uuids::uuid>();
+    
     forEachConnection([&](P2pConnectionContext& conn) {
       if (conn.peerId && conn.m_connection_id != excludeId &&
           (conn.m_state == CryptoNoteConnectionContext::state_normal ||
@@ -1176,7 +1177,7 @@ namespace CryptoNote
     context.peerId = arg.node_data.peer_id;
 
     if(arg.node_data.peer_id != m_config.m_peer_id && arg.node_data.my_port) {
-      PeerIdType peer_id_l = arg.node_data.peer_id;
+      uint64_t peer_id_l = arg.node_data.peer_id;
       uint32_t port_l = arg.node_data.my_port;
 
       if (try_ping(arg.node_data, context)) {
@@ -1291,7 +1292,7 @@ namespace CryptoNote
   }
 
   void NodeServer::acceptLoop() {
-    for (;;) {
+    while (!m_stop) {
       try {
         P2pConnectionContext ctx(m_dispatcher, logger.getLogger(), m_listener.accept());
         ctx.m_connection_id = boost::uuids::random_generator()();

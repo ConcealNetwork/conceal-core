@@ -1,4 +1,4 @@
-// Copyright (c) 2012-2016, The CryptoNote developers, The Bytecoin developers
+// Copyright (c) 2012-2017, The CryptoNote developers, The Bytecoin developers
 //
 // This file is part of Bytecoin.
 //
@@ -108,7 +108,7 @@ private:
   NativeContext* firstResumingContext;
   NativeContext* lastResumingContext;
   NativeContext* firstReusableContext;
-  size_t runningContextCount;
+  uint64_t runningContextCount;
 
   void contextProcedure(void* ucontext);
   static void contextProcedureStatic(void* context);

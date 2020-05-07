@@ -36,8 +36,8 @@ using namespace CryptoNote;
 void checkOutputKey(
   const KeyDerivation& derivation,
   const PublicKey& key,
-  size_t keyIndex,
-  size_t outputIndex,
+  uint64_t keyIndex,
+  uint64_t outputIndex,
   const std::unordered_set<PublicKey>& spendKeys,
   std::unordered_map<PublicKey, std::vector<uint32_t>>& outputs) {
 
@@ -63,12 +63,12 @@ void findMyOutputs(
     return;
   }
 
-  size_t keyIndex = 0;
-  size_t outputCount = tx.getOutputCount();
+  uint64_t keyIndex = 0;
+  uint64_t outputCount = tx.getOutputCount();
 
-  for (size_t idx = 0; idx < outputCount; ++idx) {
+  for (uint64_t idx = 0; idx < outputCount; ++idx) {
 
-    auto outType = tx.getOutputType(size_t(idx));
+    auto outType = tx.getOutputType(uint64_t(idx));
 
     if (outType == TransactionTypes::OutputType::Key) {
 
@@ -91,11 +91,11 @@ void findMyOutputs(
   }
 }
 
-std::vector<Crypto::Hash> getBlockHashes(const CryptoNote::CompleteBlock* blocks, size_t count) {
+std::vector<Crypto::Hash> getBlockHashes(const CryptoNote::CompleteBlock* blocks, uint64_t count) {
   std::vector<Crypto::Hash> result;
   result.reserve(count);
 
-  for (size_t i = 0; i < count; ++i) {
+  for (uint64_t i = 0; i < count; ++i) {
     result.push_back(blocks[i].blockHash);
   }
 
@@ -152,7 +152,7 @@ void TransfersConsumer::initTransactionPool(const std::unordered_set<Crypto::Has
 
     for (auto itTransactions = unconfirmedTransactions.begin(); itTransactions != unconfirmedTransactions.end(); ++itTransactions) {
       if (uncommitedTransactions.count(*itTransactions) == 0) {
-        m_poolTxs.emplace(*itTransactions);
+        m_poolTxs.insert(*itTransactions);
       }
     }
   }
@@ -199,7 +199,7 @@ bool TransfersConsumer::onNewBlocks(const CompleteBlock* blocks, uint32_t startH
   std::vector<PreprocessedTx> preprocessedTransactions;
   std::mutex preprocessedTransactionsMutex;
 
-  size_t workers = std::thread::hardware_concurrency();
+  uint64_t workers = std::thread::hardware_concurrency();
   if (workers == 0) {
     workers = 2;
   }
@@ -262,7 +262,7 @@ bool TransfersConsumer::onNewBlocks(const CompleteBlock* blocks, uint32_t startH
   };
 
   std::vector<std::future<std::error_code>> processingThreads;
-  for (size_t i = 0; i < workers; ++i) {
+  for (uint64_t i = 0; i < workers; ++i) {
     processingThreads.push_back(std::async(std::launch::async, processingFunction));
   }
 
@@ -315,7 +315,7 @@ std::error_code TransfersConsumer::onPoolUpdated(const std::vector<std::unique_p
 
   std::error_code processingError;
   for (auto& cryptonoteTransaction : addedTransactions) {
-    m_poolTxs.emplace(cryptonoteTransaction->getTransactionHash());
+    m_poolTxs.insert(cryptonoteTransaction->getTransactionHash());
     processingError = processTransaction(unconfirmedBlockInfo, *cryptonoteTransaction.get());
     if (processingError) {
       for (auto& sub : m_subscriptions) {
@@ -386,7 +386,7 @@ std::error_code createTransfers(
       return std::make_error_code(std::errc::argument_out_of_domain);
     }
 
-    auto outType = tx.getOutputType(size_t(idx));
+    auto outType = tx.getOutputType(uint64_t(idx));
 
     if (
       outType != TransactionTypes::OutputType::Key &&
@@ -459,7 +459,7 @@ std::error_code createTransfers(
    transfers.push_back(info);
   }
 
-  transactions_hash_seen.emplace(tx.getTransactionHash());
+  transactions_hash_seen.insert(tx.getTransactionHash());
   std::copy(temp_keys.begin(), temp_keys.end(), std::inserter(public_keys_seen, public_keys_seen.end()));
 
 
@@ -534,7 +534,7 @@ void TransfersConsumer::processTransaction(const TransactionBlockInfo& blockInfo
     processOutputs(blockInfo, *kv.second, tx, subscriptionOutputs, info.globalIdxs, containerContainsTx, containerUpdated);
     someContainerUpdated = someContainerUpdated || containerUpdated;
     if (containerContainsTx) {
-      transactionContainers.emplace_back(&kv.second->getContainer());
+      transactionContainers.push_back(&kv.second->getContainer());
     }
   }
 

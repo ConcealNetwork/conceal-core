@@ -56,15 +56,15 @@ Ipv4Address Ipv4Resolver::resolve(const std::string& host) {
     throw std::runtime_error("Ipv4Resolver::resolve, getaddrinfo failed, " + errorMessage(result));
   }
   
-  size_t count = 0;
+  uint64_t count = 0;
   for (addrinfo* addressInfo = addressInfos; addressInfo != nullptr; addressInfo = addressInfo->ai_next) {
     ++count;
   }
 
   std::mt19937 generator{ std::random_device()() };
-  size_t index = std::uniform_int_distribution<size_t>(0, count - 1)(generator);
+  uint64_t index = std::uniform_int_distribution<uint64_t>(0, count - 1)(generator);
   addrinfo* addressInfo = addressInfos;
-  for (size_t i = 0; i < index; ++i) {
+  for (uint64_t i = 0; i < index; ++i) {
     addressInfo = addressInfo->ai_next;
   }
 

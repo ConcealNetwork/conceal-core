@@ -42,7 +42,7 @@ struct TransactionOutputDetails {
 
 struct TransactionOutputReferenceDetails {
   Crypto::Hash transactionHash;
-  size_t number;
+  uint64_t number;
 };
 
 struct TransactionInputGenerateDetails {
@@ -71,7 +71,7 @@ struct TransactionInputDetails {
 };
 
 struct TransactionExtraDetails {
-  std::vector<size_t> padding;
+  std::vector<uint64_t> padding;
   std::vector<Crypto::PublicKey> publicKey; 
   std::vector<std::string> nonce;
   std::vector<uint8_t> raw;

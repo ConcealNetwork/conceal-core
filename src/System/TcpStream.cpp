@@ -43,7 +43,7 @@ std::streambuf::int_type TcpStreambuf::underflow() {
     return traits_type::to_int_type(*gptr());
   }
 
-  size_t bytesRead;
+  uint64_t bytesRead;
   try {
     bytesRead = connection.read(reinterpret_cast<uint8_t*>(&readBuf.front()), readBuf.max_size());
   } catch (std::exception&) {
@@ -60,24 +60,24 @@ std::streambuf::int_type TcpStreambuf::underflow() {
 
 bool TcpStreambuf::dumpBuffer(bool finalize) {
   try {
-    size_t count = pptr() - pbase();
+    uint64_t count = pptr() - pbase();
     if(count == 0) {
       return true;
     }
 
-    size_t transferred = connection.write(&writeBuf.front(), count);
+    uint64_t transferred = connection.write(&writeBuf.front(), count);
     if(transferred == count) {
       pbump(-static_cast<int>(count));
     } else {
       if(!finalize) {
-        size_t front = 0;
-        for (size_t pos = transferred; pos < count; ++pos, ++front) {
+        uint64_t front = 0;
+        for (uint64_t pos = transferred; pos < count; ++pos, ++front) {
           writeBuf[front] = writeBuf[pos];
         }
 
         pbump(-static_cast<int>(transferred));
       } else {
-        size_t offset = transferred;
+        uint64_t offset = transferred;
         while( offset != count) {
           offset += connection.write(&writeBuf.front() + offset, count - offset);
         }

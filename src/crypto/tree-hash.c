@@ -11,17 +11,17 @@
 
 #include "hash-ops.h"
 
-void tree_hash(const char (*hashes)[HASH_SIZE], size_t count, char *root_hash) {
+void tree_hash(const char (*hashes)[HASH_SIZE], uint64_t count, char *root_hash) {
   assert(count > 0);
   if (count == 1) {
     memcpy(root_hash, hashes, HASH_SIZE);
   } else if (count == 2) {
     cn_fast_hash(hashes, 2 * HASH_SIZE, root_hash);
   } else {
-    size_t i, j;
-    size_t cnt = count - 1;
+    uint64_t i, j;
+    uint64_t cnt = count - 1;
     char (*ints)[HASH_SIZE];
-    for (i = 1; i < 8 * sizeof(size_t); i <<= 1) {
+    for (i = 1; i < 8 * sizeof(uint64_t); i <<= 1) {
       cnt |= cnt >> i;
     }
     cnt &= ~(cnt >> 1);
@@ -41,11 +41,11 @@ void tree_hash(const char (*hashes)[HASH_SIZE], size_t count, char *root_hash) {
   }
 }
 
-size_t tree_depth(size_t count) {
-  size_t i;
-  size_t depth = 0;
+uint64_t tree_depth(uint64_t count) {
+  uint64_t i;
+  uint64_t depth = 0;
   assert(count > 0);
-  for (i = sizeof(size_t) << 2; i > 0; i >>= 1) {
+  for (i = sizeof(uint64_t) << 2; i > 0; i >>= 1) {
     if (count >> i > 0) {
       count >>= i;
       depth += i;
@@ -54,13 +54,13 @@ size_t tree_depth(size_t count) {
   return depth;
 }
 
-void tree_branch(const char (*hashes)[HASH_SIZE], size_t count, char (*branch)[HASH_SIZE]) {
-  size_t i, j;
-  size_t cnt = 1;
-  size_t depth = 0;
+void tree_branch(const char (*hashes)[HASH_SIZE], uint64_t count, char (*branch)[HASH_SIZE]) {
+  uint64_t i, j;
+  uint64_t cnt = 1;
+  uint64_t depth = 0;
   char (*ints)[HASH_SIZE];
   assert(count > 0);
-  for (i = sizeof(size_t) << 2; i > 0; i >>= 1) {
+  for (i = sizeof(uint64_t) << 2; i > 0; i >>= 1) {
     if (cnt << i <= count) {
       cnt <<= i;
       depth += i;
@@ -85,7 +85,7 @@ void tree_branch(const char (*hashes)[HASH_SIZE], size_t count, char (*branch)[H
   }
 }
 
-void tree_hash_from_branch(const char (*branch)[HASH_SIZE], size_t depth, const char *leaf, const void *path, char *root_hash) {
+void tree_hash_from_branch(const char (*branch)[HASH_SIZE], uint64_t depth, const char *leaf, const void *path, char *root_hash) {
   if (depth == 0) {
     memcpy(root_hash, leaf, HASH_SIZE);
   } else {

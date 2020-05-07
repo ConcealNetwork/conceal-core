@@ -548,7 +548,7 @@ void BlockchainExplorer::poolChanged() {
       for (const auto& rawTransaction : *rawNewTransactionsPtr) {
         auto hash = rawTransaction->getTransactionHash();
         Hash transactionHash = reinterpret_cast<const Hash&>(hash);
-        bool inserted = knownPoolState.emplace(transactionHash).second;
+        bool inserted = knownPoolState.insert(transactionHash).second;
         if (inserted) {
           newTransactionsHashesPtr->push_back(std::move(transactionHash));
         }

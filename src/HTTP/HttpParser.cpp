@@ -48,7 +48,7 @@ void HttpParser::receiveRequest(std::istream& stream, HttpRequest& request) {
   readHeaders(stream, request.headers);
 
   std::string body;
-  size_t bodyLen = getBodyLen(request.headers);
+  uint64_t bodyLen = getBodyLen(request.headers);
   if (bodyLen) {
     readBody(stream, request.body, bodyLen);
   }
@@ -90,7 +90,7 @@ void HttpParser::receiveResponse(std::istream& stream, HttpResponse& response) {
 
   response.addHeader(name, value);
   auto headers = response.getHeaders();
-  size_t length = 0;
+  uint64_t length = 0;
   auto it = headers.find("content-length");
   if (it != headers.end()) {
     length = std::stoul(it->second);
@@ -190,18 +190,18 @@ bool HttpParser::readHeader(std::istream& stream, std::string& name, std::string
   return true;
 }
 
-size_t HttpParser::getBodyLen(const HttpRequest::Headers& headers) {
+uint64_t HttpParser::getBodyLen(const HttpRequest::Headers& headers) {
   auto it = headers.find("content-length");
   if (it != headers.end()) {
-    size_t bytes = std::stoul(it->second);
+    uint64_t bytes = std::stoul(it->second);
     return bytes;
   }
 
   return 0;
 }
 
-void HttpParser::readBody(std::istream& stream, std::string& body, const size_t bodyLen) {
-  size_t read = 0;
+void HttpParser::readBody(std::istream& stream, std::string& body, const uint64_t bodyLen) {
+  uint64_t read = 0;
 
   while (stream.good() && read < bodyLen) {
     body += stream.get();

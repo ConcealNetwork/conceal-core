@@ -27,8 +27,8 @@ private:
   void readWord(std::istream& stream, std::string& word);
   void readHeaders(std::istream& stream, HttpRequest::Headers &headers);
   bool readHeader(std::istream& stream, std::string& name, std::string& value);
-  size_t getBodyLen(const HttpRequest::Headers& headers);
-  void readBody(std::istream& stream, std::string& body, const size_t bodyLen);
+  uint64_t getBodyLen(const HttpRequest::Headers& headers);
+  void readBody(std::istream& stream, std::string& body, const uint64_t bodyLen);
 };
 
 } //namespace CryptoNote

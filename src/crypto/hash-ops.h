@@ -16,17 +16,17 @@
 #include "../Common/static_assert.h"
 #include "Common/int-util.h"
 
-static inline void *padd(void *p, size_t i) {
+static inline void *padd(void *p, uint64_t i) {
   return (char *) p + i;
 }
 
-static inline const void *cpadd(const void *p, size_t i) {
+static inline const void *cpadd(const void *p, uint64_t i) {
   return (const char *) p + i;
 }
 
-static_assert(sizeof(size_t) == 4 || sizeof(size_t) == 8, "size_t must be 4 or 8 bytes long");
-static inline void place_length(uint8_t *buffer, size_t bufsize, size_t length) {
-  if (sizeof(size_t) == 4) {
+static_assert(sizeof(uint64_t) == 4 || sizeof(uint64_t) == 8, "uint64_t must be 4 or 8 bytes long");
+static inline void place_length(uint8_t *buffer, uint64_t bufsize, uint64_t length) {
+  if (sizeof(uint64_t) == 4) {
     *(uint32_t *) padd(buffer, bufsize - 4) = swap32be((uint32_t) length);
   } else {
     *(uint64_t *) padd(buffer, bufsize - 8) = swap64be(length);
@@ -42,7 +42,7 @@ union hash_state {
 static_assert(sizeof(union hash_state) == 200, "Invalid structure size");
 
 void hash_permutation(union hash_state *state);
-void hash_process(union hash_state *state, const uint8_t *buf, size_t count);
+void hash_process(union hash_state *state, const uint8_t *buf, uint64_t count);
 
 #endif
 
@@ -52,9 +52,9 @@ enum {
   SLOW_HASH_CONTEXT_SIZE = 2097552
 };
 
-void cn_fast_hash(const void *data, size_t length, char *hash);
+void cn_fast_hash(const void *data, uint64_t length, char *hash);
 
-void tree_hash(const char (*hashes)[HASH_SIZE], size_t count, char *root_hash);
-size_t tree_depth(size_t count);
-void tree_branch(const char (*hashes)[HASH_SIZE], size_t count, char (*branch)[HASH_SIZE]);
-void tree_hash_from_branch(const char (*branch)[HASH_SIZE], size_t depth, const char *leaf, const void *path, char *root_hash);
+void tree_hash(const char (*hashes)[HASH_SIZE], uint64_t count, char *root_hash);
+uint64_t tree_depth(uint64_t count);
+void tree_branch(const char (*hashes)[HASH_SIZE], uint64_t count, char (*branch)[HASH_SIZE]);
+void tree_hash_from_branch(const char (*branch)[HASH_SIZE], uint64_t depth, const char *leaf, const void *path, char *root_hash);

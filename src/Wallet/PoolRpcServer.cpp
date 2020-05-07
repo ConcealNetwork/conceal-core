@@ -152,7 +152,7 @@ bool pool_rpc_server::on_transfer(const wallet_rpc::COMMAND_RPC_TRANSFER::reques
     transfer.address = it->address;
     transfer.amount = it->amount;
     transfers.push_back(transfer);
-    messages.emplace_back(CryptoNote::TransactionMessage{ "P01", it->address });
+    messages.push_back(CryptoNote::TransactionMessage{ "P01", it->address });
     
   }
 
@@ -175,7 +175,7 @@ bool pool_rpc_server::on_transfer(const wallet_rpc::COMMAND_RPC_TRANSFER::reques
   }
 
   for (auto& rpc_message : req.messages) {
-     messages.emplace_back(CryptoNote::TransactionMessage{ rpc_message.message, rpc_message.address });
+     messages.push_back(CryptoNote::TransactionMessage{ rpc_message.message, rpc_message.address });
   }
 
   uint64_t ttl = 0;
@@ -287,7 +287,7 @@ bool pool_rpc_server::on_get_messages(const wallet_rpc::COMMAND_RPC_GET_MESSAGES
         }
       }
 
-      res.tx_messages.emplace_back(std::move(tx_messages));
+      res.tx_messages.push_back(std::move(tx_messages));
     }
   }
 
@@ -362,8 +362,8 @@ bool pool_rpc_server::on_create_integrated(const wallet_rpc::COMMAND_RPC_CREATE_
 
 bool pool_rpc_server::on_get_transfers(const wallet_rpc::COMMAND_RPC_GET_TRANSFERS::request& req, wallet_rpc::COMMAND_RPC_GET_TRANSFERS::response& res) {
   res.transfers.clear();
-  size_t transactionsCount = m_wallet.getTransactionCount();
-  for (size_t trantransactionNumber = 0; trantransactionNumber < transactionsCount; ++trantransactionNumber) {
+  uint64_t transactionsCount = m_wallet.getTransactionCount();
+  for (uint64_t trantransactionNumber = 0; trantransactionNumber < transactionsCount; ++trantransactionNumber) {
     WalletLegacyTransaction txInfo;
     m_wallet.getTransaction(trantransactionNumber, txInfo);
     if (txInfo.state != WalletLegacyTransactionState::Active || txInfo.blockHeight == WALLET_LEGACY_UNCONFIRMED_TRANSACTION_HEIGHT) {

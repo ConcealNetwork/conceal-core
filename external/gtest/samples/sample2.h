@@ -73,7 +73,7 @@ class MyString {
   // Gets the 0-terminated C string this MyString object represents.
   const char* c_string() const { return c_string_; }
 
-  size_t Length() const {
+  uint64_t Length() const {
     return c_string_ == NULL ? 0 : strlen(c_string_);
   }
 

@@ -936,7 +936,7 @@ class sparse_hashtable {
   // (1) Iterator supports operator-, resize before inserting
   template <class ForwardIterator>
   void insert(ForwardIterator f, ForwardIterator l, STL_NAMESPACE::forward_iterator_tag) {
-    size_t dist = STL_NAMESPACE::distance(f, l);
+    uint64_t dist = STL_NAMESPACE::distance(f, l);
     if (dist >= (std::numeric_limits<size_type>::max)())
       throw std::length_error("insert-range overflow");
     resize_delta(static_cast<size_type>(dist));

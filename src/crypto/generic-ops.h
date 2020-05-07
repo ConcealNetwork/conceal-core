@@ -23,16 +23,16 @@ namespace Crypto { \
 #define CRYPTO_MAKE_HASHABLE(type) \
 CRYPTO_MAKE_COMPARABLE(type) \
 namespace Crypto { \
-  static_assert(sizeof(size_t) <= sizeof(type), "Size of " #type " must be at least that of size_t"); \
-  inline size_t hash_value(const type &_v) { \
-    return reinterpret_cast<const size_t &>(_v); \
+  static_assert(sizeof(uint64_t) <= sizeof(type), "Size of " #type " must be at least that of uint64_t"); \
+  inline uint64_t hash_value(const type &_v) { \
+    return reinterpret_cast<const uint64_t &>(_v); \
   } \
 } \
 namespace std { \
   template<> \
   struct hash<Crypto::type> { \
-    size_t operator()(const Crypto::type &_v) const { \
-      return reinterpret_cast<const size_t &>(_v); \
+    uint64_t operator()(const Crypto::type &_v) const { \
+      return reinterpret_cast<const uint64_t &>(_v); \
     } \
   }; \
 }

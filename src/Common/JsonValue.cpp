@@ -483,7 +483,7 @@ const JsonValue::String& JsonValue::getString() const {
   return *reinterpret_cast<const String*>(valueString);
 }
 
-size_t JsonValue::size() const {
+uint64_t JsonValue::size() const {
   switch (type) {
   case ARRAY:
     return reinterpret_cast<const Array*>(valueArray)->size();
@@ -494,7 +494,7 @@ size_t JsonValue::size() const {
   }
 }
 
-JsonValue& JsonValue::operator[](size_t index) {
+JsonValue& JsonValue::operator[](uint64_t index) {
   if (type != ARRAY) {
     throw std::runtime_error("JsonValue type is not ARRAY");
   }
@@ -502,7 +502,7 @@ JsonValue& JsonValue::operator[](size_t index) {
   return reinterpret_cast<Array*>(valueArray)->at(index);
 }
 
-const JsonValue& JsonValue::operator[](size_t index) const {
+const JsonValue& JsonValue::operator[](uint64_t index) const {
   if (type != ARRAY) {
     throw std::runtime_error("JsonValue type is not ARRAY");
   }
@@ -515,7 +515,7 @@ JsonValue& JsonValue::pushBack(const JsonValue& value) {
     throw std::runtime_error("JsonValue type is not ARRAY");
   }
 
-  reinterpret_cast<Array*>(valueArray)->emplace_back(value);
+  reinterpret_cast<Array*>(valueArray)->push_back(value);
   return reinterpret_cast<Array*>(valueArray)->back();
 }
 
@@ -524,7 +524,7 @@ JsonValue& JsonValue::pushBack(JsonValue&& value) {
     throw std::runtime_error("JsonValue type is not ARRAY");
   }
 
-  reinterpret_cast<Array*>(valueArray)->emplace_back(std::move(value));
+  reinterpret_cast<Array*>(valueArray)->push_back(std::move(value));
   return reinterpret_cast<Array*>(valueArray)->back();
 }
 
@@ -558,7 +558,7 @@ JsonValue& JsonValue::set(const Key& key, JsonValue&& value) {
   return *this;
 }
 
-size_t JsonValue::erase(const Key& key) {
+uint64_t JsonValue::erase(const Key& key) {
   return getObject().erase(key);
 }
 
@@ -597,7 +597,7 @@ std::ostream& operator<<(std::ostream& out, const JsonValue& jsonValue) {
     out << '[';
     if (array.size() > 0) {
       out << array[0];
-      for (size_t i = 1; i < array.size(); ++i) {
+      for (uint64_t i = 1; i < array.size(); ++i) {
         out << ',' << array[i];
       }
     }
@@ -812,7 +812,7 @@ void JsonValue::readNull(std::istream& in) {
 void JsonValue::readNumber(std::istream& in, char c) {
   std::string text;
   text += c;
-  size_t dots = 0;
+  uint64_t dots = 0;
   for (;;) {
     int i = in.peek();
     if (i >= '0' && i <= '9') {

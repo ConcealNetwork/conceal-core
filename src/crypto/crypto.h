@@ -49,24 +49,24 @@ struct EllipticCurveScalar {
     friend bool secret_key_to_public_key(const SecretKey &, PublicKey &);
     static bool generate_key_derivation(const PublicKey &, const SecretKey &, KeyDerivation &);
     friend bool generate_key_derivation(const PublicKey &, const SecretKey &, KeyDerivation &);
-    static bool derive_public_key(const KeyDerivation &, size_t, const PublicKey &, PublicKey &);
-    friend bool derive_public_key(const KeyDerivation &, size_t, const PublicKey &, PublicKey &);
-    friend bool derive_public_key(const KeyDerivation &, size_t, const PublicKey &, const uint8_t*, size_t, PublicKey &);
-    static bool derive_public_key(const KeyDerivation &, size_t, const PublicKey &, const uint8_t*, size_t, PublicKey &);
+    static bool derive_public_key(const KeyDerivation &, uint64_t, const PublicKey &, PublicKey &);
+    friend bool derive_public_key(const KeyDerivation &, uint64_t, const PublicKey &, PublicKey &);
+    friend bool derive_public_key(const KeyDerivation &, uint64_t, const PublicKey &, const uint8_t*, uint64_t, PublicKey &);
+    static bool derive_public_key(const KeyDerivation &, uint64_t, const PublicKey &, const uint8_t*, uint64_t, PublicKey &);
     //hack for pg
-    static bool underive_public_key_and_get_scalar(const KeyDerivation &, std::size_t, const PublicKey &, PublicKey &, EllipticCurveScalar &);
-    friend bool underive_public_key_and_get_scalar(const KeyDerivation &, std::size_t, const PublicKey &, PublicKey &, EllipticCurveScalar &);
+    static bool underive_public_key_and_get_scalar(const KeyDerivation &, std::uint64_t, const PublicKey &, PublicKey &, EllipticCurveScalar &);
+    friend bool underive_public_key_and_get_scalar(const KeyDerivation &, std::uint64_t, const PublicKey &, PublicKey &, EllipticCurveScalar &);
     static void generate_incomplete_key_image(const PublicKey &, EllipticCurvePoint &);
     friend void generate_incomplete_key_image(const PublicKey &, EllipticCurvePoint &);
     //
-    static void derive_secret_key(const KeyDerivation &, size_t, const SecretKey &, SecretKey &);
-    friend void derive_secret_key(const KeyDerivation &, size_t, const SecretKey &, SecretKey &);
-    static void derive_secret_key(const KeyDerivation &, size_t, const SecretKey &, const uint8_t*, size_t, SecretKey &);
-    friend void derive_secret_key(const KeyDerivation &, size_t, const SecretKey &, const uint8_t*, size_t, SecretKey &);
-    static bool underive_public_key(const KeyDerivation &, size_t, const PublicKey &, PublicKey &);
-    friend bool underive_public_key(const KeyDerivation &, size_t, const PublicKey &, PublicKey &);
-    static bool underive_public_key(const KeyDerivation &, size_t, const PublicKey &, const uint8_t*, size_t, PublicKey &);
-    friend bool underive_public_key(const KeyDerivation &, size_t, const PublicKey &, const uint8_t*, size_t, PublicKey &);
+    static void derive_secret_key(const KeyDerivation &, uint64_t, const SecretKey &, SecretKey &);
+    friend void derive_secret_key(const KeyDerivation &, uint64_t, const SecretKey &, SecretKey &);
+    static void derive_secret_key(const KeyDerivation &, uint64_t, const SecretKey &, const uint8_t*, uint64_t, SecretKey &);
+    friend void derive_secret_key(const KeyDerivation &, uint64_t, const SecretKey &, const uint8_t*, uint64_t, SecretKey &);
+    static bool underive_public_key(const KeyDerivation &, uint64_t, const PublicKey &, PublicKey &);
+    friend bool underive_public_key(const KeyDerivation &, uint64_t, const PublicKey &, PublicKey &);
+    static bool underive_public_key(const KeyDerivation &, uint64_t, const PublicKey &, const uint8_t*, uint64_t, PublicKey &);
+    friend bool underive_public_key(const KeyDerivation &, uint64_t, const PublicKey &, const uint8_t*, uint64_t, PublicKey &);
     static void generate_signature(const Hash &, const PublicKey &, const SecretKey &, Signature &);
     friend void generate_signature(const Hash &, const PublicKey &, const SecretKey &, Signature &);
     static bool check_signature(const Hash &, const PublicKey &, const Signature &);
@@ -75,23 +75,23 @@ struct EllipticCurveScalar {
     friend void generate_key_image(const PublicKey &, const SecretKey &, KeyImage &);
     static KeyImage scalarmultKey(const KeyImage & P, const KeyImage & a);
     friend KeyImage scalarmultKey(const KeyImage & P, const KeyImage & a);
-    static void hash_data_to_ec(const uint8_t*, std::size_t, PublicKey&);
-    friend void hash_data_to_ec(const uint8_t*, std::size_t, PublicKey&);
+    static void hash_data_to_ec(const uint8_t*, std::uint64_t, PublicKey&);
+    friend void hash_data_to_ec(const uint8_t*, std::uint64_t, PublicKey&);
     static void generate_ring_signature(const Hash &, const KeyImage &,
-      const PublicKey *const *, size_t, const SecretKey &, size_t, Signature *);
+      const PublicKey *const *, uint64_t, const SecretKey &, uint64_t, Signature *);
 	  static void generate_tx_proof(const Hash &, const PublicKey &, const PublicKey &, const PublicKey &, const SecretKey &, Signature &);
 	friend void generate_tx_proof(const Hash &, const PublicKey &, const PublicKey &, const PublicKey &, const SecretKey &, Signature &);
 	static bool check_tx_proof(const Hash &, const PublicKey &, const PublicKey &, const PublicKey &, const Signature &);
 	friend bool check_tx_proof(const Hash &, const PublicKey &, const PublicKey &, const PublicKey &, const Signature &);      
 
     friend void generate_ring_signature(const Hash &, const KeyImage &,
-      const PublicKey *const *, size_t, const SecretKey &, size_t, Signature *);
+      const PublicKey *const *, uint64_t, const SecretKey &, uint64_t, Signature *);
 
     static bool check_ring_signature(const Hash &, const KeyImage &,
-      const PublicKey *const *, size_t, const Signature *);
+      const PublicKey *const *, uint64_t, const Signature *);
 
     friend bool check_ring_signature(const Hash &, const KeyImage &,
-      const PublicKey *const *, size_t, const Signature *);
+      const PublicKey *const *, uint64_t, const Signature *);
   };
 
   /* Generate a value filled with random bytes.
@@ -111,7 +111,6 @@ struct EllipticCurveScalar {
   public:
     typedef T result_type;
 
-#ifdef __clang__
     constexpr static T min() {
       return (std::numeric_limits<T>::min)();
     }
@@ -119,15 +118,7 @@ struct EllipticCurveScalar {
     constexpr static T max() {
       return (std::numeric_limits<T>::max)();
     }
-#else
-    static T(min)() {
-      return (std::numeric_limits<T>::min)();
-    }
-
-    static T(max)() {
-      return (std::numeric_limits<T>::max)();
-    }
-#endif
+    
     typename std::enable_if<std::is_unsigned<T>::value, T>::type operator()() {
       return rand<T>();
     }
@@ -167,28 +158,28 @@ struct EllipticCurveScalar {
     return crypto_ops::generate_key_derivation(key1, key2, derivation);
   }
 
-  inline bool derive_public_key(const KeyDerivation &derivation, size_t output_index,
-    const PublicKey &base, const uint8_t* prefix, size_t prefixLength, PublicKey &derived_key) {
+  inline bool derive_public_key(const KeyDerivation &derivation, uint64_t output_index,
+    const PublicKey &base, const uint8_t* prefix, uint64_t prefixLength, PublicKey &derived_key) {
     return crypto_ops::derive_public_key(derivation, output_index, base, prefix, prefixLength, derived_key);
   }
 
-  inline bool derive_public_key(const KeyDerivation &derivation, size_t output_index,
+  inline bool derive_public_key(const KeyDerivation &derivation, uint64_t output_index,
     const PublicKey &base, PublicKey &derived_key) {
     return crypto_ops::derive_public_key(derivation, output_index, base, derived_key);
   }
 
 
-  inline bool underive_public_key_and_get_scalar(const KeyDerivation &derivation, std::size_t output_index,
+  inline bool underive_public_key_and_get_scalar(const KeyDerivation &derivation, std::uint64_t output_index,
     const PublicKey &derived_key, PublicKey &base, EllipticCurveScalar &hashed_derivation) {
     return crypto_ops::underive_public_key_and_get_scalar(derivation, output_index, derived_key, base, hashed_derivation);
   }
 
-  inline void derive_secret_key(const KeyDerivation &derivation, std::size_t output_index,
-    const SecretKey &base, const uint8_t* prefix, size_t prefixLength, SecretKey &derived_key) {
+  inline void derive_secret_key(const KeyDerivation &derivation, std::uint64_t output_index,
+    const SecretKey &base, const uint8_t* prefix, uint64_t prefixLength, SecretKey &derived_key) {
     crypto_ops::derive_secret_key(derivation, output_index, base, prefix, prefixLength, derived_key);
   }
 
-  inline void derive_secret_key(const KeyDerivation &derivation, std::size_t output_index,
+  inline void derive_secret_key(const KeyDerivation &derivation, std::uint64_t output_index,
     const SecretKey &base, SecretKey &derived_key) {
     crypto_ops::derive_secret_key(derivation, output_index, base, derived_key);
   }
@@ -196,12 +187,12 @@ struct EllipticCurveScalar {
 
   /* Inverse function of derive_public_key. It can be used by the receiver to find which "spend" key was used to generate a transaction. This may be useful if the receiver used multiple addresses which only differ in "spend" key.
    */
-  inline bool underive_public_key(const KeyDerivation &derivation, size_t output_index,
-    const PublicKey &derived_key, const uint8_t* prefix, size_t prefixLength, PublicKey &base) {
+  inline bool underive_public_key(const KeyDerivation &derivation, uint64_t output_index,
+    const PublicKey &derived_key, const uint8_t* prefix, uint64_t prefixLength, PublicKey &base) {
     return crypto_ops::underive_public_key(derivation, output_index, derived_key, prefix, prefixLength, base);
   }
 
-  inline bool underive_public_key(const KeyDerivation &derivation, size_t output_index,
+  inline bool underive_public_key(const KeyDerivation &derivation, uint64_t output_index,
     const PublicKey &derived_key, PublicKey &base) {
     return crypto_ops::underive_public_key(derivation, output_index, derived_key, base);
   }
@@ -239,18 +230,18 @@ struct EllipticCurveScalar {
     return crypto_ops::scalarmultKey(P, a);
   }
 
-  inline void hash_data_to_ec(const uint8_t* data, std::size_t len, PublicKey& key) {
+  inline void hash_data_to_ec(const uint8_t* data, std::uint64_t len, PublicKey& key) {
     crypto_ops::hash_data_to_ec(data, len, key);
   }
 
   inline void generate_ring_signature(const Hash &prefix_hash, const KeyImage &image,
-    const PublicKey *const *pubs, std::size_t pubs_count,
-    const SecretKey &sec, std::size_t sec_index,
+    const PublicKey *const *pubs, std::uint64_t pubs_count,
+    const SecretKey &sec, std::uint64_t sec_index,
     Signature *sig) {
     crypto_ops::generate_ring_signature(prefix_hash, image, pubs, pubs_count, sec, sec_index, sig);
   }
   inline bool check_ring_signature(const Hash &prefix_hash, const KeyImage &image,
-    const PublicKey *const *pubs, size_t pubs_count,
+    const PublicKey *const *pubs, uint64_t pubs_count,
     const Signature *sig) {
     return crypto_ops::check_ring_signature(prefix_hash, image, pubs, pubs_count, sig);
   }
@@ -259,7 +250,7 @@ struct EllipticCurveScalar {
    */
   inline void generate_ring_signature(const Hash &prefix_hash, const KeyImage &image,
     const std::vector<const PublicKey *> &pubs,
-    const SecretKey &sec, size_t sec_index,
+    const SecretKey &sec, uint64_t sec_index,
     Signature *sig) {
     generate_ring_signature(prefix_hash, image, pubs.data(), pubs.size(), sec, sec_index, sig);
   }

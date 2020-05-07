@@ -22,8 +22,8 @@ namespace CryptoNote {
   /* CryptoNote helper functions                                          */
   /************************************************************************/
   //-----------------------------------------------------------------------------------------------
-  uint64_t getPenalizedAmount(uint64_t amount, size_t medianSize, size_t currentBlockSize) {
-    static_assert(sizeof(size_t) >= sizeof(uint32_t), "size_t is too small");
+  uint64_t getPenalizedAmount(uint64_t amount, uint64_t medianSize, uint64_t currentBlockSize) {
+    static_assert(sizeof(uint64_t) >= sizeof(uint32_t), "uint64_t is too small");
     assert(currentBlockSize <= 2 * medianSize);
     assert(medianSize <= std::numeric_limits<uint32_t>::max());
     assert(currentBlockSize <= std::numeric_limits<uint32_t>::max());

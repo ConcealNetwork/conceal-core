@@ -37,11 +37,11 @@ struct LegacyDepositInfo {
 void serialize(LegacyDeposit& deposit, ISerializer& serializer) {
   uint64_t creatingTxId = static_cast<uint64_t>(deposit.creatingTransactionId);
   serializer(creatingTxId, "creating_transaction_id");
-  deposit.creatingTransactionId = static_cast<size_t>(creatingTxId);
+  deposit.creatingTransactionId = static_cast<uint64_t>(creatingTxId);
 
   uint64_t spendingTxIx = static_cast<uint64_t>(deposit.spendingTransactionId);
   serializer(spendingTxIx, "spending_transaction_id");
-  deposit.creatingTransactionId = static_cast<size_t>(spendingTxIx);
+  deposit.creatingTransactionId = static_cast<uint64_t>(spendingTxIx);
 
   serializer(deposit.term, "term");
   serializer(deposit.amount, "amount");
@@ -199,15 +199,15 @@ uint64_t WalletUserTransactionsCache::countUnconfirmedSpentDepositsTotalAmount()
   return m_unconfirmedTransactions.countSpentDepositsTotalAmount();
 }
 
-size_t WalletUserTransactionsCache::getTransactionCount() const {
+uint64_t WalletUserTransactionsCache::getTransactionCount() const {
   return m_transactions.size();
 }
 
-size_t WalletUserTransactionsCache::getTransferCount() const {
+uint64_t WalletUserTransactionsCache::getTransferCount() const {
   return m_transfers.size();
 }
 
-size_t WalletUserTransactionsCache::getDepositCount() const {
+uint64_t WalletUserTransactionsCache::getDepositCount() const {
   return m_deposits.size();
 }
 
@@ -499,7 +499,7 @@ Deposit& WalletUserTransactionsCache::getDeposit(DepositId depositId) {
 }
 
 TransactionId WalletUserTransactionsCache::insertTransaction(WalletLegacyTransaction&& Transaction) {
-  m_transactions.emplace_back(std::move(Transaction));
+  m_transactions.push_back(std::move(Transaction));
   return m_transactions.size() - 1;
 }
 
@@ -565,7 +565,7 @@ void WalletUserTransactionsCache::restoreTransactionOutputToDepositIndex() {
   }
 }
 
-DepositId WalletUserTransactionsCache::insertDeposit(const Deposit& deposit, size_t depositIndexInTransaction, const Hash& transactionHash) {
+DepositId WalletUserTransactionsCache::insertDeposit(const Deposit& deposit, uint64_t depositIndexInTransaction, const Hash& transactionHash) {
   DepositInfo info;
   info.deposit = deposit;
   info.outputInTransaction = static_cast<uint32_t>(depositIndexInTransaction);
@@ -596,7 +596,7 @@ std::vector<DepositId> WalletUserTransactionsCache::createNewDeposits(Transactio
     const Currency& currency, uint32_t height) {
   std::vector<DepositId> deposits;
 
-  for (size_t i = 0; i < depositOutputs.size(); i++) {
+  for (uint64_t i = 0; i < depositOutputs.size(); i++) {
     auto id = insertNewDeposit(depositOutputs[i], creatingTransactionId, currency, height);
     deposits.push_back(id);
   }
@@ -624,7 +624,7 @@ std::vector<DepositId> WalletUserTransactionsCache::processSpentDeposits(Transac
   std::vector<DepositId> deposits;
   deposits.reserve(spentDepositOutputs.size());
 
-  for (size_t i = 0; i < spentDepositOutputs.size(); i++) {
+  for (uint64_t i = 0; i < spentDepositOutputs.size(); i++) {
     auto depositId = getDepositId(spentDepositOutputs[i].transactionHash, spentDepositOutputs[i].outputInTransaction);
     assert(depositId != WALLET_LEGACY_INVALID_DEPOSIT_ID);
     if (depositId == WALLET_LEGACY_INVALID_DEPOSIT_ID) {

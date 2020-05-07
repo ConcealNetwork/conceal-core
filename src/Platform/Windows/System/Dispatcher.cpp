@@ -36,8 +36,8 @@ struct DispatcherContext : public OVERLAPPED {
   NativeContext* context;
 };
 
-const size_t STACK_SIZE = 16384;
-const size_t RESERVE_STACK_SIZE = 2097152;
+const uint64_t STACK_SIZE = 16384;
+const uint64_t RESERVE_STACK_SIZE = 2097152;
 }
 
 Dispatcher::Dispatcher() {

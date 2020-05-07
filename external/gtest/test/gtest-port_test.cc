@@ -305,7 +305,7 @@ void* ThreadFunc(void* data) {
 }
 
 TEST(GetThreadCountTest, ReturnsCorrectValue) {
-  const size_t starting_count = GetThreadCount();
+  const uint64_t starting_count = GetThreadCount();
   pthread_t       thread_id;
 
   internal::Mutex mutex;
@@ -1173,7 +1173,7 @@ class DestructorCall {
   static std::vector<DestructorCall*>& List() { return *list_; }
 
   static void ResetList() {
-    for (size_t i = 0; i < list_->size(); ++i) {
+    for (uint64_t i = 0; i < list_->size(); ++i) {
       delete list_->at(i);
     }
     list_->clear();
@@ -1206,11 +1206,11 @@ class DestructorTracker {
   }
 
  private:
-  static size_t GetNewIndex() {
+  static uint64_t GetNewIndex() {
     DestructorCall::List().push_back(new DestructorCall);
     return DestructorCall::List().size() - 1;
   }
-  const size_t index_;
+  const uint64_t index_;
 
   GTEST_DISALLOW_ASSIGN_(DestructorTracker);
 };

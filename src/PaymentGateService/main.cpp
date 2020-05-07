@@ -35,7 +35,7 @@ SERVICE_STATUS_HANDLE serviceStatusHandle;
 std::string GetLastErrorMessage(DWORD errorMessageID)
 {
   LPSTR messageBuffer = nullptr;
-  size_t size = FormatMessageA(FORMAT_MESSAGE_ALLOCATE_BUFFER | FORMAT_MESSAGE_FROM_SYSTEM | FORMAT_MESSAGE_IGNORE_INSERTS,
+  uint64_t size = FormatMessageA(FORMAT_MESSAGE_ALLOCATE_BUFFER | FORMAT_MESSAGE_FROM_SYSTEM | FORMAT_MESSAGE_IGNORE_INSERTS,
     NULL, errorMessageID, 0, (LPSTR)&messageBuffer, 0, NULL);
 
   std::string message(messageBuffer, size);

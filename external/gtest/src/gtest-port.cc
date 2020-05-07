@@ -98,7 +98,7 @@ T ReadProcFileField(const std::string& filename, int field) {
 }  // namespace
 
 // Returns the number of active threads, or 0 when there is an error.
-size_t GetThreadCount() {
+uint64_t GetThreadCount() {
   const std::string filename =
       (Message() << "/proc/" << getpid() << "/stat").GetString();
   return ReadProcFileField<int>(filename, 19);
@@ -106,7 +106,7 @@ size_t GetThreadCount() {
 
 #elif GTEST_OS_MAC
 
-size_t GetThreadCount() {
+uint64_t GetThreadCount() {
   const task_t task = mach_task_self();
   mach_msg_type_number_t thread_count;
   thread_act_array_t thread_list;
@@ -117,7 +117,7 @@ size_t GetThreadCount() {
     vm_deallocate(task,
                   reinterpret_cast<vm_address_t>(thread_list),
                   sizeof(thread_t) * thread_count);
-    return static_cast<size_t>(thread_count);
+    return static_cast<uint64_t>(thread_count);
   } else {
     return 0;
   }
@@ -127,7 +127,7 @@ size_t GetThreadCount() {
 
 // Returns the number of threads running in the process, or 0 to indicate that
 // we cannot detect it.
-size_t GetThreadCount() {
+uint64_t GetThreadCount() {
   const int fd = open("/proc/self/as", O_RDONLY);
   if (fd < 0) {
     return 0;
@@ -137,7 +137,7 @@ size_t GetThreadCount() {
       devctl(fd, DCMD_PROC_INFO, &process_info, sizeof(process_info), NULL);
   close(fd);
   if (status == EOK) {
-    return static_cast<size_t>(process_info.num_threads);
+    return static_cast<uint64_t>(process_info.num_threads);
   } else {
     return 0;
   }
@@ -145,7 +145,7 @@ size_t GetThreadCount() {
 
 #elif GTEST_OS_AIX
 
-size_t GetThreadCount() {
+uint64_t GetThreadCount() {
   struct procentry64 entry;
   pid_t pid = getpid();
   int status = getprocs64(&entry, sizeof(entry), NULL, 0, &pid, 1);
@@ -158,7 +158,7 @@ size_t GetThreadCount() {
 
 #else
 
-size_t GetThreadCount() {
+uint64_t GetThreadCount() {
   // There's no portable way to detect the number of threads, so we just
   // return 0 to indicate that we cannot detect it.
   return 0;
@@ -588,7 +588,7 @@ void RE::Init(const char* regex) {
 
   // Reserves enough bytes to hold the regular expression used for a
   // full match.
-  const size_t full_regex_len = strlen(regex) + 10;
+  const uint64_t full_regex_len = strlen(regex) + 10;
   char* const full_pattern = new char[full_regex_len];
 
   snprintf(full_pattern, full_regex_len, "^(%s)$", regex);
@@ -730,19 +730,19 @@ bool ValidateRegex(const char* regex) {
 // expression.  The regex atom is defined as c if escaped is false,
 // or \c otherwise.  repeat is the repetition meta character (?, *,
 // or +).  The behavior is undefined if str contains too many
-// characters to be indexable by size_t, in which case the test will
+// characters to be indexable by uint64_t, in which case the test will
 // probably time out anyway.  We are fine with this limitation as
 // std::string has it too.
 bool MatchRepetitionAndRegexAtHead(
     bool escaped, char c, char repeat, const char* regex,
     const char* str) {
-  const size_t min_count = (repeat == '+') ? 1 : 0;
-  const size_t max_count = (repeat == '?') ? 1 :
-      static_cast<size_t>(-1) - 1;
+  const uint64_t min_count = (repeat == '+') ? 1 : 0;
+  const uint64_t max_count = (repeat == '?') ? 1 :
+      static_cast<uint64_t>(-1) - 1;
   // We cannot call numeric_limits::max() as it conflicts with the
   // max() macro on Windows.
 
-  for (size_t i = 0; i <= max_count; ++i) {
+  for (uint64_t i = 0; i <= max_count; ++i) {
     // We know that the atom matches each of the first i characters in str.
     if (i >= min_count && MatchRegexAtHead(regex, str + i)) {
       // We have enough matches at the head, and the tail matches too.
@@ -842,7 +842,7 @@ void RE::Init(const char* regex) {
     return;
   }
 
-  const size_t len = strlen(regex);
+  const uint64_t len = strlen(regex);
   // Reserves enough bytes to hold the regular expression used for a
   // full match: we need space to prepend a '^', append a '$', and
   // terminate the string with '\0'.
@@ -1049,17 +1049,17 @@ std::string GetCapturedStderr() {
 
 #endif  // GTEST_HAS_STREAM_REDIRECTION
 
-size_t GetFileSize(FILE* file) {
+uint64_t GetFileSize(FILE* file) {
   fseek(file, 0, SEEK_END);
-  return static_cast<size_t>(ftell(file));
+  return static_cast<uint64_t>(ftell(file));
 }
 
 std::string ReadEntireFile(FILE* file) {
-  const size_t file_size = GetFileSize(file);
+  const uint64_t file_size = GetFileSize(file);
   char* const buffer = new char[file_size];
 
-  size_t bytes_last_read = 0;  // # of bytes read in the last fread()
-  size_t bytes_read = 0;       // # of bytes read so far
+  uint64_t bytes_last_read = 0;  // # of bytes read in the last fread()
+  uint64_t bytes_read = 0;       // # of bytes read so far
 
   fseek(file, 0, SEEK_SET);
 
@@ -1112,7 +1112,7 @@ static std::string FlagToEnvVar(const char* flag) {
       (Message() << GTEST_FLAG_PREFIX_ << flag).GetString();
 
   Message env_var;
-  for (size_t i = 0; i != full_flag.length(); i++) {
+  for (uint64_t i = 0; i != full_flag.length(); i++) {
     env_var << ToUpper(full_flag.c_str()[i]);
   }
 

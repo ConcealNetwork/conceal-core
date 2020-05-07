@@ -439,9 +439,9 @@ typedef struct _RTL_CRITICAL_SECTION GTEST_CRITICAL_SECTION;
 
 #elif GTEST_HAS_POSIX_RE
 
-// On some platforms, <regex.h> needs someone to define size_t, and
+// On some platforms, <regex.h> needs someone to define uint64_t, and
 // won't compile otherwise.  We can #include it here as we already
-// included <stdlib.h>, which is guaranteed to define size_t through
+// included <stdlib.h>, which is guaranteed to define uint64_t through
 // <stddef.h>.
 # include <regex.h>  // NOLINT
 
@@ -1457,7 +1457,7 @@ GTEST_API_ std::string GetCapturedStderr();
 #endif  // GTEST_HAS_STREAM_REDIRECTION
 
 // Returns the size (in bytes) of a file.
-GTEST_API_ size_t GetFileSize(FILE* file);
+GTEST_API_ uint64_t GetFileSize(FILE* file);
 
 // Reads the entire content of a file as a string.
 GTEST_API_ std::string ReadEntireFile(FILE* file);
@@ -2210,7 +2210,7 @@ class GTEST_API_ ThreadLocal {
 
 // Returns the number of threads running in the process, or 0 to indicate that
 // we cannot detect it.
-GTEST_API_ size_t GetThreadCount();
+GTEST_API_ uint64_t GetThreadCount();
 
 // Passing non-POD classes through ellipsis (...) crashes the ARM
 // compiler and generates a warning in Sun Studio before 12u4. The Nokia Symbian
@@ -2395,7 +2395,7 @@ inline bool IsDir(const StatStruct& st) { return S_ISDIR(st.st_mode); }
 
 GTEST_DISABLE_MSC_WARNINGS_PUSH_(4996 /* deprecated function */)
 
-inline const char* StrNCpy(char* dest, const char* src, size_t n) {
+inline const char* StrNCpy(char* dest, const char* src, uint64_t n) {
   return strncpy(dest, src, n);
 }
 
@@ -2499,7 +2499,7 @@ const BiggestInt kMaxBiggestInt =
 // For now it only handles UInt (unsigned int) as that's all Google Test
 // needs.  Other types can be easily added in the future if need
 // arises.
-template <size_t size>
+template <uint64_t size>
 class TypeWithSize {
  public:
   // This prevents the user from using TypeWithSize<N> with incorrect

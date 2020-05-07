@@ -21,7 +21,7 @@
 namespace Crypto {
   extern "C" {
 #endif
-    void chacha(size_t doubleRounds, const void* data, size_t length, const uint8_t* key, const uint8_t* iv, char* cipher);
+    void chacha(uint64_t doubleRounds, const void* data, uint64_t length, const uint8_t* key, const uint8_t* iv, char* cipher);
 #if defined(__cplusplus)
   }
 
@@ -43,7 +43,7 @@ namespace Crypto {
 
   static_assert(sizeof(chacha_key) == CHACHA_KEY_SIZE && sizeof(chacha_iv) == CHACHA_IV_SIZE, "Invalid structure size");
 
-  inline void chacha8(const void* data, size_t length, const chacha_key& key, const chacha_iv& iv, char* cipher) {
+  inline void chacha8(const void* data, uint64_t length, const chacha_key& key, const chacha_iv& iv, char* cipher) {
     chacha(4, data, length, reinterpret_cast<const uint8_t*>(&key), reinterpret_cast<const uint8_t*>(&iv), cipher);
   }
 

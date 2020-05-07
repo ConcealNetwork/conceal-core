@@ -18,7 +18,7 @@ public:
 
   typedef BlockingQueue<T, Container> ThisType;
 
-  BlockingQueue(size_t maxSize = 1) : 
+  BlockingQueue(uint64_t maxSize = 1) : 
     m_maxSize(maxSize), m_closed(false) {}
 
   template <typename TT>
@@ -74,18 +74,18 @@ public:
     }
   }
 
-  size_t size() {
+  uint64_t size() {
     std::unique_lock<std::mutex> lk(m_mutex);
     return m_queue.size();
   }
 
-  size_t capacity() const {
+  uint64_t capacity() const {
     return m_maxSize;
   }
 
 private:
 
-  const size_t m_maxSize;
+  const uint64_t m_maxSize;
   Container m_queue;
   bool m_closed;
   
@@ -98,7 +98,7 @@ template <typename QueueT>
 class GroupClose {
 public:
 
-  GroupClose(QueueT& queue, size_t groupSize)
+  GroupClose(QueueT& queue, uint64_t groupSize)
     : m_queue(queue), m_count(groupSize) {}
 
   void close() {
@@ -110,7 +110,7 @@ public:
 
 private:
 
-  std::atomic<size_t> m_count;
+  std::atomic<uint64_t> m_count;
   QueueT& m_queue;
 
 };

@@ -23,9 +23,9 @@
 
 namespace CryptoNote {
 
-typedef size_t TransactionId;
-typedef size_t TransferId;
-typedef size_t DepositId;
+typedef uint64_t TransactionId;
+typedef uint64_t TransferId;
+typedef uint64_t DepositId;
 
 struct WalletLegacyTransfer {
   std::string address;
@@ -53,9 +53,9 @@ struct TransactionMessage {
 
 struct WalletLegacyTransaction {
   TransferId       firstTransferId;
-  size_t           transferCount;
+  uint64_t           transferCount;
   DepositId        firstDepositId;
-  size_t           depositCount;
+  uint64_t           depositCount;
   int64_t          totalAmount;
   uint64_t         fee;
   uint64_t         sentTime;
@@ -136,10 +136,10 @@ public:
   virtual uint64_t pendingDepositBalance() = 0;
   virtual uint64_t pendingInvestmentBalance() = 0;  
 
-  virtual size_t getTransactionCount() = 0;
-  virtual size_t getTransferCount() = 0;
-  virtual size_t getDepositCount() = 0;
-  virtual size_t getNumUnlockedOutputs() = 0;
+  virtual uint64_t getTransactionCount() = 0;
+  virtual uint64_t getTransferCount() = 0;
+  virtual uint64_t getDepositCount() = 0;
+  virtual uint64_t getNumUnlockedOutputs() = 0;
   virtual std::vector<TransactionOutputInformation> getUnspentOutputs() = 0;
 
   virtual TransactionId findTransactionByTransferId(TransferId transferId) = 0;
@@ -154,12 +154,12 @@ public:
   virtual bool get_tx_key(Crypto::Hash& txid, Crypto::SecretKey& txSecretKey) = 0;
   virtual TransactionId sendTransaction(Crypto::SecretKey& transactionSK, const WalletLegacyTransfer& transfer, uint64_t fee, const std::string& extra = "", uint64_t mixIn = 0, uint64_t unlockTimestamp = 0, const std::vector<TransactionMessage>& messages = std::vector<TransactionMessage>(), uint64_t ttl = 0) = 0;
   virtual TransactionId sendTransaction(Crypto::SecretKey& transactionSK, std::vector<WalletLegacyTransfer>& transfers, uint64_t fee, const std::string& extra = "", uint64_t mixIn = 0, uint64_t unlockTimestamp = 0, const std::vector<TransactionMessage>& messages = std::vector<TransactionMessage>(), uint64_t ttl = 0) = 0;
-  virtual size_t estimateFusion(const uint64_t& threshold) = 0;
-  virtual std::list<TransactionOutputInformation> selectFusionTransfersToSend(uint64_t threshold, size_t minInputCount, size_t maxInputCount) = 0;
+  virtual uint64_t estimateFusion(const uint64_t& threshold) = 0;
+  virtual std::list<TransactionOutputInformation> selectFusionTransfersToSend(uint64_t threshold, uint64_t minInputCount, uint64_t maxInputCount) = 0;
   virtual TransactionId sendFusionTransaction(const std::list<TransactionOutputInformation>& fusionInputs, uint64_t fee, const std::string& extra = "", uint64_t mixIn = 0, uint64_t unlockTimestamp = 0) = 0;
   virtual TransactionId deposit(uint32_t term, uint64_t amount, uint64_t fee, uint64_t mixIn = 0) = 0;
   virtual TransactionId withdrawDeposits(const std::vector<DepositId>& depositIds, uint64_t fee) = 0;
-  virtual std::error_code cancelTransaction(size_t transferId) = 0;
+  virtual std::error_code cancelTransaction(uint64_t transferId) = 0;
 
 };
 

@@ -125,7 +125,7 @@ namespace internal2 {
 // Prints the given number of bytes in the given object to the given
 // ostream.
 GTEST_API_ void PrintBytesInObjectTo(const unsigned char* obj_bytes,
-                                     size_t count,
+                                     uint64_t count,
                                      ::std::ostream* os);
 
 // For selecting which printer to use when a given type has neither <<
@@ -159,7 +159,7 @@ class TypeWithoutFormatter {
 // We print a protobuf using its ShortDebugString() when the string
 // doesn't exceed this many characters; otherwise we print it using
 // DebugString() for better readability.
-const size_t kProtobufOneLinerMaxLength = 50;
+const uint64_t kProtobufOneLinerMaxLength = 50;
 
 template <typename T>
 class TypeWithoutFormatter<T, kProtobuf> {
@@ -314,7 +314,7 @@ class FormatForComparison {
 };
 
 // Array.
-template <typename ToPrint, size_t N, typename OtherOperand>
+template <typename ToPrint, uint64_t N, typename OtherOperand>
 class FormatForComparison<ToPrint[N], OtherOperand> {
  public:
   static ::std::string Format(const ToPrint* value) {
@@ -413,9 +413,9 @@ template <DefaultPrinterType type> struct WrapPrinterType {};
 template <typename C>
 void DefaultPrintTo(WrapPrinterType<kPrintContainer> /* dummy */,
                     const C& container, ::std::ostream* os) {
-  const size_t kMaxCount = 32;  // The maximum number of elements to print.
+  const uint64_t kMaxCount = 32;  // The maximum number of elements to print.
   *os << '{';
-  size_t count = 0;
+  uint64_t count = 0;
   for (typename C::const_iterator it = container.begin();
        it != container.end(); ++it, ++count) {
     if (count > 0) {
@@ -591,9 +591,9 @@ inline void PrintTo(wchar_t* s, ::std::ostream* os) {
 // Prints the given number of elements in an array, without printing
 // the curly braces.
 template <typename T>
-void PrintRawArrayTo(const T a[], size_t count, ::std::ostream* os) {
+void PrintRawArrayTo(const T a[], uint64_t count, ::std::ostream* os) {
   UniversalPrint(a[0], os);
-  for (size_t i = 1; i != count; i++) {
+  for (uint64_t i = 1; i != count; i++) {
     *os << ", ";
     UniversalPrint(a[i], os);
   }
@@ -786,13 +786,13 @@ class UniversalPrinter<::absl::optional<T>> {
 // UniversalPrintArray(begin, len, os) prints an array of 'len'
 // elements, starting at address 'begin'.
 template <typename T>
-void UniversalPrintArray(const T* begin, size_t len, ::std::ostream* os) {
+void UniversalPrintArray(const T* begin, uint64_t len, ::std::ostream* os) {
   if (len == 0) {
     *os << "{}";
   } else {
     *os << "{ ";
-    const size_t kThreshold = 18;
-    const size_t kChunkSize = 8;
+    const uint64_t kThreshold = 18;
+    const uint64_t kChunkSize = 8;
     // If the array has more than kThreshold elements, we'll have to
     // omit some details by printing only the first and the last
     // kChunkSize elements.
@@ -809,14 +809,14 @@ void UniversalPrintArray(const T* begin, size_t len, ::std::ostream* os) {
 }
 // This overload prints a (const) char array compactly.
 GTEST_API_ void UniversalPrintArray(
-    const char* begin, size_t len, ::std::ostream* os);
+    const char* begin, uint64_t len, ::std::ostream* os);
 
 // This overload prints a (const) wchar_t array compactly.
 GTEST_API_ void UniversalPrintArray(
-    const wchar_t* begin, size_t len, ::std::ostream* os);
+    const wchar_t* begin, uint64_t len, ::std::ostream* os);
 
 // Implements printing an array type T[N].
-template <typename T, size_t N>
+template <typename T, uint64_t N>
 class UniversalPrinter<T[N]> {
  public:
   // Prints the given array, omitting some elements when there are too
@@ -864,7 +864,7 @@ class UniversalTersePrinter<T&> {
     UniversalPrint(value, os);
   }
 };
-template <typename T, size_t N>
+template <typename T, uint64_t N>
 class UniversalTersePrinter<T[N]> {
  public:
   static void Print(const T (&value)[N], ::std::ostream* os) {
@@ -934,9 +934,9 @@ typedef ::std::vector< ::std::string> Strings;
 // TuplePolicy<TupleT> must provide:
 // - tuple_size
 //     size of tuple TupleT.
-// - get<size_t I>(const TupleT& t)
+// - get<uint64_t I>(const TupleT& t)
 //     static function extracting element I of tuple TupleT.
-// - tuple_element<size_t I>::type
+// - tuple_element<uint64_t I>::type
 //     type of element I of tuple TupleT.
 template <typename TupleT>
 struct TuplePolicy;
@@ -945,12 +945,12 @@ struct TuplePolicy;
 template <typename TupleT>
 struct TuplePolicy {
   typedef TupleT Tuple;
-  static const size_t tuple_size = ::std::tr1::tuple_size<Tuple>::value;
+  static const uint64_t tuple_size = ::std::tr1::tuple_size<Tuple>::value;
 
-  template <size_t I>
+  template <uint64_t I>
   struct tuple_element : ::std::tr1::tuple_element<I, Tuple> {};
 
-  template <size_t I>
+  template <uint64_t I>
   static typename AddReference<
       const typename ::std::tr1::tuple_element<I, Tuple>::type>::type get(
       const Tuple& tuple) {
@@ -958,26 +958,26 @@ struct TuplePolicy {
   }
 };
 template <typename TupleT>
-const size_t TuplePolicy<TupleT>::tuple_size;
+const uint64_t TuplePolicy<TupleT>::tuple_size;
 #endif  // GTEST_HAS_TR1_TUPLE
 
 #if GTEST_HAS_STD_TUPLE_
 template <typename... Types>
 struct TuplePolicy< ::std::tuple<Types...> > {
   typedef ::std::tuple<Types...> Tuple;
-  static const size_t tuple_size = ::std::tuple_size<Tuple>::value;
+  static const uint64_t tuple_size = ::std::tuple_size<Tuple>::value;
 
-  template <size_t I>
+  template <uint64_t I>
   struct tuple_element : ::std::tuple_element<I, Tuple> {};
 
-  template <size_t I>
+  template <uint64_t I>
   static const typename ::std::tuple_element<I, Tuple>::type& get(
       const Tuple& tuple) {
     return ::std::get<I>(tuple);
   }
 };
 template <typename... Types>
-const size_t TuplePolicy< ::std::tuple<Types...> >::tuple_size;
+const uint64_t TuplePolicy< ::std::tuple<Types...> >::tuple_size;
 #endif  // GTEST_HAS_STD_TUPLE_
 
 #if GTEST_HAS_TR1_TUPLE || GTEST_HAS_STD_TUPLE_
@@ -989,7 +989,7 @@ const size_t TuplePolicy< ::std::tuple<Types...> >::tuple_size;
 // TuplePrefixPrinter<N - 1>.
 //
 // The inductive case.
-template <size_t N>
+template <uint64_t N>
 struct TuplePrefixPrinter {
   // Prints the first N fields of a tuple.
   template <typename Tuple>

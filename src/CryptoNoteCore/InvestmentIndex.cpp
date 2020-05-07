@@ -95,7 +95,7 @@ auto InvestmentIndex::upperBound(DepositHeight height) const -> IndexType::const
       [] (DepositHeight height, const InvestmentIndexEntry& left) { return height < left.height; });
 }
 
-size_t InvestmentIndex::popBlocks(DepositHeight from) {
+uint64_t InvestmentIndex::popBlocks(DepositHeight from) {
   if (from >= blockCount) {
     return 0;
   }

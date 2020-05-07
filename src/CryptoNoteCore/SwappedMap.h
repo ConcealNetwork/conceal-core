@@ -75,13 +75,13 @@ public:
   ~SwappedMap();
   //SwappedMap& operator=(const SwappedMap&) = delete;
 
-  bool open(const std::string& itemFileName, const std::string& indexFileName, size_t poolSize);
+  bool open(const std::string& itemFileName, const std::string& indexFileName, uint64_t poolSize);
   void close();
 
   uint64_t size() const;
   const_iterator begin();
   const_iterator end();
-  size_t count(const Key& key) const;
+  uint64_t count(const Key& key) const;
   const_iterator find(const Key& key);
 
   void clear();
@@ -91,7 +91,7 @@ public:
 private:
   std::fstream m_itemsFile;
   std::fstream m_indexesFile;
-  size_t m_poolSize;
+  uint64_t m_poolSize;
   std::unordered_map<Key, Descriptor> m_descriptors;
   uint64_t m_itemsFileSize;
   std::unordered_map<Key, T> m_items;
@@ -112,7 +112,7 @@ template<class Key, class T> SwappedMap<Key, T>::~SwappedMap() {
   close();
 }
 
-template<class Key, class T> bool SwappedMap<Key, T>::open(const std::string& itemFileName, const std::string& indexFileName, size_t poolSize) {
+template<class Key, class T> bool SwappedMap<Key, T>::open(const std::string& itemFileName, const std::string& indexFileName, uint64_t poolSize) {
   if (poolSize == 0) {
     return false;
   }
@@ -200,7 +200,7 @@ template<class Key, class T> typename SwappedMap<Key, T>::const_iterator Swapped
   return const_iterator(this, m_descriptors.cend());
 }
 
-template<class Key, class T> size_t SwappedMap<Key, T>::count(const Key& key) const {
+template<class Key, class T> uint64_t SwappedMap<Key, T>::count(const Key& key) const {
   return m_descriptors.count(key);
 }
 

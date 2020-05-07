@@ -144,7 +144,7 @@ bool HttpServer::authenticate(const HttpRequest& request) const {
 	return true;
 }
 
-size_t HttpServer::get_connections_count() const {
+uint64_t HttpServer::get_connections_count() const {
 	return m_connections.size();
 }
 

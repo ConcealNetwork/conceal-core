@@ -45,7 +45,7 @@ template<class T>
 class libc_allocator_with_realloc {
  public:
   typedef T value_type;
-  typedef size_t size_type;
+  typedef uint64_t size_type;
   typedef ptrdiff_t difference_type;
 
   typedef T* pointer;
@@ -93,7 +93,7 @@ template<>
 class libc_allocator_with_realloc<void> {
  public:
   typedef void value_type;
-  typedef size_t size_type;
+  typedef uint64_t size_type;
   typedef ptrdiff_t difference_type;
   typedef void* pointer;
   typedef const void* const_pointer;

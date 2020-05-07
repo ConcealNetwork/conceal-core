@@ -23,7 +23,7 @@ struct SynchronizationStart {
 struct AccountSubscription {
   AccountKeys keys;
   SynchronizationStart syncStart;
-  size_t transactionSpendableAge;
+  uint64_t transactionSpendableAge;
 };
 
 class ITransfersSubscription;

@@ -43,7 +43,7 @@ void ConsoleLogger::doLogString(const std::string& message) {
     { DEFAULT, Color::Default }
   };
 
-  for (size_t charPos = 0; charPos < message.size(); ++charPos) {
+  for (uint64_t charPos = 0; charPos < message.size(); ++charPos) {
     if (message[charPos] == ILogger::COLOR_DELIMETER) {
       readingText = !readingText;
       color += message[charPos];

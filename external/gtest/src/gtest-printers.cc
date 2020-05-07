@@ -61,11 +61,11 @@ using ::std::ostream;
 GTEST_ATTRIBUTE_NO_SANITIZE_MEMORY_
 GTEST_ATTRIBUTE_NO_SANITIZE_ADDRESS_
 GTEST_ATTRIBUTE_NO_SANITIZE_THREAD_
-void PrintByteSegmentInObjectTo(const unsigned char* obj_bytes, size_t start,
-                                size_t count, ostream* os) {
+void PrintByteSegmentInObjectTo(const unsigned char* obj_bytes, uint64_t start,
+                                uint64_t count, ostream* os) {
   char text[5] = "";
-  for (size_t i = 0; i != count; i++) {
-    const size_t j = start + i;
+  for (uint64_t i = 0; i != count; i++) {
+    const uint64_t j = start + i;
     if (i != 0) {
       // Organizes the bytes into groups of 2 for easy parsing by
       // human.
@@ -80,13 +80,13 @@ void PrintByteSegmentInObjectTo(const unsigned char* obj_bytes, size_t start,
 }
 
 // Prints the bytes in the given value to the given ostream.
-void PrintBytesInObjectToImpl(const unsigned char* obj_bytes, size_t count,
+void PrintBytesInObjectToImpl(const unsigned char* obj_bytes, uint64_t count,
                               ostream* os) {
   // Tells the user how big the object is.
   *os << count << "-byte object <";
 
-  const size_t kThreshold = 132;
-  const size_t kChunkSize = 64;
+  const uint64_t kThreshold = 132;
+  const uint64_t kChunkSize = 64;
   // If the object size is bigger than kThreshold, we'll have to omit
   // some details by printing only the first and the last kChunkSize
   // bytes.
@@ -97,7 +97,7 @@ void PrintBytesInObjectToImpl(const unsigned char* obj_bytes, size_t count,
     PrintByteSegmentInObjectTo(obj_bytes, 0, kChunkSize, os);
     *os << " ... ";
     // Rounds up to 2-byte boundary.
-    const size_t resume_pos = (count - kChunkSize + 1)/2*2;
+    const uint64_t resume_pos = (count - kChunkSize + 1)/2*2;
     PrintByteSegmentInObjectTo(obj_bytes, resume_pos, count - resume_pos, os);
   }
   *os << ">";
@@ -112,7 +112,7 @@ namespace internal2 {
 // uses the << operator and thus is easier done outside of the
 // ::testing::internal namespace, which contains a << operator that
 // sometimes conflicts with the one in STL.
-void PrintBytesInObjectTo(const unsigned char* obj_bytes, size_t count,
+void PrintBytesInObjectTo(const unsigned char* obj_bytes, uint64_t count,
                           ostream* os) {
   PrintBytesInObjectToImpl(obj_bytes, count, os);
 }
@@ -264,12 +264,12 @@ GTEST_ATTRIBUTE_NO_SANITIZE_MEMORY_
 GTEST_ATTRIBUTE_NO_SANITIZE_ADDRESS_
 GTEST_ATTRIBUTE_NO_SANITIZE_THREAD_
 static CharFormat PrintCharsAsStringTo(
-    const CharType* begin, size_t len, ostream* os) {
+    const CharType* begin, uint64_t len, ostream* os) {
   const char* const kQuoteBegin = sizeof(CharType) == 1 ? "\"" : "L\"";
   *os << kQuoteBegin;
   bool is_previous_hex = false;
   CharFormat print_format = kAsIs;
-  for (size_t index = 0; index < len; ++index) {
+  for (uint64_t index = 0; index < len; ++index) {
     const CharType cur = begin[index];
     if (is_previous_hex && IsXDigit(cur)) {
       // Previous character is of '\x..' form and this character can be
@@ -294,7 +294,7 @@ GTEST_ATTRIBUTE_NO_SANITIZE_MEMORY_
 GTEST_ATTRIBUTE_NO_SANITIZE_ADDRESS_
 GTEST_ATTRIBUTE_NO_SANITIZE_THREAD_
 static void UniversalPrintCharArray(
-    const CharType* begin, size_t len, ostream* os) {
+    const CharType* begin, uint64_t len, ostream* os) {
   // The code
   //   const char kFoo[] = "foo";
   // generates an array of 4, not 3, elements, with the last one being '\0'.
@@ -316,13 +316,13 @@ static void UniversalPrintCharArray(
 }
 
 // Prints a (const) char array of 'len' elements, starting at address 'begin'.
-void UniversalPrintArray(const char* begin, size_t len, ostream* os) {
+void UniversalPrintArray(const char* begin, uint64_t len, ostream* os) {
   UniversalPrintCharArray(begin, len, os);
 }
 
 // Prints a (const) wchar_t array of 'len' elements, starting at address
 // 'begin'.
-void UniversalPrintArray(const wchar_t* begin, size_t len, ostream* os) {
+void UniversalPrintArray(const wchar_t* begin, uint64_t len, ostream* os) {
   UniversalPrintCharArray(begin, len, os);
 }
 
@@ -356,8 +356,8 @@ void PrintTo(const wchar_t* s, ostream* os) {
 
 namespace {
 
-bool ContainsUnprintableControlCodes(const char* str, size_t length) {
-  for (size_t i = 0; i < length; i++) {
+bool ContainsUnprintableControlCodes(const char* str, uint64_t length) {
+  for (uint64_t i = 0; i < length; i++) {
     char ch = *str++;
     if (std::iscntrl(ch)) {
         switch (ch) {
@@ -375,10 +375,10 @@ bool ContainsUnprintableControlCodes(const char* str, size_t length) {
 
 bool IsUTF8TrailByte(unsigned char t) { return 0x80 <= t && t<= 0xbf; }
 
-bool IsValidUTF8(const char* str, size_t length) {
+bool IsValidUTF8(const char* str, uint64_t length) {
   const unsigned char *s = reinterpret_cast<const unsigned char *>(str);
 
-  for (size_t i = 0; i < length;) {
+  for (uint64_t i = 0; i < length;) {
     unsigned char lead = s[i++];
 
     if (lead <= 0x7f) {
@@ -410,7 +410,7 @@ bool IsValidUTF8(const char* str, size_t length) {
   return true;
 }
 
-void ConditionalPrintAsText(const char* str, size_t length, ostream* os) {
+void ConditionalPrintAsText(const char* str, uint64_t length, ostream* os) {
   if (!ContainsUnprintableControlCodes(str, length) &&
       IsValidUTF8(str, length)) {
     *os << "\n    As Text: \"" << str << "\"";

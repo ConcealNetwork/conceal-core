@@ -73,7 +73,7 @@ TcpConnection& TcpConnection::operator=(TcpConnection&& other) {
   return *this;
 }
 
-size_t TcpConnection::read(uint8_t* data, size_t size) {
+uint64_t TcpConnection::read(uint8_t* data, uint64_t size) {
   assert(dispatcher != nullptr);
   assert(readContext == nullptr);
   if (dispatcher->interrupted()) {
@@ -135,7 +135,7 @@ size_t TcpConnection::read(uint8_t* data, size_t size) {
   return transferred;
 }
 
-size_t TcpConnection::write(const uint8_t* data, size_t size) {
+uint64_t TcpConnection::write(const uint8_t* data, uint64_t size) {
   assert(dispatcher != nullptr);
   assert(writeContext == nullptr);
   if (dispatcher->interrupted()) {
@@ -215,7 +215,7 @@ std::pair<Ipv4Address, uint16_t> TcpConnection::getPeerAddressAndPort() const {
   return std::make_pair(Ipv4Address(htonl(address.sin_addr.S_un.S_addr)), htons(address.sin_port));
 }
 
-TcpConnection::TcpConnection(Dispatcher& dispatcher, size_t connection) : dispatcher(&dispatcher), connection(connection), readContext(nullptr), writeContext(nullptr) {
+TcpConnection::TcpConnection(Dispatcher& dispatcher, uint64_t connection) : dispatcher(&dispatcher), connection(connection), readContext(nullptr), writeContext(nullptr) {
 }
 
 }

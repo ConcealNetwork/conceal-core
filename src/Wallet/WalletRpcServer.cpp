@@ -166,7 +166,7 @@ bool wallet_rpc_server::on_transfer(const wallet_rpc::COMMAND_RPC_TRANSFER::requ
     transfers.push_back(transfer);
 
     if (!it->message.empty()) {
-      messages.emplace_back(CryptoNote::TransactionMessage{ it->message, it->address });
+      messages.push_back(CryptoNote::TransactionMessage{ it->message, it->address });
     }
   }
 
@@ -189,7 +189,7 @@ bool wallet_rpc_server::on_transfer(const wallet_rpc::COMMAND_RPC_TRANSFER::requ
   }
 
   for (auto& rpc_message : req.messages) {
-     messages.emplace_back(CryptoNote::TransactionMessage{ rpc_message.message, rpc_message.address });
+     messages.push_back(CryptoNote::TransactionMessage{ rpc_message.message, rpc_message.address });
   }
 
   uint64_t ttl = 0;
@@ -246,7 +246,7 @@ bool wallet_rpc_server::on_get_tx_proof(const wallet_rpc::COMMAND_RPC_GET_TX_PRO
 
 	if (!req.tx_key.empty()) {
 		Crypto::Hash tx_key_hash;
-		size_t size;
+		uint64_t size;
 		if (!Common::fromHex(req.tx_key, &tx_key_hash, sizeof(tx_key_hash), size) || size != sizeof(tx_key_hash)) {
 			throw JsonRpc::JsonRpcError(WALLET_RPC_ERROR_CODE_UNKNOWN_ERROR, std::string("Failed to parse tx_key"));
 		}
@@ -345,14 +345,14 @@ bool wallet_rpc_server::on_estimate_fusion(const wallet_rpc::COMMAND_RPC_ESTIMAT
 //------------------------------------------------------------------------------------------------------------------------------
 bool wallet_rpc_server::on_send_fusion(const wallet_rpc::COMMAND_RPC_SEND_FUSION::request& req, wallet_rpc::COMMAND_RPC_SEND_FUSION::response& res)
 {
-  const size_t MAX_FUSION_OUTPUT_COUNT = 8;
+  const uint64_t MAX_FUSION_OUTPUT_COUNT = 8;
 
   if (req.threshold <= m_currency.defaultDustThreshold()) {
     throw JsonRpc::JsonRpcError(WALLET_RPC_ERROR_CODE_UNKNOWN_ERROR, std::string("Fusion transaction threshold is too small. Threshold: " +
       m_currency.formatAmount(req.threshold)) + ", minimum threshold " + m_currency.formatAmount(m_currency.defaultDustThreshold() + 1));
   }
 
-  size_t estimatedFusionInputsCount = m_currency.getApproximateMaximumInputCount(m_currency.fusionTxMaxSize(), MAX_FUSION_OUTPUT_COUNT, req.mixin);
+  uint64_t estimatedFusionInputsCount = m_currency.getApproximateMaximumInputCount(m_currency.fusionTxMaxSize(), MAX_FUSION_OUTPUT_COUNT, req.mixin);
   if (estimatedFusionInputsCount < m_currency.fusionTxMinInputCount()) {
     throw JsonRpc::JsonRpcError(WALLET_RPC_ERROR_CODE_UNKNOWN_ERROR,
       std::string("Fusion transaction mixin is too big " + std::to_string(req.mixin)));
@@ -426,7 +426,7 @@ bool wallet_rpc_server::on_get_messages(const wallet_rpc::COMMAND_RPC_GET_MESSAG
         }
       }
 
-      res.tx_messages.emplace_back(std::move(tx_messages));
+      res.tx_messages.push_back(std::move(tx_messages));
     }
   }
 
@@ -501,8 +501,8 @@ bool wallet_rpc_server::on_create_integrated(const wallet_rpc::COMMAND_RPC_CREAT
 
 bool wallet_rpc_server::on_get_transfers(const wallet_rpc::COMMAND_RPC_GET_TRANSFERS::request& req, wallet_rpc::COMMAND_RPC_GET_TRANSFERS::response& res) {
   res.transfers.clear();
-  size_t transactionsCount = m_wallet.getTransactionCount();
-  for (size_t trantransactionNumber = 0; trantransactionNumber < transactionsCount; ++trantransactionNumber) {
+  uint64_t transactionsCount = m_wallet.getTransactionCount();
+  for (uint64_t trantransactionNumber = 0; trantransactionNumber < transactionsCount; ++trantransactionNumber) {
     WalletLegacyTransaction txInfo;
     m_wallet.getTransaction(trantransactionNumber, txInfo);
     if (txInfo.state != WalletLegacyTransactionState::Active || txInfo.blockHeight == WALLET_LEGACY_UNCONFIRMED_TRANSACTION_HEIGHT) {

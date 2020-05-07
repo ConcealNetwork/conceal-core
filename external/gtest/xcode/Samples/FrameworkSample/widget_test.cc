@@ -54,7 +54,7 @@ TEST(WidgetInitializerTest, TestConversion) {
   Widget widget(1.0f, "name");
   EXPECT_EQ(1, widget.GetIntValue());
 
-  size_t max_size = 128;
+  uint64_t max_size = 128;
   char buffer[max_size];
   widget.GetCharPtrValue(buffer, max_size);
   EXPECT_STREQ("name", buffer);

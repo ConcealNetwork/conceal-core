@@ -98,7 +98,7 @@ std::ostream& get_response_schema_as_json(std::ostream& ss, response_schema &rs)
        << "    \"my_id\": \"" << networkState.my_id << "\"," << ENDL
        << "    \"connections_list\": [" << ENDL;
 
-    size_t i = 0;
+    uint64_t i = 0;
     for (const connection_entry &ce : networkState.connections_list) {
       ss << "      {\"peer_id\": \"" << ce.id << "\", \"ip\": \"" << Common::ipAddressToString(ce.adr.ip) << "\", \"port\": " << ce.adr.port << ", \"is_income\": " << ce.is_income << "}";
       if (networkState.connections_list.size() - 1 != i)
@@ -208,7 +208,7 @@ bool handle_get_daemon_info(po::variables_map& vm) {
   return true;
 }
 //---------------------------------------------------------------------------------------------------------------
-bool handle_request_stat(po::variables_map& vm, PeerIdType peer_id) {
+bool handle_request_stat(po::variables_map& vm, uint64_t peer_id) {
   if(!command_line::has_arg(vm, arg_priv_key)) {
     std::cout << "{" << ENDL << "  \"status\": \"ERROR: " << "secret key not set \"" << ENDL << "}";
     return false;

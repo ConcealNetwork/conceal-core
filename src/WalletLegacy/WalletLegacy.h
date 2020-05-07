@@ -65,10 +65,10 @@ public:
   virtual uint64_t pendingDepositBalance() override;
   virtual uint64_t pendingInvestmentBalance() override;  
 
-  virtual size_t getTransactionCount() override;
-  virtual size_t getTransferCount() override;
-  virtual size_t getDepositCount() override;
-  virtual size_t getNumUnlockedOutputs() override;
+  virtual uint64_t getTransactionCount() override;
+  virtual uint64_t getTransferCount() override;
+  virtual uint64_t getDepositCount() override;
+  virtual uint64_t getNumUnlockedOutputs() override;
   virtual std::vector<TransactionOutputInformation> getUnspentOutputs() override;
   virtual bool isTrackingWallet();
   virtual TransactionId findTransactionByTransferId(TransferId transferId) override;
@@ -97,12 +97,12 @@ public:
                                         uint64_t unlockTimestamp = 0,
                                         const std::vector<TransactionMessage>& messages = std::vector<TransactionMessage>(),
                                         uint64_t ttl = 0) override;
-  virtual size_t estimateFusion(const uint64_t& threshold);
-  virtual std::list<TransactionOutputInformation> selectFusionTransfersToSend(uint64_t threshold, size_t minInputCount, size_t maxInputCount);
+  virtual uint64_t estimateFusion(const uint64_t& threshold);
+  virtual std::list<TransactionOutputInformation> selectFusionTransfersToSend(uint64_t threshold, uint64_t minInputCount, uint64_t maxInputCount);
   virtual TransactionId sendFusionTransaction(const std::list<TransactionOutputInformation>& fusionInputs, uint64_t fee, const std::string& extra = "", uint64_t mixIn = 0, uint64_t unlockTimestamp = 0);
   virtual TransactionId deposit(uint32_t term, uint64_t amount, uint64_t fee, uint64_t mixIn = 4) override;
   virtual TransactionId withdrawDeposits(const std::vector<DepositId>& depositIds, uint64_t fee) override;
-  virtual std::error_code cancelTransaction(size_t transactionId) override;
+  virtual std::error_code cancelTransaction(uint64_t transactionId) override;
 
   virtual void getAccountKeys(AccountKeys& keys) override;
 

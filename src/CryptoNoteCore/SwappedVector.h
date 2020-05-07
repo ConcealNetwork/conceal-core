@@ -36,7 +36,7 @@ public:
     const_iterator() {
     }
 
-    const_iterator(SwappedVector* swappedVector, size_t index) : m_swappedVector(swappedVector), m_index(index) {
+    const_iterator(SwappedVector* swappedVector, uint64_t index) : m_swappedVector(swappedVector), m_index(index) {
     }
 
     bool operator!=(const const_iterator& other) const {
@@ -123,13 +123,13 @@ public:
       return (*m_swappedVector)[m_index + offset];
     }
 
-    size_t index() const {
+    uint64_t index() const {
       return m_index;
     }
 
   private:
     SwappedVector* m_swappedVector;
-    size_t m_index;
+    uint64_t m_index;
   };
 
   SwappedVector();
@@ -137,7 +137,7 @@ public:
   ~SwappedVector();
   //SwappedVector& operator=(const SwappedVector&) = delete;
 
-  bool open(const std::string& itemFileName, const std::string& indexFileName, size_t poolSize);
+  bool open(const std::string& itemFileName, const std::string& indexFileName, uint64_t poolSize);
   void close();
 
   bool empty() const;
@@ -168,7 +168,7 @@ private:
 
   std::fstream m_itemsFile;
   std::fstream m_indexesFile;
-  size_t m_poolSize;
+  uint64_t m_poolSize;
   std::vector<uint64_t> m_offsets;
   uint64_t m_itemsFileSize;
   std::map<uint64_t, ItemEntry> m_items;
@@ -186,7 +186,7 @@ template<class T> SwappedVector<T>::~SwappedVector() {
   close();
 }
 
-template<class T> bool SwappedVector<T>::open(const std::string& itemFileName, const std::string& indexFileName, size_t poolSize) {
+template<class T> bool SwappedVector<T>::open(const std::string& itemFileName, const std::string& indexFileName, uint64_t poolSize) {
   if (poolSize == 0) {
     return false;
   }
@@ -209,7 +209,7 @@ template<class T> bool SwappedVector<T>::open(const std::string& itemFileName, c
         return false;
       }
 
-      offsets.emplace_back(itemsFileSize);
+      offsets.push_back(itemsFileSize);
       itemsFileSize += itemSize;
     }
 

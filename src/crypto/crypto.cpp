@@ -55,7 +55,7 @@ namespace Crypto {
     memcpy(&res, tmp, 32);
   }
 
-  static inline void hash_to_scalar(const void *data, size_t length, EllipticCurveScalar &res) {
+  static inline void hash_to_scalar(const void *data, uint64_t length, EllipticCurveScalar &res) {
     cn_fast_hash(data, length, reinterpret_cast<Hash &>(res));
     sc_reduce32(reinterpret_cast<unsigned char*>(&res));
   }
@@ -106,10 +106,10 @@ namespace Crypto {
     return true;
   }
 
-  static void derivation_to_scalar(const KeyDerivation &derivation, size_t output_index, EllipticCurveScalar &res) {
+  static void derivation_to_scalar(const KeyDerivation &derivation, uint64_t output_index, EllipticCurveScalar &res) {
     struct {
       KeyDerivation derivation;
-      char output_index[(sizeof(size_t) * 8 + 6) / 7];
+      char output_index[(sizeof(uint64_t) * 8 + 6) / 7];
     } buf;
     char *end = buf.output_index;
     buf.derivation = derivation;
@@ -118,22 +118,22 @@ namespace Crypto {
     hash_to_scalar(&buf, end - reinterpret_cast<char *>(&buf), res);
   }
 
-  static void derivation_to_scalar(const KeyDerivation &derivation, size_t output_index, const uint8_t* suffix, size_t suffixLength, EllipticCurveScalar &res) {
+  static void derivation_to_scalar(const KeyDerivation &derivation, uint64_t output_index, const uint8_t* suffix, uint64_t suffixLength, EllipticCurveScalar &res) {
     assert(suffixLength <= 32);
     struct {
       KeyDerivation derivation;
-      char output_index[(sizeof(size_t) * 8 + 6) / 7 + 32];
+      char output_index[(sizeof(uint64_t) * 8 + 6) / 7 + 32];
     } buf;
     char *end = buf.output_index;
     buf.derivation = derivation;
     Tools::write_varint(end, output_index);
     assert(end <= buf.output_index + sizeof buf.output_index);
-    size_t bufSize = end - reinterpret_cast<char *>(&buf);
+    uint64_t bufSize = end - reinterpret_cast<char *>(&buf);
     memcpy(end, suffix, suffixLength);
     hash_to_scalar(&buf, bufSize + suffixLength, res);
   }
 
-  bool crypto_ops::derive_public_key(const KeyDerivation &derivation, size_t output_index,
+  bool crypto_ops::derive_public_key(const KeyDerivation &derivation, uint64_t output_index,
     const PublicKey &base, PublicKey &derived_key) {
     EllipticCurveScalar scalar;
     ge_p3 point1;
@@ -153,8 +153,8 @@ namespace Crypto {
     return true;
   }
 
-  bool crypto_ops::derive_public_key(const KeyDerivation &derivation, size_t output_index,
-    const PublicKey &base, const uint8_t* suffix, size_t suffixLength, PublicKey &derived_key) {
+  bool crypto_ops::derive_public_key(const KeyDerivation &derivation, uint64_t output_index,
+    const PublicKey &base, const uint8_t* suffix, uint64_t suffixLength, PublicKey &derived_key) {
     EllipticCurveScalar scalar;
     ge_p3 point1;
     ge_p3 point2;
@@ -173,7 +173,7 @@ namespace Crypto {
     return true;
   }
 
-  bool crypto_ops::underive_public_key_and_get_scalar(const KeyDerivation &derivation, size_t output_index,
+  bool crypto_ops::underive_public_key_and_get_scalar(const KeyDerivation &derivation, uint64_t output_index,
     const PublicKey &derived_key, PublicKey &base, EllipticCurveScalar &hashed_derivation) {
     ge_p3 point1;
     ge_p3 point2;
@@ -192,7 +192,7 @@ namespace Crypto {
     return true;
   }
 
-  void crypto_ops::derive_secret_key(const KeyDerivation &derivation, size_t output_index,
+  void crypto_ops::derive_secret_key(const KeyDerivation &derivation, uint64_t output_index,
     const SecretKey &base, SecretKey &derived_key) {
     EllipticCurveScalar scalar;
     assert(sc_check(reinterpret_cast<const unsigned char*>(&base)) == 0);
@@ -200,8 +200,8 @@ namespace Crypto {
     sc_add(reinterpret_cast<unsigned char*>(&derived_key), reinterpret_cast<const unsigned char*>(&base), reinterpret_cast<unsigned char*>(&scalar));
   }
 
-  void crypto_ops::derive_secret_key(const KeyDerivation &derivation, size_t output_index,
-    const SecretKey &base, const uint8_t* suffix, size_t suffixLength, SecretKey &derived_key) {
+  void crypto_ops::derive_secret_key(const KeyDerivation &derivation, uint64_t output_index,
+    const SecretKey &base, const uint8_t* suffix, uint64_t suffixLength, SecretKey &derived_key) {
     EllipticCurveScalar scalar;
     assert(sc_check(reinterpret_cast<const unsigned char*>(&base)) == 0);
     derivation_to_scalar(derivation, output_index, suffix, suffixLength, scalar);
@@ -209,7 +209,7 @@ namespace Crypto {
   }
 
 
-  bool crypto_ops::underive_public_key(const KeyDerivation &derivation, size_t output_index,
+  bool crypto_ops::underive_public_key(const KeyDerivation &derivation, uint64_t output_index,
     const PublicKey &derived_key, PublicKey &base) {
     EllipticCurveScalar scalar;
     ge_p3 point1;
@@ -229,8 +229,8 @@ namespace Crypto {
     return true;
   }
 
-  bool crypto_ops::underive_public_key(const KeyDerivation &derivation, size_t output_index,
-    const PublicKey &derived_key, const uint8_t* suffix, size_t suffixLength, PublicKey &base) {
+  bool crypto_ops::underive_public_key(const KeyDerivation &derivation, uint64_t output_index,
+    const PublicKey &derived_key, const uint8_t* suffix, uint64_t suffixLength, PublicKey &base) {
     EllipticCurveScalar scalar;
     ge_p3 point1;
     ge_p3 point2;
@@ -445,7 +445,7 @@ void crypto_ops::generate_tx_proof(const Hash &prefix_hash, const PublicKey &R, 
     return aP;
   }
 
-  void crypto_ops::hash_data_to_ec(const uint8_t* data, std::size_t len, PublicKey& key) {
+  void crypto_ops::hash_data_to_ec(const uint8_t* data, std::uint64_t len, PublicKey& key) {
     Hash h;
     ge_p2 point;
     ge_p1p1 point2;
@@ -482,16 +482,16 @@ void crypto_ops::generate_tx_proof(const Hash &prefix_hash, const PublicKey &R, 
     } ab[];
   };
 
-  static inline size_t rs_comm_size(size_t pubs_count) {
+  static inline uint64_t rs_comm_size(uint64_t pubs_count) {
     return sizeof(rs_comm) + pubs_count * sizeof(((rs_comm*)0)->ab[0]);
   }
 
   void crypto_ops::generate_ring_signature(const Hash &prefix_hash, const KeyImage &image,
-    const PublicKey *const *pubs, size_t pubs_count,
-    const SecretKey &sec, size_t sec_index,
+    const PublicKey *const *pubs, uint64_t pubs_count,
+    const SecretKey &sec, uint64_t sec_index,
     Signature *sig) {
     lock_guard<mutex> lock(random_lock);
-    size_t i;
+    uint64_t i;
     ge_p3 image_unp;
     ge_dsmp image_pre;
     EllipticCurveScalar sum, k, h;
@@ -549,9 +549,9 @@ void crypto_ops::generate_tx_proof(const Hash &prefix_hash, const PublicKey &R, 
   }
 
   bool crypto_ops::check_ring_signature(const Hash &prefix_hash, const KeyImage &image,
-    const PublicKey *const *pubs, size_t pubs_count,
+    const PublicKey *const *pubs, uint64_t pubs_count,
     const Signature *sig) {
-    size_t i;
+    uint64_t i;
     ge_p3 image_unp;
     ge_dsmp image_pre;
     EllipticCurveScalar sum, h;

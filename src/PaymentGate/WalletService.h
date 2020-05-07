@@ -93,14 +93,14 @@ private:
 
   void replaceWithNewWallet(const Crypto::SecretKey& viewSecretKey);
 
-  std::vector<CryptoNote::TransactionsInBlockInfo> getTransactions(const Crypto::Hash& blockHash, size_t blockCount) const;
-  std::vector<CryptoNote::TransactionsInBlockInfo> getTransactions(uint32_t firstBlockIndex, size_t blockCount) const;
+  std::vector<CryptoNote::TransactionsInBlockInfo> getTransactions(const Crypto::Hash& blockHash, uint64_t blockCount) const;
+  std::vector<CryptoNote::TransactionsInBlockInfo> getTransactions(uint32_t firstBlockIndex, uint64_t blockCount) const;
 
-  std::vector<TransactionHashesInBlockRpcInfo> getRpcTransactionHashes(const Crypto::Hash& blockHash, size_t blockCount, const TransactionsInBlockInfoFilter& filter) const;
-  std::vector<TransactionHashesInBlockRpcInfo> getRpcTransactionHashes(uint32_t firstBlockIndex, size_t blockCount, const TransactionsInBlockInfoFilter& filter) const;
+  std::vector<TransactionHashesInBlockRpcInfo> getRpcTransactionHashes(const Crypto::Hash& blockHash, uint64_t blockCount, const TransactionsInBlockInfoFilter& filter) const;
+  std::vector<TransactionHashesInBlockRpcInfo> getRpcTransactionHashes(uint32_t firstBlockIndex, uint64_t blockCount, const TransactionsInBlockInfoFilter& filter) const;
 
-  std::vector<TransactionsInBlockRpcInfo> getRpcTransactions(const Crypto::Hash& blockHash, size_t blockCount, const TransactionsInBlockInfoFilter& filter) const;
-  std::vector<TransactionsInBlockRpcInfo> getRpcTransactions(uint32_t firstBlockIndex, size_t blockCount, const TransactionsInBlockInfoFilter& filter) const;
+  std::vector<TransactionsInBlockRpcInfo> getRpcTransactions(const Crypto::Hash& blockHash, uint64_t blockCount, const TransactionsInBlockInfoFilter& filter) const;
+  std::vector<TransactionsInBlockRpcInfo> getRpcTransactions(uint32_t firstBlockIndex, uint64_t blockCount, const TransactionsInBlockInfoFilter& filter) const;
 
   const CryptoNote::Currency& currency;
   CryptoNote::IWallet& wallet;
@@ -113,7 +113,7 @@ private:
   System::Event readyEvent;
   System::ContextGroup refreshContext;
 
-  std::map<std::string, size_t> transactionIdIndex;
+  std::map<std::string, uint64_t> transactionIdIndex;
 };
 
 } //namespace PaymentService

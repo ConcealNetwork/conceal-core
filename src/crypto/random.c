@@ -12,14 +12,14 @@
 #include "initializer.h"
 #include "random.h"
 
-static void generate_system_random_bytes(size_t n, void *result);
+static void generate_system_random_bytes(uint64_t n, void *result);
 
 #if defined(_WIN32)
 
 #include <windows.h>
 #include <wincrypt.h>
 
-static void generate_system_random_bytes(size_t n, void *result) {
+static void generate_system_random_bytes(uint64_t n, void *result) {
   HCRYPTPROV prov;
 #define must_succeed(x) do if (!(x)) assert(0); while (0)
   must_succeed(CryptAcquireContext(&prov, NULL, NULL, PROV_RSA_FULL, CRYPT_VERIFYCONTEXT | CRYPT_SILENT));
@@ -38,14 +38,14 @@ static void generate_system_random_bytes(size_t n, void *result) {
 #include <sys/types.h>
 #include <unistd.h>
 
-static void generate_system_random_bytes(size_t n, void *result) {
+static void generate_system_random_bytes(uint64_t n, void *result) {
   int fd;
   if ((fd = open("/dev/urandom", O_RDONLY | O_NOCTTY | O_CLOEXEC)) < 0) {
     err(EXIT_FAILURE, "open /dev/urandom");
   }
   for (;;) {
     ssize_t res = read(fd, result, n);
-    if ((size_t) res == n) {
+    if ((uint64_t) res == n) {
       break;
     }
     if (res < 0) {
@@ -55,8 +55,8 @@ static void generate_system_random_bytes(size_t n, void *result) {
     } else if (res == 0) {
       errx(EXIT_FAILURE, "read /dev/urandom: end of file");
     } else {
-      result = padd(result, (size_t) res);
-      n -= (size_t) res;
+      result = padd(result, (uint64_t) res);
+      n -= (uint64_t) res;
     }
   }
   if (close(fd) < 0) {
@@ -89,7 +89,7 @@ INITIALIZER(init_random) {
 #endif
 }
 
-void generate_random_bytes(size_t n, void *result) {
+void generate_random_bytes(uint64_t n, void *result) {
 #if !defined(NDEBUG)
   assert(curstate == 1);
   curstate = 2;
