@@ -1,6 +1,6 @@
 // Copyright (c) 2011-2017 The Cryptonote developers
 // Copyright (c) 2017-2018 The Circle Foundation & Conceal Devs
-// Copyright (c) 2018-2019 Conceal Network & Conceal Devs
+// Copyright (c) 2018-2020 Conceal Network & Conceal Devs
 // Distributed under the MIT/X11 software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -96,9 +96,6 @@ template<typename T> void toString(const T& value, std::string& text) { // Does 
 
 bool loadFileToString(const std::string& filepath, std::string& buf);
 bool saveStringToFile(const std::string& filepath, const std::string& buf);
-
-
-std::string base64Decode(std::string const& encoded_string);
 
 std::string ipAddressToString(uint32_t ip);
 bool parseIpAddressAndPort(uint32_t& ip, uint32_t& port, const std::string& addr);
