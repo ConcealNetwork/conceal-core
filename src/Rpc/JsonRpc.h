@@ -37,6 +37,7 @@ const int errInvalidRequest = -32600;
 const int errMethodNotFound = -32601;
 const int errInvalidParams = -32602;
 const int errInternalError = -32603;
+const int errInvalidPassword = -32604;
 
 class JsonRpcError: public std::exception {
 public:
@@ -62,6 +63,7 @@ public:
 };
 
 typedef boost::optional<Common::JsonValue> OptionalId;
+typedef boost::optional<Common::JsonValue> OptionalPassword;
 
 class JsonRpcRequest {
 public:
@@ -83,6 +85,10 @@ public:
 
     if (psReq.contains("id")) {
       id = psReq("id");
+    }
+
+    if (psReq.contains("password")) {
+      password = psReq("password");
     }
 
     return true;
@@ -113,6 +119,10 @@ public:
     return id;
   }
 
+  const OptionalPassword& getPassword() const {
+    return password;
+  }
+
   std::string getBody() {
     psReq.set("jsonrpc", std::string("2.0"));
     psReq.set("method", method);
@@ -123,6 +133,7 @@ private:
 
   Common::JsonValue psReq;
   OptionalId id;
+  OptionalPassword password;
   std::string method;
 };
 

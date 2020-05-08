@@ -13,6 +13,7 @@
 #include "Logging/ILogger.h"
 #include "Logging/LoggerRef.h"
 #include "Rpc/HttpServer.h"
+#include "PaymentGateService/PaymentServiceConfiguration.h"
 
 
 namespace CryptoNote {
@@ -32,7 +33,7 @@ namespace CryptoNote {
 
 class JsonRpcServer : HttpServer {
 public:
-  JsonRpcServer(System::Dispatcher& sys, System::Event& stopEvent, Logging::ILogger& loggerGroup);
+  JsonRpcServer(System::Dispatcher& sys, System::Event& stopEvent, Logging::ILogger& loggerGroup, PaymentService::Configuration& config);
   JsonRpcServer(const JsonRpcServer&) = delete;
 
   void start(const std::string& bindAddress, uint16_t bindPort, const std::string& user = "", const std::string& password = "");
@@ -41,11 +42,13 @@ protected:
   static void makeErrorResponse(const std::error_code& ec, Common::JsonValue& resp);
   static void makeMethodNotFoundResponse(Common::JsonValue& resp);
   static void makeGenericErrorReponse(Common::JsonValue& resp, const char* what, int errorCode = -32001);
+  static void makeInvalidPasswordResponse(Common::JsonValue& resp);
   static void fillJsonResponse(const Common::JsonValue& v, Common::JsonValue& resp);
   static void prepareJsonResponse(const Common::JsonValue& req, Common::JsonValue& resp);
   static void makeJsonParsingErrorResponse(Common::JsonValue& resp);
 
   virtual void processJsonRpcRequest(const Common::JsonValue& req, Common::JsonValue& resp) = 0;
+  PaymentService::Configuration& config;
 
 private:
   // HttpServer

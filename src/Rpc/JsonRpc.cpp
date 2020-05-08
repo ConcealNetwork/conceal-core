@@ -32,6 +32,7 @@ JsonRpcError::JsonRpcError(int c) : code(c) {
   case errMethodNotFound: message = "Method not found"; break;
   case errInvalidParams: message = "Invalid params"; break;
   case errInternalError: message = "Internal error"; break;
+  case errInvalidPassword: message = "Invalid or no password supplied"; break;
   default: message = "Unknown error"; break;
   }
 }

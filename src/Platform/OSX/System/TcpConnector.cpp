@@ -154,6 +154,7 @@ TcpConnection TcpConnector::connect(const Ipv4Address& address, uint16_t port) {
     }
 
     int result = close(connection);
+    if (result) {}
     assert(result != -1);;
   }
 

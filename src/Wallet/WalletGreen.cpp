@@ -1063,6 +1063,7 @@ bool WalletGreen::updateWalletTransactionInfo(size_t transactionId, const Crypto
     }
   });
 
+  if (r) {}
   assert(r);
 
   return updated;
@@ -1868,6 +1869,7 @@ void WalletGreen::onTransactionUpdated(const Crypto::PublicKey&, const Crypto::H
     // Don't move this code to the following remote spawn, because it guarantees that the container has the transaction
     uint64_t outputsAmount;
     bool found = container->getTransactionInformation(transactionHash, info, &inputsAmount, &outputsAmount);
+    if (found) {}
     assert(found);
 
     ContainerAmounts containerAmounts;
@@ -2176,6 +2178,7 @@ size_t WalletGreen::createFusionTransaction(uint64_t threshold, uint64_t mixin,
   size_t transactionSize;
   int round = 0;
   uint64_t transactionAmount;
+  if (transactionAmount) {}
   do {
     if (round != 0) {
       fusionInputs.pop_back();

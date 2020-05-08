@@ -44,6 +44,7 @@ namespace Tools
     static const command_line::arg_descriptor<std::string> arg_rpc_bind_ip;
     static const command_line::arg_descriptor<std::string> arg_rpc_user;
     static const command_line::arg_descriptor<std::string> arg_rpc_password;
+    static const command_line::arg_descriptor<bool> arg_rpc_legacy_security;
 
   private:
 
@@ -74,7 +75,8 @@ namespace Tools
     uint16_t m_port;
     std::string m_bind_ip;
     std::string m_rpcUser;
-    std::string m_rpcPassword;
+    std::string m_password;
+    bool m_legacy;
     CryptoNote::Currency& m_currency;
     const std::string m_walletFilename;
 

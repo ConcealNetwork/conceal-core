@@ -1998,6 +1998,14 @@ int main(int argc, char* argv[]) {
     testnet(command_line::get_arg(vm, arg_testnet)).currency();
 
   if (command_line::has_arg(vm, Tools::wallet_rpc_server::arg_rpc_bind_port)) {
+    /* If the rpc interface is run, ensure that either legacy mode or an RPC
+      password is set. */
+    if (!command_line::has_arg(vm, Tools::wallet_rpc_server::arg_rpc_password) &&
+      !command_line::has_arg(vm, Tools::wallet_rpc_server::arg_rpc_legacy_security)) {
+      logger(ERROR, BRIGHT_RED) << "Required RPC password is not set.";
+      return 1;
+    }
+    
     //runs wallet with rpc interface
     if (!command_line::has_arg(vm, arg_wallet_file)) {
       logger(ERROR, BRIGHT_RED) << "Wallet file not set.";

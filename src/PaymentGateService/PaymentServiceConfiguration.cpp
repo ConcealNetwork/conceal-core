@@ -29,6 +29,8 @@ Configuration::Configuration() {
   bindPort = 0;
   secretSpendKey = "";
   secretViewKey = "";
+  rpcPassword = "";
+  legacySecurity = false;
 }
 
 void Configuration::initOptions(boost::program_options::options_description& desc) {
@@ -36,7 +38,8 @@ void Configuration::initOptions(boost::program_options::options_description& des
       ("bind-address", po::value<std::string>()->default_value("0.0.0.0"), "payment service bind address")
       ("bind-port", po::value<uint16_t>()->default_value(8070), "payment service bind port")
       ("rpc-user", po::value<std::string>()->default_value(""), "username to use the payment service. If authorization is not required, leave it empty")
-      ("rpc-password", po::value<std::string>()->default_value(""), "password to use the payment service. If authorization is not required, leave it empty")
+      ("rpc-password", po::value<std::string>(), "Specify the password to access the rpc server.")
+      ("rpc-legacy-security", "Enable legacy mode (no password for RPC). WARNING: INSECURE. USE ONLY AS A LAST RESORT.")
       ("container-file,w", po::value<std::string>(), "container file")
       ("container-password,p", po::value<std::string>(), "container password")
       ("generate-container,g", "generate new container file with one wallet and exit")
@@ -98,10 +101,6 @@ void Configuration::init(const boost::program_options::variables_map& options) {
     rpcUser = options["rpc-user"].as<std::string>();
   }
 
-  if (options.count("rpc-password") != 0 && !options["rpc-password"].defaulted()) {
-    rpcPassword = options["rpc-password"].as<std::string>();
-  }
-
   if (options.count("container-file") != 0) {
     containerFile = options["container-file"].as<std::string>();
   }
@@ -130,6 +129,22 @@ void Configuration::init(const boost::program_options::variables_map& options) {
     if (containerFile.empty() || containerPassword.empty()) {
       throw ConfigurationError("Both container-file and container-password parameters are required");
     }
+  }
+
+  // If generating a container skip the authentication parameters.
+  if (generateNewContainer) {
+    return;
+  }
+
+  // Check for the authentication parameters
+  if ((options.count("rpc-password") == 0) && (options.count("rpc-legacy-security") == 0)) {
+    throw ConfigurationError("Please specify an RPC password or use the --rpc-legacy-security flag.");
+  }
+
+  if (options.count("rpc-legacy-security") != 0) {
+    legacySecurity = true;
+  } else {
+    rpcPassword = options["rpc-password"].as<std::string>();
   }
 }
 

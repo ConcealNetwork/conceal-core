@@ -30,7 +30,8 @@ struct Configuration {
   std::string rpcUser;
   std::string rpcPassword;
   std::string secretSpendKey;
-  std::string secretViewKey;  
+  std::string secretViewKey;
+  bool legacySecurity; 
 
   std::string containerFile;
   std::string containerPassword;

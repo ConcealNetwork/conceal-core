@@ -240,7 +240,7 @@ void PaymentGateService::runWalletService(const CryptoNote::Currency& currency, 
       std::cout << "Address: " << address << std::endl;
     }
   } else {
-    PaymentService::PaymentServiceJsonRpcServer rpcServer(*dispatcher, *stopEvent, *service, logger);
+    PaymentService::PaymentServiceJsonRpcServer rpcServer(*dispatcher, *stopEvent, *service, logger, config.gateConfiguration);
     rpcServer.start(config.gateConfiguration.bindAddress, config.gateConfiguration.bindPort,
       config.gateConfiguration.rpcUser, config.gateConfiguration.rpcPassword);
 
