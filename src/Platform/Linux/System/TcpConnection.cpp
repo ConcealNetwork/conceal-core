@@ -46,6 +46,7 @@ TcpConnection::~TcpConnection() {
     assert(contextPair.readContext == nullptr);
     assert(contextPair.writeContext == nullptr);
     int result = close(connection);
+    if (result) {}
     assert(result != -1);
   }
 }

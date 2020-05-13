@@ -63,6 +63,7 @@ TcpListener::TcpListener(Dispatcher& dispatcher, const Ipv4Address& addr, uint16
     }
 
     int result = close(listener);
+    if (result) {}
     assert(result != -1);
   }
 
@@ -82,6 +83,7 @@ TcpListener::~TcpListener() {
   if (dispatcher != nullptr) {
     assert(context == nullptr);
     int result = close(listener);
+    if (result) {}
     assert(result != -1);
   }
 }
@@ -176,6 +178,7 @@ TcpConnection TcpListener::accept() {
       }
 
       int result = close(connection);
+      if (result) {}
       assert(result != -1);
     }
   }
