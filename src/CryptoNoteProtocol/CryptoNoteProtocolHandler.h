@@ -72,6 +72,7 @@ namespace CryptoNote
     virtual size_t getPeerCount() const override;
     virtual uint32_t getObservedHeight() const override;
     void requestMissingPoolTransactions(const CryptoNoteConnectionContext& context);
+    uint32_t getBlockchainHeight();
 
   private:
     //----------------- commands handlers ----------------------------------------------

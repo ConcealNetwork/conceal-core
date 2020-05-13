@@ -131,6 +131,8 @@ bool core::init(const CoreConfig& config, const MinerConfig& minerConfig, bool l
   m_config_folder = config.configFolder;
   bool r = m_mempool.init(m_config_folder);
 
+  start_time = std::time(nullptr);
+
   if (!(r)) {
     logger(ERROR, BRIGHT_RED) << "<< Core.cpp << " << "Failed to initialize memory pool";
     return false;
@@ -1076,6 +1078,10 @@ bool core::addMessageQueue(MessageQueue<BlockchainMessage>& messageQueue) {
 
 bool core::removeMessageQueue(MessageQueue<BlockchainMessage>& messageQueue) {
   return m_blockchain.removeMessageQueue(messageQueue);
+}
+
+std::time_t core::getStartTime() const {
+  return start_time;
 }
 
 }
