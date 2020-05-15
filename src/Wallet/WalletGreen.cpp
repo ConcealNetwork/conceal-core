@@ -1728,10 +1728,12 @@ std::vector<size_t> WalletGreen::getDelayedTransactionIds() const {
 }
 
 void WalletGreen::start() {
+  m_logger(Logging::INFO, Logging::BRIGHT_WHITE) << "Starting wallet container";
   m_stopped = false;
 }
 
 void WalletGreen::stop() {
+  m_logger(Logging::INFO, Logging::BRIGHT_WHITE) << "Stopping wallet container";
   m_stopped = true;
   m_eventOccurred.set();
 }
