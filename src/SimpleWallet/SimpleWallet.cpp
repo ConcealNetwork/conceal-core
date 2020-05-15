@@ -62,11 +62,13 @@ namespace {
 
 const command_line::arg_descriptor<std::string> arg_wallet_file = { "wallet-file", "Use wallet <arg>", "" };
 const command_line::arg_descriptor<std::string> arg_generate_new_wallet = { "generate-new-wallet", "Generate new wallet and save it to <arg>", "" };
+const command_line::arg_descriptor<bool>        arg_exit_after_generate = {"exit-after-generate", "Exit immediately after generating a wallet (doesn't try to sync with the daemon)", false};
 const command_line::arg_descriptor<std::string> arg_daemon_address = { "daemon-address", "Use daemon instance at <host>:<port>", "" };
 const command_line::arg_descriptor<std::string> arg_daemon_host = { "daemon-host", "Use daemon instance at host <arg> instead of localhost", "" };
 const command_line::arg_descriptor<std::string> arg_password = { "password", "Wallet password", "", true };
 const command_line::arg_descriptor<uint16_t>    arg_daemon_port = { "daemon-port", "Use daemon instance at port <arg> instead of default", 0 };
 const command_line::arg_descriptor<uint32_t>    arg_log_level = { "set_log", "", INFO, true };
+const command_line::arg_descriptor<bool>        arg_sync_from_zero  = {"sync_from_zero", "Sync from block 0. Use for premine wallet", false}
 const command_line::arg_descriptor<bool>        arg_testnet = { "testnet", "Used to deploy test nets. The daemon must be launched with --testnet flag", false };
 const command_line::arg_descriptor< std::vector<std::string> > arg_command = { "command", "" };
 
@@ -724,6 +726,12 @@ bool simple_wallet::init(const boost::program_options::variables_map& vm) {
   }
 
   std::string walletFileName;
+
+  m_sync_from_zero = command_line::get_arg(vm, arg_sync_from_zero);
+  if (m_sync_from_zero) {
+    m_sync_from_height = 0;
+  }
+
   if (!m_generate_new.empty() || !m_import_new.empty()) {
     std::string ignoredString;
     if (!m_generate_new.empty()) {
@@ -760,6 +768,11 @@ bool simple_wallet::init(const boost::program_options::variables_map& vm) {
   if (error) {
     fail_msg_writer() << "failed to init NodeRPCProxy: " << error.message();
     return false;
+  }
+
+  m_sync_from_zero = command_line::get_arg(vm, arg_sync_from_zero);
+  if (m_sync_from_zero) {
+    m_sync_from_height = 0;
   }
 
   if (!m_generate_new.empty()) {
@@ -843,7 +856,10 @@ if (key_import) {
       logger(WARNING, BRIGHT_RED) << "Couldn't write wallet address file: " + walletAddressFile;
     }
   } else {
-    m_wallet.reset(new WalletLegacy(m_currency, *m_node, logManager));
+    if(!m_exit_after_generate) {
+      m_wallet.reset(new WalletLegacy(m_currency, *m_node, logManager));
+      m_wallet->syncAll(m_sync_from_zero, 0);
+    }
 
     try {
       m_wallet_file = tryToOpenWalletOrLoadKeysOrThrow(logger, m_wallet, m_wallet_file_arg, pwd_container.password());
@@ -861,6 +877,11 @@ if (key_import) {
       "**********************************************************************\n" <<
       "Use \"help\" command to see the list of available commands.\n" <<
       "**********************************************************************";
+
+    if(m_exit_after_generate) {
+      m_consoleHandler.requestStop();
+      std::exit(0);
+    }
   }
 
   return true;
@@ -941,6 +962,7 @@ void simple_wallet::handle_command_line(const boost::program_options::variables_
   m_daemon_address = command_line::get_arg(vm, arg_daemon_address);
   m_daemon_host = command_line::get_arg(vm, arg_daemon_host);
   m_daemon_port = command_line::get_arg(vm, arg_daemon_port);
+  m_exit_after_generate = command_line::get_arg(vm, arg_exit_after_generate);
 }
 //----------------------------------------------------------------------------------------------------
 bool simple_wallet::new_wallet(const std::string &wallet_file, const std::string& password) {
@@ -952,6 +974,7 @@ bool simple_wallet::new_wallet(const std::string &wallet_file, const std::string
   try {
     m_initResultPromise.reset(new std::promise<std::error_code>());
     std::future<std::error_code> f_initError = m_initResultPromise->get_future();
+    m_wallet->syncAll(m_sync_from_zero, 0);
     m_wallet->initAndGenerate(password);
     auto initError = f_initError.get();
     m_initResultPromise.reset(nullptr);
@@ -994,61 +1017,72 @@ bool simple_wallet::new_wallet(const std::string &wallet_file, const std::string
     "current session's state. Otherwise, you will possibly need to synchronize \n" <<
     "your wallet again. Your wallet key is NOT under risk anyway.\n" <<
     "**********************************************************************";
+
+  if(m_exit_after_generate) {
+    m_consoleHandler.requestStop();
+    std::exit(0);
+  }
+
   return true;
 }
 //----------------------------------------------------------------------------------------------------
 bool simple_wallet::new_wallet(Crypto::SecretKey &secret_key, Crypto::SecretKey &view_key, const std::string &wallet_file, const std::string& password) {
-                m_wallet_file = wallet_file;
+  m_wallet_file = wallet_file;
 
-                m_wallet.reset(new WalletLegacy(m_currency, *m_node.get(), logManager));
-                m_node->addObserver(static_cast<INodeObserver*>(this));
-                m_wallet->addObserver(this);
-                try {
-                  m_initResultPromise.reset(new std::promise<std::error_code>());
-                  std::future<std::error_code> f_initError = m_initResultPromise->get_future();
+  m_wallet.reset(new WalletLegacy(m_currency, *m_node.get(), logManager));
+  m_node->addObserver(static_cast<INodeObserver*>(this));
+  m_wallet->addObserver(this);
+  try {
+    m_initResultPromise.reset(new std::promise<std::error_code>());
+    std::future<std::error_code> f_initError = m_initResultPromise->get_future();
 
-                  AccountKeys wallet_keys;
-                  wallet_keys.spendSecretKey = secret_key;
-                  wallet_keys.viewSecretKey = view_key;
-                  Crypto::secret_key_to_public_key(wallet_keys.spendSecretKey, wallet_keys.address.spendPublicKey);
-                  Crypto::secret_key_to_public_key(wallet_keys.viewSecretKey, wallet_keys.address.viewPublicKey);
+    AccountKeys wallet_keys;
+    wallet_keys.spendSecretKey = secret_key;
+    wallet_keys.viewSecretKey = view_key;
+    Crypto::secret_key_to_public_key(wallet_keys.spendSecretKey, wallet_keys.address.spendPublicKey);
+    Crypto::secret_key_to_public_key(wallet_keys.viewSecretKey, wallet_keys.address.viewPublicKey);
 
-                  m_wallet->initWithKeys(wallet_keys, password);
-                  auto initError = f_initError.get();
-                  m_initResultPromise.reset(nullptr);
-                  if (initError) {
-                    fail_msg_writer() << "failed to generate new wallet: " << initError.message();
-                    return false;
-                  }
+    m_wallet->initWithKeys(wallet_keys, password);
+    auto initError = f_initError.get();
+    m_initResultPromise.reset(nullptr);
 
-                  try {
-                    CryptoNote::WalletHelper::storeWallet(*m_wallet, m_wallet_file);
-                  } catch (std::exception& e) {
-                    fail_msg_writer() << "failed to save new wallet: " << e.what();
-                    throw;
-                  }
+    if (initError) {
+      fail_msg_writer() << "failed to generate new wallet: " << initError.message();
+      return false;
+    }
 
-                  AccountKeys keys;
-                  m_wallet->getAccountKeys(keys);
+    try {
+      CryptoNote::WalletHelper::storeWallet(*m_wallet, m_wallet_file);
+    } catch (std::exception& e) {
+      fail_msg_writer() << "failed to save new wallet: " << e.what();
+      throw;
+    }
 
-                  logger(INFO, BRIGHT_WHITE) <<
-                    "Imported wallet: " << m_wallet->getAddress() << std::endl;
-                }
-                catch (const std::exception& e) {
-                  fail_msg_writer() << "failed to import wallet: " << e.what();
-                  return false;
-                }
+    AccountKeys keys;
+    m_wallet->getAccountKeys(keys);
 
-                success_msg_writer() <<
-                  "**********************************************************************\n" <<
-                  "Your wallet has been imported.\n" <<
-                  "Use \"help\" command to see the list of available commands.\n" <<
-                  "Always use \"exit\" command when closing simplewallet to save\n" <<
-                  "current session's state. Otherwise, you will possibly need to synchronize \n" <<
-                  "your wallet again. Your wallet key is NOT under risk anyway.\n" <<
-                  "**********************************************************************";
-                return true;
-                }
+    logger(INFO, BRIGHT_WHITE) << "Imported wallet: " << m_wallet->getAddress() << std::endl;
+  } catch (const std::exception& e) {
+    fail_msg_writer() << "failed to import wallet: " << e.what();
+    return false;
+  }
+
+  success_msg_writer() <<
+    "**********************************************************************\n" <<
+    "Your wallet has been imported.\n" <<
+    "Use \"help\" command to see the list of available commands.\n" <<
+    "Always use \"exit\" command when closing simplewallet to save\n" <<
+    "current session's state. Otherwise, you will possibly need to synchronize \n" <<
+    "your wallet again. Your wallet key is NOT under risk anyway.\n" <<
+    "**********************************************************************";
+
+  if(m_exit_after_generate) {
+    m_consoleHandler.requestStop();
+    std::exit(0);
+  }
+
+  return true;
+}
 
 //----------------------------------------------------------------------------------------------------
 bool simple_wallet::close_wallet()
@@ -1085,8 +1119,25 @@ bool simple_wallet::reset(const std::vector<std::string> &args) {
     m_walletSynchronized = false;
   }
 
-  m_wallet->reset();
-  success_msg_writer(true) << "Reset completed successfully.";
+  if(0 == args.size()) {
+    std::cout << GreenMsg("Resetting wallet from Block Height 0.") << std::endl;
+    m_wallet->syncAll(true, 0);
+    m_wallet->reset();
+    std::cout << BrightGreenMsg("Reset has successfully been completed.") << std::endl;
+  } else {
+    uint64_t height = 0;
+    bool ok = Common::fromString(args[0], height);
+    if (ok && ok <= m_node->getLastLocalBlockHeight()) {
+      std::cout << GreenMsg("Resetting wallet from Block Height ") << MagentaMsg(std::to_string(height)) << std::endl;
+      m_wallet->syncAll(true, height);
+      m_wallet->reset(height);
+      std::cout << BrightGreenMsg("Reset has successfully been completed.") << std::endl;
+    } else if (ok > m_node->getLastLocalBlockHeight()) {
+      std::cout << BrightRedMsg("Whoops! That block hasn't been passed through the Blockchain yet.") << std::endl
+                << BrightRedMsg("Please try using a lower Block Height.") << std::endl;
+      return false;
+    }
+  }
 
   std::unique_lock<std::mutex> lock(m_walletSynchronizedMutex);
   while (!m_walletSynchronized) {
@@ -1937,6 +1988,7 @@ int main(int argc, char* argv[]) {
   po::options_description desc_params("Wallet options");
   command_line::add_arg(desc_params, arg_wallet_file);
   command_line::add_arg(desc_params, arg_generate_new_wallet);
+  command_line::add_arg(desc_params, arg_exit_after_generate);
   command_line::add_arg(desc_params, arg_password);
   command_line::add_arg(desc_params, arg_daemon_address);
   command_line::add_arg(desc_params, arg_daemon_host);
@@ -1944,6 +1996,7 @@ int main(int argc, char* argv[]) {
   command_line::add_arg(desc_params, arg_command);
   command_line::add_arg(desc_params, arg_log_level);
   command_line::add_arg(desc_params, arg_testnet);
+  command_line::add_arg(desc_params, arg_sync_from_zero);
   Tools::wallet_rpc_server::init_options(desc_params);
 
   po::positional_options_description positional_options;

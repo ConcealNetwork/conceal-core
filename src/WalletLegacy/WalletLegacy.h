@@ -50,6 +50,7 @@ public:
   virtual void initWithKeys(const AccountKeys& accountKeys, const std::string& password) override;
   virtual void shutdown() override;
   virtual void reset() override;
+  virtual void reset(uint64_t height) override;
   virtual bool checkWalletPassword(std::istream& source, const std::string& password) override;
 
   virtual void save(std::ostream& destination, bool saveDetailed = true, bool saveCache = true) override;
@@ -105,6 +106,7 @@ public:
   virtual std::error_code cancelTransaction(size_t transactionId) override;
 
   virtual void getAccountKeys(AccountKeys& keys) override;
+  void syncAll(bool syncWalletFromZero, uint64_t height) override;
 
 private:
 
@@ -192,6 +194,9 @@ private:
   Tools::ObserverManager<CryptoNote::IWalletLegacyObserver> m_observerManager;
 
   std::unique_ptr<SyncStarter> m_onInitSyncStarter;
+
+  bool m_syncAll = 0;
+  uint64_t m_syncStartHeight = 0;
 };
 
 } //namespace CryptoNote

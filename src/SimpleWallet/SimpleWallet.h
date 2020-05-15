@@ -170,6 +170,11 @@ namespace CryptoNote
     uint16_t m_daemon_port;
 
     std::string m_wallet_file;
+    std::string m_restore_view;
+    std::string m_restore_spend;
+    bool m_sync_from_zero;
+    uint64_t m_sync_from_height; 
+    bool m_exit_after_generate;
 
     std::unique_ptr<std::promise<std::error_code>> m_initResultPromise;
 

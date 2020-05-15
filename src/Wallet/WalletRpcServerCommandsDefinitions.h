@@ -21,6 +21,12 @@ using CryptoNote::ISerializer;
 #define WALLET_RPC_STATUS_OK      "OK"
 #define WALLET_RPC_STATUS_BUSY    "BUSY"
 
+  struct COMMAND_RPC_STOP
+  {
+    typedef CryptoNote::EMPTY_STRUCT request;
+    typedef CryptoNote::EMPTY_STRUCT response;
+  };
+
   struct COMMAND_RPC_GET_BALANCE
   {
     typedef CryptoNote::EMPTY_STRUCT request;
@@ -360,6 +366,21 @@ using CryptoNote::ISerializer;
 			}
 		};
 	};
+
+  struct COMMAND_RPC_RESET_FROM
+  {
+
+    struct request
+    {
+    uint64_t height;
+
+      void serialize(ISerializer& s) {
+        KV_MEMBER(height)
+      }
+    };
+
+    typedef CryptoNote::EMPTY_STRUCT response;
+  };
 
   struct COMMAND_RPC_SEND_FUSION
   {

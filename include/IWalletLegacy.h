@@ -119,6 +119,7 @@ public:
   virtual void initWithKeys(const AccountKeys& accountKeys, const std::string& password) = 0;
   virtual void shutdown() = 0;
   virtual void reset() = 0;
+  virtual void reset(uint64_t height) = 0;
   virtual bool checkWalletPassword(std::istream& source, const std::string& password) = 0;
 
   virtual void save(std::ostream& destination, bool saveDetailed = true, bool saveCache = true) = 0;
@@ -144,6 +145,8 @@ public:
 
   virtual TransactionId findTransactionByTransferId(TransferId transferId) = 0;
   virtual void getAccountKeys(AccountKeys& keys) = 0;
+  virtual void syncAll(bool syncWalletFromZero = 0, uint64_t height = 0) = 0;
+
   virtual bool getTransaction(TransactionId transactionId, WalletLegacyTransaction& transaction) = 0;
   virtual bool getTransfer(TransferId transferId, WalletLegacyTransfer& transfer) = 0;
   virtual bool getDeposit(DepositId depositId, Deposit& deposit) = 0;
