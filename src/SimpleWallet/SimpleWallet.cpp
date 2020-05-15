@@ -22,6 +22,7 @@
 #include <boost/filesystem.hpp>
 
 #include "Common/Base58.h"
+#include "Common/ColouredMsg.h"
 #include "Common/CommandLine.h"
 #include "Common/SignalHandler.h"
 #include "Common/StringTools.h"
