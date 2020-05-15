@@ -125,6 +125,7 @@ public:
   virtual ~IWallet() {}
 
   virtual void initialize(const std::string& password) = 0;
+  virtual void createDeposit(uint64_t amount, uint64_t term, std::string sourceAddress, std::string destinationAddress, std::string &transactionHash) = 0;
   virtual void initializeWithViewKey(const Crypto::SecretKey& viewSecretKey, const std::string& password) = 0;
   virtual void load(std::istream& source, const std::string& password) = 0;
   virtual void shutdown() = 0;

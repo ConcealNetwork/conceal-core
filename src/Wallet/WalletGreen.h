@@ -32,6 +32,7 @@ public:
   virtual ~WalletGreen();
 
   virtual void initialize(const std::string& password) override;
+  virtual void createDeposit(uint64_t amount, uint64_t term, std::string sourceAddress, std::string destinationAddress, std::string &transactionHash) override;
   virtual void initializeWithViewKey(const Crypto::SecretKey& viewSecretKey, const std::string& password) override;
   virtual void load(std::istream& source, const std::string& password) override;
   virtual void shutdown() override;

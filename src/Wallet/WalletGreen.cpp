@@ -242,6 +242,151 @@ void WalletGreen::initialize(const std::string& password) {
   initWithKeys(viewPublicKey, viewSecretKey, password);
 }
 
+void WalletGreen::createDeposit(uint64_t amount, uint64_t term, std::string sourceAddress, std::string destinationAddress, std::string &transactionHash)
+  {
+    /* Add deposit id check and addition */
+
+    if (sourceAddress.empty())
+    {
+      sourceAddress = getAddress(0);
+    }
+
+    if (destinationAddress.empty())
+    {
+      destinationAddress = sourceAddress;
+    }
+
+    CryptoNote::AccountPublicAddress sourceAddr = parseAddress(sourceAddress);
+    CryptoNote::AccountPublicAddress destAddr = parseAddress(destinationAddress);
+
+    /* Create the transaction */
+    std::unique_ptr<ITransaction> transaction = createTransaction();
+
+    /* Select the wallet - If no source address was specified then it will pick funds from anywhere
+     and the change will go to the primary address of the wallet container */
+    std::vector<WalletOuts> wallets;
+    wallets = pickWallets({sourceAddress});
+
+    /* Select the transfers */
+    uint64_t fee = 1000;
+    uint64_t neededMoney = amount + fee;
+    std::vector<OutputToTransfer> selectedTransfers;
+    uint64_t foundMoney = selectTransfers(neededMoney,
+                                          0 == 0,
+                                          m_currency.defaultDustThreshold(),
+                                          std::move(wallets),
+                                          selectedTransfers);
+
+    /* Do we have enough funds */
+    if (foundMoney < neededMoney)
+    {
+      throw std::system_error(make_error_code(error::WRONG_AMOUNT), "Not enough money");
+    }
+
+    /* Now we add the outputs to the transaction, starting with the deposits output
+     which includes the term, and then after that the change outputs */
+
+    /* Add the deposit outputs to the transaction */
+    auto depositIndex = transaction->addOutput(
+        neededMoney - fee,
+        {destAddr},
+        1,
+        term);
+
+    /* Let's add the change outputs to the transaction */
+
+    std::vector<uint64_t> amounts;
+
+    /* Breakdown the change into specific amounts */
+    decompose_amount_into_digits(
+        foundMoney - neededMoney,
+        m_currency.defaultDustThreshold(),
+        [&](uint64_t chunk) { amounts.push_back(chunk); },
+        [&](uint64_t dust) { amounts.push_back(dust); });
+    std::vector<uint64_t> decomposedChange = amounts;
+
+    /* Now pair each of those amounts to the change address
+     which in the case of a deposit is the source address */
+    typedef std::pair<const AccountPublicAddress *, uint64_t> AmountToAddress;
+    std::vector<AmountToAddress> amountsToAddresses;
+    for (const auto &output : decomposedChange)
+    {
+      amountsToAddresses.emplace_back(AmountToAddress{&sourceAddr, output});
+    }
+
+    /* For the sake of privacy, we shuffle the output order randomly */
+    std::shuffle(amountsToAddresses.begin(), amountsToAddresses.end(), std::default_random_engine{Crypto::rand<std::default_random_engine::result_type>()});
+    std::sort(amountsToAddresses.begin(), amountsToAddresses.end(), [](const AmountToAddress &left, const AmountToAddress &right) {
+      return left.second < right.second;
+    });
+
+    /* Add the change outputs to the transaction */
+    try
+    {
+      for (const auto &amountToAddress : amountsToAddresses)
+      {
+        transaction->addOutput(amountToAddress.second,
+                               *amountToAddress.first);
+      }
+    }
+
+    catch (const std::exception &e)
+    {
+      std::cerr << e.what() << '\n';
+    }
+
+    /* Now add the other components of the transaction such as the transaction secret key, unlocktime
+     since this is a deposit, we don't need to add messages or added extras beyond the transaction publick key */
+    Crypto::SecretKey transactionSK;
+    transaction->getTransactionSecretKey(transactionSK);
+    transaction->setUnlockTime(0);
+
+    /* Add the transaction extra */
+    std::vector<WalletMessage> messages;
+    Crypto::PublicKey publicKey = transaction->getTransactionPublicKey();
+    CryptoNote::KeyPair kp = {publicKey, transactionSK};
+    for (size_t i = 0; i < messages.size(); ++i)
+    {
+      CryptoNote::AccountPublicAddress addressBin;
+      if (!m_currency.parseAccountAddressString(messages[i].address, addressBin))
+        continue;
+      CryptoNote::tx_extra_message tag;
+      if (!tag.encrypt(i, messages[i].message, &addressBin, kp))
+        continue;
+      BinaryArray ba;
+      toBinaryArray(tag, ba);
+      ba.insert(ba.begin(), TX_EXTRA_MESSAGE_TAG);
+      transaction->appendExtra(ba);
+    }
+
+    /* Prepare the inputs */
+
+    /* Get additional inputs for the mixin */
+    typedef CryptoNote::COMMAND_RPC_GET_RANDOM_OUTPUTS_FOR_AMOUNTS::outs_for_amount outs_for_amount;
+    std::vector<outs_for_amount> mixinResult;
+    std::vector<InputInfo> keysInfo;
+    prepareInputs(selectedTransfers, mixinResult, 4, keysInfo);
+
+    /* Add the inputs to the transaction */
+    std::vector<KeyPair> ephKeys;
+    for (auto &input : keysInfo)
+    {
+      transaction->addInput(makeAccountKeys(*input.walletRecord), input.keyInfo, input.ephKeys);
+    }
+
+    /* Now sign the inputs so we can proceed with the transaction */
+    size_t i = 0;
+    for (auto &input : keysInfo)
+    {
+      transaction->signInputKey(i++, input.keyInfo, input.ephKeys);
+    }
+
+    /* Return the transaction hash */
+    transactionHash = Common::podToHex(transaction->getTransactionHash());
+    size_t id = validateSaveAndSendTransaction(*transaction, {}, false, true);
+  }
+
+
 void WalletGreen::validateOrders(const std::vector<WalletOrder>& orders) const {
   for (const auto& order : orders) {
     if (!CryptoNote::validateAddress(order.address, m_currency)) {
