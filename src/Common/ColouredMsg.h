@@ -1,5 +1,7 @@
 // Copyright (c) 2018, The TurtleCoin Developers
 // Copyright (c) 2019-2020, The Lithe Project Development Team
+// Copyright (c) 2017-2018 The Circle Foundation & Conceal Devs
+// Copyright (c) 2018-2020 Conceal Network & Conceal Devs
 // 
 // Please see the included LICENSE file for more information.
 
