@@ -160,7 +160,7 @@ protected:
   virtual void onTransactionUpdated(ITransfersSubscription *object, const Crypto::Hash &transactionHash) override;
   virtual void onTransactionUpdated(const Crypto::PublicKey &viewPublicKey, const Crypto::Hash &transactionHash,
                                     const std::vector<ITransfersContainer *> &containers) override;
-  void transactionUpdated(TransactionInformation &transactionInfo, const std::vector<ContainerAmounts> &containerAmountsList);
+  void transactionUpdated(TransactionInformation transactionInfo, const std::vector<ContainerAmounts> &containerAmountsList);
 
   virtual void onTransactionDeleted(ITransfersSubscription *object, const Crypto::Hash &transactionHash) override;
   void transactionDeleted(ITransfersSubscription *object, const Crypto::Hash &transactionHash);
