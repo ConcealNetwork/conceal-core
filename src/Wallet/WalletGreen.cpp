@@ -247,22 +247,23 @@ namespace
 namespace CryptoNote
 {
 
-  WalletGreen::WalletGreen(System::Dispatcher &dispatcher, const Currency &currency, INode &node, Logging::ILogger &logger, uint32_t transactionSoftLockTime) : m_dispatcher(dispatcher),
-                                                                                                                                                                m_currency(currency),
-                                                                                                                                                                m_node(node),
-                                                                                                                                                                m_logger(logger, "WalletGreen"),
-                                                                                                                                                                m_stopped(false),
-                                                                                                                                                                m_blockchainSynchronizerStarted(false),
-                                                                                                                                                                m_blockchainSynchronizer(node, currency.genesisBlockHash()),
-                                                                                                                                                                m_synchronizer(currency, logger, m_blockchainSynchronizer, node),
-                                                                                                                                                                m_eventOccurred(m_dispatcher),
-                                                                                                                                                                m_readyEvent(m_dispatcher),
-                                                                                                                                                                m_state(WalletState::NOT_INITIALIZED),
-                                                                                                                                                                m_actualBalance(0),
-                                                                                                                                                                m_pendingBalance(0),
-                                                                                                                                                                m_lockedDepositBalance(0),
-                                                                                                                                                                m_unlockedDepositBalance(0),
-                                                                                                                                                                m_transactionSoftLockTime(transactionSoftLockTime)
+  WalletGreen::WalletGreen(System::Dispatcher &dispatcher, const Currency &currency, INode &node, Logging::ILogger &logger, uint32_t transactionSoftLockTime) : 
+      m_dispatcher(dispatcher),
+      m_currency(currency),
+      m_node(node),
+      m_logger(logger, "WalletGreen"),
+      m_stopped(false),
+      m_blockchainSynchronizerStarted(false),
+      m_blockchainSynchronizer(node, currency.genesisBlockHash()),
+      m_synchronizer(currency, logger, m_blockchainSynchronizer, node),
+      m_eventOccurred(m_dispatcher),
+      m_readyEvent(m_dispatcher),
+      m_state(WalletState::NOT_INITIALIZED),
+      m_actualBalance(0),
+      m_pendingBalance(0),
+      m_lockedDepositBalance(0),
+      m_unlockedDepositBalance(0),
+      m_transactionSoftLockTime(transactionSoftLockTime)
   {
     m_upperTransactionSizeLimit = m_currency.transactionMaxSize();
     m_readyEvent.set();
@@ -615,6 +616,11 @@ namespace CryptoNote
     }
 
     m_state = WalletState::INITIALIZED;
+    m_logger(INFO, BRIGHT_WHITE) << "Container loaded, view public key " << Common::podToHex(m_viewPublicKey) << ", wallet count "
+                                 << m_walletsContainer.size() << ", deposit count "
+                                 << m_deposits.size() << ", actual balance "
+                                 << m_currency.formatAmount(m_actualBalance) << ", pending balance "
+                                 << m_currency.formatAmount(m_pendingBalance);
   }
 
   void WalletGreen::unsafeLoad(std::istream &source, const std::string &password)
@@ -2375,9 +2381,9 @@ namespace CryptoNote
   }
 
   DepositId WalletGreen::insertNewDeposit(
-      const TransactionOutputInformation &depositOutput, 
+      const TransactionOutputInformation &depositOutput,
       TransactionId creatingTransactionId,
-      const Currency &currency, 
+      const Currency &currency,
       uint32_t height)
   {
     assert(depositOutput.type == TransactionTypes::OutputType::Multisignature);
@@ -2398,8 +2404,8 @@ namespace CryptoNote
   }
 
   DepositId WalletGreen::insertDeposit(
-      const Deposit &deposit, 
-      size_t depositIndexInTransaction, 
+      const Deposit &deposit,
+      size_t depositIndexInTransaction,
       const Hash &transactionHash)
   {
     DepositInfo info;
@@ -2630,25 +2636,31 @@ namespace CryptoNote
       return;
     }
 
+    bool updated = false;
+
     uint64_t actual = container->balance(ITransfersContainer::IncludeAllUnlocked);
     uint64_t pending = container->balance(ITransfersContainer::IncludeAllLocked);
 
     if (it->actualBalance < actual)
     {
       m_actualBalance += actual - it->actualBalance;
+      updated = true;
     }
     else
     {
       m_actualBalance -= it->actualBalance - actual;
+      updated = true;
     }
 
     if (it->pendingBalance < pending)
     {
       m_pendingBalance += pending - it->pendingBalance;
+      updated = true;
     }
     else
     {
       m_pendingBalance -= it->pendingBalance - pending;
+      updated = true;
     }
 
     std::vector<TransactionOutputInformation> transfers2;
@@ -2663,18 +2675,28 @@ namespace CryptoNote
       if (ok2)
       {
         heights2.push_back(info2.blockHeight);
+        updated = true;
       }
     }
 
     m_lockedDepositBalance = calculateDepositsAmount(transfers2, m_currency, heights2);
 
-    m_walletsContainer.get<TransfersContainerIndex>().modify(it, [actual, pending](WalletRecord &wallet) {
-      wallet.actualBalance = actual;
-      wallet.pendingBalance = pending;
-      /* TODO 
-    wallet.lockedDepositBalance = actualLockedDeposits;
-    wallet.unlockedDepositBalance = actualUnlockedDeposits; */
-    });
+    if (updated)
+    {
+      m_walletsContainer.get<TransfersContainerIndex>().modify(it, [actual, pending](WalletRecord &wallet) {
+        wallet.actualBalance = actual;
+        wallet.pendingBalance = pending;
+      });
+
+      m_logger(INFO, BRIGHT_WHITE) << "Wallet balance updated, address "
+                                   << m_currency.accountAddressAsString({it->spendPublicKey, m_viewPublicKey})
+                                   << ", actual " << m_currency.formatAmount(it->actualBalance) << ", pending "
+                                   << m_currency.formatAmount(it->pendingBalance);
+      m_logger(INFO, BRIGHT_WHITE) << "Container balance updated, actual "
+                                   << m_currency.formatAmount(m_actualBalance) << ", pending "
+                                   << m_currency.formatAmount(m_pendingBalance) << ", locked deposits "
+                                   << m_currency.formatAmount(m_lockedDepositBalance);
+    }
   }
 
   const WalletRecord &WalletGreen::getWalletRecord(const PublicKey &key) const
