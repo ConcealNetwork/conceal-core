@@ -384,11 +384,12 @@ namespace CryptoNote
     Crypto::Hash m_lastBlockHash;
   };
 
-  Blockchain::Blockchain(const Currency &currency, tx_memory_pool &tx_pool, ILogger &logger) : logger(logger, "Blockchain"),
+  Blockchain::Blockchain(const Currency &currency, tx_memory_pool &tx_pool, ILogger &logger, bool blockchainIndexesEnabled) : logger(logger, "Blockchain"),
                                                                                                m_currency(currency),
                                                                                                m_tx_pool(tx_pool),
                                                                                                m_current_block_cumul_sz_limit(0),
                                                                                                m_checkpoints(logger),
+                                                                                               m_blockchainIndexesEnabled(blockchainIndexesEnabled),
                                                                                                m_upgradeDetectorV2(currency, m_blocks, BLOCK_MAJOR_VERSION_2, logger),
                                                                                                m_upgradeDetectorV3(currency, m_blocks, BLOCK_MAJOR_VERSION_3, logger),
                                                                                                m_upgradeDetectorV4(currency, m_blocks, BLOCK_MAJOR_VERSION_4, logger),
@@ -528,7 +529,11 @@ namespace CryptoNote
         rebuildCache();
       }
 
+          /* Load (or generate) the indices only if Explorer mode is enabled */
+    if (m_blockchainIndexesEnabled) {
       loadBlockchainIndices();
+    }
+    
       m_checkpoints.load_checkpoints();
       logger(Logging::INFO) << "Loading checkpoints";
       m_checkpoints.load_checkpoints_from_dns();

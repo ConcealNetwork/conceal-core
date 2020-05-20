@@ -47,7 +47,6 @@ namespace CryptoNote {
   class Blockchain : public CryptoNote::ITransactionValidator {
   public:
     Blockchain(const Currency& currency, tx_memory_pool& tx_pool, Logging::ILogger& logger, bool blockchainIndexesEnabled);
-
     bool addObserver(IBlockchainStorageObserver* observer);
     bool removeObserver(IBlockchainStorageObserver* observer);
 
