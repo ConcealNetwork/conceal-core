@@ -267,7 +267,6 @@ namespace PaymentService
         const std::vector<CryptoNote::TransactionsInBlockInfo> &blocks,
         const TransactionsInBlockInfoFilter &filter)
     {
-
       std::vector<CryptoNote::TransactionsInBlockInfo> result;
 
       for (const auto &block : blocks)
@@ -1067,8 +1066,12 @@ namespace PaymentService
     return std::error_code();
   }
 
-  std::error_code WalletService::getTransactions(const std::vector<std::string> &addresses, const std::string &blockHashString,
-                                                 uint32_t blockCount, const std::string &paymentId, std::vector<TransactionsInBlockRpcInfo> &transactions)
+  std::error_code WalletService::getTransactions(
+      const std::vector<std::string> &addresses, 
+      const std::string &blockHashString,
+      uint32_t blockCount, 
+      const std::string &paymentId, 
+      std::vector<TransactionsInBlockRpcInfo> &transactions)
   {
     try
     {

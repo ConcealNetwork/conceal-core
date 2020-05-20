@@ -288,9 +288,13 @@ namespace CryptoNote
     initWithKeys(viewPublicKey, viewSecretKey, password);
   }
 
-  void WalletGreen::createDeposit(uint64_t amount, uint64_t term, std::string sourceAddress, std::string destinationAddress, std::string &transactionHash)
+  void WalletGreen::createDeposit(
+      uint64_t amount, 
+      uint64_t term, 
+      std::string sourceAddress, 
+      std::string destinationAddress, 
+      std::string &transactionHash)
   {
-    /* Add deposit id check and addition */
 
     if (sourceAddress.empty())
     {
@@ -1780,7 +1784,11 @@ namespace CryptoNote
     }
   }
 
-  size_t WalletGreen::validateSaveAndSendTransaction(const ITransactionReader &transaction, const std::vector<WalletTransfer> &destinations, bool isFusion, bool send)
+  size_t WalletGreen::validateSaveAndSendTransaction(
+      const ITransactionReader &transaction, 
+      const std::vector<WalletTransfer> &destinations, 
+      bool isFusion, 
+      bool send)
   {
     BinaryArray transactionData = transaction.getTransactionData();
 
@@ -2408,8 +2416,6 @@ namespace CryptoNote
     deposit.unlockHeight = height + depositOutput.term;
     deposit.locked = true;
 
-
-
     return insertDeposit(deposit, depositOutput.outputInTransaction, depositOutput.transactionHash);
   }
 
@@ -2437,7 +2443,9 @@ namespace CryptoNote
     return id;
   }
 
-  void WalletGreen::transactionUpdated(TransactionInformation transactionInfo, const std::vector<ContainerAmounts> &containerAmountsList)
+  void WalletGreen::transactionUpdated(
+      TransactionInformation transactionInfo, 
+      const std::vector<ContainerAmounts> &containerAmountsList)
   {
     System::EventLock lk(m_readyEvent);
 
