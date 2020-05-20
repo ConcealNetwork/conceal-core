@@ -9,7 +9,7 @@
 #include <exception>
 #include <limits>
 #include <vector>
-
+#include "IWallet.h"
 #include "Serialization/ISerializer.h"
 
 namespace PaymentService
@@ -81,6 +81,9 @@ struct GetStatus
     uint32_t totalOutputCount;
     std::string lastBlockHash;
     uint32_t peerCount;
+    uint32_t depositCount;
+    uint32_t transactionCount;
+    uint32_t addressCount;
 
     void serialize(CryptoNote::ISerializer &serializer);
   };
@@ -331,7 +334,7 @@ struct TransactionRpcInfo
   std::string transactionHash;
   uint32_t blockIndex;
   uint64_t timestamp;
-  uint32_t confirmations;
+  uint32_t confirmations = 0;
   bool isBase;
   uint64_t unlockTime;
   int64_t amount;
@@ -339,8 +342,8 @@ struct TransactionRpcInfo
   std::vector<TransferRpcInfo> transfers;
   std::string extra;
   std::string paymentId;
-  size_t firstDepositId;
-  size_t depositCount;
+  size_t firstDepositId = CryptoNote::WALLET_INVALID_DEPOSIT_ID;
+  size_t depositCount = 0;
 
   void serialize(CryptoNote::ISerializer &serializer);
 };

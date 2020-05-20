@@ -48,6 +48,9 @@ void GetStatus::Response::serialize(CryptoNote::ISerializer &serializer)
   serializer(totalOutputCount, "totalOutputCount");
   serializer(lastBlockHash, "lastBlockHash");
   serializer(peerCount, "peerCount");
+  serializer(depositCount, "depositCount");
+  serializer(transactionCount, "transactionCount");
+  serializer(addressCount, "addressCount");
 }
 
 void CreateDeposit::Request::serialize(CryptoNote::ISerializer &serializer)

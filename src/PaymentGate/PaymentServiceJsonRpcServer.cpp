@@ -211,7 +211,7 @@ std::error_code PaymentServiceJsonRpcServer::handleGetViewKey(const GetViewKey::
 }
 
 std::error_code PaymentServiceJsonRpcServer::handleGetStatus(const GetStatus::Request& request, GetStatus::Response& response) {
-  return service.getStatus(response.blockCount, response.knownBlockCount, response.localBlockCount, response.totalOutputCount, response.lastBlockHash, response.peerCount);
+  return service.getStatus(response.blockCount, response.knownBlockCount, response.localBlockCount, response.totalOutputCount, response.lastBlockHash, response.peerCount, response.depositCount, response.transactionCount, response.addressCount);
 }
 
 std::error_code PaymentServiceJsonRpcServer::handleCreateDeposit(const CreateDeposit::Request& request, CreateDeposit::Response& response) {

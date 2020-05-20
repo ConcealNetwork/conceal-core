@@ -1533,7 +1533,7 @@ std::error_code WalletService::getUnconfirmedTransactionHashes(const std::vector
   return std::error_code();
 }
 
-std::error_code WalletService::getStatus(uint32_t &blockCount, uint32_t &knownBlockCount, uint32_t &localBlockCount, uint32_t &totalOutputCount, std::string &lastBlockHash, uint32_t &peerCount)
+std::error_code WalletService::getStatus(uint32_t &blockCount, uint32_t &knownBlockCount, uint32_t &localBlockCount, uint32_t &totalOutputCount, std::string &lastBlockHash, uint32_t &peerCount, uint32_t &depositCount, uint32_t &transactionCount, uint32_t &addressCount)
 {
   try
   {
@@ -1546,6 +1546,9 @@ std::error_code WalletService::getStatus(uint32_t &blockCount, uint32_t &knownBl
     localBlockCount = node.getLocalBlockCount();
     peerCount = static_cast<uint32_t>(node.getPeerCount());
     blockCount = wallet.getBlockCount();
+    depositCount = static_cast<uint32_t>(wallet.getWalletDepositCount());
+    transactionCount = static_cast<uint32_t>(wallet.getTransactionCount());
+    addressCount = static_cast<uint32_t>(wallet.getAddressCount());
 
     auto lastHashes = wallet.getBlockHashes(blockCount - 1, 1);
     lastBlockHash = Common::podToHex(lastHashes.back());
