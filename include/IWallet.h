@@ -84,6 +84,7 @@ struct WalletTransaction
   WalletTransactionState state;
   uint64_t timestamp;
   uint32_t blockHeight;
+  uint32_t confirmations;
   Crypto::Hash hash;
   boost::optional<Crypto::SecretKey> secretKey;
   int64_t totalAmount;
@@ -91,7 +92,7 @@ struct WalletTransaction
   uint64_t creationTime;
   uint64_t unlockTime;
   std::string extra;
-  DepositId firstDepositId;
+  size_t firstDepositId = std::numeric_limits<DepositId>::max();;
   size_t depositCount = 0;
   bool isBase;
 };
@@ -171,6 +172,7 @@ public:
   virtual void save(std::ostream &destination, bool saveDetails = true, bool saveCache = true) = 0;
 
   virtual size_t getAddressCount() const = 0;
+  virtual size_t getWalletDepositCount() const = 0;  
   virtual std::string getAddress(size_t index) const = 0;
   virtual KeyPair getAddressSpendKey(size_t index) const = 0;
   virtual KeyPair getAddressSpendKey(const std::string &address) const = 0;
