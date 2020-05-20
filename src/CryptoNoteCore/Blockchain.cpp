@@ -376,8 +376,8 @@ namespace CryptoNote
     {
       return m_loaded;
     }
-
-  private:
+    
+    private:
     LoggerRef logger;
     bool m_loaded;
     Blockchain &m_bs;
@@ -726,6 +726,7 @@ namespace CryptoNote
     assert(m_messageQueueList.empty());
     return true;
   }
+
 
   bool Blockchain::resetAndSetGenesisBlock(const Block &b)
   {

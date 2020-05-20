@@ -24,6 +24,8 @@ struct TransactionInformation {
   Crypto::PublicKey publicKey;
   uint32_t blockHeight;
   uint64_t timestamp;
+  size_t firstDepositId;
+  size_t depositCount = 0;
   uint64_t unlockTime;
   uint64_t totalAmountIn;
   uint64_t totalAmountOut;
