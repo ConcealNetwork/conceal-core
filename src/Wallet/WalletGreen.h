@@ -44,6 +44,7 @@ public:
   virtual void save(std::ostream &destination, bool saveDetails = true, bool saveCache = true) override;
 
   virtual size_t getAddressCount() const override;
+  virtual size_t getWalletDepositCount() const override;  
   virtual std::string getAddress(size_t index) const override;
   virtual KeyPair getAddressSpendKey(size_t index) const override;
   virtual KeyPair getAddressSpendKey(const std::string &address) const override;

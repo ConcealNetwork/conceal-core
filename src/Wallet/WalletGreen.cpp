@@ -670,6 +670,14 @@ namespace CryptoNote
     return m_walletsContainer.get<RandomAccessIndex>().size();
   }
 
+  size_t WalletGreen::getWalletDepositCount() const
+  {
+    throwIfNotInitialized();
+    throwIfStopped();
+
+    return m_deposits.get<RandomAccessIndex>().size();
+  }
+
   std::string WalletGreen::getAddress(size_t index) const
   {
     throwIfNotInitialized();
@@ -2400,6 +2408,8 @@ namespace CryptoNote
     deposit.unlockHeight = height + depositOutput.term;
     deposit.locked = true;
 
+
+
     return insertDeposit(deposit, depositOutput.outputInTransaction, depositOutput.transactionHash);
   }
 
@@ -2416,6 +2426,12 @@ namespace CryptoNote
     DepositId id = m_deposits.size();
     m_deposits.push_back(std::move(info));
 
+    m_logger(INFO, BRIGHT_GREEN) << "New deposit created, id "
+                                  << id << ", locking "
+                                  << m_currency.formatAmount(deposit.amount) << " ,for a term of "
+                                  << deposit.term << " blocks, at block "
+                                  << deposit.height;
+
     //m_transactionOutputToDepositIndex.emplace(std::piecewise_construct, std::forward_as_tuple(transactionHash, static_cast<uint32_t>(depositIndexInTransaction)),
     //  std::forward_as_tuple(id));
     return id;
@@ -2430,7 +2446,7 @@ namespace CryptoNote
       return;
     }
 
-    size_t firstDepositId = WALLET_INVALID_DEPOSIT_ID;
+    size_t firstDepositId = std::numeric_limits<DepositId>::max();;
     size_t depositCount = 0;
 
     bool updated = false;
@@ -2688,11 +2704,11 @@ namespace CryptoNote
         wallet.pendingBalance = pending;
       });
 
-      m_logger(INFO, BRIGHT_WHITE) << "Wallet balance updated, address "
+      m_logger(DEBUGGING, BRIGHT_WHITE) << "Wallet balance updated, address "
                                    << m_currency.accountAddressAsString({it->spendPublicKey, m_viewPublicKey})
                                    << ", actual " << m_currency.formatAmount(it->actualBalance) << ", pending "
                                    << m_currency.formatAmount(it->pendingBalance);
-      m_logger(INFO, BRIGHT_WHITE) << "Container balance updated, actual "
+      m_logger(DEBUGGING, BRIGHT_WHITE) << "Container balance updated, actual "
                                    << m_currency.formatAmount(m_actualBalance) << ", pending "
                                    << m_currency.formatAmount(m_pendingBalance) << ", locked deposits "
                                    << m_currency.formatAmount(m_lockedDepositBalance);
@@ -3148,6 +3164,7 @@ namespace CryptoNote
 
         WalletTransactionWithTransfers transaction;
         transaction.transaction = *it;
+        transaction.transaction.confirmations = 77;
 
         transaction.transfers = getTransactionTransfers(*it);
 
