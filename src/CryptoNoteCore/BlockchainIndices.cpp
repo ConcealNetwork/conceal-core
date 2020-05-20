@@ -11,6 +11,7 @@
 #include "CryptoNoteCore/CryptoNoteFormatUtils.h"
 #include "BlockchainExplorer/BlockchainExplorerDataBuilder.h"
 #include "CryptoNoteBasicImpl.h"
+#include <parallel_hashmap/phmap.h>
 
 namespace CryptoNote {
 
@@ -27,6 +28,7 @@ bool PaymentIdIndex::add(const Transaction& transaction) {
 }
 
 bool PaymentIdIndex::remove(const Transaction& transaction) {
+  
   Crypto::Hash paymentId;
   Crypto::Hash transactionHash = getObjectHash(transaction);
   if (!BlockchainExplorerDataBuilder::getPaymentId(transaction, paymentId)) {

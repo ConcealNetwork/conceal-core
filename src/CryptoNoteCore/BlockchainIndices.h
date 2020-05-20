@@ -12,6 +12,9 @@
 
 #include "crypto/hash.h"
 #include "CryptoNoteBasic.h"
+#include <parallel_hashmap/phmap.h>
+
+using phmap::flat_hash_map;
 
 namespace CryptoNote {
 
@@ -33,7 +36,7 @@ public:
     archive & index;
   }
 private:
-  std::unordered_multimap<Crypto::Hash, Crypto::Hash> index;
+  flat_hash_map<Crypto::Hash, Crypto::Hash> index;
 };
 
 class TimestampBlocksIndex {
