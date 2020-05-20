@@ -3163,9 +3163,7 @@ namespace CryptoNote
         }
 
         WalletTransactionWithTransfers transaction;
-        transaction.transaction = *it;
-        transaction.transaction.confirmations = 77;
-
+        transaction.transaction = *it;        
         transaction.transfers = getTransactionTransfers(*it);
 
         info.transactions.emplace_back(std::move(transaction));

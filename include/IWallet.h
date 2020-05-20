@@ -84,7 +84,6 @@ struct WalletTransaction
   WalletTransactionState state;
   uint64_t timestamp;
   uint32_t blockHeight;
-  uint32_t confirmations;
   Crypto::Hash hash;
   boost::optional<Crypto::SecretKey> secretKey;
   int64_t totalAmount;
