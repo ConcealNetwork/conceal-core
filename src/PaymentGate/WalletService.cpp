@@ -1052,9 +1052,14 @@ namespace PaymentService
       unlockHeight = deposit.unlockHeight;
 
       WalletTransaction wallettx = wallet.getTransaction(deposit.creatingTransactionId);
-
       creatingTransactionHash = Common::podToHex(wallettx.hash);
-      spendingTransactionHash = "";
+
+      if (deposit.spendingTransactionId != WALLET_INVALID_TRANSACTION_ID) 
+      {
+        WalletTransaction walletstx = wallet.getTransaction(deposit.spendingTransactionId);
+        spendingTransactionHash = Common::podToHex(walletstx.hash);
+      }
+      
       bool state = true;
       uint32_t knownBlockCount = node.getKnownBlockCount();
       if (knownBlockCount > unlockHeight) {

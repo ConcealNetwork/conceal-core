@@ -264,6 +264,10 @@ protected:
   size_t insertOutgoingTransactionAndPushEvent(const Crypto::Hash &transactionHash, uint64_t fee, const BinaryArray &extra, uint64_t unlockTimestamp);
   void updateTransactionStateAndPushEvent(size_t transactionId, WalletTransactionState state);
   bool updateWalletTransactionInfo(size_t transactionId, const CryptoNote::TransactionInformation &info, int64_t totalAmount);
+  bool updateWalletDepositInfo(size_t depositId, const CryptoNote::DepositInfo &info);
+
+
+
   bool updateTransactionTransfers(size_t transactionId, const std::vector<ContainerAmounts> &containerAmountsList,
                                   int64_t allInputsAmount, int64_t allOutputsAmount);
   TransfersMap getKnownTransfersMap(size_t transactionId, size_t firstTransferIdx) const;
