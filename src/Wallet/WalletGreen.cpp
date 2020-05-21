@@ -2130,12 +2130,38 @@ namespace CryptoNote
     return getTransactionsInBlocks(blockIndex, count);
   }
 
+  std::vector<DepositsInBlockInfo> WalletGreen::getDeposits(const Crypto::Hash &blockHash, size_t count) const
+  {
+    throwIfNotInitialized();
+    throwIfStopped();
+
+    auto &hashIndex = m_blockchain.get<BlockHashIndex>();
+    auto it = hashIndex.find(blockHash);
+    if (it == hashIndex.end())
+    {
+      return std::vector<DepositsInBlockInfo>();
+    }
+
+    auto heightIt = m_blockchain.project<BlockHeightIndex>(it);
+
+    uint32_t blockIndex = static_cast<uint32_t>(std::distance(m_blockchain.get<BlockHeightIndex>().begin(), heightIt));
+    return getDepositsInBlocks(blockIndex, count);
+  }
+
   std::vector<TransactionsInBlockInfo> WalletGreen::getTransactions(uint32_t blockIndex, size_t count) const
   {
     throwIfNotInitialized();
     throwIfStopped();
 
     return getTransactionsInBlocks(blockIndex, count);
+  }
+
+  std::vector<DepositsInBlockInfo> WalletGreen::getDeposits(uint32_t blockIndex, size_t count) const
+  {
+    throwIfNotInitialized();
+    throwIfStopped();
+
+    return getDepositsInBlocks(blockIndex, count);
   }
 
   std::vector<Crypto::Hash> WalletGreen::getBlockHashes(uint32_t blockIndex, size_t count) const
@@ -2552,6 +2578,21 @@ namespace CryptoNote
     auto txId = std::distance(m_transactions.get<RandomAccessIndex>().begin(), rndIt);
 
     return txId;
+  }
+
+  size_t WalletGreen::getDepositId(const Hash &transactionHash) const
+  {
+    auto it = m_deposits.get<TransactionIndex>().find(transactionHash);
+
+    if (it == m_deposits.get<TransactionIndex>().end())
+    {
+      throw std::system_error(make_error_code(std::errc::invalid_argument));
+    }
+
+    auto rndIt = m_deposits.project<RandomAccessIndex>(it);
+    auto depositId = std::distance(m_deposits.get<RandomAccessIndex>().begin(), rndIt);
+
+    return depositId;
   }
 
   void WalletGreen::onTransactionDeleted(ITransfersSubscription *object, const Hash &transactionHash)
@@ -3138,6 +3179,44 @@ namespace CryptoNote
 
     std::sort(trimmedSelectedOuts.begin(), trimmedSelectedOuts.end(), outputsSortingFunction);
     return trimmedSelectedOuts;
+  }
+
+  std::vector<DepositsInBlockInfo> WalletGreen::getDepositsInBlocks(uint32_t blockIndex, size_t count) const
+  {
+    if (count == 0)
+    {
+      throw std::system_error(make_error_code(error::WRONG_PARAMETERS), "blocks count must be greater than zero");
+    }
+
+    std::vector<DepositsInBlockInfo> result;
+
+    if (blockIndex >= m_blockchain.size())
+    {
+      return result;
+    }
+
+    auto &blockHeightIndex = m_deposits.get<BlockHeightIndex>();
+    uint32_t stopIndex = static_cast<uint32_t>(std::min(m_blockchain.size(), blockIndex + count));
+
+    for (uint32_t height = blockIndex; height < stopIndex; ++height)
+    {
+      DepositsInBlockInfo info;
+      info.blockHash = m_blockchain[height];
+
+      auto lowerBound = blockHeightIndex.lower_bound(height);
+      auto upperBound = blockHeightIndex.upper_bound(height);
+      for (auto it = lowerBound; it != upperBound; ++it)
+      {
+        Deposit deposit;
+        DepositInfo depInfo = *it;
+        deposit = depInfo.deposit;                
+
+        info.deposits.emplace_back(std::move(deposit));
+      }
+      result.emplace_back(std::move(info));
+    }
+
+    return result;
   }
 
   std::vector<TransactionsInBlockInfo> WalletGreen::getTransactionsInBlocks(uint32_t blockIndex, size_t count) const

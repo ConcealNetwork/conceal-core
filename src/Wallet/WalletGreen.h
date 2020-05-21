@@ -70,8 +70,13 @@ public:
   virtual WalletTransfer getTransactionTransfer(size_t transactionIndex, size_t transferIndex) const override;
 
   virtual WalletTransactionWithTransfers getTransaction(const Crypto::Hash &transactionHash) const override;
-  virtual std::vector<TransactionsInBlockInfo> getTransactions(const Crypto::Hash &blockHash, size_t count) const override;
-  virtual std::vector<TransactionsInBlockInfo> getTransactions(uint32_t blockIndex, size_t count) const override;
+
+  virtual std::vector<TransactionsInBlockInfo> getTransactions(const Crypto::Hash &blockHash, size_t count) const;
+  virtual std::vector<TransactionsInBlockInfo> getTransactions(uint32_t blockIndex, size_t count) const;
+  
+  virtual std::vector<DepositsInBlockInfo> getDeposits(const Crypto::Hash &blockHash, size_t count) const;
+  virtual std::vector<DepositsInBlockInfo> getDeposits(uint32_t blockIndex, size_t count) const;
+  
   virtual std::vector<Crypto::Hash> getBlockHashes(uint32_t blockIndex, size_t count) const override;
   virtual uint32_t getBlockCount() const override;
   virtual std::vector<WalletTransactionWithTransfers> getUnconfirmedTransactions() const override;
@@ -199,6 +204,7 @@ protected:
   std::string addWallet(const Crypto::PublicKey &spendPublicKey, const Crypto::SecretKey &spendSecretKey, uint64_t creationTimestamp);
   AccountKeys makeAccountKeys(const WalletRecord &wallet) const;
   size_t getTransactionId(const Crypto::Hash &transactionHash) const;
+  size_t getDepositId(const Crypto::Hash &transactionHash) const;
   void pushEvent(const WalletEvent &event);
   bool isFusionTransaction(const WalletTransaction &walletTx) const;
 
@@ -302,6 +308,7 @@ protected:
 
   TransfersRange getTransactionTransfersRange(size_t transactionIndex) const;
   std::vector<TransactionsInBlockInfo> getTransactionsInBlocks(uint32_t blockIndex, size_t count) const;
+  std::vector<DepositsInBlockInfo> getDepositsInBlocks(uint32_t blockIndex, size_t count) const;
   Crypto::Hash getBlockHashByIndex(uint32_t blockIndex) const;
 
   std::vector<WalletTransfer> getTransactionTransfers(const WalletTransaction &transaction) const;

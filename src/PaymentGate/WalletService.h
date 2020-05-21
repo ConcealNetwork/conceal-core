@@ -103,6 +103,9 @@ private:
   std::vector<CryptoNote::TransactionsInBlockInfo> getTransactions(const Crypto::Hash &blockHash, size_t blockCount) const;
   std::vector<CryptoNote::TransactionsInBlockInfo> getTransactions(uint32_t firstBlockIndex, size_t blockCount) const;
 
+  std::vector<CryptoNote::DepositsInBlockInfo> getDeposits(const Crypto::Hash &blockHash, size_t blockCount) const;
+  std::vector<CryptoNote::DepositsInBlockInfo> getDeposits(uint32_t firstBlockIndex, size_t blockCount) const;
+
   std::vector<TransactionHashesInBlockRpcInfo> getRpcTransactionHashes(const Crypto::Hash &blockHash, size_t blockCount, const TransactionsInBlockInfoFilter &filter) const;
   std::vector<TransactionHashesInBlockRpcInfo> getRpcTransactionHashes(uint32_t firstBlockIndex, size_t blockCount, const TransactionsInBlockInfoFilter &filter) const;
 

@@ -1784,9 +1784,20 @@ namespace PaymentService
     return result;
   }
 
-  std::vector<CryptoNote::TransactionsInBlockInfo> WalletService::getTransactions(uint32_t firstBlockIndex, size_t blockCount) const
+  std::vector<CryptoNote::DepositsInBlockInfo> WalletService::getDeposits(const Crypto::Hash &blockHash, size_t blockCount) const
   {
-    std::vector<CryptoNote::TransactionsInBlockInfo> result = wallet.getTransactions(firstBlockIndex, blockCount);
+    std::vector<CryptoNote::DepositsInBlockInfo> result = wallet.getDeposits(blockHash, blockCount);
+    if (result.empty())
+    {
+      throw std::system_error(make_error_code(CryptoNote::error::WalletServiceErrorCode::OBJECT_NOT_FOUND));
+    }
+
+    return result;
+  }
+
+  std::vector<CryptoNote::DepositsInBlockInfo> WalletService::getDeposits(uint32_t firstBlockIndex, size_t blockCount) const
+  {
+    std::vector<CryptoNote::DepositsInBlockInfo> result = wallet.getDeposits(firstBlockIndex, blockCount);
     if (result.empty())
     {
       throw std::system_error(make_error_code(CryptoNote::error::WalletServiceErrorCode::OBJECT_NOT_FOUND));

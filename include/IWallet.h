@@ -155,6 +155,12 @@ struct TransactionsInBlockInfo
   std::vector<WalletTransactionWithTransfers> transactions;
 };
 
+struct DepositsInBlockInfo
+{
+  Crypto::Hash blockHash;
+  std::vector<Deposit> deposits;
+};
+
 class IWallet
 {
 public:
@@ -171,7 +177,11 @@ public:
   virtual void save(std::ostream &destination, bool saveDetails = true, bool saveCache = true) = 0;
 
   virtual size_t getAddressCount() const = 0;
+
   virtual size_t getWalletDepositCount() const = 0;  
+  virtual std::vector<DepositsInBlockInfo> getDeposits(const Crypto::Hash &blockHash, size_t count) const = 0;
+  virtual std::vector<DepositsInBlockInfo> getDeposits(uint32_t blockIndex, size_t count) const = 0;
+
   virtual std::string getAddress(size_t index) const = 0;
   virtual KeyPair getAddressSpendKey(size_t index) const = 0;
   virtual KeyPair getAddressSpendKey(const std::string &address) const = 0;
@@ -196,8 +206,12 @@ public:
   virtual WalletTransfer getTransactionTransfer(size_t transactionIndex, size_t transferIndex) const = 0;
 
   virtual WalletTransactionWithTransfers getTransaction(const Crypto::Hash &transactionHash) const = 0;
+
   virtual std::vector<TransactionsInBlockInfo> getTransactions(const Crypto::Hash &blockHash, size_t count) const = 0;
   virtual std::vector<TransactionsInBlockInfo> getTransactions(uint32_t blockIndex, size_t count) const = 0;
+
+
+
   virtual std::vector<Crypto::Hash> getBlockHashes(uint32_t blockIndex, size_t count) const = 0;
   virtual uint32_t getBlockCount() const = 0;
   virtual std::vector<WalletTransactionWithTransfers> getUnconfirmedTransactions() const = 0;
