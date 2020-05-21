@@ -2769,6 +2769,8 @@ bool WalletGreen::updateWalletDepositInfo(size_t depositId, const CryptoNote::De
       updated = true;
     }
 
+    /* Update locked deposit balance, this will cover deposits, as well 
+       as investments since they are all deposits with different parameters */
     std::vector<TransactionOutputInformation> transfers2;
     container->getOutputs(transfers2, ITransfersContainer::IncludeTypeDeposit | ITransfersContainer::IncludeStateLocked | ITransfersContainer::IncludeStateSoftLocked);
 
@@ -2786,6 +2788,23 @@ bool WalletGreen::updateWalletDepositInfo(size_t depositId, const CryptoNote::De
     }
 
     m_lockedDepositBalance = calculateDepositsAmount(transfers2, m_currency, heights2);
+
+    /* This updates the unlocked deposit balance, these are the deposits that have matured
+       and can be withdrawn */
+    std::vector<TransactionOutputInformation> transfers;
+    container->getOutputs(transfers, ITransfersContainer::IncludeTypeDeposit | ITransfersContainer::IncludeStateUnlocked);
+
+    std::vector<uint32_t> heights;
+    for (auto transfer : transfers)
+    {
+      Crypto::Hash hash = transfer.transactionHash;
+      TransactionInformation info;
+      bool ok = container->getTransactionInformation(hash, info, NULL, NULL);
+      assert(ok);
+      heights.push_back(info.blockHeight);
+    }
+
+    m_unlockedDepositBalance = calculateDepositsAmount(transfers, m_currency, heights);
 
     if (updated)
     {
