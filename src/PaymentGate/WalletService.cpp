@@ -1055,7 +1055,11 @@ namespace PaymentService
 
       creatingTransactionHash = Common::podToHex(wallettx.hash);
       spendingTransactionHash = "";
-      locked = deposit.locked;
+      bool state = true;
+      uint32_t knownBlockCount = node.getKnownBlockCount();
+      if (knownBlockCount > unlockHeight) {
+        locked = false;
+      }
     }
     catch (std::exception &x)
     {
