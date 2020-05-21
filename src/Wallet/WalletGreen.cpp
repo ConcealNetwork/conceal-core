@@ -2425,6 +2425,7 @@ namespace CryptoNote
       const Hash &transactionHash)
   {
     DepositInfo info;
+    info.blockHeight = deposit.height;
     info.deposit = deposit;
     info.outputInTransaction = static_cast<uint32_t>(depositIndexInTransaction);
     info.transactionHash = transactionHash;
