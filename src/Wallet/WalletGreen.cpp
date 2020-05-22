@@ -1053,7 +1053,7 @@ namespace CryptoNote
       throw std::system_error(make_error_code(CryptoNote::error::INDEX_OUT_OF_RANGE));
     }
 
-    WalletDeposit DepInfo = m_deposits.get<RandomAccessIndex>()[depositIndex];
+    DepositInfo DepInfo = m_deposits.get<RandomAccessIndex>()[depositIndex];
     return DepInfo.deposit;
   }
 
@@ -1379,14 +1379,14 @@ namespace CryptoNote
     }
   }
 
-bool WalletGreen::updateWalletDepositInfo(size_t depositId, const CryptoNote::WalletDeposit &info)
+bool WalletGreen::updateWalletDepositInfo(size_t depositId, const CryptoNote::DepositInfo &info)
   {
     auto &txIdIndex = m_deposits.get<RandomAccessIndex>();
     assert(depositId < txIdIndex.size());
     auto it = std::next(txIdIndex.begin(), depositId);
 
     bool updated = false;
-    bool r = txIdIndex.modify(it, [&info, &updated](WalletDeposit &deposit) {
+    bool r = txIdIndex.modify(it, [&info, &updated](DepositInfo &deposit) {
       if (deposit.deposit.spendingTransactionId != info.deposit.spendingTransactionId)
       {
         deposit.deposit.spendingTransactionId = info.deposit.spendingTransactionId;
@@ -2482,7 +2482,7 @@ bool WalletGreen::updateWalletDepositInfo(size_t depositId, const CryptoNote::Wa
       size_t depositIndexInTransaction,
       const Hash &transactionHash)
   {
-    WalletDeposit info;
+    DepositInfo info;
     info.blockHeight = deposit.height;
     info.deposit = deposit;
     info.outputInTransaction = static_cast<uint32_t>(depositIndexInTransaction);
@@ -3282,7 +3282,7 @@ bool WalletGreen::updateWalletDepositInfo(size_t depositId, const CryptoNote::Wa
       for (auto it = lowerBound; it != upperBound; ++it)
       {
         Deposit deposit;
-        WalletDeposit depInfo = *it;
+        DepositInfo depInfo = *it;
         deposit = depInfo.deposit;
 
         info.deposits.emplace_back(std::move(deposit));

@@ -25,7 +25,7 @@ namespace CryptoNote
 
     const uint64_t ACCOUNT_CREATE_TIME_ACCURACY = 60 * 60 * 24;
 
-    struct WalletDeposit
+    struct DepositInfo
     {
         Deposit deposit;
         uint32_t outputInTransaction;
@@ -103,13 +103,13 @@ namespace CryptoNote
         UnlockTransactionJobs;
 
     typedef boost::multi_index_container<
-        CryptoNote::WalletDeposit,
+        CryptoNote::DepositInfo,
         boost::multi_index::indexed_by<
             boost::multi_index::random_access<boost::multi_index::tag<RandomAccessIndex>>,
             boost::multi_index::hashed_unique<boost::multi_index::tag<TransactionIndex>,
-                                              boost::multi_index::member<CryptoNote::WalletDeposit, Crypto::Hash, &CryptoNote::WalletDeposit::transactionHash>>,
+                                              boost::multi_index::member<CryptoNote::DepositInfo, Crypto::Hash, &CryptoNote::DepositInfo::transactionHash>>,
             boost::multi_index::ordered_non_unique<boost::multi_index::tag<BlockHeightIndex>,
-                                                   boost::multi_index::member<CryptoNote::WalletDeposit, uint32_t, &CryptoNote::WalletDeposit::blockHeight>>>>
+                                                   boost::multi_index::member<CryptoNote::DepositInfo, uint32_t, &CryptoNote::DepositInfo::blockHeight>>>>
          WalletDeposits;
 
     typedef boost::multi_index_container<
