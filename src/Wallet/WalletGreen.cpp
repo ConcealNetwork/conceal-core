@@ -45,7 +45,10 @@ using namespace Logging;
 namespace
 {
 
-  uint64_t calculateDepositsAmount(const std::vector<CryptoNote::TransactionOutputInformation> &transfers, const CryptoNote::Currency &currency, const std::vector<uint32_t> heights)
+  uint64_t calculateDepositsAmount(
+      const std::vector<CryptoNote::TransactionOutputInformation> &transfers, 
+      const CryptoNote::Currency &currency, 
+      const std::vector<uint32_t> heights)
   {
     int index = 0;
     return std::accumulate(transfers.begin(), transfers.end(), static_cast<uint64_t>(0), [&currency, &index, heights](uint64_t sum, const CryptoNote::TransactionOutputInformation &deposit) {
@@ -58,7 +61,10 @@ namespace
     requestFinished.set();
   }
 
-  void parseAddressString(const std::string &string, const CryptoNote::Currency &currency, CryptoNote::AccountPublicAddress &address)
+  void parseAddressString(
+      const std::string &string, 
+      const CryptoNote::Currency &currency, 
+      CryptoNote::AccountPublicAddress &address)
   {
     if (!currency.parseAccountAddressString(string, address))
     {
@@ -66,7 +72,9 @@ namespace
     }
   }
 
-  uint64_t countNeededMoney(const std::vector<CryptoNote::WalletTransfer> &destinations, uint64_t fee)
+  uint64_t countNeededMoney(
+      const std::vector<CryptoNote::WalletTransfer> &destinations, 
+      uint64_t fee)
   {
     uint64_t neededMoney = 0;
     for (const auto &transfer : destinations)
@@ -230,7 +238,9 @@ namespace
     return donationAmount;
   }
 
-  CryptoNote::AccountPublicAddress parseAccountAddressString(const std::string &addressString, const CryptoNote::Currency &currency)
+  CryptoNote::AccountPublicAddress parseAccountAddressString(
+      const std::string &addressString, 
+      const CryptoNote::Currency &currency)
   {
     CryptoNote::AccountPublicAddress address;
 
@@ -247,22 +257,23 @@ namespace
 namespace CryptoNote
 {
 
-  WalletGreen::WalletGreen(System::Dispatcher &dispatcher, const Currency &currency, INode &node, Logging::ILogger &logger, uint32_t transactionSoftLockTime) : m_dispatcher(dispatcher),
-                                                                                                                                                                m_currency(currency),
-                                                                                                                                                                m_node(node),
-                                                                                                                                                                m_logger(logger, "WalletGreen"),
-                                                                                                                                                                m_stopped(false),
-                                                                                                                                                                m_blockchainSynchronizerStarted(false),
-                                                                                                                                                                m_blockchainSynchronizer(node, currency.genesisBlockHash()),
-                                                                                                                                                                m_synchronizer(currency, logger, m_blockchainSynchronizer, node),
-                                                                                                                                                                m_eventOccurred(m_dispatcher),
-                                                                                                                                                                m_readyEvent(m_dispatcher),
-                                                                                                                                                                m_state(WalletState::NOT_INITIALIZED),
-                                                                                                                                                                m_actualBalance(0),
-                                                                                                                                                                m_pendingBalance(0),
-                                                                                                                                                                m_lockedDepositBalance(0),
-                                                                                                                                                                m_unlockedDepositBalance(0),
-                                                                                                                                                                m_transactionSoftLockTime(transactionSoftLockTime)
+  WalletGreen::WalletGreen(System::Dispatcher &dispatcher, const Currency &currency, INode &node, Logging::ILogger &logger, uint32_t transactionSoftLockTime) : 
+      m_dispatcher(dispatcher),
+      m_currency(currency),
+      m_node(node),
+      m_logger(logger, "WalletGreen"),
+      m_stopped(false),
+      m_blockchainSynchronizerStarted(false),
+      m_blockchainSynchronizer(node, currency.genesisBlockHash()),
+      m_synchronizer(currency, logger, m_blockchainSynchronizer, node),
+      m_eventOccurred(m_dispatcher),
+      m_readyEvent(m_dispatcher),
+      m_state(WalletState::NOT_INITIALIZED),
+      m_actualBalance(0),
+      m_pendingBalance(0),
+      m_lockedDepositBalance(0),
+      m_unlockedDepositBalance(0),
+      m_transactionSoftLockTime(transactionSoftLockTime)
   {
     m_upperTransactionSizeLimit = m_currency.transactionMaxSize();
     m_readyEvent.set();
@@ -2471,6 +2482,9 @@ bool WalletGreen::updateWalletDepositInfo(size_t depositId, const CryptoNote::De
       size_t depositIndexInTransaction,
       const Hash &transactionHash)
   {
+
+
+
     DepositInfo info;
     info.blockHeight = deposit.height;
     info.deposit = deposit;

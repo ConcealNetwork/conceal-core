@@ -1054,15 +1054,16 @@ namespace PaymentService
       WalletTransaction wallettx = wallet.getTransaction(deposit.creatingTransactionId);
       creatingTransactionHash = Common::podToHex(wallettx.hash);
 
-      if (deposit.spendingTransactionId != WALLET_INVALID_TRANSACTION_ID) 
+      if (deposit.spendingTransactionId != WALLET_INVALID_TRANSACTION_ID)
       {
         WalletTransaction walletstx = wallet.getTransaction(deposit.spendingTransactionId);
         spendingTransactionHash = Common::podToHex(walletstx.hash);
       }
-      
+
       bool state = true;
       uint32_t knownBlockCount = node.getKnownBlockCount();
-      if (knownBlockCount > unlockHeight) {
+      if (knownBlockCount > unlockHeight)
+      {
         locked = false;
       }
     }
@@ -1076,10 +1077,10 @@ namespace PaymentService
   }
 
   std::error_code WalletService::getTransactions(
-      const std::vector<std::string> &addresses, 
+      const std::vector<std::string> &addresses,
       const std::string &blockHashString,
-      uint32_t blockCount, 
-      const std::string &paymentId, 
+      uint32_t blockCount,
+      const std::string &paymentId,
       std::vector<TransactionsInBlockRpcInfo> &transactions)
   {
     try
@@ -1545,14 +1546,14 @@ namespace PaymentService
   }
 
   std::error_code WalletService::getStatus(
-      uint32_t &blockCount, 
-      uint32_t &knownBlockCount, 
-      uint32_t &localBlockCount, 
-      uint32_t &totalOutputCount, 
-      std::string &lastBlockHash, 
-      uint32_t &peerCount, 
-      uint32_t &depositCount, 
-      uint32_t &transactionCount, 
+      uint32_t &blockCount,
+      uint32_t &knownBlockCount,
+      uint32_t &localBlockCount,
+      uint32_t &totalOutputCount,
+      std::string &lastBlockHash,
+      uint32_t &peerCount,
+      uint32_t &depositCount,
+      uint32_t &transactionCount,
       uint32_t &addressCount)
   {
     try
@@ -1587,23 +1588,21 @@ namespace PaymentService
     return std::error_code();
   }
 
-  std::error_code WalletService::createDeposit(uint64_t amount, uint64_t term, std::string sourceAddress, std::string destinationAddress, std::string &transactionHash)
+  /* Create a new deposit for the wallet address specified. */
+  std::error_code WalletService::createDeposit(
+      uint64_t amount, 
+      uint64_t term, 
+      std::string sourceAddress, 
+      std::string &transactionHash)
   {
     try
     {
       System::EventLock lk(readyEvent);
 
-      /* Validate both the source and destination addresses
-       if they are not empty */
-
+      /* Validate the source addresse if it is are not empty */
       if (!sourceAddress.empty())
       {
         validateAddresses({sourceAddress}, currency, logger);
-      }
-
-      if (!destinationAddress.empty())
-      {
-        validateAddresses({destinationAddress}, currency, logger);
       }
 
       /* Now validate the deposit term and the amount */
@@ -1624,7 +1623,7 @@ namespace PaymentService
       }
 
       /* Create or send the deposit */
-      wallet.createDeposit(amount, term, sourceAddress, destinationAddress, transactionHash);
+      wallet.createDeposit(amount, term, sourceAddress, sourceAddress, transactionHash);
     }
 
     catch (std::system_error &x)
@@ -1638,6 +1637,66 @@ namespace PaymentService
       return make_error_code(CryptoNote::error::INTERNAL_WALLET_ERROR);
     }
 
+    return std::error_code();
+  }
+
+  /* Create and send a deposit to another wallet address, the deposit then will appear in their
+   wallet upon confirmation. */
+  std::error_code WalletService::sendDeposit(
+      uint64_t amount, 
+      uint64_t term, 
+      std::string sourceAddress, 
+      std::string destinationAddress, 
+      std::string &transactionHash)
+  {
+    try
+    {
+      System::EventLock lk(readyEvent);
+
+      /* Validate both the source and destination addresses
+       if they are not empty */
+
+      if (!sourceAddress.empty())
+      {
+        validateAddresses({sourceAddress}, currency, logger);
+      }
+
+      if (!destinationAddress.empty())
+      {
+        validateAddresses({destinationAddress}, currency, logger);
+      }
+
+      /* Now validate the deposit term and the amount */
+
+      if (term < CryptoNote::parameters::DEPOSIT_MIN_TERM_V3)
+      {
+        return make_error_code(CryptoNote::error::DEPOSIT_TERM_TOO_SMALL);
+      }
+
+      if (term > CryptoNote::parameters::DEPOSIT_MAX_TERM_V3)
+      {
+        return make_error_code(CryptoNote::error::DEPOSIT_TERM_TOO_BIG);
+      }
+
+      if (amount < CryptoNote::parameters::DEPOSIT_MIN_AMOUNT)
+      {
+        return make_error_code(CryptoNote::error::DEPOSIT_AMOUNT_TOO_SMALL);
+      }
+
+      /* Create and send the deposit */
+      wallet.createDeposit(amount, term, sourceAddress, destinationAddress, transactionHash);
+    }
+
+    catch (std::system_error &x)
+    {
+      logger(Logging::WARNING) << "Error: " << x.what();
+      return x.code();
+    }
+    catch (std::exception &x)
+    {
+      logger(Logging::WARNING) << "Error : " << x.what();
+      return make_error_code(CryptoNote::error::INTERNAL_WALLET_ERROR);
+    }
     return std::error_code();
   }
 
@@ -1799,7 +1858,6 @@ namespace PaymentService
 
     return result;
   }
-
 
   std::vector<CryptoNote::DepositsInBlockInfo> WalletService::getDeposits(const Crypto::Hash &blockHash, size_t blockCount) const
   {

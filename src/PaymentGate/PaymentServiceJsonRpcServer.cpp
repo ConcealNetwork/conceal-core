@@ -60,6 +60,7 @@ PaymentServiceJsonRpcServer::PaymentServiceJsonRpcServer(System::Dispatcher& sys
   handlers.emplace("getStatus", jsonHandler<GetStatus::Request, GetStatus::Response>(std::bind(&PaymentServiceJsonRpcServer::handleGetStatus, this, std::placeholders::_1, std::placeholders::_2)));
   handlers.emplace("getAddresses", jsonHandler<GetAddresses::Request, GetAddresses::Response>(std::bind(&PaymentServiceJsonRpcServer::handleGetAddresses, this, std::placeholders::_1, std::placeholders::_2)));
   handlers.emplace("createDeposit", jsonHandler<CreateDeposit::Request, CreateDeposit::Response>(std::bind(&PaymentServiceJsonRpcServer::handleCreateDeposit, this, std::placeholders::_1, std::placeholders::_2)));
+  handlers.emplace("sendDeposit", jsonHandler<SendDeposit::Request, SendDeposit::Response>(std::bind(&PaymentServiceJsonRpcServer::handleSendDeposit, this, std::placeholders::_1, std::placeholders::_2)));
   handlers.emplace("getMessagesFromExtra", jsonHandler<GetMessagesFromExtra::Request, GetMessagesFromExtra::Response>(std::bind(&PaymentServiceJsonRpcServer::handleGetMessagesFromExtra, this, std::placeholders::_1, std::placeholders::_2)));
   handlers.emplace("getDeposit", jsonHandler<GetDeposit::Request, GetDeposit::Response>(std::bind(&PaymentServiceJsonRpcServer::handleGetDeposit, this, std::placeholders::_1, std::placeholders::_2)));
   handlers.emplace("estimateFusion", jsonHandler<EstimateFusion::Request, EstimateFusion::Response>(std::bind(&PaymentServiceJsonRpcServer::handleEstimateFusion, this, std::placeholders::_1, std::placeholders::_2)));
@@ -215,7 +216,11 @@ std::error_code PaymentServiceJsonRpcServer::handleGetStatus(const GetStatus::Re
 }
 
 std::error_code PaymentServiceJsonRpcServer::handleCreateDeposit(const CreateDeposit::Request& request, CreateDeposit::Response& response) {
-  return service.createDeposit(request.amount, request.term, request.sourceAddress, request.destinationAddress, response.transactionHash);
+  return service.createDeposit(request.amount, request.term, request.sourceAddress, response.transactionHash);
+}
+
+std::error_code PaymentServiceJsonRpcServer::handleSendDeposit(const SendDeposit::Request& request, SendDeposit::Response& response) {
+  return service.sendDeposit(request.amount, request.term, request.sourceAddress, request.destinationAddress, response.transactionHash);
 }
 
 std::error_code PaymentServiceJsonRpcServer::handleGetDeposit(const GetDeposit::Request& request, GetDeposit::Response& response) {

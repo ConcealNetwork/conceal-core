@@ -97,6 +97,26 @@ struct CreateDeposit
     uint64_t amount;
     uint64_t term;
     std::string sourceAddress;
+
+    void serialize(CryptoNote::ISerializer &serializer);
+  };
+
+  struct Response
+  {
+    std::string transactionHash;
+
+    void serialize(CryptoNote::ISerializer &serializer);
+  };
+};
+
+struct SendDeposit
+{
+  struct Request
+  {
+
+    uint64_t amount;
+    uint64_t term;
+    std::string sourceAddress;
     std::string destinationAddress;
 
     void serialize(CryptoNote::ISerializer &serializer);

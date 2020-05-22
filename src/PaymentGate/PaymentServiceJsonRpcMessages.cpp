@@ -58,13 +58,26 @@ void CreateDeposit::Request::serialize(CryptoNote::ISerializer &serializer)
   serializer(amount, "amount");
   serializer(term, "term");
   serializer(sourceAddress, "sourceAddress");
-  serializer(destinationAddress, "destinationAddress");
 }
 
 void CreateDeposit::Response::serialize(CryptoNote::ISerializer &serializer)
 {
   serializer(transactionHash, "transactionHash");
 }
+
+void SendDeposit::Request::serialize(CryptoNote::ISerializer &serializer)
+{
+  serializer(amount, "amount");
+  serializer(term, "term");
+  serializer(sourceAddress, "sourceAddress");
+  serializer(destinationAddress, "destinationAddress");
+}
+
+void SendDeposit::Response::serialize(CryptoNote::ISerializer &serializer)
+{
+  serializer(transactionHash, "transactionHash");
+}
+
 
 void GetDeposit::Request::serialize(CryptoNote::ISerializer &serializer)
 {
