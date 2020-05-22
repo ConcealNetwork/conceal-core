@@ -58,6 +58,15 @@ struct Deposit
   bool locked;
 };
 
+struct WalletDeposit
+{
+    Deposit deposit;
+    uint32_t outputInTransaction;
+    Crypto::Hash transactionHash;
+    std::string address;
+    uint32_t blockHeight;
+};
+
 struct WalletTransactionUpdatedData
 {
   size_t transactionIndex;
