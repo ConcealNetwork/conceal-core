@@ -65,7 +65,7 @@ public:
 
   virtual size_t getTransactionCount() const override;
   virtual WalletTransaction getTransaction(size_t transactionIndex) const override;
-  virtual WalletDeposit getDeposit(size_t depositIndex) const override;
+  virtual Deposit getDeposit(size_t depositIndex) const override;
   virtual size_t getTransactionTransferCount(size_t transactionIndex) const override;
   virtual WalletTransfer getTransactionTransfer(size_t transactionIndex, size_t transferIndex) const override;
 
