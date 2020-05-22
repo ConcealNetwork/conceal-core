@@ -2482,14 +2482,15 @@ bool WalletGreen::updateWalletDepositInfo(size_t depositId, const CryptoNote::De
       size_t depositIndexInTransaction,
       const Hash &transactionHash)
   {
-
-
-
     DepositInfo info;
     info.blockHeight = deposit.height;
     info.deposit = deposit;
     info.outputInTransaction = static_cast<uint32_t>(depositIndexInTransaction);
     info.transactionHash = transactionHash;
+
+    /* Add the address to deposit info to make searching easier */
+    WalletTransactionWithTransfers transactionWithTransfers = getTransaction(transactionHash);
+    info.address = transactionWithTransfers.transfers[0].address;
 
     DepositId id = m_deposits.size();
     m_deposits.push_back(std::move(info));
