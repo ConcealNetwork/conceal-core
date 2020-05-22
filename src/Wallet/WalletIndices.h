@@ -25,6 +25,15 @@ namespace CryptoNote
 
     const uint64_t ACCOUNT_CREATE_TIME_ACCURACY = 60 * 60 * 24;
 
+    struct WalletDeposit
+    {
+        Deposit deposit;
+        uint32_t outputInTransaction;
+        Crypto::Hash transactionHash;
+        std::string address;
+        uint32_t blockHeight;
+    };
+
     struct WalletRecord
     {
         Crypto::PublicKey spendPublicKey;
