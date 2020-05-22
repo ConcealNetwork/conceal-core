@@ -2477,6 +2477,8 @@ bool WalletGreen::updateWalletDepositInfo(size_t depositId, const CryptoNote::De
     return insertDeposit(deposit, depositOutput.outputInTransaction, depositOutput.transactionHash);
   }
 
+  //KK
+
   DepositId WalletGreen::insertDeposit(
       const Deposit &deposit,
       size_t depositIndexInTransaction,
@@ -2489,8 +2491,19 @@ bool WalletGreen::updateWalletDepositInfo(size_t depositId, const CryptoNote::De
     info.transactionHash = transactionHash;
 
     /* Add the address to deposit info to make searching easier */
-    WalletTransactionWithTransfers transactionWithTransfers = getTransaction(transactionHash);
-    info.address = transactionWithTransfers.transfers[0].address;
+
+    m_logger(INFO, BRIGHT_GREEN) << "Getting transfers for address " << deposit.height << " hash " << podToHex(transactionHash);
+
+    auto &hashIndex = m_transactions.get<TransactionIndex>();
+    auto it = hashIndex.find(transactionHash);
+    if (it == hashIndex.end())
+    {
+      throw std::system_error(make_error_code(error::OBJECT_NOT_FOUND), "Transaction not found");
+    }
+
+    WalletTransactionWithTransfers walletTransaction;
+    walletTransaction.transaction = *it;
+    walletTransaction.transfers = getTransactionTransfers(*it);
 
     DepositId id = m_deposits.size();
     m_deposits.push_back(std::move(info));
