@@ -1043,8 +1043,8 @@ namespace PaymentService
     try
     {
       System::EventLock lk(readyEvent);
-      Deposit deposit;
-      deposit = wallet.getDeposit(depositId);
+      WalletDeposit depInfo = wallet.getDeposit(depositId);
+      Deposit deposit = depInfo.deposit;
       amount = deposit.amount;
       term = deposit.term;
       interest = deposit.interest;
