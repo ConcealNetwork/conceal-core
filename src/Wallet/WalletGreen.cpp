@@ -1043,7 +1043,7 @@ namespace CryptoNote
     return m_transactions.get<RandomAccessIndex>()[transactionIndex];
   }
 
-  Deposit WalletGreen::getDeposit(size_t depositIndex) const
+  WalletDeposit WalletGreen::getDeposit(size_t depositIndex) const
   {
     throwIfNotInitialized();
     throwIfStopped();
@@ -1053,8 +1053,7 @@ namespace CryptoNote
       throw std::system_error(make_error_code(CryptoNote::error::INDEX_OUT_OF_RANGE));
     }
 
-    WalletDeposit DepInfo = m_deposits.get<RandomAccessIndex>()[depositIndex];
-    return DepInfo.deposit;
+    return m_deposits.get<RandomAccessIndex>()[depositIndex];
   }
 
   size_t WalletGreen::getTransactionTransferCount(size_t transactionIndex) const
