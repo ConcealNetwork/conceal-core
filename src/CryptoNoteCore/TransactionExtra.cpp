@@ -327,7 +327,7 @@ bool tx_extra_message::encrypt(size_t index, const std::string &message, const A
     key_data.magic2 = 0;
     Hash h = cn_fast_hash(&key_data, sizeof(message_key_data));
     uint64_t nonce = SWAP64LE(index);
-    chacha(10, buf.get(), mlen, reinterpret_cast<uint8_t *>(&h), reinterpret_cast<uint8_t *>(&nonce), buf.get());
+    chacha8(10, buf.get(), mlen, reinterpret_cast<uint8_t *>(&h), reinterpret_cast<uint8_t *>(&nonce), buf.get());
   }
   data.assign(buf.get(), mlen);
   return true;
@@ -351,7 +351,7 @@ bool tx_extra_message::decrypt(size_t index, const Crypto::PublicKey &txkey, con
     key_data.magic2 = 0;
     Hash h = cn_fast_hash(&key_data, sizeof(message_key_data));
     uint64_t nonce = SWAP64LE(index);
-    chacha(10, data.data(), mlen, reinterpret_cast<uint8_t *>(&h), reinterpret_cast<uint8_t *>(&nonce), ptr.get());
+    chacha8(10, data.data(), mlen, reinterpret_cast<uint8_t *>(&h), reinterpret_cast<uint8_t *>(&nonce), ptr.get());
     buf = ptr.get();
   } else {
     buf = data.data();

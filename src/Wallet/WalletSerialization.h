@@ -13,15 +13,15 @@
 #include "Transfers/TransfersSynchronizer.h"
 #include "Serialization/BinaryInputStreamSerializer.h"
 
-#include "crypto/chacha.h"
+#include "crypto/chacha8.h"
 
 namespace CryptoNote
 {
 
-struct CryptoContext
-{
-  Crypto::chacha_key key;
-  Crypto::chacha_iv iv;
+struct CryptoContext {
+  Crypto::chacha8_key key;
+  Crypto::chacha8_iv iv;
+
 
   void incIv();
 };
@@ -52,31 +52,31 @@ public:
 private:
   static const uint32_t SERIALIZATION_VERSION;
 
-  void loadWallet(Common::IInputStream &source, const std::string &password, uint32_t version);
-  void loadWalletV1(Common::IInputStream &source, const std::string &password);
+  void loadWallet(Common::IInputStream& source, const std::string& password, uint32_t version);
+  void loadWalletV1(Common::IInputStream& source, const std::string& password);
 
-  CryptoContext generateCryptoContext(const std::string &password);
+  CryptoContext generateCryptoContext(const std::string& password);
 
-  void saveVersion(Common::IOutputStream &destination);
-  void saveIv(Common::IOutputStream &destination, Crypto::chacha_iv &iv);
-  void saveKeys(Common::IOutputStream &destination, CryptoContext &cryptoContext);
-  void savePublicKey(Common::IOutputStream &destination, CryptoContext &cryptoContext);
-  void saveSecretKey(Common::IOutputStream &destination, CryptoContext &cryptoContext);
-  void saveFlags(bool saveDetails, bool saveCache, Common::IOutputStream &destination, CryptoContext &cryptoContext);
-  void saveWallets(Common::IOutputStream &destination, bool saveCache, CryptoContext &cryptoContext);
-  void saveBalances(Common::IOutputStream &destination, bool saveCache, CryptoContext &cryptoContext);
-  void saveTransfersSynchronizer(Common::IOutputStream &destination, CryptoContext &cryptoContext);
-  void saveUnlockTransactionsJobs(Common::IOutputStream &destination, CryptoContext &cryptoContext);
-  void saveUncommitedTransactions(Common::IOutputStream &destination, CryptoContext &cryptoContext);
-  void saveTransactions(Common::IOutputStream &destination, CryptoContext &cryptoContext);
-  void saveTransfers(Common::IOutputStream &destination, CryptoContext &cryptoContext);
+  void saveVersion(Common::IOutputStream& destination);
+  void saveIv(Common::IOutputStream& destination, Crypto::chacha8_iv& iv);
+  void saveKeys(Common::IOutputStream& destination, CryptoContext& cryptoContext);
+  void savePublicKey(Common::IOutputStream& destination, CryptoContext& cryptoContext);
+  void saveSecretKey(Common::IOutputStream& destination, CryptoContext& cryptoContext);
+  void saveFlags(bool saveDetails, bool saveCache, Common::IOutputStream& destination, CryptoContext& cryptoContext);
+  void saveWallets(Common::IOutputStream& destination, bool saveCache, CryptoContext& cryptoContext);
+  void saveBalances(Common::IOutputStream& destination, bool saveCache, CryptoContext& cryptoContext);
+  void saveTransfersSynchronizer(Common::IOutputStream& destination, CryptoContext& cryptoContext);
+  void saveUnlockTransactionsJobs(Common::IOutputStream& destination, CryptoContext& cryptoContext);
+  void saveUncommitedTransactions(Common::IOutputStream& destination, CryptoContext& cryptoContext);
+  void saveTransactions(Common::IOutputStream& destination, CryptoContext& cryptoContext);
+  void saveTransfers(Common::IOutputStream& destination, CryptoContext& cryptoContext);
 
-  uint32_t loadVersion(Common::IInputStream &source);
-  void loadIv(Common::IInputStream &source, Crypto::chacha_iv &iv);
-  void generateKey(const std::string &password, Crypto::chacha_key &key);
-  void loadKeys(Common::IInputStream &source, CryptoContext &cryptoContext);
-  void loadPublicKey(Common::IInputStream &source, CryptoContext &cryptoContext);
-  void loadSecretKey(Common::IInputStream &source, CryptoContext &cryptoContext);
+  uint32_t loadVersion(Common::IInputStream& source);
+  void loadIv(Common::IInputStream& source, Crypto::chacha8_iv& iv);
+  void generateKey(const std::string& password, Crypto::chacha8_key& key);
+  void loadKeys(Common::IInputStream& source, CryptoContext& cryptoContext);
+  void loadPublicKey(Common::IInputStream& source, CryptoContext& cryptoContext);
+  void loadSecretKey(Common::IInputStream& source, CryptoContext& cryptoContext);
   void checkKeys();
   void loadFlags(bool &details, bool &cache, Common::IInputStream &source, CryptoContext &cryptoContext);
   void loadWallets(Common::IInputStream &source, CryptoContext &cryptoContext);
