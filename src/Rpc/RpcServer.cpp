@@ -7,7 +7,6 @@
 #include "RpcServer.h"
 
 #include <future>
-#include "math.h"
 #include <unordered_map>
 
 // CryptoNote
@@ -22,13 +21,11 @@
 #include "CryptoNoteCore/Miner.h"
 #include "CryptoNoteCore/TransactionExtra.h"
 #include "CryptoNoteProtocol/ICryptoNoteProtocolQuery.h"
-#include "CryptoNoteConfig.h"
 
 #include "P2p/NetNode.h"
 
 #include "CoreRpcServerErrorCodes.h"
 #include "JsonRpc.h"
-
 #include "version.h"
 
 #undef ERROR
@@ -616,16 +613,13 @@ bool RpcServer::on_get_info(const COMMAND_RPC_GET_INFO::request& req, COMMAND_RP
   res.incoming_connections_count = total_conn - res.outgoing_connections_count;
   res.white_peerlist_size = m_p2p.getPeerlistManager().get_white_peers_count();
   res.grey_peerlist_size = m_p2p.getPeerlistManager().get_gray_peers_count();
-  res.last_known_block_index = std::max(static_cast<uint32_t>(1), m_protocolQuery.getObservedHeight());
+  res.last_known_block_index = std::max(static_cast<uint32_t>(1), m_protocolQuery.getObservedHeight()) - 1;
   res.full_deposit_amount = m_core.fullDepositAmount();
   res.status = CORE_RPC_STATUS_OK;
-  Crypto::Hash last_block_hash = m_core.getBlockIdByHeight(m_core.get_current_blockchain_height());
+  Crypto::Hash last_block_hash = m_core.getBlockIdByHeight(m_core.get_current_blockchain_height() - 1);
   res.top_block_hash = Common::podToHex(last_block_hash);
   res.version = PROJECT_VERSION;
-  res.hashrate = (uint32_t)round(res.difficulty / CryptoNote::parameters::DIFFICULTY_TARGET);
-  res.synced = ((uint32_t)res.height == (uint32_t)res.last_known_block_index);
-  res.start_time = m_core.getStartTime();
- 
+
   Block blk;
   if (!m_core.getBlockByHash(last_block_hash, blk)) {
 	  throw JsonRpc::JsonRpcError{
@@ -658,7 +652,6 @@ bool RpcServer::on_get_info(const COMMAND_RPC_GET_INFO::request& req, COMMAND_RP
 
 bool RpcServer::on_get_height(const COMMAND_RPC_GET_HEIGHT::request& req, COMMAND_RPC_GET_HEIGHT::response& res) {
   res.height = m_core.get_current_blockchain_height();
-  res.last_known_block_index = std::max(static_cast<uint32_t>(1), m_protocolQuery.getObservedHeight());
   res.status = CORE_RPC_STATUS_OK;
   return true;
 }

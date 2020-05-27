@@ -162,12 +162,6 @@ std::vector<std::string> CryptoNoteProtocolHandler::all_connections()
   return connections;
 }
 
-uint32_t CryptoNoteProtocolHandler::getBlockchainHeight() {
-  CORE_SYNC_DATA hshd;
-  uint32_t currentChainHeight = hshd.current_height;
-  return currentChainHeight;  
-}
-
 uint32_t CryptoNoteProtocolHandler::get_current_blockchain_height()
 {
   uint32_t height;
@@ -206,15 +200,6 @@ bool CryptoNoteProtocolHandler::process_payload_sync_data(const CORE_SYNC_DATA &
                                                                                           << "Synchronization started";
 
     logger(DEBUGGING) << "Remote top block height: " << hshd.current_height << ", id: " << hshd.top_id;
-    
-    /* pass it through the logger for now */
-    logger(diff >= 0 ? (is_inital ? Logging::INFO : Logging::DEBUGGING) : Logging::TRACE, Logging::BRIGHT_YELLOW) << context <<
-      "Your Conceal node is syncing with the network."
-      << "You are " << std::abs(diff)
-      << " blocks (" << std::abs(diff) / (24 * 60 * 60 / m_currency.difficultyTarget())
-      << " days) " << (diff >= 0 ? std::string("behind") : std::string("ahead"))
-      << "." << std::endl;
-    
     //let the socket to send response to handshake, but request callback, to let send request data after response
     logger(Logging::TRACE) << context << "requesting synchronization";
     context.m_state = CryptoNoteConnectionContext::state_sync_required;
@@ -659,8 +644,7 @@ bool CryptoNoteProtocolHandler::request_missing_objects(CryptoNoteConnectionCont
     requestMissingPoolTransactions(context);
 
     context.m_state = CryptoNoteConnectionContext::state_normal;
-    logger(Logging::INFO, Logging::BRIGHT_GREEN) << "<< CryptonoteProtocolHandler.cpp << "
-                                                 << context << "Successfully Synchronized to the Conceal Network.";
+    logger(Logging::INFO, Logging::BRIGHT_GREEN) << "<< CryptonoteProtocolHandler.cpp << " << context << "Synchronization complete";
     on_connection_synchronized();
   }
   return true;
@@ -703,12 +687,11 @@ bool CryptoNoteProtocolHandler::on_connection_synchronized()
                           << "                                  (@@@@**((((.                                  " << ENDL
                           << "                                     .#***                                      " << ENDL
                           << "  " << ENDL
-                          << ENDL
-                          << "Always exit conceald and concealwallet with the \"exit\" command." << ENDL
-                          << "If you do not exit properly, you may lose your blockchain and wallet data." << ENDL
-                          << ENDL
+                          << "You are now synchronized with the Conceal network. You may now start concealwallet." << ENDL
+                          << "Please note, that the blockchain will be saved only after you quit the daemon" << ENDL
+                          << "with the \"exit\" command or if you use the \"save\" command." << ENDL
+                          << "Otherwise, you will possibly need to synchronize the blockchain again." << ENDL
                           << "Use \"help\" command to see the list of available commands." << ENDL
-                          << "Use \"export_keys\" command to display your keys for restoring a corrupted wallet." << ENDL
                           << "********************************************************************************";
     m_core.on_synchronized();
 
@@ -882,7 +865,6 @@ void CryptoNoteProtocolHandler::recalculateMaxObservedHeight(const CryptoNoteCon
 
 uint32_t CryptoNoteProtocolHandler::getObservedHeight() const
 {
-  uint32_t getBlockchainHeight();
   std::lock_guard<std::mutex> lock(m_observedHeightMutex);
   return m_observedHeight;
 };
