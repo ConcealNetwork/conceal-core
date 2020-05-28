@@ -319,29 +319,28 @@ PaymentService::TransactionRpcInfo convertTransactionWithTransfersToTransactionR
   return transactionInfo;
 }
 
-std::vector<PaymentService::TransactionsInBlockRpcInfo> convertTransactionsInBlockInfoToTransactionsInBlockRpcInfo(
-    const std::vector<CryptoNote::TransactionsInBlockInfo> &blocks)
-{
-
-  std::vector<PaymentService::TransactionsInBlockRpcInfo> rpcBlocks;
-  rpcBlocks.reserve(blocks.size());
-  for (const auto &block : blocks)
-  {
-    PaymentService::TransactionsInBlockRpcInfo rpcBlock;
-    rpcBlock.blockHash = Common::podToHex(block.blockHash);
-
-    for (const CryptoNote::WalletTransactionWithTransfers &transactionWithTransfers : block.transactions)
+      std::vector<PaymentService::TransactionsInBlockRpcInfo> convertTransactionsInBlockInfoToTransactionsInBlockRpcInfo(
+        const std::vector<CryptoNote::TransactionsInBlockInfo> &blocks, uint32_t &knownBlockCount)
     {
-      PaymentService::TransactionRpcInfo transactionInfo = convertTransactionWithTransfersToTransactionRpcInfo(transactionWithTransfers);
-      rpcBlock.transactions.push_back(std::move(transactionInfo));
+      std::vector<PaymentService::TransactionsInBlockRpcInfo> rpcBlocks;
+      rpcBlocks.reserve(blocks.size());
+      for (const auto &block : blocks)
+      {
+        PaymentService::TransactionsInBlockRpcInfo rpcBlock;
+        rpcBlock.blockHash = Common::podToHex(block.blockHash);
+
+        for (const CryptoNote::WalletTransactionWithTransfers &transactionWithTransfers : block.transactions)
+        {
+          PaymentService::TransactionRpcInfo transactionInfo = convertTransactionWithTransfersToTransactionRpcInfo(transactionWithTransfers);
+          transactionInfo.confirmations = knownBlockCount - transactionInfo.blockIndex;
+          rpcBlock.transactions.push_back(std::move(transactionInfo));
+        }
+
+        rpcBlocks.push_back(std::move(rpcBlock));
+      }
+
+      return rpcBlocks;
     }
-
-    rpcBlocks.push_back(std::move(rpcBlock));
-  }
-
-  return rpcBlocks;
-}
-
 std::vector<PaymentService::TransactionHashesInBlockRpcInfo> convertTransactionsInBlockInfoToTransactionHashesInBlockRpcInfo(
     const std::vector<CryptoNote::TransactionsInBlockInfo> &blocks)
 {
@@ -1698,18 +1697,21 @@ std::vector<TransactionHashesInBlockRpcInfo> WalletService::getRpcTransactionHas
   return convertTransactionsInBlockInfoToTransactionHashesInBlockRpcInfo(filteredTransactions);
 }
 
-std::vector<TransactionsInBlockRpcInfo> WalletService::getRpcTransactions(const Crypto::Hash &blockHash, size_t blockCount, const TransactionsInBlockInfoFilter &filter) const
-{
-  std::vector<CryptoNote::TransactionsInBlockInfo> allTransactions = getTransactions(blockHash, blockCount);
-  std::vector<CryptoNote::TransactionsInBlockInfo> filteredTransactions = filterTransactions(allTransactions, filter);
-  return convertTransactionsInBlockInfoToTransactionsInBlockRpcInfo(filteredTransactions);
-}
+  std::vector<TransactionsInBlockRpcInfo> WalletService::getRpcTransactions(const Crypto::Hash &blockHash, size_t blockCount, const TransactionsInBlockInfoFilter &filter) const
+  {
+    uint32_t knownBlockCount = node.getKnownBlockCount();
+    std::vector<CryptoNote::TransactionsInBlockInfo> allTransactions = getTransactions(blockHash, blockCount);
+    std::vector<CryptoNote::TransactionsInBlockInfo> filteredTransactions = filterTransactions(allTransactions, filter);
+    return convertTransactionsInBlockInfoToTransactionsInBlockRpcInfo(filteredTransactions, knownBlockCount);
+  }
 
-std::vector<TransactionsInBlockRpcInfo> WalletService::getRpcTransactions(uint32_t firstBlockIndex, size_t blockCount, const TransactionsInBlockInfoFilter &filter) const
-{
-  std::vector<CryptoNote::TransactionsInBlockInfo> allTransactions = getTransactions(firstBlockIndex, blockCount);
-  std::vector<CryptoNote::TransactionsInBlockInfo> filteredTransactions = filterTransactions(allTransactions, filter);
-  return convertTransactionsInBlockInfoToTransactionsInBlockRpcInfo(filteredTransactions);
-}
+  std::vector<TransactionsInBlockRpcInfo> WalletService::getRpcTransactions(uint32_t firstBlockIndex, size_t blockCount, const TransactionsInBlockInfoFilter &filter) const
+  {
+    uint32_t knownBlockCount = node.getKnownBlockCount();
+    std::vector<CryptoNote::TransactionsInBlockInfo> allTransactions = getTransactions(firstBlockIndex, blockCount);
+    std::vector<CryptoNote::TransactionsInBlockInfo> filteredTransactions = filterTransactions(allTransactions, filter);
+    return convertTransactionsInBlockInfoToTransactionsInBlockRpcInfo(filteredTransactions, knownBlockCount);
+  }
+  
 
 } //namespace PaymentService
