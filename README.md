@@ -6,7 +6,7 @@
 ![](https://github.com/bomb-on/conceal-core/workflows/macOS/badge.svg)
 
 # Conceal Core (CLI)
-Latest Release: v6.1.6
+Latest Release: v6.1.8
 Maintained by Conceal Developers.
 
 ## Information
