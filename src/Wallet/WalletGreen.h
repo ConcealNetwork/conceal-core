@@ -303,6 +303,8 @@ static EncryptedWalletRecord encryptKeyPair(const Crypto::PublicKey& publicKey, 
   void addUnconfirmedTransaction(const ITransactionReader &transaction);
   void removeUnconfirmedTransaction(const Crypto::Hash &transactionHash);
   void initTransactionPool();
+    void deleteOrphanTransactions(const std::unordered_set<Crypto::PublicKey>& deletedKeys);
+  void saveWalletCache(ContainerStorage& storage, const Crypto::chacha_key& key, WalletSaveLevel saveLevel, const std::string& extra);
   void loadSpendKeys();
 void subscribeWallets();
 

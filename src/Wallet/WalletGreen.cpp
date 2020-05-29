@@ -571,6 +571,70 @@ void WalletGreen::initBlockchain(const Crypto::PublicKey& viewPublicKey) {
   m_blockchain.insert(m_blockchain.end(), blockchain.begin(), blockchain.end());
 }
 
+void WalletGreen::deleteOrphanTransactions(const std::unordered_set<Crypto::PublicKey>& deletedKeys) {
+  for (auto spendPublicKey : deletedKeys) {
+    AccountPublicAddress deletedAccountAddress;
+    deletedAccountAddress.spendPublicKey = spendPublicKey;
+    deletedAccountAddress.viewPublicKey = m_viewPublicKey;
+    auto deletedAddressString = m_currency.accountAddressAsString(deletedAccountAddress);
+
+    std::vector<size_t> deletedTransactions;
+    std::vector<size_t> updatedTransactions = deleteTransfersForAddress(deletedAddressString, deletedTransactions);
+    deleteFromUncommitedTransactions(deletedTransactions);
+  }
+}
+
+void WalletGreen::saveWalletCache(ContainerStorage& storage, const Crypto::chacha_key& key, WalletSaveLevel saveLevel, const std::string& extra) {
+  m_logger(DEBUGGING) << "Saving cache...";
+
+  WalletTransactions transactions;
+  WalletTransfers transfers;
+
+  if (saveLevel == WalletSaveLevel::SAVE_KEYS_AND_TRANSACTIONS) {
+    filterOutTransactions(transactions, transfers, [](const WalletTransaction& tx) {
+      return tx.state == WalletTransactionState::CREATED || tx.state == WalletTransactionState::DELETED;
+    });
+
+    for (auto it = transactions.begin(); it != transactions.end(); ++it) {
+      transactions.modify(it, [](WalletTransaction& tx) {
+        tx.state = WalletTransactionState::CANCELLED;
+        tx.blockHeight = WALLET_UNCONFIRMED_TRANSACTION_HEIGHT;
+      });
+    }
+  } else if (saveLevel == WalletSaveLevel::SAVE_ALL) {
+    filterOutTransactions(transactions, transfers, [](const WalletTransaction& tx) {
+      return tx.state == WalletTransactionState::DELETED;
+    });
+  }
+
+  std::string containerData;
+  Common::StringOutputStream containerStream(containerData);
+
+  WalletSerializerV2 s(
+    *this,
+    m_viewPublicKey,
+    m_viewSecretKey,
+    m_actualBalance,
+    m_pendingBalance,
+    m_walletsContainer,
+    m_synchronizer,
+    m_unlockTransactionsJob,
+    transactions,
+    transfers,
+    m_uncommitedTransactions,
+    const_cast<std::string&>(extra),
+    m_transactionSoftLockTime
+  );
+
+  s.save(containerStream, saveLevel);
+
+  encryptAndSaveContainerData(storage, key, containerData.data(), containerData.size());
+  storage.flush();
+
+  m_extra = extra;
+
+  m_logger(DEBUGGING) << "Container saving finished";
+}
 
 
   void WalletGreen::doShutdown()
@@ -758,7 +822,7 @@ void WalletGreen::load(const std::string& path, const std::string& password, std
   stopBlockchainSynchronizer();
 
   Crypto::cn_context cnContext;
-  generate_chacha8_key(cnContext, password, m_key);
+  generate_chacha_key(cnContext, password, m_key);
 
   std::ifstream walletFileStream(path, std::ios_base::binary);
   int version = walletFileStream.peek();
