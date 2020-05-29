@@ -468,7 +468,7 @@ void WalletGreen::decryptKeyPair(const EncryptedWalletRecord& cipher, PublicKey&
   uint64_t& creationTimestamp, const Crypto::chacha8_key& key) {
 
   std::array<char, sizeof(cipher.data)> buffer;
-  //TODO chacha(cipher.data, sizeof(cipher.data), key, cipher.iv, buffer.data());
+  chacha8(cipher.data, sizeof(cipher.data), key, cipher.iv, buffer.data());
 
   MemoryInputStream stream(buffer.data(), buffer.size());
   BinaryInputStreamSerializer serializer(stream);
@@ -497,12 +497,19 @@ EncryptedWalletRecord WalletGreen::encryptKeyPair(const PublicKey& publicKey, co
   assert(serializedKeys.size() == sizeof(result.data));
 
   result.iv = iv;
-  // TODO chacha(serializedKeys.data(), serializedKeys.size(), key, result.iv, reinterpret_cast<char*>(result.data));
+  chacha8(serializedKeys.data(), serializedKeys.size(), key, result.iv, reinterpret_cast<char*>(result.data));
 
   return result;
 }
 
+Crypto::chacha8_iv WalletGreen::getNextIv() const {
+  const auto* prefix = reinterpret_cast<const ContainerStoragePrefix*>(m_containerStorage.prefix());
+  return prefix->nextIv;
+}
 
+EncryptedWalletRecord WalletGreen::encryptKeyPair(const PublicKey& publicKey, const SecretKey& secretKey, uint64_t creationTimestamp) const {
+  return encryptKeyPair(publicKey, secretKey, creationTimestamp, m_key, getNextIv());
+}
 
 void WalletGreen::loadSpendKeys() {
   bool isTrackingMode;
@@ -813,6 +820,18 @@ void WalletGreen::incNextIv() {
   static_assert(sizeof(uint64_t) == sizeof(Crypto::chacha8_iv), "Bad Crypto::chacha8_iv size");
   auto* prefix = reinterpret_cast<ContainerStoragePrefix*>(m_containerStorage.prefix());
   incIv(prefix->nextIv);
+}
+
+void WalletGreen::loadAndDecryptContainerData(ContainerStorage& storage, const Crypto::chacha8_key& key, BinaryArray& containerData) {
+  Common::MemoryInputStream suffixStream(storage.suffix(), storage.suffixSize());
+  BinaryInputStreamSerializer suffixSerializer(suffixStream);
+  Crypto::chacha8_iv suffixIv;
+  BinaryArray encryptedContainer;
+  suffixSerializer(suffixIv, "suffixIv");
+  suffixSerializer(encryptedContainer, "encryptedContainer");
+
+  containerData.resize(encryptedContainer.size());
+  chacha8(encryptedContainer.data(), encryptedContainer.size(), key, suffixIv, reinterpret_cast<char*>(containerData.data()));
 }
 
 void WalletGreen::loadWalletCache(std::unordered_set<Crypto::PublicKey>& addedKeys, std::unordered_set<Crypto::PublicKey>& deletedKeys, std::string& extra) {
@@ -1277,7 +1296,7 @@ void WalletGreen::load(const std::string& path, const std::string& password) {
       {
         std::string password = m_password;
         std::stringstream ss;
-        unsafeSave(ss, true, false);
+        //unsafeSave(ss, true, false);
         shutdown();
         //TODO load(ss, password);
         shutdown();

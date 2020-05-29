@@ -120,9 +120,10 @@ protected:
   void convertAndLoadWalletFile(const std::string& path, std::ifstream&& walletFileStream);
 
   static void decryptKeyPair(const EncryptedWalletRecord& cipher, Crypto::PublicKey& publicKey, Crypto::SecretKey& secretKey, uint64_t& creationTimestamp, const Crypto::chacha8_key& key);
+    Crypto::chacha8_iv getNextIv() const;
+
   void decryptKeyPair(const EncryptedWalletRecord& cipher, Crypto::PublicKey& publicKey, Crypto::SecretKey& secretKey, uint64_t& creationTimestamp) const;
-static EncryptedWalletRecord encryptKeyPair(const Crypto::PublicKey& publicKey, const Crypto::SecretKey& secretKey, uint64_t creationTimestamp,
-    const Crypto::chacha8_key& key, const Crypto::chacha8_iv& iv);
+  static EncryptedWalletRecord encryptKeyPair(const Crypto::PublicKey& publicKey, const Crypto::SecretKey& secretKey, uint64_t creationTimestamp, const Crypto::chacha8_key& key, const Crypto::chacha8_iv& iv);
   EncryptedWalletRecord encryptKeyPair(const Crypto::PublicKey& publicKey, const Crypto::SecretKey& secretKey, uint64_t creationTimestamp) const;
   static void incIv(Crypto::chacha8_iv& iv);
   void incNextIv();
@@ -305,7 +306,8 @@ static EncryptedWalletRecord encryptKeyPair(const Crypto::PublicKey& publicKey, 
   void addUnconfirmedTransaction(const ITransactionReader &transaction);
   void removeUnconfirmedTransaction(const Crypto::Hash &transactionHash);
   void initTransactionPool();
-  
+    static void loadAndDecryptContainerData(ContainerStorage& storage, const Crypto::chacha8_key& key, BinaryArray& containerData);
+
     static void encryptAndSaveContainerData(ContainerStorage& storage, const Crypto::chacha8_key& key, const void* containerData, size_t containerDataSize);
   void loadWalletCache(std::unordered_set<Crypto::PublicKey>& addedKeys, std::unordered_set<Crypto::PublicKey>& deletedKeys, std::string& extra);
 
