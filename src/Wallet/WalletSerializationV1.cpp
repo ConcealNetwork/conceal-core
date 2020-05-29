@@ -4,7 +4,7 @@
 // Distributed under the MIT/X11 software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#include "WalletSerialization.h"
+#include "WalletSerializationV1.h"
 
 #include <string>
 #include <sstream>
@@ -35,8 +35,6 @@ struct WalletRecordDto {
   SecretKey spendSecretKey; 
   uint64_t actualBalance = 0;
   uint64_t pendingBalance = 0;
-  uint64_t lockedDepositBalance = 0;
-  uint16_t unlockedDepositBalance = 0;  
   uint64_t creationTimestamp = 0;
 };
 
@@ -76,8 +74,6 @@ struct WalletTransactionDto {
     creationTime = wallet.creationTime;
     unlockTime = wallet.unlockTime;
     extra = wallet.extra;
-    firstDepositId = wallet.firstDepositId;
-    depositCount = wallet.depositCount;
   }
 
   CryptoNote::WalletTransactionState state;
@@ -89,8 +85,6 @@ struct WalletTransactionDto {
   uint64_t creationTime;
   uint64_t unlockTime;
   std::string extra;
-  size_t firstDepositId;
-  size_t depositCount;
   boost::optional<Crypto::SecretKey> secretKey = CryptoNote::NULL_SECRET_KEY;
 };
 
@@ -114,8 +108,6 @@ void serialize(WalletRecordDto& value, CryptoNote::ISerializer& serializer) {
   serializer(value.spendSecretKey, "spend_secret_key");
   serializer(value.pendingBalance, "pending_balance");
   serializer(value.actualBalance, "actual_balance");
-  serializer(value.lockedDepositBalance, "locked_deposit_balance");
-  serializer(value.unlockedDepositBalance, "unlocked_deposit_balance");
   serializer(value.creationTimestamp, "creation_timestamp");
 }
 
@@ -153,8 +145,6 @@ void serialize(WalletTransactionDto& value, CryptoNote::ISerializer& serializer)
   serializer(value.creationTime, "creation_time");
   serializer(value.unlockTime, "unlock_time");
   serializer(value.extra, "extra");
-  serializer(value.firstDepositId, "first_deposit_id");
-  serializer(value.depositCount, "deposit_count");
 }
 
 void serialize(WalletTransferDto& value, CryptoNote::ISerializer& serializer) {
@@ -255,8 +245,6 @@ CryptoNote::WalletTransaction convert(const CryptoNote::WalletLegacyTransaction&
   mtx.creationTime = tx.sentTime;
   mtx.unlockTime = tx.unlockTime;
   mtx.extra = tx.extra;
-  mtx.firstDepositId = tx.firstDepositId;
-  mtx.depositCount = tx.depositCount;
   mtx.isBase = tx.isCoinbase;
 
   return mtx;
@@ -288,14 +276,11 @@ WalletSerializer::WalletSerializer(
   SecretKey& viewSecretKey,
   uint64_t& actualBalance,
   uint64_t& pendingBalance,
-  uint64_t& lockedDepositBalance,
-  uint64_t& unlockedDepositBalance,
   WalletsContainer& walletsContainer,
   TransfersSyncronizer& synchronizer,
   UnlockTransactionJobs& unlockTransactions,
   WalletTransactions& transactions,
   WalletTransfers& transfers,
-  WalletDeposits& deposits,
   uint32_t transactionSoftLockTime,
   UncommitedTransactions& uncommitedTransactions
 ) :
@@ -304,14 +289,11 @@ WalletSerializer::WalletSerializer(
   m_viewSecretKey(viewSecretKey),
   m_actualBalance(actualBalance),
   m_pendingBalance(pendingBalance),
-  m_lockedDepositBalance(lockedDepositBalance),
-  m_unlockedDepositBalance(unlockedDepositBalance),
   m_walletsContainer(walletsContainer),
   m_synchronizer(synchronizer),
   m_unlockTransactions(unlockTransactions),
   m_transactions(transactions),
   m_transfers(transfers),
-  m_deposits(deposits),
   m_transactionSoftLockTime(transactionSoftLockTime),
   uncommitedTransactions(uncommitedTransactions)
 { }
@@ -606,8 +588,6 @@ void WalletSerializer::loadWalletV1Keys(CryptoNote::BinaryInputStreamSerializer&
   wallet.spendSecretKey = keys.spendSecretKey;
   wallet.actualBalance = 0;
   wallet.pendingBalance = 0;
-  wallet.lockedDepositBalance = 0;
-  wallet.unlockedDepositBalance = 0;
   wallet.creationTimestamp = static_cast<time_t>(keys.creationTimestamp);
 
   m_walletsContainer.get<RandomAccessIndex>().push_back(wallet);
@@ -881,8 +861,6 @@ void WalletSerializer::loadTransactions(Common::IInputStream& source, CryptoCont
     tx.creationTime = dto.creationTime;
     tx.unlockTime = dto.unlockTime;
     tx.extra = dto.extra;
-    tx.firstDepositId = dto.firstDepositId;
-    tx.depositCount = dto.depositCount;
     tx.isBase = false;
 
     m_transactions.get<RandomAccessIndex>().push_back(std::move(tx));

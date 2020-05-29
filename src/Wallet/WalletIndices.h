@@ -20,6 +20,9 @@
 #include <boost/multi_index/composite_key.hpp>
 #include <boost/multi_index/member.hpp>
 
+#include "Common/FileMappedVector.h"
+#include "crypto/chacha.h"
+
 namespace CryptoNote
 {
 
@@ -36,6 +39,14 @@ namespace CryptoNote
         uint64_t unlockedDepositBalance = 0;
         time_t creationTimestamp;
     };
+
+#pragma pack(push, 1)
+struct EncryptedWalletRecord {
+  Crypto::chacha_iv iv;
+  // Secret key, public key and creation timestamp
+  uint8_t data[sizeof(Crypto::PublicKey) + sizeof(Crypto::SecretKey) + sizeof(uint64_t)];
+};
+#pragma pack(pop)
 
     struct RandomAccessIndex
     {
@@ -112,7 +123,7 @@ namespace CryptoNote
             boost::multi_index::ordered_non_unique<boost::multi_index::tag<BlockHeightIndex>,
                                                    boost::multi_index::member<CryptoNote::WalletTransaction, uint32_t, &CryptoNote::WalletTransaction::blockHeight>>>>
         WalletTransactions;
-
+typedef Common::FileMappedVector<EncryptedWalletRecord> ContainerStorage;
     typedef std::pair<size_t, CryptoNote::WalletTransfer> TransactionTransferPair;
     typedef std::vector<TransactionTransferPair> WalletTransfers;
 

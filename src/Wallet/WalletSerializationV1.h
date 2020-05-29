@@ -35,14 +35,11 @@ public:
       Crypto::SecretKey &viewSecretKey,
       uint64_t &actualBalance,
       uint64_t &pendingBalance,
-      uint64_t &lockedDepositBalance,
-      uint64_t &unlockedDepositBalance,
       WalletsContainer &walletsContainer,
       TransfersSyncronizer &synchronizer,
       UnlockTransactionJobs &unlockTransactions,
       WalletTransactions &transactions,
       WalletTransfers &transfers,
-      WalletDeposits &deposits,
       uint32_t transactionSoftLockTime,
       UncommitedTransactions &uncommitedTransactions);
 
@@ -103,14 +100,11 @@ private:
   Crypto::SecretKey &m_viewSecretKey;
   uint64_t &m_actualBalance;
   uint64_t &m_pendingBalance;
-  uint64_t &m_lockedDepositBalance;
-  uint64_t &m_unlockedDepositBalance;
   WalletsContainer &m_walletsContainer;
   TransfersSyncronizer &m_synchronizer;
   UnlockTransactionJobs &m_unlockTransactions;
   WalletTransactions &m_transactions;
   WalletTransfers &m_transfers;
-  WalletDeposits &m_deposits;
   uint32_t m_transactionSoftLockTime;
   UncommitedTransactions &uncommitedTransactions;
 };

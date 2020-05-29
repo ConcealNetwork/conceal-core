@@ -647,21 +647,11 @@ namespace PaymentService
     return std::error_code();
   }
 
-  void WalletService::loadWallet()
-  {
-    std::ifstream inputWalletFile;
-    inputWalletFile.open(config.walletFile.c_str(), std::fstream::in | std::fstream::binary);
-    if (!inputWalletFile)
-    {
-      throw std::runtime_error("Couldn't open wallet file");
-    }
-
-    logger(Logging::INFO) << "Loading wallet";
-
-    wallet.load(inputWalletFile, config.walletPassword);
-
-    logger(Logging::INFO) << "Wallet loading is finished.";
-  }
+void WalletService::loadWallet() {
+  logger(Logging::INFO, Logging::BRIGHT_WHITE) << "Loading wallet";
+  wallet.load(config.walletFile, config.walletPassword);
+  logger(Logging::INFO, Logging::BRIGHT_WHITE) << "Wallet loading is finished.";
+}
 
   void WalletService::loadTransactionIdIndex()
   {

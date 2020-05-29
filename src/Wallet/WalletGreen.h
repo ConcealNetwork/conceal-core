@@ -13,7 +13,7 @@
 
 #include "IFusionManager.h"
 #include "WalletIndices.h"
-
+#include "Common/StringOutputStream.h"
 #include "Logging/LoggerRef.h"
 #include <System/Dispatcher.h>
 #include <System/Event.h>
@@ -34,11 +34,13 @@ public:
   virtual ~WalletGreen();
 
   virtual void initialize(const std::string &password) override;
+  virtual void initializeWithViewKey(const Crypto::SecretKey &viewSecretKey, const std::string &password) override;
+  virtual void load(const std::string& path, const std::string& password, std::string& extra) override;
+  virtual void load(const std::string& path, const std::string& password) override;
+  virtual void shutdown() override;
+
   virtual void createDeposit(uint64_t amount, uint64_t term, std::string sourceAddress, std::string destinationAddress, std::string &transactionHash) override;
 
-  virtual void initializeWithViewKey(const Crypto::SecretKey &viewSecretKey, const std::string &password) override;
-  virtual void load(std::istream &source, const std::string &password) override;
-  virtual void shutdown() override;
 
   virtual void changePassword(const std::string &oldPassword, const std::string &newPassword) override;
   virtual void save(std::ostream &destination, bool saveDetails = true, bool saveCache = true) override;
@@ -88,7 +90,6 @@ public:
   virtual size_t makeTransaction(const TransactionParameters &sendingTransaction) override;
   virtual void commitTransaction(size_t) override;
   virtual void rollbackUncommitedTransaction(size_t) override;
-
   virtual void start() override;
   virtual void stop() override;
   virtual WalletEvent getEvent() override;
@@ -115,7 +116,14 @@ protected:
   void throwIfStopped() const;
   void throwIfTrackingMode() const;
   void doShutdown();
-  void clearCaches();
+    void clearCaches(bool clearTransactions, bool clearCachedData);
+  void convertAndLoadWalletFile(const std::string& path, std::ifstream&& walletFileStream);
+
+  static void decryptKeyPair(const EncryptedWalletRecord& cipher, Crypto::PublicKey& publicKey, Crypto::SecretKey& secretKey, uint64_t& creationTimestamp, const Crypto::chacha_key& key);
+  void decryptKeyPair(const EncryptedWalletRecord& cipher, Crypto::PublicKey& publicKey, Crypto::SecretKey& secretKey, uint64_t& creationTimestamp) const;
+static EncryptedWalletRecord encryptKeyPair(const Crypto::PublicKey& publicKey, const Crypto::SecretKey& secretKey, uint64_t creationTimestamp,
+    const Crypto::chacha_key& key, const Crypto::chacha_iv& iv);
+  EncryptedWalletRecord encryptKeyPair(const Crypto::PublicKey& publicKey, const Crypto::SecretKey& secretKey, uint64_t creationTimestamp) const;
   void initWithKeys(const Crypto::PublicKey &viewPublicKey, const Crypto::SecretKey &viewSecretKey, const std::string &password);
   std::string doCreateAddress(const Crypto::PublicKey &spendPublicKey, const Crypto::SecretKey &spendSecretKey, uint64_t creationTimestamp);
   std::vector<std::string> doCreateAddressList(const std::vector<NewAddressData> &addressDataList);
@@ -158,6 +166,14 @@ protected:
     ITransfersContainer *container;
     AddressAmounts amounts;
   };
+
+#pragma pack(push, 1)
+  struct ContainerStoragePrefix {
+    uint8_t version;
+    Crypto::chacha_iv nextIv;
+    EncryptedWalletRecord encryptedViewKeys;
+  };
+#pragma pack(pop)
 
   typedef std::unordered_map<std::string, AddressAmounts> TransfersMap;
 
@@ -286,6 +302,10 @@ protected:
   void stopBlockchainSynchronizer();
   void addUnconfirmedTransaction(const ITransactionReader &transaction);
   void removeUnconfirmedTransaction(const Crypto::Hash &transactionHash);
+  void initTransactionPool();
+  void loadSpendKeys();
+void subscribeWallets();
+
 
   void unsafeLoad(std::istream &source, const std::string &password);
   void unsafeSave(std::ostream &destination, bool saveDetails, bool saveCache);
@@ -317,6 +337,7 @@ protected:
 
   std::vector<WalletTransfer> getTransactionTransfers(const WalletTransaction &transaction) const;
   void filterOutTransactions(WalletTransactions &transactions, WalletTransfers &transfers, std::function<bool(const WalletTransaction &)> &&pred) const;
+  void initBlockchain(const Crypto::PublicKey& viewPublicKey);
   void getViewKeyKnownBlocks(const Crypto::PublicKey &viewPublicKey);
   CryptoNote::AccountPublicAddress getChangeDestination(const std::string &changeDestinationAddress, const std::vector<std::string> &sourceAddresses) const;
   bool isMyAddress(const std::string &address) const;
@@ -332,6 +353,7 @@ protected:
   bool m_stopped;
   WalletDeposits m_deposits;
   WalletsContainer m_walletsContainer;
+  ContainerStorage m_containerStorage;
   UnlockTransactionJobs m_unlockTransactionsJob;
   WalletTransactions m_transactions;
   WalletTransfers m_transfers;                               //sorted
@@ -349,7 +371,10 @@ protected:
   WalletState m_state;
 
   std::string m_password;
-
+  Crypto::chacha_key m_key;
+  std::string m_path;
+  std::string m_extra; // workaround for wallet reset
+  
   Crypto::PublicKey m_viewPublicKey;
   Crypto::SecretKey m_viewSecretKey;
 

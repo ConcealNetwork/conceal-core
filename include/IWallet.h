@@ -32,6 +32,12 @@ enum class WalletTransactionState : uint8_t
   DELETED
 };
 
+enum class WalletSaveLevel : uint8_t {
+  SAVE_KEYS_ONLY,
+  SAVE_KEYS_AND_TRANSACTIONS,
+  SAVE_ALL
+};
+
 enum WalletEventType
 {
   TRANSACTION_CREATED,
@@ -179,7 +185,8 @@ public:
   virtual void createDeposit(uint64_t amount, uint64_t term, std::string sourceAddress, std::string destinationAddress, std::string &transactionHash) = 0;
   virtual WalletDeposit getDeposit(size_t depositIndex) const = 0;
   virtual void initializeWithViewKey(const Crypto::SecretKey &viewSecretKey, const std::string &password) = 0;
-  virtual void load(std::istream &source, const std::string &password) = 0;
+  virtual void load(const std::string& path, const std::string& password, std::string& extra) = 0;
+  virtual void load(const std::string& path, const std::string& password) = 0;
   virtual void shutdown() = 0;
 
   virtual void changePassword(const std::string &oldPassword, const std::string &newPassword) = 0;

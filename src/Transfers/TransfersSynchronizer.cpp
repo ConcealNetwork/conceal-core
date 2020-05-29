@@ -6,7 +6,7 @@
 
 #include "TransfersSynchronizer.h"
 #include "TransfersConsumer.h"
-
+#include "CryptoNoteCore/CryptoNoteBasicImpl.h"
 #include "Common/StdInputStream.h"
 #include "Common/StdOutputStream.h"
 #include "Serialization/BinaryInputStreamSerializer.h"
