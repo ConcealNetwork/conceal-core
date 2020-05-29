@@ -157,7 +157,7 @@ bool RpcServer::processJsonRpcRequest(const HttpRequest& request, HttpResponse& 
       { "getlastblockheader", { makeMemberMethod(&RpcServer::on_get_last_block_header), false } },
       { "getblockheaderbyhash", { makeMemberMethod(&RpcServer::on_get_block_header_by_hash), false } },
       { "getblockheaderbyheight", { makeMemberMethod(&RpcServer::on_get_block_header_by_height), false } },
-	    { "gettransactionsbypaymentid", { makeMemberMethod(&RpcServer::f_on_transactions_by_payment_id), false } }
+      { "gettransactionsbypaymentid", { makeMemberMethod(&RpcServer::f_on_transactions_by_payment_id), false } }
     };
 
     auto it = jsonRpcHandlers.find(jsonRequest.getMethod());
