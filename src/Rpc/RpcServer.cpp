@@ -1,6 +1,6 @@
 // Copyright (c) 2011-2017 The Cryptonote developers
 // Copyright (c) 2017-2018 The Circle Foundation & Conceal Devs
-// Copyright (c) 2018-2019 Conceal Network & Conceal Devs
+// Copyright (c) 2018-2020 Conceal Network & Conceal Devs
 // Distributed under the MIT/X11 software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -156,7 +156,8 @@ bool RpcServer::processJsonRpcRequest(const HttpRequest& request, HttpResponse& 
       { "submitblock", { makeMemberMethod(&RpcServer::on_submitblock), false } },
       { "getlastblockheader", { makeMemberMethod(&RpcServer::on_get_last_block_header), false } },
       { "getblockheaderbyhash", { makeMemberMethod(&RpcServer::on_get_block_header_by_hash), false } },
-      { "getblockheaderbyheight", { makeMemberMethod(&RpcServer::on_get_block_header_by_height), false } }
+      { "getblockheaderbyheight", { makeMemberMethod(&RpcServer::on_get_block_header_by_height), false } },
+	    { "gettransactionsbypaymentid", { makeMemberMethod(&RpcServer::f_on_transactions_by_payment_id), false } }
     };
 
     auto it = jsonRpcHandlers.find(jsonRequest.getMethod());
@@ -1111,6 +1112,44 @@ bool RpcServer::f_on_transactions_pool_json(const F_COMMAND_RPC_GET_POOL::reques
 
     res.status = CORE_RPC_STATUS_OK;
     return true;
+}
+
+bool RpcServer::f_on_transactions_by_payment_id(const F_COMMAND_RPC_GET_TRANSACTIONS_BY_PAYMENT_ID::request& req, F_COMMAND_RPC_GET_TRANSACTIONS_BY_PAYMENT_ID::response& res) {
+	if (!req.payment_id.size()) {
+		throw JsonRpc::JsonRpcError{ CORE_RPC_ERROR_CODE_WRONG_PARAM, "Wrong parameters, expected payment_id" };
+	}
+	logger(Logging::INFO, Logging::WHITE) << "RPC request came: Search by Payment ID: " << req.payment_id;
+
+	Crypto::Hash paymentId;
+	std::vector<Transaction> transactions;
+
+	if (!parse_hash256(req.payment_id, paymentId)) {
+		throw JsonRpc::JsonRpcError{
+			CORE_RPC_ERROR_CODE_WRONG_PARAM,
+			"Failed to parse Payment ID: " + req.payment_id + '.' };
+	}
+
+	if (!m_core.getTransactionsByPaymentId(paymentId, transactions)) {
+		throw JsonRpc::JsonRpcError{
+			CORE_RPC_ERROR_CODE_INTERNAL_ERROR,
+			"Internal error: can't get transactions by Payment ID: " + req.payment_id + '.' };
+	}
+
+	for (const Transaction& tx : transactions) {
+		f_transaction_short_response transaction_short;
+		uint64_t amount_in = 0;
+		get_inputs_money_amount(tx, amount_in);
+		uint64_t amount_out = get_outs_money_amount(tx);
+
+		transaction_short.hash = Common::podToHex(getObjectHash(tx));
+		transaction_short.fee = amount_in - amount_out;
+		transaction_short.amount_out = amount_out;
+		transaction_short.size = getObjectBinarySize(tx);
+		res.transactions.push_back(transaction_short);
+	}
+
+	res.status = CORE_RPC_STATUS_OK;
+	return true;
 }
 
 bool RpcServer::on_getblockcount(const COMMAND_RPC_GETBLOCKCOUNT::request& req, COMMAND_RPC_GETBLOCKCOUNT::response& res) {

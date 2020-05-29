@@ -1,6 +1,6 @@
 // Copyright (c) 2011-2017 The Cryptonote developers
 // Copyright (c) 2017-2018 The Circle Foundation & Conceal Devs
-// Copyright (c) 2018-2019 Conceal Network & Conceal Devs
+// Copyright (c) 2018-2020 Conceal Network & Conceal Devs
 // Distributed under the MIT/X11 software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -690,6 +690,26 @@ struct F_COMMAND_RPC_GET_BLOCK_DETAILS {
       KV_MEMBER(status)
     }
   };
+};
+
+struct F_COMMAND_RPC_GET_TRANSACTIONS_BY_PAYMENT_ID {
+	struct request {
+		std::string payment_id;
+
+		void serialize(ISerializer &s) {
+			KV_MEMBER(payment_id)
+		}
+	};
+
+	struct response {
+		std::vector<f_transaction_short_response> transactions;
+		std::string status;
+
+		void serialize(ISerializer &s) {
+			KV_MEMBER(transactions)
+				KV_MEMBER(status)
+		}
+	};
 };
 
 struct F_COMMAND_RPC_GET_TRANSACTION_DETAILS {
