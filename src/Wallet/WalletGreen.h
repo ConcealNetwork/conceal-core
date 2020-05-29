@@ -119,11 +119,13 @@ protected:
     void clearCaches(bool clearTransactions, bool clearCachedData);
   void convertAndLoadWalletFile(const std::string& path, std::ifstream&& walletFileStream);
 
-  static void decryptKeyPair(const EncryptedWalletRecord& cipher, Crypto::PublicKey& publicKey, Crypto::SecretKey& secretKey, uint64_t& creationTimestamp, const Crypto::chacha_key& key);
+  static void decryptKeyPair(const EncryptedWalletRecord& cipher, Crypto::PublicKey& publicKey, Crypto::SecretKey& secretKey, uint64_t& creationTimestamp, const Crypto::chacha8_key& key);
   void decryptKeyPair(const EncryptedWalletRecord& cipher, Crypto::PublicKey& publicKey, Crypto::SecretKey& secretKey, uint64_t& creationTimestamp) const;
 static EncryptedWalletRecord encryptKeyPair(const Crypto::PublicKey& publicKey, const Crypto::SecretKey& secretKey, uint64_t creationTimestamp,
-    const Crypto::chacha_key& key, const Crypto::chacha_iv& iv);
+    const Crypto::chacha8_key& key, const Crypto::chacha8_iv& iv);
   EncryptedWalletRecord encryptKeyPair(const Crypto::PublicKey& publicKey, const Crypto::SecretKey& secretKey, uint64_t creationTimestamp) const;
+  static void incIv(Crypto::chacha8_iv& iv);
+  void incNextIv();
   void initWithKeys(const Crypto::PublicKey &viewPublicKey, const Crypto::SecretKey &viewSecretKey, const std::string &password);
   std::string doCreateAddress(const Crypto::PublicKey &spendPublicKey, const Crypto::SecretKey &spendSecretKey, uint64_t creationTimestamp);
   std::vector<std::string> doCreateAddressList(const std::vector<NewAddressData> &addressDataList);
@@ -170,7 +172,7 @@ static EncryptedWalletRecord encryptKeyPair(const Crypto::PublicKey& publicKey, 
 #pragma pack(push, 1)
   struct ContainerStoragePrefix {
     uint8_t version;
-    Crypto::chacha_iv nextIv;
+    Crypto::chacha8_iv nextIv;
     EncryptedWalletRecord encryptedViewKeys;
   };
 #pragma pack(pop)
@@ -303,9 +305,15 @@ static EncryptedWalletRecord encryptKeyPair(const Crypto::PublicKey& publicKey, 
   void addUnconfirmedTransaction(const ITransactionReader &transaction);
   void removeUnconfirmedTransaction(const Crypto::Hash &transactionHash);
   void initTransactionPool();
+  
+    static void encryptAndSaveContainerData(ContainerStorage& storage, const Crypto::chacha8_key& key, const void* containerData, size_t containerDataSize);
+  void loadWalletCache(std::unordered_set<Crypto::PublicKey>& addedKeys, std::unordered_set<Crypto::PublicKey>& deletedKeys, std::string& extra);
+
     void deleteOrphanTransactions(const std::unordered_set<Crypto::PublicKey>& deletedKeys);
-  void saveWalletCache(ContainerStorage& storage, const Crypto::chacha_key& key, WalletSaveLevel saveLevel, const std::string& extra);
+  void saveWalletCache(ContainerStorage& storage, const Crypto::chacha8_key& key, WalletSaveLevel saveLevel, const std::string& extra);
   void loadSpendKeys();
+    void loadContainerStorage(const std::string& path);
+
 void subscribeWallets();
 
 
@@ -373,7 +381,7 @@ void subscribeWallets();
   WalletState m_state;
 
   std::string m_password;
-  Crypto::chacha_key m_key;
+  Crypto::chacha8_key m_key;
   std::string m_path;
   std::string m_extra; // workaround for wallet reset
   

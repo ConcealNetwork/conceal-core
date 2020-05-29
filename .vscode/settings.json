@@ -76,6 +76,13 @@
         "xthread": "cpp",
         "sparse_hash_map": "cpp",
         "sparse_hash_set": "cpp",
-        "sparsetable": "cpp"
+        "sparsetable": "cpp",
+        "concepts": "cpp",
+        "locale": "cpp",
+        "optional": "cpp",
+        "regex": "cpp",
+        "shared_mutex": "cpp",
+        "xlocbuf": "cpp",
+        "xlocmes": "cpp"
     }
 }
