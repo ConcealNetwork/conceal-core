@@ -26,7 +26,7 @@ using namespace Crypto;
 namespace {
 
 struct keys_file_data {
-  chacha_iv iv;
+  chacha8_iv iv;
   std::string account_data;
 
   void serialize(CryptoNote::ISerializer& s) {
@@ -53,7 +53,7 @@ void loadKeysFromFile(const std::string& filename, const std::string& password, 
     throw std::system_error(make_error_code(CryptoNote::error::INTERNAL_WALLET_ERROR), "failed to deserialize \"" + filename + '\"');
   }
 
-  chacha_key key;
+  chacha8_key key;
   cn_context cn_context;
   generate_chacha8_key(cn_context, password, key);
   std::string account_data;
