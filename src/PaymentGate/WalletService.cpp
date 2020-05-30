@@ -458,7 +458,7 @@ namespace PaymentService
 
   void saveWallet(CryptoNote::IWallet &wallet, std::fstream &walletFile, bool saveDetailed = true, bool saveCache = true)
   {
-    wallet.save(walletFile, saveDetailed, saveCache);
+    wallet.save();
     walletFile.flush();
   }
 
@@ -511,7 +511,7 @@ namespace PaymentService
       Crypto::generate_keys(spendKey.publicKey, spendKey.secretKey);
       AccountBase::generateViewFromSpend(spendKey.secretKey, private_view_key, unused);
 
-      wallet->initializeWithViewKey(private_view_key, conf.walletPassword);
+      wallet->initializeWithViewKey(conf.walletFile, conf.walletPassword, private_view_key);
       address = wallet->createAddress(spendKey.secretKey);
 
       log(Logging::INFO, Logging::BRIGHT_WHITE) << "New wallet generated.";
@@ -549,7 +549,7 @@ namespace PaymentService
       Crypto::SecretKey private_spend_key = *(struct Crypto::SecretKey *)&private_spend_key_hash;
       Crypto::SecretKey private_view_key = *(struct Crypto::SecretKey *)&private_view_key_hash;
 
-      wallet->initializeWithViewKey(private_view_key, conf.walletPassword);
+      wallet->initializeWithViewKey(conf.walletFile, conf.walletPassword, private_view_key);
       address = wallet->createAddress(private_spend_key);
       log(Logging::INFO, Logging::BRIGHT_WHITE) << "Imported wallet successfully.";
       log(Logging::INFO, Logging::BRIGHT_WHITE) << "Address: " << address;
@@ -1815,16 +1815,31 @@ void WalletService::loadWallet() {
 
   void WalletService::replaceWithNewWallet(const Crypto::SecretKey &viewSecretKey)
   {
-    wallet.stop();
-    wallet.shutdown();
-    inited = false;
-    refreshContext.wait();
+   wallet.stop();
+  wallet.shutdown();
+  inited = false;
+  refreshContext.wait();
 
-    transactionIdIndex.clear();
+  transactionIdIndex.clear();
 
-    wallet.start();
-    wallet.initializeWithViewKey(viewSecretKey, config.walletPassword);
-    inited = true;
+  size_t i = 0;
+  for (;;) {
+    boost::system::error_code ec;
+    std::string backup = config.walletFile + ".backup";
+    if (i != 0) {
+      backup += "." + std::to_string(i);
+    }
+
+    if (!boost::filesystem::exists(backup)) {
+      boost::filesystem::rename(config.walletFile, backup);
+      logger(Logging::DEBUGGING) << "Walletd file '" << config.walletFile  << "' backed up to '" << backup << '\'';
+      break;
+    }
+  }
+
+  wallet.start();
+  wallet.initializeWithViewKey(config.walletFile, config.walletPassword, viewSecretKey);
+  inited = true;
   }
 
   std::vector<CryptoNote::TransactionsInBlockInfo> WalletService::getTransactions(const Crypto::Hash &blockHash, size_t blockCount) const

@@ -290,14 +290,17 @@ namespace CryptoNote
     m_dispatcher.yield(); //let remote spawns finish
   }
 
-  void WalletGreen::initialize(const std::string &password)
-  {
-    Crypto::PublicKey viewPublicKey;
-    Crypto::SecretKey viewSecretKey;
-    Crypto::generate_keys(viewPublicKey, viewSecretKey);
-
-    initWithKeys(viewPublicKey, viewSecretKey, password);
-  }
+void WalletGreen::initialize(
+    const std::string& path, 
+    const std::string& password) 
+{
+  Crypto::PublicKey viewPublicKey;
+  Crypto::SecretKey viewSecretKey;
+  Crypto::generate_keys(viewPublicKey, viewSecretKey);
+  uint64_t creationTimestamp = time(nullptr);
+  initWithKeys(path, password, viewPublicKey, viewSecretKey);
+  //m_logger(INFO, BRIGHT_WHITE) << "New container initialized, public view key " << viewPublicKey;
+}
 
   void WalletGreen::createDeposit(
       uint64_t amount,
@@ -553,16 +556,16 @@ void WalletGreen::loadSpendKeys() {
     }
   }
 
-  void WalletGreen::initializeWithViewKey(const Crypto::SecretKey &viewSecretKey, const std::string &password)
-  {
-    Crypto::PublicKey viewPublicKey;
-    if (!Crypto::secret_key_to_public_key(viewSecretKey, viewPublicKey))
-    {
-      throw std::system_error(make_error_code(CryptoNote::error::KEY_GENERATION_ERROR));
-    }
-
-    initWithKeys(viewPublicKey, viewSecretKey, password);
+void WalletGreen::initializeWithViewKey(const std::string& path, const std::string& password, const Crypto::SecretKey& viewSecretKey) {
+  Crypto::PublicKey viewPublicKey;
+  if (!Crypto::secret_key_to_public_key(viewSecretKey, viewPublicKey)) {
+    //m_logger(ERROR, BRIGHT_RED) << "initializeWithViewKey(" << viewSecretKey << ") Failed to convert secret key to public key";
+    throw std::system_error(make_error_code(CryptoNote::error::KEY_GENERATION_ERROR));
   }
+
+  initWithKeys(path, password, viewPublicKey, viewSecretKey);
+  //m_logger(INFO, BRIGHT_WHITE) << "Container initialized with view secret key, public view key " << viewPublicKey;
+}
 
   void WalletGreen::shutdown()
   {
@@ -644,23 +647,23 @@ void WalletGreen::saveWalletCache(ContainerStorage& storage, const Crypto::chach
 }
 
 
-  void WalletGreen::doShutdown()
-  {
-    if (m_walletsContainer.size() != 0)
-    {
-      m_synchronizer.unsubscribeConsumerNotifications(m_viewPublicKey, this);
-    }
-
-    stopBlockchainSynchronizer();
-    m_blockchainSynchronizer.removeObserver(this);
-
-    // TODO clearCaches();
-
-    std::queue<WalletEvent> noEvents;
-    std::swap(m_events, noEvents);
-
-    m_state = WalletState::NOT_INITIALIZED;
+void WalletGreen::doShutdown() {
+  if (m_walletsContainer.size() != 0) {
+    m_synchronizer.unsubscribeConsumerNotifications(m_viewPublicKey, this);
   }
+
+  stopBlockchainSynchronizer();
+  m_blockchainSynchronizer.removeObserver(this);
+
+  m_containerStorage.close();
+  m_walletsContainer.clear();
+  clearCaches(true, true);
+
+  std::queue<WalletEvent> noEvents;
+  std::swap(m_events, noEvents);
+
+  m_state = WalletState::NOT_INITIALIZED;
+}
 
 
 void WalletGreen::initTransactionPool() {
@@ -672,38 +675,64 @@ void WalletGreen::initTransactionPool() {
   m_synchronizer.initTransactionPool(uncommitedTransactionsSet);
 }
 
-  void WalletGreen::initWithKeys(const Crypto::PublicKey &viewPublicKey, const Crypto::SecretKey &viewSecretKey, const std::string &password)
-  {
-    if (m_state != WalletState::NOT_INITIALIZED)
-    {
-      throw std::system_error(make_error_code(CryptoNote::error::ALREADY_INITIALIZED));
-    }
+void WalletGreen::initWithKeys(const std::string& path, const std::string& password,
+  const Crypto::PublicKey& viewPublicKey, const Crypto::SecretKey& viewSecretKey) {
 
-    throwIfStopped();
-
-    m_viewPublicKey = viewPublicKey;
-    m_viewSecretKey = viewSecretKey;
-    m_password = password;
-
-    assert(m_blockchain.empty());
-    m_blockchain.push_back(m_currency.genesisBlockHash());
-
-    m_blockchainSynchronizer.addObserver(this);
-
-    m_state = WalletState::INITIALIZED;
+  if (m_state != WalletState::NOT_INITIALIZED) {
+    //m_logger(ERROR, BRIGHT_RED) << "Failed to initialize with keys: already initialized. Current state: " << m_state;
+    throw std::system_error(make_error_code(CryptoNote::error::ALREADY_INITIALIZED));
   }
 
-  void WalletGreen::save(std::ostream &destination, bool saveDetails, bool saveCache)
-  {
-    throwIfNotInitialized();
-    throwIfStopped();
+  throwIfStopped();
 
-    stopBlockchainSynchronizer();
+  ContainerStorage newStorage(path, Common::FileMappedVectorOpenMode::CREATE, sizeof(ContainerStoragePrefix));
+  ContainerStoragePrefix* prefix = reinterpret_cast<ContainerStoragePrefix*>(newStorage.prefix());
+  prefix->version = static_cast<uint8_t>(WalletSerializerV2::SERIALIZATION_VERSION);
+  prefix->nextIv = Crypto::rand<Crypto::chacha8_iv>();
 
-    unsafeSave(destination, saveDetails, saveCache);
+  Crypto::cn_context cnContext;
+  Crypto::generate_chacha8_key(cnContext, password, m_key);
 
+  uint64_t creationTimestamp = time(nullptr);
+  prefix->encryptedViewKeys = encryptKeyPair(viewPublicKey, viewSecretKey, creationTimestamp, m_key, prefix->nextIv);
+
+  newStorage.flush();
+  m_containerStorage.swap(newStorage);
+  incNextIv();
+
+  m_viewPublicKey = viewPublicKey;
+  m_viewSecretKey = viewSecretKey;
+  m_password = password;
+  m_path = path;
+  m_logger = Logging::LoggerRef(m_logger.getLogger(), "WalletGreen/" + podToHex(m_viewPublicKey).substr(0, 5));
+
+  assert(m_blockchain.empty());
+  m_blockchain.push_back(m_currency.genesisBlockHash());
+
+  m_blockchainSynchronizer.addObserver(this);
+
+  m_state = WalletState::INITIALIZED;
+}
+
+void WalletGreen::save(WalletSaveLevel saveLevel, const std::string& extra) {
+  m_logger(INFO, BRIGHT_WHITE) << "Saving container...";
+
+  throwIfNotInitialized();
+  throwIfStopped();
+
+  stopBlockchainSynchronizer();
+
+  try {
+    saveWalletCache(m_containerStorage, m_key, saveLevel, extra);
+  } catch (const std::exception& e) {
+    m_logger(ERROR, BRIGHT_RED) << "Failed to save container: " << e.what();
     startBlockchainSynchronizer();
+    throw;
   }
+
+  startBlockchainSynchronizer();
+  m_logger(INFO, BRIGHT_WHITE) << "Container saved";
+}
 
   void WalletGreen::unsafeSave(std::ostream &destination, bool saveDetails, bool saveCache)
   {
@@ -741,29 +770,32 @@ void WalletGreen::initTransactionPool() {
     s.save(m_password, output, saveDetails, saveCache);
   }
 
-void WalletGreen::convertAndLoadWalletFile(const std::string& path, std::ifstream&& walletFileStream) {
-  WalletSerializer s(
-    *this,
-    m_viewPublicKey,
-    m_viewSecretKey,
-    m_actualBalance,
-    m_pendingBalance,
-    m_walletsContainer,
-    m_synchronizer,
-    m_unlockTransactionsJob,
-    m_transactions,
-    m_transfers,
-    m_transactionSoftLockTime,
-    m_uncommitedTransactions
-  );
+void WalletGreen::convertAndLoadWalletFile(const std::string& path, std::ifstream& walletFileStream, const std::string& password) {
 
-  StdInputStream stream(walletFileStream);
-  s.load(m_password, stream);
-  walletFileStream.close();
+    WalletSerializer s(
+        *this,
+        m_viewPublicKey,
+        m_viewSecretKey,
+        m_actualBalance,
+        m_pendingBalance,
+        m_walletsContainer,
+        m_synchronizer,
+        m_unlockTransactionsJob,
+        m_transactions,
+        m_transfers,
+        m_transactionSoftLockTime,
+        m_uncommitedTransactions);
+
+    StdInputStream inputStream(walletFileStream);
+    	m_logger(INFO) << "about to load.";
+    s.load(password, inputStream);
+    	m_logger(INFO) << "loaded.";
+
+  // walletFileStream.close();
 
   boost::filesystem::path bakPath = path + ".backup";
   boost::filesystem::path tmpPath = boost::filesystem::unique_path(path + ".tmp.%%%%-%%%%");
-
+m_logger(INFO) << "made backup.";
   if (boost::filesystem::exists(bakPath)) {
 	m_logger(INFO) << "Wallet backup already exists! Creating random file name backup.";
     bakPath = boost::filesystem::unique_path(path + ".%%%%-%%%%" + ".backup");
@@ -773,34 +805,23 @@ void WalletGreen::convertAndLoadWalletFile(const std::string& path, std::ifstrea
     boost::system::error_code ignore;
     boost::filesystem::remove(tmpPath, ignore);
   });
-
+m_logger(INFO) << "about to open container storage.";
   m_containerStorage.open(tmpPath.string(), Common::FileMappedVectorOpenMode::CREATE, sizeof(ContainerStoragePrefix));
   ContainerStoragePrefix* prefix = reinterpret_cast<ContainerStoragePrefix*>(m_containerStorage.prefix());
   prefix->version = WalletSerializerV2::SERIALIZATION_VERSION;
+  m_logger(INFO) << "versiont set.";
   prefix->nextIv = Crypto::randomChachaIV();
-
-#ifdef USE_LITE_WALLET
-  uint64_t creationTimestamp;
-  for (WalletRecord wallet : m_walletsContainer.get<RandomAccessIndex>()) {
-    boost::posix_time::ptime ts = boost::posix_time::from_time_t(wallet.creationTimestamp);
-    if (!ts.is_not_a_date_time()) {
-      creationTimestamp = wallet.creationTimestamp;
-      break;
-    }
-    creationTimestamp = time(nullptr);
-  }
-#else
+  m_logger(INFO) << "nextiv set.";
   uint64_t creationTimestamp = time(nullptr);
-#endif
   prefix->encryptedViewKeys = encryptKeyPair(m_viewPublicKey, m_viewSecretKey, creationTimestamp);
-
+m_logger(INFO) << "encrypted view keys set.";
   for (auto spendKeys : m_walletsContainer.get<RandomAccessIndex>()) {
     m_containerStorage.push_back(encryptKeyPair(spendKeys.spendPublicKey, spendKeys.spendSecretKey, spendKeys.creationTimestamp));
     incNextIv();
   }
-
+m_logger(INFO) << "about to save wallet cache.";
   saveWalletCache(m_containerStorage, m_key, WalletSaveLevel::SAVE_ALL, "");
-
+m_logger(INFO) << "after save walletca.";
   boost::filesystem::rename(path, bakPath);
   std::error_code ec;
   m_containerStorage.rename(path, ec);
@@ -934,7 +955,7 @@ void WalletGreen::load(const std::string& path, const std::string& password, std
   Crypto::cn_context cnContext;
   generate_chacha8_key(cnContext, password, m_key);
 
-  std::ifstream walletFileStream(path, std::ios_base::binary);
+  std::ifstream walletFileStream(path.c_str(), std::fstream::in | std::fstream::binary);
   int version = walletFileStream.peek();
   if (version == EOF) {
     m_logger(ERROR, BRIGHT_RED) << "Failed to read wallet version";
@@ -942,7 +963,8 @@ void WalletGreen::load(const std::string& path, const std::string& password, std
   }
 
   if (version < WalletSerializerV2::MIN_VERSION) {
-    convertAndLoadWalletFile(path, std::move(walletFileStream));
+    m_logger(INFO, BRIGHT_RED) << "Wallet file version is " << version << " converting";
+    convertAndLoadWalletFile(path, walletFileStream, password);
   } else {
     walletFileStream.close();
 

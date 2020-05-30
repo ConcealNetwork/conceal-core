@@ -181,16 +181,16 @@ class IWallet
 public:
   virtual ~IWallet() {}
 
-  virtual void initialize(const std::string &password) = 0;
+  virtual void initialize(const std::string& path, const std::string& password) = 0;
   virtual void createDeposit(uint64_t amount, uint64_t term, std::string sourceAddress, std::string destinationAddress, std::string &transactionHash) = 0;
   virtual WalletDeposit getDeposit(size_t depositIndex) const = 0;
-  virtual void initializeWithViewKey(const Crypto::SecretKey &viewSecretKey, const std::string &password) = 0;
+  virtual void initializeWithViewKey(const std::string& path, const std::string& password, const Crypto::SecretKey& viewSecretKey) = 0;
   virtual void load(const std::string& path, const std::string& password, std::string& extra) = 0;
   virtual void load(const std::string& path, const std::string& password) = 0;
   virtual void shutdown() = 0;
 
   virtual void changePassword(const std::string &oldPassword, const std::string &newPassword) = 0;
-  virtual void save(std::ostream &destination, bool saveDetails = true, bool saveCache = true) = 0;
+  virtual void save(WalletSaveLevel saveLevel = WalletSaveLevel::SAVE_ALL, const std::string& extra = "") = 0;
 
   virtual size_t getAddressCount() const = 0;
 

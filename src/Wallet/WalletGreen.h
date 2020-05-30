@@ -33,8 +33,8 @@ public:
   WalletGreen(System::Dispatcher &dispatcher, const Currency &currency, INode &node, Logging::ILogger &logger, uint32_t transactionSoftLockTime = 1);
   virtual ~WalletGreen();
 
-  virtual void initialize(const std::string &password) override;
-  virtual void initializeWithViewKey(const Crypto::SecretKey &viewSecretKey, const std::string &password) override;
+  virtual void initialize(const std::string& path, const std::string& password) override;
+  virtual void initializeWithViewKey(const std::string& path, const std::string& password, const Crypto::SecretKey& viewSecretKey) override;
   virtual void load(const std::string& path, const std::string& password, std::string& extra) override;
   virtual void load(const std::string& path, const std::string& password) override;
   virtual void shutdown() override;
@@ -43,7 +43,7 @@ public:
 
 
   virtual void changePassword(const std::string &oldPassword, const std::string &newPassword) override;
-  virtual void save(std::ostream &destination, bool saveDetails = true, bool saveCache = true) override;
+  virtual void save(WalletSaveLevel saveLevel = WalletSaveLevel::SAVE_ALL, const std::string& extra = "") override;
 
   virtual size_t getAddressCount() const override;
   virtual size_t getWalletDepositCount() const override;  
@@ -117,7 +117,7 @@ protected:
   void throwIfTrackingMode() const;
   void doShutdown();
     void clearCaches(bool clearTransactions, bool clearCachedData);
-  void convertAndLoadWalletFile(const std::string& path, std::ifstream&& walletFileStream);
+  void convertAndLoadWalletFile(const std::string& path, std::ifstream& walletFileStream, const std::string& password);
 
   static void decryptKeyPair(const EncryptedWalletRecord& cipher, Crypto::PublicKey& publicKey, Crypto::SecretKey& secretKey, uint64_t& creationTimestamp, const Crypto::chacha8_key& key);
     Crypto::chacha8_iv getNextIv() const;
@@ -127,7 +127,7 @@ protected:
   EncryptedWalletRecord encryptKeyPair(const Crypto::PublicKey& publicKey, const Crypto::SecretKey& secretKey, uint64_t creationTimestamp) const;
   static void incIv(Crypto::chacha8_iv& iv);
   void incNextIv();
-  void initWithKeys(const Crypto::PublicKey &viewPublicKey, const Crypto::SecretKey &viewSecretKey, const std::string &password);
+  void initWithKeys(const std::string& path, const std::string& password, const Crypto::PublicKey& viewPublicKey, const Crypto::SecretKey& viewSecretKey);
   std::string doCreateAddress(const Crypto::PublicKey &spendPublicKey, const Crypto::SecretKey &spendSecretKey, uint64_t creationTimestamp);
   std::vector<std::string> doCreateAddressList(const std::vector<NewAddressData> &addressDataList);
 
