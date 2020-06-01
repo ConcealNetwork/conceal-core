@@ -730,6 +730,91 @@ void WalletGreen::save(WalletSaveLevel saveLevel, const std::string& extra) {
   m_logger(INFO, BRIGHT_WHITE) << "Container saved";
 }
 
+void WalletGreen::copyContainerStorageKeys(ContainerStorage& src, const chacha8_key& srcKey, ContainerStorage& dst, const chacha8_key& dstKey) {
+  dst.reserve(src.size());
+
+  dst.setAutoFlush(false);
+  Tools::ScopeExit exitHandler([&dst] {
+    dst.setAutoFlush(true);
+    dst.flush();
+  });
+
+  size_t counter = 0;
+
+  for (auto& encryptedSpendKeys : src) {
+    Crypto::PublicKey publicKey;
+    Crypto::SecretKey secretKey;
+    uint64_t creationTimestamp;
+    decryptKeyPair(encryptedSpendKeys, publicKey, secretKey, creationTimestamp, srcKey);
+
+    // push_back() can resize container, and dstPrefix address can be changed, so it is requested for each key pair
+    ContainerStoragePrefix* dstPrefix = reinterpret_cast<ContainerStoragePrefix*>(dst.prefix());
+    Crypto::chacha8_iv keyPairIv = dstPrefix->nextIv;
+    incIv(dstPrefix->nextIv);
+
+    dst.push_back(encryptKeyPair(publicKey, secretKey, creationTimestamp, dstKey, keyPairIv));
+  }
+}
+
+void WalletGreen::copyContainerStoragePrefix(ContainerStorage& src, const chacha8_key& srcKey, ContainerStorage& dst, const chacha8_key& dstKey) {
+  ContainerStoragePrefix* srcPrefix = reinterpret_cast<ContainerStoragePrefix*>(src.prefix());
+  ContainerStoragePrefix* dstPrefix = reinterpret_cast<ContainerStoragePrefix*>(dst.prefix());
+  dstPrefix->version = srcPrefix->version;
+  dstPrefix->nextIv = Crypto::randomChachaIV();
+
+  Crypto::PublicKey publicKey;
+  Crypto::SecretKey secretKey;
+  uint64_t creationTimestamp;
+  decryptKeyPair(srcPrefix->encryptedViewKeys, publicKey, secretKey, creationTimestamp, srcKey);
+  dstPrefix->encryptedViewKeys = encryptKeyPair(publicKey, secretKey, creationTimestamp, dstKey, dstPrefix->nextIv);
+  incIv(dstPrefix->nextIv);
+}
+
+void WalletGreen::exportWallet(const std::string& path, bool encrypt, WalletSaveLevel saveLevel, const std::string& extra) {
+  m_logger(INFO, BRIGHT_WHITE) << "Exporting container...";
+
+  throwIfNotInitialized();
+  throwIfStopped();
+
+  stopBlockchainSynchronizer();
+
+  try {
+    bool storageCreated = false;
+    Tools::ScopeExit failExitHandler([path, &storageCreated] {
+      // Don't delete file if it has existed
+      if (storageCreated) {
+        boost::system::error_code ignore;
+        boost::filesystem::remove(path, ignore);
+      }
+    });
+
+    ContainerStorage newStorage(path, FileMappedVectorOpenMode::CREATE, m_containerStorage.prefixSize());
+    storageCreated = true;
+
+    chacha8_key newStorageKey;
+    if (encrypt) {
+      newStorageKey = m_key;
+    } else {
+      cn_context cnContext;
+      generate_chacha8_key(cnContext, "", newStorageKey);
+    }
+
+    copyContainerStoragePrefix(m_containerStorage, m_key, newStorage, newStorageKey);
+    copyContainerStorageKeys(m_containerStorage, m_key, newStorage, newStorageKey);
+    saveWalletCache(newStorage, newStorageKey, saveLevel, extra);
+
+    failExitHandler.cancel();
+
+    m_logger(DEBUGGING) << "Container export finished";
+  } catch (const std::exception& e) {
+    m_logger(ERROR, BRIGHT_RED) << "Failed to export container: " << e.what();
+    startBlockchainSynchronizer();
+    throw;
+  }
+
+  startBlockchainSynchronizer();
+  m_logger(INFO, BRIGHT_WHITE) << "Container exported";
+}
 
 void WalletGreen::convertAndLoadWalletFile(const std::string& path, std::ifstream& walletFileStream, const std::string& password) {
 
@@ -1933,6 +2018,8 @@ uint64_t WalletGreen::getCurrentTimestampAdjusted() {
 
 void WalletGreen::reset(const uint64_t scanHeight)
 {
+    //TODO
+
     throwIfNotInitialized();
     throwIfStopped();
 
@@ -1941,8 +2028,10 @@ void WalletGreen::reset(const uint64_t scanHeight)
 
     /* Grab the wallet encrypted prefix */
     auto* prefix = reinterpret_cast<ContainerStoragePrefix*>(m_containerStorage.prefix());
-
+    m_logger(INFO, BRIGHT_WHITE) << "reset with height " << scanHeight;
     uint64_t newTimestamp = scanHeightToTimestamp((uint32_t) scanHeight);
+
+    m_logger(INFO, BRIGHT_WHITE) << "new timestamp " << newTimestamp;
 
     /* Reencrypt with the new creation timestamp so we rescan from here when we relaunch */
     prefix->encryptedViewKeys = encryptKeyPair(m_viewPublicKey, m_viewSecretKey, newTimestamp);

@@ -36,18 +36,16 @@ struct Save
   };
 };
 
-struct Reset
-{
-  struct Request
-  {
+struct Reset {
+  struct Request {
     std::string viewSecretKey;
+    uint32_t scanHeight = std::numeric_limits<uint32_t>::max();
 
-    void serialize(CryptoNote::ISerializer &serializer);
+    void serialize(CryptoNote::ISerializer& serializer);
   };
 
-  struct Response
-  {
-    void serialize(CryptoNote::ISerializer &serializer);
+  struct Response {
+    void serialize(CryptoNote::ISerializer& serializer);
   };
 };
 

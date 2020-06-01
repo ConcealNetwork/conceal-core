@@ -18,13 +18,12 @@ void Save::Response::serialize(CryptoNote::ISerializer & /*serializer*/)
 {
 }
 
-void Reset::Request::serialize(CryptoNote::ISerializer &serializer)
-{
+void Reset::Request::serialize(CryptoNote::ISerializer& serializer) {
   serializer(viewSecretKey, "privateViewKey");
+  serializer(scanHeight, "scanHeight");
 }
 
-void Reset::Response::serialize(CryptoNote::ISerializer &serializer)
-{
+void Reset::Response::serialize(CryptoNote::ISerializer& serializer) {
 }
 
 void GetViewKey::Request::serialize(CryptoNote::ISerializer &serializer)

@@ -108,9 +108,17 @@ void PaymentServiceJsonRpcServer::processJsonRpcRequest(const Common::JsonValue&
 
 std::error_code PaymentServiceJsonRpcServer::handleReset(const Reset::Request& request, Reset::Response& response) {
   if (request.viewSecretKey.empty()) {
-    return service.resetWallet();
+    if (request.scanHeight != std::numeric_limits<uint32_t>::max()) {
+      return service.resetWallet(request.scanHeight);
+    } else {
+      return service.resetWallet();
+    }
   } else {
-    return service.replaceWithNewWallet(request.viewSecretKey);
+    if (request.scanHeight != std::numeric_limits<uint32_t>::max()) {
+      return service.replaceWithNewWallet(request.viewSecretKey);
+    } else {
+      return service.replaceWithNewWallet(request.viewSecretKey);
+    }
   }
 }
 

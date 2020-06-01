@@ -733,6 +733,57 @@ void WalletService::loadWallet() {
     return std::error_code();
   }
 
+std::error_code WalletService::exportWallet(const std::string& fileName) {
+  try {
+    System::EventLock lk(readyEvent);
+
+    if (!inited) {
+      logger(Logging::WARNING, Logging::BRIGHT_YELLOW) << "Export impossible: Wallet Service is not initialized";
+      return make_error_code(CryptoNote::error::NOT_INITIALIZED);
+    }
+
+    boost::filesystem::path walletPath(config.walletFile);
+    boost::filesystem::path exportPath = walletPath.parent_path() / fileName;
+
+    logger(Logging::INFO, Logging::BRIGHT_WHITE) << "Exporting wallet to " << exportPath.string();
+    wallet.exportWallet(exportPath.string());
+  } catch (std::system_error& x) {
+    logger(Logging::WARNING, Logging::BRIGHT_YELLOW) << "Error while exporting wallet: " << x.what();
+    return x.code();
+  } catch (std::exception& x) {
+    logger(Logging::WARNING, Logging::BRIGHT_YELLOW) << "Error while exporting wallet: " << x.what();
+    return make_error_code(CryptoNote::error::INTERNAL_WALLET_ERROR);
+  }
+
+  return std::error_code();
+}
+
+std::error_code WalletService::resetWallet(const uint32_t scanHeight) {
+  try {
+    System::EventLock lk(readyEvent);
+
+    logger(Logging::INFO, Logging::BRIGHT_WHITE) << "Resetting wallet";
+
+    if (!inited) {
+      logger(Logging::WARNING, Logging::BRIGHT_YELLOW) << "Reset impossible: Wallet Service is not initialized";
+      return make_error_code(CryptoNote::error::NOT_INITIALIZED);
+    }
+
+    wallet.reset(scanHeight);
+    logger(Logging::INFO, Logging::BRIGHT_WHITE) << "Wallet has been reset starting scanning from height " << scanHeight;
+  }
+  catch (std::system_error& x) {
+    logger(Logging::WARNING, Logging::BRIGHT_YELLOW) << "Error while resetting wallet: " << x.what();
+    return x.code();
+  }
+  catch (std::exception& x) {
+    logger(Logging::WARNING, Logging::BRIGHT_YELLOW) << "Error while resetting wallet: " << x.what();
+    return make_error_code(CryptoNote::error::INTERNAL_WALLET_ERROR);
+  }
+
+  return std::error_code();
+}
+
   std::error_code WalletService::createAddress(const std::string &spendSecretKeyText, std::string &address)
   {
     try
