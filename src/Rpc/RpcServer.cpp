@@ -645,6 +645,7 @@ bool RpcServer::on_get_info(const COMMAND_RPC_GET_INFO::request& req, COMMAND_RP
   m_core.getBlockDifficulty(static_cast<uint32_t>(last_block_height), res.last_block_difficulty);
 
   res.connections = m_p2p.get_payload_object().all_connections();
+  res.start_time = m_core.getStartTime();
   return true;
 }
 

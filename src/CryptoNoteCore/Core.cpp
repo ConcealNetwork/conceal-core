@@ -126,6 +126,10 @@ bool core::get_alternative_blocks(std::list<Block>& blocks) {
 size_t core::get_alternative_blocks_count() {
   return m_blockchain.getAlternativeBlocksCount();
 }
+
+std::time_t core::getStartTime() const {
+  return start_time;
+}
 //-----------------------------------------------------------------------------------------------
 bool core::init(const CoreConfig& config, const MinerConfig& minerConfig, bool load_existing) {
   m_config_folder = config.configFolder;
@@ -147,6 +151,8 @@ bool core::init(const CoreConfig& config, const MinerConfig& minerConfig, bool l
     logger(ERROR, BRIGHT_RED) << "<< Core.cpp << " << "Failed to initialize blockchain storage";
     return false;
   }
+
+  start_time = std::time(nullptr);
 
   return load_state_data();
 }

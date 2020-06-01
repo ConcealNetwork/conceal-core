@@ -6,7 +6,11 @@
 
 #pragma once
 
+#include <boost/format.hpp>
+
 #include "Common/ConsoleHandler.h"
+#include "CryptoNoteProtocol/ICryptoNoteProtocolQuery.h"
+#include "Rpc/RpcServer.h"
 
 #include <Logging/LoggerRef.h>
 #include <Logging/LoggerManager.h>
@@ -15,12 +19,13 @@ namespace CryptoNote {
 class core;
 class Currency;
 class NodeServer;
+class ICryptoNoteProtocolQuery;
 }
 
 class DaemonCommandsHandler
 {
 public:
-  DaemonCommandsHandler(CryptoNote::core& core, CryptoNote::NodeServer& srv, Logging::LoggerManager& log);
+  DaemonCommandsHandler(CryptoNote::core& core, CryptoNote::NodeServer& srv, Logging::LoggerManager& log, const CryptoNote::ICryptoNoteProtocolQuery& protocol, CryptoNote::RpcServer* prpc_server);
 
   bool start_handling() {
     m_consoleHandler.start();
@@ -38,8 +43,12 @@ private:
   CryptoNote::NodeServer& m_srv;
   Logging::LoggerRef logger;
   Logging::LoggerManager& m_logManager;
+  const CryptoNote::ICryptoNoteProtocolQuery& protocolQuery;
+  CryptoNote::RpcServer* m_prpc_server;
 
   std::string get_commands_str();
+  std::string get_mining_speed(uint32_t hr);
+  float get_sync_percentage(uint64_t height, uint64_t target_height);
   bool print_block_by_height(uint32_t height);
   bool print_block_by_hash(const std::string& arg);
   uint64_t calculatePercent(const CryptoNote::Currency& currency, uint64_t value, uint64_t total);

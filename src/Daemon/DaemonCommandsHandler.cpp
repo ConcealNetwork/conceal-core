@@ -4,6 +4,10 @@
 // Distributed under the MIT/X11 software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
+#include <ctime>
+#include "math.h"
+#include <boost/format.hpp>
+
 #include "DaemonCommandsHandler.h"
 
 #include "P2p/NetNode.h"
@@ -22,9 +26,8 @@ namespace {
   }
 }
 
-
-DaemonCommandsHandler::DaemonCommandsHandler(CryptoNote::core& core, CryptoNote::NodeServer& srv, Logging::LoggerManager& log) :
-  m_core(core), m_srv(srv), logger(log, "daemon"), m_logManager(log) {
+DaemonCommandsHandler::DaemonCommandsHandler(CryptoNote::core& core, CryptoNote::NodeServer& srv, Logging::LoggerManager& log, const CryptoNote::ICryptoNoteProtocolQuery& protocol, CryptoNote::RpcServer* prpc_server) :
+  m_core(core), m_srv(srv), logger(log, "daemon"), m_logManager(log), protocolQuery(protocol), m_prpc_server(prpc_server) {
   m_consoleHandler.setHandler("exit", boost::bind(&DaemonCommandsHandler::exit, this, _1), "Shutdown the daemon");
   m_consoleHandler.setHandler("help", boost::bind(&DaemonCommandsHandler::help, this, _1), "Show this help");
   m_consoleHandler.setHandler("print_pl", boost::bind(&DaemonCommandsHandler::print_pl, this, _1), "Print peer list");
@@ -72,6 +75,24 @@ bool DaemonCommandsHandler::help(const std::vector<std::string>& args) {
 bool DaemonCommandsHandler::print_pl(const std::vector<std::string>& args) {
   m_srv.log_peerlist();
   return true;
+}
+//--------------------------------------------------------------------------------
+std::string DaemonCommandsHandler::get_mining_speed(uint32_t hr) {
+  if (hr>1e9) return (boost::format("%.2f GH/s") % (hr / 1e9)).str();
+  if (hr>1e6) return (boost::format("%.2f MH/s") % (hr / 1e6)).str();
+  if (hr>1e3) return (boost::format("%.2f kH/s") % (hr / 1e3)).str();
+  return (boost::format("%.0f H/s") % hr).str();
+}
+
+//--------------------------------------------------------------------------------
+float DaemonCommandsHandler::get_sync_percentage(uint64_t height, uint64_t target_height) {
+  target_height = target_height ? target_height < height ? height : target_height : height;
+  float pc = 100.0f * height / target_height;
+  if (height < target_height && pc > 99.9f) {
+    return 99.9f; // to avoid 100% when not fully synced
+  }
+  
+  return pc;
 }
 //--------------------------------------------------------------------------------
 bool DaemonCommandsHandler::show_hr(const std::vector<std::string>& args)
@@ -246,7 +267,7 @@ uint64_t DaemonCommandsHandler::calculatePercent(const CryptoNote::Currency& cur
 }
 //--------------------------------------------------------------------------------
 bool DaemonCommandsHandler::print_stat(const std::vector<std::string>& args) {
-  uint32_t height = 0;
+  uint32_t height = m_core.get_current_blockchain_height();
   uint32_t maxHeight = m_core.get_current_blockchain_height() - 1;
   if (args.empty()) {
     height = maxHeight;
@@ -264,20 +285,37 @@ bool DaemonCommandsHandler::print_stat(const std::vector<std::string>& args) {
       height = maxHeight;
     }
   }
+  uint32_t last_known_block_index = std::max(static_cast<uint32_t>(1), protocolQuery.getObservedHeight()) - 1;
+  bool synced = ((uint32_t)height == (uint32_t)last_known_block_index);
+  uint64_t difficulty = m_core.getNextBlockDifficulty();
+  uint64_t hashrate = (uint32_t)round(difficulty / CryptoNote::parameters::DIFFICULTY_TARGET);
 
   uint64_t totalCoinsInNetwork = m_core.coinsEmittedAtHeight(height);
   uint64_t totalCoinsOnDeposits = m_core.depositAmountAtHeight(height);
   uint64_t amountOfActiveCoins = totalCoinsInNetwork - totalCoinsOnDeposits;
 
+  std::time_t uptime = std::time(nullptr) - m_core.getStartTime();
+  uint32_t secs = (unsigned int)fmod(uptime, 60.0);
+  uint32_t mins = (unsigned int)floor(fmod((uptime / 60.0), 60.0));
+  uint32_t hour = (unsigned int)floor(fmod((uptime / 60.0 / 60.0), 24.0));
+  uint32_t days = (unsigned int)floor(uptime / 60.0 / 60.0 / 24.0);
+
   const auto& currency = m_core.currency();
-  std::cout << "Block height: " << height << std::endl;
-  std::cout << "Block difficulty: " << m_core.difficultyAtHeight(height) << std::endl;
-  std::cout << "Total coins in network:  " << currency.formatAmount(totalCoinsInNetwork) << std::endl;
-  std::cout << "Total coins banked: " << currency.formatAmount(totalCoinsOnDeposits) <<
-    " (" << currency.formatAmount(calculatePercent(currency, totalCoinsOnDeposits, totalCoinsInNetwork)) << "%)" << std::endl;
-  std::cout << "Amount of active coins:  " << currency.formatAmount(amountOfActiveCoins) <<
-    " (" << currency.formatAmount(calculatePercent(currency, amountOfActiveCoins, totalCoinsInNetwork)) << "%)" << std::endl;
- 
+
+  std::cout
+    << "Daemon Height: " << height << std::endl
+    << "Blockchain Height: " << last_known_block_index << std::endl
+    << "Sync Status: " << (synced ? "synced " : "syncing ") << "(" << get_sync_percentage(height, last_known_block_index) << "%)" << std::endl
+    << "Hashrate: " << get_mining_speed(hashrate) << std::endl
+    << "Block Difficulty: " << m_core.difficultyAtHeight(height) << std::endl
+    << "Total coins in network: " << currency.formatAmount(totalCoinsInNetwork) << std::endl
+    << "Total coins banked: " << currency.formatAmount(totalCoinsOnDeposits)
+    << " (" << currency.formatAmount(calculatePercent(currency, totalCoinsOnDeposits, totalCoinsInNetwork)) << "%)" << std::endl
+    << "Amount of active coins: " << currency.formatAmount(amountOfActiveCoins)
+    << " (" << currency.formatAmount(calculatePercent(currency, amountOfActiveCoins, totalCoinsInNetwork)) << "%)" << std::endl
+    << "Software Version: " << PROJECT_VERSION << std::endl
+    << "Uptime: " << days << "D " << hour << "H " << mins << "M " << secs << "s "
+    << std::endl;
   return true;
 }
 //--------------------------------------------------------------------------------

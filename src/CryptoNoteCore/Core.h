@@ -6,6 +6,7 @@
 
 #pragma once
 
+#include <ctime>
 #include <boost/program_options/options_description.hpp>
 #include <boost/program_options/variables_map.hpp>
 
@@ -54,6 +55,7 @@ core(const Currency& currency, i_cryptonote_protocol* pprotocol, Logging::ILogge
      static void init_options(boost::program_options::options_description& desc);
      bool init(const CoreConfig& config, const MinerConfig& minerConfig, bool load_existing);
      bool set_genesis_block(const Block& b);
+     virtual std::time_t getStartTime() const;
      bool deinit();
 
      // ICore
@@ -187,5 +189,6 @@ core(const Currency& currency, i_cryptonote_protocol* pprotocol, Logging::ILogge
      friend class tx_validate_inputs;
      std::atomic<bool> m_starter_message_showed;
      Tools::ObserverManager<ICoreObserver> m_observerManager;
+     time_t start_time;
    };
 }
