@@ -1817,7 +1817,7 @@ void WalletService::loadWallet() {
 
   void WalletService::replaceWithNewWallet(const Crypto::SecretKey &viewSecretKey)
   {
-   wallet.stop();
+  wallet.stop();
   wallet.shutdown();
   inited = false;
   refreshContext.wait();

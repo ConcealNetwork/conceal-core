@@ -44,6 +44,9 @@ public:
 
   virtual void changePassword(const std::string &oldPassword, const std::string &newPassword) override;
   virtual void save(WalletSaveLevel saveLevel = WalletSaveLevel::SAVE_ALL, const std::string& extra = "") override;
+  virtual void reset(const uint64_t scanHeight) override;
+
+
 
   virtual size_t getAddressCount() const override;
   virtual size_t getWalletDepositCount() const override;  
@@ -130,6 +133,8 @@ protected:
   void initWithKeys(const std::string& path, const std::string& password, const Crypto::PublicKey& viewPublicKey, const Crypto::SecretKey& viewSecretKey);
   std::string doCreateAddress(const Crypto::PublicKey &spendPublicKey, const Crypto::SecretKey &spendSecretKey, uint64_t creationTimestamp);
   std::vector<std::string> doCreateAddressList(const std::vector<NewAddressData> &addressDataList);
+  uint64_t scanHeightToTimestamp(const uint32_t scanHeight);
+  uint64_t getCurrentTimestampAdjusted();
 
   struct InputInfo
   {
