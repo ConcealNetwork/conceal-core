@@ -174,8 +174,7 @@ const std::initializer_list<const char*> SEED_NODES  = {
 	"212.237.59.97:15000", // Gamma
 	"188.213.165.210:15000", // Omega
 	"89.40.118.85:15000", // Delta
-	"94.177.245.107:15000", // Lambda
-	"139.99.42.182:15000" // Katz, Singapore
+	"94.177.245.107:15000" // Lambda
 };
 
 struct CheckpointData {
@@ -243,7 +242,10 @@ const std::initializer_list<CheckpointData> CHECKPOINTS  = {
 	{440000, "6a0138801d48150985045bc671c752f8209d084adad3624a57edd22f9edbef78"},
 	{460000, "dec1da5df01c3cdf5d25a577816c93de58dfb6dd6b073619c5cbd50aedefceb7"},
 	{470000, "1d07fd8995e17429143202da00138f0bfcbdd20aa5ddbba18ac762bc473ffd77"},
-	{480000, "c896df9146e8f09f6205496dfa1e28037c8223f531546d2d64119068a6d1db1d"}
+	{480000, "c896df9146e8f09f6205496dfa1e28037c8223f531546d2d64119068a6d1db1d"},
+	{490000, "faa86e0b546f7655e829dcd8e967a52d9fa933c832863a648df30cc0e8771fa8"},
+	{500000, "df5b2b47960ecd7809f037de44c6817640283e13323a36fe3dd894f3b2b3c5e1"},
+	{510000, "db784d782ac463fbfbf221b417166a80ca1451f8895a1e3027bd19de2952c9bc"}
 };
 
 } // CryptoNote

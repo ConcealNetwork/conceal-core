@@ -2128,7 +2128,6 @@ size_t WalletGreen::createFusionTransaction(uint64_t threshold, uint64_t mixin,
   });
 
   System::EventLock lk(m_readyEvent);
-
   
   throwIfNotInitialized();
   throwIfTrackingMode();
@@ -2197,7 +2196,7 @@ size_t WalletGreen::createFusionTransaction(uint64_t threshold, uint64_t mixin,
     transactionSize = getTransactionSize(*fusionTransaction);
 
     ++round;
-  } while (transactionSize > m_currency.fusionTxMaxSize() && fusionInputs.size() >= m_currency.fusionTxMinInputCount());
+  } while ((transactionSize > m_upperTransactionSizeLimit) && (fusionInputs.size() >= m_currency.fusionTxMinInputCount()));
 
   if (fusionInputs.size() < m_currency.fusionTxMinInputCount()) {
     throw std::system_error(make_error_code(error::MINIMUM_INPUT_COUNT));
