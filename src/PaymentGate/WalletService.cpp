@@ -1086,8 +1086,7 @@ std::error_code WalletService::resetWallet(const uint32_t scanHeight) {
     try
     {
       System::EventLock lk(readyEvent);
-      WalletDeposit depInfo = wallet.getDeposit(depositId);
-      Deposit deposit = depInfo.deposit;
+      Deposit deposit = wallet.getDeposit(depositId);
       amount = deposit.amount;
       term = deposit.term;
       interest = deposit.interest;

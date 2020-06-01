@@ -16,7 +16,7 @@
 // along with Bytecoin.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "WalletSerializationV2.h"
-
+#include "IWallet.h"
 #include "CryptoNoteCore/CryptoNoteSerialization.h"
 #include "Serialization/BinaryInputStreamSerializer.h"
 #include "Serialization/BinaryOutputStreamSerializer.h"
@@ -79,6 +79,41 @@ struct WalletTransferDtoV2 {
   uint8_t type;
 };
 
+
+
+
+struct WalletDepositDtoV2 {
+  WalletDepositDtoV2() {
+  }
+
+  WalletDepositDtoV2(const CryptoNote::Deposit& wd) {
+
+    creatingTransactionId = wd.creatingTransactionId;
+    spendingTransactionId = wd.spendingTransactionId;
+    term = wd.term;
+    amount = wd.amount;
+    interest = wd.interest;
+    height = wd.height;
+    unlockHeight = wd.unlockHeight;
+    locked = wd.locked;
+    transactionHash = wd.transactionHash;
+    outputInTransaction = wd.outputInTransaction;
+    address = wd.address;
+  }
+
+  size_t creatingTransactionId;
+  size_t spendingTransactionId;
+  uint32_t term;
+  uint64_t amount;
+  uint64_t interest;
+  uint64_t height;
+  uint64_t unlockHeight;
+  bool locked;
+  uint32_t outputInTransaction;
+  Crypto::Hash transactionHash;
+  std::string address;
+};
+
 void serialize(UnlockTransactionJobDtoV2& value, CryptoNote::ISerializer& serializer) {
   serializer(value.blockHeight, "blockHeight");
   serializer(value.transactionHash, "transactionHash");
@@ -109,6 +144,20 @@ void serialize(WalletTransferDtoV2& value, CryptoNote::ISerializer& serializer) 
   serializer(value.type, "type");
 }
 
+void serialize(WalletDepositDtoV2& value, CryptoNote::ISerializer& serializer) {
+  serializer(value.height, "height");
+  serializer(value.transactionHash, "transactionHash");
+  serializer(value.outputInTransaction, "outputInTransaction");
+  serializer(value.creatingTransactionId, "creatingTransactionId");
+  serializer(value.spendingTransactionId, "spendingTransactionId");
+  serializer(value.amount, "amount");
+  serializer(value.term, "term");
+  serializer(value.interest, "interest");
+  serializer(value.unlockHeight, "unlockHeight");
+  serializer(value.locked, "locked");
+  serializer(value.address, "address");
+}
+
 }
 
 namespace CryptoNote {
@@ -124,6 +173,7 @@ WalletSerializerV2::WalletSerializerV2(
   UnlockTransactionJobs& unlockTransactions,
   WalletTransactions& transactions,
   WalletTransfers& transfers,
+  WalletDeposits& deposits,
   UncommitedTransactions& uncommitedTransactions,
   std::string& extra,
   uint32_t transactionSoftLockTime
@@ -136,6 +186,7 @@ WalletSerializerV2::WalletSerializerV2(
   m_unlockTransactions(unlockTransactions),
   m_transactions(transactions),
   m_transfers(transfers),
+  m_deposits(deposits),
   m_uncommitedTransactions(uncommitedTransactions),
   m_extra(extra),
   m_transactionSoftLockTime(transactionSoftLockTime)
@@ -285,6 +336,16 @@ void WalletSerializerV2::saveTransactions(CryptoNote::ISerializer& serializer) {
   for (const auto& tx : m_transactions) {
     WalletTransactionDtoV2 dto(tx);
     serializer(dto, "transaction");
+  }
+}
+
+void WalletSerializerV2::saveDeposits(CryptoNote::ISerializer& serializer) {
+  uint64_t count = m_deposits.size();
+  serializer(count, "depositCount");
+
+  for (const auto& tx : m_deposits) {
+    WalletDepositDtoV2 dto;
+    serializer(dto, "deposit");
   }
 }
 

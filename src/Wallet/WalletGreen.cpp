@@ -629,6 +629,7 @@ void WalletGreen::saveWalletCache(ContainerStorage& storage, const Crypto::chach
     m_unlockTransactionsJob,
     transactions,
     transfers,
+    m_deposits,
     m_uncommitedTransactions,
     const_cast<std::string&>(extra),
     m_transactionSoftLockTime
@@ -908,6 +909,7 @@ void WalletGreen::loadWalletCache(std::unordered_set<Crypto::PublicKey>& addedKe
     m_unlockTransactionsJob,
     m_transactions,
     m_transfers,
+    m_deposits,
     m_uncommitedTransactions,
     extra,
     m_transactionSoftLockTime
@@ -1520,7 +1522,7 @@ std::string WalletGreen::doCreateAddress(const Crypto::PublicKey& spendPublicKey
     return m_transactions.get<RandomAccessIndex>()[transactionIndex];
   }
 
-  WalletDeposit WalletGreen::getDeposit(size_t depositIndex) const
+  Deposit WalletGreen::getDeposit(size_t depositIndex) const
   {
     throwIfNotInitialized();
     throwIfStopped();
@@ -1855,17 +1857,17 @@ std::string WalletGreen::doCreateAddress(const Crypto::PublicKey& spendPublicKey
     }
   }
 
-bool WalletGreen::updateWalletDepositInfo(size_t depositId, const CryptoNote::WalletDeposit &info)
+bool WalletGreen::updateWalletDepositInfo(size_t depositId, const CryptoNote::Deposit &info)
   {
     auto &txIdIndex = m_deposits.get<RandomAccessIndex>();
     assert(depositId < txIdIndex.size());
     auto it = std::next(txIdIndex.begin(), depositId);
 
     bool updated = false;
-    bool r = txIdIndex.modify(it, [&info, &updated](WalletDeposit &deposit) {
-      if (deposit.deposit.spendingTransactionId != info.deposit.spendingTransactionId)
+    bool r = txIdIndex.modify(it, [&info, &updated](Deposit &deposit) {
+      if (deposit.spendingTransactionId != info.spendingTransactionId)
       {
-        deposit.deposit.spendingTransactionId = info.deposit.spendingTransactionId;
+        deposit.spendingTransactionId = info.spendingTransactionId;
         updated = true;
       }
 
@@ -3056,13 +3058,13 @@ void WalletGreen::reset(const uint64_t scanHeight)
       size_t depositIndexInTransaction,
       const Hash &transactionHash)
   {
-    WalletDeposit info;
-    info.blockHeight = deposit.height;
-    info.deposit = deposit;
+  
+    Deposit info = deposit;
+    
     info.outputInTransaction = static_cast<uint32_t>(depositIndexInTransaction);
     info.transactionHash = transactionHash;
 
-    /* Add the address to deposit info to make searching easier */
+    /*TODO Add the address to deposit info to make searching easier */
 
     auto &hashIndex = m_transactions.get<TransactionIndex>();
     auto it = hashIndex.find(transactionHash);
@@ -3150,7 +3152,7 @@ void WalletGreen::reset(const uint64_t scanHeight)
         }
 
         auto info = m_deposits[depositId];       
-        info.deposit.spendingTransactionId = transactionId;        
+        info.spendingTransactionId = transactionId;        
         updated |= updateWalletDepositInfo(depositId, info);
       }
 
@@ -3861,9 +3863,7 @@ void WalletGreen::validateChangeDestination(const std::vector<std::string>& sour
       for (auto it = lowerBound; it != upperBound; ++it)
       {
         Deposit deposit;
-        WalletDeposit depInfo = *it;
-        deposit = depInfo.deposit;
-
+        deposit = *it;
         info.deposits.emplace_back(std::move(deposit));
       }
       result.emplace_back(std::move(info));

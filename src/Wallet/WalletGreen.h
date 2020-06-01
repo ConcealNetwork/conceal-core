@@ -71,7 +71,7 @@ public:
 
   virtual size_t getTransactionCount() const override;
   virtual WalletTransaction getTransaction(size_t transactionIndex) const override;
-  virtual WalletDeposit getDeposit(size_t depositIndex) const override;
+  virtual Deposit getDeposit(size_t depositIndex) const override;
   virtual size_t getTransactionTransferCount(size_t transactionIndex) const override;
   virtual WalletTransfer getTransactionTransfer(size_t transactionIndex, size_t transferIndex) const override;
 
@@ -289,7 +289,7 @@ protected:
   size_t insertOutgoingTransactionAndPushEvent(const Crypto::Hash &transactionHash, uint64_t fee, const BinaryArray &extra, uint64_t unlockTimestamp);
   void updateTransactionStateAndPushEvent(size_t transactionId, WalletTransactionState state);
   bool updateWalletTransactionInfo(size_t transactionId, const CryptoNote::TransactionInformation &info, int64_t totalAmount);
-  bool updateWalletDepositInfo(size_t depositId, const CryptoNote::WalletDeposit &info);
+  bool updateWalletDepositInfo(size_t depositId, const CryptoNote::Deposit &info);
 
 
 

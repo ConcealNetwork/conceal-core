@@ -62,15 +62,9 @@ struct Deposit
   uint64_t height;
   uint64_t unlockHeight;
   bool locked;
-};
-
-struct WalletDeposit
-{
-    Deposit deposit;
-    uint32_t outputInTransaction;
-    Crypto::Hash transactionHash;
-    std::string address;
-    uint32_t blockHeight;
+  uint32_t outputInTransaction;
+  Crypto::Hash transactionHash;
+  std::string address;
 };
 
 struct WalletTransactionUpdatedData
@@ -183,7 +177,7 @@ public:
 
   virtual void initialize(const std::string& path, const std::string& password) = 0;
   virtual void createDeposit(uint64_t amount, uint64_t term, std::string sourceAddress, std::string destinationAddress, std::string &transactionHash) = 0;
-  virtual WalletDeposit getDeposit(size_t depositIndex) const = 0;
+  virtual Deposit getDeposit(size_t depositIndex) const = 0;
   virtual void initializeWithViewKey(const std::string& path, const std::string& password, const Crypto::SecretKey& viewSecretKey) = 0;
   virtual void load(const std::string& path, const std::string& password, std::string& extra) = 0;
   virtual void load(const std::string& path, const std::string& password) = 0;

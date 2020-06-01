@@ -105,13 +105,13 @@ struct EncryptedWalletRecord {
         UnlockTransactionJobs;
 
     typedef boost::multi_index_container<
-        CryptoNote::WalletDeposit,
+        CryptoNote::Deposit,
         boost::multi_index::indexed_by<
             boost::multi_index::random_access<boost::multi_index::tag<RandomAccessIndex>>,
             boost::multi_index::hashed_unique<boost::multi_index::tag<TransactionIndex>,
-                                              boost::multi_index::member<CryptoNote::WalletDeposit, Crypto::Hash, &CryptoNote::WalletDeposit::transactionHash>>,
+                                              boost::multi_index::member<CryptoNote::Deposit, Crypto::Hash, &CryptoNote::Deposit::transactionHash>>,
             boost::multi_index::ordered_non_unique<boost::multi_index::tag<BlockHeightIndex>,
-                                                   boost::multi_index::member<CryptoNote::WalletDeposit, uint32_t, &CryptoNote::WalletDeposit::blockHeight>>>>
+                                                   boost::multi_index::member<CryptoNote::Deposit, uint64_t, &CryptoNote::Deposit::height>>>>
          WalletDeposits;
 
     typedef boost::multi_index_container<
@@ -124,7 +124,7 @@ struct EncryptedWalletRecord {
                                                    boost::multi_index::member<CryptoNote::WalletTransaction, uint32_t, &CryptoNote::WalletTransaction::blockHeight>>>>
         WalletTransactions;
         
-typedef Common::FileMappedVector<EncryptedWalletRecord> ContainerStorage;
+    typedef Common::FileMappedVector<EncryptedWalletRecord> ContainerStorage;
     typedef std::pair<size_t, CryptoNote::WalletTransfer> TransactionTransferPair;
     typedef std::vector<TransactionTransferPair> WalletTransfers;
 
