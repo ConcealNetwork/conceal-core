@@ -119,7 +119,7 @@ protected:
   void throwIfStopped() const;
   void throwIfTrackingMode() const;
   void doShutdown();
-    void clearCaches(bool clearTransactions, bool clearCachedData);
+  void clearCaches(bool clearTransactions, bool clearCachedData);
   void convertAndLoadWalletFile(const std::string& path, std::ifstream& walletFileStream, const std::string& password);
 
   static void decryptKeyPair(const EncryptedWalletRecord& cipher, Crypto::PublicKey& publicKey, Crypto::SecretKey& secretKey, uint64_t& creationTimestamp, const Crypto::chacha8_key& key);
@@ -321,11 +321,7 @@ protected:
   void loadSpendKeys();
     void loadContainerStorage(const std::string& path);
 
-void subscribeWallets();
-
-
-  void unsafeLoad(std::istream &source, const std::string &password);
-  void unsafeSave(std::ostream &destination, bool saveDetails, bool saveCache);
+   void subscribeWallets();
 
   std::vector<OutputToTransfer> pickRandomFusionInputs(const std::vector<std::string> &addresses,
                                                        uint64_t threshold, size_t minInputCount, size_t maxInputCount);

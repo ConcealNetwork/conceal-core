@@ -730,41 +730,6 @@ void WalletGreen::save(WalletSaveLevel saveLevel, const std::string& extra) {
   m_logger(INFO, BRIGHT_WHITE) << "Container saved";
 }
 
-  void WalletGreen::unsafeSave(std::ostream &destination, bool saveDetails, bool saveCache)
-  {
-    WalletTransactions transactions;
-    WalletTransfers transfers;
-
-    if (saveDetails && !saveCache)
-    {
-      filterOutTransactions(transactions, transfers, [](const WalletTransaction &tx) {
-        return tx.state == WalletTransactionState::CREATED || tx.state == WalletTransactionState::DELETED;
-      });
-    }
-    else if (saveDetails)
-    {
-      filterOutTransactions(transactions, transfers, [](const WalletTransaction &tx) {
-        return tx.state == WalletTransactionState::DELETED;
-      });
-    }
-
-    WalletSerializer s(
-        *this,
-        m_viewPublicKey,
-        m_viewSecretKey,
-        m_actualBalance,
-        m_pendingBalance,
-        m_walletsContainer,
-        m_synchronizer,
-        m_unlockTransactionsJob,
-        transactions,
-        transfers,
-        m_transactionSoftLockTime,
-        m_uncommitedTransactions);
-
-    StdOutputStream output(destination);
-    s.save(m_password, output, saveDetails, saveCache);
-  }
 
 void WalletGreen::convertAndLoadWalletFile(const std::string& path, std::ifstream& walletFileStream, const std::string& password) {
 
