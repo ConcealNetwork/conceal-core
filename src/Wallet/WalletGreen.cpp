@@ -624,6 +624,8 @@ void WalletGreen::saveWalletCache(ContainerStorage& storage, const Crypto::chach
     m_viewSecretKey,
     m_actualBalance,
     m_pendingBalance,
+    m_lockedDepositBalance,
+    m_unlockedDepositBalance,
     m_walletsContainer,
     m_synchronizer,
     m_unlockTransactionsJob,
@@ -904,6 +906,8 @@ void WalletGreen::loadWalletCache(std::unordered_set<Crypto::PublicKey>& addedKe
     m_viewSecretKey,
     m_actualBalance,
     m_pendingBalance,
+    m_lockedDepositBalance,
+    m_unlockedDepositBalance,
     m_walletsContainer,
     m_synchronizer,
     m_unlockTransactionsJob,
@@ -1090,6 +1094,7 @@ void WalletGreen::clearCaches(bool clearTransactions, bool clearCachedData) {
   if (clearTransactions) {
     m_transactions.clear();
     m_transfers.clear();
+    m_deposits.clear();
   }
 
   if (clearCachedData) {
@@ -3387,7 +3392,7 @@ void WalletGreen::reset(const uint64_t scanHeight)
       }
     }
 
-    m_lockedDepositBalance = calculateDepositsAmount(transfers2, m_currency, heights2);
+    uint64_t locked = calculateDepositsAmount(transfers2, m_currency, heights2);
 
     /* This updates the unlocked deposit balance, these are the deposits that have matured
        and can be withdrawn */
@@ -3404,13 +3409,38 @@ void WalletGreen::reset(const uint64_t scanHeight)
       heights.push_back(info.blockHeight);
     }
 
-    m_unlockedDepositBalance = calculateDepositsAmount(transfers, m_currency, heights);
+    uint64_t unlocked = calculateDepositsAmount(transfers, m_currency, heights);
+
+    if (it->lockedDepositBalance < locked)
+    {
+      m_lockedDepositBalance += locked - it->lockedDepositBalance;
+      updated = true;
+    }
+    else
+    {
+      m_lockedDepositBalance -= it->lockedDepositBalance - locked;
+      updated = true;
+    }
+
+    if (it->unlockedDepositBalance < unlocked)
+    {
+      m_unlockedDepositBalance += locked - it->unlockedDepositBalance;
+      updated = true;
+    }
+    else
+    {
+      m_unlockedDepositBalance -= it->unlockedDepositBalance - unlocked;
+      updated = true;
+    }
+
 
     if (updated)
     {
-      m_walletsContainer.get<TransfersContainerIndex>().modify(it, [actual, pending](WalletRecord &wallet) {
+      m_walletsContainer.get<TransfersContainerIndex>().modify(it, [actual, pending, locked, unlocked](WalletRecord &wallet) {
         wallet.actualBalance = actual;
         wallet.pendingBalance = pending;
+        wallet.lockedDepositBalance = locked;
+        wallet.unlockedDepositBalance = unlocked;
       });
 
       m_logger(DEBUGGING, BRIGHT_WHITE) << "Wallet balance updated, address "
@@ -3420,7 +3450,8 @@ void WalletGreen::reset(const uint64_t scanHeight)
       m_logger(DEBUGGING, BRIGHT_WHITE) << "Container balance updated, actual "
                                         << m_currency.formatAmount(m_actualBalance) << ", pending "
                                         << m_currency.formatAmount(m_pendingBalance) << ", locked deposits "
-                                        << m_currency.formatAmount(m_lockedDepositBalance);
+                                        << m_currency.formatAmount(m_lockedDepositBalance) << ",unlocked deposits "
+                                        << m_currency.formatAmount(m_unlockedDepositBalance);
     }
   }
 

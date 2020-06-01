@@ -34,6 +34,8 @@ public:
     Crypto::SecretKey& viewSecretKey,
     uint64_t& actualBalance,
     uint64_t& pendingBalance,
+    uint64_t& lockedDepositBalance,
+    uint64_t& unlockedDepositBalance,
     WalletsContainer& walletsContainer,
     TransfersSyncronizer& synchronizer,
     UnlockTransactionJobs& unlockTransactions,
@@ -61,6 +63,7 @@ private:
   void loadTransactions(CryptoNote::ISerializer& serializer);
   void saveTransactions(CryptoNote::ISerializer& serializer);
 
+  void loadDeposits(CryptoNote::ISerializer& serializer);
   void saveDeposits(CryptoNote::ISerializer& serializer);
 
   void loadTransfers(CryptoNote::ISerializer& serializer);
@@ -75,6 +78,8 @@ private:
   ITransfersObserver& m_transfersObserver;
   uint64_t& m_actualBalance;
   uint64_t& m_pendingBalance;
+  uint64_t& m_lockedDepositBalance;
+  uint64_t& m_unlockedDepositBalance;
   WalletsContainer& m_walletsContainer;
   TransfersSyncronizer& m_synchronizer;
   UnlockTransactionJobs& m_unlockTransactions;
