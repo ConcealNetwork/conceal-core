@@ -595,11 +595,11 @@ void WalletGreen::deleteOrphanTransactions(const std::unordered_set<Crypto::Publ
 }
 
 void WalletGreen::saveWalletCache(ContainerStorage& storage, const Crypto::chacha8_key& key, WalletSaveLevel saveLevel, const std::string& extra) {
-  m_logger(DEBUGGING) << "Saving cache...";
+  m_logger(INFO) << "Saving cache...";
 
   WalletTransactions transactions;
   WalletTransfers transfers;
-
+  m_logger(INFO) << "1";
   if (saveLevel == WalletSaveLevel::SAVE_KEYS_AND_TRANSACTIONS) {
     filterOutTransactions(transactions, transfers, [](const WalletTransaction& tx) {
       return tx.state == WalletTransactionState::CREATED || tx.state == WalletTransactionState::DELETED;
@@ -612,6 +612,7 @@ void WalletGreen::saveWalletCache(ContainerStorage& storage, const Crypto::chach
       });
     }
   } else if (saveLevel == WalletSaveLevel::SAVE_ALL) {
+      m_logger(INFO) << "2";
     filterOutTransactions(transactions, transfers, [](const WalletTransaction& tx) {
       return tx.state == WalletTransactionState::DELETED;
     });
@@ -619,7 +620,7 @@ void WalletGreen::saveWalletCache(ContainerStorage& storage, const Crypto::chach
 
   std::string containerData;
   Common::StringOutputStream containerStream(containerData);
-
+  m_logger(INFO) << "about to serialize";
   WalletSerializerV2 s(
     *this,
     m_viewPublicKey,
@@ -635,9 +636,9 @@ void WalletGreen::saveWalletCache(ContainerStorage& storage, const Crypto::chach
     const_cast<std::string&>(extra),
     m_transactionSoftLockTime
   );
-
+  m_logger(INFO) << "about to save via the serializer";
   s.save(containerStream, saveLevel);
-
+  m_logger(INFO) << "about to  encrypt";
   encryptAndSaveContainerData(storage, key, containerData.data(), containerData.size());
   storage.flush();
 
@@ -795,7 +796,7 @@ void WalletGreen::convertAndLoadWalletFile(const std::string& path, std::ifstrea
 
   boost::filesystem::path bakPath = path + ".backup";
   boost::filesystem::path tmpPath = boost::filesystem::unique_path(path + ".tmp.%%%%-%%%%");
-m_logger(INFO) << "made backup.";
+  m_logger(INFO) << "made backup.";
   if (boost::filesystem::exists(bakPath)) {
 	m_logger(INFO) << "Wallet backup already exists! Creating random file name backup.";
     bakPath = boost::filesystem::unique_path(path + ".%%%%-%%%%" + ".backup");
@@ -3866,29 +3867,33 @@ bool WalletGreen::updateWalletDepositInfo(size_t depositId, const CryptoNote::Wa
     return result;
   }
 
-  void WalletGreen::filterOutTransactions(WalletTransactions &transactions, WalletTransfers &transfers, std::function<bool(const WalletTransaction &)> &&pred) const
-  {
-    size_t cancelledTransactions = 0;
+void WalletGreen::filterOutTransactions(WalletTransactions& transactions, WalletTransfers& transfers, std::function<bool (const WalletTransaction&)>&& pred) const {
+  size_t cancelledTransactions = 0;
 
-    auto &index = m_transactions.get<RandomAccessIndex>();
-    for (size_t i = 0; i < m_transactions.size(); ++i)
-    {
-      const WalletTransaction &transaction = index[i];
+  transactions.reserve(m_transactions.size());
+  transfers.reserve(m_transfers.size());
 
-      if (pred(transaction))
-      {
-        ++cancelledTransactions;
-        continue;
+  auto& index = m_transactions.get<RandomAccessIndex>();
+  size_t transferIdx = 0;
+  for (size_t i = 0; i < m_transactions.size(); ++i) {
+    const WalletTransaction& transaction = index[i];
+
+    if (pred(transaction)) {
+      ++cancelledTransactions;
+
+      while (transferIdx < m_transfers.size() && m_transfers[transferIdx].first == i) {
+        ++transferIdx;
       }
+    } else {
+      transactions.emplace_back(transaction);
 
-      transactions.push_back(transaction);
-      std::vector<WalletTransfer> transactionTransfers = getTransactionTransfers(transaction);
-      for (auto &transfer : transactionTransfers)
-      {
-        transfers.push_back(TransactionTransferPair{i - cancelledTransactions, std::move(transfer)});
+      while (transferIdx < m_transfers.size() && m_transfers[transferIdx].first == i) {
+        transfers.emplace_back(i - cancelledTransactions, m_transfers[transferIdx].second);
+        ++transferIdx;
       }
     }
   }
+}
 
   void WalletGreen::getViewKeyKnownBlocks(const Crypto::PublicKey &viewPublicKey)
   {

@@ -485,35 +485,37 @@ namespace PaymentService
   /* Generate a new wallet (-g) or import a new wallet if the secret keys have been specified */
   void generateNewWallet(const CryptoNote::Currency &currency, const WalletConfiguration &conf, Logging::ILogger &logger, System::Dispatcher &dispatcher)
   {
-    Logging::LoggerRef log(logger, "generateNewWallet");
+Logging::LoggerRef log(logger, "generateNewWallet");
 
-    CryptoNote::INode *nodeStub = NodeFactory::createNodeStub();
-    std::unique_ptr<CryptoNote::INode> nodeGuard(nodeStub);
+  CryptoNote::INode* nodeStub = NodeFactory::createNodeStub();
+  std::unique_ptr<CryptoNote::INode> nodeGuard(nodeStub);
 
-    CryptoNote::IWallet *wallet = new CryptoNote::WalletGreen(dispatcher, currency, *nodeStub, logger);
-    std::unique_ptr<CryptoNote::IWallet> walletGuard(wallet);
+  CryptoNote::IWallet* wallet = new CryptoNote::WalletGreen(dispatcher, currency, *nodeStub, logger);
+  std::unique_ptr<CryptoNote::IWallet> walletGuard(wallet);
 
-    std::fstream walletFile;
-    createWalletFile(walletFile, conf.walletFile);
-
-    std::string address;
+  std::string address;
 
     /* Create a new address and container since both view key and spend key
      have not been specifiec */
     if (conf.secretSpendKey.empty() && conf.secretViewKey.empty())
     {
-      log(Logging::INFO, Logging::BRIGHT_WHITE) << "Generating new wallet";
-      log(Logging::INFO, Logging::BRIGHT_WHITE) << "Both spend key and view key are empty.";
+ log(Logging::INFO, Logging::BRIGHT_WHITE) << "Generating new deterministic wallet";
+
       Crypto::SecretKey private_view_key;
       CryptoNote::KeyPair spendKey;
-      Crypto::PublicKey unused;
 
       Crypto::generate_keys(spendKey.publicKey, spendKey.secretKey);
-      AccountBase::generateViewFromSpend(spendKey.secretKey, private_view_key, unused);
+
+      Crypto::PublicKey unused_dummy_variable;
+
+      CryptoNote::AccountBase::generateViewFromSpend(spendKey.secretKey, private_view_key, unused_dummy_variable);
 
       wallet->initializeWithViewKey(conf.walletFile, conf.walletPassword, private_view_key);
       address = wallet->createAddress(spendKey.secretKey);
 
+      log(Logging::INFO, Logging::BRIGHT_WHITE) << "New deterministic wallet is generated. Address: " << address;
+
+      //TODO make this a cout
       log(Logging::INFO, Logging::BRIGHT_WHITE) << "New wallet generated.";
       log(Logging::INFO, Logging::BRIGHT_WHITE) << "Address: " << address;
       log(Logging::INFO, Logging::BRIGHT_WHITE) << "Secret spend key: " << Common::podToHex(spendKey.secretKey);
@@ -556,7 +558,7 @@ namespace PaymentService
     }
 
     /* Save the container and exit */
-    saveWallet(*wallet, walletFile, false, false);
+    wallet->save(CryptoNote::WalletSaveLevel::SAVE_KEYS_ONLY);
     log(Logging::INFO) << "Wallet is saved";
   } // namespace PaymentService
 
