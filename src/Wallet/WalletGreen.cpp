@@ -46,6 +46,18 @@ using namespace Logging;
 namespace
 {
 
+  std::vector<uint64_t> split(uint64_t amount, uint64_t dustThreshold)
+  {
+    std::vector<uint64_t> amounts;
+
+    decompose_amount_into_digits(
+        amount, dustThreshold,
+        [&](uint64_t chunk) { amounts.push_back(chunk); },
+        [&](uint64_t dust) { amounts.push_back(dust); });
+
+    return amounts;
+  }
+
   uint64_t calculateDepositsAmount(
       const std::vector<CryptoNote::TransactionOutputInformation> &transfers, 
       const CryptoNote::Currency &currency, 
@@ -319,26 +331,68 @@ void WalletGreen::initialize(
     // TODO get the address from the deposit
     const auto &wallet = getWalletRecord("ccx7Xh4S7w3RtRbmfv3BaTNMZcbZLu8VShwvmGGBYovyUvhRHiWE4K7K174vDU5hw2eXjGwyiC8JfT3vPaUSmg9g1utGShBrGS");
     ITransfersContainer *container = wallet.container;
+    AccountKeys account = makeAccountKeys(wallet);
     ITransfersContainer::TransferState state;
     TransactionOutputInformation transfer;
     Deposit deposit = getDeposit(depositId);
 
-    bool works = container->getTransfer(deposit.transactionHash, deposit.outputInTransaction, transfer, state);
+    //throwIf(container->getTransfer(deposit.transactionHash, deposit.outputInTransaction, transfer, state) == false, error::DEPOSIT_DOESNOT_EXIST);
+    //throwIf(transfer.amount < 1000, error::WRONG_AMOUNT);
     selectedTransfers.push_back(std::move(transfer));
-
     m_logger(INFO, BRIGHT_WHITE) << "Withdraw deposit, id " << depositId << " found transfer for " << transfer.amount << " with a global output index of " << transfer.globalOutputIndex;
-    /*
-    {
-      
-      ITransfersContainer::TransferState state;
-      throwIf(m_transferDetails.getTransfer(transactionHash, outputInTransaction, transfer, state) == false, error::DEPOSIT_DOESNOT_EXIST);
-      throwIf(state != ITransfersContainer::TransferState::TransferAvailable, error::DEPOSIT_LOCKED);
 
-      selectedTransfers.push_back(std::move(transfer));
+    //throwIf(state != ITransfersContainer::TransferState::TransferAvailable, error::DEPOSIT_LOCKED);
+
+    std::vector<MultisignatureInput> inputs = prepareMultisignatureInputs(selectedTransfers);
+
+    AccountPublicAddress address;
+    parseAddressString("ccx7Xh4S7w3RtRbmfv3BaTNMZcbZLu8VShwvmGGBYovyUvhRHiWE4K7K174vDU5hw2eXjGwyiC8JfT3vPaUSmg9g1utGShBrGS", m_currency, address);
+
+    for (const auto &input : inputs)
+    {
+      transaction->addInput(input);
     }
-*/
+
+    std::vector<uint64_t> outputAmounts = split(transfer.amount - 1000, parameters::DEFAULT_DUST_THRESHOLD);
+
+    for (auto amount : outputAmounts)
+    {
+      transaction->addOutput(amount,account.address );
+    }
+
+    transaction->setUnlockTime(0);
+
+    assert(inputs.size() == selectedTransfers.size());
+    for (size_t i = 0; i < inputs.size(); ++i)
+    {
+      transaction->signInputMultisignature(i, selectedTransfers[i].transactionPublicKey, selectedTransfers[i].outputInTransaction, account);
+    }
+
+    transactionHash = Common::podToHex(transaction->getTransactionHash());
+    size_t id = validateSaveAndSendTransaction(*transaction, {}, false, true);
   }
 
+  std::vector<MultisignatureInput> WalletGreen::prepareMultisignatureInputs(const std::vector<TransactionOutputInformation> &selectedTransfers)
+  {
+    std::vector<MultisignatureInput> inputs;
+    inputs.reserve(selectedTransfers.size());
+
+    for (const auto &output : selectedTransfers)
+    {
+      assert(output.type == TransactionTypes::OutputType::Multisignature);
+      assert(output.requiredSignatures == 1); //Other types are currently unsupported
+
+      MultisignatureInput input;
+      input.amount = output.amount;
+      input.signatureCount = output.requiredSignatures;
+      input.outputIndex = output.globalOutputIndex;
+      input.term = output.term;
+
+      inputs.emplace_back(std::move(input));
+    }
+
+    return inputs;
+  }
 
   void WalletGreen::createDeposit(
       uint64_t amount,
