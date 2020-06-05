@@ -306,8 +306,9 @@ void WalletGreen::initialize(
       DepositId depositId, 
       std::string &transactionHash)
   {
-      //check to make sure the deposit exists
-      //check that the deposit is unlocked and has not been spent
+      // TODO
+      // check to make sure the deposit exists
+      // check that the deposit is unlocked and has not been spent
       
     /* Create the transaction */
     std::unique_ptr<ITransaction> transaction = createTransaction();
@@ -315,6 +316,7 @@ void WalletGreen::initialize(
 
     std::vector<TransactionOutputInformation> selectedTransfers;
 
+    // TODO get the address from the deposit
     const auto &wallet = getWalletRecord("ccx7Xh4S7w3RtRbmfv3BaTNMZcbZLu8VShwvmGGBYovyUvhRHiWE4K7K174vDU5hw2eXjGwyiC8JfT3vPaUSmg9g1utGShBrGS");
     ITransfersContainer *container = wallet.container;
     ITransfersContainer::TransferState state;
@@ -323,6 +325,8 @@ void WalletGreen::initialize(
 
     bool works = container->getTransfer(deposit.transactionHash, deposit.outputInTransaction, transfer, state);
     selectedTransfers.push_back(std::move(transfer));
+
+    m_logger(INFO, BRIGHT_WHITE) << "Withdraw deposit, id " << depositId << " found transfer for " << transfer.amount << " with a global output index of " << transfer.globalOutputIndex;
     /*
     {
       

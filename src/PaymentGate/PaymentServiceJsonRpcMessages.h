@@ -107,6 +107,24 @@ struct CreateDeposit
   };
 };
 
+struct WithdrawDeposit
+{
+  struct Request
+  {
+
+    uint64_t depositId;
+
+    void serialize(CryptoNote::ISerializer &serializer);
+  };
+
+  struct Response
+  {
+    std::string transactionHash;
+
+    void serialize(CryptoNote::ISerializer &serializer);
+  };
+};
+
 struct SendDeposit
 {
   struct Request

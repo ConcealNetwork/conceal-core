@@ -40,7 +40,7 @@ public:
   virtual void shutdown() override;
 
   virtual void createDeposit(uint64_t amount, uint64_t term, std::string sourceAddress, std::string destinationAddress, std::string &transactionHash) override;
-  virtual void withdrawDeposit(DepositId deposit, std::string &transactionHash);
+  virtual void withdrawDeposit(uint64_t depositId, std::string &transactionHash) override;
 
   virtual void changePassword(const std::string &oldPassword, const std::string &newPassword) override;
   virtual void save(WalletSaveLevel saveLevel = WalletSaveLevel::SAVE_ALL, const std::string& extra = "") override;

@@ -1682,6 +1682,12 @@ std::error_code WalletService::resetWallet(const uint32_t scanHeight) {
     return std::error_code();
   }
 
+  std::error_code WalletService::withdrawDeposit(uint64_t depositId, std::string &transactionHash) 
+  {
+    wallet.withdrawDeposit(depositId, transactionHash);
+    return std::error_code();
+  }
+
   /* Create and send a deposit to another wallet address, the deposit then will appear in their
    wallet upon confirmation. */
   std::error_code WalletService::sendDeposit(

@@ -64,6 +64,16 @@ void CreateDeposit::Response::serialize(CryptoNote::ISerializer &serializer)
   serializer(transactionHash, "transactionHash");
 }
 
+void WithdrawDeposit::Request::serialize(CryptoNote::ISerializer &serializer)
+{
+  serializer(depositId, "depositId");
+}
+
+void WithdrawDeposit::Response::serialize(CryptoNote::ISerializer &serializer)
+{
+  serializer(transactionHash, "transactionHash");
+}
+
 void SendDeposit::Request::serialize(CryptoNote::ISerializer &serializer)
 {
   serializer(amount, "amount");
