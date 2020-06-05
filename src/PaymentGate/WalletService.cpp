@@ -1682,8 +1682,12 @@ std::error_code WalletService::resetWallet(const uint32_t scanHeight) {
     return std::error_code();
   }
 
-  std::error_code WalletService::withdrawDeposit(uint64_t depositId, std::string &transactionHash) 
+  std::error_code WalletService::withdrawDeposit(
+      uint64_t depositId, 
+      std::string &transactionHash) 
+
   {
+    // TODO try and catch
     wallet.withdrawDeposit(depositId, transactionHash);
     return std::error_code();
   }
