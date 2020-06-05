@@ -18,6 +18,7 @@
 #include "WalletLegacy/WalletUserTransactionsCache.h"
 #include "Wallet/WalletErrors.h"
 #include "WalletLegacy/KeysStorage.h"
+#include "crypto/chacha8.h"
 
 using namespace Common;
 

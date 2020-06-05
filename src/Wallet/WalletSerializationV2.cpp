@@ -79,9 +79,6 @@ struct WalletTransferDtoV2 {
   uint8_t type;
 };
 
-
-
-
 struct WalletDepositDtoV2 {
   WalletDepositDtoV2() {
   }

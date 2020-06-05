@@ -302,6 +302,40 @@ void WalletGreen::initialize(
   //m_logger(INFO, BRIGHT_WHITE) << "New container initialized, public view key " << viewPublicKey;
 }
 
+  void WalletGreen::withdrawDeposit(
+      DepositId depositId, 
+      std::string &transactionHash)
+  {
+      //check to make sure the deposit exists
+      //check that the deposit is unlocked and has not been spent
+      
+    /* Create the transaction */
+    std::unique_ptr<ITransaction> transaction = createTransaction();
+    uint64_t foundMoney = 0;
+
+    std::vector<TransactionOutputInformation> selectedTransfers;
+
+    const auto &wallet = getWalletRecord("ccx7Xh4S7w3RtRbmfv3BaTNMZcbZLu8VShwvmGGBYovyUvhRHiWE4K7K174vDU5hw2eXjGwyiC8JfT3vPaUSmg9g1utGShBrGS");
+    ITransfersContainer *container = wallet.container;
+    ITransfersContainer::TransferState state;
+    TransactionOutputInformation transfer;
+    Deposit deposit = getDeposit(depositId);
+
+    bool works = container->getTransfer(deposit.transactionHash, deposit.outputInTransaction, transfer, state);
+    selectedTransfers.push_back(std::move(transfer));
+    /*
+    {
+      
+      ITransfersContainer::TransferState state;
+      throwIf(m_transferDetails.getTransfer(transactionHash, outputInTransaction, transfer, state) == false, error::DEPOSIT_DOESNOT_EXIST);
+      throwIf(state != ITransfersContainer::TransferState::TransferAvailable, error::DEPOSIT_LOCKED);
+
+      selectedTransfers.push_back(std::move(transfer));
+    }
+*/
+  }
+
+
   void WalletGreen::createDeposit(
       uint64_t amount,
       uint64_t term,
