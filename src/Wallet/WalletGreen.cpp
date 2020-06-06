@@ -324,7 +324,7 @@ void WalletGreen::initialize(
       
     /* Create the transaction */
     std::unique_ptr<ITransaction> transaction = createTransaction();
-    uint64_t foundMoney = 0;
+  
 
     std::vector<TransactionOutputInformation> selectedTransfers;
 
@@ -336,7 +336,11 @@ void WalletGreen::initialize(
     TransactionOutputInformation transfer;
     Deposit deposit = getDeposit(depositId);
 
-    //throwIf(container->getTransfer(deposit.transactionHash, deposit.outputInTransaction, transfer, state) == false, error::DEPOSIT_DOESNOT_EXIST);
+    uint64_t foundMoney = 0;
+    foundMoney += deposit.amount + deposit.interest;
+    m_logger(INFO, WHITE) << "found money " << foundMoney;
+
+    container->getTransfer(deposit.transactionHash, deposit.outputInTransaction, transfer, state);
     //throwIf(transfer.amount < 1000, error::WRONG_AMOUNT);
     selectedTransfers.push_back(std::move(transfer));
     m_logger(INFO, BRIGHT_WHITE) << "Withdraw deposit, id " << depositId << " found transfer for " << transfer.amount << " with a global output index of " << transfer.globalOutputIndex;
@@ -345,22 +349,39 @@ void WalletGreen::initialize(
 
     std::vector<MultisignatureInput> inputs = prepareMultisignatureInputs(selectedTransfers);
 
-    AccountPublicAddress address;
-    parseAddressString("ccx7Xh4S7w3RtRbmfv3BaTNMZcbZLu8VShwvmGGBYovyUvhRHiWE4K7K174vDU5hw2eXjGwyiC8JfT3vPaUSmg9g1utGShBrGS", m_currency, address);
-
     for (const auto &input : inputs)
     {
       transaction->addInput(input);
     }
 
-    std::vector<uint64_t> outputAmounts = split(transfer.amount - 1000, parameters::DEFAULT_DUST_THRESHOLD);
+    std::vector<uint64_t> outputAmounts = split(foundMoney - 1000, parameters::DEFAULT_DUST_THRESHOLD);
 
     for (auto amount : outputAmounts)
     {
-      transaction->addOutput(amount,account.address );
+      transaction->addOutput(amount, account.address);
     }
 
     transaction->setUnlockTime(0);
+    Crypto::SecretKey transactionSK;
+    transaction->getTransactionSecretKey(transactionSK);
+
+    /* Add the transaction extra */
+    std::vector<WalletMessage> messages;
+    Crypto::PublicKey publicKey = transaction->getTransactionPublicKey();
+    CryptoNote::KeyPair kp = {publicKey, transactionSK};
+    for (size_t i = 0; i < messages.size(); ++i)
+    {
+      CryptoNote::AccountPublicAddress addressBin;
+      if (!m_currency.parseAccountAddressString(messages[i].address, addressBin))
+        continue;
+      CryptoNote::tx_extra_message tag;
+      if (!tag.encrypt(i, messages[i].message, &addressBin, kp))
+        continue;
+      BinaryArray ba;
+      toBinaryArray(tag, ba);
+      ba.insert(ba.begin(), TX_EXTRA_MESSAGE_TAG);
+      transaction->appendExtra(ba);
+    }
 
     assert(inputs.size() == selectedTransfers.size());
     for (size_t i = 0; i < inputs.size(); ++i)
