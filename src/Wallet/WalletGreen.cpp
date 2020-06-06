@@ -1369,7 +1369,7 @@ size_t WalletGreen::validateSaveAndSendTransaction(const ITransactionReader& tra
     throw std::system_error(make_error_code(error::INTERNAL_WALLET_ERROR), "Failed to deserialize created transaction");
   }
 
-  uint64_t fee = transaction.getInputTotalAmount() < transaction.getOutputTotalAmount() ? CryptoNote::parameters::MINIMUM_FEE_V1 : transaction.getInputTotalAmount() - transaction.getOutputTotalAmount();
+  uint64_t fee = transaction.getInputTotalAmount() < transaction.getOutputTotalAmount() ? CryptoNote::parameters::MINIMUM_FEE_V2 : transaction.getInputTotalAmount() - transaction.getOutputTotalAmount();
   size_t transactionId = insertOutgoingTransactionAndPushEvent(transaction.getTransactionHash(), fee, transaction.getExtra(), transaction.getUnlockTime());
   Tools::ScopeExit rollbackTransactionInsertion([this, transactionId] {
     updateTransactionStateAndPushEvent(transactionId, WalletTransactionState::FAILED);
@@ -2196,7 +2196,7 @@ size_t WalletGreen::createFusionTransaction(uint64_t threshold, uint64_t mixin,
     transactionSize = getTransactionSize(*fusionTransaction);
 
     ++round;
-  } while ((transactionSize > m_upperTransactionSizeLimit) && (fusionInputs.size() >= m_currency.fusionTxMinInputCount()));
+  } while ((transactionSize > m_upperTransactionSizeLimit) && (fusionInputs.size()) >= m_currency.fusionTxMinInputCount());
 
   if (fusionInputs.size() < m_currency.fusionTxMinInputCount()) {
     throw std::system_error(make_error_code(error::MINIMUM_INPUT_COUNT));
