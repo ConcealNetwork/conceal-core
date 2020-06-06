@@ -149,6 +149,12 @@ namespace CryptoNote {
       }
     }
 
+    /* A static fee of 1000 is the only acceptable fee */
+    if (ttl.ttl == 0 && fee != 1000)
+    {
+      return false;
+    }
+
     //check key images for transaction if it is not kept by block
     if (!keptByBlock) {
       std::lock_guard<std::recursive_mutex> lock(m_transactions_lock);
@@ -388,7 +394,7 @@ namespace CryptoNote {
 
     BlockTemplate blockTemplate;
 
-    for (auto it = m_fee_index.rbegin(); it != m_fee_index.rend(); ++it) 
+    for (auto it = m_fee_index.rbegin(); it != m_fee_index.rend() && it->fee == 1000; ++it)
     {
       const auto& txd = *it;
 
