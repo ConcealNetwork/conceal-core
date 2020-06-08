@@ -224,7 +224,7 @@ bool BlockchainExplorerDataBuilder::fillTransactionDetails(const Transaction& tr
     transactionDetails.fee = 0;
     transactionDetails.mixin = 0;
   } else {
-    transactionDetails.fee = inputsAmount < transactionDetails.totalOutputsAmount ? CryptoNote::parameters::MINIMUM_FEE : core.currency().getTransactionFee(transaction, transactionDetails.blockHeight);
+    transactionDetails.fee = inputsAmount < transactionDetails.totalOutputsAmount ? CryptoNote::parameters::MINIMUM_FEE_V2 : core.currency().getTransactionFee(transaction, transactionDetails.blockHeight);
     uint64_t mixin;
     if (!getMixin(transaction, mixin)) {
       return false;
