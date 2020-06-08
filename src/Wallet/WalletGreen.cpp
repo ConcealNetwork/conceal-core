@@ -353,7 +353,7 @@ void WalletGreen::initialize(
       transaction->addInput(input);
     }
 
-    std::vector<uint64_t> outputAmounts = split(foundMoney, parameters::DEFAULT_DUST_THRESHOLD);
+    std::vector<uint64_t> outputAmounts = split(foundMoney - 10, parameters::DEFAULT_DUST_THRESHOLD);
 
     for (auto amount : outputAmounts)
     {
