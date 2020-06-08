@@ -309,7 +309,6 @@ void WalletGreen::initialize(
   Crypto::PublicKey viewPublicKey;
   Crypto::SecretKey viewSecretKey;
   Crypto::generate_keys(viewPublicKey, viewSecretKey);
-  uint64_t creationTimestamp = time(nullptr);
   initWithKeys(path, password, viewPublicKey, viewSecretKey);
   //m_logger(INFO, BRIGHT_WHITE) << "New container initialized, public view key " << viewPublicKey;
 }
@@ -354,7 +353,7 @@ void WalletGreen::initialize(
       transaction->addInput(input);
     }
 
-    std::vector<uint64_t> outputAmounts = split(foundMoney - 1000, parameters::DEFAULT_DUST_THRESHOLD);
+    std::vector<uint64_t> outputAmounts = split(foundMoney, parameters::DEFAULT_DUST_THRESHOLD);
 
     for (auto amount : outputAmounts)
     {
@@ -1262,7 +1261,7 @@ void WalletGreen::subscribeWallets() {
       auto& subscription = m_synchronizer.addSubscription(sub);
       bool r = index.modify(it, [&subscription](WalletRecord& rec) { rec.container = &subscription.getContainer(); });
       assert(r);
-
+      if (r) {};
       subscription.addObserver(this);
     }
   } catch (const std::exception& e) {
@@ -2519,7 +2518,7 @@ void WalletGreen::reset(const uint64_t scanHeight)
     if (transactionData.size() > m_upperTransactionSizeLimit)
     {
       throw std::system_error(make_error_code(error::TRANSACTION_SIZE_TOO_BIG));
-    }
+    }     
 
     CryptoNote::Transaction cryptoNoteTransaction;
     if (!fromBinaryArray(cryptoNoteTransaction, transactionData))
@@ -2527,7 +2526,7 @@ void WalletGreen::reset(const uint64_t scanHeight)
       throw std::system_error(make_error_code(error::INTERNAL_WALLET_ERROR), "Failed to deserialize created transaction");
     }
 
-    uint64_t fee = transaction.getInputTotalAmount() < transaction.getOutputTotalAmount() ? CryptoNote::parameters::MINIMUM_FEE_V1 : transaction.getInputTotalAmount() - transaction.getOutputTotalAmount();
+    uint64_t fee = transaction.getInputTotalAmount() < transaction.getOutputTotalAmount() ? CryptoNote::parameters::MINIMUM_FEE_V2 : transaction.getInputTotalAmount() - transaction.getOutputTotalAmount();
     size_t transactionId = insertOutgoingTransactionAndPushEvent(transaction.getTransactionHash(), fee, transaction.getExtra(), transaction.getUnlockTime());
     Tools::ScopeExit rollbackTransactionInsertion([this, transactionId] {
       updateTransactionStateAndPushEvent(transactionId, WalletTransactionState::FAILED);
