@@ -404,8 +404,6 @@ namespace CryptoNote {
       {
         logger(ERROR) << "Transaction, with id " << txd.id << " uses more money than it has: uses " << m_currency.formatAmount(outputs_amount) << ", has " << m_currency.formatAmount(inputs_amount)
                      << " and will not be included in the block template";
-        auto tx = m_transactions.find(txd.id);
-        removeTransaction(tx);
         continue;
       }
 
