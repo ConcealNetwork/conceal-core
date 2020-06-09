@@ -113,12 +113,16 @@ namespace CryptoNote {
     uint64_t inputs_amount = m_currency.getTransactionAllInputsAmount(tx, height);
     uint64_t outputs_amount = get_outs_money_amount(tx);
 
+    logger(INFO) << "Processing tx " << id << " with inputs of " << inputs_amount << " and outputs of " << outputs_amount;
+
     if (outputs_amount > inputs_amount) {
-      logger(INFO) << "<< TransactionPool.cpp << " << "transaction use more money then it has: use " << m_currency.formatAmount(outputs_amount) <<
-        ", have " << m_currency.formatAmount(inputs_amount);
+      logger(INFO) << "Transaction, with id " << id << " uses more money then it has: uses " << m_currency.formatAmount(outputs_amount) <<
+        ", has " << m_currency.formatAmount(inputs_amount);
       tvc.m_verification_failed = true;
       return false;
     }
+
+
 
     std::vector<TransactionExtraField> txExtraFields;
     parseTransactionExtra(tx.extra, txExtraFields);
@@ -210,7 +214,7 @@ namespace CryptoNote {
 
       auto txd_p = m_transactions.insert(std::move(txd));
       if (!(txd_p.second)) {
-        logger(ERROR, BRIGHT_RED) << "<< TransactionPool.cpp << " << "transaction already exists at inserting in memory pool";
+        logger(ERROR, BRIGHT_RED) << " Transaction already exists at inserting in memory pool";
         return false;
       }
       m_paymentIdIndex.add(txd.tx);
@@ -219,6 +223,8 @@ namespace CryptoNote {
       if (ttl.ttl != 0) {
         m_ttlIndex.emplace(std::make_pair(id, ttl.ttl));
       }
+
+      logger(INFO) << "Transaction " << txd.id << " added to pool";
     }
 
     tvc.m_added_to_pool = true;
@@ -353,11 +359,6 @@ namespace CryptoNote {
 
       ss << "blobSize: " << txd.blobSize << std::endl
         << "fee: " << m_currency.formatAmount(txd.fee) << std::endl
-        << "keptByBlock: " << (txd.keptByBlock ? 'T' : 'F') << std::endl
-        << "max_used_block_height: " << txd.maxUsedBlock.height << std::endl
-        << "max_used_block_id: " << txd.maxUsedBlock.id << std::endl
-        << "last_failed_height: " << txd.lastFailedBlock.height << std::endl
-        << "last_failed_id: " << txd.lastFailedBlock.id << std::endl
         << "received: " << std::ctime(&txd.receiveTime);
 
       auto ttlIt = m_ttlIndex.find(txd.id);
@@ -397,6 +398,16 @@ namespace CryptoNote {
         continue;
       }
 
+      uint64_t inputs_amount = m_currency.getTransactionAllInputsAmount(txd.tx, height);
+      uint64_t outputs_amount = get_outs_money_amount(txd.tx);
+
+      if (outputs_amount > inputs_amount)
+      {
+        logger(ERROR) << "Transaction, with id " << txd.id << " uses more money then it has: uses " << m_currency.formatAmount(outputs_amount) << ", has " << m_currency.formatAmount(inputs_amount)
+                     << " and will not be included in the block template"; 
+        continue;
+      }
+
       size_t blockSizeLimit = (txd.fee == 0) ? median_size : max_total_size;
       if (blockSizeLimit < total_size + txd.blobSize) 
       {
@@ -406,10 +417,15 @@ namespace CryptoNote {
       TransactionCheckInfo checkInfo(txd);
       bool ready = is_transaction_ready_to_go(txd.tx, checkInfo);
 
-      if (ready && blockTemplate.addTransaction(txd.id, txd.tx)) 
+      if (ready && blockTemplate.addTransaction(txd.id, txd.tx))
       {
         total_size += txd.blobSize;
         fee += txd.fee;
+        logger(INFO) << "Transaction " << txd.id << " included to block template";
+      }
+      else
+      {
+        logger(INFO) << "Transaction " << txd.id << " is failed to include to block template";
       }
     }
 
@@ -527,7 +543,8 @@ namespace CryptoNote {
         }
       }
 
-      for (auto it = m_transactions.begin(); it != m_transactions.end();) {
+      for (auto it = m_transactions.begin(); it != m_transactions.end();) 
+      {
         uint64_t txAge = now - it->receiveTime;
         bool remove = txAge > (it->keptByBlock ? m_currency.mempoolTxFromAltBlockLiveTime() : m_currency.mempoolTxLiveTime());
 
@@ -536,9 +553,9 @@ namespace CryptoNote {
 
         if (remove || ttlExpired) {
           if (ttlExpired) {
-            logger(TRACE) << "<< TransactionPool.cpp << " << "Tx " << it->id << " removed from tx pool due to expired TTL, TTL : " << ttlIt->second;
+            logger(INFO) << "Tx " << it->id << " removed from tx pool due to expired TTL, TTL : " << ttlIt->second;
           } else {
-            logger(TRACE) << "<< TransactionPool.cpp << " << "Tx " << it->id << " removed from tx pool due to outdated, age: " << txAge;
+            logger(INFO) << "Tx " << it->id << " removed from tx pool due to outdated, age: " << txAge;
           }
 
           m_recentlyDeletedTransactions.emplace(it->id, now);
