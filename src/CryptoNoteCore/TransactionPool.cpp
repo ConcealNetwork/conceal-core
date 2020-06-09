@@ -110,13 +110,7 @@ namespace CryptoNote {
       return false;
     }
 
-    uint64_t inputs_amount = 0;
-    if (!get_inputs_money_amount(tx, inputs_amount))
-    {
-      tvc.m_verification_failed = true;
-      return false;
-    }
-
+    uint64_t inputs_amount = m_currency.getTransactionAllInputsAmount(tx, height);
     uint64_t outputs_amount = get_outs_money_amount(tx);
 
     logger(INFO) << "Processing tx " << id << " with inputs of " << inputs_amount << " and outputs of " << outputs_amount;
@@ -409,7 +403,9 @@ namespace CryptoNote {
       if (outputs_amount > inputs_amount)
       {
         logger(ERROR) << "Transaction, with id " << txd.id << " uses more money than it has: uses " << m_currency.formatAmount(outputs_amount) << ", has " << m_currency.formatAmount(inputs_amount)
-                     << " and will not be included in the block template"; 
+                     << " and will not be included in the block template";
+        auto tx = m_transactions.find(txd.id);
+        removeTransaction(tx);
         continue;
       }
 
