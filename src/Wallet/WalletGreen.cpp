@@ -3596,7 +3596,7 @@ void WalletGreen::reset(const uint64_t scanHeight)
         wallet.unlockedDepositBalance = unlocked;
       });
 
-      m_logger(INFO, BRIGHT_WHITE) << "Wallet balance updated, address "
+      /*m_logger(INFO, BRIGHT_WHITE) << "Wallet balance updated, address "
                                         << m_currency.accountAddressAsString({it->spendPublicKey, m_viewPublicKey})
                                         << ", actual " << m_currency.formatAmount(it->actualBalance) << ", pending "
                                         << m_currency.formatAmount(it->pendingBalance);
@@ -3604,7 +3604,7 @@ void WalletGreen::reset(const uint64_t scanHeight)
                                         << m_currency.formatAmount(m_actualBalance) << ", pending "
                                         << m_currency.formatAmount(m_pendingBalance) << ", locked deposits "
                                         << m_currency.formatAmount(m_lockedDepositBalance) << ",unlocked deposits "
-                                        << m_currency.formatAmount(m_unlockedDepositBalance);
+                                        << m_currency.formatAmount(m_unlockedDepositBalance);*/
     }
   }
 
