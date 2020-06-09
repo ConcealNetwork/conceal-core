@@ -483,23 +483,27 @@ namespace PaymentService
   }
 
   /* Generate a new wallet (-g) or import a new wallet if the secret keys have been specified */
-  void generateNewWallet(const CryptoNote::Currency &currency, const WalletConfiguration &conf, Logging::ILogger &logger, System::Dispatcher &dispatcher)
+  void generateNewWallet(
+      const CryptoNote::Currency &currency, 
+      const WalletConfiguration &conf, 
+      Logging::ILogger &logger, 
+      System::Dispatcher &dispatcher)
   {
-Logging::LoggerRef log(logger, "generateNewWallet");
+    Logging::LoggerRef log(logger, "generateNewWallet");
 
-  CryptoNote::INode* nodeStub = NodeFactory::createNodeStub();
-  std::unique_ptr<CryptoNote::INode> nodeGuard(nodeStub);
+    CryptoNote::INode *nodeStub = NodeFactory::createNodeStub();
+    std::unique_ptr<CryptoNote::INode> nodeGuard(nodeStub);
 
-  CryptoNote::IWallet* wallet = new CryptoNote::WalletGreen(dispatcher, currency, *nodeStub, logger);
-  std::unique_ptr<CryptoNote::IWallet> walletGuard(wallet);
+    CryptoNote::IWallet *wallet = new CryptoNote::WalletGreen(dispatcher, currency, *nodeStub, logger);
+    std::unique_ptr<CryptoNote::IWallet> walletGuard(wallet);
 
-  std::string address;
+    std::string address;
 
     /* Create a new address and container since both view key and spend key
      have not been specifiec */
     if (conf.secretSpendKey.empty() && conf.secretViewKey.empty())
     {
- log(Logging::INFO, Logging::BRIGHT_WHITE) << "Generating new deterministic wallet";
+      log(Logging::INFO, Logging::BRIGHT_WHITE) << "Generating new deterministic wallet";
 
       Crypto::SecretKey private_view_key;
       CryptoNote::KeyPair spendKey;
@@ -649,11 +653,12 @@ Logging::LoggerRef log(logger, "generateNewWallet");
     return std::error_code();
   }
 
-void WalletService::loadWallet() {
-  logger(Logging::INFO, Logging::BRIGHT_WHITE) << "Loading wallet";
-  wallet.load(config.walletFile, config.walletPassword);
-  logger(Logging::INFO, Logging::BRIGHT_WHITE) << "Wallet loading is finished.";
-}
+  void WalletService::loadWallet()
+  {
+    logger(Logging::INFO, Logging::BRIGHT_WHITE) << "Loading wallet";
+    wallet.load(config.walletFile, config.walletPassword);
+    logger(Logging::INFO, Logging::BRIGHT_WHITE) << "Wallet loading is finished.";
+  }
 
   void WalletService::loadTransactionIdIndex()
   {
@@ -733,56 +738,68 @@ void WalletService::loadWallet() {
     return std::error_code();
   }
 
-std::error_code WalletService::exportWallet(const std::string& fileName) {
-  try {
-    System::EventLock lk(readyEvent);
+  std::error_code WalletService::exportWallet(const std::string &fileName)
+  {
+    try
+    {
+      System::EventLock lk(readyEvent);
 
-    if (!inited) {
-      logger(Logging::WARNING, Logging::BRIGHT_YELLOW) << "Export impossible: Wallet Service is not initialized";
-      return make_error_code(CryptoNote::error::NOT_INITIALIZED);
+      if (!inited)
+      {
+        logger(Logging::WARNING, Logging::BRIGHT_YELLOW) << "Export impossible: Wallet Service is not initialized";
+        return make_error_code(CryptoNote::error::NOT_INITIALIZED);
+      }
+
+      boost::filesystem::path walletPath(config.walletFile);
+      boost::filesystem::path exportPath = walletPath.parent_path() / fileName;
+
+      logger(Logging::INFO, Logging::BRIGHT_WHITE) << "Exporting wallet to " << exportPath.string();
+      wallet.exportWallet(exportPath.string());
+    }
+    catch (std::system_error &x)
+    {
+      logger(Logging::WARNING, Logging::BRIGHT_YELLOW) << "Error while exporting wallet: " << x.what();
+      return x.code();
+    }
+    catch (std::exception &x)
+    {
+      logger(Logging::WARNING, Logging::BRIGHT_YELLOW) << "Error while exporting wallet: " << x.what();
+      return make_error_code(CryptoNote::error::INTERNAL_WALLET_ERROR);
     }
 
-    boost::filesystem::path walletPath(config.walletFile);
-    boost::filesystem::path exportPath = walletPath.parent_path() / fileName;
-
-    logger(Logging::INFO, Logging::BRIGHT_WHITE) << "Exporting wallet to " << exportPath.string();
-    wallet.exportWallet(exportPath.string());
-  } catch (std::system_error& x) {
-    logger(Logging::WARNING, Logging::BRIGHT_YELLOW) << "Error while exporting wallet: " << x.what();
-    return x.code();
-  } catch (std::exception& x) {
-    logger(Logging::WARNING, Logging::BRIGHT_YELLOW) << "Error while exporting wallet: " << x.what();
-    return make_error_code(CryptoNote::error::INTERNAL_WALLET_ERROR);
+    return std::error_code();
   }
 
-  return std::error_code();
-}
+  std::error_code WalletService::resetWallet(const uint32_t scanHeight)
+  {
+    try
+    {
+      System::EventLock lk(readyEvent);
 
-std::error_code WalletService::resetWallet(const uint32_t scanHeight) {
-  try {
-    System::EventLock lk(readyEvent);
+      logger(Logging::INFO, Logging::BRIGHT_WHITE) << "Resetting wallet";
 
-    logger(Logging::INFO, Logging::BRIGHT_WHITE) << "Resetting wallet";
+      if (!inited)
+      {
+        logger(Logging::WARNING, Logging::BRIGHT_YELLOW) << "Reset impossible: Wallet Service is not initialized";
+        return make_error_code(CryptoNote::error::NOT_INITIALIZED);
+      }
 
-    if (!inited) {
-      logger(Logging::WARNING, Logging::BRIGHT_YELLOW) << "Reset impossible: Wallet Service is not initialized";
-      return make_error_code(CryptoNote::error::NOT_INITIALIZED);
+      wallet.reset(scanHeight);
+      logger(Logging::INFO, Logging::BRIGHT_WHITE) << "Wallet has been reset starting scanning from height " << scanHeight;
+    }
+    catch (std::system_error &x)
+    {
+      logger(Logging::WARNING, Logging::BRIGHT_YELLOW) << "Error while resetting wallet: " << x.what();
+      return x.code();
+    }
+    catch (std::exception &x)
+    {
+      logger(Logging::WARNING, Logging::BRIGHT_YELLOW) << "Error while resetting wallet: " << x.what();
+      return make_error_code(CryptoNote::error::INTERNAL_WALLET_ERROR);
     }
 
-    wallet.reset(scanHeight);
-    logger(Logging::INFO, Logging::BRIGHT_WHITE) << "Wallet has been reset starting scanning from height " << scanHeight;
+    return std::error_code();
   }
-  catch (std::system_error& x) {
-    logger(Logging::WARNING, Logging::BRIGHT_YELLOW) << "Error while resetting wallet: " << x.what();
-    return x.code();
-  }
-  catch (std::exception& x) {
-    logger(Logging::WARNING, Logging::BRIGHT_YELLOW) << "Error while resetting wallet: " << x.what();
-    return make_error_code(CryptoNote::error::INTERNAL_WALLET_ERROR);
-  }
-
-  return std::error_code();
-}
 
   std::error_code WalletService::createAddress(const std::string &spendSecretKeyText, std::string &address)
   {
@@ -1322,8 +1339,6 @@ std::error_code WalletService::resetWallet(const uint32_t scanHeight) {
       size_t transactionId = wallet.transfer(sendParams, transactionSK);
       transactionHash = Common::podToHex(wallet.getTransaction(transactionId).hash);
       transactionSecretKey = Common::podToHex(transactionSK);
-      saveWallet();
-
       logger(Logging::DEBUGGING) << "Transaction " << transactionHash << " has been sent";
     }
     catch (std::system_error &x)
@@ -1632,9 +1647,9 @@ std::error_code WalletService::resetWallet(const uint32_t scanHeight) {
 
   /* Create a new deposit for the wallet address specified. */
   std::error_code WalletService::createDeposit(
-      uint64_t amount, 
-      uint64_t term, 
-      std::string sourceAddress, 
+      uint64_t amount,
+      uint64_t term,
+      std::string sourceAddress,
       std::string &transactionHash)
   {
     try
@@ -1683,8 +1698,8 @@ std::error_code WalletService::resetWallet(const uint32_t scanHeight) {
   }
 
   std::error_code WalletService::withdrawDeposit(
-      uint64_t depositId, 
-      std::string &transactionHash) 
+      uint64_t depositId,
+      std::string &transactionHash)
 
   {
     // TODO try and catch
@@ -1695,10 +1710,10 @@ std::error_code WalletService::resetWallet(const uint32_t scanHeight) {
   /* Create and send a deposit to another wallet address, the deposit then will appear in their
    wallet upon confirmation. */
   std::error_code WalletService::sendDeposit(
-      uint64_t amount, 
-      uint64_t term, 
-      std::string sourceAddress, 
-      std::string destinationAddress, 
+      uint64_t amount,
+      uint64_t term,
+      std::string sourceAddress,
+      std::string destinationAddress,
       std::string &transactionHash)
   {
     try
@@ -1877,31 +1892,34 @@ std::error_code WalletService::resetWallet(const uint32_t scanHeight) {
 
   void WalletService::replaceWithNewWallet(const Crypto::SecretKey &viewSecretKey)
   {
-  wallet.stop();
-  wallet.shutdown();
-  inited = false;
-  refreshContext.wait();
+    wallet.stop();
+    wallet.shutdown();
+    inited = false;
+    refreshContext.wait();
 
-  transactionIdIndex.clear();
+    transactionIdIndex.clear();
 
-  size_t i = 0;
-  for (;;) {
-    boost::system::error_code ec;
-    std::string backup = config.walletFile + ".backup";
-    if (i != 0) {
-      backup += "." + std::to_string(i);
+    size_t i = 0;
+    for (;;)
+    {
+      boost::system::error_code ec;
+      std::string backup = config.walletFile + ".backup";
+      if (i != 0)
+      {
+        backup += "." + std::to_string(i);
+      }
+
+      if (!boost::filesystem::exists(backup))
+      {
+        boost::filesystem::rename(config.walletFile, backup);
+        logger(Logging::DEBUGGING) << "Walletd file '" << config.walletFile << "' backed up to '" << backup << '\'';
+        break;
+      }
     }
 
-    if (!boost::filesystem::exists(backup)) {
-      boost::filesystem::rename(config.walletFile, backup);
-      logger(Logging::DEBUGGING) << "Walletd file '" << config.walletFile  << "' backed up to '" << backup << '\'';
-      break;
-    }
-  }
-
-  wallet.start();
-  wallet.initializeWithViewKey(config.walletFile, config.walletPassword, viewSecretKey);
-  inited = true;
+    wallet.start();
+    wallet.initializeWithViewKey(config.walletFile, config.walletPassword, viewSecretKey);
+    inited = true;
   }
 
   std::vector<CryptoNote::TransactionsInBlockInfo> WalletService::getTransactions(const Crypto::Hash &blockHash, size_t blockCount) const
