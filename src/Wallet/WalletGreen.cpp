@@ -1369,7 +1369,9 @@ size_t WalletGreen::validateSaveAndSendTransaction(const ITransactionReader& tra
     throw std::system_error(make_error_code(error::INTERNAL_WALLET_ERROR), "Failed to deserialize created transaction");
   }
 
-  uint64_t fee = transaction.getInputTotalAmount() < transaction.getOutputTotalAmount() ? CryptoNote::parameters::MINIMUM_FEE_V2 : transaction.getInputTotalAmount() - transaction.getOutputTotalAmount();
+  /* This fee only applies to when withdrawing a deposit
+     As a result, deposit withdrawal fees with remain at 10 */
+  uint64_t fee = transaction.getInputTotalAmount() < transaction.getOutputTotalAmount() ? CryptoNote::parameters::MINIMUM_FEE : transaction.getInputTotalAmount() - transaction.getOutputTotalAmount();
   size_t transactionId = insertOutgoingTransactionAndPushEvent(transaction.getTransactionHash(), fee, transaction.getExtra(), transaction.getUnlockTime());
   Tools::ScopeExit rollbackTransactionInsertion([this, transactionId] {
     updateTransactionStateAndPushEvent(transactionId, WalletTransactionState::FAILED);
