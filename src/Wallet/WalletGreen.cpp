@@ -2556,10 +2556,17 @@ void WalletGreen::reset(const uint64_t scanHeight)
   {
     BinaryArray transactionData = transaction.getTransactionData();
 
-    if (transactionData.size() > m_upperTransactionSizeLimit)
+    if ((transactionData.size() > m_upperTransactionSizeLimit) && (isFusion == false))
     {
+      m_logger(ERROR, BRIGHT_RED) << "Transaction is too big";
       throw std::system_error(make_error_code(error::TRANSACTION_SIZE_TOO_BIG));
-    }     
+    }
+
+    if ((transactionData.size() > m_currency.fusionTxMaxSize()) && (isFusion == true))
+    {
+      m_logger(ERROR, BRIGHT_RED) << "Fusion transaction is too big. Transaction hash";
+      throw std::system_error(make_error_code(error::TRANSACTION_SIZE_TOO_BIG));
+    }
 
     CryptoNote::Transaction cryptoNoteTransaction;
     if (!fromBinaryArray(cryptoNoteTransaction, transactionData))
@@ -3674,8 +3681,10 @@ void WalletGreen::reset(const uint64_t scanHeight)
     return m_walletsContainer.get<RandomAccessIndex>().begin()->spendSecretKey == NULL_SECRET_KEY ? WalletTrackingMode::TRACKING : WalletTrackingMode::NOT_TRACKING;
   }
 
-  size_t WalletGreen::createFusionTransaction(uint64_t threshold, uint64_t mixin,
-                                              const std::vector<std::string> &sourceAddresses, const std::string &destinationAddress)
+  size_t WalletGreen::createFusionTransaction(
+      uint64_t threshold, uint64_t mixin,
+      const std::vector<std::string> &sourceAddresses, 
+      const std::string &destinationAddress)
   {
 
     size_t id = WALLET_INVALID_TRANSACTION_ID;
@@ -3764,7 +3773,7 @@ void WalletGreen::reset(const uint64_t scanHeight)
       transactionSize = getTransactionSize(*fusionTransaction);
 
       ++round;
-    } while (transactionSize > m_currency.fusionTxMaxSize() && fusionInputs.size() >= m_currency.fusionTxMinInputCount());
+    } while ((transactionSize > m_currency.fusionTxMaxSize()) && (fusionInputs.size() >= m_currency.fusionTxMinInputCount()));
 
     if (fusionInputs.size() < m_currency.fusionTxMinInputCount())
     {
