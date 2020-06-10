@@ -478,11 +478,11 @@ namespace CryptoNote
       {
         total_size += txd.blobSize;
         fee += txd.fee;
-        logger(INFO) << "Transaction " << txd.id << " included in the block template";
+        logger(DEBUGGING) << "Transaction " << txd.id << " included in the block template";
       }
       else
       {
-        logger(INFO) << "Transaction " << txd.id << " was not included in the block template";
+        logger(DEBUGGING) << "Transaction " << txd.id << " was not included in the block template";
       }
     }
 
