@@ -24,7 +24,7 @@ jobs:
         run: |
           $build_folder = "build"
           $sha = "${{ github.sha }}"
-          $ccx_ver = "${{ github.ref }}" -replace 'refs/tags/'
+          $ccx_ver = "6.1.11"
           $release_name = "ccx-cli-win64-v$ccx_ver"
           mkdir "$build_folder"
           cd "$build_folder"
@@ -60,7 +60,7 @@ jobs:
         id: build
         run: |
           build_folder="build/"
-          $ccx_ver = "${{ github.ref }}" -replace 'refs/tags/'
+          $ccx_ver = "6.1.11"
           $release_name = "ccx-cli-macOS-v$ccx_ver"
           brew install gcc boost@1.60
           brew link boost@1.60 --force
