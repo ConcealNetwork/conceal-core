@@ -44,6 +44,9 @@ if(MSVC)
       string(REPLACE "/MD" "/MT" ${VAR} "${${VAR}}")
     endforeach()
   endif()
+  include_directories(SYSTEM src/platform/msc)
+else()
+  if (${CMAKE_SYSTEM_NAME} STREQUAL "Linux")
     # This option has no effect in glibc version less than 2.20.
     # Since glibc 2.20 _BSD_SOURCE is deprecated, this macro is recomended instead
     add_definitions("-D_DEFAULT_SOURCE -D_GNU_SOURCE")
@@ -80,12 +83,6 @@ if(MSVC)
   if(APPLE)
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DGTEST_HAS_TR1_TUPLE=0")
   endif()
-  if(APPLE)
-    add_definitions(/DHAVE_ROTR)
-  endif()
-
-
-
   if(CMAKE_C_COMPILER_ID STREQUAL "GNU" AND NOT (CMAKE_C_COMPILER_VERSION VERSION_LESS 4.8))
     set(DEBUG_FLAGS "-g3 -Og")
   else()
@@ -93,6 +90,11 @@ if(MSVC)
   endif()
   set(RELEASE_FLAGS "-g3 -O0")
   
+endif()
+
+
+if(APPLE)
+  add_definitions(/DHAVE_ROTR)
 endif()
 
 if(STATIC)
