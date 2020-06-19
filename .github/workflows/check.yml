@@ -72,3 +72,21 @@ jobs:
           cd "$build_folder"
           cmake ../..
           make -j2
+
+  build-macos:
+    name: macOS
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@master
+
+      - name: Build
+        id: build
+        run: |
+          build_folder="build/"
+          brew install gcc boost@1.60
+          brew link boost@1.60 --force
+          mkdir "$build_folder"
+          cd "$build_folder"
+          cmake -DCMAKE_C_FLAGS="-mmacosx-version-min=10.12" -DCMAKE_CXX_FLAGS="-mmacosx-version-min=10.12" ..
+          make -j2
+
