@@ -17,8 +17,12 @@ set(CMAKE_SUPPRESS_REGENERATION ON)
 project(concealX)
 
 include_directories(include src external "${CMAKE_BINARY_DIR}/version")
-if(APPLE)
+
+if(APPLE OR FREEBSD)
   include_directories(SYSTEM /usr/include/malloc)
+  if(POLICY CMP0042)
+    cmake_policy(SET CMP0042 NEW)
+  endif()
   enable_language(ASM)
 endif()
 
