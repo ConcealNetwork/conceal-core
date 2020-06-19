@@ -24,7 +24,7 @@ if(APPLE OR FREEBSD)
     cmake_policy(SET CMP0042 NEW)
   endif()
   enable_language(ASM)
-      add_definitions(/DHAVE_ROTR)
+  add_definitions(/DHAVE_ROTR)
 endif()
 
 if(MSVC)
