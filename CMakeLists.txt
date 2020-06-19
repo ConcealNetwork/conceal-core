@@ -24,7 +24,6 @@ if(APPLE OR FREEBSD)
     cmake_policy(SET CMP0042 NEW)
   endif()
   enable_language(ASM)
-  add_definitions(/DHAVE_ROTR)
 endif()
 
 if(MSVC)
@@ -81,6 +80,12 @@ if(MSVC)
   if(APPLE)
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DGTEST_HAS_TR1_TUPLE=0")
   endif()
+  if(APPLE)
+    add_definitions(/DHAVE_ROTR)
+  endif()
+
+
+
   if(CMAKE_C_COMPILER_ID STREQUAL "GNU" AND NOT (CMAKE_C_COMPILER_VERSION VERSION_LESS 4.8))
     set(DEBUG_FLAGS "-g3 -Og")
   else()
