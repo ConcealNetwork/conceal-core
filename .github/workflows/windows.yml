@@ -45,22 +45,3 @@ jobs:
             ${{ steps.build.outputs.sha256 }}
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
- 
-      # Upload to GH Release
-      - name: Upload to GH Release
-        if: github.event_name == 'release'
-        uses: actions/upload-release-asset@v1
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        with:
-          upload_url: ${{ github.event.release.upload_url }}
-          asset_path: ./build/src/Release/${{ steps.before_deploy.outputs.file_name }}
-          asset_name: ${{ steps.before_deploy.outputs.file_name }}
-          asset_content_type: application/zip
-
-      # Upload to GH Actions Artifacts
-      - name: Upload To GH Artifacts
-        uses: actions/upload-artifact@v2
-        with:
-          name: ${{ steps.before_deploy.outputs.artifact_name }}
-          path: ./build/src/Release/${{ steps.before_deploy.outputs.binary_path }}
