@@ -29,7 +29,7 @@ jobs:
           mkdir "$build_folder"
           cd "$build_folder"
           cmake -G "Visual Studio 16 2019" -A x64 -DBOOST_ROOT="$env:BOOST_ROOT_1_69_0" ..
-          msbuild Karbowanec.sln /p:Configuration=Release /m
+          msbuild concealX.sln /p:Configuration=Release /m
           cd src\Release
           Compress-Archive -Path *.exe -DestinationPath "$release_name.zip"
           $sha256 = (Get-FileHash "$release_name.zip").Hash
