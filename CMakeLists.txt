@@ -24,6 +24,7 @@ if(APPLE OR FREEBSD)
     cmake_policy(SET CMP0042 NEW)
   endif()
   enable_language(ASM)
+      add_definitions(/DHAVE_ROTR)
 endif()
 
 if(MSVC)
@@ -44,9 +45,6 @@ if(MSVC)
       string(REPLACE "/MD" "/MT" ${VAR} "${${VAR}}")
     endforeach()
   endif()
-  include_directories(SYSTEM src/platform/msc)
-else()
-  if (${CMAKE_SYSTEM_NAME} STREQUAL "Linux")
     # This option has no effect in glibc version less than 2.20.
     # Since glibc 2.20 _BSD_SOURCE is deprecated, this macro is recomended instead
     add_definitions("-D_DEFAULT_SOURCE -D_GNU_SOURCE")
