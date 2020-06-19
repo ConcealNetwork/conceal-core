@@ -5,7 +5,7 @@
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #include "Serialization/SerializationOverloads.h"
-
+#include <stdexcept>
 #include <limits>
 
 namespace CryptoNote {
