@@ -73,6 +73,27 @@ jobs:
           cmake ../..
           make -j2
 
+  build-ubuntu20:
+    name: Ubuntu 20.04
+    runs-on: ubuntu-20.04
+    steps:
+      - uses: actions/checkout@master
+
+      - name: Build
+        id: build
+        run: |
+          BOOST_ROOT=
+          sudo apt-get purge '*boost*'
+          sudo apt install -y libboost-all-dev
+          build_folder="build/debug"
+          ccx_ver=$(echo "$GITHUB_REF" | sed 's|refs/tags/||')
+          ccx_ver_folder=$(echo $ccx_ver | sed 's/\.//g')
+          release_name=ccx-cli-ubuntu-1804-v"$ccx_ver"
+          mkdir -p "$build_folder"
+          cd "$build_folder"
+          cmake ../..
+          make -j2
+
   build-macos:
     name: macOS
     runs-on: macos-latest
