@@ -14,18 +14,15 @@ set(CMAKE_SKIP_INSTALL_RULES ON)
 set(CMAKE_SKIP_PACKAGE_ALL_DEPENDENCY ON)
 set(CMAKE_SUPPRESS_REGENERATION ON)
 
-if(DO_TESTS)
-  message(STATUS "BUILD TESTS: enabled")
-  enable_testing()
-else()
-  message(STATUS "BUILD TESTS: disabled")
-endif()
-
 project(concealX)
 
 include_directories(include src external "${CMAKE_BINARY_DIR}/version")
-if(APPLE)
+
+if(APPLE OR FREEBSD)
   include_directories(SYSTEM /usr/include/malloc)
+  if(POLICY CMP0042)
+    cmake_policy(SET CMP0042 NEW)
+  endif()
   enable_language(ASM)
 endif()
 
@@ -48,6 +45,7 @@ if(MSVC)
     endforeach()
   endif()
   include_directories(SYSTEM src/platform/msc)
+  add_definitions(/DHAVE_ROTR)
 else()
   if (${CMAKE_SYSTEM_NAME} STREQUAL "Linux")
     # This option has no effect in glibc version less than 2.20.
@@ -75,6 +73,7 @@ else()
   endif()
   if(CMAKE_C_COMPILER_ID STREQUAL "GNU" AND NOT (CMAKE_C_COMPILER_VERSION VERSION_LESS 5.1))
     set(WARNINGS "${WARNINGS} -Wno-error=odr")
+    add_definitions(/DHAVE_ROTR)
   endif()
   set(C_WARNINGS "-Waggregate-return -Wnested-externs -Wold-style-definition -Wstrict-prototypes")
   set(CXX_WARNINGS "-Wno-reorder -Wno-missing-field-initializers")
@@ -95,6 +94,11 @@ else()
   
 endif()
 
+
+if(APPLE)
+  add_definitions(/DHAVE_ROTR)
+endif()
+
 if(STATIC)
   set(Boost_USE_STATIC_LIBS ON)
   set(Boost_USE_STATIC_RUNTIME ON)
@@ -110,6 +114,13 @@ elseif(APPLE)
   set(Boost_LIBRARIES "${Boost_LIBRARIES}")
 elseif(NOT MSVC)
   set(Boost_LIBRARIES "${Boost_LIBRARIES};rt")
+endif()
+
+# option(BUILD_TESTS "Build tests." ON)
+
+if(BUILD_TESTS)
+  add_subdirectory(tests)
+  enable_testing()
 endif()
 
 set(COMMIT_ID_IN_VERSION ON CACHE BOOL "Include commit ID in version")
