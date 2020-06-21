@@ -1,4 +1,4 @@
-![image](https://github.com/ConcealNetwork/conceal-assets/blob/master/splash.png)
+![image](https://github.com/ConcealNetwork/conceal-imagery/blob/master/tqRGU34m_400x400.jpg)
 
 ![](https://github.com/bomb-on/conceal-core/workflows/Ubuntu%2016.04/badge.svg) ![](https://github.com/bomb-on/conceal-core/workflows/Ubuntu%2018.04/badge.svg) ![](https://github.com/bomb-on/conceal-core/workflows/Windows/badge.svg) ![](https://github.com/bomb-on/conceal-core/workflows/macOS/badge.svg) [![Codacy Badge](https://app.codacy.com/project/badge/Grade/4b47060713f444b8afb5f5284d4b9716)](https://www.codacy.com/manual/cryptokatz/conceal-core?utm_source=github.com&amp;utm_medium=referral&amp;utm_content=cryptokatz/conceal-core&amp;utm_campaign=Badge_Grade)
 
