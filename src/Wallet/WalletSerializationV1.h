@@ -44,13 +44,13 @@ public:
       UncommitedTransactions &uncommitedTransactions);
 
   void save(const std::string &password, Common::IOutputStream &destination, bool saveDetails, bool saveCache);
-  void load(const std::string &password, Common::IInputStream &source);
+  void load(const Crypto::chacha8_key &key, Common::IInputStream &source);
 
 private:
   static const uint32_t SERIALIZATION_VERSION;
 
-  void loadWallet(Common::IInputStream &source, const std::string &password, uint32_t version);
-  void loadWalletV1(Common::IInputStream &source, const std::string &password);
+  void loadWallet(Common::IInputStream &source, const Crypto::chacha8_key &key, uint32_t version);
+  void loadWalletV1(Common::IInputStream &source, const Crypto::chacha8_key &key);
 
   CryptoContext generateCryptoContext(const std::string &password);
 
