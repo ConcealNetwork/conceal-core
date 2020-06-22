@@ -33,20 +33,24 @@ public:
   WalletGreen(System::Dispatcher &dispatcher, const Currency &currency, INode &node, Logging::ILogger &logger, uint32_t transactionSoftLockTime = 1);
   virtual ~WalletGreen();
 
+  /* Deposit related functions */
+  virtual void createDeposit(uint64_t amount, uint64_t term, std::string sourceAddress, std::string destinationAddress, std::string &transactionHash) override;
+  virtual void withdrawDeposit(uint64_t depositId, std::string &transactionHash) override;
+  std::vector<MultisignatureInput> prepareMultisignatureInputs(const std::vector<TransactionOutputInformation> &selectedTransfers);
+  virtual uint64_t getLockedDepositBalance() const override;
+  virtual uint64_t getUnlockedDepositBalance() const override;
+  
   virtual void initialize(const std::string& path, const std::string& password) override;
   virtual void initializeWithViewKey(const std::string& path, const std::string& password, const Crypto::SecretKey& viewSecretKey) override;
   virtual void load(const std::string& path, const std::string& password, std::string& extra) override;
   virtual void load(const std::string& path, const std::string& password) override;
   virtual void shutdown() override;
 
-  virtual void createDeposit(uint64_t amount, uint64_t term, std::string sourceAddress, std::string destinationAddress, std::string &transactionHash) override;
-  virtual void withdrawDeposit(uint64_t depositId, std::string &transactionHash) override;
 
   virtual void changePassword(const std::string &oldPassword, const std::string &newPassword) override;
   virtual void save(WalletSaveLevel saveLevel = WalletSaveLevel::SAVE_ALL, const std::string& extra = "") override;
   virtual void reset(const uint64_t scanHeight) override;
   virtual void exportWallet(const std::string& path, bool encrypt = true, WalletSaveLevel saveLevel = WalletSaveLevel::SAVE_ALL, const std::string& extra = "") override;
-  std::vector<MultisignatureInput> prepareMultisignatureInputs(const std::vector<TransactionOutputInformation>& selectedTransfers);
 
 
 
@@ -67,8 +71,7 @@ public:
   virtual uint64_t getActualBalance(const std::string &address) const override;
   virtual uint64_t getPendingBalance() const override;
   virtual uint64_t getPendingBalance(const std::string &address) const override;
-  virtual uint64_t getLockedDepositBalance() const override;
-  virtual uint64_t getUnlockedDepositBalance() const override;
+
 
   virtual size_t getTransactionCount() const override;
   virtual WalletTransaction getTransaction(size_t transactionIndex) const override;
@@ -122,7 +125,7 @@ protected:
   void throwIfTrackingMode() const;
   void doShutdown();
   void clearCaches(bool clearTransactions, bool clearCachedData);
-  void convertAndLoadWalletFile(const std::string& path, std::ifstream& walletFileStream, const std::string& password);
+  void convertAndLoadWalletFile(const std::string &path, std::ifstream &&walletFileStream);
 
   static void decryptKeyPair(const EncryptedWalletRecord& cipher, Crypto::PublicKey& publicKey, Crypto::SecretKey& secretKey, uint64_t& creationTimestamp, const Crypto::chacha8_key& key);
     Crypto::chacha8_iv getNextIv() const;
