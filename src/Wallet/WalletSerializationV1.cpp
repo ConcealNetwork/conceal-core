@@ -474,31 +474,38 @@ void WalletSerializer::saveTransfers(Common::IOutputStream& destination, CryptoC
   }
 }
 
-void WalletSerializer::load(const std::string& password, Common::IInputStream& source) {
+void WalletSerializer::load(const Crypto::chacha8_key &key, Common::IInputStream &source)
+{
   CryptoNote::BinaryInputStreamSerializer s(source);
   s.beginObject("wallet");
 
   uint32_t version = loadVersion(source);
 
-  if (version > SERIALIZATION_VERSION) {
+  if (version > SERIALIZATION_VERSION)
+  {
     throw std::system_error(make_error_code(error::WRONG_VERSION));
-  } else if (version > 2) {
-    loadWallet(source, password, version);
-  } else {
-    loadWalletV1(source, password);
+  }
+  else if (version > 2)
+  {
+    loadWallet(source, key, version);
+  }
+  else
+  {
+    loadWalletV1(source, key);
   }
 
   s.endObject();
 }
 
-void WalletSerializer::loadWallet(Common::IInputStream& source, const std::string& password, uint32_t version) {
+void WalletSerializer::loadWallet(Common::IInputStream &source, const Crypto::chacha8_key &key, uint32_t version)
+{
   CryptoNote::CryptoContext cryptoContext;
 
   bool details = false;
   bool cache = false;
 
   loadIv(source, cryptoContext.iv);
-  generateKey(password, cryptoContext.key);
+  cryptoContext.key = key;
 
   loadKeys(source, cryptoContext);
   checkKeys();
@@ -547,13 +554,14 @@ void WalletSerializer::loadWallet(Common::IInputStream& source, const std::strin
   }
 }
 
-void WalletSerializer::loadWalletV1(Common::IInputStream& source, const std::string& password) {
+void WalletSerializer::loadWalletV1(Common::IInputStream &source, const Crypto::chacha8_key &key)
+{
   CryptoNote::CryptoContext cryptoContext;
 
   CryptoNote::BinaryInputStreamSerializer encrypted(source);
 
   encrypted(cryptoContext.iv, "iv");
-  generateKey(password, cryptoContext.key);
+  cryptoContext.key = key;
 
   std::string cipher;
   encrypted(cipher, "data");
