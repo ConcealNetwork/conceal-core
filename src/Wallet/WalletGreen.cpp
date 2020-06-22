@@ -1119,7 +1119,7 @@ void WalletGreen::load(const std::string& path, const std::string& password, std
   }
 
   if (version < WalletSerializerV2::MIN_VERSION) {
-    convertAndLoadWalletFile(path, walletFileStream, password);
+    convertAndLoadWalletFile(path, std::move(walletFileStream), password);
   } else {
     walletFileStream.close();
 
