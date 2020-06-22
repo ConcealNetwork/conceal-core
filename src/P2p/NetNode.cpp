@@ -500,7 +500,7 @@ namespace CryptoNote
     m_stopEvent.wait();
 
     logger(INFO) <<  "Stopping NodeServer and it's, " << m_connections.size() << " connections...";
-    safeInterrupt(m_workingContextGroup);
+    m_workingContextGroup.interrupt();
     m_workingContextGroup.wait();
 
     logger(INFO) <<  "NodeServer loop stopped";
