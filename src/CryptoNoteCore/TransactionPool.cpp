@@ -113,10 +113,8 @@ namespace CryptoNote {
     uint64_t inputs_amount = m_currency.getTransactionAllInputsAmount(tx, height);
     uint64_t outputs_amount = get_outs_money_amount(tx);
 
-    logger(INFO) << "Processing tx " << id << " with inputs of " << inputs_amount << " and outputs of " << outputs_amount;
-
     if (outputs_amount > inputs_amount) {
-      logger(INFO) << "Transaction, with id " << id << " uses more money then it has: uses " << m_currency.formatAmount(outputs_amount) <<
+      logger(WARNING) << "Transaction, with id " << id << " uses more money then it has: uses " << m_currency.formatAmount(outputs_amount) <<
         ", has " << m_currency.formatAmount(inputs_amount);
       tvc.m_verification_failed = true;
       return false;
@@ -222,7 +220,6 @@ namespace CryptoNote {
         m_ttlIndex.emplace(std::make_pair(id, ttl.ttl));
       }
 
-      logger(INFO) << "Transaction " << txd.id << " added to pool";
     }
 
     tvc.m_added_to_pool = true;
