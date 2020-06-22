@@ -827,7 +827,8 @@ void WalletGreen::initWithKeys(const std::string& path, const std::string& passw
   m_state = WalletState::INITIALIZED;
 }
 
-void WalletGreen::save(WalletSaveLevel saveLevel, const std::string& extra) {
+void WalletGreen::save(WalletSaveLevel saveLevel, const std::string &extra)
+{
   m_logger(INFO, BRIGHT_WHITE) << "Saving container...";
 
   throwIfNotInitialized();
@@ -835,9 +836,12 @@ void WalletGreen::save(WalletSaveLevel saveLevel, const std::string& extra) {
 
   stopBlockchainSynchronizer();
 
-  try {
+  try
+  {
     saveWalletCache(m_containerStorage, m_key, saveLevel, extra);
-  } catch (const std::exception& e) {
+  }
+  catch (const std::exception &e)
+  {
     m_logger(ERROR, BRIGHT_RED) << "Failed to save container: " << e.what();
     startBlockchainSynchronizer();
     throw;
@@ -933,30 +937,32 @@ void WalletGreen::exportWallet(const std::string& path, bool encrypt, WalletSave
   m_logger(INFO, BRIGHT_WHITE) << "Container exported";
 }
 
-void WalletGreen::convertAndLoadWalletFile(const std::string& path, std::ifstream& walletFileStream, const std::string& password) {
+void WalletGreen::convertAndLoadWalletFile(const std::string &path, std::ifstream &&walletFileStream)
+{
 
-    WalletSerializer s(
-        *this,
-        m_viewPublicKey,
-        m_viewSecretKey,
-        m_actualBalance,
-        m_pendingBalance,
-        m_walletsContainer,
-        m_synchronizer,
-        m_unlockTransactionsJob,
-        m_transactions,
-        m_transfers,
-        m_transactionSoftLockTime,
-        m_uncommitedTransactions);
+  WalletSerializer s(
+      *this,
+      m_viewPublicKey,
+      m_viewSecretKey,
+      m_actualBalance,
+      m_pendingBalance,
+      m_walletsContainer,
+      m_synchronizer,
+      m_unlockTransactionsJob,
+      m_transactions,
+      m_transfers,
+      m_transactionSoftLockTime,
+      m_uncommitedTransactions);
 
-    StdInputStream inputStream(walletFileStream);
-      s.load(password, inputStream);
-      walletFileStream.close();
+  StdInputStream stream(walletFileStream);
+  s.load(m_key, stream);
+  walletFileStream.close();
 
   boost::filesystem::path bakPath = path + ".backup";
   boost::filesystem::path tmpPath = boost::filesystem::unique_path(path + ".tmp.%%%%-%%%%");
-  if (boost::filesystem::exists(bakPath)) {
-	m_logger(INFO) << "Wallet backup already exists! Creating random file name backup.";
+  if (boost::filesystem::exists(bakPath))
+  {
+    m_logger(INFO) << "Wallet backup already exists! Creating random file name backup.";
     bakPath = boost::filesystem::unique_path(path + ".%%%%-%%%%" + ".backup");
   }
 
@@ -1111,7 +1117,7 @@ void WalletGreen::load(const std::string& path, const std::string& password, std
   Crypto::cn_context cnContext;
   generate_chacha8_key(cnContext, password, m_key);
 
-  std::ifstream walletFileStream(path.c_str(), std::fstream::in | std::fstream::binary);
+  std::ifstream walletFileStream(path, std::ios_base::binary);
   int version = walletFileStream.peek();
   if (version == EOF) {
     m_logger(ERROR, BRIGHT_RED) << "Failed to read wallet version";
@@ -1119,8 +1125,10 @@ void WalletGreen::load(const std::string& path, const std::string& password, std
   }
 
   if (version < WalletSerializerV2::MIN_VERSION) {
-    convertAndLoadWalletFile(path, std::move(walletFileStream), password);
-  } else {
+    convertAndLoadWalletFile(path, std::move(walletFileStream));
+  }
+  else
+  {
     walletFileStream.close();
 
     if (version > WalletSerializerV2::SERIALIZATION_VERSION) {
