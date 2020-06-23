@@ -162,7 +162,7 @@ std::error_code PaymentServiceJsonRpcServer::handleGetSpendKeys(const GetSpendKe
 
 std::error_code PaymentServiceJsonRpcServer::handleGetBalance(const GetBalance::Request& request, GetBalance::Response& response) {
   if (!request.address.empty()) {
-    return service.getBalance(request.address, response.availableBalance, response.lockedAmount);
+    return service.getBalance(request.address, response.availableBalance, response.lockedAmount, response.lockedDepositBalance, response.unlockedDepositBalance);
   } else {
     return service.getBalance(response.availableBalance, response.lockedAmount, response.lockedDepositBalance, response.unlockedDepositBalance);
   }

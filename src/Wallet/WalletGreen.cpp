@@ -2157,9 +2157,9 @@ uint64_t WalletGreen::scanHeightToTimestamp(const uint32_t scanHeight) {
 	secondsSinceLaunch = static_cast<uint64_t>(secondsSinceLaunch * 0.95);
 
 	/* Get the genesis block timestamp and add the time since launch */
-	timestamp = UINT64_C(1464595534) + secondsSinceLaunch;
+  timestamp = UINT64_C(1527078920) + secondsSinceLaunch;
 
-	/* Timestamp in the future */
+  /* Timestamp in the future */
 	if (timestamp >= static_cast<uint64_t>(std::time(nullptr))) {
 		return getCurrentTimestampAdjusted();
 	}
@@ -3579,27 +3579,10 @@ void WalletGreen::reset(const uint64_t scanHeight)
 
     uint64_t unlocked = calculateDepositsAmount(transfers, m_currency, heights);
 
-    if (it->lockedDepositBalance < locked)
-    {
-      m_lockedDepositBalance += locked - it->lockedDepositBalance;
-      updated = true;
-    }
-    else
-    {
-      m_lockedDepositBalance -= it->lockedDepositBalance - locked;
-      updated = true;
-    }
 
-    if (it->unlockedDepositBalance < unlocked)
-    {
-      m_unlockedDepositBalance += locked - it->unlockedDepositBalance;
-      updated = true;
-    }
-    else
-    {
-      m_unlockedDepositBalance -= it->unlockedDepositBalance - unlocked;
-      updated = true;
-    }
+      m_lockedDepositBalance = locked;
+      m_unlockedDepositBalance = unlocked;
+  
 
 
     if (updated)
@@ -4306,12 +4289,68 @@ void WalletGreen::filterOutTransactions(WalletTransactions& transactions, Wallet
     return updatedTransactions;
   }
 
+  size_t WalletGreen::getTxSize(const TransactionParameters &sendingTransaction)
+  {
+    System::EventLock lk(m_readyEvent);
+
+    throwIfNotInitialized();
+    throwIfTrackingMode();
+    throwIfStopped();
+
+    CryptoNote::AccountPublicAddress changeDestination = getChangeDestination(sendingTransaction.changeDestination, sendingTransaction.sourceAddresses);
+
+    std::vector<WalletOuts> wallets;
+    if (!sendingTransaction.sourceAddresses.empty())
+    {
+      wallets = pickWallets(sendingTransaction.sourceAddresses);
+    }
+    else
+    {
+      wallets = pickWalletsWithMoney();
+    }
+
+    PreparedTransaction preparedTransaction;
+    Crypto::SecretKey txSecretKey;
+    prepareTransaction(
+        std::move(wallets),
+        sendingTransaction.destinations,
+        sendingTransaction.messages,
+        sendingTransaction.fee,
+        sendingTransaction.mixIn,
+        sendingTransaction.extra,
+        sendingTransaction.unlockTimestamp,
+        sendingTransaction.donation,
+        changeDestination,
+        preparedTransaction,
+        txSecretKey);
+
+    BinaryArray transactionData = preparedTransaction.transaction->getTransactionData();
+    return transactionData.size();
+  }
+
   void WalletGreen::deleteFromUncommitedTransactions(const std::vector<size_t> &deletedTransactions)
   {
     for (auto transactionId : deletedTransactions)
     {
       m_uncommitedTransactions.erase(transactionId);
     }
+  }
+
+  void WalletGreen::clearCacheAndShutdown()
+  {
+    if (m_walletsContainer.size() != 0)
+    {
+      m_synchronizer.unsubscribeConsumerNotifications(m_viewPublicKey, this);
+    }
+
+    stopBlockchainSynchronizer();
+    m_blockchainSynchronizer.removeObserver(this);
+
+    clearCaches(true, true);
+
+    m_walletsContainer.clear();
+
+    shutdown();
   }
 
 } //namespace CryptoNote
