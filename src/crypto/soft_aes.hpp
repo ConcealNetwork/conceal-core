@@ -9,11 +9,13 @@
 
 #pragma once
 
-#ifdef __GNUC__
-#include <x86intrin.h>
-#else
-#include <intrin.h>
-#endif // __GNUC__
+#if defined(_WIN32) || defined(_WIN64)
+	#include <intrin.h>
+#elif defined(__GNUC__) && (defined(__x86_64__) || defined(__i386__))
+	#include <x86intrin.h>
+#elif defined(__GNUC__) && (defined(__arm__) || defined(__aarch64__))
+	#include "sse2neon.h"
+#endif
 
 #include <inttypes.h>
 
@@ -87,9 +89,9 @@ inline __m128i soft_aesenc(__m128i in, __m128i key)
 
 inline uint32_t sub_word(uint32_t key)
 {
-	return (saes_sbox[key >> 24 ] << 24)   | 
-		(saes_sbox[(key >> 16) & 0xff] << 16 ) | 
-		(saes_sbox[(key >> 8)  & 0xff] << 8  ) | 
+	return (saes_sbox[key >> 24 ] << 24)   |
+		(saes_sbox[(key >> 16) & 0xff] << 16 ) |
+		(saes_sbox[(key >> 8)  & 0xff] << 8  ) |
 		 saes_sbox[key & 0xff];
 }
 

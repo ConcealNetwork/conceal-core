@@ -8,25 +8,24 @@
 #include "coin_algos.hpp"
 
 #if defined(_WIN32) || defined(_WIN64)
-#include <intrin.h>
-#include <malloc.h>
-#define HAS_WIN_INTRIN_API
+	#include <intrin.h>
+	#include <malloc.h>
+	#define HAS_WIN_INTRIN_API
+#elif defined(__GNUC__) && (defined(__x86_64__) || defined(__i386__))
+	#pragma GCC target ("aes,sse2")
+	#include <x86intrin.h>
+	static inline uint64_t _umul128(uint64_t a, uint64_t b, uint64_t* hi)
+	{
+			unsigned __int128 r = (unsigned __int128)a * (unsigned __int128)b;
+			*hi = r >> 64;
+			return (uint64_t)r;
+	}
+	#if !defined(HAS_WIN_INTRIN_API)
+		#include <cpuid.h>
+	#endif // !defined(HAS_WIN_INTRIN_API)
+#elif defined(__GNUC__) && (defined(__arm__) || defined(__aarch64__))
+	#include "sse2neon.h"
 #endif
-
-#ifdef __GNUC__
-#pragma GCC target ("aes,sse2")
-#include <x86intrin.h>
-static inline uint64_t _umul128(uint64_t a, uint64_t b, uint64_t* hi)
-{
-    unsigned __int128 r = (unsigned __int128)a * (unsigned __int128)b;
-    *hi = r >> 64;
-    return (uint64_t)r;
-}
-#if !defined(HAS_WIN_INTRIN_API)
-#include <cpuid.h>
-#endif // !defined(HAS_WIN_INTRIN_API)
-#endif // __GNUC__
-
 
 inline void cpuid(uint32_t eax, int32_t ecx, int32_t val[4])
 {
@@ -37,7 +36,7 @@ inline void cpuid(uint32_t eax, int32_t ecx, int32_t val[4])
 
 #if defined(HAS_WIN_INTRIN_API)
 	__cpuidex(val, eax, ecx);
-#else
+#elif !defined(__ARM_NEON__)
 	__cpuid_count(eax, ecx, val[0], val[1], val[2], val[3]);
 #endif
 }
@@ -49,17 +48,18 @@ inline bool hw_check_aes()
 	return (cpu_info[2] & (1 << 25)) == 0;
 }
 
-struct cryptonight_ctx
-{
-	cryptonight_ctx(cryptonight_algo ALGO)
-	{
-		long_state = (uint8_t*)_mm_malloc(cn_select_memory(ALGO), 2097152);
-		hash_state = (uint8_t*)_mm_malloc(4096, 4096);
-	}
+// I think this struct is unused
+// struct cryptonight_ctx
+// {
+// 	cryptonight_ctx(cryptonight_algo ALGO)
+// 	{
+// 		long_state = (uint8_t*)_mm_malloc(cn_select_memory(ALGO), 2097152);
+// 		hash_state = (uint8_t*)_mm_malloc(4096, 4096);
+// 	}
 
-	uint8_t* long_state;
-	uint8_t* hash_state;
-};
+// 	uint8_t* long_state;
+// 	uint8_t* hash_state;
+// };
 
 // This will shift and xor tmp1 into itself as 4 32-bit vals such as
 // sl_xor(a1 a2 a3 a4) = a1 (a2^a1) (a3^a2^a1) (a4^a3^a2^a1)
@@ -91,6 +91,7 @@ inline void aes_round(__m128i key, __m128i& x0, __m128i& x1, __m128i& x2, __m128
 	}
 	else
 	{
+		#if !defined(__ARM_NEON__)
 		x0 = _mm_aesenc_si128(x0, key);
 		x1 = _mm_aesenc_si128(x1, key);
 		x2 = _mm_aesenc_si128(x2, key);
@@ -99,5 +100,6 @@ inline void aes_round(__m128i key, __m128i& x0, __m128i& x1, __m128i& x2, __m128
 		x5 = _mm_aesenc_si128(x5, key);
 		x6 = _mm_aesenc_si128(x6, key);
 		x7 = _mm_aesenc_si128(x7, key);
+		#endif
 	}
 }

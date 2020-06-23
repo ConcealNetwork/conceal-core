@@ -533,12 +533,17 @@ void generateNewWallet(const CryptoNote::Currency &currency, const WalletConfigu
     size_t size;
 
     /* Check if both keys are valid */
-    if (!Common::fromHex(conf.secretSpendKey, &private_spend_key_hash, sizeof(private_spend_key_hash), size) || size != sizeof(private_spend_key_hash))
+		// Double check this change doesn't cause an issue! Fails to build on ARM because of the below error:
+		// error: cannot bind non-const lvalue reference of type ‘size_t&’ {aka ‘unsigned int&’} to an rvalue of type ‘size_t’ {aka ‘unsigned int’}
+		// if (!Common::fromHex(conf.secretSpendKey, &private_spend_key_hash, sizeof(private_spend_key_hash), size) || size != sizeof(private_spend_key_hash))
+		if (!Common::fromHex(conf.secretSpendKey, &private_spend_key_hash, sizeof(private_spend_key_hash)))
     {
       log(Logging::ERROR, Logging::BRIGHT_RED) << "Spend key is invalid";
       return;
     }
-    if (!Common::fromHex(conf.secretViewKey, &private_view_key_hash, sizeof(private_view_key_hash), size) || size != sizeof(private_spend_key_hash))
+		// Same issues with the below line as above.
+		// if (!Common::fromHex(conf.secretViewKey, &private_view_key_hash, sizeof(private_view_key_hash), size) || size != sizeof(private_spend_key_hash))
+    if (!Common::fromHex(conf.secretViewKey, &private_view_key_hash, sizeof(private_view_key_hash)))
     {
       log(Logging::ERROR, Logging::BRIGHT_RED) << "View key is invalid";
       return;
@@ -1131,7 +1136,7 @@ std::error_code WalletService::getTransaction(const std::string &transactionHash
     uint32_t knownBlockCount = node.getKnownBlockCount();
     transaction.confirmations = knownBlockCount - transaction.blockIndex;
 
-    /* Cycle through all the transfers in the transaction and extract the address, 
+    /* Cycle through all the transfers in the transaction and extract the address,
        amount, and pull any messages from Extra */
     std::vector<std::string> messages;
     std::vector<uint8_t> extraBin = Common::fromHex(transaction.extra);
@@ -1712,6 +1717,6 @@ std::vector<TransactionHashesInBlockRpcInfo> WalletService::getRpcTransactionHas
     std::vector<CryptoNote::TransactionsInBlockInfo> filteredTransactions = filterTransactions(allTransactions, filter);
     return convertTransactionsInBlockInfoToTransactionsInBlockRpcInfo(filteredTransactions, knownBlockCount);
   }
-  
+
 
 } //namespace PaymentService
