@@ -30,6 +30,7 @@ endif()
 # Compile Settings for ARM
 if (${CMAKE_SYSTEM_PROCESSOR} MATCHES "armv7l")
   set(ARM TRUE)
+	include_directories(/usr/lib/gcc/arm-linux-gnueabihf/8/include)
 endif()
 
 # Compile Settings for ARM64
@@ -40,18 +41,15 @@ if (${CMAKE_SYSTEM_PROCESSOR} MATCHES "aarch64")
 	set(CMAKE_FIND_ROOT_PATH_MODE_PROGRAM NEVER)
 	set(CMAKE_FIND_ROOT_PATH_MODE_LIBRARY ONLY)
 	set(CMAKE_FIND_ROOT_PATH_MODE_INCLUDE ONLY)
+	include_directories(/usr/lib/gcc/aarch64-linux-gnu/8/include)
 endif()
 
 # Includes
-if(MSVC) # Windows
+if(MSVC)
   include_directories(src/Platform/Windows)
-elseif(APPLE) # Apple
-	include_directories(src/Platform/OSX)
-elseif(ARM) # ARM
-	include_directories(/usr/lib/gcc/arm-linux-gnueabihf/8/include)
-elseif(ARM64) # ARM64
-	include_directories(/usr/lib/gcc/aarch64-linux-gnu/8/include)
-else() # Linux / Default
+elseif(APPLE)
+  include_directories(src/Platform/OSX)
+else()
   include_directories(src/Platform/Linux)
 endif()
 
@@ -108,8 +106,10 @@ else()
     set(MINGW_FLAG "")
   endif()
   if(CMAKE_C_COMPILER_ID STREQUAL "GNU" AND NOT (CMAKE_C_COMPILER_VERSION VERSION_LESS 5.1))
-    set(WARNINGS "${WARNINGS} -Wno-error=odr")
-    add_definitions(/DHAVE_ROTR)
+		set(WARNINGS "${WARNINGS} -Wno-error=odr")
+		if(!ARM OR !ARM64)
+			add_definitions(/DHAVE_ROTR)
+		endif()
   endif()
   set(C_WARNINGS "-Waggregate-return -Wnested-externs -Wold-style-definition -Wstrict-prototypes")
   set(CXX_WARNINGS "-Wno-reorder -Wno-missing-field-initializers")
