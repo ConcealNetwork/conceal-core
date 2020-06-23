@@ -299,7 +299,7 @@ void cryptonight_hash(const void* input, size_t len, void* output, cn_context& c
 		if(SOFT_AES) {
 			cx = soft_aesenc(cx, _mm_set_epi64x(ah0, al0));
 		} else {
-			#if (defined(__x86_64__) || defined(__i386__)) #
+			#if (defined(__x86_64__) || defined(__i386__))
 				cx = _mm_aesenc_si128(cx, _mm_set_epi64x(ah0, al0));
 			#endif
 		}
