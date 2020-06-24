@@ -94,7 +94,7 @@ inline uint32_t sub_word(uint32_t key)
 }
 
 #ifndef HAVE_ROTR
-static inline uint32_t _rotr(uint32_t value, uint32_t amount) {
+static inline uint32_t __rotr(uint32_t value, uint32_t amount) {
 	return (value >> amount) | (value << (-amount & 31));
 }
 #endif
