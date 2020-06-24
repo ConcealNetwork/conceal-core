@@ -19,7 +19,10 @@
 #include <map>
 #include <unordered_map>
 #include <unordered_set>
+#include <parallel_hashmap/phmap.h>
 
+using phmap::flat_hash_map;
+using phmap::parallel_flat_hash_map;
 namespace CryptoNote
 {
 
@@ -244,68 +247,80 @@ bool serialize(std::unordered_map<K, V, Hash> &value, Common::StringView name, C
 }
 
 template <typename K, typename V, typename Hash>
-bool serialize(std::unordered_multimap<K, V, Hash> &value, Common::StringView name, CryptoNote::ISerializer &serializer)
-{
-  return serializeMap(value, name, serializer, [&value](size_t size) { value.reserve(size); });
-}
-
-template <typename K, typename V, typename Hash>
-bool serialize(std::map<K, V, Hash> &value, Common::StringView name, CryptoNote::ISerializer &serializer)
+bool serialize(flat_hash_map<K, V, Hash> &value, Common::StringView name, CryptoNote::ISerializer &serializer)
 {
   return serializeMap(value, name, serializer, [](size_t size) {});
 }
 
 template <typename K, typename V, typename Hash>
-bool serialize(std::multimap<K, V, Hash> &value, Common::StringView name, CryptoNote::ISerializer &serializer)
+bool serialize(parallel_flat_hash_map<K, V, Hash> &value, Common::StringView name, CryptoNote::ISerializer &serializer)
 {
   return serializeMap(value, name, serializer, [](size_t size) {});
 }
 
-template <size_t size>
-bool serialize(std::array<uint8_t, size> &value, Common::StringView name, CryptoNote::ISerializer &s)
-{
-  return s.binary(value.data(), value.size(), name);
-}
-
-template <typename T1, typename T2>
-void serialize(std::pair<T1, T2> &value, ISerializer &s)
-{
-  s(value.first, "first");
-  s(value.second, "second");
-}
-
-template <typename Element, typename Iterator>
-void writeSequence(Iterator begin, Iterator end, Common::StringView name, ISerializer &s)
-{
-  size_t size = std::distance(begin, end);
-  s.beginArray(size, name);
-  for (Iterator i = begin; i != end; ++i)
+  template <typename K, typename V, typename Hash>
+  bool serialize(std::unordered_multimap<K, V, Hash> & value, Common::StringView name, CryptoNote::ISerializer & serializer)
   {
-    s(const_cast<Element &>(*i), "");
-  }
-  s.endArray();
-}
-
-template <typename Element, typename Iterator>
-void readSequence(Iterator outputIterator, Common::StringView name, ISerializer &s)
-{
-  size_t size = 0;
-  s.beginArray(size, name);
-
-  while (size--)
-  {
-    Element e;
-    s(e, "");
-    *outputIterator++ = std::move(e);
+    return serializeMap(value, name, serializer, [&value](size_t size) { value.reserve(size); });
   }
 
-  s.endArray();
-}
+  template <typename K, typename V, typename Hash>
+  bool serialize(std::map<K, V, Hash> & value, Common::StringView name, CryptoNote::ISerializer & serializer)
+  {
+    return serializeMap(value, name, serializer, [](size_t size) {});
+  }
 
-//convinience function since we change block height type
-void serializeBlockHeight(ISerializer &s, uint32_t &blockHeight, Common::StringView name);
+  template <typename K, typename V, typename Hash>
+  bool serialize(std::multimap<K, V, Hash> & value, Common::StringView name, CryptoNote::ISerializer & serializer)
+  {
+    return serializeMap(value, name, serializer, [](size_t size) {});
+  }
 
-//convinience function since we change global output index type
-void serializeGlobalOutputIndex(ISerializer &s, uint32_t &globalOutputIndex, Common::StringView name);
+  template <size_t size>
+  bool serialize(std::array<uint8_t, size> & value, Common::StringView name, CryptoNote::ISerializer & s)
+  {
+    return s.binary(value.data(), value.size(), name);
+  }
+
+  template <typename T1, typename T2>
+  void serialize(std::pair<T1, T2> & value, ISerializer & s)
+  {
+    s(value.first, "first");
+    s(value.second, "second");
+  }
+
+  template <typename Element, typename Iterator>
+  void writeSequence(Iterator begin, Iterator end, Common::StringView name, ISerializer & s)
+  {
+    size_t size = std::distance(begin, end);
+    s.beginArray(size, name);
+    for (Iterator i = begin; i != end; ++i)
+    {
+      s(const_cast<Element &>(*i), "");
+    }
+    s.endArray();
+  }
+
+  template <typename Element, typename Iterator>
+  void readSequence(Iterator outputIterator, Common::StringView name, ISerializer & s)
+  {
+    size_t size = 0;
+    s.beginArray(size, name);
+
+    while (size--)
+    {
+      Element e;
+      s(e, "");
+      *outputIterator++ = std::move(e);
+    }
+
+    s.endArray();
+  }
+
+  //convinience function since we change block height type
+  void serializeBlockHeight(ISerializer & s, uint32_t & blockHeight, Common::StringView name);
+
+  //convinience function since we change global output index type
+  void serializeGlobalOutputIndex(ISerializer & s, uint32_t & globalOutputIndex, Common::StringView name);
 
 } // namespace CryptoNote
