@@ -41,10 +41,9 @@
 #include "Serialization/BinaryInputStreamSerializer.h"
 #include "Serialization/BinaryOutputStreamSerializer.h"
 #include "Serialization/SerializationOverloads.h"
+#include "Common/StringTools.h"
 
-    //#include "Common/StringTools.h"
-
-    using namespace Common;
+using namespace Common;
 using namespace Logging;
 using namespace CryptoNote;
 
@@ -887,7 +886,7 @@ namespace CryptoNote
 
       return true;
     }
-    return true;
+    return false;
   }
 
 
