@@ -135,7 +135,12 @@ namespace CryptoNote
     CryptoNote::PeerlistManager& getPeerlistManager() { return m_peerlist; }
 
   private:
-
+    enum PeerType
+    {
+      anchor = 0,
+      white,
+      gray
+    };
     int handleCommand(const LevinProtocol::Command& cmd, BinaryArray& buff_out, P2pConnectionContext& context, bool& handled);
 
     //----------------- commands handlers ----------------------------------------------
@@ -171,6 +176,7 @@ namespace CryptoNote
 
     //-----------------------------------------------------------------------------------------------
     bool handle_command_line(const boost::program_options::variables_map& vm);
+    bool is_addr_recently_failed(const uint32_t address_ip);
     bool handleConfig(const NetNodeConfig& config);
     bool append_net_address(std::vector<NetworkAddress>& nodes, const std::string& addr);
     bool idle_worker();
@@ -182,11 +188,13 @@ namespace CryptoNote
 
     bool connections_maker();
     bool make_new_connection_from_peerlist(bool use_white_list);
-    bool try_to_connect_and_handshake_with_new_peer(const NetworkAddress& na, bool just_take_peerlist = false, uint64_t last_seen_stamp = 0, bool white = true);
-    bool is_peer_used(const PeerlistEntry& peer);
+    bool make_new_connection_from_anchor_peerlist(const std::vector<AnchorPeerlistEntry> &anchor_peerlist);
+    bool try_to_connect_and_handshake_with_new_peer(const NetworkAddress &na, bool just_take_peerlist = false, uint64_t last_seen_stamp = 0, PeerType peer_type = white, uint64_t first_seen_stamp = 0);
+    bool is_peer_used(const PeerlistEntry &peer);
+    bool is_peer_used(const AnchorPeerlistEntry &peer);
     bool is_addr_connected(const NetworkAddress& peer);
     bool try_ping(basic_node_data& node_data, P2pConnectionContext& context);
-    bool make_expected_connections_count(bool white_list, size_t expected_connections);
+    bool make_expected_connections_count(PeerType peer_type, size_t expected_connections);
     bool is_priority_node(const NetworkAddress& na);
 
     bool connect_to_peerlist(const std::vector<NetworkAddress>& peers);
@@ -262,5 +270,7 @@ namespace CryptoNote
     std::list<PeerlistEntry> m_command_line_peers;
     uint64_t m_peer_livetime;
     boost::uuids::uuid m_network_id;
+    std::map<uint32_t, uint64_t> m_host_fails_score;
+    mutable std::mutex mutex;
   };
 }

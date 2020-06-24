@@ -32,6 +32,13 @@ namespace CryptoNote
     uint64_t last_seen;
   };
 
+  struct AnchorPeerlistEntry
+  {
+    NetworkAddress adr;
+    PeerIdType id;
+    int64_t first_seen;
+  };
+
   struct connection_entry
   {
     NetworkAddress adr;
