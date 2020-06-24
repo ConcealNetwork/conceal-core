@@ -428,7 +428,7 @@ uint32_t Blockchain::getCurrentBlockchainHeight() {
 bool Blockchain::init(const std::string& config_folder, bool load_existing) {
   std::lock_guard<decltype(m_blockchain_lock)> lk(m_blockchain_lock);
   if (!config_folder.empty() && !Tools::create_directories_if_necessary(config_folder)) {
-    logger(ERROR, BRIGHT_RED) << "<< Blockchain.cpp << Failed to create data directory: " << m_config_folder;
+    logger(ERROR, BRIGHT_RED) << " Failed to create data directory: " << m_config_folder;
     return false;
   }
 
@@ -439,12 +439,12 @@ bool Blockchain::init(const std::string& config_folder, bool load_existing) {
   }
 
   if (load_existing && !m_blocks.empty()) {
-    logger(INFO, BRIGHT_WHITE) << "<< Blockchain.cpp << Loading blockchain";
+    logger(INFO, BRIGHT_WHITE) << "Loading blockchain";
     BlockCacheSerializer loader(*this, get_block_hash(m_blocks.back().bl), logger.getLogger());
     loader.load(appendPath(config_folder, m_currency.blocksCacheFileName()));
 
     if (!loader.loaded()) {
-      logger(WARNING, BRIGHT_YELLOW) << "<< Blockchain.cpp << No actual blockchain cache found, rebuilding internal structures";
+      logger(WARNING, BRIGHT_YELLOW) << " No actual blockchain cache found, rebuilding internal structures";
       rebuildCache();
     }
 
@@ -1021,7 +1021,7 @@ bool Blockchain::prevalidate_miner_transaction(const Block& b, uint32_t height) 
      because they do not do multisignature transactions as we do for our deposits */
   if (b.baseTransaction.signatures.size() > 1) 
   {
-    logger(ERROR, BRIGHT_RED) << "<< Blockchain.cpp << coinbase transaction in the block shouldn't have more than 1 signature. Signature count: " << b.baseTransaction.signatures.size();
+    logger(ERROR, BRIGHT_RED) << " coinbase transaction in the block shouldn't have more than 1 signature. Signature count: " << b.baseTransaction.signatures.size();
     return false;
   }
 

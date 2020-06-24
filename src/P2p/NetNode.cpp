@@ -497,7 +497,7 @@ namespace CryptoNote
 
     m_listener = System::TcpListener(m_dispatcher, System::Ipv4Address(m_bind_ip), static_cast<uint16_t>(m_listeningPort));
 
-    logger(INFO, BRIGHT_GREEN) << "<< Netnode.cpp << Net service bound on " << m_bind_ip << ":" << m_listeningPort;
+    logger(INFO, BRIGHT_GREEN) << "Net service bound on " << m_bind_ip << ":" << m_listeningPort;
 
     if(m_external_port) {
       logger(INFO) <<  "External port defined as " << m_external_port;
@@ -516,7 +516,7 @@ namespace CryptoNote
   //-----------------------------------------------------------------------------------
 
   bool NodeServer::run() {
-    logger(INFO) <<  "Starting node_server";
+    logger(INFO) <<  "Starting node server";
 
     m_workingContextGroup.spawn(std::bind(&NodeServer::acceptLoop, this));
     m_workingContextGroup.spawn(std::bind(&NodeServer::onIdle, this));

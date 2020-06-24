@@ -42,7 +42,7 @@ Block Miner::mine(const BlockMiningParameters& blockMiningParameters, size_t thr
 
   assert(m_state != MiningState::MINING_IN_PROGRESS);
   if (m_state == MiningState::MINING_STOPPED) {
-    m_logger(Logging::DEBUGGING) << "<< Miner.cpp << " << "Mining has been stopped";
+    m_logger(Logging::DEBUGGING) << "Mining has been stopped";
     throw System::InterruptedException();
   }
 
