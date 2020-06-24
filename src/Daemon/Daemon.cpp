@@ -248,17 +248,17 @@ int main(int argc, char* argv[])
     // configure logging
     logManager.configure(buildLoggerConfiguration(cfgLogLevel, cfgLogFile));
 
-    logger(INFO) << "<< Daemon.cpp << " << CryptoNote::CRYPTONOTE_NAME << " v" << PROJECT_VERSION_LONG;
+    logger(INFO, BRIGHT_YELLOW) << "Conceal v" << PROJECT_VERSION_LONG;
 
     if (command_line_preprocessor(vm, logger)) {
       return 0;
     }
 
-    logger(INFO) << "<< Daemon.cpp << " "Module folder: " << argv[0];
+    logger(INFO) << "Module folder: " << argv[0];
 
     bool testnet_mode = command_line::get_arg(vm, arg_testnet_on);
     if (testnet_mode) {
-      logger(INFO) << "<< Daemon.cpp << " "Starting in testnet mode!";
+      logger(INFO) << "Starting in testnet mode!";
     }
 
     //create objects and link them
@@ -306,29 +306,29 @@ int main(int argc, char* argv[])
     DaemonCommandsHandler dch(ccore, p2psrv, logManager);
 
     // initialize objects
-    logger(INFO) << "<< Daemon.cpp << " "Initializing p2p server...";
+    logger(INFO) << "Initializing p2p server...";
     if (!p2psrv.init(netNodeConfig)) {
       logger(ERROR, BRIGHT_RED) << "Failed to initialize p2p server.";
       return 1;
     }
 
-    logger(INFO) << "<< Daemon.cpp << " "P2p server initialized OK";
+    logger(INFO) << "P2p server initialized OK";
 
     // initialize core here
-    logger(INFO) << "<< Daemon.cpp << " "Initializing core...";
+    logger(INFO) << "Initializing core...";
     if (!ccore.init(coreConfig, minerConfig, true)) {
       logger(ERROR, BRIGHT_RED) << "Failed to initialize core";
       return 1;
     }
 
-    logger(INFO) << "<< Daemon.cpp << " "Core initialized OK";
+    logger(INFO) << "Core initialized OK";
 
     // start components
     if (!command_line::has_arg(vm, arg_console)) {
       dch.start_handling();
     }
 
-    logger(INFO) << "<< Daemon.cpp << " << "Starting core rpc server on address " << rpcConfig.getBindAddress();
+    logger(INFO) << "Starting core rpc server on address " << rpcConfig.getBindAddress();
   
     /* Set address for remote node fee */
   	if (command_line::has_arg(vm, arg_set_fee_address)) {
@@ -340,7 +340,7 @@ int main(int argc, char* argv[])
           return 1;
         }
         rpcServer.setFeeAddress(addr_str, acc);
-        logger(INFO, BRIGHT_YELLOW) << "<< Daemon.cpp << " << "Remote node fee address set: " << addr_str;
+        logger(INFO, BRIGHT_YELLOW) << "Remote node fee address set: " << addr_str;
 
       }
 	  }
@@ -351,32 +351,32 @@ int main(int argc, char* argv[])
       std::string vk_str = command_line::get_arg(vm, arg_set_view_key);
 	    if (!vk_str.empty()) {
         rpcServer.setViewKey(vk_str);
-        logger(INFO, BRIGHT_YELLOW) << "<< Daemon.cpp << " << "Secret view key set: " << vk_str;
+        logger(INFO, BRIGHT_YELLOW) << "Secret view key set: " << vk_str;
       }
     }
  
     rpcServer.start(rpcConfig.bindIp, rpcConfig.bindPort);
-    logger(INFO) << "<< Daemon.cpp << " "Core rpc server started ok";
+    logger(INFO) << "Core rpc server started ok";
 
     Tools::SignalHandler::install([&dch, &p2psrv] {
       dch.stop_handling();
       p2psrv.sendStopSignal();
     });
 
-    logger(INFO) << "<< Daemon.cpp << " "Starting p2p net loop...";
+    logger(INFO) << "Starting p2p net loop...";
     p2psrv.run();
-    logger(INFO) << "<< Daemon.cpp << " "p2p net loop stopped";
+    logger(INFO) << "p2p net loop stopped";
 
     dch.stop_handling();
 
     //stop components
-    logger(INFO) << "<< Daemon.cpp << " "Stopping core rpc server...";
+    logger(INFO) << "Stopping core rpc server...";
     rpcServer.stop();
 
     //deinitialize components
-    logger(INFO) << "<< Daemon.cpp << " "Deinitializing core...";
+    logger(INFO) << "Deinitializing core...";
     ccore.deinit();
-    logger(INFO) << "<< Daemon.cpp << " "Deinitializing p2p...";
+    logger(INFO) << "Deinitializing p2p...";
     p2psrv.deinit();
 
     ccore.set_cryptonote_protocol(NULL);
@@ -387,7 +387,7 @@ int main(int argc, char* argv[])
     return 1;
   }
 
-  logger(INFO) << "<< Daemon.cpp << " "Node stopped.";
+  logger(INFO) << "Node stopped.";
   return 0;
 }
 
