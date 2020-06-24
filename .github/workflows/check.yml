@@ -30,6 +30,20 @@ jobs:
           cd "$build_folder"
           cmake -G "Visual Studio 16 2019" -A x64 -DBOOST_ROOT="$env:BOOST_ROOT_1_69_0" ..
           msbuild concealX.sln /p:Configuration=Release /m
+          cd src\Release
+          Compress-Archive -Path *.exe -DestinationPath "$release_name.zip"
+          $asset_path = "./$build_folder/src/Release/$release_name.zip"
+          mkdir "$release_name"
+          cp *.exe "$release_name/"
+          echo "::set-output name=artifact_path::$build_folder/src/Release/$release_name"
+          
+      - name: Upload To GH Artifacts
+        uses: actions/upload-artifact@v1.0.0
+        with:
+          name: ${{ steps.build.outputs.release_name }}
+          path: ${{ steps.build.outputs.artifact_path }}
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
   build-ubuntu16:
     name: Ubuntu 16.04
