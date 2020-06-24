@@ -23,6 +23,7 @@
 #include "CryptoNoteTools.h"
 #include "TransactionExtra.h"
 #include "CryptoNoteConfig.h"
+#include "parallel_hashmap/phmap_dump.h"
 
 using namespace Logging;
 using namespace Common;
@@ -51,7 +52,7 @@ bool operator<(const Crypto::KeyImage& keyImage1, const Crypto::KeyImage& keyIma
 }
 }
 
-#define CURRENT_BLOCKCACHE_STORAGE_ARCHIVE_VER 3
+#define CURRENT_BLOCKCACHE_STORAGE_ARCHIVE_VER 4
 #define CURRENT_BLOCKCHAININDICES_STORAGE_ARCHIVE_VER 1
 
 namespace CryptoNote {
@@ -188,10 +189,28 @@ public:
     s(m_bs.m_blockIndex, "block_index");
 
     logger(INFO) << operation << "transaction map";
-    s(m_bs.m_transactionMap, "transactions");
+    if (s.type() == ISerializer::INPUT)
+    {
+      phmap::BinaryInputArchive ar_in(appendPath(m_bs.m_config_folder, "transactionsmap.dat").c_str());
+      m_bs.m_transactionMap.load(ar_in);
+    }
+    else
+    {
+      phmap::BinaryOutputArchive ar_out(appendPath(m_bs.m_config_folder, "transactionsmap.dat").c_str());
+      m_bs.m_transactionMap.dump(ar_out);
+    }
 
     logger(INFO) << operation << "spent keys";
-    s(m_bs.m_spent_keys, "spent_keys");
+    if (s.type() == ISerializer::INPUT)
+    {
+      phmap::BinaryInputArchive ar_in(appendPath(m_bs.m_config_folder, "spentkeys.dat").c_str());
+      m_bs.m_spent_keys.load(ar_in);
+    }
+    else
+    {
+      phmap::BinaryOutputArchive ar_out(appendPath(m_bs.m_config_folder, "spentkeys.dat").c_str());
+      m_bs.m_spent_keys.dump(ar_out);
+    }
 
     logger(INFO) << operation << "outputs";
     s(m_bs.m_outputs, "outputs");
@@ -324,10 +343,6 @@ m_upgradeDetectorV4(currency, m_blocks, BLOCK_MAJOR_VERSION_4, logger),
 m_upgradeDetectorV7(currency, m_blocks, BLOCK_MAJOR_VERSION_7, logger)
 {
 
-  m_outputs.set_deleted_key(0);
-  m_multisignatureOutputs.set_deleted_key(0);
-  Crypto::KeyImage nullImage = boost::value_initialized<decltype(nullImage)>();
-  m_spent_keys.set_deleted_key(nullImage);
 }
 
 bool Blockchain::addObserver(IBlockchainStorageObserver* observer) {
@@ -558,7 +573,7 @@ void Blockchain::rebuildCache() {
       // process inputs
       for (auto& i : transaction.tx.inputs) {
         if (i.type() == typeid(KeyInput)) {
-          m_spent_keys.insert(::boost::get<KeyInput>(i).keyImage);
+          m_spent_keys.insert(std::make_pair(::boost::get<KeyInput>(i).keyImage, b));
         } else if (i.type() == typeid(MultisignatureInput)) {
           auto out = ::boost::get<MultisignatureInput>(i);
           m_multisignatureOutputs[out.amount][out.outputIndex].isUsed = true;
@@ -2265,7 +2280,7 @@ bool Blockchain::pushTransaction(BlockEntry& block, const Crypto::Hash& transact
 
   for (size_t i = 0; i < transaction.tx.inputs.size(); ++i) {
     if (transaction.tx.inputs[i].type() == typeid(KeyInput)) {
-      auto result = m_spent_keys.insert(::boost::get<KeyInput>(transaction.tx.inputs[i]).keyImage);
+      auto result = m_spent_keys.insert(std::make_pair(::boost::get<KeyInput>(transaction.tx.inputs[i]).keyImage, block.height));
       if (!result.second) {
         logger(ERROR, BRIGHT_RED) <<
           "Double spending transaction was pushed to blockchain.";
