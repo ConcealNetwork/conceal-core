@@ -1,6 +1,7 @@
 // Copyright (c) 2011-2017 The Cryptonote developers
 // Copyright (c) 2017-2018 The Circle Foundation & Conceal Devs
-// Copyright (c) 2018-2019 Conceal Network & Conceal Devs
+// Copyright (c) 2018-2020 Karbo developers
+// Copyright (c) 2018-2020 Conceal Network & Conceal Devs
 // Distributed under the MIT/X11 software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -41,9 +42,9 @@
 #include "Serialization/BinaryOutputStreamSerializer.h"
 #include "Serialization/SerializationOverloads.h"
 
-//#include "Common/StringTools.h"
+    //#include "Common/StringTools.h"
 
-using namespace Common;
+    using namespace Common;
 using namespace Logging;
 using namespace CryptoNote;
 
@@ -873,7 +874,7 @@ namespace CryptoNote
         continue;
       }
 
-      logger(INFO) << "Selected anchor peer: " << pe.id << " " << Common::ipAddressToString(pe.adr.ip)
+      logger(DEBUGGING) << "Selected anchor peer: " << pe.id << " " << Common::ipAddressToString(pe.adr.ip)
                         << ":" << boost::lexical_cast<std::string>(pe.adr.port)
                         << "[peer_type=" << anchor
                         << "] first_seen: " << Common::timeIntervalToString(time(NULL) - pe.first_seen);
