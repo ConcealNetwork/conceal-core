@@ -82,7 +82,7 @@ public:
     case BAD_ADDRESS:              return "Bad address";
     case BAD_INTEGRATED_ADDRESS:   return "Integrated address should be 186 characters";    
     case TRANSACTION_SIZE_TOO_BIG: return "Transaction size is too big, please optimize your wallet.";
-    case WRONG_AMOUNT:             return "Wrong amount";
+    case WRONG_AMOUNT:             return "Insufficient funds";
     case BAD_PREFIX:               return "Address has incorrect prefix";    
     case SUM_OVERFLOW:             return "Sum overflow";
     case ZERO_DESTINATION:         return "The destination is empty";
@@ -93,7 +93,7 @@ public:
     case WRONG_VERSION:            return "Wrong version";
     case FEE_TOO_SMALL:            return "Transaction fee is too small";
     case KEY_GENERATION_ERROR:     return "Cannot generate new key";
-    case INDEX_OUT_OF_RANGE:       return "Index is out of range";
+    case INDEX_OUT_OF_RANGE:       return "Not found";
     case ADDRESS_ALREADY_EXISTS:   return "Address already exists";
     case TRACKING_MODE:            return "The wallet is in tracking mode";
     case WRONG_PARAMETERS:         return "Wrong parameters passed";
@@ -104,7 +104,7 @@ public:
     case DEPOSIT_TERM_TOO_SMALL:   return "Deposit term is too small";
     case DEPOSIT_TERM_TOO_BIG:     return "Deposit term is too big";
     case DEPOSIT_AMOUNT_TOO_SMALL: return "Deposit amount is too small";
-    case DEPOSIT_DOESNOT_EXIST:    return "Deposit doesn't exist";
+    case DEPOSIT_DOESNOT_EXIST:    return "Deposit not found";
   case DESTINATION_ADDRESS_REQUIRED:  return  "Destination address required";
     case DESTINATION_ADDRESS_NOT_FOUND: return "Destination address not found";
     case DEPOSIT_LOCKED:           return "Deposit is locked";

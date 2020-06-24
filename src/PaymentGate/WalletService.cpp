@@ -1073,7 +1073,7 @@ namespace PaymentService
     return std::error_code();
   }
 
-  std::error_code WalletService::getDeposit(uint64_t depositId, uint64_t &amount, uint64_t &term, uint64_t &interest, std::string &creatingTransactionHash, std::string &spendingTransactionHash, bool &locked, uint64_t &height, uint64_t &unlockHeight)
+  std::error_code WalletService::getDeposit(uint64_t depositId, uint64_t &amount, uint64_t &term, uint64_t &interest, std::string &creatingTransactionHash, std::string &spendingTransactionHash, bool &locked, uint64_t &height, uint64_t &unlockHeight, std::string &address)
   {
     try
     {
@@ -1087,6 +1087,8 @@ namespace PaymentService
 
       WalletTransaction wallettx = wallet.getTransaction(deposit.creatingTransactionId);
       creatingTransactionHash = Common::podToHex(wallettx.hash);
+
+      WalletTransfer transfer = wallet.getTransactionTransfer(deposit.creatingTransactionId,0);
 
       if (deposit.spendingTransactionId != WALLET_INVALID_TRANSACTION_ID)
       {

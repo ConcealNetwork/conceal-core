@@ -456,7 +456,7 @@ void WalletGreen::initialize(
     /* Do we have enough funds */
     if (foundMoney < neededMoney)
     {
-      throw std::system_error(make_error_code(error::WRONG_AMOUNT), "Not enough money");
+      throw std::system_error(make_error_code(error::WRONG_AMOUNT));
     }
 
     /* Now we add the outputs to the transaction, starting with the deposits output
@@ -1695,7 +1695,7 @@ std::string WalletGreen::addWallet(const Crypto::PublicKey &spendPublicKey, cons
 
     if (m_deposits.size() <= depositIndex)
     {
-      throw std::system_error(make_error_code(CryptoNote::error::INDEX_OUT_OF_RANGE));
+      throw std::system_error(make_error_code(CryptoNote::error::DEPOSIT_DOESNOT_EXIST));
     }
 
     return m_deposits.get<RandomAccessIndex>()[depositIndex];

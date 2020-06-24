@@ -165,6 +165,7 @@ struct GetDeposit
     std::string creatingTransactionHash;
     std::string spendingTransactionHash;
     bool locked;
+    std::string address;
 
     void serialize(CryptoNote::ISerializer &serializer);
   };

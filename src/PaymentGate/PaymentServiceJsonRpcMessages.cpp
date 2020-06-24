@@ -103,6 +103,7 @@ void GetDeposit::Response::serialize(CryptoNote::ISerializer &serializer)
   serializer(height, "height");
   serializer(unlockHeight, "unlockHeight");
   serializer(locked, "locked");
+  serializer(address, "address");
 }
 
 void GetAddresses::Request::serialize(CryptoNote::ISerializer &serializer)
