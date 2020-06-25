@@ -1,6 +1,7 @@
 // Copyright (c) 2011-2017 The Cryptonote developers
 // Copyright (c) 2017-2018 The Circle Foundation & Conceal Devs
-// Copyright (c) 2018-2019 Conceal Network & Conceal Devs
+// Copyright (c) 2018-2020 Karbo developers
+// Copyright (c) 2018-2020 Conceal Network & Conceal Devs
 // Distributed under the MIT/X11 software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -10,6 +11,7 @@
 
 #include "google/sparse_hash_set"
 #include "google/sparse_hash_map"
+#include <parallel_hashmap/phmap.h>
 
 #include "Common/ObserverManager.h"
 #include "Common/Util.h"
@@ -32,7 +34,7 @@
 #include <Logging/LoggerRef.h>
 
 #undef ERROR
-
+using phmap::parallel_flat_hash_map;
 namespace CryptoNote {
   struct NOTIFY_REQUEST_GET_OBJECTS_request;
   struct NOTIFY_RESPONSE_GET_OBJECTS_request;
@@ -230,10 +232,10 @@ bool have_tx_keyimg_as_spent(const Crypto::KeyImage &key_im);
       }
     };
 
-    typedef google::sparse_hash_set<Crypto::KeyImage> key_images_container;
-    typedef std::unordered_map<Crypto::Hash, BlockEntry> blocks_ext_by_hash;
-    typedef google::sparse_hash_map<uint64_t, std::vector<std::pair<TransactionIndex, uint16_t>>> outputs_container; //Crypto::Hash - tx hash, size_t - index of out in transaction
-    typedef google::sparse_hash_map<uint64_t, std::vector<MultisignatureOutputUsage>> MultisignatureOutputsContainer;
+    typedef parallel_flat_hash_map<Crypto::KeyImage, uint32_t> key_images_container;
+    typedef parallel_flat_hash_map<Crypto::Hash, BlockEntry> blocks_ext_by_hash;
+    typedef parallel_flat_hash_map<uint64_t, std::vector<std::pair<TransactionIndex, uint16_t>>> outputs_container; //Crypto::Hash - tx hash, size_t - index of out in transaction
+    typedef parallel_flat_hash_map<uint64_t, std::vector<MultisignatureOutputUsage>> MultisignatureOutputsContainer;
 
     const Currency& m_currency;
     tx_memory_pool& m_tx_pool;
@@ -251,8 +253,8 @@ bool have_tx_keyimg_as_spent(const Crypto::KeyImage &key_im);
     std::atomic<bool> m_is_in_checkpoint_zone;
 
     typedef SwappedVector<BlockEntry> Blocks;
-    typedef std::unordered_map<Crypto::Hash, uint32_t> BlockMap;
-    typedef std::unordered_map<Crypto::Hash, TransactionIndex> TransactionMap;
+    typedef parallel_flat_hash_map<Crypto::Hash, uint32_t> BlockMap;
+    typedef parallel_flat_hash_map<Crypto::Hash, TransactionIndex> TransactionMap;
     typedef BasicUpgradeDetector<Blocks> UpgradeDetector;
 
     friend class BlockCacheSerializer;
