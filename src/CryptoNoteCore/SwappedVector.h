@@ -15,7 +15,7 @@
 #include <map>
 #include <string>
 #include <vector>
-
+#include <cstdio>
 #include "Common/StdInputStream.h"
 #include "Common/StdOutputStream.h"
 #include "Serialization/BinaryInputStreamSerializer.h"

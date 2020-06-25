@@ -1,8 +1,7 @@
 // Copyright (c) 2011-2017 The Cryptonote developers
-// Copyright (c) 2016-2019, The Karbo developers
 // Copyright (c) 2017-2018 The Circle Foundation & Conceal Devs
-// Copyright (c) 2018-2019 Conceal Network & Conceal Devs
-
+// Copyright (c) 2018-2020 Karbo developers
+// Copyright (c) 2018-2020 Conceal Network & Conceal Devs
 // Distributed under the MIT/X11 software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -23,6 +22,7 @@
 #include "CryptoNoteTools.h"
 #include "TransactionExtra.h"
 #include "CryptoNoteConfig.h"
+#include "parallel_hashmap/phmap_dump.h"
 
 using namespace Logging;
 using namespace Common;
@@ -51,7 +51,7 @@ bool operator<(const Crypto::KeyImage& keyImage1, const Crypto::KeyImage& keyIma
 }
 }
 
-#define CURRENT_BLOCKCACHE_STORAGE_ARCHIVE_VER 3
+#define CURRENT_BLOCKCACHE_STORAGE_ARCHIVE_VER 4
 #define CURRENT_BLOCKCHAININDICES_STORAGE_ARCHIVE_VER 1
 
 namespace CryptoNote {
@@ -188,10 +188,28 @@ public:
     s(m_bs.m_blockIndex, "block_index");
 
     logger(INFO) << operation << "transaction map";
-    s(m_bs.m_transactionMap, "transactions");
+    if (s.type() == ISerializer::INPUT)
+    {
+      phmap::BinaryInputArchive ar_in(appendPath(m_bs.m_config_folder, "transactionsmap.dat").c_str());
+      m_bs.m_transactionMap.load(ar_in);
+    }
+    else
+    {
+      phmap::BinaryOutputArchive ar_out(appendPath(m_bs.m_config_folder, "transactionsmap.dat").c_str());
+      m_bs.m_transactionMap.dump(ar_out);
+    }
 
     logger(INFO) << operation << "spent keys";
-    s(m_bs.m_spent_keys, "spent_keys");
+    if (s.type() == ISerializer::INPUT)
+    {
+      phmap::BinaryInputArchive ar_in(appendPath(m_bs.m_config_folder, "spentkeys.dat").c_str());
+      m_bs.m_spent_keys.load(ar_in);
+    }
+    else
+    {
+      phmap::BinaryOutputArchive ar_out(appendPath(m_bs.m_config_folder, "spentkeys.dat").c_str());
+      m_bs.m_spent_keys.dump(ar_out);
+    }
 
     logger(INFO) << operation << "outputs";
     s(m_bs.m_outputs, "outputs");
@@ -324,10 +342,6 @@ m_upgradeDetectorV4(currency, m_blocks, BLOCK_MAJOR_VERSION_4, logger),
 m_upgradeDetectorV7(currency, m_blocks, BLOCK_MAJOR_VERSION_7, logger)
 {
 
-  m_outputs.set_deleted_key(0);
-  m_multisignatureOutputs.set_deleted_key(0);
-  Crypto::KeyImage nullImage = boost::value_initialized<decltype(nullImage)>();
-  m_spent_keys.set_deleted_key(nullImage);
 }
 
 bool Blockchain::addObserver(IBlockchainStorageObserver* observer) {
@@ -414,7 +428,7 @@ uint32_t Blockchain::getCurrentBlockchainHeight() {
 bool Blockchain::init(const std::string& config_folder, bool load_existing) {
   std::lock_guard<decltype(m_blockchain_lock)> lk(m_blockchain_lock);
   if (!config_folder.empty() && !Tools::create_directories_if_necessary(config_folder)) {
-    logger(ERROR, BRIGHT_RED) << "<< Blockchain.cpp << Failed to create data directory: " << m_config_folder;
+    logger(ERROR, BRIGHT_RED) << " Failed to create data directory: " << m_config_folder;
     return false;
   }
 
@@ -425,12 +439,12 @@ bool Blockchain::init(const std::string& config_folder, bool load_existing) {
   }
 
   if (load_existing && !m_blocks.empty()) {
-    logger(INFO, BRIGHT_WHITE) << "<< Blockchain.cpp << Loading blockchain";
+    logger(INFO, BRIGHT_WHITE) << "Loading blockchain";
     BlockCacheSerializer loader(*this, get_block_hash(m_blocks.back().bl), logger.getLogger());
     loader.load(appendPath(config_folder, m_currency.blocksCacheFileName()));
 
     if (!loader.loaded()) {
-      logger(WARNING, BRIGHT_YELLOW) << "<< Blockchain.cpp << No actual blockchain cache found, rebuilding internal structures";
+      logger(WARNING, BRIGHT_YELLOW) << " No actual blockchain cache found, rebuilding internal structures";
       rebuildCache();
     }
 
@@ -558,7 +572,7 @@ void Blockchain::rebuildCache() {
       // process inputs
       for (auto& i : transaction.tx.inputs) {
         if (i.type() == typeid(KeyInput)) {
-          m_spent_keys.insert(::boost::get<KeyInput>(i).keyImage);
+          m_spent_keys.insert(std::make_pair(::boost::get<KeyInput>(i).keyImage, b));
         } else if (i.type() == typeid(MultisignatureInput)) {
           auto out = ::boost::get<MultisignatureInput>(i);
           m_multisignatureOutputs[out.amount][out.outputIndex].isUsed = true;
@@ -1007,7 +1021,7 @@ bool Blockchain::prevalidate_miner_transaction(const Block& b, uint32_t height) 
      because they do not do multisignature transactions as we do for our deposits */
   if (b.baseTransaction.signatures.size() > 1) 
   {
-    logger(ERROR, BRIGHT_RED) << "<< Blockchain.cpp << coinbase transaction in the block shouldn't have more than 1 signature. Signature count: " << b.baseTransaction.signatures.size();
+    logger(ERROR, BRIGHT_RED) << " coinbase transaction in the block shouldn't have more than 1 signature. Signature count: " << b.baseTransaction.signatures.size();
     return false;
   }
 
@@ -2265,7 +2279,7 @@ bool Blockchain::pushTransaction(BlockEntry& block, const Crypto::Hash& transact
 
   for (size_t i = 0; i < transaction.tx.inputs.size(); ++i) {
     if (transaction.tx.inputs[i].type() == typeid(KeyInput)) {
-      auto result = m_spent_keys.insert(::boost::get<KeyInput>(transaction.tx.inputs[i]).keyImage);
+      auto result = m_spent_keys.insert(std::make_pair(::boost::get<KeyInput>(transaction.tx.inputs[i]).keyImage, block.height));
       if (!result.second) {
         logger(ERROR, BRIGHT_RED) <<
           "Double spending transaction was pushed to blockchain.";

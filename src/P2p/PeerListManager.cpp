@@ -1,6 +1,7 @@
 // Copyright (c) 2011-2017 The Cryptonote developers
 // Copyright (c) 2017-2018 The Circle Foundation & Conceal Devs
-// Copyright (c) 2018-2019 Conceal Network & Conceal Devs
+// Copyright (c) 2018-2020 Karbo developers
+// Copyright (c) 2018-2020 Conceal Network & Conceal Devs
 // Distributed under the MIT/X11 software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -37,6 +38,12 @@ namespace CryptoNote {
     s(pe.last_seen, "last_seen");
   }
 
+  void serialize(AnchorPeerlistEntry &pe, ISerializer &s)
+  {
+    s(pe.adr, "adr");
+    s(pe.id, "id");
+    s(pe.first_seen, "first_seen");
+  }
 }
 
 PeerlistManager::Peerlist::Peerlist(peers_indexed& peers, size_t maxSize) :
@@ -44,7 +51,7 @@ PeerlistManager::Peerlist::Peerlist(peers_indexed& peers, size_t maxSize) :
 }
 
 void PeerlistManager::serialize(ISerializer& s) {
-  const uint8_t currentVersion = 1;
+  const uint8_t currentVersion = 2;
   uint8_t version = currentVersion;
 
   s(version, "version");
@@ -55,6 +62,7 @@ void PeerlistManager::serialize(ISerializer& s) {
 
   s(m_peers_white, "whitelist");
   s(m_peers_gray, "graylist");
+  s(m_peers_anchor, "anchorlist");
 }
 
 size_t PeerlistManager::Peerlist::count() const {
@@ -200,6 +208,28 @@ bool PeerlistManager::set_peer_just_seen(PeerIdType peer, const NetworkAddress& 
 }
 //--------------------------------------------------------------------------------------------------
 
+bool PeerlistManager::append_with_peer_anchor(const AnchorPeerlistEntry &ple)
+{
+  try
+  {
+    if (!is_ip_allowed(ple.adr.ip))
+      return true;
+
+    auto by_addr_it_anchor = m_peers_anchor.get<by_addr>().find(ple.adr);
+    if (by_addr_it_anchor == m_peers_anchor.get<by_addr>().end())
+    {
+      //put new record into white list
+      m_peers_anchor.insert(ple);
+    }
+
+    return true;
+  }
+  catch (std::exception &)
+  {
+  }
+  return false;
+}
+
 bool PeerlistManager::append_with_peer_white(const PeerlistEntry& ple)
 {
   try {
@@ -259,6 +289,44 @@ bool PeerlistManager::append_with_peer_gray(const PeerlistEntry& ple)
   return false;
 }
 //--------------------------------------------------------------------------------------------------
+bool PeerlistManager::get_and_empty_anchor_peerlist(std::vector<AnchorPeerlistEntry> &apl)
+{
+  try
+  {
+    auto begin = m_peers_anchor.get<by_time>().begin();
+    auto end = m_peers_anchor.get<by_time>().end();
+
+    std::for_each(begin, end, [&apl](const AnchorPeerlistEntry &a) {
+      apl.push_back(a);
+    });
+
+    m_peers_anchor.get<by_time>().clear();
+    return true;
+  }
+  catch (std::exception &)
+  {
+  }
+  return false;
+}
+//--------------------------------------------------------------------------------------------------
+
+bool PeerlistManager::remove_from_peer_anchor(const NetworkAddress &addr)
+{
+  try
+  {
+    anchor_peers_indexed::index_iterator<by_addr>::type iterator = m_peers_anchor.get<by_addr>().find(addr);
+
+    if (iterator != m_peers_anchor.get<by_addr>().end())
+    {
+      m_peers_anchor.erase(iterator);
+    }
+    return true;
+  }
+  catch (std::exception &)
+  {
+  }
+  return false;
+}
 
 PeerlistManager::Peerlist& PeerlistManager::getWhite() { 
   return m_whitePeerlist; 

@@ -194,9 +194,9 @@ bool CryptoNoteProtocolHandler::process_payload_sync_data(const CORE_SYNC_DATA &
   {
     int64_t diff = static_cast<int64_t>(hshd.current_height) - static_cast<int64_t>(get_current_blockchain_height());
 
-    logger(diff >= 0 ? (is_inital ? Logging::INFO : DEBUGGING) : Logging::TRACE) << "<< CryptonoteProtocolHandler.cpp << " << context << "Unknown top block: " << get_current_blockchain_height() << " -> " << hshd.current_height
+    logger(diff >= 0 ? (is_inital ? Logging::INFO : DEBUGGING) : Logging::TRACE)  << context << "Unknown top block: " << get_current_blockchain_height() << " -> " << hshd.current_height
                                                                                           << std::endl
-                                                                                          << "<< CryptonoteProtocolHandler.cpp << "
+                                                                                          
                                                                                           << "Synchronization started";
 
     logger(DEBUGGING) << "Remote top block height: " << hshd.current_height << ", id: " << hshd.top_id;
@@ -644,7 +644,7 @@ bool CryptoNoteProtocolHandler::request_missing_objects(CryptoNoteConnectionCont
     requestMissingPoolTransactions(context);
 
     context.m_state = CryptoNoteConnectionContext::state_normal;
-    logger(Logging::INFO, Logging::BRIGHT_GREEN) << "<< CryptonoteProtocolHandler.cpp << " << context << "Synchronization complete";
+    logger(Logging::INFO, Logging::BRIGHT_GREEN)  << context << "Synchronization complete";
     on_connection_synchronized();
   }
   return true;
@@ -656,38 +656,7 @@ bool CryptoNoteProtocolHandler::on_connection_synchronized()
   if (m_synchronized.compare_exchange_strong(val_expected, true))
   {
     logger(Logging::INFO) << ENDL << "********************************************************************************" << ENDL
-                          << "  " << ENDL
-                          << "                                      .//.                                      " << ENDL
-                          << "                                  ./((((((((,                                   " << ENDL
-                          << "                              .*((((((((((((((((.                               " << ENDL
-                          << "                           *(((((((((*.**.*((((((((/.                           " << ENDL
-                          << "                        /((((((((/.%@@@//(((/.*((((((((,                        " << ENDL
-                          << "                       %@*.((/.#@@@@@@@//(((((((/./(.*(/                        " << ENDL
-                          << "                       %@@@/#@@@@@@@%.    ./(((((((,(((/                        " << ENDL
-                          << "                       %@@@/#@@@@,             *(((,((*                         " << ENDL
-                          << "                       %@@@/#@@@@,                                              " << ENDL
-                          << "                       %@@@/#@@@@,                                              " << ENDL
-                          << "                       %@@@/#@@@@,                                              " << ENDL
-                          << "                       %@@@/#@@@@,                                              " << ENDL
-                          << "                       %@@@/#@@@@,                                              " << ENDL
-                          << "                       %@@@/#@@@@,                                              " << ENDL
-                          << "                       %@@@/#@@@@,                                              " << ENDL
-                          << "                       %@@@/#@@@@,                                              " << ENDL
-                          << "                       %@@@/#@@@@,                                              " << ENDL
-                          << "                       %@@@/#@@@@,                                              " << ENDL
-                          << "                       %@@@/#@@@@,                                              " << ENDL
-                          << "                       %@@@/#@@@@,                                              " << ENDL
-                          << "                       %@@@/#@@@@,                                              " << ENDL
-                          << "                       %@@@/(@@@@,              .&@@%.                          " << ENDL
-                          << "                       %@@@/(/.(@@@*        ,&@@@@@@@%..                        " << ENDL
-                          << "                       %@@@@,*@@@@@@@@@,*@@@@@@@@%..(((*                        " << ENDL
-                          << "                       %@@@@@@@&.,@@@@@@@@@@@%..(((((((*                        " << ENDL
-                          << "                          ,@@@@@@@@&.,&@@&..((((((((*                           " << ENDL
-                          << "                              /@@@@@@@@,*(((((((/.                              " << ENDL
-                          << "                                  (@@@@**((((.                                  " << ENDL
-                          << "                                     .#***                                      " << ENDL
-                          << "  " << ENDL
-                          << "You are now synchronized with the Conceal network. You may now start concealwallet." << ENDL
+                          << "You are now synchronized with the Conceal network." << ENDL
                           << "Please note, that the blockchain will be saved only after you quit the daemon" << ENDL
                           << "with the \"exit\" command or if you use the \"save\" command." << ENDL
                           << "Otherwise, you will possibly need to synchronize the blockchain again." << ENDL
