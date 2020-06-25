@@ -108,6 +108,7 @@ else()
 	set(ARCH native CACHE STRING "CPU to build for: -march value or default")
 	if("${ARCH}" STREQUAL "default")
 		set(ARCH_FLAG "")
+		message(status: ": ${ARCH_FLAG}")
 	elseif(ARMv6)
 		set(ARCH_FLAG "-march=armv6")
 	elseif(ARMv7)
@@ -122,15 +123,20 @@ else()
 
 	# AES Config Flags
 	if(ARMv6)
-		set(ARCH_FLAG "-fpu=vfp -mfloat-abi=hard")
+		set(AESFLAG "-fpu=vfp -mfloat-abi=hard")
+		message(status: ": ${AESFLAG}")
 	elseif(ARMv7)
-		set(ARCH_FLAG "-fpu=neon-vfpv4 -mfloat-abi=hard")
+		set(AESFLAG "-fpu=neon-vfpv4 -mfloat-abi=hard")
+		message(status: ": ${AESFLAG}")
 	elseif(ARMv8)
-		set(ARCH_FLAG "-fpu=neon-fp-armv8 -mfloat-abi=hard")
+		set(AESFLAG "-fpu=neon-fp-armv8 -mfloat-abi=hard")
+		message(status: ": ${AESFLAG}")
 	elseif(ARM64)
-		set(ARCH_FLAG "") # not required
+		set(AESFLAG "") # not required
+		message(status: ": ${AESFLAG}")
 	else()
 		set(AESFLAG "-maes") # Default AES
+		message(status: ": ${AESFLAG}")
 	endif()
 
 	set(WARNINGS "-Wall -Wextra -Wpointer-arith -Wundef -Wvla -Wwrite-strings -Wno-error=extra -Wno-error=unused-function -Wno-error=deprecated-declarations -Wno-error=sign-compare -Wno-error=strict-aliasing -Wno-error=type-limits -Wno-unused-parameter -Wno-error=unused-variable -Wno-error=undef -Wno-error=uninitialized -Wno-error=unused-result")
