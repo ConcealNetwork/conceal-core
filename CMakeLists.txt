@@ -28,7 +28,7 @@ if(APPLE OR FREEBSD)
 endif()
 
 # Compile Settings for ARMv6
-if (${CMAKE_SYSTEM_PROCESSOR} MATCHES "arm")
+if (${CMAKE_SYSTEM_PROCESSOR} STREQUAL "arm")
 	set(ARMv6 TRUE)
 	message("ARMv6 is true")
 	# set(CMAKE_CXX_COMPILER "arm-linux-gnueabihf-g++")
@@ -39,7 +39,7 @@ if (${CMAKE_SYSTEM_PROCESSOR} MATCHES "arm")
 endif()
 
 # Compile Settings for ARMv7
-if (${CMAKE_SYSTEM_PROCESSOR} MATCHES "armv7-a")
+if (${CMAKE_SYSTEM_PROCESSOR} STREQUAL "armv7-a")
 	set(ARMv7 TRUE)
 	message("ARMv7 is true")
 	# set(CMAKE_CXX_COMPILER "arm-linux-gnueabihf-g++")
@@ -50,7 +50,7 @@ if (${CMAKE_SYSTEM_PROCESSOR} MATCHES "armv7-a")
 endif()
 
 # Compile Settings for ARMv8
-if (${CMAKE_SYSTEM_PROCESSOR} MATCHES "armv7l")
+if (${CMAKE_SYSTEM_PROCESSOR} STREQUAL "armv7l")
 	set(ARMv8 TRUE)
 	message("ARMv8 is true")
 	# set(CMAKE_CXX_COMPILER "arm-linux-gnueabihf-g++")
@@ -61,7 +61,7 @@ if (${CMAKE_SYSTEM_PROCESSOR} MATCHES "armv7l")
 endif()
 
 # Compile Settings for ARM64
-if (${CMAKE_SYSTEM_PROCESSOR} MATCHES "aarch64")
+if (${CMAKE_SYSTEM_PROCESSOR} STREQUAL "aarch64")
 	set(ARM64 TRUE)
 	message("ARM64 is true")
 	# set(CMAKE_CXX_COMPILER "aarch64-linux-gnu-g++")
