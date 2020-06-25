@@ -132,6 +132,9 @@ jobs:
         id: build
         run: |
           build_folder="build/"
+          ccx_ver=${GITHUB_SHA::7}
+          ccx_ver_folder=$(echo $ccx_ver | sed 's/\.//g')
+          release_name=ccx-cli-ubuntu-1804-v"$ccx_ver"
           brew install gcc boost@1.60
           brew link boost@1.60 --force
           mkdir "$build_folder"
