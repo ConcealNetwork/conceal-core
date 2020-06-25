@@ -28,7 +28,7 @@ if(APPLE OR FREEBSD)
 endif()
 
 # Compile Settings for ARMv6
-if (${CMAKE_SYSTEM_PROCESSOR} MATCHES "armv6*")
+if (${CMAKE_SYSTEM_PROCESSOR} MATCHES "arm")
 	set(ARMv6 TRUE)
 	message("ARMv6 is true")
 	# set(CMAKE_CXX_COMPILER "arm-linux-gnueabihf-g++")
@@ -39,7 +39,7 @@ if (${CMAKE_SYSTEM_PROCESSOR} MATCHES "armv6*")
 endif()
 
 # Compile Settings for ARMv7
-if (${CMAKE_SYSTEM_PROCESSOR} MATCHES "armv7-*")
+if (${CMAKE_SYSTEM_PROCESSOR} MATCHES "armv7-a")
 	set(ARMv7 TRUE)
 	message("ARMv7 is true")
 	# set(CMAKE_CXX_COMPILER "arm-linux-gnueabihf-g++")
@@ -50,7 +50,7 @@ if (${CMAKE_SYSTEM_PROCESSOR} MATCHES "armv7-*")
 endif()
 
 # Compile Settings for ARMv8
-if (${CMAKE_SYSTEM_PROCESSOR} MATCHES "armv8*" OR "armv7l")
+if (${CMAKE_SYSTEM_PROCESSOR} MATCHES "armv7l")
 	set(ARMv8 TRUE)
 	message("ARMv8 is true")
 	# set(CMAKE_CXX_COMPILER "arm-linux-gnueabihf-g++")
@@ -71,7 +71,7 @@ if (${CMAKE_SYSTEM_PROCESSOR} MATCHES "aarch64")
 	include_directories(/usr/lib/gcc/aarch64-linux-gnu/8/include)
 endif()
 
-message(status ": ${CMAKE_SYSTEM_PROCESSOR}")
+message(CMAKE_SYSTEM_PROCESSOR ": ${CMAKE_SYSTEM_PROCESSOR}")
 
 # Includes
 if(MSVC)
@@ -117,7 +117,7 @@ else()
 	else()
 		set(ARCH_FLAG "-march=x86-64")
 	endif()
-	message(status ": ${ARCH_FLAG}")
+	message(ARCH_FLAG ": ${ARCH_FLAG}")
 
 	# AES Config Flags
 	if(ARMv6)
@@ -131,7 +131,7 @@ else()
 	else()
 		set(AESFLAG "-maes") # Default AES
 	endif()
-	message(status ": ${AESFLAG}")
+	message(AESFLAG ": ${AESFLAG}")
 
 	set(WARNINGS "-Wall -Wextra -Wpointer-arith -Wundef -Wvla -Wwrite-strings -Wno-error=extra -Wno-error=unused-function -Wno-error=deprecated-declarations -Wno-error=sign-compare -Wno-error=strict-aliasing -Wno-error=type-limits -Wno-unused-parameter -Wno-error=unused-variable -Wno-error=undef -Wno-error=uninitialized -Wno-error=unused-result")
 	if(CMAKE_C_COMPILER_ID STREQUAL "Clang")
