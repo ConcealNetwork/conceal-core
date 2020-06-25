@@ -50,7 +50,7 @@ if (${CMAKE_SYSTEM_PROCESSOR} MATCHES "armv7-*")
 endif()
 
 # Compile Settings for ARMv8
-if (${CMAKE_SYSTEM_PROCESSOR} MATCHES "armv8*" OR MATCHES "armv7l")
+if (${CMAKE_SYSTEM_PROCESSOR} MATCHES "armv8*" OR "armv7l")
 	set(ARMv8 TRUE)
 	message("ARMv8 is true")
 	# set(CMAKE_CXX_COMPILER "arm-linux-gnueabihf-g++")
