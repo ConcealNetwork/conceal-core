@@ -28,20 +28,31 @@ if(APPLE OR FREEBSD)
 endif()
 
 # Compile Settings for ARMv6
-if (${CMAKE_SYSTEM_PROCESSOR} MATCHES "armv6")
+if (${CMAKE_SYSTEM_PROCESSOR} MATCHES "^armv6*")
 	set(ARMv6 TRUE)
 	set(CMAKE_SYSTEM_PROCESSOR armv6)
 	set(CMAKE_CXX_COMPILER "arm-linux-gnueabihf-g++")
 	set(CMAKE_FIND_ROOT_PATH_MODE_PROGRAM NEVER)
 	set(CMAKE_FIND_ROOT_PATH_MODE_LIBRARY ONLY)
 	set(CMAKE_FIND_ROOT_PATH_MODE_INCLUDE ONLY)
-	include_directories(/usr/lib/gcc/arm-linux-gnueabihf/8/include)
+	include_directories(/usr/lib/gcc/arm-linux-gnueabihf/6/include)
 endif()
 
-# Compile Settings for ARM
-if (${CMAKE_SYSTEM_PROCESSOR} MATCHES "armv7")
+# Compile Settings for ARMv7
+if (${CMAKE_SYSTEM_PROCESSOR} MATCHES "^armv7*")
 	set(ARMv7 TRUE)
 	set(CMAKE_SYSTEM_PROCESSOR armv7)
+	set(CMAKE_CXX_COMPILER "arm-linux-gnueabihf-g++")
+	set(CMAKE_FIND_ROOT_PATH_MODE_PROGRAM NEVER)
+	set(CMAKE_FIND_ROOT_PATH_MODE_LIBRARY ONLY)
+	set(CMAKE_FIND_ROOT_PATH_MODE_INCLUDE ONLY)
+	include_directories(/usr/lib/gcc/arm-linux-gnueabihf/7/include)
+endif()
+
+# Compile Settings for ARMv8
+if (${CMAKE_SYSTEM_PROCESSOR} MATCHES "^armv8*")
+	set(ARMv8 TRUE)
+	set(CMAKE_SYSTEM_PROCESSOR armv8)
 	set(CMAKE_CXX_COMPILER "arm-linux-gnueabihf-g++")
 	set(CMAKE_FIND_ROOT_PATH_MODE_PROGRAM NEVER)
 	set(CMAKE_FIND_ROOT_PATH_MODE_LIBRARY ONLY)
