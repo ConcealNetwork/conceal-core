@@ -208,7 +208,7 @@ if(MINGW)
 elseif(APPLE)
 	set(Boost_LIBRARIES "${Boost_LIBRARIES}")
 elseif(NOT MSVC)
-	set(Boost_LIBRARIES "${Boost_LIBRARIES};rt")
+	set(Boost_LIBRARIES "/usr/lib/arm-linux-gnueabihf;rt")
 endif()
 message("Boost_LIBRARIES: ${Boost_LIBRARIES}")
 
