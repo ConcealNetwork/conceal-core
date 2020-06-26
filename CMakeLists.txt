@@ -31,8 +31,209 @@ if(MSVC)
 elseif(APPLE)
   include_directories(src/Platform/OSX)
 else()
-  include_directories(src/Platform/Linux)
+	include_directories(src/Platform/Linux)
+	include(TestCXXAcceptsFlag)
 endif()
+
+# ARCH defines the target architecture, either by an explicit identifier or
+# one of the following two keywords. By default, ARCH a value of 'native':
+# target arch = host arch, binary is not portable. When ARCH is set to the
+# string 'default', no -march arg is passed, which creates a binary that is
+# portable across processors in the same family as host processor.  In cases
+# when ARCH is not set to an explicit identifier, cmake's builtin is used
+# to identify the target architecture, to direct logic in this cmake script.
+# Since ARCH is a cached variable, it will not be set on first cmake invocation.
+if (NOT ARCH_ID)
+if (NOT ARCH OR ARCH STREQUAL "" OR ARCH STREQUAL "native" OR ARCH STREQUAL "default")
+  if(CMAKE_SYSTEM_PROCESSOR STREQUAL "")
+    set(CMAKE_SYSTEM_PROCESSOR ${CMAKE_HOST_SYSTEM_PROCESSOR})
+  endif()
+  set(ARCH_ID "${CMAKE_SYSTEM_PROCESSOR}")
+else()
+  set(ARCH_ID "${ARCH}")
+endif()
+endif()
+string(TOLOWER "${ARCH_ID}" ARM_ID)
+string(SUBSTRING "${ARM_ID}" 0 3 ARM_TEST)
+if (ARM_TEST STREQUAL "arm")
+  set(ARM 1)
+  string(SUBSTRING "${ARM_ID}" 0 5 ARM_TEST)
+  if (ARM_TEST STREQUAL "armv6")
+    set(ARM6 1)
+  endif()
+  if (ARM_TEST STREQUAL "armv7")
+    set(ARM7 1)
+  endif()
+endif()
+
+if (ARM_ID STREQUAL "aarch64" OR ARM_ID STREQUAL "arm64" OR ARM_ID STREQUAL "armv8-a")
+  set(ARM 1)
+  set(ARM8 1)
+  set(ARCH "armv8-a")
+endif()
+
+if(ARCH_ID STREQUAL "ppc64le")
+  set(PPC64LE 1)
+  set(PPC64   0)
+  set(PPC     0)
+endif()
+
+if(ARCH_ID STREQUAL "powerpc64" OR ARCH_ID STREQUAL "ppc64")
+  set(PPC64LE 0)
+  set(PPC64   1)
+  set(PPC     0)
+endif()
+
+if(ARCH_ID STREQUAL "powerpc" OR ARCH_ID STREQUAL "ppc")
+  set(PPC64LE 0)
+  set(PPC64   0)
+  set(PPC     1)
+endif()
+
+if(ARCH_ID STREQUAL "s390x")
+  set(S390X 1)
+endif()
+
+# Check whether we're on a 32-bit or 64-bit system
+if(CMAKE_SIZEOF_VOID_P EQUAL "8")
+  set(DEFAULT_BUILD_64 ON)
+else()
+  set(DEFAULT_BUILD_64 OFF)
+endif()
+option(BUILD_64 "Build for 64-bit? 'OFF' builds for 32-bit." ${DEFAULT_BUILD_64})
+
+if(BUILD_64)
+  set(ARCH_WIDTH "64")
+else()
+  set(ARCH_WIDTH "32")
+endif()
+message(STATUS "Building for a ${ARCH_WIDTH}-bit system")
+
+# Check whether system supports AES
+
+option(NO_AES "Explicitly disable AES support" ${NO_AES})
+
+if(NO_AES)
+	message(STATUS "AES support explicitly disabled")
+	set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -DNO_AES")
+	set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DNO_AES")
+elseif(NOT ARM AND NOT PPC64LE AND NOT PPC64 AND NOT PPC AND NOT S390X)
+	message(STATUS "AES support enabled")
+	set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -maes")
+	set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -maes")
+elseif(PPC64LE OR PPC64 OR PPC)
+	message(STATUS "AES support not available on POWER")
+elseif(S390X)
+	message(STATUS "AES support not available on s390x")
+elseif(ARM6)
+	message(STATUS "AES support not available on ARMv6")
+elseif(ARM7)
+	message(STATUS "AES support not available on ARMv7")
+elseif(ARM8)
+	CHECK_CXX_ACCEPTS_FLAG("-march=${ARCH}+crypto" ARCH_PLUS_CRYPTO)
+	if(ARCH_PLUS_CRYPTO)
+		message(STATUS "Crypto extensions enabled for ARMv8")
+		set(ARCH_FLAG "-march=${ARCH}+crypto")
+	else()
+		message(STATUS "Crypto extensions unavailable on your ARMv8 device")
+	endif()
+else()
+	message(STATUS "AES support disabled")
+endif()
+
+set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} ${ARCH_FLAG}")
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${ARCH_FLAG}")
+
+if(ARM)
+message(STATUS "Setting FPU Flags for ARM Processors")
+
+#NB NEON hardware does not fully implement the IEEE 754 standard for floating-point arithmetic
+#Need custom assembly code to take full advantage of NEON SIMD
+
+#Cortex-A5/9  -mfpu=neon-fp16
+#Cortex-A7/15 -mfpu=neon-vfpv4
+#Cortex-A8    -mfpu=neon
+#ARMv8  	  -FP and SIMD on by default for all ARM8v-A series, NO -mfpu setting needed
+
+#For custom -mtune, processor IDs for ARMv8-A series:
+#0xd04 - Cortex-A35
+#0xd07 - Cortex-A57
+#0xd08 - Cortex-A72
+#0xd03 - Cortex-A73
+
+if(NOT ARM8)
+	CHECK_CXX_ACCEPTS_FLAG(-mfpu=vfp3-d16 CXX_ACCEPTS_VFP3_D16)
+	CHECK_CXX_ACCEPTS_FLAG(-mfpu=vfp4 CXX_ACCEPTS_VFP4)
+	CHECK_CXX_ACCEPTS_FLAG(-mfloat-abi=hard CXX_ACCEPTS_MFLOAT_HARD)
+	CHECK_CXX_ACCEPTS_FLAG(-mfloat-abi=softfp CXX_ACCEPTS_MFLOAT_SOFTFP)
+endif()
+
+if(ARM8)
+	CHECK_CXX_ACCEPTS_FLAG(-mfix-cortex-a53-835769 CXX_ACCEPTS_MFIX_CORTEX_A53_835769)
+	CHECK_CXX_ACCEPTS_FLAG(-mfix-cortex-a53-843419 CXX_ACCEPTS_MFIX_CORTEX_A53_843419)
+endif()
+
+if(ARM6)
+	message(STATUS "Selecting VFP for ARMv6")
+	set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -mfpu=vfp")
+	set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -mfpu=vfp")
+	if(DEPENDS)
+		set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -marm")
+		set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -marm")
+	endif()
+endif(ARM6)
+
+if(ARM7)
+	if(CXX_ACCEPTS_VFP3_D16 AND NOT CXX_ACCEPTS_VFP4)
+		message(STATUS "Selecting VFP3 for ARMv7")
+		set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -mfpu=vfp3-d16")
+		set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -mfpu=vfp3-d16")
+	endif()
+
+	if(CXX_ACCEPTS_VFP4)
+		message(STATUS "Selecting VFP4 for ARMv7")
+		set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -mfpu=vfp4")
+		set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -mfpu=vfp4")
+	endif()
+
+	if(CXX_ACCEPTS_MFLOAT_HARD)
+		message(STATUS "Setting Hardware ABI for Floating Point")
+		set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -mfloat-abi=hard")
+		set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -mfloat-abi=hard")
+	endif()
+
+	if(CXX_ACCEPTS_MFLOAT_SOFTFP AND NOT CXX_ACCEPTS_MFLOAT_HARD)
+		message(STATUS "Setting Software ABI for Floating Point")
+		set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -mfloat-abi=softfp")
+		set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -mfloat-abi=softfp")
+	endif()
+endif(ARM7)
+
+if(ARM8)
+	if(CXX_ACCEPTS_MFIX_CORTEX_A53_835769)
+		message(STATUS "Enabling Cortex-A53 workaround 835769")
+		set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -mfix-cortex-a53-835769")
+		set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -mfix-cortex-a53-835769")
+	endif()
+
+	if(CXX_ACCEPTS_MFIX_CORTEX_A53_843419)
+		message(STATUS "Enabling Cortex-A53 workaround 843419")
+		set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -mfix-cortex-a53-843419")
+		set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -mfix-cortex-a53-843419")
+	endif()
+endif(ARM8)
+
+endif(ARM)
+
+# if (${CMAKE_SYSTEM_PROCESSOR} MATCHES "^arm")
+#   set(ARM32 TRUE)
+#   include_directories(/usr/lib/gcc/arm-linux-gnueabihf/8/include)
+# endif()
+
+# if (${CMAKE_SYSTEM_PROCESSOR} STREQUAL "aarch64")
+# 	set(ARM64 TRUE)
+# 	include_directories(/usr/lib/gcc/aarch64-linux-gnu/8/include)
+# endif()
 
 set(STATIC ${MSVC} CACHE BOOL "Link libraries statically")
 
@@ -51,13 +252,8 @@ else()
     # This option has no effect in glibc version less than 2.20.
     # Since glibc 2.20 _BSD_SOURCE is deprecated, this macro is recomended instead
     add_definitions("-D_DEFAULT_SOURCE -D_GNU_SOURCE")
-  endif()
-  set(ARCH native CACHE STRING "CPU to build for: -march value or default")
-  if("${ARCH}" STREQUAL "default")
-    set(ARCH_FLAG "")
-  else()
-    set(ARCH_FLAG "-march=x86-64")
-  endif()
+	endif()
+
   set(WARNINGS "-Wall -Wextra -Wpointer-arith -Wundef -Wvla -Wwrite-strings -Wno-error=extra -Wno-error=unused-function -Wno-error=deprecated-declarations -Wno-error=sign-compare -Wno-error=strict-aliasing -Wno-error=type-limits -Wno-unused-parameter -Wno-error=unused-variable -Wno-error=undef -Wno-error=uninitialized -Wno-error=unused-result")
   if(CMAKE_C_COMPILER_ID STREQUAL "Clang")
     set(WARNINGS "${WARNINGS} -Wno-error=mismatched-tags -Wno-error=null-conversion -Wno-overloaded-shift-op-parentheses -Wno-error=shift-count-overflow -Wno-error=tautological-constant-out-of-range-compare -Wno-error=unused-private-field -Wno-error=unneeded-internal-declaration -Wno-error=unused-function")
@@ -77,11 +273,11 @@ else()
   endif()
   set(C_WARNINGS "-Waggregate-return -Wnested-externs -Wold-style-definition -Wstrict-prototypes")
   set(CXX_WARNINGS "-Wno-reorder -Wno-missing-field-initializers")
-  set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -std=c11 ${MINGW_FLAG} ${WARNINGS} ${C_WARNINGS} ${ARCH_FLAG} -maes")
+  set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -std=c11 ${MINGW_FLAG} ${WARNINGS} ${C_WARNINGS}")
   if(NOT APPLE)
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -pthread")
   endif()
-  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11 ${MINGW_FLAG} ${WARNINGS} ${CXX_WARNINGS} ${ARCH_FLAG} -maes")
+  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11 ${MINGW_FLAG} ${WARNINGS} ${CXX_WARNINGS}")
   if(APPLE)
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DGTEST_HAS_TR1_TUPLE=0")
   endif()
@@ -91,7 +287,7 @@ else()
     set(DEBUG_FLAGS "-g3 -O0")
   endif()
   set(RELEASE_FLAGS "-g3 -O0")
-  
+
 endif()
 
 
