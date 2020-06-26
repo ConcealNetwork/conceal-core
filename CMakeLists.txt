@@ -58,6 +58,7 @@ if (${CMAKE_SYSTEM_PROCESSOR} STREQUAL "armv7l")
 	set(CMAKE_FIND_ROOT_PATH_MODE_LIBRARY ONLY)
 	set(CMAKE_FIND_ROOT_PATH_MODE_INCLUDE ONLY)
 	include_directories(/usr/lib/gcc/arm-linux-gnueabihf/8/include)
+	set(BOOST_ROOT /usr/include/boost)
 endif()
 
 # Compile Settings for ARM64
@@ -72,7 +73,7 @@ if (${CMAKE_SYSTEM_PROCESSOR} STREQUAL "aarch64")
 endif()
 
 message(CMAKE_SYSTEM_PROCESSOR ": ${CMAKE_SYSTEM_PROCESSOR}")
-message(Boost_LIBRARIES ": ${Boost_LIBRARIES}")
+message(Boost_INCLUDE_DIRS ": ${Boost_INCLUDE_DIRS}")
 
 # Includes
 if(MSVC)
