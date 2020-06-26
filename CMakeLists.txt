@@ -28,7 +28,7 @@ if(APPLE OR FREEBSD)
 endif()
 
 # Compile Settings for ARMv6
-if (${CMAKE_SYSTEM_PROCESSOR} STREQUAL "arm")
+if (${CMAKE_SYSTEM_PROCESSOR} STREQUAL "armv6l")
 	set(ARMv6 TRUE)
 	message("ARMv6 is true")
 	# set(CMAKE_CXX_COMPILER "arm-linux-gnueabihf-g++")
