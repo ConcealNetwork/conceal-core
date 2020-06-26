@@ -75,7 +75,6 @@ if (${CMAKE_SYSTEM_PROCESSOR} STREQUAL "aarch64")
 endif()
 
 message(CMAKE_SYSTEM_PROCESSOR ": ${CMAKE_SYSTEM_PROCESSOR}")
-message(Boost_INCLUDE_DIRS ": ${Boost_INCLUDE_DIRS}")
 
 # Includes
 if(MSVC)
