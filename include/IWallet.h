@@ -208,10 +208,12 @@ public:
   virtual uint64_t getActualBalance() const = 0;
   virtual uint64_t getActualBalance(const std::string &address) const = 0;
   virtual uint64_t getPendingBalance() const = 0;
-  virtual uint64_t getLockedDepositBalance() const = 0;
-  virtual uint64_t getUnlockedDepositBalance() const = 0;
-
   virtual uint64_t getPendingBalance(const std::string &address) const = 0;
+
+  virtual uint64_t getLockedDepositBalance() const = 0;
+  virtual uint64_t getLockedDepositBalance(const std::string &address) const = 0;
+  virtual uint64_t getUnlockedDepositBalance() const = 0;
+  virtual uint64_t getUnlockedDepositBalance(const std::string &address) const = 0;
 
   virtual size_t getTransactionCount() const = 0;
   virtual WalletTransaction getTransaction(size_t transactionIndex) const = 0;

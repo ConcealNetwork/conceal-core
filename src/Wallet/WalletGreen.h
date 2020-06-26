@@ -37,8 +37,7 @@ public:
   virtual void createDeposit(uint64_t amount, uint64_t term, std::string sourceAddress, std::string destinationAddress, std::string &transactionHash) override;
   virtual void withdrawDeposit(uint64_t depositId, std::string &transactionHash) override;
   std::vector<MultisignatureInput> prepareMultisignatureInputs(const std::vector<TransactionOutputInformation> &selectedTransfers);
-  virtual uint64_t getLockedDepositBalance() const override;
-  virtual uint64_t getUnlockedDepositBalance() const override;
+
   
   virtual void initialize(const std::string& path, const std::string& password) override;
   virtual void initializeWithViewKey(const std::string& path, const std::string& password, const Crypto::SecretKey& viewSecretKey) override;
@@ -72,6 +71,10 @@ public:
   virtual uint64_t getPendingBalance() const override;
   virtual uint64_t getPendingBalance(const std::string &address) const override;
 
+  virtual uint64_t getLockedDepositBalance() const override;
+  virtual uint64_t getLockedDepositBalance(const std::string &address) const override;
+  virtual uint64_t getUnlockedDepositBalance() const override;
+  virtual uint64_t getUnlockedDepositBalance(const std::string &address) const override;
 
   virtual size_t getTransactionCount() const override;
   virtual WalletTransaction getTransaction(size_t transactionIndex) const override;
@@ -318,9 +321,8 @@ protected:
   void addUnconfirmedTransaction(const ITransactionReader &transaction);
   void removeUnconfirmedTransaction(const Crypto::Hash &transactionHash);
   void initTransactionPool();
-    static void loadAndDecryptContainerData(ContainerStorage& storage, const Crypto::chacha8_key& key, BinaryArray& containerData);
-
-    static void encryptAndSaveContainerData(ContainerStorage& storage, const Crypto::chacha8_key& key, const void* containerData, size_t containerDataSize);
+  static void loadAndDecryptContainerData(ContainerStorage& storage, const Crypto::chacha8_key& key, BinaryArray& containerData);
+  static void encryptAndSaveContainerData(ContainerStorage& storage, const Crypto::chacha8_key& key, const void* containerData, size_t containerDataSize);
   void loadWalletCache(std::unordered_set<Crypto::PublicKey>& addedKeys, std::unordered_set<Crypto::PublicKey>& deletedKeys, std::string& extra);
 
   void copyContainerStorageKeys(ContainerStorage& src, const Crypto::chacha8_key& srcKey, ContainerStorage& dst, const Crypto::chacha8_key& dstKey);

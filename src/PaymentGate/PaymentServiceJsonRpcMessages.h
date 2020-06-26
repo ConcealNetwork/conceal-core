@@ -75,8 +75,6 @@ struct GetStatus
   {
     uint32_t blockCount;
     uint32_t knownBlockCount;
-    uint32_t localBlockCount;
-    uint32_t totalOutputCount;
     std::string lastBlockHash;
     uint32_t peerCount;
     uint32_t depositCount;

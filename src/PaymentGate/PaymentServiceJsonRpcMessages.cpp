@@ -43,8 +43,6 @@ void GetStatus::Response::serialize(CryptoNote::ISerializer &serializer)
 {
   serializer(blockCount, "blockCount");
   serializer(knownBlockCount, "knownBlockCount");
-  serializer(localBlockCount, "localBlockCount");
-  serializer(totalOutputCount, "totalOutputCount");
   serializer(lastBlockHash, "lastBlockHash");
   serializer(peerCount, "peerCount");
   serializer(depositCount, "depositCount");

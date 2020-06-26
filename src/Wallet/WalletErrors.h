@@ -52,7 +52,8 @@ enum WalletErrorCodes {
   DEPOSIT_DOESNOT_EXIST,
   DEPOSIT_LOCKED,
   DESTINATION_ADDRESS_REQUIRED,
-  DESTINATION_ADDRESS_NOT_FOUND
+  DESTINATION_ADDRESS_NOT_FOUND,
+  DAEMON_NOT_SYNCED
 };
 
 // custom category:
@@ -77,9 +78,9 @@ public:
     case MIXIN_COUNT_TOO_BIG:      return "MixIn count is too big";
     case NOTHING_TO_OPTIMIZE:      return "There are no inputs to optimize";
     case THRESHOLD_TOO_LOW:        return "Threshold must be greater than 10";    
-    case MINIMUM_ONE_ADDRESS:       return "You should have at least one address";
+    case MINIMUM_ONE_ADDRESS:      return "You should have at least one address";
     case MINIMUM_INPUT_COUNT:      return "Not enough inputs to optimizne, minimum 12";    
-    case BAD_ADDRESS:              return "Bad address";
+    case BAD_ADDRESS:              return "Invalid address";
     case BAD_INTEGRATED_ADDRESS:   return "Integrated address should be 186 characters";    
     case TRANSACTION_SIZE_TOO_BIG: return "Transaction size is too big, please optimize your wallet.";
     case WRONG_AMOUNT:             return "Insufficient funds";
@@ -105,10 +106,12 @@ public:
     case DEPOSIT_TERM_TOO_BIG:     return "Deposit term is too big";
     case DEPOSIT_AMOUNT_TOO_SMALL: return "Deposit amount is too small";
     case DEPOSIT_DOESNOT_EXIST:    return "Deposit not found";
-  case DESTINATION_ADDRESS_REQUIRED:  return  "Destination address required";
+    case DESTINATION_ADDRESS_REQUIRED:  return  "Destination address required";
     case DESTINATION_ADDRESS_NOT_FOUND: return "Destination address not found";
     case DEPOSIT_LOCKED:           return "Deposit is locked";
-    default:                       return "Unknown error";
+    case DAEMON_NOT_SYNCED:         return "Daemon is not synchronized";
+        default:
+      return "Unknown error";
     }
   }
 

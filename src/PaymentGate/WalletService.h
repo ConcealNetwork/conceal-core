@@ -84,7 +84,7 @@ std::error_code getViewKey(std::string &viewSecretKey);
   std::error_code deleteDelayedTransaction(const std::string &transactionHash);
   std::error_code sendDelayedTransaction(const std::string &transactionHash);
   std::error_code getUnconfirmedTransactionHashes(const std::vector<std::string> &addresses, std::vector<std::string> &transactionHashes);
-  std::error_code getStatus(uint32_t &blockCount, uint32_t &knownBlockCount, uint32_t &localBlockCount, uint32_t &totalOutputCount, std::string &lastBlockHash, uint32_t &peerCount, uint32_t &depositCount, uint32_t &transactionCount, uint32_t &addressCount);
+  std::error_code getStatus(uint32_t &blockCount, uint32_t &knownBlockCount, std::string &lastBlockHash, uint32_t &peerCount, uint32_t &depositCount, uint32_t &transactionCount, uint32_t &addressCount);
   std::error_code createDeposit(uint64_t amount, uint64_t term, std::string sourceAddress, std::string &transactionHash);
   std::error_code withdrawDeposit(uint64_t depositId, std::string &transactionHash);
   std::error_code sendDeposit(uint64_t amount, uint64_t term, std::string sourceAddress, std::string destinationAddress, std::string &transactionHash);
