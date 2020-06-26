@@ -194,7 +194,8 @@ endif()
 
 if(STATIC)
   set(Boost_USE_STATIC_LIBS ON)
-  set(Boost_USE_STATIC_RUNTIME ON)
+	set(Boost_USE_STATIC_RUNTIME ON)
+	message("static is on")
 endif()
 
 #set(Boost_DEBUG on)
