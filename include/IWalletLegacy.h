@@ -20,6 +20,7 @@
 #include "CryptoNoteCore/CryptoNoteBasic.h"
 #include "Rpc/CoreRpcServerCommandsDefinitions.h"
 #include "ITransfersContainer.h"
+#include "IWallet.h"
 
 namespace CryptoNote {
 
@@ -69,15 +70,6 @@ struct WalletLegacyTransaction {
   std::string      extra;
   WalletLegacyTransactionState state;
   std::vector<std::string> messages;
-};
-
-struct Deposit {
-  TransactionId creatingTransactionId;
-  TransactionId spendingTransactionId;
-  uint32_t term;
-  uint64_t amount;
-  uint64_t interest;
-  bool locked;
 };
 
 using PaymentId = Crypto::Hash;
