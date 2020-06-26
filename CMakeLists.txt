@@ -37,6 +37,7 @@ if (${CMAKE_SYSTEM_PROCESSOR} STREQUAL "armv6l")
 	set(CMAKE_FIND_ROOT_PATH_MODE_LIBRARY ONLY)
 	set(CMAKE_FIND_ROOT_PATH_MODE_INCLUDE ONLY)
 	include_directories(/usr/lib/gcc/arm-linux-gnueabihf/8/include)
+	target_link_libraries(thread boost_thread boost_system)
 endif()
 
 # Compile Settings for ARMv7
@@ -49,6 +50,7 @@ if (${CMAKE_SYSTEM_PROCESSOR} STREQUAL "armv7-a")
 	set(CMAKE_FIND_ROOT_PATH_MODE_LIBRARY ONLY)
 	set(CMAKE_FIND_ROOT_PATH_MODE_INCLUDE ONLY)
 	include_directories(/usr/lib/gcc/arm-linux-gnueabihf/8/include)
+	target_link_libraries(thread boost_thread boost_system)
 endif()
 
 # Compile Settings for ARMv8
@@ -61,6 +63,7 @@ if (${CMAKE_SYSTEM_PROCESSOR} STREQUAL "armv7l")
 	set(CMAKE_FIND_ROOT_PATH_MODE_LIBRARY ONLY)
 	set(CMAKE_FIND_ROOT_PATH_MODE_INCLUDE ONLY)
 	include_directories(/usr/lib/gcc/arm-linux-gnueabihf/8/include)
+	target_link_libraries(thread boost_thread boost_system)
 endif()
 
 # Compile Settings for ARM64
