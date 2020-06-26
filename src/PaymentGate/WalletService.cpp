@@ -1283,9 +1283,19 @@ namespace PaymentService
 
   std::error_code WalletService::sendTransaction(const SendTransaction::Request &request, std::string &transactionHash, std::string &transactionSecretKey)
   {
+
     try
     {
       System::EventLock lk(readyEvent);
+
+      uint64_t knownBlockCount = node.getKnownBlockCount();
+      uint64_t localBlockCount = node.getLocalBlockCount();
+      uint64_t diff = knownBlockCount - localBlockCount;
+      if ((localBlockCount == 0) || (diff > 2))
+      {
+        logger(Logging::WARNING) << "Daemon is not synchronized";
+        return make_error_code(CryptoNote::error::DAEMON_NOT_SYNCED);
+      }
 
       validateAddresses(request.sourceAddresses, currency, logger);
       validateAddresses(collectDestinationAddresses(request.transfers), currency, logger);
@@ -1624,18 +1634,19 @@ namespace PaymentService
         std::string sourceAddress,
         std::string & transactionHash)
     {
-
-      uint64_t knownBlockCount = node.getKnownBlockCount();
-      uint64_t localBlockCount = node.getLocalBlockCount();
-      uint64_t diff = knownBlockCount - localBlockCount;
-      if((localBlockCount == 0) || (diff > 2))
-      {
-        logger(Logging::WARNING) << "Daemon is not synchronized";
-        return make_error_code(CryptoNote::error::DAEMON_NOT_SYNCED);
-      }
     
       try
       {
+
+        uint64_t knownBlockCount = node.getKnownBlockCount();
+        uint64_t localBlockCount = node.getLocalBlockCount();
+        uint64_t diff = knownBlockCount - localBlockCount;
+        if ((localBlockCount == 0) || (diff > 2))
+        {
+          logger(Logging::WARNING) << "Daemon is not synchronized";
+          return make_error_code(CryptoNote::error::DAEMON_NOT_SYNCED);
+        }
+        
         System::EventLock lk(readyEvent);
 
         /* Validate the source addresse if it is are not empty */
@@ -1803,6 +1814,15 @@ namespace PaymentService
                                                   uint32_t &fusionReadyCount, uint32_t &totalOutputCount)
     {
 
+      uint64_t knownBlockCount = node.getKnownBlockCount();
+      uint64_t localBlockCount = node.getLocalBlockCount();
+      uint64_t diff = knownBlockCount - localBlockCount;
+      if ((localBlockCount == 0) || (diff > 2))
+      {
+        logger(Logging::WARNING) << "Daemon is not synchronized";
+        return make_error_code(CryptoNote::error::DAEMON_NOT_SYNCED);
+      }
+
       try
       {
         System::EventLock lk(readyEvent);
@@ -1830,10 +1850,18 @@ namespace PaymentService
     std::error_code WalletService::sendFusionTransaction(uint64_t threshold, uint32_t anonymity, const std::vector<std::string> &addresses,
                                                          const std::string &destinationAddress, std::string &transactionHash)
     {
-
       try
       {
         System::EventLock lk(readyEvent);
+
+        uint64_t knownBlockCount = node.getKnownBlockCount();
+        uint64_t localBlockCount = node.getLocalBlockCount();
+        uint64_t diff = knownBlockCount - localBlockCount;
+        if ((localBlockCount == 0) || (diff > 2))
+        {
+          logger(Logging::WARNING) << "Daemon is not synchronized";
+          return make_error_code(CryptoNote::error::DAEMON_NOT_SYNCED);
+        }
 
         validateAddresses(addresses, currency, logger);
         if (!destinationAddress.empty())
