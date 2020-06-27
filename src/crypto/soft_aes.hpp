@@ -95,9 +95,11 @@ inline uint32_t sub_word(uint32_t key)
 		 saes_sbox[key & 0xff];
 }
 
-static inline uint32_t _rotr(uint32_t value, uint32_t amount) {
-	return (value >> amount) | (value << (-amount & 31));
-}
+#if defined(HAVE_ROTR) || defined(__arm__) || defined(__aarch64__)
+	static inline uint32_t _rotr(uint32_t value, uint32_t amount) {
+		return (value >> amount) | (value << (-amount & 31));
+	}
+#endif
 
 template<uint8_t rcon>
 inline __m128i soft_aeskeygenassist(__m128i key)
