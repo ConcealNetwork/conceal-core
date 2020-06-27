@@ -7,33 +7,27 @@
 #include "WalletRpcServer.h"
 
 #include <fstream>
-#include "Common/CommandLine.h"
-#include "Common/StringTools.h"
-#include "CryptoNoteCore/CryptoNoteFormatUtils.h"
-#include "CryptoNoteCore/Account.h"
-#include "crypto/hash.h"
-#include "CryptoNoteCore/CryptoNoteBasic.h"
-#include "CryptoNoteCore/CryptoNoteBasicImpl.h"
-#include "WalletLegacy/WalletHelper.h"
+
 #include "Common/Base58.h"
 #include "Common/CommandLine.h"
 #include "Common/SignalHandler.h"
 #include "Common/StringTools.h"
 #include "Common/PathTools.h"
 #include "Common/Util.h"
+
+#include "CryptoNoteCore/Account.h"
+#include "CryptoNoteCore/CryptoNoteBasic.h"
+#include "CryptoNoteCore/CryptoNoteBasicImpl.h"
 #include "CryptoNoteCore/CryptoNoteFormatUtils.h"
 #include "CryptoNoteCore/CryptoNoteTools.h"
+
 #include "CryptoNoteProtocol/CryptoNoteProtocolHandler.h"
-#include "Common/CommandLine.h"
-#include "Common/StringTools.h"
-#include "CryptoNoteCore/CryptoNoteFormatUtils.h"
-#include "CryptoNoteCore/Account.h"
-#include "crypto/hash.h"
-#include "WalletLegacy/WalletHelper.h"
-#include "CryptoNoteConfig.h"
-// #include "wallet_errors.h"
 
 #include "Rpc/JsonRpc.h"
+#include "WalletLegacy/WalletHelper.h"
+#include "crypto/hash.h"
+
+#include "CryptoNoteConfig.h"
 
 using namespace Logging;
 using namespace CryptoNote;
@@ -118,7 +112,8 @@ void wallet_rpc_server::processRequest(const CryptoNote::HttpRequest& request, C
       { "getbalance", makeMemberMethod(&wallet_rpc_server::on_getbalance) },
       { "transfer", makeMemberMethod(&wallet_rpc_server::on_transfer) },
       { "store", makeMemberMethod(&wallet_rpc_server::on_store) },
-      { "get_messages", makeMemberMethod(&wallet_rpc_server::on_get_messages) },
+      { "stop_wallet"  , makeMemberMethod(&wallet_rpc_server::on_stop_wallet)		},
+			{ "get_messages", makeMemberMethod(&wallet_rpc_server::on_get_messages) },
       { "get_payments", makeMemberMethod(&wallet_rpc_server::on_get_payments) },
       { "get_transfers", makeMemberMethod(&wallet_rpc_server::on_get_transfers) },
       { "get_height", makeMemberMethod(&wallet_rpc_server::on_get_height) },
@@ -128,8 +123,9 @@ void wallet_rpc_server::processRequest(const CryptoNote::HttpRequest& request, C
       { "optimize", makeMemberMethod(&wallet_rpc_server::on_optimize) },
       { "estimate_fusion"  , makeMemberMethod(&wallet_rpc_server::on_estimate_fusion) },
       { "send_fusion"      , makeMemberMethod(&wallet_rpc_server::on_send_fusion) },
-      { "reset", makeMemberMethod(&wallet_rpc_server::on_reset) }
-    };
+      { "reset", makeMemberMethod(&wallet_rpc_server::on_reset) },
+      { "get_paymentid", makeMemberMethod(&wallet_rpc_server::on_gen_paymentid)	}
+		};
 
     auto it = s_methods.find(jsonRequest.getMethod());
     if (it == s_methods.end()) {
@@ -502,6 +498,13 @@ bool wallet_rpc_server::on_create_integrated(const wallet_rpc::COMMAND_RPC_CREAT
 bool wallet_rpc_server::on_get_transfers(const wallet_rpc::COMMAND_RPC_GET_TRANSFERS::request& req, wallet_rpc::COMMAND_RPC_GET_TRANSFERS::response& res) {
   res.transfers.clear();
   size_t transactionsCount = m_wallet.getTransactionCount();
+	uint64_t bc_height;
+	try {
+		bc_height = m_node.getKnownBlockCount();
+	} catch (std::exception &e) {
+		throw JsonRpc::JsonRpcError(WALLET_RPC_ERROR_CODE_UNKNOWN_ERROR, std::string("Failed to get blockchain height: ") + e.what());
+	}
+
   for (size_t trantransactionNumber = 0; trantransactionNumber < transactionsCount; ++trantransactionNumber) {
     WalletLegacyTransaction txInfo;
     m_wallet.getTransaction(trantransactionNumber, txInfo);
@@ -528,6 +531,7 @@ bool wallet_rpc_server::on_get_transfers(const wallet_rpc::COMMAND_RPC_GET_TRANS
     transfer.blockIndex = txInfo.blockHeight;
     transfer.unlockTime = txInfo.unlockTime;
     transfer.paymentId = "";
+    transfer.confirmations = bc_height - txInfo.blockHeight;
 
     std::vector<uint8_t> extraVec;
     extraVec.reserve(txInfo.extra.size());
@@ -555,6 +559,32 @@ bool wallet_rpc_server::on_get_outputs(const wallet_rpc::COMMAND_RPC_GET_OUTPUTS
 bool wallet_rpc_server::on_reset(const wallet_rpc::COMMAND_RPC_RESET::request& req, wallet_rpc::COMMAND_RPC_RESET::response& res) {
   m_wallet.reset();
   return true;
+}
+
+//------------------------------------------------------------------------------------------------------------------------------
+bool wallet_rpc_server::on_stop_wallet(const wallet_rpc::COMMAND_RPC_STOP::request& req, wallet_rpc::COMMAND_RPC_STOP::response& res) {
+	try {
+		WalletHelper::storeWallet(m_wallet, m_walletFilename);
+	}
+	catch (std::exception& e) {
+		throw JsonRpc::JsonRpcError(WALLET_RPC_ERROR_CODE_UNKNOWN_ERROR, std::string("Couldn't save wallet: ") + e.what());
+	}
+	wallet_rpc_server::send_stop_signal();
+	return true;
+}
+//------------------------------------------------------------------------------------------------------------------------------
+bool wallet_rpc_server::on_gen_paymentid(const wallet_rpc::COMMAND_RPC_GEN_PAYMENT_ID::request& req,
+	wallet_rpc::COMMAND_RPC_GEN_PAYMENT_ID::response& res)
+{
+	std::string pid;
+	try {
+		pid = Common::podToHex(Crypto::rand<Crypto::Hash>());
+	}
+	catch (const std::exception& e) {
+		throw JsonRpc::JsonRpcError(WALLET_RPC_ERROR_CODE_UNKNOWN_ERROR, std::string("Internal error: can't generate Payment ID: ") + e.what());
+	}
+	res.payment_id = pid;
+	return true;
 }
 
 }

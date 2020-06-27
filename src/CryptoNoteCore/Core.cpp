@@ -8,6 +8,9 @@
 
 #include <sstream>
 #include <unordered_set>
+#include <boost/utility/value_init.hpp>
+#include <boost/range/combine.hpp>
+
 #include "../CryptoNoteConfig.h"
 #include "../Common/CommandLine.h"
 #include "../Common/Util.h"
@@ -622,6 +625,10 @@ std::vector<Transaction> core::getPoolTransactions() {
   return result;
 }
 
+std::list<CryptoNote::tx_memory_pool::TransactionDetails> core::getMemoryPool() const {
+	return m_mempool.getMemoryPool();
+}
+
 std::vector<Crypto::Hash> core::buildSparseChain() {
   assert(m_blockchain.getCurrentBlockchainHeight() != 0);
   return m_blockchain.buildSparseChain();
@@ -984,6 +991,21 @@ bool core::getTransactionsByPaymentId(const Crypto::Hash& paymentId, std::vector
   return true;
 }
 
+std::vector<Crypto::Hash> core::getTransactionHashesByPaymentId(const Crypto::Hash& paymentId) {
+  logger(DEBUGGING) << "getTransactionHashesByPaymentId request with paymentId " << paymentId;
+
+  std::vector<Crypto::Hash> blockchainTransactionHashes;
+  m_blockchain.getTransactionIdsByPaymentId(paymentId, blockchainTransactionHashes);
+
+  std::vector<Crypto::Hash> poolTransactionHashes;
+  m_mempool.getTransactionIdsByPaymentId(paymentId, poolTransactionHashes);
+
+  blockchainTransactionHashes.reserve(blockchainTransactionHashes.size() + poolTransactionHashes.size());
+  std::move(poolTransactionHashes.begin(), poolTransactionHashes.end(), std::back_inserter(blockchainTransactionHashes));
+
+  return blockchainTransactionHashes;
+}
+
 std::error_code core::executeLocked(const std::function<std::error_code()>& func) {
   std::lock_guard<decltype(m_mempool)> lk(m_mempool);
   LockedBlockchainStorage lbs(m_blockchain);
@@ -1076,6 +1098,16 @@ bool core::addMessageQueue(MessageQueue<BlockchainMessage>& messageQueue) {
 
 bool core::removeMessageQueue(MessageQueue<BlockchainMessage>& messageQueue) {
   return m_blockchain.removeMessageQueue(messageQueue);
+}
+
+bool core::getPaymentId(const Transaction& transaction, Crypto::Hash& paymentId) {
+  std::vector<TransactionExtraField> txExtraFields;
+  parseTransactionExtra(transaction.extra, txExtraFields);
+  TransactionExtraNonce extraNonce;
+  if (!findTransactionExtraFieldByType(txExtraFields, extraNonce)) {
+    return false;
+  }
+  return getPaymentIdFromTransactionExtraNonce(extraNonce.nonce, paymentId);
 }
 
 }

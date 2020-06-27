@@ -267,6 +267,7 @@ struct COMMAND_RPC_GET_INFO {
     uint64_t alt_blocks_count;
     uint64_t outgoing_connections_count;
     uint64_t incoming_connections_count;
+    uint64_t rpc_connections_count;
     uint64_t white_peerlist_size;
     uint64_t grey_peerlist_size;
     uint8_t block_major_version;
@@ -294,12 +295,13 @@ struct COMMAND_RPC_GET_INFO {
       KV_MEMBER(incoming_connections_count)
       KV_MEMBER(white_peerlist_size)
       KV_MEMBER(grey_peerlist_size)
+      KV_MEMBER(rpc_connections_count)
       KV_MEMBER(last_known_block_index)
       KV_MEMBER(full_deposit_amount)
       KV_MEMBER(last_block_reward)
       KV_MEMBER(last_block_timestamp)
       KV_MEMBER(last_block_difficulty)
-      KV_MEMBER(connections)      
+      KV_MEMBER(connections)
     }
   };
 };
@@ -480,6 +482,32 @@ struct f_transaction_details_response {
     KV_MEMBER(mixin)
     KV_MEMBER(fee)
     KV_MEMBER(amount_out)
+  }
+};
+
+struct f_mempool_transaction_response {
+std::string hash;
+  uint64_t fee;
+  uint64_t amount_out;
+  uint64_t size;
+  time_t receiveTime;
+  bool keptByBlock;
+  uint32_t max_used_block_height;
+  std::string max_used_block_id;
+  uint32_t last_failed_height;
+  std::string last_failed_id;
+
+  void serialize(ISerializer &s) {
+    KV_MEMBER(hash)
+    KV_MEMBER(fee)
+    KV_MEMBER(amount_out)
+    KV_MEMBER(size)
+    KV_MEMBER(receiveTime)
+    KV_MEMBER(keptByBlock)
+    KV_MEMBER(max_used_block_height)
+    KV_MEMBER(max_used_block_id)
+    KV_MEMBER(last_failed_height)
+    KV_MEMBER(last_failed_id)
   }
 };
 
@@ -710,17 +738,31 @@ struct F_COMMAND_RPC_GET_TRANSACTION_DETAILS {
 };
 
 struct F_COMMAND_RPC_GET_POOL {
-    typedef EMPTY_STRUCT request;
+  typedef EMPTY_STRUCT request;
 
-    struct response {
-        std::vector<f_transaction_short_response> transactions; //transactions blobs as hex
-        std::string status;
+  struct response {
+    std::vector<f_transaction_short_response> transactions;
+    std::string status;
 
-        void serialize(ISerializer &s) {
-            KV_MEMBER(transactions)
-            KV_MEMBER(status)
-        }
-    };
+    void serialize(ISerializer &s) {
+      KV_MEMBER(transactions)
+      KV_MEMBER(status)
+    }
+  };
+};
+
+struct COMMAND_RPC_GET_MEMPOOL {
+  typedef EMPTY_STRUCT request;
+
+  struct response {
+    std::vector<f_mempool_transaction_response> mempool;
+    std::string status;
+
+    void serialize(ISerializer &s) {
+      KV_MEMBER(mempool)
+      KV_MEMBER(status)
+    }
+  };
 };
 
 struct F_COMMAND_RPC_GET_BLOCKCHAIN_SETTINGS {
@@ -739,8 +781,6 @@ struct F_COMMAND_RPC_GET_BLOCKCHAIN_SETTINGS {
     }
   };
 };
-
-
 
 struct COMMAND_RPC_QUERY_BLOCKS {
   struct request {
@@ -882,6 +922,18 @@ struct K_COMMAND_RPC_CHECK_RESERVE_PROOF {
 			KV_MEMBER(spent)
 		}
 	};
+};
+
+struct COMMAND_RPC_GEN_PAYMENT_ID {
+  typedef EMPTY_STRUCT request;
+
+  struct response {
+	  std::string payment_id;
+
+	  void serialize(ISerializer &s) {
+		  KV_MEMBER(payment_id)
+	  }
+  };
 };
 
 }

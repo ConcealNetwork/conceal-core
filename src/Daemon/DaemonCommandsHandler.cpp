@@ -27,6 +27,7 @@ DaemonCommandsHandler::DaemonCommandsHandler(CryptoNote::core& core, CryptoNote:
   m_core(core), m_srv(srv), logger(log, "daemon"), m_logManager(log) {
   m_consoleHandler.setHandler("exit", boost::bind(&DaemonCommandsHandler::exit, this, _1), "Shutdown the daemon");
   m_consoleHandler.setHandler("help", boost::bind(&DaemonCommandsHandler::help, this, _1), "Show this help");
+  m_consoleHandler.setHandler("height", boost::bind(&DaemonCommandsHandler::print_height, this, _1), "Print blockchain height");
   m_consoleHandler.setHandler("print_pl", boost::bind(&DaemonCommandsHandler::print_pl, this, _1), "Print peer list");
   m_consoleHandler.setHandler("rollback_chain", boost::bind(&DaemonCommandsHandler::rollback_chain, this, _1), "Rollback chain to specific height, rollback_chain <height>");
   m_consoleHandler.setHandler("print_cn", boost::bind(&DaemonCommandsHandler::print_cn, this, _1), "Print connections");
@@ -36,8 +37,10 @@ DaemonCommandsHandler::DaemonCommandsHandler(CryptoNote::core& core, CryptoNote:
   m_consoleHandler.setHandler("print_tx", boost::bind(&DaemonCommandsHandler::print_tx, this, _1), "Print transaction, print_tx <transaction_hash>");
   m_consoleHandler.setHandler("start_mining", boost::bind(&DaemonCommandsHandler::start_mining, this, _1), "Start mining for specified address, start_mining <addr> [threads=1]");
   m_consoleHandler.setHandler("stop_mining", boost::bind(&DaemonCommandsHandler::stop_mining, this, _1), "Stop mining");
+  m_consoleHandler.setHandler("print_diff", boost::bind(&DaemonCommandsHandler::print_diff, this, _1), "Difficulty for next block");
   m_consoleHandler.setHandler("print_pool", boost::bind(&DaemonCommandsHandler::print_pool, this, _1), "Print transaction pool (long format)");
   m_consoleHandler.setHandler("print_pool_sh", boost::bind(&DaemonCommandsHandler::print_pool_sh, this, _1), "Print transaction pool (short format)");
+  m_consoleHandler.setHandler("print_mp", boost::bind(&DaemonCommandsHandler::print_pool_count, this, _1), "Print number of transactions in memory pool");
   m_consoleHandler.setHandler("show_hr", boost::bind(&DaemonCommandsHandler::show_hr, this, _1), "Start showing hash rate");
   m_consoleHandler.setHandler("hide_hr", boost::bind(&DaemonCommandsHandler::hide_hr, this, _1), "Stop showing hash rate");
   m_consoleHandler.setHandler("set_log", boost::bind(&DaemonCommandsHandler::set_log, this, _1), "set_log <level> - Change current log level, <level> is a number 0-4");
@@ -66,6 +69,11 @@ bool DaemonCommandsHandler::exit(const std::vector<std::string>& args) {
 //--------------------------------------------------------------------------------
 bool DaemonCommandsHandler::help(const std::vector<std::string>& args) {
   std::cout << get_commands_str() << ENDL;
+  return true;
+}
+//--------------------------------------------------------------------------------
+bool DaemonCommandsHandler::print_height(const std::vector<std::string> &args) {
+  logger(Logging::INFO) << "Height: " << m_core.get_current_blockchain_height() << std::endl;
   return true;
 }
 //--------------------------------------------------------------------------------
@@ -238,6 +246,18 @@ bool DaemonCommandsHandler::print_block_by_hash(const std::string& arg)
     return false;
   }
 
+  return true;
+}
+//--------------------------------------------------------------------------------
+bool DaemonCommandsHandler::print_diff(const std::vector<std::string>& args)
+{
+  logger(Logging::INFO) << "Difficulty for next block: " << m_core.getNextBlockDifficulty() << std::endl;
+  return true;
+}
+//--------------------------------------------------------------------------------
+bool DaemonCommandsHandler::print_pool_count(const std::vector<std::string>& args)
+{
+  logger(Logging::INFO) << "Pending transactions in mempool: " << m_core.get_pool_transactions_count() << std::endl;
   return true;
 }
 //--------------------------------------------------------------------------------

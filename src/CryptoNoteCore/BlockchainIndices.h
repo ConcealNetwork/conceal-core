@@ -25,6 +25,7 @@ public:
   bool add(const Transaction& transaction);
   bool remove(const Transaction& transaction);
   bool find(const Crypto::Hash& paymentId, std::vector<Crypto::Hash>& transactionHashes);
+  std::vector<Crypto::Hash> find(const Crypto::Hash& paymentId);
   void clear();
 
   void serialize(ISerializer& s);
@@ -34,6 +35,7 @@ public:
     archive & index;
   }
 private:
+  bool enabled = false;
   std::unordered_multimap<Crypto::Hash, Crypto::Hash> index;
 };
 

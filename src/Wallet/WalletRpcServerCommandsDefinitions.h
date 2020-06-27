@@ -168,6 +168,12 @@ using CryptoNote::ISerializer;
     };
   };
 
+	struct COMMAND_RPC_STOP
+	{
+		typedef CryptoNote::EMPTY_STRUCT request;
+		typedef CryptoNote::EMPTY_STRUCT response;
+	};
+
   struct payment_details
   {
     std::string tx_hash;
@@ -214,6 +220,7 @@ using CryptoNote::ISerializer;
     std::string address;
     uint64_t blockIndex;
     uint64_t unlockTime;
+    uint64_t confirmations;
 
     void serialize(ISerializer& s) {
       KV_MEMBER(time)
@@ -225,6 +232,7 @@ using CryptoNote::ISerializer;
       KV_MEMBER(address)
       KV_MEMBER(blockIndex)
       KV_MEMBER(unlockTime)
+      KV_MEMBER(confirmations)
     }
   };
 
@@ -236,6 +244,29 @@ using CryptoNote::ISerializer;
 
       void serialize(ISerializer& s) {
         KV_MEMBER(transfers)
+      }
+    };
+  };
+
+  struct COMMAND_RPC_GET_ADDRESS {
+    typedef CryptoNote::EMPTY_STRUCT request;
+    struct response {
+      std::string address;
+      
+      void serialize(ISerializer& s) {
+        KV_MEMBER(address)
+      }
+    };
+  };
+
+  struct COMMAND_RPC_GEN_PAYMENT_ID {
+    typedef CryptoNote::EMPTY_STRUCT request;
+
+    struct response {
+      std::string payment_id;
+
+      void serialize(ISerializer& s) {
+        KV_MEMBER(payment_id)
       }
     };
   };

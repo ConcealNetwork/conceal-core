@@ -305,7 +305,10 @@ bool serialize(parallel_flat_hash_map<K, V, Hash> &value, Common::StringView nam
   void readSequence(Iterator outputIterator, Common::StringView name, ISerializer & s)
   {
     size_t size = 0;
-    s.beginArray(size, name);
+    // array of zero size is not written in KVBinaryOutputStreamSerializer
+    if (!s.beginArray(size, name)) {
+      return;
+    }
 
     while (size--)
     {

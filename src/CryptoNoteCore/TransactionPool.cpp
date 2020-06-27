@@ -10,6 +10,7 @@
 #include <ctime>
 #include <vector>
 #include <unordered_set>
+#include <unordered_map>
 
 #include <boost/filesystem.hpp>
 
@@ -246,7 +247,7 @@ namespace CryptoNote
         logger(WARNING, BRIGHT_YELLOW) << " Transaction already exists at inserting in memory pool";
         return false;
       }
-      m_paymentIdIndex.add(txd.tx);
+      m_paymentIdIndex.add(tx);
       m_timestampIndex.add(txd.receiveTime, txd.id);
 
       if (ttl.ttl != 0)
@@ -310,6 +311,22 @@ namespace CryptoNote
     {
       txs.push_back(tx_vt.tx);
     }
+  }
+  //---------------------------------------------------------------------------------
+  void tx_memory_pool::getMemoryPool(std::list<tx_memory_pool::TransactionDetails> txs) const {
+	  std::lock_guard<std::recursive_mutex> lock(m_transactions_lock);
+	  for (const auto& txd : m_fee_index) {
+		  txs.push_back(txd);
+	  }
+  }
+  //---------------------------------------------------------------------------------
+  std::list<CryptoNote::tx_memory_pool::TransactionDetails> tx_memory_pool::getMemoryPool() const {
+	  std::lock_guard<std::recursive_mutex> lock(m_transactions_lock);
+	  std::list<tx_memory_pool::TransactionDetails> txs;
+	  for (const auto& txd : m_fee_index) {
+		  txs.push_back(txd);
+	  }
+	  return txs;
   }
   //---------------------------------------------------------------------------------
   void tx_memory_pool::get_difference(const std::vector<Crypto::Hash> &known_tx_ids, std::vector<Crypto::Hash> &new_tx_ids, std::vector<Crypto::Hash> &deleted_tx_ids) const
@@ -817,7 +834,8 @@ namespace CryptoNote
   bool tx_memory_pool::getTransactionIdsByPaymentId(const Crypto::Hash &paymentId, std::vector<Crypto::Hash> &transactionIds)
   {
     std::lock_guard<std::recursive_mutex> lock(m_transactions_lock);
-    return m_paymentIdIndex.find(paymentId, transactionIds);
+    transactionIds = m_paymentIdIndex.find(paymentId);
+    return true;
   }
 
   bool tx_memory_pool::getTransactionIdsByTimestamp(uint64_t timestampBegin, uint64_t timestampEnd, uint32_t transactionsNumberLimit, std::vector<Crypto::Hash> &hashes, uint64_t &transactionsNumberWithinTimestamps)
