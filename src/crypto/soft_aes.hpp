@@ -95,7 +95,7 @@ inline uint32_t sub_word(uint32_t key)
 		 saes_sbox[key & 0xff];
 }
 
-#if defined(__clang__) || defined(__arm__) || defined(__aarch64__) || defined(__APPLE__)
+#if !defined(_WIN32) || !defined(_WIN64)
 	static inline uint32_t _rotr(uint32_t value, uint32_t amount) {
 		return (value >> amount) | (value << (-amount & 31));
 	}
