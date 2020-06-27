@@ -129,7 +129,7 @@ protected:
   void doShutdown();
   void clearCaches(bool clearTransactions, bool clearCachedData);
   void clearCacheAndShutdown();
-  void convertAndLoadWalletFile(const std::string &path, std::ifstream &&walletFileStream);
+  void convertAndLoadWalletFile(const std::string &path, std::ifstream &walletFileStream);
   size_t getTxSize(const TransactionParameters &sendingTransaction);
 
   static void decryptKeyPair(const EncryptedWalletRecord& cipher, Crypto::PublicKey& publicKey, Crypto::SecretKey& secretKey, uint64_t& creationTimestamp, const Crypto::chacha8_key& key);
