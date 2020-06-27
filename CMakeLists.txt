@@ -209,7 +209,7 @@ endif()
 if(ARM6)
 
 	if(CXX_ACCEPTS_NEON)
-		message(STATUS "Selecting Neon for ARMv7")
+		message(STATUS "Selecting Neon for ARMv6")
 		set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -mfpu=neon")
 		set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -mfpu=neon")
 	endif()
