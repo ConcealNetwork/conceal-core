@@ -194,6 +194,7 @@ add_definitions(/DARM)
 
 if(NOT ARM8)
 	CHECK_CXX_ACCEPTS_FLAG(-mfpu=neon CXX_ACCEPTS_NEON)
+	CHECK_CXX_ACCEPTS_FLAG(-mfpu=vfp CXX_ACCEPTS_VFP)
 	CHECK_CXX_ACCEPTS_FLAG(-mfpu=vfp3-d16 CXX_ACCEPTS_VFP3_D16)
 	CHECK_CXX_ACCEPTS_FLAG(-mfpu=vfp4 CXX_ACCEPTS_VFP4)
 	CHECK_CXX_ACCEPTS_FLAG(-mfloat-abi=hard CXX_ACCEPTS_MFLOAT_HARD)
@@ -206,9 +207,19 @@ if(ARM8)
 endif()
 
 if(ARM6)
-	message(STATUS "Selecting VFP for ARMv6")
-	set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -mfpu=vfp")
-	set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -mfpu=vfp")
+
+	if(CXX_ACCEPTS_NEON)
+		message(STATUS "Selecting Neon for ARMv7")
+		set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -mfpu=neon")
+		set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -mfpu=neon")
+	endif()
+
+	if(CXX_ACCEPTS_VFP AND NOT CXX_ACCEPTS_NEON)
+		message(STATUS "Selecting VFP for ARMv6")
+		set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -mfpu=vfp")
+		set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -mfpu=vfp")
+	endif()
+
 	if(DEPENDS)
 		set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -marm")
 		set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -marm")
@@ -248,6 +259,7 @@ if(ARM7)
 endif(ARM7)
 
 if(ARM8)
+
 	if(CXX_ACCEPTS_MFIX_CORTEX_A53_835769)
 		message(STATUS "Enabling Cortex-A53 workaround 835769")
 		set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -mfix-cortex-a53-835769")
