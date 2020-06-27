@@ -95,7 +95,14 @@ inline uint32_t sub_word(uint32_t key)
 		 saes_sbox[key & 0xff];
 }
 
-#if defined(HAVE_ROTR) || defined(ARM)
+#ifndef HAVE_ROTR
+static inline uint32_t _rotr(uint32_t value, uint32_t amount) {
+	return (value >> amount) | (value << (-amount & 31));
+}
+#endif
+
+// Cant seem to merge these two without breaking the build
+#ifndef ARM
 static inline uint32_t _rotr(uint32_t value, uint32_t amount) {
 	return (value >> amount) | (value << (-amount & 31));
 }
