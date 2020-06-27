@@ -29,10 +29,10 @@ namespace Crypto {
   struct chacha_key {
     uint8_t data[CHACHA_KEY_SIZE];
 
-    ~chacha_key()
+    /*~chacha_key()
     {
       memset(data, 0, sizeof(data));
-    }
+    } */
   };
 
   // MS VC 2012 doesn't interpret `class chacha_iv` as POD in spite of [9.0.10], so it is a struct

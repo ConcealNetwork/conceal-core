@@ -12,9 +12,13 @@
 #include "cn_aux.hpp"
 #include "aux_hash.h"
 
-#if !defined(_LP64) && !defined(_WIN64)
-#error You are trying to do a 32-bit build. This will all end in tears. I know it.
+#if defined(__ARM_FEATURE_SIMD32) || defined(__ARM_NEON)
+	#include "sse2neon.h"
 #endif
+
+// #if !defined(_LP64) && !defined(_WIN64)
+// #error You are trying to do a 32-bit build. This will all end in tears. I know it.
+// #endif
 
 namespace Crypto {
 
@@ -292,10 +296,13 @@ void cryptonight_hash(const void* input, size_t len, void* output, cn_context& c
 			cx = _mm_xor_si128(cx, _mm_cvttps_epi32(nc));
 		}
 
-		if(SOFT_AES)
+		if(SOFT_AES) {
 			cx = soft_aesenc(cx, _mm_set_epi64x(ah0, al0));
-		else
-			cx = _mm_aesenc_si128(cx, _mm_set_epi64x(ah0, al0));
+		} else {
+			#if !defined(__ARM_FEATURE_SIMD32) || !defined(__ARM_NEON)
+				cx = _mm_aesenc_si128(cx, _mm_set_epi64x(ah0, al0));
+			#endif
+		}
 
 		if(MONERO_TWEAK)
 			cryptonight_monero_tweak((uint64_t*)&l0[idx0 & MASK], _mm_xor_si128(bx0, cx));

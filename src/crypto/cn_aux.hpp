@@ -8,25 +8,28 @@
 #include "coin_algos.hpp"
 
 #if defined(_WIN32) || defined(_WIN64)
-#include <intrin.h>
-#include <malloc.h>
-#define HAS_WIN_INTRIN_API
+	#include <intrin.h>
+	#include <malloc.h>
+	#define HAS_WIN_INTRIN_API
 #endif
 
-#ifdef __GNUC__
-#pragma GCC target ("aes,sse2")
-#include <x86intrin.h>
-static inline uint64_t _umul128(uint64_t a, uint64_t b, uint64_t* hi)
-{
-    unsigned __int128 r = (unsigned __int128)a * (unsigned __int128)b;
-    *hi = r >> 64;
-    return (uint64_t)r;
-}
-#if !defined(HAS_WIN_INTRIN_API)
-#include <cpuid.h>
-#endif // !defined(HAS_WIN_INTRIN_API)
-#endif // __GNUC__
+#if defined(__ARM_FEATURE_SIMD32) || defined(__ARM_NEON)
+	#include "sse2neon.h"
+#endif
 
+#if defined(__GNUC__) && (defined(__x86_64__) || defined(__i386__))
+	#pragma GCC target ("aes,sse2")
+	#include <x86intrin.h>
+	static inline uint64_t _umul128(uint64_t a, uint64_t b, uint64_t* hi)
+	{
+			unsigned __int128 r = (unsigned __int128)a * (unsigned __int128)b;
+			*hi = r >> 64;
+			return (uint64_t)r;
+	}
+	#if !defined(HAS_WIN_INTRIN_API)
+		#include <cpuid.h>
+	#endif // !defined(HAS_WIN_INTRIN_API)
+#endif // __GNUC__
 
 inline void cpuid(uint32_t eax, int32_t ecx, int32_t val[4])
 {
@@ -91,13 +94,15 @@ inline void aes_round(__m128i key, __m128i& x0, __m128i& x1, __m128i& x2, __m128
 	}
 	else
 	{
-		x0 = _mm_aesenc_si128(x0, key);
-		x1 = _mm_aesenc_si128(x1, key);
-		x2 = _mm_aesenc_si128(x2, key);
-		x3 = _mm_aesenc_si128(x3, key);
-		x4 = _mm_aesenc_si128(x4, key);
-		x5 = _mm_aesenc_si128(x5, key);
-		x6 = _mm_aesenc_si128(x6, key);
-		x7 = _mm_aesenc_si128(x7, key);
+		#if !defined(__ARM_FEATURE_SIMD32) || !defined(__ARM_NEON)
+			x0 = _mm_aesenc_si128(x0, key);
+			x1 = _mm_aesenc_si128(x1, key);
+			x2 = _mm_aesenc_si128(x2, key);
+			x3 = _mm_aesenc_si128(x3, key);
+			x4 = _mm_aesenc_si128(x4, key);
+			x5 = _mm_aesenc_si128(x5, key);
+			x6 = _mm_aesenc_si128(x6, key);
+			x7 = _mm_aesenc_si128(x7, key);
+		#endif
 	}
 }
