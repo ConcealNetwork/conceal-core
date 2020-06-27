@@ -9,7 +9,7 @@
 
 #pragma once
 
-#if defined(__GNUC__) && (!defined(__ARM_FEATURE_SIMD32) || !defined(__ARM_NEON))
+#if defined(__GNUC__) && (!defined(__arm__) || !defined(__aarch64__))
 	#include <x86intrin.h>
 #elif defined(__ARM_FEATURE_SIMD32) || defined(__ARM_NEON)
 	#include "sse2neon.h"
