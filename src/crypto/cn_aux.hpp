@@ -40,8 +40,10 @@ inline void cpuid(uint32_t eax, int32_t ecx, int32_t val[4])
 
 #if defined(HAS_WIN_INTRIN_API)
 	__cpuidex(val, eax, ecx);
-#else
+#elif defined(__x86_64) || defined(__i386)
 	__cpuid_count(eax, ecx, val[0], val[1], val[2], val[3]);
+#else
+	// Need a function here?
 #endif
 }
 
