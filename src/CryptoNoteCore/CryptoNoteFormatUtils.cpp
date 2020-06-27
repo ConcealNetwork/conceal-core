@@ -72,6 +72,37 @@ uint64_t power_integral(uint64_t a, uint64_t b) {
   return total;
 }
 
+bool get_tx_fee(const Transaction& tx, uint64_t & fee) {
+  uint64_t amount_in = 0;
+  uint64_t amount_out = 0;
+
+  for (const auto& in : tx.inputs) {
+    if (in.type() == typeid(KeyInput)) {
+      amount_in += boost::get<KeyInput>(in).amount;
+    } else if (in.type() == typeid(MultisignatureInput)) {
+      amount_in += boost::get<MultisignatureInput>(in).amount;
+    }
+  }
+
+  for (const auto& o : tx.outputs) {
+    amount_out += o.amount;
+  }
+
+  if (!(amount_in >= amount_out)) {
+    return false;
+  }
+
+  fee = amount_in - amount_out;
+  return true;
+}
+
+uint64_t get_tx_fee(const Transaction& tx) {
+  uint64_t r = 0;
+  if (!get_tx_fee(tx, r))
+    return 0;
+  return r;
+}
+
 bool constructTransaction(
   const AccountKeys& sender_account_keys,
   const std::vector<TransactionSourceEntry>& sources,

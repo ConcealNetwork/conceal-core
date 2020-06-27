@@ -26,6 +26,9 @@
 
 #include <Logging/LoggerMessage.h>
 
+#include "BlockchainExplorerData.h"
+#include "BlockchainExplorerData2.h"
+
 namespace CryptoNote {
 
   struct core_stat_info;
@@ -151,6 +154,9 @@ core(const Currency& currency, i_cryptonote_protocol* pprotocol, Logging::ILogge
 
      bool is_key_image_spent(const Crypto::KeyImage& key_im);
      static bool getPaymentId(const Transaction& transaction, Crypto::Hash& paymentId);
+     bool fillBlockDetails(const CryptoNote::Block& block, BlockDetails2& blockDetails);
+     bool fillTransactionDetails(const Transaction &tx, TransactionDetails2& txRpcInfo, uint64_t timestamp = 0);
+     bool f_getMixin(const Transaction& transaction, uint64_t& mixin);
 
    private:
      bool add_new_tx(const Transaction& tx, const Crypto::Hash& tx_hash, size_t blob_size, tx_verification_context& tvc, bool keeped_by_block, uint32_t height);
@@ -177,6 +183,9 @@ core(const Currency& currency, i_cryptonote_protocol* pprotocol, Logging::ILogge
 
      bool findStartAndFullOffsets(const std::vector<Crypto::Hash>& knownBlockIds, uint64_t timestamp, uint32_t& startOffset, uint32_t& startFullOffset);
      std::vector<Crypto::Hash> findIdsForShortBlocks(uint32_t startOffset, uint32_t startFullOffset);
+
+     bool fillTxExtra(const std::vector<uint8_t>& rawExtra, TransactionExtraDetails& extraDetails);
+     size_t median(std::vector<size_t>& v);
 
      const Currency& m_currency;
      Logging::LoggerRef logger;
