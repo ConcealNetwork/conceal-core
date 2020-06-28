@@ -1001,7 +1001,7 @@ namespace CryptoNote
     m_logger(INFO, BRIGHT_WHITE) << "Container exported";
   }
 
-  void WalletGreen::convertAndLoadWalletFile(const std::string &path, std::ifstream& walletFileStream)
+  void WalletGreen::convertAndLoadWalletFile(const std::string &path, const std::ifstream &walletFileStream)
   {
 
     WalletSerializer s(
@@ -1020,7 +1020,7 @@ namespace CryptoNote
 
     StdInputStream stream(walletFileStream);
     s.load(m_key, stream);
-    //walletFileStream.close();
+    walletFileStream.close();
 
     boost::filesystem::path bakPath = path + ".backup";
     boost::filesystem::path tmpPath = boost::filesystem::unique_path(path + ".tmp.%%%%-%%%%");
