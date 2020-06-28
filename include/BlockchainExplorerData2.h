@@ -11,73 +11,36 @@
 #include <vector>
 
 #include "CryptoTypes.h"
-
+#include "CryptoNote.h"
+#include "BlockchainExplorerData.h"
 #include <boost/variant.hpp>
 
 namespace CryptoNote {
 
-enum class TransactionRemoveReason : uint8_t 
-{ 
-  INCLUDED_IN_BLOCK = 0, 
-  TIMEOUT = 1
+struct transaction_output_details {
+	TransactionOutput output;
+	uint64_t globalIndex;
 };
 
-struct TransactionOutputToKeyDetails {
-  Crypto::PublicKey txOutKey;
-};
-
-struct TransactionOutputMultisignatureDetails {
-  std::vector<Crypto::PublicKey> keys;
-  uint32_t requiredSignatures;
-};
-
-struct TransactionOutputDetails {
+struct BaseInputDetails {
+  BaseInput input;
   uint64_t amount;
-  uint32_t globalIndex;
-
-  boost::variant<
-    TransactionOutputToKeyDetails,
-    TransactionOutputMultisignatureDetails> output;
 };
 
-struct TransactionOutputReferenceDetails {
-  Crypto::Hash transactionHash;
-  size_t number;
-};
-
-struct TransactionInputGenerateDetails {
-  uint32_t height;
-};
-
-struct TransactionInputToKeyDetails {
-  std::vector<uint32_t> outputIndexes;
-  Crypto::KeyImage keyImage;
+struct KeyInputDetails {
+  KeyInput input;
   uint64_t mixin;
   TransactionOutputReferenceDetails output;
 };
 
-struct TransactionInputMultisignatureDetails {
-  uint32_t signatures;
+struct MultisignatureInputDetails {
+  MultisignatureInput input;
   TransactionOutputReferenceDetails output;
 };
 
-struct TransactionInputDetails {
-  uint64_t amount;
+typedef boost::variant<BaseInputDetails, KeyInputDetails, MultisignatureInputDetails> transaction_input_details;
 
-  boost::variant<
-    TransactionInputGenerateDetails,
-    TransactionInputToKeyDetails,
-    TransactionInputMultisignatureDetails> input;
-};
-
-struct TransactionExtraDetails {
-  std::vector<size_t> padding;
-  std::vector<Crypto::PublicKey> publicKey; 
-  std::vector<std::string> nonce;
-  std::vector<uint8_t> raw;
-};
-
-struct TransactionDetails {
+struct TransactionDetails2 {
   Crypto::Hash hash;
   uint64_t size = 0;
   uint64_t fee = 0;
@@ -93,11 +56,11 @@ struct TransactionDetails {
   uint32_t blockHeight = 0;
   TransactionExtraDetails extra;
   std::vector<std::vector<Crypto::Signature>> signatures;
-  std::vector<TransactionInputDetails> inputs;
-  std::vector<TransactionOutputDetails> outputs;
+  std::vector<transaction_input_details> inputs;
+  std::vector<transaction_output_details> outputs;
 };
 
-struct BlockDetails {
+struct BlockDetails2 {
   uint8_t majorVersion = 0;
   uint8_t minorVersion = 0;
   uint64_t timestamp = 0;
@@ -116,7 +79,7 @@ struct BlockDetails {
   uint64_t sizeMedian = 0;
   double penalty = 0.0;
   uint64_t totalFeeAmount = 0;
-  std::vector<TransactionDetails> transactions;
+  std::vector<TransactionDetails2> transactions;
 };
 
 }
