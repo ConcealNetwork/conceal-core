@@ -122,43 +122,6 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           
-  build-ubuntu20:
-    name: Ubuntu 20.04
-    runs-on: ubuntu-20.04
-    steps:
-      - uses: actions/checkout@master
-
-      - name: Build
-        id: build
-        run: |
-          BOOST_ROOT=
-          sudo apt-get purge '*boost*'
-          sudo apt install -y libboost-all-dev
-          build_folder="build/debug"
-          ccx_ver=${GITHUB_SHA::7}
-          ccx_ver_folder=$(echo $ccx_ver | sed 's/\.//g')
-          release_name=ccx-cli-ubuntu-1804-v"$ccx_ver"
-          mkdir -p "$build_folder"
-          cd "$build_folder"
-          cmake ../..
-          make -j2
-          mkdir -p "$release_name"
-          exeFiles=()
-          for f in src/*; do [[ -x $f && -f $f ]] && exeFiles+=( "$f" ); done
-          strip "${exeFiles[@]}"
-          cp "${exeFiles[@]}" "$release_name/"
-          echo "::set-output name=release_name::${release_name}"
-          echo "::set-output name=artifact_path::$build_folder/$release_name"
-
-      - name: Upload To GH Artifacts
-        uses: actions/upload-artifact@v1.0.0
-        with:
-          name: ${{ steps.build.outputs.release_name }}
-          path: ${{ steps.build.outputs.artifact_path }}
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-
-
   build-macos:
     name: macOS
     runs-on: macos-latest
