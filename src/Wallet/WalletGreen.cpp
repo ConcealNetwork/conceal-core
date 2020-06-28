@@ -1018,7 +1018,7 @@ namespace CryptoNote
         m_transactionSoftLockTime,
         m_uncommitedTransactions);
 
-    StdInputStream stream(walletFileStream);
+    StdInputStream stream(walletFileStream.c_str());
     s.load(m_key, stream);
     walletFileStream.close();
 
