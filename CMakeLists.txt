@@ -210,7 +210,7 @@ message(STATUS "Setting FPU Flags for ARM Processors")
 
 	if(ARM6)
 		if(CXX_ACCEPTS_VFP)
-			message(STATUS "Selecting vfp for ARMv6")
+			message(STATUS "Setting vfp for ARMv6")
 			set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -mfpu=vfp")
 			set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -mfpu=vfp")
 		endif()
@@ -399,10 +399,6 @@ else()
     add_custom_target(version ALL)
   endif()
 endif()
-
-# Debug
-message(STATUS "CMAKE_C_FLAGS Flag: ${CMAKE_CXX_FLAGS}")
-message(STATUS "CMAKE_CXX_FLAGS Flag: ${CMAKE_CXX_FLAGS}")
 
 add_subdirectory(external)
 add_subdirectory(src)
