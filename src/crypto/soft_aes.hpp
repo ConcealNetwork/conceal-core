@@ -96,7 +96,7 @@ inline uint32_t sub_word(uint32_t key)
 		 saes_sbox[key & 0xff];
 }
 
-#if defined(HAVE_ROTR) || defined(ARM)
+#if !defined(HAVE_ROTR) || defined(ARM)
 	static inline uint32_t _rotr(uint32_t value, uint32_t amount) {
 		return (value >> amount) | (value << (-amount & 31));
 	}
