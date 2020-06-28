@@ -170,7 +170,7 @@ elseif(ARM7)
 	if(TRY_ARCH)
 		message(STATUS "Setting march=armv8-a for ARMv7")
 		set(ARCH_FLAG "-march=armv8-a")
-	else
+	else()
 		CHECK_CXX_ACCEPTS_FLAG("march=armv7-a" TRY_ARCH)
 		if(TRY_ARCH)
 			message(STATUS "Setting -march=armv7-a for ARMv7")
