@@ -8,6 +8,7 @@
  */
 
 #pragma once
+#include <stdint.h>
 
 #if defined(__GNUC__) && !defined(ARM)
 	#include <x86intrin.h>
