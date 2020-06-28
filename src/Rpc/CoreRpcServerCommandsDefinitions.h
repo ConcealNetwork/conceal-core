@@ -927,6 +927,60 @@ struct K_COMMAND_RPC_CHECK_RESERVE_PROOF {
 	};
 };
 
+struct COMMAND_RPC_GET_TRANSACTIONS_DETAILS_BY_HASHES {
+  struct request {
+    std::vector<Crypto::Hash> transactionHashes;
+
+    void serialize(ISerializer &s) {
+      KV_MEMBER(transactionHashes);
+    }
+  };
+
+  struct response {
+    std::vector<TransactionDetails2> transactions;
+    std::string status;
+
+    void serialize(ISerializer &s) {
+      KV_MEMBER(status)
+      KV_MEMBER(transactions)
+    }
+  };
+};
+
+struct COMMAND_RPC_GET_TRANSACTION_DETAILS_BY_HASH {
+	struct request {
+		Crypto::Hash hash;
+
+		void serialize(ISerializer &s) {
+			KV_MEMBER(hash);
+		}
+	};
+
+	struct response {
+		TransactionDetails2 transaction;
+		std::string status;
+
+		void serialize(ISerializer &s) {
+			KV_MEMBER(status)
+			KV_MEMBER(transaction)
+		}
+	};
+};
+
+struct f_transaction_details_extra_response {
+  std::vector<size_t> padding;
+  Crypto::PublicKey publicKey; 
+  std::vector<std::string> nonce;
+  std::vector<uint8_t> raw;
+
+  void serialize(ISerializer &s) {
+    KV_MEMBER(padding)
+    KV_MEMBER(publicKey)
+    KV_MEMBER(nonce)
+    KV_MEMBER(raw)
+  }
+};
+
 struct COMMAND_RPC_GEN_PAYMENT_ID {
   typedef EMPTY_STRUCT request;
 
