@@ -168,8 +168,14 @@ elseif(ARM7)
 	# Set -march for Pi 3/4 32bit
 	CHECK_CXX_ACCEPTS_FLAG("-march=armv8-a" TRY_ARCH)
 	if(TRY_ARCH)
-		message(STATUS "Setting ARCH for ARMv7")
+		message(STATUS "Setting march=armv8-a for ARMv7")
 		set(ARCH_FLAG "-march=armv8-a")
+	else
+		CHECK_CXX_ACCEPTS_FLAG("march=armv7-a" TRY_ARCH)
+		if(TRY_ARCH)
+			message(STATUS "Setting -march=armv7-a for ARMv7")
+			set(ARCH_FLAG "-march=armv7-a")
+		endif()
 	endif()
 elseif(ARM8)
 	# Set -march for Pi 3/4 64bit
