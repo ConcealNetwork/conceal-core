@@ -381,7 +381,6 @@ endif()
 
 if(ARM)
 	add_definitions(/DARM)
-	add_definitions(/DHAVE_ROTR)
 endif()
 
 if(STATIC)
