@@ -97,7 +97,7 @@ inline void aes_round(__m128i key, __m128i& x0, __m128i& x1, __m128i& x2, __m128
 	}
 	else
 	{
-		#if !defined(__ARM_FEATURE_SIMD32) || !defined(__ARM_NEON)
+		#if !defined(ARM)
 			x0 = _mm_aesenc_si128(x0, key);
 			x1 = _mm_aesenc_si128(x1, key);
 			x2 = _mm_aesenc_si128(x2, key);

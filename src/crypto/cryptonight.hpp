@@ -299,7 +299,7 @@ void cryptonight_hash(const void* input, size_t len, void* output, cn_context& c
 		if(SOFT_AES) {
 			cx = soft_aesenc(cx, _mm_set_epi64x(ah0, al0));
 		} else {
-			#if !defined(__ARM_FEATURE_SIMD32) || !defined(__ARM_NEON)
+			#if !defined(ARM)
 				cx = _mm_aesenc_si128(cx, _mm_set_epi64x(ah0, al0));
 			#endif
 		}
