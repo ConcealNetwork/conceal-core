@@ -14,7 +14,7 @@
 #include <set>
 #include <tuple>
 #include <utility>
-
+#include <fstream>
 #include <System/EventLock.h>
 #include <System/RemoteContext.h>
 
@@ -1018,7 +1018,7 @@ namespace CryptoNote
         m_transactionSoftLockTime,
         m_uncommitedTransactions);
 
-    StdInputStream stream(walletFileStream.c_str());
+    StdInputStream stream(walletFileStream);
     s.load(m_key, stream);
     walletFileStream.close();
 
