@@ -1001,7 +1001,7 @@ namespace CryptoNote
     m_logger(INFO, BRIGHT_WHITE) << "Container exported";
   }
 
-  void WalletGreen::convertAndLoadWalletFile(const std::string &path, const std::ifstream &walletFileStream)
+  void WalletGreen::convertAndLoadWalletFile(const std::string &path, const std::ifstream &&walletFileStream)
   {
 
     WalletSerializer s(
