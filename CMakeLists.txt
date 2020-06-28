@@ -176,7 +176,6 @@ set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${ARCH_FLAG}")
 
 if(ARM)
 message(STATUS "Setting FPU Flags for ARM Processors")
-add_definitions(/DARM)
 
 #NB NEON hardware does not fully implement the IEEE 754 standard for floating-point arithmetic
 #Need custom assembly code to take full advantage of NEON SIMD
@@ -332,6 +331,11 @@ endif()
 
 if(APPLE)
   add_definitions(/DHAVE_ROTR)
+endif()
+
+if(ARM)
+	add_definitions(/DHAVE_ROTR)
+	add_definitions(/DARM)
 endif()
 
 if(STATIC)
