@@ -177,7 +177,7 @@ public:
 
   virtual void initialize(const std::string& path, const std::string& password) = 0;
   virtual void createDeposit(uint64_t amount, uint64_t term, std::string sourceAddress, std::string destinationAddress, std::string &transactionHash) = 0;
-  virtual void withdrawDeposit(uint64_t depositId, std::string &transactionHash) = 0;
+  virtual void withdrawDeposit(DepositId depositId, std::string &transactionHash) = 0;
   virtual Deposit getDeposit(size_t depositIndex) const = 0;
   virtual void initializeWithViewKey(const std::string& path, const std::string& password, const Crypto::SecretKey& viewSecretKey) = 0;
   virtual void load(const std::string& path, const std::string& password, std::string& extra) = 0;
