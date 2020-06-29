@@ -418,8 +418,6 @@ bool RpcServer::k_on_check_reserve_proof(const K_COMMAND_RPC_CHECK_RESERVE_PROOF
 
     CryptoNote::TransactionPrefix tx = *static_cast<const TransactionPrefix*>(&transactions[i]);
 
-    bool unlocked = m_core.is_tx_spendtime_unlocked(tx.unlockTime, req.height);
-
     if (proof.index_in_tx >= tx.outputs.size()) {
       throw JsonRpc::JsonRpcError{ CORE_RPC_ERROR_CODE_INTERNAL_ERROR, "index_in_tx is out of bound" };
     }
@@ -456,9 +454,6 @@ bool RpcServer::k_on_check_reserve_proof(const K_COMMAND_RPC_CHECK_RESERVE_PROOF
         uint64_t amount = tx.outputs[proof.index_in_tx].amount;
         res.total += amount;
 
-        if (!unlocked) {
-          res.locked += amount;
-        }
         if (req.height != 0) {
           if (m_core.is_key_image_spent(proof.key_image, req.height)) {
             res.spent += amount;
@@ -870,7 +865,7 @@ bool RpcServer::on_get_info(const COMMAND_RPC_GET_INFO::request& req, COMMAND_RP
   res.block_minor_version = block_header.minor_version;
   res.last_block_timestamp = block_header.timestamp;
   res.last_block_reward = block_header.reward;
-  m_core.getBlockDifficulty(last_block_height), res.last_block_difficulty);
+  m_core.getBlockDifficulty(last_block_height, res.last_block_difficulty);
 
   res.connections = m_p2p.get_payload_object().all_connections();
   return true;

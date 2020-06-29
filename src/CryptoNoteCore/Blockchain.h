@@ -13,6 +13,14 @@
 #include "google/sparse_hash_map"
 #include <parallel_hashmap/phmap.h>
 
+#include <boost/multi_index_container.hpp>
+#include <boost/multi_index/composite_key.hpp>
+#include <boost/multi_index/hashed_index.hpp>
+#include <boost/multi_index/member.hpp>
+#include <boost/multi_index/mem_fun.hpp>
+#include <boost/multi_index/ordered_index.hpp>
+#include <boost/multi_index/random_access_index.hpp>
+
 #include "Common/ObserverManager.h"
 #include "Common/Util.h"
 #include "CryptoNoteCore/BlockIndex.h"
@@ -217,6 +225,16 @@ namespace CryptoNote {
       }
     };
 
+    struct SpentKeyImage {
+      uint32_t blockIndex;
+      Crypto::KeyImage keyImage;
+
+      void serialize(ISerializer& s) {
+        s(blockIndex, "block_index");
+        s(keyImage, "key_image");
+      }
+    };
+
     struct BlockEntry {
       Block bl;
       uint32_t height;
@@ -235,6 +253,27 @@ namespace CryptoNote {
       }
     };
 
+    struct BlockIndexTag {};
+    struct BlockHashTag {};
+    struct TransactionHashTag {};
+    struct KeyImageTag {};
+    struct TimestampTag {};
+    struct PaymentIdTag {};
+
+    typedef boost::multi_index_container<
+      SpentKeyImage,
+      boost::multi_index::indexed_by<
+      boost::multi_index::ordered_non_unique<
+      boost::multi_index::tag<BlockIndexTag>,
+      BOOST_MULTI_INDEX_MEMBER(SpentKeyImage, uint32_t, blockIndex)
+      >,
+      boost::multi_index::hashed_unique<
+      boost::multi_index::tag<KeyImageTag>,
+      BOOST_MULTI_INDEX_MEMBER(SpentKeyImage, Crypto::KeyImage, keyImage)
+      >
+      >
+    > SpentKeyImagesContainer;
+
     typedef parallel_flat_hash_map<Crypto::KeyImage, uint32_t> key_images_container;
     typedef parallel_flat_hash_map<Crypto::Hash, BlockEntry> blocks_ext_by_hash;
     typedef parallel_flat_hash_map<uint64_t, std::vector<std::pair<TransactionIndex, uint16_t>>> outputs_container; //Crypto::Hash - tx hash, size_t - index of out in transaction
@@ -247,6 +286,7 @@ namespace CryptoNote {
     Tools::ObserverManager<IBlockchainStorageObserver> m_observerManager;
 
     key_images_container m_spent_keys;
+    SpentKeyImagesContainer spentKeyImages;
     size_t m_current_block_cumul_sz_limit;
     blocks_ext_by_hash m_alternative_chains; // Crypto::Hash -> block_extended_info
     outputs_container m_outputs;

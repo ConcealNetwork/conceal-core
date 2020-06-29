@@ -417,7 +417,7 @@ bool Blockchain::haveTransaction(const Crypto::Hash &id) {
 
 bool Blockchain::have_tx_keyimg_as_spent(const Crypto::KeyImage &key_im) {
   std::lock_guard<decltype(m_blockchain_lock)> lk(m_blockchain_lock);
-  return  m_spent_keys.find(key_im) != m_spent_keys.end();
+  return m_spent_keys.find(key_im) != m_spent_keys.end();
 }
 
 bool Blockchain::checkIfSpent(const Crypto::KeyImage& keyImage, uint32_t blockIndex) {
@@ -433,6 +433,7 @@ bool Blockchain::checkIfSpent(const Crypto::KeyImage& keyImage) {
 
   return have_tx_keyimg_as_spent(keyImage);
 }
+
 
 uint32_t Blockchain::getCurrentBlockchainHeight() {
   std::lock_guard<decltype(m_blockchain_lock)> lk(m_blockchain_lock);
