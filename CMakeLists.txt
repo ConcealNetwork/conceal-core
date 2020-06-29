@@ -40,15 +40,6 @@ else()
   message(STATUS "Building on ${CMAKE_SYSTEM_PROCESSOR}")
   if(ARCH STREQUAL "default")
     set(ARCH_FLAG "")
-  elseif(PPC64LE)
-    set(ARCH_FLAG "-mcpu=power8")
-  elseif(PPC64)
-    set(ARCH_FLAG "-mcpu=970")
-  elseif(PPC)
-    set(ARCH_FLAG "-mcpu=7400")
-  elseif(IOS AND ARCH STREQUAL "arm64")
-    message(STATUS "IOS: Changing arch from arm64 to armv8")
-    set(ARCH_FLAG "-march=armv8")
   else()
     set(ARCH_FLAG "-march=${ARCH}")
     if(ARCH STREQUAL "native")
@@ -83,16 +74,17 @@ if (NOT ARCH_ID)
 		set(ARCH_ID "${ARCH}")
 	endif()
 endif()
+
 string(TOLOWER "${ARCH_ID}" ARM_ID)
 string(SUBSTRING "${ARM_ID}" 0 3 ARM_TEST)
+
 if (ARM_TEST STREQUAL "arm")
   set(ARM 1)
   string(SUBSTRING "${ARM_ID}" 0 5 ARM_TEST)
-  if (ARM_TEST STREQUAL "armv6")
-		set(ARM6 1)
-  endif()
   if (ARM_TEST STREQUAL "armv7")
 		set(ARM7 1)
+		message(STATUS "Setting -march=armv8-a+fp+simd for ARMv8")
+		set(ARCH_FLAG "-march=armv8-a+fp+simd")
   endif()
 endif()
 
@@ -101,84 +93,14 @@ if (ARM_ID STREQUAL "aarch64" OR ARM_ID STREQUAL "arm64" OR ARM_ID STREQUAL "arm
   set(ARM8 1)
 endif()
 
-if(ARCH_ID STREQUAL "ppc64le")
-  set(PPC64LE 1)
-  set(PPC64   0)
-  set(PPC     0)
-endif()
-
-if(ARCH_ID STREQUAL "powerpc64" OR ARCH_ID STREQUAL "ppc64")
-  set(PPC64LE 0)
-  set(PPC64   1)
-  set(PPC     0)
-endif()
-
-if(ARCH_ID STREQUAL "powerpc" OR ARCH_ID STREQUAL "ppc")
-  set(PPC64LE 0)
-  set(PPC64   0)
-  set(PPC     1)
-endif()
-
-if(ARCH_ID STREQUAL "s390x")
-  set(S390X 1)
-endif()
-
-# Check whether we're on a 32-bit or 64-bit system
-if(CMAKE_SIZEOF_VOID_P EQUAL "8")
-  set(DEFAULT_BUILD_64 ON)
-else()
-  set(DEFAULT_BUILD_64 OFF)
-endif()
-
-option(BUILD_64 "Build for 64-bit? 'OFF' builds for 32-bit." ${DEFAULT_BUILD_64})
-
-if(BUILD_64)
-  set(ARCH_WIDTH "64")
-else()
-  set(ARCH_WIDTH "32")
-endif()
-
-message(STATUS "Building for a ${ARCH_WIDTH}-bit system")
-
-# Check support for AES and ARCH
-option(NO_AES "Explicitly disable AES support" ${NO_AES})
-
-if(NO_AES)
-	message(STATUS "AES support explicitly disabled")
-	set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -DNO_AES")
-	set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DNO_AES")
-elseif(NOT ARM AND NOT PPC64LE AND NOT PPC64 AND NOT PPC AND NOT S390X)
-	message(STATUS "AES support enabled")
-	set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -maes")
-	set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -maes")
-elseif(PPC64LE OR PPC64 OR PPC)
-	message(STATUS "AES support not available on POWER")
-elseif(S390X)
-	message(STATUS "AES support not available on s390x")
-elseif(ARM6)
-	message(STATUS "AES support not available on ARMv6")
-	# Set -march for Pi 1/Zero 32bit
-	CHECK_CXX_ACCEPTS_FLAG("-march=armv6" TRY_ARCH)
-	if(TRY_ARCH)
-		message(STATUS "Setting -march=armv6 for ARMv6")
-		set(ARCH_FLAG "-march=armv6")
-	endif()
-elseif(ARM7)
-	message(STATUS "AES support not available on ARMv7")
-	# Set -march for Pi 3/4 32bit
+# Manually ARCH options for ARM
+if(ARM7) # ARMv7 Pi 3/4 32Bit
 	CHECK_CXX_ACCEPTS_FLAG("-march=armv8-a" TRY_ARCH)
 	if(TRY_ARCH)
 		message(STATUS "Setting march=armv8-a for ARMv7")
 		set(ARCH_FLAG "-march=armv8-a")
-	else()
-		CHECK_CXX_ACCEPTS_FLAG("march=armv7-a" TRY_ARCH)
-		if(TRY_ARCH)
-			message(STATUS "Setting -march=armv7-a for ARMv7")
-			set(ARCH_FLAG "-march=armv7-a")
-		endif()
 	endif()
-elseif(ARM8)
-	# Set -march for Pi 3/4 64bit
+elseif(ARM8) # ARMv8 Pi 3/4 64Bit
 	CHECK_CXX_ACCEPTS_FLAG("-march=armv8-a+fp+simd" TRY_ARCH)
 	if(TRY_ARCH)
 		message(STATUS "Setting -march=armv8-a+fp+simd for ARMv8")
@@ -186,21 +108,34 @@ elseif(ARM8)
 	endif()
 endif()
 
+# Check support for AES
+option(NO_AES "Explicitly disable AES support" ${NO_AES})
+
+if(NO_AES) # No AES
+	message(STATUS "AES support explicitly disabled")
+	set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -DNO_AES")
+	set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DNO_AES")
+
+elseif(NOT ARM) # x86/64
+	message(STATUS "AES support enabled")
+	set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -maes")
+	set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -maes")
+
+endif()
+
 set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} ${ARCH_FLAG}")
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${ARCH_FLAG}")
 
+# Check and set fpu and float settings
 if(ARM)
 message(STATUS "Setting FPU Flags for ARM Processors")
 
 	if(NOT ARM8)
 		# FPU
-		CHECK_CXX_ACCEPTS_FLAG(-mfpu=vfp CXX_ACCEPTS_VFP)
 		CHECK_CXX_ACCEPTS_FLAG(-mfpu=neon-vfpv4 CXX_ACCEPTS_NEON_1)
 		CHECK_CXX_ACCEPTS_FLAG(-mfpu=neon-fp-armv8 CXX_ACCEPTS_NEON_2)
 		# FLOAT
 		CHECK_CXX_ACCEPTS_FLAG(-mfloat-abi=hard CXX_ACCEPTS_MFLOAT_HARD)
-		CHECK_CXX_ACCEPTS_FLAG(-mfloat-abi=softfp CXX_ACCEPTS_MFLOAT_SOFTFP)
-		CHECK_CXX_ACCEPTS_FLAG(-mfloat-abi=soft CXX_ACCEPTS_MFLOAT_SOFT)
 	endif()
 
 	if(ARM8)
@@ -208,38 +143,8 @@ message(STATUS "Setting FPU Flags for ARM Processors")
 		CHECK_CXX_ACCEPTS_FLAG(-mfix-cortex-a53-843419 CXX_ACCEPTS_MFIX_CORTEX_A53_843419)
 	endif()
 
-	if(ARM6)
-		if(CXX_ACCEPTS_VFP)
-			message(STATUS "Setting vfp for ARMv6")
-			set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -mfpu=vfp")
-			set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -mfpu=vfp")
-		endif()
-
-		if(CXX_ACCEPTS_MFLOAT_HARD)
-			message(STATUS "Setting Hardware ABI for Floating Point")
-			set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -mfloat-abi=hard")
-			set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -mfloat-abi=hard")
-		endif()
-
-		if(CXX_ACCEPTS_MFLOAT_SOFTFP AND NOT CXX_ACCEPTS_MFLOAT_HARD)
-			message(STATUS "Setting Software ABI for Floating Point")
-			set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -mfloat-abi=softfp")
-			set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -mfloat-abi=softfp")
-		endif()
-
-		if(CXX_ACCEPTS_MFLOAT_SOFT AND NOT CXX_ACCEPTS_MFLOAT_SOFTFP AND NOT CXX_ACCEPTS_MFLOAT_HARD)
-			message(STATUS "Setting Software ABI for Floating Point")
-			set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -mfloat-abi=soft")
-			set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -mfloat-abi=soft")
-		endif()
-
-		if(DEPENDS)
-			set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -marm")
-			set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -marm")
-		endif()
-	endif(ARM6)
-
 	if(ARM7)
+
 		if(CXX_ACCEPTS_NEON_2)
 			message(STATUS "Setting mfpu=neon-fp-armv8 for ARMv7")
 			set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -mfpu=neon-fp-armv8")
@@ -258,20 +163,10 @@ message(STATUS "Setting FPU Flags for ARM Processors")
 			set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -mfloat-abi=hard")
 		endif()
 
-		if(CXX_ACCEPTS_MFLOAT_SOFTFP AND NOT CXX_ACCEPTS_MFLOAT_HARD)
-			message(STATUS "Setting Software FP ABI for Floating Point")
-			set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -mfloat-abi=softfp")
-			set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -mfloat-abi=softfp")
-		endif()
-
-		if(CXX_ACCEPTS_MFLOAT_SOFT AND NOT CXX_ACCEPTS_MFLOAT_SOFTFP AND NOT CXX_ACCEPTS_MFLOAT_HARD)
-			message(STATUS "Setting Software ABI for Floating Point")
-			set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -mfloat-abi=soft")
-			set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -mfloat-abi=soft")
-		endif()
 	endif(ARM7)
 
 	if(ARM8)
+
 		if(CXX_ACCEPTS_MFIX_CORTEX_A53_835769)
 			message(STATUS "Enabling Cortex-A53 workaround 835769")
 			set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -mfix-cortex-a53-835769")
@@ -283,6 +178,7 @@ message(STATUS "Setting FPU Flags for ARM Processors")
 			set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -mfix-cortex-a53-843419")
 			set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -mfix-cortex-a53-843419")
 		endif()
+
 	endif(ARM8)
 
 endif(ARM)
