@@ -187,8 +187,11 @@ namespace CryptoNote {
       }
     };
 
-bool rollbackBlockchainTo(uint32_t height);
-bool have_tx_keyimg_as_spent(const Crypto::KeyImage &key_im);
+    bool rollbackBlockchainTo(uint32_t height);
+    bool have_tx_keyimg_as_spent(const Crypto::KeyImage &key_im);
+
+    bool checkIfSpent(const Crypto::KeyImage& keyImage, uint32_t blockIndex);
+    bool checkIfSpent(const Crypto::KeyImage& keyImage);
 
   private:
 
