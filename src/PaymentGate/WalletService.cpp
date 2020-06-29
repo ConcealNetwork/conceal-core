@@ -538,7 +538,7 @@ namespace PaymentService
       log(Logging::INFO, Logging::BRIGHT_WHITE) << "Attemping to create container from keys";
       Crypto::Hash private_spend_key_hash;
       Crypto::Hash private_view_key_hash;
-      uint64_t size;
+      size_t size;
 
       /* Check if both keys are valid */
       if (!Common::fromHex(conf.secretSpendKey, &private_spend_key_hash, sizeof(private_spend_key_hash), size) || size != sizeof(private_spend_key_hash))
