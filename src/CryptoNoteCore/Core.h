@@ -152,6 +152,8 @@ core(const Currency& currency, i_cryptonote_protocol* pprotocol, Logging::ILogge
      uint64_t depositInterestAtHeight(size_t height) const;
 
      bool is_key_image_spent(const Crypto::KeyImage& key_im);
+     bool is_key_image_spent(const Crypto::KeyImage& key_im, uint32_t height);
+
      static bool getPaymentId(const Transaction& transaction, Crypto::Hash& paymentId);
      virtual bool getMixin(const Transaction& transaction, uint64_t& mixin);
 
