@@ -14,6 +14,8 @@
 #include "Common/Math.h"
 #include "CoreRpcServerCommandsDefinitions.h"
 
+#include "BlockchainExplorer/BlockchainExplorerDataBuilder.h"
+
 namespace CryptoNote {
 
 class core;
@@ -23,7 +25,8 @@ class ICryptoNoteProtocolQuery;
 
 class RpcServer : public HttpServer {
 public:
-  RpcServer(System::Dispatcher& dispatcher, Logging::ILogger& log, core& c, NodeServer& p2p, const ICryptoNoteProtocolQuery& protocolQuery);
+  RpcServer(System::Dispatcher& dispatcher, Logging::ILogger& log, core& c, NodeServer& p2p, ICryptoNoteProtocolQuery& protocolQuery);
+
   typedef std::function<bool(RpcServer*, const HttpRequest& request, HttpResponse& response)> HandlerFunction;
   bool setFeeAddress(const std::string& fee_address, const AccountPublicAddress& fee_acc);
   bool setViewKey(const std::string& view_key);
@@ -96,11 +99,10 @@ private:
   bool f_on_pool_json(const F_COMMAND_RPC_GET_POOL::request& req, F_COMMAND_RPC_GET_POOL::response& res);
   bool f_on_mempool_json(const COMMAND_RPC_GET_MEMPOOL::request& req, COMMAND_RPC_GET_MEMPOOL::response& res);
 
-  bool f_getMixin(const Transaction& transaction, uint64_t& mixin);
-
   Logging::LoggerRef logger;
   core& m_core;
   NodeServer& m_p2p;
+  BlockchainExplorerDataBuilder blockchainExplorerDataBuilder;
   const ICryptoNoteProtocolQuery& m_protocolQuery;
   bool m_restricted_rpc;
   std::string m_cors_domain;

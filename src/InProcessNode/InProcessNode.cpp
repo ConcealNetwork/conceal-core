@@ -568,6 +568,32 @@ void InProcessNode::getOutByMSigGIndexAsync(uint64_t amount, uint32_t gindex, Mu
   callback(ec);
 }
 
+void InProcessNode::getFeeAddress() {
+  // Do nothing
+  return;
+}
+
+std::string InProcessNode::feeAddress() const { 
+  return std::string();
+}
+
+void InProcessNode::getBlock(const uint32_t blockHeight, BlockDetails &block, const Callback& callback) {
+  std::unique_lock<std::mutex> lock(mutex);
+  if (state != INITIALIZED) {
+    lock.unlock();
+    callback(make_error_code(CryptoNote::error::NOT_INITIALIZED));
+    return;
+  }
+
+  std::vector<uint32_t> blockHeights;
+  std::vector<std::vector<BlockDetails>> blocks;
+  blockHeights.push_back(blockHeight);
+
+  getBlocksAsync(blockHeights, blocks, callback);
+
+  block = blocks[0][0];
+}
+
 void InProcessNode::getBlocks(const std::vector<uint32_t>& blockHeights, std::vector<std::vector<BlockDetails>>& blocks, const Callback& callback) {
   std::unique_lock<std::mutex> lock(mutex);
   if (state != INITIALIZED) {

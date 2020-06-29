@@ -11,7 +11,6 @@
 
 // CryptoNote
 #include "BlockchainExplorerData.h"
-#include "BlockchainExplorerData2.h"
 #include "Common/StringTools.h"
 #include "Common/Base58.h"
 #include "CryptoNoteCore/TransactionUtils.h"
@@ -117,8 +116,8 @@ std::unordered_map<std::string, RpcServer::RpcHandler<RpcServer::HandlerFunction
   { "/json_rpc", { std::bind(&RpcServer::processJsonRpcRequest, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3), true } }
 };
 
-RpcServer::RpcServer(System::Dispatcher& dispatcher, Logging::ILogger& log, core& c, NodeServer& p2p, const ICryptoNoteProtocolQuery& protocolQuery) :
-  HttpServer(dispatcher, log), logger(log, "RpcServer"), m_core(c), m_p2p(p2p), m_protocolQuery(protocolQuery) {
+RpcServer::RpcServer(System::Dispatcher& dispatcher, Logging::ILogger& log, core& c, NodeServer& p2p, ICryptoNoteProtocolQuery& protocolQuery) :
+  HttpServer(dispatcher, log), logger(log, "RpcServer"), m_core(c), m_p2p(p2p), m_protocolQuery(protocolQuery), blockchainExplorerDataBuilder(c, protocolQuery) {
 }
 
 void RpcServer::processRequest(const HttpRequest& request, HttpResponse& response) {
@@ -607,7 +606,7 @@ bool RpcServer::onGetPoolChangesLite(const COMMAND_RPC_GET_POOL_CHANGES_LITE::re
 
 bool RpcServer::onGetBlocksDetailsByHeights(const COMMAND_RPC_GET_BLOCKS_DETAILS_BY_HEIGHTS::request& req, COMMAND_RPC_GET_BLOCKS_DETAILS_BY_HEIGHTS::response& rsp) {
   try {
-    std::vector<BlockDetails2> blockDetails;
+    std::vector<BlockDetails> blockDetails;
     for (const uint32_t& height : req.blockHeights) {
       if (m_core.get_current_blockchain_height() <= height) {
         throw JsonRpc::JsonRpcError{ CORE_RPC_ERROR_CODE_TOO_BIG_HEIGHT,
@@ -618,8 +617,8 @@ bool RpcServer::onGetBlocksDetailsByHeights(const COMMAND_RPC_GET_BLOCKS_DETAILS
       if (!m_core.getBlockByHash(block_hash, blk)) {
         throw JsonRpc::JsonRpcError{ CORE_RPC_ERROR_CODE_INTERNAL_ERROR, "Internal error: can't get block by height " + std::to_string(height) + '.' };
 	  }
-	  BlockDetails2 detail;
-	  if (!m_core.fillBlockDetails(blk, detail)) {
+	  BlockDetails detail;
+	  if (!blockchainExplorerDataBuilder.fillBlockDetails(blk, detail)) {
         throw JsonRpc::JsonRpcError{ CORE_RPC_ERROR_CODE_INTERNAL_ERROR, "Internal error: can't fill block details." };
 	  }
 	  blockDetails.push_back(detail);
@@ -639,14 +638,14 @@ bool RpcServer::onGetBlocksDetailsByHeights(const COMMAND_RPC_GET_BLOCKS_DETAILS
 
 bool RpcServer::onGetBlocksDetailsByHashes(const COMMAND_RPC_GET_BLOCKS_DETAILS_BY_HASHES::request& req, COMMAND_RPC_GET_BLOCKS_DETAILS_BY_HASHES::response& rsp) {
   try {
-    std::vector<BlockDetails2> blockDetails;
+    std::vector<BlockDetails> blockDetails;
     for (const Crypto::Hash& hash : req.blockHashes) {
       Block blk;
       if (!m_core.getBlockByHash(hash, blk)) {
         //throw JsonRpc::JsonRpcError{ CORE_RPC_ERROR_CODE_INTERNAL_ERROR, "Internal error: can't get block by hash " + Common::PodToHex(hash) + '.' };
       }
-	  BlockDetails2 detail;
-      if (!m_core.fillBlockDetails(blk, detail)) {
+	  BlockDetails detail;
+      if (!blockchainExplorerDataBuilder.fillBlockDetails(blk, detail)) {
         throw JsonRpc::JsonRpcError{ CORE_RPC_ERROR_CODE_INTERNAL_ERROR, "Internal error: can't fill block details." };
       }
       blockDetails.push_back(detail);
@@ -666,7 +665,7 @@ bool RpcServer::onGetBlocksDetailsByHashes(const COMMAND_RPC_GET_BLOCKS_DETAILS_
 
 bool RpcServer::onGetBlockDetailsByHeight(const COMMAND_RPC_GET_BLOCK_DETAILS_BY_HEIGHT::request& req, COMMAND_RPC_GET_BLOCK_DETAILS_BY_HEIGHT::response& rsp) {
   try {
-    BlockDetails2 blockDetails;
+    BlockDetails blockDetails;
     if (m_core.get_current_blockchain_height() <= req.blockHeight) {
       throw JsonRpc::JsonRpcError{ CORE_RPC_ERROR_CODE_TOO_BIG_HEIGHT,
         std::string("To big height: ") + std::to_string(req.blockHeight) + ", current blockchain height = " + std::to_string(m_core.get_current_blockchain_height() - 1) };
@@ -677,7 +676,7 @@ bool RpcServer::onGetBlockDetailsByHeight(const COMMAND_RPC_GET_BLOCK_DETAILS_BY
       throw JsonRpc::JsonRpcError{ CORE_RPC_ERROR_CODE_INTERNAL_ERROR,
         "Internal error: can't get block by height " + std::to_string(req.blockHeight) + '.' };
 	}
-    if (!m_core.fillBlockDetails(blk, blockDetails)) {
+    if (!blockchainExplorerDataBuilder.fillBlockDetails(blk, blockDetails)) {
       throw JsonRpc::JsonRpcError{ CORE_RPC_ERROR_CODE_INTERNAL_ERROR, "Internal error: can't fill block details." };
     }
     rsp.block = blockDetails;
@@ -717,7 +716,7 @@ bool RpcServer::onGetBlocksHashesByTimestamps(const COMMAND_RPC_GET_BLOCKS_HASHE
 
 bool RpcServer::onGetTransactionsDetailsByHashes(const COMMAND_RPC_GET_TRANSACTIONS_DETAILS_BY_HASHES::request& req, COMMAND_RPC_GET_TRANSACTIONS_DETAILS_BY_HASHES::response& rsp) {
   try {
-    std::vector<TransactionDetails2> transactionsDetails;
+    std::vector<TransactionDetails> transactionsDetails;
     transactionsDetails.reserve(req.transactionHashes.size());
 
     std::list<Crypto::Hash> missed_txs;
@@ -726,8 +725,8 @@ bool RpcServer::onGetTransactionsDetailsByHashes(const COMMAND_RPC_GET_TRANSACTI
 
     if (!txs.empty()) {
       for (const Transaction& tx: txs) {
-        TransactionDetails2 txDetails;
-        if (!m_core.fillTransactionDetails(tx, txDetails)) {
+        TransactionDetails txDetails;
+        if (!blockchainExplorerDataBuilder.fillTransactionDetails(tx, txDetails)) {
           throw JsonRpc::JsonRpcError{ CORE_RPC_ERROR_CODE_INTERNAL_ERROR,
             "Internal error: can't fill transaction details." };
         }
@@ -769,8 +768,8 @@ bool RpcServer::onGetTransactionDetailsByHash(const COMMAND_RPC_GET_TRANSACTION_
       "transaction wasn't found. Hash = " + hash_str + '.' };
   }
 
-  TransactionDetails2 transactionsDetails;
-  if (!m_core.fillTransactionDetails(txs.back(), transactionsDetails)) {
+  TransactionDetails transactionsDetails;
+  if (!blockchainExplorerDataBuilder.fillTransactionDetails(txs.back(), transactionsDetails)) {
     throw JsonRpc::JsonRpcError{ CORE_RPC_ERROR_CODE_INTERNAL_ERROR,
       "Internal error: can't fill transaction details." };
   }
@@ -1286,7 +1285,7 @@ bool RpcServer::f_on_transaction_json(const F_COMMAND_RPC_GET_TRANSACTION_DETAIL
   res.txDetails.size = getObjectBinarySize(res.tx);
 
   uint64_t mixin;
-  if (!f_getMixin(res.tx, mixin)) {
+  if (!m_core.getMixin(res.tx, mixin)) {
     return false;
   }
   res.txDetails.mixin = mixin;
@@ -1339,20 +1338,6 @@ bool RpcServer::f_on_mempool_json(const COMMAND_RPC_GET_MEMPOOL::request& req, C
     res.mempool.push_back(mempool_transaction);
   }
   res.status = CORE_RPC_STATUS_OK;
-  return true;
-}
-
-bool RpcServer::f_getMixin(const Transaction& transaction, uint64_t& mixin) {
-  mixin = 0;
-  for (const TransactionInput& txin : transaction.inputs) {
-    if (txin.type() != typeid(KeyInput)) {
-      continue;
-    }
-    uint64_t currentMixin = boost::get<KeyInput>(txin).outputIndexes.size();
-    if (currentMixin > mixin) {
-      mixin = currentMixin;
-    }
-  }
   return true;
 }
 

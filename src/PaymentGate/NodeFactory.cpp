@@ -28,6 +28,7 @@ public:
   virtual uint32_t getKnownBlockCount() const override { return 0; }
   virtual uint64_t getLastLocalBlockTimestamp() const override { return 0; }
 
+  virtual void getFeeAddress() override { }
   virtual void relayTransaction(const CryptoNote::Transaction& transaction, const Callback& callback) override { callback(std::error_code()); }
   virtual void getRandomOutsByAmounts(std::vector<uint64_t>&& amounts, uint64_t outsCount,
     std::vector<CryptoNote::COMMAND_RPC_GET_RANDOM_OUTPUTS_FOR_AMOUNTS::outs_for_amount>& result, const Callback& callback) override {
@@ -59,6 +60,9 @@ public:
   virtual void getBlocks(uint64_t timestampBegin, uint64_t timestampEnd, uint32_t blocksNumberLimit, std::vector<CryptoNote::BlockDetails>& blocks, uint32_t& blocksNumberWithinTimestamps,
     const Callback& callback) override { }
 
+  virtual void getBlock(const uint32_t blockHeight, CryptoNote::BlockDetails &block,
+    const Callback& callback) override { }
+
   virtual void getTransactions(const std::vector<Crypto::Hash>& transactionHashes, std::vector<CryptoNote::TransactionDetails>& transactions,
     const Callback& callback) override { }
 
@@ -72,6 +76,8 @@ public:
     const Callback& callback) override { }
 
   virtual void isSynchronized(bool& syncStatus, const Callback& callback) override { }
+
+  virtual std::string feeAddress() const override { return std::string(); }
 
 };
 
