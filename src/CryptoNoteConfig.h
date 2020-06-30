@@ -92,7 +92,7 @@ const uint64_t CRYPTONOTE_MEMPOOL_TX_LIVETIME = (60 * 60 * 12); /* 1 hour in sec
 const uint64_t CRYPTONOTE_MEMPOOL_TX_FROM_ALT_BLOCK_LIVETIME = (60 * 60 * 12); /* 24 hours in seconds */
 const uint64_t CRYPTONOTE_NUMBER_OF_PERIODS_TO_FORGET_TX_DELETED_FROM_POOL  = 7; /* CRYPTONOTE_NUMBER_OF_PERIODS_TO_FORGET_TX_DELETED_FROM_POOL * CRYPTONOTE_MEMPOOL_TX_LIVETIME  = time to forget tx */
 
-const size_t   FUSION_TX_MAX_SIZE = CRYPTONOTE_MAX_TX_SIZE_LIMIT;
+const size_t   FUSION_TX_MAX_SIZE = CRYPTONOTE_BLOCK_GRANTED_FULL_REWARD_ZONE * 30 / 100;
 const size_t   FUSION_TX_MIN_INPUT_COUNT = 12;
 const size_t   FUSION_TX_MIN_IN_OUT_COUNT_RATIO = 4;
 
@@ -122,7 +122,7 @@ const char     MINER_CONFIG_FILE_NAME[]                       = "miner_conf.json
 
 const uint64_t START_BLOCK_REWARD = (UINT64_C(5000) * parameters::POINT); // start reward (Consensus I)
 const uint64_t FOUNDATION_TRUST = (UINT64_C(12000000) * parameters::COIN); // locked funds to secure network  (Consensus II)
-const uint64_t MAX_BLOCK_REWARD = (UINT64_C(20) * parameters::COIN); // max reward (Consensus I)
+const uint64_t MAX_BLOCK_REWARD = (UINT64_C(15) * parameters::COIN); // max reward (Consensus I)
 const uint64_t REWARD_INCREASE_INTERVAL = (UINT64_C(21900)); // aprox. 1 month (+ 0.25 CCX increment per month)
 
 const char     CRYPTONOTE_NAME[] = "conceal";
