@@ -4,7 +4,7 @@
 // Distributed under the MIT/X11 software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#include "WalletSerialization.h"
+#include "WalletSerializationV1.h"
 
 #include <string>
 #include <sstream>
@@ -32,9 +32,9 @@ namespace {
 //DO NOT CHANGE IT
 struct WalletRecordDto {
   PublicKey spendPublicKey;
-  SecretKey spendSecretKey;
-  uint64_t pendingBalance = 0;
+  SecretKey spendSecretKey; 
   uint64_t actualBalance = 0;
+  uint64_t pendingBalance = 0;
   uint64_t creationTimestamp = 0;
 };
 
@@ -100,7 +100,6 @@ struct WalletTransferDto {
   std::string address;
   uint64_t amount;
   uint8_t type;
-
   uint32_t version;
 };
 
@@ -333,7 +332,7 @@ CryptoContext WalletSerializer::generateCryptoContext(const std::string& passwor
   Crypto::cn_context c;
   Crypto::generate_chacha8_key(c, password, context.key);
 
-  context.iv = Crypto::rand<Crypto::chacha_iv>();
+  context.iv = Crypto::rand<Crypto::chacha8_iv>();
 
   return context;
 }
@@ -345,9 +344,9 @@ void WalletSerializer::saveVersion(Common::IOutputStream& destination) {
   s(version, "version");
 }
 
-void WalletSerializer::saveIv(Common::IOutputStream& destination, Crypto::chacha_iv& iv) {
+void WalletSerializer::saveIv(Common::IOutputStream& destination, Crypto::chacha8_iv& iv) {
   BinaryOutputStreamSerializer s(destination);
-  s.binary(reinterpret_cast<void *>(&iv.data), sizeof(iv.data), "chacha_iv");
+  s.binary(reinterpret_cast<void *>(&iv.data), sizeof(iv.data), "chacha8_iv");
 }
 
 void WalletSerializer::saveKeys(Common::IOutputStream& destination, CryptoContext& cryptoContext) {
@@ -475,31 +474,38 @@ void WalletSerializer::saveTransfers(Common::IOutputStream& destination, CryptoC
   }
 }
 
-void WalletSerializer::load(const std::string& password, Common::IInputStream& source) {
+void WalletSerializer::load(const Crypto::chacha8_key &key, Common::IInputStream &source)
+{
   CryptoNote::BinaryInputStreamSerializer s(source);
   s.beginObject("wallet");
 
   uint32_t version = loadVersion(source);
 
-  if (version > SERIALIZATION_VERSION) {
+  if (version > SERIALIZATION_VERSION)
+  {
     throw std::system_error(make_error_code(error::WRONG_VERSION));
-  } else if (version > 2) {
-    loadWallet(source, password, version);
-  } else {
-    loadWalletV1(source, password);
+  }
+  else if (version > 2)
+  {
+    loadWallet(source, key, version);
+  }
+  else
+  {
+    loadWalletV1(source, key);
   }
 
   s.endObject();
 }
 
-void WalletSerializer::loadWallet(Common::IInputStream& source, const std::string& password, uint32_t version) {
+void WalletSerializer::loadWallet(Common::IInputStream &source, const Crypto::chacha8_key &key, uint32_t version)
+{
   CryptoNote::CryptoContext cryptoContext;
 
   bool details = false;
   bool cache = false;
 
   loadIv(source, cryptoContext.iv);
-  generateKey(password, cryptoContext.key);
+  cryptoContext.key = key;
 
   loadKeys(source, cryptoContext);
   checkKeys();
@@ -548,13 +554,14 @@ void WalletSerializer::loadWallet(Common::IInputStream& source, const std::strin
   }
 }
 
-void WalletSerializer::loadWalletV1(Common::IInputStream& source, const std::string& password) {
+void WalletSerializer::loadWalletV1(Common::IInputStream &source, const Crypto::chacha8_key &key)
+{
   CryptoNote::CryptoContext cryptoContext;
 
   CryptoNote::BinaryInputStreamSerializer encrypted(source);
 
   encrypted(cryptoContext.iv, "iv");
-  generateKey(password, cryptoContext.key);
+  cryptoContext.key = key;
 
   std::string cipher;
   encrypted(cipher, "data");
@@ -613,13 +620,13 @@ uint32_t WalletSerializer::loadVersion(Common::IInputStream& source) {
   return version;
 }
 
-void WalletSerializer::loadIv(Common::IInputStream& source, Crypto::chacha_iv& iv) {
+void WalletSerializer::loadIv(Common::IInputStream& source, Crypto::chacha8_iv& iv) {
   CryptoNote::BinaryInputStreamSerializer s(source);
 
-  s.binary(static_cast<void *>(&iv.data), sizeof(iv.data), "chacha_iv");
+  s.binary(static_cast<void *>(&iv.data), sizeof(iv.data), "chacha8_iv");
 }
 
-void WalletSerializer::generateKey(const std::string& password, Crypto::chacha_key& key) {
+void WalletSerializer::generateKey(const std::string& password, Crypto::chacha8_key& key) {
   Crypto::cn_context context;
   Crypto::generate_chacha8_key(context, password, key);
 }
