@@ -287,7 +287,7 @@ namespace CryptoNote
                                                                                                                                                                 m_unlockedDepositBalance(0),
                                                                                                                                                                 m_transactionSoftLockTime(transactionSoftLockTime)
   {
-    m_upperTransactionSizeLimit = m_currency.maxTxSize();
+    m_upperTransactionSizeLimit = m_currency.transactionMaxSize();
     m_readyEvent.set();
   }
 

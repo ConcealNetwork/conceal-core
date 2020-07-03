@@ -159,7 +159,7 @@ namespace CryptoNote {
                                                                                                                                                                                                        m_isStoping(false),
                                                                                                                                                                                                        m_keys(keys),
                                                                                                                                                                                                        m_transferDetails(transfersContainer),
-                                                                                                                                                                                                       m_upperTransactionSizeLimit(m_currency.maxTxSize()),
+                                                                                                                                                                                                       m_upperTransactionSizeLimit(m_currency.transactionMaxSize()),
                                                                                                                                                                                                        m_node(node)
   {
   }
