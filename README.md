@@ -48,6 +48,8 @@ For example if you have 8GB of RAM, then your SWAP size should be 5GB
 	sudo dphys-swapfile swapoff
 	sudo nano /etc/dphys-swapfile
 	CONF_SWAPSIZE=5120
+	sudo nano /sbin/dphys-swapfile
+	#CONF_MAXSWAP=2048
 	sudo dphys-swapfile setup
 	sudo dphys-swapfile swapon
 	```
