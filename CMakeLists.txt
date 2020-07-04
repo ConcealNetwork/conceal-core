@@ -93,7 +93,7 @@ if (ARM_ID STREQUAL "aarch64" OR ARM_ID STREQUAL "arm64" OR ARM_ID STREQUAL "arm
   set(ARM8 1)
 endif()
 
-# Manually ARCH options for ARM
+# Manual ARCH options for ARM
 if(ARM7) # ARMv7 Pi 3/4 32Bit
 	CHECK_CXX_ACCEPTS_FLAG("-march=armv8-a" TRY_ARCH)
 	if(TRY_ARCH)
