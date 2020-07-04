@@ -28,12 +28,12 @@ Conceal is open-source, community driven and truly decentralized. No one owns it
 
 ## Compiling Conceal from source
 
-### RAM / SWAP
+### System Memory
 
-The build process can consume upto 13GB of memory and may fail if there are not enough resources available.
+The build process can consume upto 13GB of memory and may fail if enough resources are not available.
 In some build scenarios it may be necessary to increase the size of the SWAP to compensate for less RAM.
 
-- For example you have 8GB of RAM, your SWAP size should be 5GB
+For example if you have 8GB of RAM, then your SWAP size should be 5GB
 
 - Ubuntu / Linux
 	```bash
@@ -72,7 +72,8 @@ If the build is successful the binaries will be in the src folder.
 ### Raspberry Pi / ARM
 
 Tested on a Raspberry Pi 4 with Raspberry Pi OS (32/64bit) images.
-Note: Other ARM CPU/OS combinations should be possible if the CPU supports Neon/AES.
+
+Other ARM CPU/OS combinations should be possible if the CPU supports Neon/AES.
 
 - Follow the Linux / Ubuntu procedure to build.
 
