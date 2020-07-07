@@ -2318,8 +2318,6 @@ namespace CryptoNote
 
   void WalletGreen::reset(const uint64_t scanHeight)
   {
-    //TODO
-
     throwIfNotInitialized();
     throwIfStopped();
 
@@ -3355,8 +3353,6 @@ namespace CryptoNote
     return insertDeposit(deposit, depositOutput.outputInTransaction, depositOutput.transactionHash);
   }
 
-  //KK
-
   DepositId WalletGreen::insertDeposit(
       const Deposit &deposit,
       size_t depositIndexInTransaction,
@@ -3367,8 +3363,6 @@ namespace CryptoNote
 
     info.outputInTransaction = static_cast<uint32_t>(depositIndexInTransaction);
     info.transactionHash = transactionHash;
-
-    /*TODO Add the address to deposit info to make searching easier */
 
     auto &hashIndex = m_transactions.get<TransactionIndex>();
     auto it = hashIndex.find(transactionHash);
@@ -3406,7 +3400,6 @@ namespace CryptoNote
     }
 
     size_t firstDepositId = std::numeric_limits<DepositId>::max();
-    ;
     size_t depositCount = 0;
 
     bool updated = false;

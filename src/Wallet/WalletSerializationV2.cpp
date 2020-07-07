@@ -43,6 +43,8 @@ struct WalletTransactionDtoV2 {
     timestamp = wallet.timestamp;
     blockHeight = wallet.blockHeight;
     hash = wallet.hash;
+    depositCount = wallet.depositCount;
+    firstDepositId = wallet.firstDepositId;
     totalAmount = wallet.totalAmount;
     fee = wallet.fee;
     creationTime = wallet.creationTime;
@@ -55,6 +57,8 @@ struct WalletTransactionDtoV2 {
   uint64_t timestamp;
   uint32_t blockHeight;
   Hash hash;
+  size_t depositCount;
+  size_t firstDepositId;
   int64_t totalAmount;
   uint64_t fee;
   uint64_t creationTime;
@@ -129,6 +133,8 @@ void serialize(WalletTransactionDtoV2& value, CryptoNote::ISerializer& serialize
   serializer(value.hash, "hash");
   serializer(value.totalAmount, "totalAmount");
   serializer(value.fee, "fee");
+  serializer(value.depositCount, "depositCount");
+  serializer(value.firstDepositId, "firstDepositId");
   serializer(value.creationTime, "creationTime");
   serializer(value.unlockTime, "unlockTime");
   serializer(value.extra, "extra");
@@ -334,6 +340,8 @@ void WalletSerializerV2::loadTransactions(CryptoNote::ISerializer& serializer) {
     tx.timestamp = dto.timestamp;
     tx.blockHeight = dto.blockHeight;
     tx.hash = dto.hash;
+    tx.depositCount = dto.depositCount;
+    tx.firstDepositId = dto.firstDepositId;
     tx.totalAmount = dto.totalAmount;
     tx.fee = dto.fee;
     tx.creationTime = dto.creationTime;

@@ -100,7 +100,7 @@ struct WalletTransaction
   uint64_t creationTime;
   uint64_t unlockTime;
   std::string extra;
-  size_t firstDepositId = std::numeric_limits<DepositId>::max();;
+  size_t firstDepositId = std::numeric_limits<DepositId>::max();
   size_t depositCount = 0;
   bool isBase;
 };
