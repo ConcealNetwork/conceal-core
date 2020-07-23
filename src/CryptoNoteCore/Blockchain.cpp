@@ -1956,6 +1956,11 @@ bool Blockchain::addNewBlock(const Block& bl_, block_verification_context& bvc) 
       add_result = pushBlock(bl, id, bvc, ++height);
       if (add_result) {
         sendMessage(BlockchainMessage(NewBlockMessage(id)));
+
+        /** Save the blockchain every 720 blocks */
+        if (height % 720 == 0) {
+          storeCache();
+        }
       }
     }
   }
