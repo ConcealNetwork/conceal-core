@@ -1,4 +1,4 @@
-name: Ubuntu 18.04
+name: ARM64
 
 on:
   push:
@@ -6,9 +6,9 @@ on:
     - '*'
 
 jobs:
-  build-ubuntu18:
-    name: Ubuntu 18.04
-    runs-on: ubuntu-18.04
+  build-arm64:
+    name: ARM64
+    runs-on: ARM64
     steps:
       - uses: actions/checkout@master
 
@@ -16,16 +16,14 @@ jobs:
         id: build
         run: |
           BOOST_ROOT=
-          sudo apt-get purge '*boost*'
-          sudo apt install -y libboost-all-dev
           build_folder="build/debug"
           ccx_ver=$(echo "$GITHUB_REF" | sed 's|refs/tags/||')
           ccx_ver_folder=$(echo $ccx_ver | sed 's/\.//g')
-          release_name=ccx-cli-ubuntu-1804-v"$ccx_ver"
+          release_name=ccx-cli-arm64-v"$ccx_ver"
           mkdir -p "$build_folder"
           cd "$build_folder"
           cmake ../..
-          make -j2
+          make -j4
           mkdir -p "$release_name/$ccx_ver_folder"
           exeFiles=()
           for f in src/*; do [[ -x $f && -f $f ]] && exeFiles+=( "$f" ); done

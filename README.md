@@ -28,6 +28,32 @@ Conceal is open-source, community driven and truly decentralized. No one owns it
 
 ## Compiling Conceal from source
 
+### System Memory
+
+The build process can consume upto 13GB of memory and may fail if enough resources are not available.
+In some build scenarios it may be necessary to increase the size of the SWAP to compensate for less RAM.
+
+For example if you have 8GB of RAM, then your SWAP size should be 5GB
+
+- Ubuntu / Linux
+	```bash
+	sudo fallocate -l 5G /swapfile
+	sudo chmod 600 /swapfile
+	sudo mkswap /swapfile
+	sudo swapon /swapfile
+	```
+
+- Rasberry Pi OS
+	```bash
+	sudo dphys-swapfile swapoff
+	sudo nano /etc/dphys-swapfile
+	CONF_SWAPSIZE=5120
+	sudo nano /sbin/dphys-swapfile
+	#CONF_MAXSWAP=2048
+	sudo dphys-swapfile setup
+	sudo dphys-swapfile swapon
+	```
+
 ### Linux / Ubuntu
 
 ##### Prerequisites
@@ -44,6 +70,14 @@ Conceal is open-source, community driven and truly decentralized. No one owns it
 - `make`
 
 If the build is successful the binaries will be in the src folder.
+
+### Raspberry Pi / ARM
+
+Tested on a Raspberry Pi 4 with Raspberry Pi OS (32/64bit) images.
+
+Other ARM CPU/OS combinations should be possible if the CPU supports Neon/AES.
+
+- Follow the Linux / Ubuntu procedure to build.
 
 ### Windows 10
 
