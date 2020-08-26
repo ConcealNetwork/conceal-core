@@ -860,9 +860,10 @@ namespace CryptoNote
 
       /** If the amount is larger than the current dust threshold 
        * insert the amount into the correct bucket */
-      if (walletAmount.amount > dust) {
+      if (walletAmount.amount > dust)
+      {
         buckets[numberOfDigits].push_back(walletAmount);
-      } 
+      }
     }
 
     while (foundMoney < neededMoney && !buckets.empty())
@@ -880,7 +881,7 @@ namespace CryptoNote
           /** Add the amount to the selected transfers so long as 
            * foundMoney is still less than neededMoney. This prevents 
            * larger outputs than we need when we already have enough funds */
-          if (foundMoney < neededMoney) 
+          if (foundMoney < neededMoney)
           {
             selectedTransfers.push_back(bucket->second.back());
             foundMoney += bucket->second.back().amount;
