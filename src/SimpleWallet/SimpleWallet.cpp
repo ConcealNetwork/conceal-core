@@ -15,6 +15,7 @@
 #include <sstream>
 #include <regex>
 
+#include <boost/format.hpp>
 #include <boost/bind.hpp>
 #include <boost/lexical_cast.hpp>
 #include <boost/program_options.hpp>
