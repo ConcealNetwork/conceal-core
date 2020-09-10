@@ -14,6 +14,7 @@
 #include <boost/uuid/random_generator.hpp>
 #include <boost/uuid/uuid_io.hpp>
 #include <boost/utility/value_init.hpp>
+#include <boost/format.hpp>
 
 #include <miniupnpc/miniupnpc.h>
 #include <miniupnpc/upnpcommands.h>
@@ -221,21 +222,30 @@ namespace CryptoNote
     s(m_config.m_peer_id, "peer_id");
   }
 
-#define INVOKE_HANDLER(CMD, Handler) case CMD::ID: { ret = invokeAdaptor<CMD>(cmd.buf, out, ctx,  boost::bind(Handler, this, _1, _2, _3, _4)); break; }
+#define INVOKE_HANDLER(CMD, Handler)                                                                                                             \
+  case CMD::ID:                                                                                                                                  \
+  {                                                                                                                                              \
+    ret = invokeAdaptor<CMD>(cmd.buf, out, ctx, boost::bind(Handler, this, boost::arg<1>(), boost::arg<2>(), boost::arg<3>(), boost::arg<4>())); \
+    break;                                                                                                                                       \
+  }
 
-  int NodeServer::handleCommand(const LevinProtocol::Command& cmd, BinaryArray& out, P2pConnectionContext& ctx, bool& handled) {
+  int NodeServer::handleCommand(const LevinProtocol::Command &cmd, BinaryArray &out, P2pConnectionContext &ctx, bool &handled)
+  {
     int ret = 0;
     handled = true;
 
-    if (cmd.isResponse && cmd.command == COMMAND_TIMED_SYNC::ID) {
-      if (!handleTimedSyncResponse(cmd.buf, ctx)) {
+    if (cmd.isResponse && cmd.command == COMMAND_TIMED_SYNC::ID)
+    {
+      if (!handleTimedSyncResponse(cmd.buf, ctx))
+      {
         // invalid response, close connection
         ctx.m_state = CryptoNoteConnectionContext::state_shutdown;
       }
       return 0;
     }
 
-    switch (cmd.command) {
+    switch (cmd.command)
+    {
       INVOKE_HANDLER(COMMAND_HANDSHAKE, &NodeServer::handle_handshake)
       INVOKE_HANDLER(COMMAND_TIMED_SYNC, &NodeServer::handle_timed_sync)
       INVOKE_HANDLER(COMMAND_PING, &NodeServer::handle_ping)
@@ -244,10 +254,11 @@ namespace CryptoNote
       INVOKE_HANDLER(COMMAND_REQUEST_NETWORK_STATE, &NodeServer::handle_get_network_state)
       INVOKE_HANDLER(COMMAND_REQUEST_PEER_ID, &NodeServer::handle_get_peer_id)
 #endif
-    default: {
-        handled = false;
-        ret = m_payload_handler.handleCommand(cmd.isNotify, cmd.command, cmd.buf, out, ctx, handled);
-      }
+    default:
+    {
+      handled = false;
+      ret = m_payload_handler.handleCommand(cmd.isNotify, cmd.command, cmd.buf, out, ctx, handled);
+    }
     }
 
     return ret;
