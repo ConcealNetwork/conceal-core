@@ -229,19 +229,23 @@ namespace CryptoNote
     break;                                                                                                                                                                       \
   }
 
-  int NodeServer::handleCommand(const LevinProtocol::Command& cmd, BinaryArray& out, P2pConnectionContext& ctx, bool& handled) {
+  int NodeServer::handleCommand(const LevinProtocol::Command &cmd, BinaryArray &out, P2pConnectionContext &ctx, bool &handled)
+  {
     int ret = 0;
     handled = true;
 
-    if (cmd.isResponse && cmd.command == COMMAND_TIMED_SYNC::ID) {
-      if (!handleTimedSyncResponse(cmd.buf, ctx)) {
+    if (cmd.isResponse && cmd.command == COMMAND_TIMED_SYNC::ID)
+    {
+      if (!handleTimedSyncResponse(cmd.buf, ctx))
+      {
         // invalid response, close connection
         ctx.m_state = CryptoNoteConnectionContext::state_shutdown;
       }
       return 0;
     }
 
-    switch (cmd.command) {
+    switch (cmd.command)
+    {
       INVOKE_HANDLER(COMMAND_HANDSHAKE, &NodeServer::handle_handshake)
       INVOKE_HANDLER(COMMAND_TIMED_SYNC, &NodeServer::handle_timed_sync)
       INVOKE_HANDLER(COMMAND_PING, &NodeServer::handle_ping)
@@ -250,10 +254,11 @@ namespace CryptoNote
       INVOKE_HANDLER(COMMAND_REQUEST_NETWORK_STATE, &NodeServer::handle_get_network_state)
       INVOKE_HANDLER(COMMAND_REQUEST_PEER_ID, &NodeServer::handle_get_peer_id)
 #endif
-    default: {
-        handled = false;
-        ret = m_payload_handler.handleCommand(cmd.isNotify, cmd.command, cmd.buf, out, ctx, handled);
-      }
+    default:
+    {
+      handled = false;
+      ret = m_payload_handler.handleCommand(cmd.isNotify, cmd.command, cmd.buf, out, ctx, handled);
+    }
     }
 
     return ret;
