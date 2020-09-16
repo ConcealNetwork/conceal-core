@@ -482,6 +482,11 @@ void core::update_block_template_and_resume_mining() {
   m_miner->resume();
 }
 
+bool core::saveBlockchain()
+{
+  return m_blockchain.storeCache();
+}
+
 bool core::handle_block_found(Block& b) {
   block_verification_context bvc = boost::value_initialized<block_verification_context>();
   handle_incoming_block(b, bvc, true, true);

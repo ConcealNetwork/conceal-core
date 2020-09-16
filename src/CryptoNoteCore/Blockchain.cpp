@@ -712,14 +712,14 @@ namespace CryptoNote
   {
     std::lock_guard<decltype(m_blockchain_lock)> lk(m_blockchain_lock);
 
-    logger(INFO, BRIGHT_WHITE) << "Saving blockchain";
+    logger(INFO, BRIGHT_WHITE) << "Saving blockchain...";
     BlockCacheSerializer ser(*this, getTailId(), logger.getLogger());
     if (!ser.save(appendPath(m_config_folder, m_currency.blocksCacheFileName())))
     {
       logger(ERROR, BRIGHT_RED) << "Failed to save blockchain cache";
       return false;
     }
-
+    logger(INFO, BRIGHT_GREEN) << "The Blockchain was successfully saved.";
     return true;
   }
 
