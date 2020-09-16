@@ -57,6 +57,7 @@ core(const Currency& currency, i_cryptonote_protocol* pprotocol, Logging::ILogge
      bool deinit();
 
      // ICore
+     virtual bool saveBlockchain() override;
      virtual size_t addChain(const std::vector<const IBlock*>& chain) override;
      virtual bool handle_get_objects(NOTIFY_REQUEST_GET_OBJECTS_request& arg, NOTIFY_RESPONSE_GET_OBJECTS_request& rsp) override; //Deprecated. Should be removed with CryptoNoteProtocolHandler.
      virtual bool getBackwardBlocksSizes(uint32_t fromHeight, std::vector<size_t>& sizes, size_t count) override;
