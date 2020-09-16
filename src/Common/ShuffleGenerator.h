@@ -44,11 +44,6 @@ public:
     return value;
   }
 
-  bool empty() const
-  {
-    return count == 0;
-  }
-
   void reset() {
     count = N;
     selected.clear();
