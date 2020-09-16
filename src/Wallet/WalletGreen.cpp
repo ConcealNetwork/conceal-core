@@ -2800,62 +2800,57 @@ namespace CryptoNote
       std::vector<WalletOuts> &&wallets,
       std::vector<OutputToTransfer> &selectedTransfers)
   {
-
     uint64_t foundMoney = 0;
 
-    std::vector<WalletOuts> walletOuts = wallets;
-    std::default_random_engine randomGenerator(Crypto::rand<std::default_random_engine::result_type>());
+    typedef std::pair<WalletRecord *, TransactionOutputInformation> OutputData;
+    std::vector<OutputData> dustOutputs;
+    std::vector<OutputData> walletOuts;
+    std::unordered_map<uint64_t, std::vector<OutputData>> buckets;
 
-    while (foundMoney < neededMoney && !walletOuts.empty())
+    for (auto walletIt = wallets.begin(); walletIt != wallets.end(); ++walletIt)
     {
-      std::uniform_int_distribution<size_t> walletsDistribution(0, walletOuts.size() - 1);
-
-      size_t walletIndex = walletsDistribution(randomGenerator);
-      std::vector<TransactionOutputInformation> &addressOuts = walletOuts[walletIndex].outs;
-
-      assert(addressOuts.size() > 0);
-      std::uniform_int_distribution<size_t> outDistribution(0, addressOuts.size() - 1);
-      size_t outIndex = outDistribution(randomGenerator);
-
-      TransactionOutputInformation out = addressOuts[outIndex];
-      if (out.amount > dustThreshold || dust)
+      for (auto outIt = walletIt->outs.begin(); outIt != walletIt->outs.end(); ++outIt)
       {
-        if (out.amount <= dustThreshold)
+        int numberOfDigits = floor(log10(outIt->amount)) + 1;
+
+        if (outIt->amount > dustThreshold)
         {
-          dust = false;
+          buckets[numberOfDigits].emplace_back(
+              std::piecewise_construct,
+              std::forward_as_tuple(walletIt->wallet),
+              std::forward_as_tuple(*outIt));
         }
-
-        foundMoney += out.amount;
-
-        selectedTransfers.push_back({std::move(out), walletOuts[walletIndex].wallet});
-      }
-
-      addressOuts.erase(addressOuts.begin() + outIndex);
-      if (addressOuts.empty())
-      {
-        walletOuts.erase(walletOuts.begin() + walletIndex);
       }
     }
 
-    if (!dust)
+    while (foundMoney < neededMoney && !buckets.empty())
     {
-      return foundMoney;
-    }
-
-    for (const auto &addressOuts : walletOuts)
-    {
-      auto it = std::find_if(addressOuts.outs.begin(), addressOuts.outs.end(), [dustThreshold](const TransactionOutputInformation &out) {
-        return out.amount <= dustThreshold;
-      });
-
-      if (it != addressOuts.outs.end())
+      /* Take one element from each bucket, smallest first. */
+      for (auto bucket = buckets.begin(); bucket != buckets.end();)
       {
-        foundMoney += it->amount;
-        selectedTransfers.push_back({*it, addressOuts.wallet});
-        break;
+        /* Bucket has been exhausted, remove from list */
+        if (bucket->second.empty())
+        {
+          bucket = buckets.erase(bucket);
+        }
+        else
+        {
+          /** Add the amount to the selected transfers so long as 
+           * foundMoney is still less than neededMoney. This prevents 
+           * larger outputs than we need when we already have enough funds */
+          if (foundMoney < neededMoney)
+          {
+            auto out = bucket->second.back();
+            selectedTransfers.emplace_back(OutputToTransfer{std::move(out.second), std::move(out.first)});
+            foundMoney += out.second.amount;
+          }
+
+          /* Remove amount we just added */
+          bucket->second.pop_back();
+          bucket++;
+        }
       }
     }
-
     return foundMoney;
   };
 
