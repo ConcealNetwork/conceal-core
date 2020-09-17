@@ -379,17 +379,19 @@ namespace CryptoNote
     Crypto::Hash m_lastBlockHash;
   };
 
-  Blockchain::Blockchain(const Currency &currency, tx_memory_pool &tx_pool, ILogger &logger, bool blockchainIndexesEnabled) : logger(logger, "Blockchain"),
-                                                                                                                              m_currency(currency),
-                                                                                                                              m_tx_pool(tx_pool),
-                                                                                                                              m_current_block_cumul_sz_limit(0),
-                                                                                                                              m_checkpoints(logger),
-                                                                                                                              m_blockchainIndexesEnabled(blockchainIndexesEnabled),
-                                                                                                                              m_upgradeDetectorV2(currency, m_blocks, BLOCK_MAJOR_VERSION_2, logger),
-                                                                                                                              m_upgradeDetectorV3(currency, m_blocks, BLOCK_MAJOR_VERSION_3, logger),
-                                                                                                                              m_upgradeDetectorV4(currency, m_blocks, BLOCK_MAJOR_VERSION_4, logger),
-                                                                                                                              m_upgradeDetectorV7(currency, m_blocks, BLOCK_MAJOR_VERSION_7, logger),
-                                                                                                                              m_upgradeDetectorV8(currency, m_blocks, BLOCK_MAJOR_VERSION_8, logger)
+  Blockchain::Blockchain(const Currency &currency, tx_memory_pool &tx_pool, ILogger &logger, bool blockchainIndexesEnabled, bool blockchainAutosaveEnabled) : 
+    logger(logger, "Blockchain"),
+    m_currency(currency),
+    m_tx_pool(tx_pool),
+    m_current_block_cumul_sz_limit(0),
+    m_checkpoints(logger),
+    m_blockchainIndexesEnabled(blockchainIndexesEnabled),
+    m_blockchainAutosaveEnabled(blockchainAutosaveEnabled),
+    m_upgradeDetectorV2(currency, m_blocks, BLOCK_MAJOR_VERSION_2, logger),
+    m_upgradeDetectorV3(currency, m_blocks, BLOCK_MAJOR_VERSION_3, logger),
+    m_upgradeDetectorV4(currency, m_blocks, BLOCK_MAJOR_VERSION_4, logger),
+    m_upgradeDetectorV7(currency, m_blocks, BLOCK_MAJOR_VERSION_7, logger),
+    m_upgradeDetectorV8(currency, m_blocks, BLOCK_MAJOR_VERSION_8, logger)
 
   {
   }
@@ -2338,6 +2340,15 @@ namespace CryptoNote
         if (add_result)
         {
           sendMessage(BlockchainMessage(NewBlockMessage(id)));
+
+          /** Save the blockchain every 720 blocks if the option is enabled*/
+          if (m_blockchainAutosaveEnabled) {
+            if (height % 720 == 0)
+            {
+              storeCache();
+            }
+          }
+
         }
       }
     }
