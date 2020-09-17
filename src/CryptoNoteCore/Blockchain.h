@@ -47,7 +47,7 @@ namespace CryptoNote
   class Blockchain : public CryptoNote::ITransactionValidator
   {
   public:
-    Blockchain(const Currency &currency, tx_memory_pool &tx_pool, Logging::ILogger &logger, bool blockchainIndexesEnabled);
+    Blockchain(const Currency &currency, tx_memory_pool &tx_pool, Logging::ILogger &logger, bool blockchainIndexesEnabled, bool blockchainAutosaveEnabled);
 
     bool addObserver(IBlockchainStorageObserver *observer);
     bool removeObserver(IBlockchainStorageObserver *observer);
@@ -303,6 +303,7 @@ namespace CryptoNote
     UpgradeDetector m_upgradeDetectorV8;
 
     bool m_blockchainIndexesEnabled;
+    bool m_blockchainAutosaveEnabled;
     PaymentIdIndex m_paymentIdIndex;
     TimestampBlocksIndex m_timestampIndex;
     GeneratedTransactionsIndex m_generatedTransactionsIndex;

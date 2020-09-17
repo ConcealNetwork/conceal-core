@@ -57,18 +57,18 @@ private:
   friend class core;
 };
 
-core::core(const Currency& currency, i_cryptonote_protocol* pprotocol, Logging::ILogger& logger, bool blockchainIndexesEnabled) :
-  m_currency(currency),
-  logger(logger, "core"),
-  m_mempool(currency, m_blockchain, m_timeProvider, logger),
-  m_blockchain(currency, m_mempool, logger, blockchainIndexesEnabled),
-  m_miner(new miner(currency, *this, logger)),
-  m_starter_message_showed(false) {
+core::core(const Currency &currency, i_cryptonote_protocol *pprotocol, Logging::ILogger &logger, bool blockchainIndexesEnabled, bool blockchainAutosaveEnabled) : m_currency(currency),
+                                                                                                                                                                  logger(logger, "core"),
+                                                                                                                                                                  m_mempool(currency, m_blockchain, m_timeProvider, logger),
+                                                                                                                                                                  m_blockchain(currency, m_mempool, logger, blockchainIndexesEnabled, blockchainAutosaveEnabled),
+                                                                                                                                                                  m_miner(new miner(currency, *this, logger)),
+                                                                                                                                                                  m_starter_message_showed(false)
+{
 
   set_cryptonote_protocol(pprotocol);
   m_blockchain.addObserver(this);
   m_mempool.addObserver(this);
-  }
+}
   //-----------------------------------------------------------------------------------------------
   core::~core() {
   m_blockchain.removeObserver(this);
