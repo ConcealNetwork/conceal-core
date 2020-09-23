@@ -1657,16 +1657,25 @@ namespace PaymentService
 
         /* Now validate the deposit term and the amount */
 
-        if (term < CryptoNote::parameters::DEPOSIT_MIN_TERM)
+        /* Deposits should be multiples of 21,900 blocks */
+        if (term % CryptoNote::parameters::DEPOSIT_MIN_TERM_V3 != 0)
         {
-          return make_error_code(CryptoNote::error::DEPOSIT_TERM_TOO_SMALL);
+          return make_error_code(CryptoNote::error::DEPOSIT_WRONG_TERM);
         }
 
+        /* The minimum term should be 21,900 */
+        if (term < CryptoNote::parameters::DEPOSIT_MIN_TERM_V3)
+        {
+          return make_error_code(CryptoNote::error::DEPOSIT_TERM_TOO_BIG);
+        }
+
+        /* Current deposit rates are for a maximum term of one year, 262800 */
         if (term > CryptoNote::parameters::DEPOSIT_MAX_TERM_V3)
         {
           return make_error_code(CryptoNote::error::DEPOSIT_TERM_TOO_BIG);
         }
 
+        /* The minimum deposit amount is 1 CCX */
         if (amount < CryptoNote::parameters::DEPOSIT_MIN_AMOUNT)
         {
           return make_error_code(CryptoNote::error::DEPOSIT_AMOUNT_TOO_SMALL);

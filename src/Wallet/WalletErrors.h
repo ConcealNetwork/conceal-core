@@ -51,6 +51,7 @@ enum WalletErrorCodes {
   DEPOSIT_AMOUNT_TOO_SMALL,
   DEPOSIT_DOESNOT_EXIST,
   DEPOSIT_LOCKED,
+  DEPOSIT_WRONG_TERM,
   DESTINATION_ADDRESS_REQUIRED,
   DESTINATION_ADDRESS_NOT_FOUND,
   DAEMON_NOT_SYNCED
@@ -109,7 +110,8 @@ public:
     case DESTINATION_ADDRESS_REQUIRED:  return  "Destination address required";
     case DESTINATION_ADDRESS_NOT_FOUND: return "Destination address not found";
     case DEPOSIT_LOCKED:           return "Deposit is locked";
-    case DAEMON_NOT_SYNCED:         return "Daemon is not synchronized";
+    case DEPOSIT_WRONG_TERM:       return "Incorrect term";
+    case DAEMON_NOT_SYNCED:        return "Daemon is not synchronized";
         default:
       return "Unknown error";
     }
