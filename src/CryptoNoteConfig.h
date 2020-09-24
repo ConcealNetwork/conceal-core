@@ -107,7 +107,7 @@ namespace CryptoNote
 		const uint64_t UPGRADE_HEIGHT_V5 = 98160;	  /* Deposits 2.0, Investments 1.0 */
 		const uint64_t UPGRADE_HEIGHT_V6 = 104200;	  /* LWMA3 */
 		const uint64_t UPGRADE_HEIGHT_V7 = 195765;	  /* Cryptoight Conceal */
-		const uint64_t UPGRADE_HEIGHT_V8 = 1000000;	  /* LWMA1 */
+		const uint64_t UPGRADE_HEIGHT_V8 = 1500000;	  /* LWMA1 */
 		const unsigned UPGRADE_VOTING_THRESHOLD = 90; // percent
 		const size_t UPGRADE_VOTING_WINDOW = EXPECTED_NUMBER_OF_BLOCKS_PER_DAY;
 		const size_t UPGRADE_WINDOW = EXPECTED_NUMBER_OF_BLOCKS_PER_DAY;
@@ -257,7 +257,10 @@ and the minimum version for communication between nodes */
 			{520000, "70b9c6945d8156d97d5f337b22ec8a4f77fa8af3b89d63e3fe6b834a03f7a613"},
 			{530000, "f1b6f4018201e9c498e2b441f8e20f6e562e5d45c69008fe74caa7baa0a16611"},
 			{550000, "1b922d13de891cd9f7224bd1a3c879a1d7634505f5f562623d7a487d44211327"},
-			{570000, "9efe8868099afd1f6b17de773da0f5baebf2ace666bf5e599188c64d27cd429f"}
+			{570000, "9efe8868099afd1f6b17de773da0f5baebf2ace666bf5e599188c64d27cd429f"},
+			{580000, "39ecee8d292c4e0440467b28ead6ed96c480ac85bec4fdba1e4c14b49b08077e"},
+			{590000, "d6201b072cfed013b0e1091517624ca72bdd1ef147143356a1f951dd3241dd88"},
+			{600000, "9f87dd161e37e9dbbcd86a3fafe8e1dec8c54194251ca0c36c646173db12c115"}
 
 	};
 
