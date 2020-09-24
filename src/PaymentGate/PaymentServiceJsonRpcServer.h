@@ -81,6 +81,10 @@ private:
   std::error_code handleSendDelayedTransaction(const SendDelayedTransaction::Request& request, SendDelayedTransaction::Response& response);
   std::error_code handleGetViewKey(const GetViewKey::Request& request, GetViewKey::Response& response);
   std::error_code handleGetStatus(const GetStatus::Request& request, GetStatus::Response& response);
+  std::error_code handleCreateDeposit(const CreateDeposit::Request& request, CreateDeposit::Response& response);
+  std::error_code handleSendDeposit(const SendDeposit::Request& request, SendDeposit::Response& response);
+  std::error_code handleWithdrawDeposit(const WithdrawDeposit::Request &request, WithdrawDeposit::Response &response);
+  std::error_code handleGetDeposit(const GetDeposit::Request& request, GetDeposit::Response& response);
   std::error_code handleGetAddresses(const GetAddresses::Request& request, GetAddresses::Response& response);
   std::error_code handleGetMessagesFromExtra(const GetMessagesFromExtra::Request& request, GetMessagesFromExtra::Response& response);
   std::error_code handleEstimateFusion(const EstimateFusion::Request& request, EstimateFusion::Response& response);

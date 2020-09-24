@@ -166,70 +166,72 @@ int main(int argc, char* argv[])
     po::options_description desc_cmd_only("Command line options");
     po::options_description desc_cmd_sett("Command line options and settings options");
 
-   desc_cmd_sett.add_options() 
-      ("enable-blockchain-indexes,i", po::bool_switch()->default_value(false), "Enable blockchain indexes");
+   desc_cmd_sett.add_options()("enable-blockchain-indexes,i", po::bool_switch()->default_value(false), "Enable blockchain indexes");
+   desc_cmd_sett.add_options()("enable-autosave,a", po::bool_switch()->default_value(false), "Enable blockchain autosave every 720 blocks");
 
+   command_line::add_arg(desc_cmd_only, command_line::arg_help);
+   command_line::add_arg(desc_cmd_only, command_line::arg_version);
+   command_line::add_arg(desc_cmd_only, arg_os_version);
+   command_line::add_arg(desc_cmd_only, command_line::arg_data_dir, Tools::getDefaultDataDirectory());
+   command_line::add_arg(desc_cmd_only, arg_config_file);
+   command_line::add_arg(desc_cmd_sett, arg_set_fee_address);
+   command_line::add_arg(desc_cmd_sett, arg_log_file);
+   command_line::add_arg(desc_cmd_sett, arg_log_level);
+   command_line::add_arg(desc_cmd_sett, arg_console);
+   command_line::add_arg(desc_cmd_sett, arg_set_view_key);
+   command_line::add_arg(desc_cmd_sett, arg_testnet_on);
+   command_line::add_arg(desc_cmd_sett, arg_print_genesis_tx);
+   //command_line::add_arg(desc_cmd_sett, arg_genesis_block_reward_address);
 
-    command_line::add_arg(desc_cmd_only, command_line::arg_help);
-    command_line::add_arg(desc_cmd_only, command_line::arg_version);
-    command_line::add_arg(desc_cmd_only, arg_os_version);
-    command_line::add_arg(desc_cmd_only, command_line::arg_data_dir, Tools::getDefaultDataDirectory());
-    command_line::add_arg(desc_cmd_only, arg_config_file);
-	  command_line::add_arg(desc_cmd_sett, arg_set_fee_address);
-    command_line::add_arg(desc_cmd_sett, arg_log_file);
-    command_line::add_arg(desc_cmd_sett, arg_log_level);
-    command_line::add_arg(desc_cmd_sett, arg_console);
-  	command_line::add_arg(desc_cmd_sett, arg_set_view_key);
-    command_line::add_arg(desc_cmd_sett, arg_testnet_on);
-    command_line::add_arg(desc_cmd_sett, arg_print_genesis_tx);
-    //command_line::add_arg(desc_cmd_sett, arg_genesis_block_reward_address);
+   RpcServerConfig::initOptions(desc_cmd_sett);
+   CoreConfig::initOptions(desc_cmd_sett);
+   NetNodeConfig::initOptions(desc_cmd_sett);
+   MinerConfig::initOptions(desc_cmd_sett);
 
-    RpcServerConfig::initOptions(desc_cmd_sett);
-    CoreConfig::initOptions(desc_cmd_sett);
-    NetNodeConfig::initOptions(desc_cmd_sett);
-    MinerConfig::initOptions(desc_cmd_sett);
+   po::options_description desc_options("Allowed options");
+   desc_options.add(desc_cmd_only).add(desc_cmd_sett);
 
-    po::options_description desc_options("Allowed options");
-    desc_options.add(desc_cmd_only).add(desc_cmd_sett);
+   po::variables_map vm;
+   bool r = command_line::handle_error_helper(desc_options, [&]() {
+     po::store(po::parse_command_line(argc, argv, desc_options), vm);
 
-    po::variables_map vm;
-    bool r = command_line::handle_error_helper(desc_options, [&]()
-    {
-      po::store(po::parse_command_line(argc, argv, desc_options), vm);
+     if (command_line::get_arg(vm, command_line::arg_help))
+     {
+       std::cout << CryptoNote::CRYPTONOTE_NAME << " v" << PROJECT_VERSION_LONG << ENDL << ENDL;
+       std::cout << desc_options << std::endl;
+       return false;
+     }
 
-      if (command_line::get_arg(vm, command_line::arg_help))
-      {
-        std::cout << CryptoNote::CRYPTONOTE_NAME << " v" << PROJECT_VERSION_LONG << ENDL << ENDL;
-        std::cout << desc_options << std::endl;
-        return false;
-      }
+     if (command_line::get_arg(vm, arg_print_genesis_tx))
+     {
+       //print_genesis_tx_hex(vm);
+       print_genesis_tx_hex();
+       return false;
+     }
 
-      if (command_line::get_arg(vm, arg_print_genesis_tx)) {
-        //print_genesis_tx_hex(vm);
-		    print_genesis_tx_hex();
-        return false;
-      }
+     std::string data_dir = command_line::get_arg(vm, command_line::arg_data_dir);
+     std::string config = command_line::get_arg(vm, arg_config_file);
 
-      std::string data_dir = command_line::get_arg(vm, command_line::arg_data_dir);
-      std::string config = command_line::get_arg(vm, arg_config_file);
+     boost::filesystem::path data_dir_path(data_dir);
+     boost::filesystem::path config_path(config);
+     if (!config_path.has_parent_path())
+     {
+       config_path = data_dir_path / config_path;
+     }
 
-      boost::filesystem::path data_dir_path(data_dir);
-      boost::filesystem::path config_path(config);
-      if (!config_path.has_parent_path()) {
-        config_path = data_dir_path / config_path;
-      }
+     boost::system::error_code ec;
+     if (boost::filesystem::exists(config_path, ec))
+     {
+       po::store(po::parse_config_file<char>(config_path.string<std::string>().c_str(), desc_cmd_sett), vm);
+     }
 
-      boost::system::error_code ec;
-      if (boost::filesystem::exists(config_path, ec)) {
-        po::store(po::parse_config_file<char>(config_path.string<std::string>().c_str(), desc_cmd_sett), vm);
-      }
+     po::notify(vm);
+     return true;
+   });
 
-      po::notify(vm);
-      return true;
-    });
-
-    if (!r) {
-      return 1;
+   if (!r)
+   {
+     return 1;
     }
 
     auto modulePath = Common::NativePathToGeneric(argv[0]);
@@ -273,9 +275,9 @@ int main(int argc, char* argv[])
     }
 
     CryptoNote::Currency currency = currencyBuilder.currency();
-    CryptoNote::core ccore(currency, nullptr, logManager, vm["enable-blockchain-indexes"].as<bool>());
+    CryptoNote::core ccore(currency, nullptr, logManager, vm["enable-blockchain-indexes"].as<bool>(), vm["enable-autosave"].as<bool>());
 
-     CoreConfig coreConfig;
+    CoreConfig coreConfig;
     coreConfig.init(vm);
     NetNodeConfig netNodeConfig;
     netNodeConfig.init(vm);

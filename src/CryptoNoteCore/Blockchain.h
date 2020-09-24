@@ -47,10 +47,13 @@ namespace CryptoNote
   class Blockchain : public CryptoNote::ITransactionValidator
   {
   public:
-    Blockchain(const Currency &currency, tx_memory_pool &tx_pool, Logging::ILogger &logger, bool blockchainIndexesEnabled);
+    Blockchain(const Currency &currency, tx_memory_pool &tx_pool, Logging::ILogger &logger, bool blockchainIndexesEnabled, bool blockchainAutosaveEnabled);
 
     bool addObserver(IBlockchainStorageObserver *observer);
     bool removeObserver(IBlockchainStorageObserver *observer);
+
+    void rebuildCache();
+    bool storeCache();
 
     // ITransactionValidator
     virtual bool checkTransactionInputs(const CryptoNote::Transaction &tx, BlockInfo &maxUsedBlock) override;
@@ -300,6 +303,7 @@ namespace CryptoNote
     UpgradeDetector m_upgradeDetectorV8;
 
     bool m_blockchainIndexesEnabled;
+    bool m_blockchainAutosaveEnabled;
     PaymentIdIndex m_paymentIdIndex;
     TimestampBlocksIndex m_timestampIndex;
     GeneratedTransactionsIndex m_generatedTransactionsIndex;
@@ -309,8 +313,7 @@ namespace CryptoNote
 
     Logging::LoggerRef logger;
 
-    void rebuildCache();
-    bool storeCache();
+
     bool switch_to_alternative_blockchain(std::list<blocks_ext_by_hash::iterator> &alt_chain, bool discard_disconnected_chain);
     bool handle_alternative_block(const Block &b, const Crypto::Hash &id, block_verification_context &bvc, bool sendNewAlternativeBlockMessage = true);
     difficulty_type get_next_difficulty_for_alternative_chain(const std::list<blocks_ext_by_hash::iterator> &alt_chain, BlockEntry &bei);
