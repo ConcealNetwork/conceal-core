@@ -199,7 +199,7 @@ namespace CryptoNote {
       assert(m_currency.upgradeVotingThreshold() > 0 && m_currency.upgradeVotingThreshold() <= 100);
 
       size_t voteCounter = getNumberOfVotes(height);
-      return m_currency.upgradeVotingWindow() * m_currency.upgradeVotingThreshold() <= 100 * voteCounter;
+      return (size_t) m_currency.upgradeVotingThreshold() * m_currency.upgradeVotingWindow() <= 100 * voteCounter;
     }
 
   private:
