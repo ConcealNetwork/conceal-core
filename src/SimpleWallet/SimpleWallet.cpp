@@ -420,7 +420,9 @@ void printListTransfersItem(LoggerRef& logger, const WalletLegacyTransaction& tx
 
   char timeString[TIMESTAMP_MAX_WIDTH + 1];
   time_t timestamp = static_cast<time_t>(txInfo.timestamp);
-  if (std::strftime(timeString, sizeof(timeString), "%Y-%m-%d %H:%M:%S", std::gmtime(&timestamp)) == 0) {
+  struct tm time;
+  gmtime_r(&timestamp, &time);
+  if (std::strftime(timeString, sizeof(timeString), "%Y-%m-%d %H:%M:%S", &time) == 0) {
     throw std::runtime_error("time buffer is too small");
   }
 

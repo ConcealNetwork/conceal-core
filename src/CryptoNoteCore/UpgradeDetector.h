@@ -124,9 +124,10 @@ namespace CryptoNote {
           if (m_blockchain.size() % (60 * 60 / m_currency.difficultyTarget()) == 0) {
             auto interval = m_currency.difficultyTarget() * (upgradeHeight() - m_blockchain.size() + 2);
             time_t upgradeTimestamp = time(nullptr) + static_cast<time_t>(interval);
-            struct tm* upgradeTime = localtime(&upgradeTimestamp);;
+            struct tm upgradeTime;
+            localtime_r(&upgradeTimestamp, &upgradeTime);
             char upgradeTimeStr[40];
-            strftime(upgradeTimeStr, 40, "%H:%M:%S %Y.%m.%d", upgradeTime);
+            strftime(upgradeTimeStr, 40, "%H:%M:%S %Y.%m.%d", &upgradeTime);
 
             logger(Logging::TRACE, Logging::BRIGHT_GREEN) << "###### UPGRADE is going to happen after block index " << upgradeHeight() << " at about " <<
               upgradeTimeStr << " (in " << Common::timeIntervalToString(interval) << ")! Current last block index " << (m_blockchain.size() - 1) <<
@@ -198,7 +199,7 @@ namespace CryptoNote {
       assert(m_currency.upgradeVotingThreshold() > 0 && m_currency.upgradeVotingThreshold() <= 100);
 
       size_t voteCounter = getNumberOfVotes(height);
-      return m_currency.upgradeVotingThreshold() * m_currency.upgradeVotingWindow() <= 100 * voteCounter;
+      return m_currency.upgradeVotingWindow() * m_currency.upgradeVotingThreshold() <= 100 * voteCounter;
     }
 
   private:

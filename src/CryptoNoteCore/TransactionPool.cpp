@@ -412,15 +412,20 @@ namespace CryptoNote
         ss << storeToJson(txd.tx) << std::endl;
       }
 
+      char time[50]; 
+      ctime_r(&txd.receiveTime, time);
+
       ss << "blobSize: " << txd.blobSize << std::endl
          << "fee: " << m_currency.formatAmount(txd.fee) << std::endl
-         << "received: " << std::ctime(&txd.receiveTime);
+         << "received: " << time;
 
       auto ttlIt = m_ttlIndex.find(txd.id);
       if (ttlIt != m_ttlIndex.end())
       {
-        // ctime() returns string that ends with new line
-        ss << "TTL: " << std::ctime(reinterpret_cast<const time_t *>(&ttlIt->second));
+        // ctime() returns string that ends with new line       
+        char time[50];
+        ctime_r(reinterpret_cast<const time_t *>(&ttlIt->second), time);
+        ss << "TTL: " << time;
       }
 
       ss << std::endl;
