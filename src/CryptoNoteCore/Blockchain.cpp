@@ -664,7 +664,7 @@ namespace CryptoNote
       Crypto::Hash blockHash = get_block_hash(block.bl);
       m_blockIndex.push(blockHash);
       uint64_t interest = 0;
-      for (uint16_t t = 0; t < block.transactions.size(); ++t)
+      for (uint32_t t = 0; t < block.transactions.size(); ++t)
       {
         const TransactionEntry &transaction = block.transactions[t];
         Crypto::Hash transactionHash = getObjectHash(transaction.tx);
@@ -686,7 +686,7 @@ namespace CryptoNote
         }
 
         // process outputs
-        for (uint16_t o = 0; o < transaction.tx.outputs.size(); ++o)
+        for (uint32_t o = 0; o < transaction.tx.outputs.size(); ++o)
         {
           const auto &out = transaction.tx.outputs[o];
           if (out.target.type() == typeid(KeyOutput))
@@ -2737,7 +2737,7 @@ namespace CryptoNote
     }
 
     transaction.m_global_output_indexes.resize(transaction.tx.outputs.size());
-    for (uint16_t output = 0; output < transaction.tx.outputs.size(); ++output)
+    for (uint32_t output = 0; output < transaction.tx.outputs.size(); ++output)
     {
       if (transaction.tx.outputs[output].target.type() == typeid(KeyOutput))
       {
@@ -3153,7 +3153,7 @@ namespace CryptoNote
         const BlockEntry &block = m_blocks[b];
         m_timestampIndex.add(block.bl.timestamp, get_block_hash(block.bl));
         m_generatedTransactionsIndex.add(block.bl);
-        for (uint16_t t = 0; t < block.transactions.size(); ++t)
+        for (size_t t = 0; t < block.transactions.size(); ++t)
         {
           const TransactionEntry &transaction = block.transactions[t];
           m_paymentIdIndex.add(transaction.tx);
