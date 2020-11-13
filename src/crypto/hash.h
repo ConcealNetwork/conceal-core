@@ -11,6 +11,7 @@
 #include <CryptoTypes.h>
 #include "generic-ops.h"
 #include <boost/align/aligned_alloc.hpp>
+#include "pow_hash/cn_slow_hash.hpp"
 
 /* Standard Cryptonight */
 #define CN_PAGE_SIZE                    2097152
@@ -62,13 +63,15 @@ namespace Crypto {
     cn_context(const cn_context &) = delete;
     void operator=(const cn_context &) = delete;
 
-     uint8_t* long_state = nullptr;
-     uint8_t* hash_state = nullptr;
+    cn_v3_hash_t cn_gpu_state;
+    uint8_t* long_state = nullptr;
+    uint8_t* hash_state = nullptr;
   };
 
-  void cn_slow_hash(cn_context &context, const void *data, size_t length, Hash &hash);
+  void cn_slow_hash_v0(cn_context &context, const void *data, size_t length, Hash &hash);
   void cn_fast_slow_hash_v1(cn_context &context, const void *data, size_t length, Hash &hash);
   void cn_conceal_slow_hash_v0(cn_context &context, const void *data, size_t length, Hash &hash);  
+  void cn_gpu_hash_v0(cn_context &context, const void *data, size_t length, Hash &hash);  
 
   inline void tree_hash(const Hash *hashes, size_t count, Hash &root_hash) {
     tree_hash(reinterpret_cast<const char (*)[HASH_SIZE]>(hashes), count, reinterpret_cast<char *>(&root_hash));
