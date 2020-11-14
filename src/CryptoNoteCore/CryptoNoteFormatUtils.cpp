@@ -488,7 +488,7 @@ bool get_block_longhash(cn_context &context, const Block& b, Hash& res) {
     return false;
   }
 
-  if (b.majorVersion >= 9) {
+  if (b.majorVersion >= 8) {
     cn_gpu_hash_v0(context, bd.data(), bd.size(), res);
   } else if (b.majorVersion >= 7) {
     cn_conceal_slow_hash_v0(context, bd.data(), bd.size(), res);
