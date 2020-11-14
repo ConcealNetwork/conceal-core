@@ -26,33 +26,7 @@
 			*hi = r >> 64;
 			return (uint64_t)r;
 	}
-	#if !defined(HAS_WIN_INTRIN_API)
-		#include <cpuid.h>
-	#endif // !defined(HAS_WIN_INTRIN_API)
 #endif // __GNUC__
-
-inline void cpuid(uint32_t eax, int32_t ecx, int32_t val[4])
-{
-	val[0] = 0;
-	val[1] = 0;
-	val[2] = 0;
-	val[3] = 0;
-
-#if defined(HAS_WIN_INTRIN_API)
-	__cpuidex(val, eax, ecx);
-#elif defined(__x86_64) || defined(__i386)
-	__cpuid_count(eax, ecx, val[0], val[1], val[2], val[3]);
-#else
-	// Need a function here?
-#endif
-}
-
-inline bool hw_check_aes()
-{
-	int32_t cpu_info[4];
-	cpuid(1, 0, cpu_info);
-	return (cpu_info[2] & (1 << 25)) == 0;
-}
 
 #if !defined(ARM)
 	struct cryptonight_ctx

@@ -30,7 +30,7 @@ extern "C" {
   }
 
   static void slow_hash(const void *data, size_t length, char *hash) {
-    cn_slow_hash(*context, data, length, *reinterpret_cast<chash *>(hash));
+    cn_slow_hash_v0(*context, data, length, *reinterpret_cast<chash *>(hash));
   }
 }
 
