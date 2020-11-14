@@ -18,8 +18,7 @@ jobs:
           build_folder="build/"
           ccx_ver=$(echo ${{ github.ref }} | sed 's|refs/tags/||')
           release_name="ccx-cli-macOS-v$ccx_ver"
-          brew install gcc boost@1.73
-          brew link boost@1.73 --force
+          brew install gcc boost
           mkdir "$build_folder"
           cd "$build_folder"
           cmake -DCMAKE_C_FLAGS="-mmacosx-version-min=10.12" -DCMAKE_CXX_FLAGS="-mmacosx-version-min=10.12" ..
