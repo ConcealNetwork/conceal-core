@@ -107,24 +107,18 @@ If the build is successful the binaries will be in the src/Release folder.
 #### Prerequisites
 
 In order to install prerequisites, [XCode](https://developer.apple.com/xcode/) and [Homebrew](https://brew.sh/) needs to be installed.
-Once both are ready, open terminal app, run following command:
+Once both are ready, open Terminal app and run the following command to install additional tools:
 
 ```bash
 $ xcode-select --install
 ```
 
-and install all tools. On newer macOS versions (v10.14 and higher) this step is done through Software Update app.
+On newer macOS versions (v10.14 and higher) this step is done through Software Update in System Preferences.
 
 After that, proceed with installing dependencies:
 
 ```bash
-$ brew install git python cmake gcc boost@1.60
-```
-
-Ensure that Boost is properly linked:
-
-```bash
-$ brew link --force boost@1.60
+$ brew install git python cmake gcc boost
 ```
 
 When all dependencies are installed, build Conceal Core binaries:
