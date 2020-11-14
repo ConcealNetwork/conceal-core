@@ -52,7 +52,7 @@ namespace CryptoNote
 		const size_t DIFFICULTY_WINDOW_V1 = DIFFICULTY_WINDOW;
 		const size_t DIFFICULTY_WINDOW_V2 = DIFFICULTY_WINDOW;
 		const size_t DIFFICULTY_WINDOW_V3 = 60; /* changed for LWMA3 */
-		const size_t DIFFICULTY_WINDOW_V4 = 120;
+		const size_t DIFFICULTY_WINDOW_V4 = 60;
 		const size_t DIFFICULTY_BLOCKS_COUNT = DIFFICULTY_WINDOW_V3 + 1;	/* added for LWMA3 */
 		const size_t DIFFICULTY_BLOCKS_COUNT_V1 = DIFFICULTY_WINDOW_V4 + 1; /* added for LWMA1 */
 		const size_t DIFFICULTY_CUT = 60;									/* timestamps to cut after sorting */
