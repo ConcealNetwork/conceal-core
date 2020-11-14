@@ -1173,7 +1173,7 @@ namespace CryptoNote
       uint64_t height) const
   {
     uint64_t T = 120;
-    uint64_t N = 120;
+    uint64_t N = 60;
 
     // Genesis should be the only time sizes are < N+1.
     assert(timestamps.size() == cumulative_difficulties.size() && timestamps.size() <= N + 1);
