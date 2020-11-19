@@ -12,8 +12,8 @@ jobs:
     steps:
       - uses: actions/checkout@master
 
-      - name: Setup MSBuild.exe
-        uses: warrenbuckley/Setup-MSBuild@v1
+      - name: Setup msbuild
+        uses: microsoft/setup-msbuild@v1.0.2
 
       - name: Build
         shell: powershell

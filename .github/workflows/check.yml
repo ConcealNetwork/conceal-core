@@ -15,8 +15,8 @@ jobs:
     steps:
       - uses: actions/checkout@master
 
-      - name: Setup MSBuild.exe
-        uses: warrenbuckley/Setup-MSBuild@v1
+      - name: Setup msbuild
+        uses: microsoft/setup-msbuild@v1.0.2
 
       - name: Build
         shell: powershell
@@ -175,8 +175,7 @@ jobs:
           ccx_ver=${GITHUB_SHA::7}
           ccx_ver_folder=$(echo $ccx_ver | sed 's/\.//g')
           release_name=ccx-cli-macos-v"$ccx_ver"
-          brew install gcc boost@1.73
-          brew link boost@1.73 --force
+          brew install gcc boost
           mkdir "$build_folder"
           cd "$build_folder"
           cmake -DCMAKE_C_FLAGS="-mmacosx-version-min=10.12" -DCMAKE_CXX_FLAGS="-mmacosx-version-min=10.12" ..
