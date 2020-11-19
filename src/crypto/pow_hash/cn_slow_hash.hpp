@@ -39,7 +39,7 @@
 #define cn_v3_hash_t cn_slow_hash<2 * 1024 * 1024, 0xC000, 2>
 
 // Use the types below
-template <size_t MEMORY, size_t ITER, size_t VERSION>
+template <size_t MEMORY, size_t ITER, size_t CN_SLOW_HASH_VERSION>
 class cn_slow_hash;
 using cn_pow_hash_v1 = cn_v1_hash_t;
 using cn_pow_hash_v2 = cn_v2_hash_t;
@@ -124,7 +124,7 @@ class cn_sptr
 	void* base_ptr;
 };
 
-template <size_t MEMORY, size_t ITER, size_t VERSION>
+template <size_t MEMORY, size_t ITER, size_t CN_SLOW_HASH_VERSION>
 class cn_slow_hash
 {
   public:
@@ -175,7 +175,7 @@ class cn_slow_hash
 
 	void hash(const void* in, size_t len, void* out)
 	{
-		if(VERSION <= 1)
+		if(CN_SLOW_HASH_VERSION <= 1)
 		{
 			if(hw_check_aes() && !check_override())
 				hardware_hash(in, len, out);
@@ -206,7 +206,7 @@ class cn_slow_hash
 #endif
 
   private:
-	static constexpr size_t MASK = VERSION <= 1 ? ((MEMORY - 1) >> 4) << 4 : ((MEMORY - 1) >> 6) << 6;
+	static constexpr size_t MASK = CN_SLOW_HASH_VERSION <= 1 ? ((MEMORY - 1) >> 4) << 4 : ((MEMORY - 1) >> 6) << 6;
 
 	friend cn_pow_hash_v1;
 	friend cn_pow_hash_v2;

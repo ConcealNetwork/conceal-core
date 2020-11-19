@@ -130,8 +130,8 @@ inline void double_comupte_wrap(const __m256& n0, const __m256& n1, const __m256
 	out = _mm256_xor_si256(out, r);
 }
 
-template <size_t MEMORY, size_t ITER, size_t VERSION>
-void cn_slow_hash<MEMORY, ITER, VERSION>::inner_hash_3_avx()
+template <size_t MEMORY, size_t ITER, size_t CN_SLOW_HASH_VERSION>
+void cn_slow_hash<MEMORY, ITER, CN_SLOW_HASH_VERSION>::inner_hash_3_avx()
 {
 	uint32_t s = spad.as_dword(0) >> 8;
 	cn_sptr idx0 = scratchpad_ptr(s, 0);
