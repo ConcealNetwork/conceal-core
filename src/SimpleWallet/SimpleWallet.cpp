@@ -147,7 +147,7 @@ struct TransferCommand {
   uint64_t ttl;
 
   TransferCommand(const CryptoNote::Currency& currency) :
-    m_currency(currency), fake_outs_count(0), fee(currency.minimumFee()), ttl(0) {
+    m_currency(currency), fake_outs_count(0), fee(currency.minimumFeeV2()), ttl(0) {
   }
 
 /* This parses arguments from the transfer command */
@@ -241,7 +241,7 @@ struct TransferCommand {
             aliases[aliasUrl].emplace_back(WalletLegacyTransfer{"", static_cast<int64_t>(de.amount)});
           }
 
-          /* Remote node transactions fees are 1000 X */
+          /* Remote node transactions fees are 10000 X */
           if (!remote_fee_address.empty()) {
             destination.address = remote_fee_address;                     
             destination.amount = 10000;
