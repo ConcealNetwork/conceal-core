@@ -1304,6 +1304,7 @@ namespace CryptoNote
 
     minimumFee(parameters::MINIMUM_FEE);
     minimumFeeV1(parameters::MINIMUM_FEE_V1);
+    minimumFeeV2(parameters::MINIMUM_FEE_V2);
     minimumFeeBanking(parameters::MINIMUM_FEE_BANKING);
     defaultDustThreshold(parameters::DEFAULT_DUST_THRESHOLD);
 

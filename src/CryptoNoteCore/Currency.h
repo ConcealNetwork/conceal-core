@@ -77,6 +77,7 @@ namespace CryptoNote
 
     uint64_t minimumFee() const { return m_minimumFee; }
     uint64_t minimumFeeV1() const { return m_minimumFeeV1; }
+    uint64_t minimumFeeV2() const { return m_minimumFeeV2; }
     uint64_t minimumFeeBanking() const { return m_minimumFeeBanking; }
 
     uint64_t defaultDustThreshold() const { return m_defaultDustThreshold; }
@@ -227,6 +228,7 @@ namespace CryptoNote
 
     uint64_t m_minimumFee;
     uint64_t m_minimumFeeV1;
+    uint64_t m_minimumFeeV2;
     uint64_t m_minimumFeeBanking;
     uint64_t m_defaultDustThreshold;
 
@@ -403,6 +405,12 @@ namespace CryptoNote
       m_currency.m_minimumFeeV1 = val;
       return *this;
     }
+    CurrencyBuilder &minimumFeeV2(uint64_t val)
+    {
+      m_currency.m_minimumFeeV2 = val;
+      return *this;
+    }
+
     CurrencyBuilder &minimumFeeBanking(uint64_t val)
     {
       m_currency.m_minimumFeeBanking = val;
