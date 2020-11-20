@@ -365,7 +365,6 @@ namespace CryptoNote
     selectedTransfers.push_back(std::move(transfer));
     m_logger(DEBUGGING, BRIGHT_WHITE) << "Withdraw deposit, id " << depositId << " found transfer for " << transfer.amount << " with a global output index of " << transfer.globalOutputIndex;
 
-
     std::vector<MultisignatureInput> inputs = prepareMultisignatureInputs(selectedTransfers);
 
     for (const auto &input : inputs)
@@ -1880,17 +1879,18 @@ namespace CryptoNote
     return doTransfer(transactionParameters, transactionSK);
   }
 
-  void WalletGreen::prepareTransaction(std::vector<WalletOuts> &&wallets,
-                                       const std::vector<WalletOrder> &orders,
-                                       const std::vector<WalletMessage> &messages,
-                                       uint64_t fee,
-                                       uint64_t mixIn,
-                                       const std::string &extra,
-                                       uint64_t unlockTimestamp,
-                                       const DonationSettings &donation,
-                                       const CryptoNote::AccountPublicAddress &changeDestination,
-                                       PreparedTransaction &preparedTransaction,
-                                       Crypto::SecretKey &transactionSK)
+  void WalletGreen::prepareTransaction(
+      std::vector<WalletOuts> &&wallets,
+      const std::vector<WalletOrder> &orders,
+      const std::vector<WalletMessage> &messages,
+      uint64_t fee,
+      uint64_t mixIn,
+      const std::string &extra,
+      uint64_t unlockTimestamp,
+      const DonationSettings &donation,
+      const CryptoNote::AccountPublicAddress &changeDestination,
+      PreparedTransaction &preparedTransaction,
+      Crypto::SecretKey &transactionSK)
   {
 
     preparedTransaction.destinations = convertOrdersToTransfers(orders);
@@ -2803,7 +2803,6 @@ namespace CryptoNote
     uint64_t foundMoney = 0;
 
     typedef std::pair<WalletRecord *, TransactionOutputInformation> OutputData;
-    std::vector<OutputData> dustOutputs;
     std::vector<OutputData> walletOuts;
     std::unordered_map<uint64_t, std::vector<OutputData>> buckets;
 
