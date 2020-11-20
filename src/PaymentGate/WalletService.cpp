@@ -1319,7 +1319,7 @@ namespace PaymentService
       sendParams.destinations = convertWalletRpcOrdersToWalletOrders(request.transfers);
       sendParams.messages = convertWalletRpcMessagesToWalletMessages(messages);
       sendParams.fee = 1000;
-      sendParams.mixIn = request.anonymity;
+      sendParams.mixIn = parameters::MINIMUM_MIXIN;
       sendParams.unlockTimestamp = request.unlockTime;
       sendParams.changeDestination = request.changeAddress;
 
