@@ -227,6 +227,7 @@ namespace CryptoNote
     }
     else
     {
+      mixIn = CryptoNote::parameters::MINIMUM_MIXIN;
       neededMoney = countNeededMoney(fee, transfers);
       context->foundMoney = selectTransfersToSend(neededMoney, 0 == mixIn, context->dustPolicy.dustThreshold, context->selectedTransfers);
     }
