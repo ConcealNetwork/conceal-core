@@ -258,7 +258,7 @@ namespace CryptoNote
     }
 
     tvc.m_added_to_pool = true;
-    tvc.m_should_be_relayed = inputsValid && (fee > 0 || isFusionTransaction || ttl.ttl != 0);
+    tvc.m_should_be_relayed = inputsValid && (fee == 10 || isFusionTransaction || ttl.ttl != 0 || fee == 1000);
     tvc.m_verification_failed = true;
 
     if (!addTransactionInputs(id, tx, keptByBlock))
