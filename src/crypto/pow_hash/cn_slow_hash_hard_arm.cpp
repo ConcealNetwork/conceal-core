@@ -156,8 +156,8 @@ inline void mem_load(cn_sptr& lpad, size_t i, uint8x16_t& x0, uint8x16_t& x1, ui
 	x7 ^= vld1q_u8(lpad.as_byte() + i + 112);
 }
 
-template <size_t MEMORY, size_t ITER, size_t VERSION>
-void cn_slow_hash<MEMORY, ITER, VERSION>::implode_scratchpad_hard()
+template <size_t MEMORY, size_t ITER, size_t CN_SLOW_HASH_VERSION>
+void cn_slow_hash<MEMORY, ITER, CN_SLOW_HASH_VERSION>::implode_scratchpad_hard()
 {
 	uint8x16_t x0, x1, x2, x3, x4, x5, x6, x7;
 	uint8x16_t k0, k1, k2, k3, k4, k5, k6, k7, k8, k9;
@@ -186,11 +186,11 @@ void cn_slow_hash<MEMORY, ITER, VERSION>::implode_scratchpad_hard()
 		aes_round10(x6, k0, k1, k2, k3, k4, k5, k6, k7, k8, k9);
 		aes_round10(x7, k0, k1, k2, k3, k4, k5, k6, k7, k8, k9);
 
-		if(VERSION > 0)
+		if(CN_SLOW_HASH_VERSION > 0)
 			xor_shift(x0, x1, x2, x3, x4, x5, x6, x7);
 	}
 
-	for(size_t i = 0; VERSION > 0 && i < MEMORY; i += 128)
+	for(size_t i = 0; CN_SLOW_HASH_VERSION > 0 && i < MEMORY; i += 128)
 	{
 		mem_load(lpad, i, x0, x1, x2, x3, x4, x5, x6, x7);
 
@@ -206,7 +206,7 @@ void cn_slow_hash<MEMORY, ITER, VERSION>::implode_scratchpad_hard()
 		xor_shift(x0, x1, x2, x3, x4, x5, x6, x7);
 	}
 
-	for(size_t i = 0; VERSION > 0 && i < 16; i++)
+	for(size_t i = 0; CN_SLOW_HASH_VERSION > 0 && i < 16; i++)
 	{
 		aes_round10(x0, k0, k1, k2, k3, k4, k5, k6, k7, k8, k9);
 		aes_round10(x1, k0, k1, k2, k3, k4, k5, k6, k7, k8, k9);
@@ -230,8 +230,8 @@ void cn_slow_hash<MEMORY, ITER, VERSION>::implode_scratchpad_hard()
 	vst1q_u8(spad.as_byte() + 176, x7);
 }
 
-template <size_t MEMORY, size_t ITER, size_t VERSION>
-void cn_slow_hash<MEMORY, ITER, VERSION>::explode_scratchpad_hard()
+template <size_t MEMORY, size_t ITER, size_t CN_SLOW_HASH_VERSION>
+void cn_slow_hash<MEMORY, ITER, CN_SLOW_HASH_VERSION>::explode_scratchpad_hard()
 {
 	uint8x16_t x0, x1, x2, x3, x4, x5, x6, x7;
 	uint8x16_t k0, k1, k2, k3, k4, k5, k6, k7, k8, k9;
@@ -247,7 +247,7 @@ void cn_slow_hash<MEMORY, ITER, VERSION>::explode_scratchpad_hard()
 	x6 = vld1q_u8(spad.as_byte() + 160);
 	x7 = vld1q_u8(spad.as_byte() + 176);
 
-	for(size_t i = 0; VERSION > 0 && i < 16; i++)
+	for(size_t i = 0; CN_SLOW_HASH_VERSION > 0 && i < 16; i++)
 	{
 		aes_round10(x0, k0, k1, k2, k3, k4, k5, k6, k7, k8, k9);
 		aes_round10(x1, k0, k1, k2, k3, k4, k5, k6, k7, k8, k9);
@@ -295,8 +295,8 @@ inline uint8x16_t _mm_set_epi64x(const uint64_t a, const uint64_t b)
 	return vreinterpretq_u8_u64(vcombine_u64(vcreate_u64(b), vcreate_u64(a)));
 }
 
-template <size_t MEMORY, size_t ITER, size_t VERSION>
-void cn_slow_hash<MEMORY, ITER, VERSION>::hardware_hash(const void* in, size_t len, void* out)
+template <size_t MEMORY, size_t ITER, size_t CN_SLOW_HASH_VERSION>
+void cn_slow_hash<MEMORY, ITER, CN_SLOW_HASH_VERSION>::hardware_hash(const void* in, size_t len, void* out)
 {
 	keccak((const uint8_t*)in, len, spad.as_byte(), 200);
 
@@ -338,7 +338,7 @@ void cn_slow_hash<MEMORY, ITER, VERSION>::hardware_hash(const void* in, size_t l
 		al0 ^= cl;
 		idx0 = al0;
 
-		if(VERSION > 0)
+		if(CN_SLOW_HASH_VERSION > 0)
 		{
 			int64_t n = scratchpad_ptr(idx0).as_qword(0);
 			int32_t d = scratchpad_ptr(idx0).as_dword(2);
@@ -464,8 +464,8 @@ inline void single_comupte_wrap(const float32x4_t& n0, const float32x4_t& n1, co
 	out = veorq_s32(out, r);
 }
 
-template <size_t MEMORY, size_t ITER, size_t VERSION>
-void cn_slow_hash<MEMORY, ITER, VERSION>::inner_hash_3()
+template <size_t MEMORY, size_t ITER, size_t CN_SLOW_HASH_VERSION>
+void cn_slow_hash<MEMORY, ITER, CN_SLOW_HASH_VERSION>::inner_hash_3()
 {
 	uint32_t s = spad.as_dword(0) >> 8;
 	cn_sptr idx0 = scratchpad_ptr(s, 0);
@@ -545,8 +545,8 @@ void cn_slow_hash<MEMORY, ITER, VERSION>::inner_hash_3()
 }
 
 #if defined(__aarch64__)
-template <size_t MEMORY, size_t ITER, size_t VERSION>
-void cn_slow_hash<MEMORY, ITER, VERSION>::hardware_hash_3(const void* in, size_t len, void* pout)
+template <size_t MEMORY, size_t ITER, size_t CN_SLOW_HASH_VERSION>
+void cn_slow_hash<MEMORY, ITER, CN_SLOW_HASH_VERSION>::hardware_hash_3(const void* in, size_t len, void* pout)
 {
 	keccak((const uint8_t*)in, len, spad.as_byte(), 200);
 
@@ -559,8 +559,8 @@ void cn_slow_hash<MEMORY, ITER, VERSION>::hardware_hash_3(const void* in, size_t
 }
 #endif
 
-template <size_t MEMORY, size_t ITER, size_t VERSION>
-void cn_slow_hash<MEMORY, ITER, VERSION>::software_hash_3(const void* in, size_t len, void* pout)
+template <size_t MEMORY, size_t ITER, size_t CN_SLOW_HASH_VERSION>
+void cn_slow_hash<MEMORY, ITER, CN_SLOW_HASH_VERSION>::software_hash_3(const void* in, size_t len, void* pout)
 {
 	keccak((const uint8_t*)in, len, spad.as_byte(), 200);
 
