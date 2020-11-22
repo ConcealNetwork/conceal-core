@@ -127,6 +127,17 @@ namespace CryptoNote
       return false;
     }
 
+    bool isWithdrawalTransaction = false;
+
+    for (const auto &in : tx.inputs)
+    {
+      const auto &inputType = in.type();
+      if (inputType == typeid(MultisignatureInput))
+      {
+        isWithdrawalTransaction = true;
+      }
+    }
+
     uint64_t inputs_amount = m_currency.getTransactionAllInputsAmount(tx, height);
     uint64_t outputs_amount = get_outs_money_amount(tx);
 
@@ -149,6 +160,12 @@ namespace CryptoNote
 
     const uint64_t fee = inputs_amount - outputs_amount;
     bool isFusionTransaction = fee == 0 && m_currency.isFusionTransaction(tx, blobSize);
+
+    logger(INFO, BRIGHT_YELLOW) << "fee " << fee;
+    if (isFusionTransaction == true)
+    {
+      logger(INFO, BRIGHT_YELLOW) << "isFusion ";
+    }
 
     if (ttl.ttl != 0 && !keptByBlock)
     {
@@ -257,9 +274,15 @@ namespace CryptoNote
       logger(DEBUGGING) << "Transaction " << txd.id << " added to pool";
     }
 
-    tvc.m_added_to_pool = true;
-    tvc.m_should_be_relayed = inputsValid && (fee == 10 || isFusionTransaction || ttl.ttl != 0 || fee == 1000);
-    tvc.m_verification_failed = true;
+    if (height >= parameters::UPGRADE_HEIGHT_V8) {
+      tvc.m_added_to_pool = true;
+      tvc.m_should_be_relayed = inputsValid && (fee == 1000 || isFusionTransaction || isWithdrawalTransaction || ttl.ttl != 0);
+      tvc.m_verification_failed = true;
+    } else {
+      tvc.m_added_to_pool = true;
+      tvc.m_should_be_relayed = inputsValid && (fee > 0 || isFusionTransaction || ttl.ttl != 0);
+      tvc.m_verification_failed = true;
+    }
 
     if (!addTransactionInputs(id, tx, keptByBlock))
       return false;
