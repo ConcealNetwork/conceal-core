@@ -161,12 +161,6 @@ namespace CryptoNote
     const uint64_t fee = inputs_amount - outputs_amount;
     bool isFusionTransaction = fee == 0 && m_currency.isFusionTransaction(tx, blobSize);
 
-    logger(INFO, BRIGHT_YELLOW) << "fee " << fee;
-    if (isFusionTransaction == true)
-    {
-      logger(INFO, BRIGHT_YELLOW) << "isFusion ";
-    }
-
     if (ttl.ttl != 0 && !keptByBlock)
     {
       uint64_t now = static_cast<uint64_t>(time(nullptr));
