@@ -14,7 +14,7 @@ Conceal is based on the Cryptonote protocol and runs on a secure peer-to-peer ne
 Conceal is open-source, community driven and truly decentralized. No one owns it, everyone can take part.
 
 ## Resources
-- Web: [http://conceal.network](https://conceal.network/)
+- Web: [https://conceal.network](https://conceal.network/)
 - GitHub: [https://github.com/ConcealNetwork/conceal-core](https://github.com/ConcealNetwork/conceal-core)
 - Wiki: [https://conceal.network/wiki](https://conceal.network/wiki/doku.php)
 - Explorer: [https://explorer.conceal.network](https://explorer.conceal.network)
@@ -56,7 +56,7 @@ For example if you have 8GB of RAM, then your SWAP size should be 5GB
 
 ### Linux / Ubuntu
 
-##### Prerequisites
+#### Prerequisites
 
 - You will need the following dependencies to build the Conceal CLI: boost, cmake, git, gcc, g++, python, and make.
 - On Ubuntu: `sudo apt-get install -y build-essential python-dev gcc g++ git cmake libboost-all-dev`
@@ -69,7 +69,7 @@ For example if you have 8GB of RAM, then your SWAP size should be 5GB
 - `cmake ..`
 - `make`
 
-If the build is successful the binaries will be in the src folder.
+If the build is successful the binaries will be in the `src` folder.
 
 ### Raspberry Pi / ARM
 
@@ -81,26 +81,26 @@ Other ARM CPU/OS combinations should be possible if the CPU supports Neon/AES.
 
 ### Windows 10
 
-##### Prerequisites
+#### Prerequisites
 
 - Install [Visual Studio 2019 Community Edition](https://visualstudio.microsoft.com/thank-you-downloading-visual-studio/?sku=Community&rel=16)
 - Install [CMake](https://cmake.org/download/)
 - When installing Visual Studio, you need to install **Desktop development with C++** and the **MSVC v142 - VS 2019 C++ x64/x86 build tools** components. The option to install the v142 build tools can be found by expanding the "Desktop development with C++" node on the right. You will need this for the project to build correctly.
-- Use the premade binaries for [MSVC 14.2](https://github.com/ConcealNetwork)
-- Install [Boost 1.70.0](https://sourceforge.net/projects/boost/files/boost-binaries/1.70.0/boost_1_70_0-msvc-14.1-64.exe/download), ensuring you download the installer for MSVC 14.2.
+- Install [Boost 1.73.0](https://sourceforge.net/projects/boost/files/boost-binaries/1.73.0/boost_1_73_0-msvc-14.2-64.exe/download), **ensuring** you download the installer for **MSVC 14.2**.
 
-##### Building
+#### Building
 
-- From the start menu, open 'x64 Native Tools Command Prompt for vs2019' or run "C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\Common7\Tools\VsMSBuildCmd.bat" from any command prompt.
+From the start menu, open 'x64 Native Tools Command Prompt for vs2019' or run "C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\Common7\Tools\VsMSBuildCmd.bat" from any command prompt.
 
-- `git clone https://github.com/ConcealNetwork/conceal-core`
-- `cd conceal-core`
-- `mkdir build`
-- `cd build`
-- `cmake -G "Visual Studio 16 2017" -A x64 -DBOOST_LIBRARYDIR="c:\local\boost_1_70_0\lib64-msvc-14.2 ..` (Or your boost installed dir.)
-- `msbuild concealX.sln /p:Configuration=Release /m`
+```bash
+git clone https://github.com/ConcealNetwork/conceal-core
+cd conceal-core
+mkdir build
+cmake .. -G "Visual Studio 16 2019" -A x64 -DBOOST_LIBRARYDIR="c:\local\boost_1_73_0\lib64-msvc-14.2"
+msbuild concealX.sln /p:Configuration=Release /m
+```
 
-If the build is successful the binaries will be in the src/Release folder.
+If the build is successful the binaries will be in the `src/Release` folder.
 
 ### macOS
 
@@ -120,6 +120,8 @@ After that, proceed with installing dependencies:
 ```bash
 $ brew install git python cmake gcc boost
 ```
+
+#### Building
 
 When all dependencies are installed, build Conceal Core binaries:
 
