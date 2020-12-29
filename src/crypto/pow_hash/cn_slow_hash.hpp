@@ -60,6 +60,12 @@ inline void cpuid(uint32_t eax, int32_t ecx, int32_t val[4])
 #endif
 }
 
+/**
+ * @brief Check if hardware aes is supported
+ * 
+ * @return true when hardware aes is supported
+ * @return false when hardware aes is not supported
+ */
 inline bool hw_check_aes()
 {
 	int32_t cpu_info[4];
@@ -67,6 +73,12 @@ inline bool hw_check_aes()
 	return (cpu_info[2] & (1 << 25)) != 0;
 }
 
+/**
+ * @brief Check if avx2 is supported
+ * 
+ * @return true when avx2 is supported
+ * @return false when avx2 is not supported
+ */
 inline bool check_avx2()
 {
 	int32_t cpu_info[4];
@@ -76,6 +88,12 @@ inline bool check_avx2()
 #endif
 
 #ifdef HAS_ARM_HW
+/**
+ * @brief Check if hardware aes is supported
+ * 
+ * @return true when hardware aes is supported
+ * @return false when hardware aes is not supported
+ */
 inline bool hw_check_aes()
 {
 	return (getauxval(AT_HWCAP) & HWCAP_AES) != 0;
@@ -83,6 +101,12 @@ inline bool hw_check_aes()
 #endif
 
 #if !defined(HAS_INTEL_HW) && !defined(HAS_ARM_HW)
+/**
+ * @brief Check if hardware aes is supported
+ * 
+ * @return true when hardware aes is supported
+ * @return false when hardware aes is not supported
+ */
 inline bool hw_check_aes()
 {
 	return false;
