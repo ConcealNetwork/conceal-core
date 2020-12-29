@@ -8,9 +8,10 @@
 
 #include <cstdint>
 #include <list>
+#include <memory>
+#include <system_error>
 #include <utility>
 #include <vector>
-#include <system_error>
 
 #include <CryptoNote.h>
 #include "CryptoNoteCore/Difficulty.h"
