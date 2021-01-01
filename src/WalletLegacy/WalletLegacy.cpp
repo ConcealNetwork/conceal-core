@@ -757,7 +757,7 @@ TransactionId WalletLegacy::withdrawDeposits(const std::vector<DepositId>& depos
   std::unique_ptr<WalletRequest> request;
   std::deque<std::unique_ptr<WalletLegacyEvent>> events;
 
-  fee = CryptoNote::parameters::MINIMUM_FEE_V2;
+  fee = CryptoNote::parameters::MINIMUM_FEE;
 
   {
     std::unique_lock<std::mutex> lock(m_cacheMutex);

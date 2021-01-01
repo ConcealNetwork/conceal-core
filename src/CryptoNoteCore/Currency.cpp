@@ -178,14 +178,26 @@ namespace CryptoNote
 
   uint64_t Currency::baseRewardFunction(uint64_t alreadyGeneratedCoins, uint32_t height) const
   {
+
+    uint64_t incrIntervals = static_cast<uint64_t>(height) / REWARD_INCREASE_INTERVAL;
+    assert(incrIntervals < REWARD_INCREASING_FACTOR.size());
+
     if (height == 1)
     {
       return FOUNDATION_TRUST;
     }
 
-    uint64_t incrIntervals = static_cast<uint64_t>(height) / REWARD_INCREASE_INTERVAL;
-    assert(incrIntervals < REWARD_INCREASING_FACTOR.size());
-    uint64_t base_reward = START_BLOCK_REWARD + REWARD_INCREASING_FACTOR[incrIntervals];
+    uint64_t base_reward = 0;
+
+    if (height > CryptoNote::parameters::UPGRADE_HEIGHT_V8)
+    {
+      base_reward = CryptoNote::MAX_BLOCK_REWARD_V1;
+    }
+    else
+    {
+      base_reward = START_BLOCK_REWARD + REWARD_INCREASING_FACTOR[incrIntervals];
+    }
+
     base_reward = (std::min)(base_reward, MAX_BLOCK_REWARD);
     base_reward = (std::min)(base_reward, m_moneySupply - alreadyGeneratedCoins);
 
@@ -1173,7 +1185,8 @@ namespace CryptoNote
       uint64_t height) const
   {
     uint64_t T = 120;
-    uint64_t N = 120;
+    uint64_t N = 60;
+    uint64_t difficulty_guess = 7200000;
 
     // Genesis should be the only time sizes are < N+1.
     assert(timestamps.size() == cumulative_difficulties.size() && timestamps.size() <= N + 1);
@@ -1182,6 +1195,11 @@ namespace CryptoNote
     // This helps a lot in preventing a very common problem in CN forks from conflicting difficulties.
 
     assert(timestamps.size() == N + 1);
+
+    if (height >= parameters::UPGRADE_HEIGHT_V8 && height < parameters::UPGRADE_HEIGHT_V8 + N)
+    {
+      return difficulty_guess;
+    }
 
     uint64_t L(0), next_D, i, this_timestamp(0), previous_timestamp(0), avg_D;
 
@@ -1304,6 +1322,7 @@ namespace CryptoNote
 
     minimumFee(parameters::MINIMUM_FEE);
     minimumFeeV1(parameters::MINIMUM_FEE_V1);
+    minimumFeeV2(parameters::MINIMUM_FEE_V2);
     minimumFeeBanking(parameters::MINIMUM_FEE_BANKING);
     defaultDustThreshold(parameters::DEFAULT_DUST_THRESHOLD);
 

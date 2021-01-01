@@ -15,8 +15,8 @@ jobs:
     steps:
       - uses: actions/checkout@master
 
-      - name: Setup MSBuild.exe
-        uses: warrenbuckley/Setup-MSBuild@v1
+      - name: Setup msbuild
+        uses: microsoft/setup-msbuild@v1.0.2
 
       - name: Build
         shell: powershell
@@ -28,7 +28,7 @@ jobs:
           $release_name = "ccx-cli-win64-v$ccx_ver"
           mkdir "$build_folder"
           cd "$build_folder"
-          cmake -G "Visual Studio 16 2019" -A x64 -DBOOST_ROOT="$env:BOOST_ROOT_1_69_0" ..
+          cmake -G "Visual Studio 16 2019" -DBoost_INCLUDE_DIR="${env:BOOST_ROOT_1_72_0}"/include ..
           msbuild concealX.sln /p:Configuration=Release /m
           cd src\Release
           Compress-Archive -Path *.exe -DestinationPath "$release_name.zip"
@@ -175,8 +175,7 @@ jobs:
           ccx_ver=${GITHUB_SHA::7}
           ccx_ver_folder=$(echo $ccx_ver | sed 's/\.//g')
           release_name=ccx-cli-macos-v"$ccx_ver"
-          brew install gcc boost@1.73
-          brew link boost@1.73 --force
+          brew install gcc boost
           mkdir "$build_folder"
           cd "$build_folder"
           cmake -DCMAKE_C_FLAGS="-mmacosx-version-min=10.12" -DCMAKE_CXX_FLAGS="-mmacosx-version-min=10.12" ..
@@ -193,72 +192,6 @@ jobs:
           echo "::set-output name=release_name::${release_name}.zip"
           echo "::set-output name=asset_path::${asset_path}"
           echo "::set-output name=krb_ver::${krb_ver}"
-          echo "::set-output name=artifact_path::$build_folder/$release_name"
-
-      - name: Upload To GH Artifacts
-        uses: actions/upload-artifact@v1.0.0
-        with:
-          name: ${{ steps.build.outputs.release_name }}
-          path: ${{ steps.build.outputs.artifact_path }}
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-
-  build-arm32:
-    name: ARM
-    runs-on: ARM
-    steps:
-      - uses: actions/checkout@master
-
-      - name: Build
-        id: build
-        run: |
-          build_folder="build/debug"
-          ccx_ver=${GITHUB_SHA::7}
-          ccx_ver_folder=$(echo $ccx_ver | sed 's/\.//g')
-          release_name=ccx-cli-arm32-v"$ccx_ver"
-          mkdir -p "$build_folder"
-          cd "$build_folder"
-          cmake ../..
-          make -j4
-          mkdir -p "$release_name"
-          exeFiles=()
-          for f in src/*; do [[ -x $f && -f $f ]] && exeFiles+=( "$f" ); done
-          strip "${exeFiles[@]}"
-          cp "${exeFiles[@]}" "$release_name/"
-          echo "::set-output name=release_name::${release_name}.zip"
-          echo "::set-output name=artifact_path::$build_folder/$release_name"
-
-      - name: Upload To GH Artifacts
-        uses: actions/upload-artifact@v1.0.0
-        with:
-          name: ${{ steps.build.outputs.release_name }}
-          path: ${{ steps.build.outputs.artifact_path }}
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-
-  build-arm64:
-    name: ARM64
-    runs-on: ARM64
-    steps:
-      - uses: actions/checkout@master
-
-      - name: Build
-        id: build
-        run: |
-          build_folder="build/debug"
-          ccx_ver=${GITHUB_SHA::7}
-          ccx_ver_folder=$(echo $ccx_ver | sed 's/\.//g')
-          release_name=ccx-cli-arm64-v"$ccx_ver"
-          mkdir -p "$build_folder"
-          cd "$build_folder"
-          cmake ../..
-          make -j4
-          mkdir -p "$release_name"
-          exeFiles=()
-          for f in src/*; do [[ -x $f && -f $f ]] && exeFiles+=( "$f" ); done
-          strip "${exeFiles[@]}"
-          cp "${exeFiles[@]}" "$release_name/"
-          echo "::set-output name=release_name::${release_name}.zip"
           echo "::set-output name=artifact_path::$build_folder/$release_name"
 
       - name: Upload To GH Artifacts

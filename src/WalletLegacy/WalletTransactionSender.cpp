@@ -200,17 +200,18 @@ namespace CryptoNote
     }
   }
 
-  std::unique_ptr<WalletRequest> WalletTransactionSender::makeSendRequest(Crypto::SecretKey &transactionSK,
-                                                                          bool optimize,
-                                                                          TransactionId &transactionId,
-                                                                          std::deque<std::unique_ptr<WalletLegacyEvent>> &events,
-                                                                          std::vector<WalletLegacyTransfer> &transfers,
-                                                                          uint64_t fee,
-                                                                          const std::string &extra,
-                                                                          uint64_t mixIn,
-                                                                          uint64_t unlockTimestamp,
-                                                                          const std::vector<TransactionMessage> &messages,
-                                                                          uint64_t ttl)
+  std::unique_ptr<WalletRequest> WalletTransactionSender::makeSendRequest(
+      Crypto::SecretKey &transactionSK,
+      bool optimize,
+      TransactionId &transactionId,
+      std::deque<std::unique_ptr<WalletLegacyEvent>> &events,
+      std::vector<WalletLegacyTransfer> &transfers,
+      uint64_t fee,
+      const std::string &extra,
+      uint64_t mixIn,
+      uint64_t unlockTimestamp,
+      const std::vector<TransactionMessage> &messages,
+      uint64_t ttl)
   {
     throwIf(transfers.empty(), error::ZERO_DESTINATION);
     validateTransfersAddresses(transfers);
@@ -227,8 +228,9 @@ namespace CryptoNote
     }
     else
     {
+      mixIn = CryptoNote::parameters::MINIMUM_MIXIN;
       neededMoney = countNeededMoney(fee, transfers);
-      context->foundMoney = selectTransfersToSend(neededMoney, 0 == mixIn, context->dustPolicy.dustThreshold, context->selectedTransfers);
+      context->foundMoney = selectTransfersToSend(neededMoney, false, context->dustPolicy.dustThreshold, context->selectedTransfers);
     }
     throwIf(context->foundMoney < neededMoney, error::WRONG_AMOUNT);
 
@@ -257,12 +259,13 @@ namespace CryptoNote
     return doSendTransaction(std::move(context), events, transactionSK);
   }
 
-  std::unique_ptr<WalletRequest> WalletTransactionSender::makeDepositRequest(TransactionId &transactionId,
-                                                                             std::deque<std::unique_ptr<WalletLegacyEvent>> &events,
-                                                                             uint64_t term,
-                                                                             uint64_t amount,
-                                                                             uint64_t fee,
-                                                                             uint64_t mixIn)
+  std::unique_ptr<WalletRequest> WalletTransactionSender::makeDepositRequest(
+      TransactionId &transactionId,
+      std::deque<std::unique_ptr<WalletLegacyEvent>> &events,
+      uint64_t term,
+      uint64_t amount,
+      uint64_t fee,
+      uint64_t mixIn)
   {
 
     throwIf(term < m_currency.depositMinTerm(), error::DEPOSIT_TERM_TOO_SMALL);
