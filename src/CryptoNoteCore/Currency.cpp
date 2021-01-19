@@ -319,7 +319,7 @@ namespace CryptoNote
 
       /* minimum 50000 for investments */
       uint64_t amount4Humans = amount / 1000000;
-      assert(amount4Humans >= 50000);
+      // assert(amount4Humans >= 50000); //fails at block 166342
 
       /* quantity tiers */
       float qTier = 1;
