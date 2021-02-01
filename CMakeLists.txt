@@ -1,5 +1,6 @@
 cmake_minimum_required(VERSION 2.8.6)
 
+include(CheckCXXCompilerFlag)
 set(VERSION "0.2")
 # Packaged from main commits
 set(COMMIT 72946d9)
@@ -87,8 +88,6 @@ if (ARM_TEST STREQUAL "arm")
   string(SUBSTRING "${ARM_ID}" 0 5 ARM_TEST)
   if (ARM_TEST STREQUAL "armv7")
 		set(ARM7 1)
-		message(STATUS "Setting -march=armv8-a+fp+simd for ARMv8")
-		set(ARCH_FLAG "-march=armv8-a+fp+simd")
   endif()
 endif()
 
@@ -99,10 +98,10 @@ endif()
 
 # Manual ARCH options for ARM
 if(ARM7) # ARMv7 Pi 3/4 32Bit
-	CHECK_CXX_ACCEPTS_FLAG("-march=armv8-a" TRY_ARCH)
+	CHECK_CXX_ACCEPTS_FLAG("-march=armv7-a" TRY_ARCH)
 	if(TRY_ARCH)
-		message(STATUS "Setting march=armv8-a for ARMv7")
-		set(ARCH_FLAG "-march=armv8-a")
+		message(STATUS "Setting march=armv7-a for ARMv7")
+		set(ARCH_FLAG "-march=armv7-a")
 	endif()
 elseif(ARM8) # ARMv8 Pi 3/4 64Bit
 	CHECK_CXX_ACCEPTS_FLAG("-march=armv8-a+fp+simd" TRY_ARCH)
@@ -136,8 +135,8 @@ message(STATUS "Setting FPU Flags for ARM Processors")
 
 	if(NOT ARM8)
 		# FPU
-		CHECK_CXX_ACCEPTS_FLAG(-mfpu=neon-vfpv4 CXX_ACCEPTS_NEON_1)
-		CHECK_CXX_ACCEPTS_FLAG(-mfpu=neon-fp-armv8 CXX_ACCEPTS_NEON_2)
+		CHECK_CXX_COMPILER_FLAG(-mfpu=neon-vfpv4 CXX_ACCEPTS_NEON_1)
+		CHECK_CXX_COMPILER_FLAG(-mfpu=neon-fp-armv8 CXX_ACCEPTS_NEON_2)
 		# FLOAT
 		CHECK_CXX_ACCEPTS_FLAG(-mfloat-abi=hard CXX_ACCEPTS_MFLOAT_HARD)
 	endif()
@@ -155,10 +154,10 @@ message(STATUS "Setting FPU Flags for ARM Processors")
 			set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -mfpu=neon-fp-armv8")
 		endif()
 
-		if(CXX_ACCEPTS_NEON_1 AND NOT CXX_ACCEPTS_NEON_2)
-			message(STATUS "Setting mfpu=neon-vfpv for ARMv7")
-			set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -mfpu=neon-vfpv")
-			set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -mfpu=neon-vfpv")
+		if(CXX_ACCEPTS_NEON_1)
+			message(STATUS "Setting mfpu=neon-vfpv4 for ARMv7")
+			set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -mfpu=neon-vfpv4")
+			set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -mfpu=neon-vfpv4")
 		endif()
 
 		if(CXX_ACCEPTS_MFLOAT_HARD)
