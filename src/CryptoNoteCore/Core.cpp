@@ -119,6 +119,24 @@ void core::getTransactions(const std::vector<Crypto::Hash>& txs_ids, std::list<T
   m_blockchain.getTransactions(txs_ids, txs, missed_txs, checkTxPool);
 }
 
+bool core::getTransaction(const Crypto::Hash &id, Transaction &tx, bool checkTxPool)
+{
+  std::vector<Crypto::Hash> txs_ids;
+  std::list<Transaction> txs;
+  std::list<Crypto::Hash> missed_txs;
+
+  txs_ids.push_back(id);
+  m_blockchain.getTransactions(txs_ids, txs, missed_txs, checkTxPool);
+
+  if (missed_txs.empty() && !txs.empty() && txs.size() == 1)
+  {
+    tx = txs.front();
+    return true;
+  }
+
+  return false;
+}
+
 bool core::get_alternative_blocks(std::list<Block>& blocks) {
   return m_blockchain.getAlternativeBlocks(blocks);
 }
@@ -867,6 +885,16 @@ bool core::queryBlocksLite(const std::vector<Crypto::Hash>& knownBlockIds, uint6
 
 bool core::getBackwardBlocksSizes(uint32_t fromHeight, std::vector<size_t>& sizes, size_t count) {
   return m_blockchain.getBackwardBlocksSize(fromHeight, sizes, count);
+}
+
+bool core::getPoolTransaction(const Crypto::Hash &tx_hash, Transaction &transaction)
+{
+  if (!m_mempool.have_tx(tx_hash))
+  {
+    return false;
+  }
+
+  return m_mempool.getTransaction(tx_hash, transaction);
 }
 
 bool core::getBlockSize(const Crypto::Hash& hash, size_t& size) {
