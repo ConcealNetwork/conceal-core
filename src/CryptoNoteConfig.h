@@ -155,10 +155,15 @@ namespace CryptoNote
 	const int RPC_DEFAULT_PORT = 16000;
 
 	/* P2P Network Configuration Section - This defines our current P2P network version
-and the minimum version for communication between nodes */
+	and the minimum version for communication between nodes */
+	const uint8_t P2P_VERSION_1 = 1;
+	const uint8_t P2P_VERSION_2 = 2;
 	const uint8_t P2P_CURRENT_VERSION = 1;
 	const uint8_t P2P_MINIMUM_VERSION = 1;
 	const uint8_t P2P_UPGRADE_WINDOW = 2;
+
+	// This defines the minimum P2P version required for lite blocks propogation
+	const uint8_t P2P_LITE_BLOCKS_PROPOGATION_VERSION = 3;
 
 	const size_t P2P_LOCAL_WHITE_PEERLIST_LIMIT = 1000;
 	const size_t P2P_LOCAL_GRAY_PEERLIST_LIMIT = 5000;
@@ -267,7 +272,9 @@ and the minimum version for communication between nodes */
 			{640000, "24e1ac8aff3e1e7850c06a377c68b2ea3afe53477b710b988b6b456383a50081"},
 			{650000, "4587f3196487cdf12e701bebe30340669374e39b6e0ca7a3c32d6b522be44570"},
 			{660000, "8d8338dab606e4010f1fa53bc0ef268c98f63bf727150184bfedbea37c40026d"},
-			{665000, "79c1520e1e5b18d44cca35f7baa567a98236253afe3188e3f8b1f311976505ce"}
+			{670000, "26350d735576a40e4d4e628b57186f4c7f85b3bea6c15f28554706f4c78c3837"},
+			{680000, "6774c21beb0f4e2383069da967654ce4d26743f313aa7c705f222c055fcf0e05"},
+			{690000, "33e1ddd732edfb8e850cdca304ae398a2eb495fd2a6876ff759725788f5b1135"}
 
 	};
 
