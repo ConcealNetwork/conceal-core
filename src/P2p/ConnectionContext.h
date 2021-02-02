@@ -12,7 +12,7 @@
 #include <boost/optional.hpp>
 #include <boost/uuid/uuid.hpp>
 #include "Common/StringTools.h"
-#include "p2p/PendingLiteBlock.h"
+#include "P2p/PendingLiteBlock.h"
 #include "crypto/hash.h"
 
 namespace CryptoNote {
