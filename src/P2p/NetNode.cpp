@@ -330,10 +330,33 @@ namespace CryptoNote
   }
 
   //-----------------------------------------------------------------------------------
-  void NodeServer::externalRelayNotifyToAll(int command, const BinaryArray& data_buff) {
-    m_dispatcher.remoteSpawn([this, command, data_buff] {
-      relay_notify_to_all(command, data_buff, nullptr);
+  void NodeServer::externalRelayNotifyToAll(int command, const BinaryArray &data_buff, const net_connection_id *excludeConnection)
+  {
+    m_dispatcher.remoteSpawn([this, command, data_buff, excludeConnection] {
+      relay_notify_to_all(command, data_buff, excludeConnection);
     });
+  }
+
+  //-----------------------------------------------------------------------------------
+  void NodeServer::externalRelayNotifyToList(int command, const BinaryArray &data_buff, const std::list<boost::uuids::uuid> relayList)
+  {
+    m_dispatcher.remoteSpawn([this, command, data_buff, relayList] {
+      forEachConnection([&](P2pConnectionContext &conn) {
+        if (std::find(relayList.begin(), relayList.end(), conn.m_connection_id) != relayList.end())
+        {
+          if (conn.peerId && (conn.m_state == CryptoNoteConnectionContext::state_normal || conn.m_state == CryptoNoteConnectionContext::state_synchronizing))
+          {
+            conn.pushMessage(P2pMessage(P2pMessage::NOTIFY, command, data_buff));
+          }
+        }
+      });
+    });
+  }
+
+
+  void NodeServer::drop_connection(CryptoNoteConnectionContext &context, bool add_fail)
+  {
+    context.m_state = CryptoNoteConnectionContext::state_shutdown;
   }
 
   //-----------------------------------------------------------------------------------
@@ -616,11 +639,17 @@ namespace CryptoNote
       return false;
     }
 
-    if (rsp.node_data.version < CryptoNote::P2P_MINIMUM_VERSION) {
-      logger(Logging::DEBUGGING) << context << "COMMAND_HANDSHAKE Failed, peer is wrong version! (" << std::to_string(rsp.node_data.version) << "), closing connection.";
+    if (rsp.node_data.version < CryptoNote::P2P_MINIMUM_VERSION)
+    {
+      logger(Logging::DEBUGGING) << context << "COMMAND_HANDSHAKE Failed, peer is wrong version! ("
+                                 << std::to_string(rsp.node_data.version) << "), closing connection.";
       return false;
-    } else if ((rsp.node_data.version - CryptoNote::P2P_CURRENT_VERSION) >= CryptoNote::P2P_UPGRADE_WINDOW) {
-      logger(Logging::WARNING) << context << "COMMAND_HANDSHAKE Warning, your software may be out of date. Please upgrade to the latest version.";
+    }
+    else if ((rsp.node_data.version - CryptoNote::P2P_CURRENT_VERSION) >= CryptoNote::P2P_UPGRADE_WINDOW)
+    {
+      logger(Logging::WARNING) << context
+                               << "COMMAND_HANDSHAKE Warning, your software may be out of date. Please visit: "
+                               << "https://github.com/concealnetwork/conceal-core/releases for the latest version.";
     }
 
     if (!handle_remote_peerlist(rsp.local_peerlist, rsp.node_data.local_time, context)) {
