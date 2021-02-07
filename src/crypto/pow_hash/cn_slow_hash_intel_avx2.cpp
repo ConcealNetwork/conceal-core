@@ -28,31 +28,35 @@
 
 #ifdef HAS_INTEL_HW
 
-inline void __attribute__((target("avx2"))) prep_dv_avx(cn_sptr& idx, __m256i& v, __m256& n01)
+ATTRIBUTE
+inline void prep_dv_avx(cn_sptr& idx, __m256i& v, __m256& n01)
 {
 	v = _mm256_load_si256(idx.as_ptr<__m256i>());
 	n01 = _mm256_cvtepi32_ps(v);
 }
 
-inline __m256 __attribute__((target("avx2"))) _mm256_set1_ps_epi32(uint32_t x)
+ATTRIBUTE
+inline __m256 _mm256_set1_ps_epi32(uint32_t x)
 {
 	return _mm256_castsi256_ps(_mm256_set1_epi32(x));
 }
 
-inline __m128 __attribute__((target("avx2"))) _mm_set1_ps_epi32(uint32_t x)
+ATTRIBUTE
+inline __m128 _mm_set1_ps_epi32(uint32_t x)
 {
 	return _mm_castsi128_ps(_mm_set1_epi32(x));
 }
 
-inline __m256 __attribute__((target("avx2"))) fma_break(const __m256& x) 
+ATTRIBUTE
+inline __m256 fma_break(const __m256& x) 
 { 
 	// Break the dependency chain by setitng the exp to ?????01 
 	__m256 xx = _mm256_and_ps(_mm256_set1_ps_epi32(0xFEFFFFFF), x); 
 	return _mm256_or_ps(_mm256_set1_ps_epi32(0x00800000), xx); 
 }
 
-// 14
-inline void __attribute__((target("avx2"))) sub_round(const __m256& n0, const __m256& n1, const __m256& n2, const __m256& n3, const __m256& rnd_c, __m256& n, __m256& d, __m256& c)
+ATTRIBUTE
+inline void sub_round(const __m256& n0, const __m256& n1, const __m256& n2, const __m256& n3, const __m256& rnd_c, __m256& n, __m256& d, __m256& c)
 {
 	__m256 nn = _mm256_mul_ps(n0, c);
 	nn = _mm256_mul_ps(_mm256_add_ps(n1, c), _mm256_mul_ps(nn, nn));
@@ -74,7 +78,8 @@ inline void __attribute__((target("avx2"))) sub_round(const __m256& n0, const __
 }
 
 // 14*8 + 2 = 112
-inline void __attribute__((target("avx2"))) round_compute(const __m256& n0, const __m256& n1, const __m256& n2, const __m256& n3, const __m256& rnd_c, __m256& c, __m256& r)
+ATTRIBUTE
+inline void round_compute(const __m256& n0, const __m256& n1, const __m256& n2, const __m256& n3, const __m256& rnd_c, __m256& c, __m256& r)
 {
 	__m256 n = _mm256_setzero_ps(), d = _mm256_setzero_ps();
 
@@ -95,7 +100,8 @@ inline void __attribute__((target("avx2"))) round_compute(const __m256& n0, cons
 
 // 112×4 = 448
 template <bool add>
-inline __m256i __attribute__((target("avx2"))) double_comupte(const __m256& n0, const __m256& n1, const __m256& n2, const __m256& n3, 
+ATTRIBUTE
+inline __m256i double_comupte(const __m256& n0, const __m256& n1, const __m256& n2, const __m256& n3, 
 							  float lcnt, float hcnt, const __m256& rnd_c, __m256& sum)
 {
 	__m256 c = _mm256_insertf128_ps(_mm256_castps128_ps256(_mm_set1_ps(lcnt)), _mm_set1_ps(hcnt), 1);
@@ -120,7 +126,8 @@ inline __m256i __attribute__((target("avx2"))) double_comupte(const __m256& n0, 
 }
 
 template <size_t rot>
-inline void __attribute__((target("avx2"))) double_comupte_wrap(const __m256& n0, const __m256& n1, const __m256& n2, const __m256& n3, 
+ATTRIBUTE
+inline void double_comupte_wrap(const __m256& n0, const __m256& n1, const __m256& n2, const __m256& n3, 
 								float lcnt, float hcnt, const __m256& rnd_c, __m256& sum, __m256i& out)
 {
 	__m256i r = double_comupte<rot % 2 != 0>(n0, n1, n2, n3, lcnt, hcnt, rnd_c, sum);
@@ -131,7 +138,7 @@ inline void __attribute__((target("avx2"))) double_comupte_wrap(const __m256& n0
 }
 
 template <size_t MEMORY, size_t ITER, size_t CN_SLOW_HASH_VERSION>
-void __attribute__((target("avx2"))) cn_slow_hash<MEMORY, ITER, CN_SLOW_HASH_VERSION>::inner_hash_3_avx()
+void ATTRIBUTE cn_slow_hash<MEMORY, ITER, CN_SLOW_HASH_VERSION>::inner_hash_3_avx()
 {
 	uint32_t s = spad.as_dword(0) >> 8;
 	cn_sptr idx0 = scratchpad_ptr(s, 0);
