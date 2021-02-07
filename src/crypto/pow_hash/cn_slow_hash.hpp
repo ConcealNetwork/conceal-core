@@ -294,7 +294,7 @@ class cn_slow_hash
 	void implode_scratchpad_soft();
 
 	void inner_hash_3();
-	void inner_hash_3_avx();
+	void __attribute__((target("avx2"))) inner_hash_3_avx();
 
 	cn_sptr lpad;
 	cn_sptr spad;
