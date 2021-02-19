@@ -29,6 +29,11 @@
 #include <stdlib.h>
 #include <string.h>
 
+#ifdef __clang__
+#define ATTRIBUTE __attribute__((target("avx2")))
+#else
+#define ATTRIBUTE
+#endif
 
 // Macros are for template instantiations
 // Cryptonight
@@ -294,7 +299,7 @@ class cn_slow_hash
 	void implode_scratchpad_soft();
 
 	void inner_hash_3();
-	void inner_hash_3_avx();
+	void ATTRIBUTE inner_hash_3_avx();
 
 	cn_sptr lpad;
 	cn_sptr spad;
