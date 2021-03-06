@@ -205,7 +205,8 @@ TEST_F(NodeTest, generateBlockchain)
     std::string password = "pass";
     CryptoNote::WalletGreen wallet(dispatcher, currency, *mainNode, logger);
 
-    wallet.initialize(password);
+    std::string walletFile("wallet.bin", std::ios::binary | std::ios::trunc);
+    wallet.initialize(walletFile, password);
 
     std::string minerAddress = wallet.createAddress();
     daemon.startMining(1, minerAddress);
@@ -220,8 +221,8 @@ TEST_F(NodeTest, generateBlockchain)
 
     daemon.stopMining();
 
-    std::ofstream walletFile("wallet.bin", std::ios::binary | std::ios::trunc);
-    wallet.save(walletFile);
+    
+    wallet.save();
     wallet.shutdown();
 
     dumpBlockchainInfo(*mainNode);
@@ -257,7 +258,7 @@ TEST_F(NodeTest, addMoreBlocks)
     CryptoNote::WalletGreen wallet(dispatcher, currency, *mainNode, logger);
 
     {
-      std::ifstream walletFile("wallet.bin", std::ios::binary);
+      std::string walletFile("wallet.bin", std::ios::binary);
       wallet.load(walletFile, password);
     }
 
@@ -275,7 +276,7 @@ TEST_F(NodeTest, addMoreBlocks)
     daemon.stopMining();
 
     std::ofstream walletFile("wallet.bin", std::ios::binary | std::ios::trunc);
-    wallet.save(walletFile);
+    wallet.save();
     wallet.shutdown();
 
     dumpBlockchainInfo(*mainNode);

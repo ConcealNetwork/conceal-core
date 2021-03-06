@@ -270,6 +270,7 @@ endif()
 
 if(BUILD_TESTS)
   add_subdirectory(tests)
+  add_subdirectory(external/gtest)
   enable_testing()
 endif()
 
