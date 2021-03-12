@@ -3,7 +3,7 @@ name: Windows
 on:
   push:
     tags:
-    - '*'
+      - "*"
 
 jobs:
   build-windows:

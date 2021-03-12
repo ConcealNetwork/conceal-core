@@ -3,7 +3,7 @@ name: Ubuntu 20.04
 on:
   push:
     tags:
-    - '*'
+      - "*"
 
 jobs:
   build-ubuntu20:
@@ -19,9 +19,8 @@ jobs:
           sudo chmod 600 /swapfile
           sudo mkswap /swapfile
           sudo swapon /swapfile
-          BOOST_ROOT=
-          sudo apt-get purge '*boost*'
-          sudo apt install -y libboost-all-dev
+          sudo apt-get update
+          sudo apt-get install -y libboost-all-dev
           build_folder="build/debug"
           ccx_ver=$(echo "$GITHUB_REF" | sed 's|refs/tags/||')
           ccx_ver_folder=$(echo $ccx_ver | sed 's/\.//g')
