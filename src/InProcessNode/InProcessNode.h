@@ -61,6 +61,7 @@ public:
 
   virtual void getBlocks(const std::vector<uint32_t>& blockHeights, std::vector<std::vector<BlockDetails>>& blocks, const Callback& callback) override;
   virtual void getBlocks(const std::vector<Crypto::Hash>& blockHashes, std::vector<BlockDetails>& blocks, const Callback& callback) override;
+  virtual void getTransaction(const Crypto::Hash &transactionHash, CryptoNote::Transaction &transaction, const Callback &callback) override;
   virtual void getBlocks(uint64_t timestampBegin, uint64_t timestampEnd, uint32_t blocksNumberLimit, std::vector<BlockDetails>& blocks, uint32_t& blocksNumberWithinTimestamps, const Callback& callback) override;
   virtual void getTransactions(const std::vector<Crypto::Hash>& transactionHashes, std::vector<TransactionDetails>& transactions, const Callback& callback) override;
   virtual void getTransactionsByPaymentId(const Crypto::Hash& paymentId, std::vector<TransactionDetails>& transactions, const Callback& callback) override;
@@ -118,6 +119,8 @@ private:
   void isSynchronizedAsync(bool& syncStatus, const Callback& callback);
   std::error_code doIsSynchronized(bool& syncStatus);
 
+  void getTransactionAsync(const Crypto::Hash &transactionHash, CryptoNote::Transaction &transaction, const Callback &callback);
+  std::error_code doGetTransaction(const Crypto::Hash &transactionHash, CryptoNote::Transaction &transaction);
   void workerFunc();
   bool doShutdown();
 

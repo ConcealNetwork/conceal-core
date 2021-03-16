@@ -34,7 +34,6 @@ using namespace Logging;
 using namespace Crypto;
 using namespace Common;
 
-static const Crypto::SecretKey I = { { 0x01, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00 } };
 
 
 namespace CryptoNote {
@@ -290,11 +289,12 @@ bool RpcServer::k_on_check_tx_proof(const K_COMMAND_RPC_CHECK_TX_PROOF::request&
 
 		// obtain key derivation by multiplying scalar 1 to the pubkey r*A included in the signature
 		Crypto::KeyDerivation derivation;
-		if (!Crypto::generate_key_derivation(rA, I, derivation)) {
-			throw JsonRpc::JsonRpcError{ CORE_RPC_ERROR_CODE_INTERNAL_ERROR, "Failed to generate key derivation" };
-		}
+    if (!Crypto::generate_key_derivation(rA, Crypto::EllipticCurveScalar2SecretKey(Crypto::I), derivation))
+    {
+      throw JsonRpc::JsonRpcError{ CORE_RPC_ERROR_CODE_INTERNAL_ERROR, "Failed to generate key derivation" };
+    }
 
-		// get tx pub key
+    // get tx pub key
 		Crypto::PublicKey txPubKey = getTransactionPublicKeyFromExtra(transaction.extra);
 
 		// look for outputs
@@ -421,10 +421,11 @@ bool RpcServer::k_on_check_reserve_proof(const K_COMMAND_RPC_CHECK_RESERVE_PROOF
 
 		// check if the address really received the fund
 		Crypto::KeyDerivation derivation;
-		if (!Crypto::generate_key_derivation(proof.shared_secret, I, derivation)) {
-			throw JsonRpc::JsonRpcError{ CORE_RPC_ERROR_CODE_INTERNAL_ERROR, "Failed to generate key derivation" };
-		}
-		try {
+    if (!Crypto::generate_key_derivation(proof.shared_secret, Crypto::EllipticCurveScalar2SecretKey(Crypto::I), derivation))
+    {
+      throw JsonRpc::JsonRpcError{ CORE_RPC_ERROR_CODE_INTERNAL_ERROR, "Failed to generate key derivation" };
+    }
+    try {
 			Crypto::PublicKey pubkey;
 			derive_public_key(derivation, proof.index_in_tx, address.spendPublicKey, pubkey);
 			if (pubkey == out_key.key) {
