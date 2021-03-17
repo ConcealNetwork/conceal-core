@@ -601,6 +601,7 @@ simple_wallet::simple_wallet(System::Dispatcher& dispatcher, const CryptoNote::C
   m_consoleHandler.setHandler("get_tx_proof", boost::bind(&simple_wallet::get_tx_proof, this, boost::arg<1>()), "Generate a signature to prove payment: <txid> <address> [<txkey>]");
   m_consoleHandler.setHandler("bc_height", boost::bind(&simple_wallet::show_blockchain_height, this, boost::arg<1>()), "Show blockchain height");
   m_consoleHandler.setHandler("show_dust", boost::bind(&simple_wallet::show_dust, this, boost::arg<1>()), "Show the number of unmixable dust outputs");
+  m_consoleHandler.setHandler("get_tx_key", boost::bind(&simple_wallet::get_tx_key, this, _1), "Get secret transaction key for a given <txid>");
   m_consoleHandler.setHandler("outputs", boost::bind(&simple_wallet::show_num_unlocked_outputs, this, boost::arg<1>()), "Show the number of unlocked outputs available for a transaction");
   m_consoleHandler.setHandler("optimize", boost::bind(&simple_wallet::optimize_outputs, this, boost::arg<1>()), "Combine many available outputs into a few by sending a transaction to self");
   m_consoleHandler.setHandler("optimize_all", boost::bind(&simple_wallet::optimize_all_outputs, this, boost::arg<1>()), "Optimize your wallet several times so you can send large transactions");  
@@ -1894,6 +1895,35 @@ bool simple_wallet::transfer(const std::vector<std::string> &args) {
 
   return true;
 }
+
+bool simple_wallet::get_tx_key(const std::vector<std::string> &args)
+{
+  if (args.size() != 1)
+  {
+    fail_msg_writer() << "use: get_tx_key <txid>";
+    return true;
+  }
+  const std::string &str_hash = args[0];
+  Crypto::Hash txid;
+  if (!parse_hash256(str_hash, txid))
+  {
+    fail_msg_writer() << "Failed to parse txid";
+    return true;
+  }
+
+  Crypto::SecretKey tx_key = m_wallet->getTxKey(txid);
+  if (tx_key != NULL_SECRET_KEY)
+  {
+    success_msg_writer() << "Tx key: " << Common::podToHex(tx_key);
+    return true;
+  }
+  else
+  {
+    fail_msg_writer() << "No tx key found for this txid";
+    return true;
+  }
+}
+
 //----------------------------------------------------------------------------------------------------
 bool simple_wallet::run() {
   {
