@@ -90,6 +90,27 @@ struct COMMAND_RPC_GET_TRANSACTIONS {
     }
   };
 };
+
+struct block_short_response
+{
+  uint64_t timestamp;
+  uint32_t height;
+  std::string hash;
+  uint64_t transactions_count;
+  uint64_t cumulative_size;
+  difficulty_type difficulty;
+
+  void serialize(ISerializer &s)
+  {
+    KV_MEMBER(timestamp)
+    KV_MEMBER(height)
+    KV_MEMBER(hash)
+    KV_MEMBER(cumulative_size)
+    KV_MEMBER(transactions_count)
+    KV_MEMBER(difficulty)
+  }
+};
+
 //-----------------------------------------------
 struct COMMAND_RPC_GET_POOL_CHANGES {
   struct request {
@@ -112,6 +133,23 @@ struct COMMAND_RPC_GET_POOL_CHANGES {
       KV_MEMBER(isTailBlockActual)
       KV_MEMBER(addedTxs)
       serializeAsBinary(deletedTxsIds, "deletedTxsIds", s);
+      KV_MEMBER(status)
+    }
+  };
+};
+
+struct COMMAND_RPC_GET_ALT_BLOCKS_LIST
+{
+  typedef EMPTY_STRUCT request;
+
+  struct response
+  {
+    std::vector<block_short_response> alt_blocks;
+    std::string status;
+
+    void serialize(ISerializer &s)
+    {
+      KV_MEMBER(alt_blocks)
       KV_MEMBER(status)
     }
   };
