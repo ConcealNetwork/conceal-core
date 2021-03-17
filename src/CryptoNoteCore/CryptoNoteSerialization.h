@@ -49,6 +49,7 @@ void serialize(TransactionExtraMergeMiningTag& tag, ISerializer& serializer);
 
 void serialize(AccountPublicAddress& address, ISerializer& serializer);
 void serialize(AccountKeys& keys, ISerializer& s);
+void serialize(TransactionInputs &inputs, ISerializer &serializer);
 
 void serialize(KeyPair& keyPair, ISerializer& serializer);
 

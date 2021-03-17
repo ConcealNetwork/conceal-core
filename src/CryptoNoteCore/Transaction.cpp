@@ -47,6 +47,7 @@ namespace CryptoNote {
     // ITransactionReader
     virtual Hash getTransactionHash() const override;
     virtual Hash getTransactionPrefixHash() const override;
+    virtual Hash getTransactionInputsHash() const override;
     virtual PublicKey getTransactionPublicKey() const override;
     virtual uint64_t getUnlockTime() const override;
     virtual bool getPaymentId(Hash& hash) const override;
@@ -59,6 +60,7 @@ namespace CryptoNote {
     virtual TransactionTypes::InputType getInputType(size_t index) const override;
     virtual void getInput(size_t index, KeyInput& input) const override;
     virtual void getInput(size_t index, MultisignatureInput& input) const override;
+    virtual std::vector<TransactionInput> getInputs() const override;
 
     // outputs
     virtual size_t getOutputCount() const override;
@@ -77,7 +79,7 @@ namespace CryptoNote {
 
     // get serialized transaction
     virtual BinaryArray getTransactionData() const override;
-
+    TransactionPrefix getTransactionPrefix() const override;
     // ITransactionWriter
 
     virtual void setUnlockTime(uint64_t unlockTime) override;
@@ -204,6 +206,11 @@ namespace CryptoNote {
     checkIfSigning();
     transaction.unlockTime = unlockTime;
     invalidateHash();
+  }
+
+  Hash TransactionImpl::getTransactionInputsHash() const
+  {
+    return getObjectHash(transaction.inputs);
   }
 
   bool TransactionImpl::getTransactionSecretKey(SecretKey& key) const {
@@ -394,6 +401,11 @@ namespace CryptoNote {
     return toBinaryArray(transaction);
   }
 
+  TransactionPrefix TransactionImpl::getTransactionPrefix() const
+  {
+    return transaction;
+  }
+
   void TransactionImpl::setPaymentId(const Hash& hash) {
     checkIfSigning();
     BinaryArray paymentIdBlob;
@@ -463,6 +475,11 @@ namespace CryptoNote {
 
   size_t TransactionImpl::getOutputCount() const {
     return transaction.outputs.size();
+  }
+
+  std::vector<TransactionInput> TransactionImpl::getInputs() const
+  {
+    return transaction.inputs;
   }
 
   uint64_t TransactionImpl::getOutputTotalAmount() const {

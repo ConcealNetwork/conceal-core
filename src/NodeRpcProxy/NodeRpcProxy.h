@@ -95,9 +95,11 @@ private:
     std::vector<CryptoNote::BlockShortEntry>& newBlocks, uint32_t& startHeight);
   std::error_code doGetPoolSymmetricDifference(std::vector<Crypto::Hash>&& knownPoolTxIds, Crypto::Hash knownBlockId, bool& isBcActual,
           std::vector<std::unique_ptr<ITransactionReader>>& newTxs, std::vector<Crypto::Hash>& deletedTxIds);
+  virtual void getTransaction(const Crypto::Hash &transactionHash, CryptoNote::Transaction &transaction, const Callback &callback) override;
+  std::error_code doGetTransaction(const Crypto::Hash &transactionHash, CryptoNote::Transaction &transaction);
 
   void scheduleRequest(std::function<std::error_code()>&& procedure, const Callback& callback);
-  template <typename Request, typename Response>
+template <typename Request, typename Response>
   std::error_code binaryCommand(const std::string& url, const Request& req, Response& res);
   template <typename Request, typename Response>
   std::error_code jsonCommand(const std::string& url, const Request& req, Response& res);

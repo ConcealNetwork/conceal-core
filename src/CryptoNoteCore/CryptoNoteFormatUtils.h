@@ -7,7 +7,7 @@
 #pragma once
 
 #include <boost/utility/value_init.hpp>
-
+#include <CryptoNote.h>
 #include "CryptoNoteBasic.h"
 #include "CryptoNoteSerialization.h"
 
@@ -46,6 +46,9 @@ struct tx_message_entry
   bool encrypt;
   AccountPublicAddress addr;
 };
+
+bool generateDeterministicTransactionKeys(const Crypto::Hash &inputsHash, const Crypto::SecretKey &viewSecretKey, KeyPair &generatedKeys);
+bool generateDeterministicTransactionKeys(const Transaction &tx, const Crypto::SecretKey &viewSecretKey, KeyPair &generatedKeys);
 
 bool constructTransaction(
   const AccountKeys& senderAccountKeys,

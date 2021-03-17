@@ -1218,14 +1218,37 @@ void WalletLegacy::pushBalanceUpdatedEvents(std::deque<std::unique_ptr<WalletLeg
   }
 }
 
-Crypto::SecretKey WalletLegacy::getTxKey(Crypto::Hash& txid) {
+Crypto::SecretKey WalletLegacy::getTxKey(Crypto::Hash &txid)
+{
   TransactionId ti = m_transactionsCache.findTransactionByHash(txid);
   WalletLegacyTransaction transaction;
   getTransaction(ti, transaction);
-  if (transaction.secretKey) {
-     return reinterpret_cast<const Crypto::SecretKey&>(transaction.secretKey.get());
-  } else {
-     return NULL_SECRET_KEY;
+  if (transaction.secretKey && NULL_SECRET_KEY != reinterpret_cast<const Crypto::SecretKey &>(transaction.secretKey.get()))
+  {
+    return reinterpret_cast<const Crypto::SecretKey &>(transaction.secretKey.get());
+  }
+  else
+  {
+    auto getTransactionCompleted = std::promise<std::error_code>();
+    auto getTransactionWaitFuture = getTransactionCompleted.get_future();
+    CryptoNote::Transaction tx;
+    m_node.getTransaction(std::move(txid), std::ref(tx),
+                          [&getTransactionCompleted](std::error_code ec) {
+                            auto detachedPromise = std::move(getTransactionCompleted);
+                            detachedPromise.set_value(ec);
+                          });
+    std::error_code ec = getTransactionWaitFuture.get();
+    if (ec)
+    {
+      //m_logger(ERROR) << "Failed to get tx: " << ec << ", " << ec.message();
+      return reinterpret_cast<const Crypto::SecretKey &>(transaction.secretKey.get());
+    }
+
+    Crypto::PublicKey txPubKey = getTransactionPublicKeyFromExtra(tx.extra);
+    KeyPair deterministicTxKeys;
+    bool ok = generateDeterministicTransactionKeys(tx, m_account.getAccountKeys().viewSecretKey, deterministicTxKeys) && deterministicTxKeys.publicKey == txPubKey;
+
+    return ok ? deterministicTxKeys.secretKey : reinterpret_cast<const Crypto::SecretKey &>(transaction.secretKey.get());
   }
 }
 bool WalletLegacy::get_tx_key(Crypto::Hash& txid, Crypto::SecretKey& txSecretKey) {
