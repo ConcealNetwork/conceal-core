@@ -12,11 +12,21 @@ jobs:
   build-windows:
     name: Windows
     runs-on: windows-latest
+    env:
+      BOOST_ROOT: C:/hostedtoolcache/windows/Boost/1.72.0/x86_64
     steps:
       - uses: actions/checkout@master
 
       - name: Setup msbuild
         uses: microsoft/setup-msbuild@v1.0.2
+
+      - name: Install Boost
+        shell: powershell
+        run: |
+          echo "${env:BOOST_ROOT}"
+          $Url = "https://sourceforge.net/projects/boost/files/boost-binaries/1.72.0/boost_1_72_0-msvc-14.2-64.exe"
+          (New-Object System.Net.WebClient).DownloadFile($Url, "$env:TEMP\boost.exe")
+          Start-Process -Wait -FilePath "$env:TEMP\boost.exe" "/SILENT","/SP-","/SUPPRESSMSGBOXES","/DIR=${env:BOOST_ROOT}"
 
       - name: Build
         shell: powershell
@@ -28,7 +38,7 @@ jobs:
           $release_name = "ccx-cli-win64-v$ccx_ver"
           mkdir "$build_folder"
           cd "$build_folder"
-          cmake -G "Visual Studio 16 2019" -DBoost_INCLUDE_DIR="${env:BOOST_ROOT_1_72_0}"/include ..
+          cmake -G "Visual Studio 16 2019" ..
           msbuild concealX.sln /p:Configuration=Release /m
           cd src\Release
           Compress-Archive -Path *.exe -DestinationPath "$release_name.zip"
