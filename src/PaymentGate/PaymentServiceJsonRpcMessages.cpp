@@ -26,6 +26,15 @@ void Reset::Request::serialize(CryptoNote::ISerializer& serializer) {
 void Reset::Response::serialize(CryptoNote::ISerializer& serializer) {
 }
 
+void Export::Request::serialize(CryptoNote::ISerializer &serializer)
+{
+  serializer(exportFilename, "exportFilename");
+}
+
+void Export::Response::serialize(CryptoNote::ISerializer &serializer)
+{
+}
+
 void GetViewKey::Request::serialize(CryptoNote::ISerializer &serializer)
 {
 }

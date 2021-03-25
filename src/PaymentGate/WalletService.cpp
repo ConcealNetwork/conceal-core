@@ -707,9 +707,13 @@ namespace PaymentService
 
   std::error_code WalletService::exportWallet(const std::string &fileName)
   {
+
+
     try
     {
       System::EventLock lk(readyEvent);
+
+      saveWallet();
 
       if (!inited)
       {
@@ -719,6 +723,8 @@ namespace PaymentService
 
       boost::filesystem::path walletPath(config.walletFile);
       boost::filesystem::path exportPath = walletPath.parent_path() / fileName;
+
+      logger(Logging::INFO, Logging::BRIGHT_WHITE) << "Exporting wallet to filename" << exportPath.string();
 
       logger(Logging::INFO, Logging::BRIGHT_WHITE) << "Exporting wallet to " << exportPath.string();
       wallet.exportWallet(exportPath.string());

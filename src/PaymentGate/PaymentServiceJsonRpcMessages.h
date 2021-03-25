@@ -49,6 +49,21 @@ struct Reset {
   };
 };
 
+struct Export
+{
+  struct Request
+  {
+    std::string exportFilename;
+
+    void serialize(CryptoNote::ISerializer &serializer);
+  };
+
+  struct Response
+  {
+    void serialize(CryptoNote::ISerializer &serializer);
+  };
+};
+
 struct GetViewKey
 {
   struct Request

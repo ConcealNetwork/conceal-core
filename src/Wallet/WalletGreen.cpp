@@ -952,8 +952,9 @@ namespace CryptoNote
 
     throwIfNotInitialized();
     throwIfStopped();
-
     stopBlockchainSynchronizer();
+
+    saveLevel = WalletSaveLevel::SAVE_KEYS_ONLY;
 
     try
     {
