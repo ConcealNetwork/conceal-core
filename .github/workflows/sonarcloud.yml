@@ -1,0 +1,30 @@
+name: sonarcloud
+on: [push, pull_request]
+jobs:
+  sonarcloud:
+    name: sonarcloud
+    runs-on: ubuntu-20.04
+    steps:
+      - uses: actions/checkout@v2
+        with:
+          fetch-depth: 0
+
+      - name: setup sonar-scanner
+        uses: warchant/setup-sonar-scanner@v3
+
+      - name: sonarcloud build & scan
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libboost-all-dev
+          wget https://sonarcloud.io/static/cpp/build-wrapper-linux-x86.zip
+          unzip build-wrapper-linux-x86.zip
+          export PATH=./build-wrapper-linux-x86:$PATH
+          mkdir build
+          cd build
+          cmake .. -DCMAKE_BUILD_TYPE=Release
+          cd ..
+          build-wrapper-linux-x86-64 --out-dir bw-output cmake --build build -- -j 2
+          sonar-scanner
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
