@@ -41,7 +41,8 @@ PaymentServiceJsonRpcServer::PaymentServiceJsonRpcServer(System::Dispatcher& sys
   handlers.emplace("createIntegrated", jsonHandler<CreateIntegrated::Request, CreateIntegrated::Response>(std::bind(&PaymentServiceJsonRpcServer::handleCreateIntegrated, this, std::placeholders::_1, std::placeholders::_2)));
   handlers.emplace("splitIntegrated", jsonHandler<SplitIntegrated::Request, SplitIntegrated::Response>(std::bind(&PaymentServiceJsonRpcServer::handleSplitIntegrated, this, std::placeholders::_1, std::placeholders::_2)));
   handlers.emplace("reset", jsonHandler<Reset::Request, Reset::Response>(std::bind(&PaymentServiceJsonRpcServer::handleReset, this, std::placeholders::_1, std::placeholders::_2)));
-  handlers.emplace("export", jsonHandler<Export::Request, Export::Response>(std::bind(&PaymentServiceJsonRpcServer::handleExport, this, std::placeholders::_1, std::placeholders::_2)));
+  handlers.emplace("exportWallet", jsonHandler<ExportWallet::Request, ExportWallet::Response>(std::bind(&PaymentServiceJsonRpcServer::handleExportWallet, this, std::placeholders::_1, std::placeholders::_2)));
+  handlers.emplace("exportWalletKeys", jsonHandler<ExportWalletKeys::Request, ExportWalletKeys::Response>(std::bind(&PaymentServiceJsonRpcServer::handleExportWalletKeys, this, std::placeholders::_1, std::placeholders::_2)));
   handlers.emplace("createAddress", jsonHandler<CreateAddress::Request, CreateAddress::Response>(std::bind(&PaymentServiceJsonRpcServer::handleCreateAddress, this, std::placeholders::_1, std::placeholders::_2)));
   handlers.emplace("createAddressList", jsonHandler<CreateAddressList::Request, CreateAddressList::Response>(std::bind(&PaymentServiceJsonRpcServer::handleCreateAddressList, this, std::placeholders::_1, std::placeholders::_2)));
   handlers.emplace("deleteAddress", jsonHandler<DeleteAddress::Request, DeleteAddress::Response>(std::bind(&PaymentServiceJsonRpcServer::handleDeleteAddress, this, std::placeholders::_1, std::placeholders::_2)));
@@ -134,9 +135,14 @@ std::error_code PaymentServiceJsonRpcServer::handleCreateAddress(const CreateAdd
   }
 }
 
-std::error_code PaymentServiceJsonRpcServer::handleExport(const Export::Request &request, Export::Response &response)
+std::error_code PaymentServiceJsonRpcServer::handleExportWallet(const ExportWallet::Request &request, ExportWallet::Response &response)
 {
   return service.exportWallet(request.exportFilename);
+}
+
+std::error_code PaymentServiceJsonRpcServer::handleExportWalletKeys(const ExportWalletKeys::Request &request, ExportWalletKeys::Response &response)
+{
+  return service.exportWalletKeys(request.exportFilename);
 }
 
 std::error_code PaymentServiceJsonRpcServer::handleCreateAddressList(const CreateAddressList::Request& request, CreateAddressList::Response& response) {
