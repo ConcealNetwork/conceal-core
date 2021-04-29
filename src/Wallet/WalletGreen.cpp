@@ -946,7 +946,7 @@ namespace CryptoNote
     incIv(dstPrefix->nextIv);
   }
 
-  void WalletGreen::exportWallet(const std::string &path, bool encrypt, WalletSaveLevel saveLevel, const std::string &extra)
+  void WalletGreen::exportWalletKeys(const std::string &path, bool encrypt, WalletSaveLevel saveLevel, const std::string &extra)
   {
     m_logger(INFO, BRIGHT_WHITE) << "Exporting container...";
 
@@ -954,7 +954,58 @@ namespace CryptoNote
     throwIfStopped();
     stopBlockchainSynchronizer();
 
-    saveLevel = WalletSaveLevel::SAVE_KEYS_ONLY;
+    try
+    {
+      bool storageCreated = false;
+      Tools::ScopeExit failExitHandler([path, &storageCreated] {
+        // Don't delete file if it has existed
+        if (storageCreated)
+        {
+          boost::system::error_code ignore;
+          boost::filesystem::remove(path, ignore);
+        }
+      });
+
+      ContainerStorage newStorage(path, FileMappedVectorOpenMode::CREATE, m_containerStorage.prefixSize());
+      storageCreated = true;
+
+      chacha8_key newStorageKey;
+      if (encrypt)
+      {
+        newStorageKey = m_key;
+      }
+      else
+      {
+        cn_context cnContext;
+        generate_chacha8_key(cnContext, "", newStorageKey);
+      }
+
+      copyContainerStoragePrefix(m_containerStorage, m_key, newStorage, newStorageKey);
+      copyContainerStorageKeys(m_containerStorage, m_key, newStorage, newStorageKey);
+      saveWalletCache(newStorage, newStorageKey, saveLevel, extra);
+
+      failExitHandler.cancel();
+
+      m_logger(INFO) << "Container export finished";
+    }
+    catch (const std::exception &e)
+    {
+      m_logger(ERROR, BRIGHT_RED) << "Failed to export container: " << e.what();
+      startBlockchainSynchronizer();
+      throw;
+    }
+
+    startBlockchainSynchronizer();
+    m_logger(INFO, BRIGHT_WHITE) << "Container exported";
+  }
+
+  void WalletGreen::exportWallet(const std::string &path, bool encrypt, WalletSaveLevel saveLevel, const std::string &extra)
+  {
+    m_logger(INFO, BRIGHT_WHITE) << "Exporting container...";
+
+    throwIfNotInitialized();
+    throwIfStopped();
+    stopBlockchainSynchronizer();
 
     try
     {

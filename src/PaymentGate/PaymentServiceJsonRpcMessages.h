@@ -49,7 +49,22 @@ struct Reset {
   };
 };
 
-struct Export
+struct ExportWallet
+{
+  struct Request
+  {
+    std::string exportFilename;
+
+    void serialize(CryptoNote::ISerializer &serializer);
+  };
+
+  struct Response
+  {
+    void serialize(CryptoNote::ISerializer &serializer);
+  };
+};
+
+struct ExportWalletKeys
 {
   struct Request
   {
