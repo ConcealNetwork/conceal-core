@@ -1742,6 +1742,11 @@ namespace CryptoNote
 
     m_walletsContainer.get<KeysIndex>().erase(it);
 
+    auto addressIndex = std::distance(
+        m_walletsContainer.get<RandomAccessIndex>().begin(), m_walletsContainer.project<RandomAccessIndex>(it));
+
+    m_containerStorage.erase(std::next(m_containerStorage.begin(), addressIndex));
+
     if (m_walletsContainer.get<RandomAccessIndex>().size() != 0)
     {
       startBlockchainSynchronizer();
