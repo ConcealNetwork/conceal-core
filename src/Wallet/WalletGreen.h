@@ -142,6 +142,8 @@ protected:
   void initWithKeys(const std::string& path, const std::string& password, const Crypto::PublicKey& viewPublicKey, const Crypto::SecretKey& viewSecretKey);
   std::string doCreateAddress(const Crypto::PublicKey &spendPublicKey, const Crypto::SecretKey &spendSecretKey, uint64_t creationTimestamp);
   std::vector<std::string> doCreateAddressList(const std::vector<NewAddressData> &addressDataList);
+  Crypto::SecretKey getTransactionDeterministicSecretKey(Crypto::Hash &transactionHash) const;
+
   uint64_t scanHeightToTimestamp(const uint32_t scanHeight);
   uint64_t getCurrentTimestampAdjusted();
 

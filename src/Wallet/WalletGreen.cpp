@@ -411,6 +411,37 @@ namespace CryptoNote
     size_t id = validateSaveAndSendTransaction(*transaction, {}, false, true);
   }
 
+  Crypto::SecretKey WalletGreen::getTransactionDeterministicSecretKey(Crypto::Hash &transactionHash) const
+  {
+    throwIfNotInitialized();
+    throwIfStopped();
+
+    Crypto::SecretKey txKey = CryptoNote::NULL_SECRET_KEY;
+
+    auto getTransactionCompleted = std::promise<std::error_code>();
+    auto getTransactionWaitFuture = getTransactionCompleted.get_future();
+    CryptoNote::Transaction tx;
+    m_node.getTransaction(std::move(transactionHash), std::ref(tx),
+                          [&getTransactionCompleted](std::error_code ec) {
+                            auto detachedPromise = std::move(getTransactionCompleted);
+                            detachedPromise.set_value(ec);
+                          });
+    std::error_code ec = getTransactionWaitFuture.get();
+    if (ec)
+    {
+      m_logger(ERROR) << "Failed to get tx: " << ec << ", " << ec.message();
+      return CryptoNote::NULL_SECRET_KEY;
+    }
+
+    Crypto::PublicKey txPubKey = getTransactionPublicKeyFromExtra(tx.extra);
+    KeyPair deterministicTxKeys;
+    bool ok = generateDeterministicTransactionKeys(tx, m_viewSecretKey, deterministicTxKeys) && deterministicTxKeys.publicKey == txPubKey;
+
+    return ok ? deterministicTxKeys.secretKey : CryptoNote::NULL_SECRET_KEY;
+
+    return txKey;
+  }
+
   std::vector<MultisignatureInput> WalletGreen::prepareMultisignatureInputs(const std::vector<TransactionOutputInformation> &selectedTransfers)
   {
     std::vector<MultisignatureInput> inputs;
@@ -1762,6 +1793,11 @@ namespace CryptoNote
     deleteFromUncommitedTransactions(deletedTransactions);
 
     m_walletsContainer.get<KeysIndex>().erase(it);
+
+    auto addressIndex = std::distance(
+        m_walletsContainer.get<RandomAccessIndex>().begin(), m_walletsContainer.project<RandomAccessIndex>(it));
+
+    m_containerStorage.erase(std::next(m_containerStorage.begin(), addressIndex));
 
     if (m_walletsContainer.get<RandomAccessIndex>().size() != 0)
     {
