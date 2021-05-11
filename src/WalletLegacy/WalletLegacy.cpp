@@ -450,6 +450,7 @@ uint64_t WalletLegacy::pendingBalance() {
   return calculatePendingBalance();
 }
 
+
 uint64_t WalletLegacy::actualDepositBalance() {
   std::unique_lock<std::mutex> lock(m_cacheMutex);
   throwIfNotInitialised();
@@ -621,6 +622,58 @@ size_t WalletLegacy::estimateFusion(const uint64_t& threshold) {
   }
   return fusionReadyCount;
 }
+
+uint64_t WalletLegacy::getWalletMaximum()
+{
+  uint64_t foundMoney = 0;
+
+  /** Get all the unlocked outputs from the wallet */
+  std::vector<TransactionOutputInformation> outputs;
+  m_transferDetails->getOutputs(outputs, ITransfersContainer::IncludeKeyUnlocked);
+
+  /** Split the inputs into buckets based on what power of ten they are in 
+     * (For example, [1, 2, 5, 7], [20, 50, 80, 80], [100, 600, 700]), though
+     * we will ignore dust for the time being. */
+  std::unordered_map<uint64_t, std::vector<TransactionOutputInformation>> buckets;
+
+  for (const auto &walletAmount : outputs)
+  {
+    /** Use the number of digits to determine which buck they fit in */
+    int numberOfDigits = floor(log10(walletAmount.amount)) + 1;
+
+    /** If the amount is larger than the current dust threshold 
+       * insert the amount into the correct bucket */
+    if (walletAmount.amount > 10)
+    {
+      buckets[numberOfDigits].push_back(walletAmount);
+    }
+  }
+
+  while (!buckets.empty())
+  {
+    /* Take one element from each bucket, smallest first. */
+    for (auto bucket = buckets.begin(); bucket != buckets.end();)
+    {
+      /* Bucket has been exhausted, remove from list */
+      if (bucket->second.empty())
+      {
+        bucket = buckets.erase(bucket);
+      }
+      else
+      {
+        foundMoney += bucket->second.back().amount;
+
+        /* Remove amount we just added */
+        bucket->second.pop_back();
+        bucket++;
+      }
+    }
+  }
+
+  return foundMoney;
+}
+
+
 
 std::list<TransactionOutputInformation> WalletLegacy::selectFusionTransfersToSend(uint64_t threshold, size_t minInputCount, size_t maxInputCount) {
   std::list<TransactionOutputInformation> selectedOutputs;
@@ -1413,5 +1466,9 @@ bool WalletLegacy::checkWalletPassword(std::istream& source, const std::string& 
   WalletLegacySerializer serializer(m_account, m_transactionsCache);
   return serializer.deserialize(source, password);
 }
+
+
+//KK
+
 
 } //namespace CryptoNote
