@@ -73,6 +73,7 @@ public:
   virtual i_cryptonote_protocol* get_protocol() = 0;
   virtual bool handle_incoming_tx(const BinaryArray& tx_blob, tx_verification_context& tvc, bool keeped_by_block) = 0; //Deprecated. Should be removed with CryptoNoteProtocolHandler.
   virtual std::vector<Transaction> getPoolTransactions() = 0;
+  virtual bool getPoolTransaction(const Crypto::Hash &tx_hash, Transaction &transaction) = 0;
   virtual bool getPoolChanges(const Crypto::Hash& tailBlockId, const std::vector<Crypto::Hash>& knownTxsIds,
                               std::vector<Transaction>& addedTxs, std::vector<Crypto::Hash>& deletedTxsIds) = 0;
   virtual bool getPoolChangesLite(const Crypto::Hash& tailBlockId, const std::vector<Crypto::Hash>& knownTxsIds,
@@ -97,7 +98,7 @@ public:
   virtual bool getBlockDifficulty(uint32_t height, difficulty_type& difficulty) = 0;
   virtual bool getBlockContainingTx(const Crypto::Hash& txId, Crypto::Hash& blockId, uint32_t& blockHeight) = 0;
   virtual bool getMultisigOutputReference(const MultisignatureInput& txInMultisig, std::pair<Crypto::Hash, size_t>& outputReference) = 0;
-
+  virtual bool getTransaction(const Crypto::Hash &id, Transaction &tx, bool checkTxPool = false) = 0;
   virtual bool getGeneratedTransactionsNumber(uint32_t height, uint64_t& generatedTransactions) = 0;
   virtual bool getOrphanBlocksByHeight(uint32_t height, std::vector<Block>& blocks) = 0;
   virtual bool getBlocksByTimestamp(uint64_t timestampBegin, uint64_t timestampEnd, uint32_t blocksNumberLimit, std::vector<Block>& blocks, uint32_t& blocksNumberWithinTimestamps) = 0;

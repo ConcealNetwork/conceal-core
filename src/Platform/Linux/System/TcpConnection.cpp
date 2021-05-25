@@ -17,14 +17,14 @@
 
 #include "TcpConnection.h"
 
-#include <arpa/inet.h>
-#include <cassert>
-#include <sys/epoll.h>
-#include <unistd.h>
-
 #include <System/ErrorMessage.h>
 #include <System/InterruptedException.h>
 #include <System/Ipv4Address.h>
+#include <arpa/inet.h>
+#include <cassert>
+#include <stdexcept>
+#include <sys/epoll.h>
+#include <unistd.h>
 
 namespace System {
 

@@ -14,12 +14,22 @@ struct Hash {
   uint8_t data[32];
 };
 
-struct PublicKey {
+struct EllipticCurvePoint
+{
   uint8_t data[32];
 };
 
-struct SecretKey {
+struct EllipticCurveScalar
+{
   uint8_t data[32];
+};
+
+struct PublicKey : public EllipticCurvePoint
+{
+};
+
+struct SecretKey : public EllipticCurveScalar
+{
 };
 
 struct KeyDerivation {
@@ -34,4 +44,7 @@ struct Signature {
   uint8_t data[64];
 };
 
+const struct EllipticCurveScalar I = {{0x01, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00}};
+
 }
+

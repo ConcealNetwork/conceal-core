@@ -353,7 +353,7 @@ void cn_slow_hash<MEMORY, ITER, CN_SLOW_HASH_VERSION>::hardware_hash(const void*
 
 	implode_scratchpad_hard();
 
-	keccakf(spad.as_uqword());
+	keccakf(spad.as_uqword(), 24);
 
 	switch(spad.as_byte(0) & 3)
 	{
@@ -554,7 +554,7 @@ void cn_slow_hash<MEMORY, ITER, CN_SLOW_HASH_VERSION>::hardware_hash_3(const voi
 	inner_hash_3();
 	implode_scratchpad_hard();
 
-	keccakf(spad.as_uqword());
+	keccakf(spad.as_uqword(), 24);
 	memcpy(pout, spad.as_byte(), 32);
 }
 #endif
@@ -568,7 +568,7 @@ void cn_slow_hash<MEMORY, ITER, CN_SLOW_HASH_VERSION>::software_hash_3(const voi
 	inner_hash_3();
 	implode_scratchpad_soft();
 
-	keccakf(spad.as_uqword());
+	keccakf(spad.as_uqword(), 24);
 	memcpy(pout, spad.as_byte(), 32);
 }
 

@@ -1,7 +1,8 @@
 // Copyright (c) 2011-2017 The Cryptonote developers
 // Copyright (c) 2017-2018 The Circle Foundation & Conceal Devs
-// Copyright (c) 2018-2020 Karbo developers
-// Copyright (c) 2018-2020 Conceal Network & Conceal Devs
+// Copyright (c) 2018-2019 The TurtleCoin developers
+// Copyright (c) 2016-2020 The Karbo developers
+// Copyright (c) 2018-2021 Conceal Network & Conceal Devs
 // Distributed under the MIT/X11 software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -11,6 +12,8 @@
 #include <unordered_map>
 
 #include <boost/functional/hash.hpp>
+#include <list>
+#include <boost/uuid/uuid.hpp>
 
 #include <System/Context.h>
 #include <System/ContextGroup.h>
@@ -172,9 +175,10 @@ namespace CryptoNote
     //----------------- i_p2p_endpoint -------------------------------------------------------------
     virtual void relay_notify_to_all(int command, const BinaryArray& data_buff, const net_connection_id* excludeConnection) override;
     virtual bool invoke_notify_to_peer(int command, const BinaryArray& req_buff, const CryptoNoteConnectionContext& context) override;
+    virtual void drop_connection(CryptoNoteConnectionContext &context, bool add_fail) override;
     virtual void for_each_connection(std::function<void(CryptoNote::CryptoNoteConnectionContext&, PeerIdType)> f) override;
-    virtual void externalRelayNotifyToAll(int command, const BinaryArray& data_buff) override;
-
+    virtual void externalRelayNotifyToAll(int command, const BinaryArray &data_buff, const net_connection_id *excludeConnection) override;
+    virtual void externalRelayNotifyToList(int command, const BinaryArray &data_buff, const std::list<boost::uuids::uuid> relayList) override;
     //-----------------------------------------------------------------------------------------------
     bool handle_command_line(const boost::program_options::variables_map& vm);
     bool is_addr_recently_failed(const uint32_t address_ip);
@@ -183,7 +187,6 @@ namespace CryptoNote
     bool idle_worker();
     bool handle_remote_peerlist(const std::list<PeerlistEntry>& peerlist, time_t local_time, const CryptoNoteConnectionContext& context);
     bool get_local_node_data(basic_node_data& node_data);
-
     bool merge_peerlist_with_local(const std::list<PeerlistEntry>& bs);
     bool fix_time_delta(std::list<PeerlistEntry>& local_peerlist, time_t local_time, int64_t& delta);
 
