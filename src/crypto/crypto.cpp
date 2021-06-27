@@ -55,9 +55,10 @@ namespace Crypto {
     memcpy(&res, tmp, 32);
   }
 
-  static inline void hash_to_scalar(const void *data, size_t length, EllipticCurveScalar &res) {
+  void hash_to_scalar(const void *data, size_t length, EllipticCurveScalar &res)
+  {
     cn_fast_hash(data, length, reinterpret_cast<Hash &>(res));
-    sc_reduce32(reinterpret_cast<unsigned char*>(&res));
+    sc_reduce32(reinterpret_cast<unsigned char *>(&res));
   }
 
   void crypto_ops::generate_keys(PublicKey &pub, SecretKey &sec) {

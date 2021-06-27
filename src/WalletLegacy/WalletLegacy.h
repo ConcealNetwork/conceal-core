@@ -143,7 +143,8 @@ private:
   uint64_t calculateActualDepositBalance();
   uint64_t calculateActualInvestmentBalance();
   uint64_t calculatePendingDepositBalance();
-  uint64_t calculatePendingInvestmentBalance();  
+  uint64_t calculatePendingInvestmentBalance();
+  uint64_t getWalletMaximum();
   uint64_t dustBalance();
 
   uint64_t calculateActualBalance();

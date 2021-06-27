@@ -1,6 +1,8 @@
 // Copyright (c) 2011-2017 The Cryptonote developers
 // Copyright (c) 2017-2018 The Circle Foundation & Conceal Devs
-// Copyright (c) 2018-2019 Conceal Network & Conceal Devs
+// Copyright (c) 2018-2019 The TurtleCoin developers
+// Copyright (c) 2016-2020 The Karbo developers
+// Copyright (c) 2018-2021 Conceal Network & Conceal Devs
 // Distributed under the MIT/X11 software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -198,4 +200,48 @@ namespace CryptoNote
     const static int ID = BC_COMMANDS_POOL_BASE + 8;
     typedef NOTIFY_REQUEST_TX_POOL_request request;
   };
-}
+
+  /************************************************************************/
+  /*                                                                      */
+  /************************************************************************/
+  struct NOTIFY_NEW_LITE_BLOCK_request
+  {
+    std::string block;
+    uint32_t current_blockchain_height;
+    uint32_t hop;
+
+    void serialize(ISerializer &s)
+    {
+      KV_MEMBER(block)
+      KV_MEMBER(current_blockchain_height)
+      KV_MEMBER(hop)
+    }
+  };
+
+  struct NOTIFY_NEW_LITE_BLOCK
+  {
+    const static int ID = BC_COMMANDS_POOL_BASE + 9;
+    typedef NOTIFY_NEW_LITE_BLOCK_request request;
+  };
+
+  struct NOTIFY_MISSING_TXS_request
+  {
+    Crypto::Hash blockHash;
+    uint32_t current_blockchain_height;
+    std::vector<Crypto::Hash> missing_txs;
+
+    void serialize(ISerializer &s)
+    {
+      KV_MEMBER(blockHash)
+      KV_MEMBER(current_blockchain_height)
+      serializeAsBinary(missing_txs, "missing_txs", s);
+    }
+  };
+
+  struct NOTIFY_MISSING_TXS
+  {
+    const static int ID = BC_COMMANDS_POOL_BASE + 10;
+    typedef NOTIFY_MISSING_TXS_request request;
+  };
+} // namespace CryptoNote
+

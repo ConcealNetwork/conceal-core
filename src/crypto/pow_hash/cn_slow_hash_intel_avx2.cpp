@@ -28,22 +28,26 @@
 
 #ifdef HAS_INTEL_HW
 
+ATTRIBUTE
 inline void prep_dv_avx(cn_sptr& idx, __m256i& v, __m256& n01)
 {
 	v = _mm256_load_si256(idx.as_ptr<__m256i>());
 	n01 = _mm256_cvtepi32_ps(v);
 }
 
+ATTRIBUTE
 inline __m256 _mm256_set1_ps_epi32(uint32_t x)
 {
 	return _mm256_castsi256_ps(_mm256_set1_epi32(x));
 }
 
+ATTRIBUTE
 inline __m128 _mm_set1_ps_epi32(uint32_t x)
 {
 	return _mm_castsi128_ps(_mm_set1_epi32(x));
 }
 
+ATTRIBUTE
 inline __m256 fma_break(const __m256& x) 
 { 
 	// Break the dependency chain by setitng the exp to ?????01 
@@ -51,7 +55,7 @@ inline __m256 fma_break(const __m256& x)
 	return _mm256_or_ps(_mm256_set1_ps_epi32(0x00800000), xx); 
 }
 
-// 14
+ATTRIBUTE
 inline void sub_round(const __m256& n0, const __m256& n1, const __m256& n2, const __m256& n3, const __m256& rnd_c, __m256& n, __m256& d, __m256& c)
 {
 	__m256 nn = _mm256_mul_ps(n0, c);
@@ -74,6 +78,7 @@ inline void sub_round(const __m256& n0, const __m256& n1, const __m256& n2, cons
 }
 
 // 14*8 + 2 = 112
+ATTRIBUTE
 inline void round_compute(const __m256& n0, const __m256& n1, const __m256& n2, const __m256& n3, const __m256& rnd_c, __m256& c, __m256& r)
 {
 	__m256 n = _mm256_setzero_ps(), d = _mm256_setzero_ps();
@@ -95,6 +100,7 @@ inline void round_compute(const __m256& n0, const __m256& n1, const __m256& n2, 
 
 // 112×4 = 448
 template <bool add>
+ATTRIBUTE
 inline __m256i double_comupte(const __m256& n0, const __m256& n1, const __m256& n2, const __m256& n3, 
 							  float lcnt, float hcnt, const __m256& rnd_c, __m256& sum)
 {
@@ -120,6 +126,7 @@ inline __m256i double_comupte(const __m256& n0, const __m256& n1, const __m256& 
 }
 
 template <size_t rot>
+ATTRIBUTE
 inline void double_comupte_wrap(const __m256& n0, const __m256& n1, const __m256& n2, const __m256& n3, 
 								float lcnt, float hcnt, const __m256& rnd_c, __m256& sum, __m256i& out)
 {
@@ -131,7 +138,7 @@ inline void double_comupte_wrap(const __m256& n0, const __m256& n1, const __m256
 }
 
 template <size_t MEMORY, size_t ITER, size_t CN_SLOW_HASH_VERSION>
-void cn_slow_hash<MEMORY, ITER, CN_SLOW_HASH_VERSION>::inner_hash_3_avx()
+void ATTRIBUTE cn_slow_hash<MEMORY, ITER, CN_SLOW_HASH_VERSION>::inner_hash_3_avx()
 {
 	uint32_t s = spad.as_dword(0) >> 8;
 	cn_sptr idx0 = scratchpad_ptr(s, 0);

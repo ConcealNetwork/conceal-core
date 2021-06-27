@@ -50,8 +50,7 @@ public:
   virtual void save(WalletSaveLevel saveLevel = WalletSaveLevel::SAVE_ALL, const std::string& extra = "") override;
   virtual void reset(const uint64_t scanHeight) override;
   virtual void exportWallet(const std::string& path, bool encrypt = true, WalletSaveLevel saveLevel = WalletSaveLevel::SAVE_ALL, const std::string& extra = "") override;
-
-
+  virtual void exportWalletKeys(const std::string &path, bool encrypt = true, WalletSaveLevel saveLevel = WalletSaveLevel::SAVE_KEYS_ONLY, const std::string &extra = "") override;
 
   virtual size_t getAddressCount() const override;
   virtual size_t getWalletDepositCount() const override;  
@@ -143,6 +142,8 @@ protected:
   void initWithKeys(const std::string& path, const std::string& password, const Crypto::PublicKey& viewPublicKey, const Crypto::SecretKey& viewSecretKey);
   std::string doCreateAddress(const Crypto::PublicKey &spendPublicKey, const Crypto::SecretKey &spendSecretKey, uint64_t creationTimestamp);
   std::vector<std::string> doCreateAddressList(const std::vector<NewAddressData> &addressDataList);
+  Crypto::SecretKey getTransactionDeterministicSecretKey(Crypto::Hash &transactionHash) const;
+
   uint64_t scanHeightToTimestamp(const uint32_t scanHeight);
   uint64_t getCurrentTimestampAdjusted();
 

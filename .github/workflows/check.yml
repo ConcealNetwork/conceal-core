@@ -3,20 +3,30 @@ name: Build check
 on:
   push:
     branches:
-      - '**'
+      - "**"
     tags-ignore:
-      - '*'            # We don't want this to run on release
+      - "*" # We don't want this to run on release
   pull_request:
 
 jobs:
   build-windows:
     name: Windows
     runs-on: windows-latest
+    env:
+      BOOST_ROOT: C:/hostedtoolcache/windows/Boost/1.72.0/x86_64
     steps:
       - uses: actions/checkout@master
 
       - name: Setup msbuild
         uses: microsoft/setup-msbuild@v1.0.2
+
+      - name: Install Boost
+        shell: powershell
+        run: |
+          echo "${env:BOOST_ROOT}"
+          $Url = "https://sourceforge.net/projects/boost/files/boost-binaries/1.72.0/boost_1_72_0-msvc-14.2-64.exe"
+          (New-Object System.Net.WebClient).DownloadFile($Url, "$env:TEMP\boost.exe")
+          Start-Process -Wait -FilePath "$env:TEMP\boost.exe" "/SILENT","/SP-","/SUPPRESSMSGBOXES","/DIR=${env:BOOST_ROOT}"
 
       - name: Build
         shell: powershell
@@ -28,7 +38,7 @@ jobs:
           $release_name = "ccx-cli-win64-v$ccx_ver"
           mkdir "$build_folder"
           cd "$build_folder"
-          cmake -G "Visual Studio 16 2019" -DBoost_INCLUDE_DIR="${env:BOOST_ROOT_1_72_0}"/include ..
+          cmake -G "Visual Studio 16 2019" ..
           msbuild concealX.sln /p:Configuration=Release /m
           cd src\Release
           Compress-Archive -Path *.exe -DestinationPath "$release_name.zip"
@@ -59,16 +69,15 @@ jobs:
       - name: Build
         id: build
         run: |
-          BOOST_ROOT=
-          sudo apt-get purge '*boost*'
-          sudo apt install -y libboost-all-dev
+          sudo apt-get update
+          sudo apt-get install -y libboost-all-dev
           build_folder="build/debug"
           ccx_ver=${GITHUB_SHA::7}
           ccx_ver_folder=$(echo $ccx_ver | sed 's/\.//g')
-          release_name=ccx-cli-ubuntu-1604-v"$ccx_ver"
+          release_name=ccx-cli-ubuntu-1604-dev"$ccx_ver"
           mkdir -p "$build_folder"
           cd "$build_folder"
-          cmake ../..
+          cmake ../.. -DCMAKE_BUILD_TYPE=Debug
           make -j2
           mkdir -p "$release_name"
           exeFiles=()
@@ -95,16 +104,15 @@ jobs:
       - name: Build
         id: build
         run: |
-          BOOST_ROOT=
-          sudo apt-get purge '*boost*'
-          sudo apt install -y libboost-all-dev
+          sudo apt-get update
+          sudo apt-get install -y libboost-all-dev
           build_folder="build/debug"
           ccx_ver=${GITHUB_SHA::7}
           ccx_ver_folder=$(echo $ccx_ver | sed 's/\.//g')
-          release_name=ccx-cli-ubuntu-1804-v"$ccx_ver"
+          release_name=ccx-cli-ubuntu-1804-dev"$ccx_ver"
           mkdir -p "$build_folder"
           cd "$build_folder"
-          cmake ../..
+          cmake ../.. -DCMAKE_BUILD_TYPE=Debug
           make -j2
           mkdir -p "$release_name"
           exeFiles=()
@@ -131,20 +139,15 @@ jobs:
       - name: Build
         id: build
         run: |
-          sudo fallocate -l 6G /swapfile
-          sudo chmod 600 /swapfile
-          sudo mkswap /swapfile
-          sudo swapon /swapfile
-          BOOST_ROOT=
-          sudo apt-get purge '*boost*'
-          sudo apt install -y libboost-all-dev
+          sudo apt-get update
+          sudo apt-get install -y libboost-all-dev
           build_folder="build/debug"
           ccx_ver=${GITHUB_SHA::7}
           ccx_ver_folder=$(echo $ccx_ver | sed 's/\.//g')
-          release_name=ccx-cli-ubuntu-2004-v"$ccx_ver"
+          release_name=ccx-cli-ubuntu-2004-dev"$ccx_ver"
           mkdir -p "$build_folder"
           cd "$build_folder"
-          cmake ../..
+          cmake ../.. -DCMAKE_BUILD_TYPE=Debug
           make -j2
           mkdir -p "$release_name"
           exeFiles=()
@@ -174,7 +177,7 @@ jobs:
           build_folder="build/"
           ccx_ver=${GITHUB_SHA::7}
           ccx_ver_folder=$(echo $ccx_ver | sed 's/\.//g')
-          release_name=ccx-cli-macos-v"$ccx_ver"
+          release_name=ccx-cli-macos-dev"$ccx_ver"
           brew install gcc boost
           mkdir "$build_folder"
           cd "$build_folder"

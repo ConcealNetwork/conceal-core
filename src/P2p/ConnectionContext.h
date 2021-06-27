@@ -1,6 +1,8 @@
 // Copyright (c) 2011-2017 The Cryptonote developers
 // Copyright (c) 2017-2018 The Circle Foundation & Conceal Devs
-// Copyright (c) 2018-2019 Conceal Network & Conceal Devs
+// Copyright (c) 2018-2019 The TurtleCoin developers
+// Copyright (c) 2016-2020 The Karbo developers
+// Copyright (c) 2018-2021 Conceal Network & Conceal Devs
 // Distributed under the MIT/X11 software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -9,9 +11,10 @@
 #include <list>
 #include <ostream>
 #include <unordered_set>
-
+#include <boost/optional.hpp>
 #include <boost/uuid/uuid.hpp>
 #include "Common/StringTools.h"
+#include "P2p/PendingLiteBlock.h"
 #include "crypto/hash.h"
 
 namespace CryptoNote {
@@ -35,6 +38,7 @@ struct CryptoNoteConnectionContext {
   };
 
   state m_state = state_befor_handshake;
+  boost::optional<PendingLiteBlock> m_pending_lite_block;
   std::list<Crypto::Hash> m_needed_objects;
   std::unordered_set<Crypto::Hash> m_requested_objects;
   uint32_t m_remote_blockchain_height = 0;

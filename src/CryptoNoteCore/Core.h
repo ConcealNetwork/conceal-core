@@ -102,91 +102,91 @@ namespace CryptoNote {
     virtual bool queryBlocksLite(const std::vector<Crypto::Hash>& knownBlockIds, uint64_t timestamp,
       uint32_t& resStartHeight, uint32_t& resCurrentHeight, uint32_t& resFullOffset, std::vector<BlockShortInfo>& entries) override;
     virtual Crypto::Hash getBlockIdByHeight(uint32_t height) override;
-     void getTransactions(const std::vector<Crypto::Hash>& txs_ids, std::list<Transaction>& txs, std::list<Crypto::Hash>& missed_txs, bool checkTxPool = false) override;
-     virtual bool getBlockByHash(const Crypto::Hash &h, Block &blk) override;
-     virtual bool getBlockHeight(const Crypto::Hash& blockId, uint32_t& blockHeight) override;
-     //void get_all_known_block_ids(std::list<Crypto::Hash> &main, std::list<Crypto::Hash> &alt, std::list<Crypto::Hash> &invalid);
+    virtual bool getTransaction(const Crypto::Hash &id, Transaction &tx, bool checkTxPool = false) override;
+    void getTransactions(const std::vector<Crypto::Hash> &txs_ids, std::list<Transaction> &txs, std::list<Crypto::Hash> &missed_txs, bool checkTxPool = false) override;
+    virtual bool getBlockByHash(const Crypto::Hash &h, Block &blk) override;
+    virtual bool getBlockHeight(const Crypto::Hash &blockId, uint32_t &blockHeight) override;
+    //void get_all_known_block_ids(std::list<Crypto::Hash> &main, std::list<Crypto::Hash> &alt, std::list<Crypto::Hash> &invalid);
 
-     bool get_alternative_blocks(std::list<Block>& blocks);
-     size_t get_alternative_blocks_count();
-     uint64_t coinsEmittedAtHeight(uint64_t height);
-     uint64_t difficultyAtHeight(uint64_t height);
+    bool get_alternative_blocks(std::list<Block> &blocks);
+    size_t get_alternative_blocks_count();
+    uint64_t coinsEmittedAtHeight(uint64_t height);
+    uint64_t difficultyAtHeight(uint64_t height);
 
-     void set_cryptonote_protocol(i_cryptonote_protocol* pprotocol);
-     void set_checkpoints(Checkpoints&& chk_pts);
+    void set_cryptonote_protocol(i_cryptonote_protocol *pprotocol);
+    void set_checkpoints(Checkpoints &&chk_pts);
 
-     std::vector<Transaction> getPoolTransactions() override;
-     size_t get_pool_transactions_count();
-     size_t get_blockchain_total_transactions();
-     //bool get_outs(uint64_t amount, std::list<Crypto::PublicKey>& pkeys);
-     virtual std::vector<Crypto::Hash> findBlockchainSupplement(const std::vector<Crypto::Hash>& remoteBlockIds, size_t maxCount,
-       uint32_t& totalBlockCount, uint32_t& startBlockIndex) override;
-     bool get_stat_info(core_stat_info& st_inf) override;
-     
-     virtual bool get_tx_outputs_gindexs(const Crypto::Hash& tx_id, std::vector<uint32_t>& indexs) override;
-     Crypto::Hash get_tail_id();
-     virtual bool get_random_outs_for_amounts(const COMMAND_RPC_GET_RANDOM_OUTPUTS_FOR_AMOUNTS_request& req, COMMAND_RPC_GET_RANDOM_OUTPUTS_FOR_AMOUNTS_response& res) override;
-     void pause_mining() override;
-     void update_block_template_and_resume_mining() override;
-     //Blockchain& get_blockchain_storage(){return m_blockchain;}
-     //debug functions
-     void print_blockchain(uint32_t start_index, uint32_t end_index);
-     void print_blockchain_index();
-     std::string print_pool(bool short_format);
-     void print_blockchain_outs(const std::string& file);
-     virtual bool getPoolChanges(const Crypto::Hash& tailBlockId, const std::vector<Crypto::Hash>& knownTxsIds,
-                                 std::vector<Transaction>& addedTxs, std::vector<Crypto::Hash>& deletedTxsIds) override;
-     virtual bool getPoolChangesLite(const Crypto::Hash& tailBlockId, const std::vector<Crypto::Hash>& knownTxsIds,
-                                  std::vector<TransactionPrefixInfo>& addedTxs, std::vector<Crypto::Hash>& deletedTxsIds) override;
-     virtual void getPoolChanges(const std::vector<Crypto::Hash>& knownTxsIds, std::vector<Transaction>& addedTxs,
-                                 std::vector<Crypto::Hash>& deletedTxsIds) override;
+    std::vector<Transaction> getPoolTransactions() override;
+    bool getPoolTransaction(const Crypto::Hash &tx_hash, Transaction &transaction) override;
+    size_t get_pool_transactions_count();
+    size_t get_blockchain_total_transactions();
+    //bool get_outs(uint64_t amount, std::list<Crypto::PublicKey>& pkeys);
+    virtual std::vector<Crypto::Hash> findBlockchainSupplement(const std::vector<Crypto::Hash> &remoteBlockIds, size_t maxCount,
+                                                               uint32_t &totalBlockCount, uint32_t &startBlockIndex) override;
+    bool get_stat_info(core_stat_info &st_inf) override;
 
-     uint64_t getNextBlockDifficulty();
-     uint64_t getTotalGeneratedAmount();
-     uint64_t fullDepositAmount() const;
-     uint64_t depositAmountAtHeight(size_t height) const;
-     uint64_t investmentAmountAtHeight(size_t height) const;
-     uint64_t depositInterestAtHeight(size_t height) const;
+    virtual bool get_tx_outputs_gindexs(const Crypto::Hash &tx_id, std::vector<uint32_t> &indexs) override;
+    Crypto::Hash get_tail_id();
+    virtual bool get_random_outs_for_amounts(const COMMAND_RPC_GET_RANDOM_OUTPUTS_FOR_AMOUNTS_request &req, COMMAND_RPC_GET_RANDOM_OUTPUTS_FOR_AMOUNTS_response &res) override;
+    void pause_mining() override;
+    void update_block_template_and_resume_mining() override;
+    //Blockchain& get_blockchain_storage(){return m_blockchain;}
+    //debug functions
+    void print_blockchain(uint32_t start_index, uint32_t end_index);
+    void print_blockchain_index();
+    std::string print_pool(bool short_format);
+    void print_blockchain_outs(const std::string &file);
+    virtual bool getPoolChanges(const Crypto::Hash &tailBlockId, const std::vector<Crypto::Hash> &knownTxsIds,
+                                std::vector<Transaction> &addedTxs, std::vector<Crypto::Hash> &deletedTxsIds) override;
+    virtual bool getPoolChangesLite(const Crypto::Hash &tailBlockId, const std::vector<Crypto::Hash> &knownTxsIds,
+                                    std::vector<TransactionPrefixInfo> &addedTxs, std::vector<Crypto::Hash> &deletedTxsIds) override;
+    virtual void getPoolChanges(const std::vector<Crypto::Hash> &knownTxsIds, std::vector<Transaction> &addedTxs,
+                                std::vector<Crypto::Hash> &deletedTxsIds) override;
 
-     bool is_key_image_spent(const Crypto::KeyImage& key_im);
+    uint64_t getNextBlockDifficulty();
+    uint64_t getTotalGeneratedAmount();
+    uint64_t fullDepositAmount() const;
+    uint64_t depositAmountAtHeight(size_t height) const;
+    uint64_t investmentAmountAtHeight(size_t height) const;
+    uint64_t depositInterestAtHeight(size_t height) const;
 
-   private:
-     bool add_new_tx(const Transaction& tx, const Crypto::Hash& tx_hash, size_t blob_size, tx_verification_context& tvc, bool keeped_by_block, uint32_t height);
-     bool load_state_data();
-     bool parse_tx_from_blob(Transaction& tx, Crypto::Hash& tx_hash, Crypto::Hash& tx_prefix_hash, const BinaryArray& blob);
-     bool handle_incoming_block(const Block& b, block_verification_context& bvc, bool control_miner, bool relay_block);
+    bool is_key_image_spent(const Crypto::KeyImage &key_im);
 
-     bool check_tx_syntax(const Transaction& tx);
-     //check correct values, amounts and all lightweight checks not related with database
-     bool check_tx_semantic(const Transaction& tx, bool keeped_by_block, uint32_t &height);
-     //check if tx already in memory pool or in main blockchain
+  private:
+    bool add_new_tx(const Transaction &tx, const Crypto::Hash &tx_hash, size_t blob_size, tx_verification_context &tvc, bool keeped_by_block, uint32_t height);
+    bool load_state_data();
+    bool parse_tx_from_blob(Transaction &tx, Crypto::Hash &tx_hash, Crypto::Hash &tx_prefix_hash, const BinaryArray &blob);
+    bool handle_incoming_block(const Block &b, block_verification_context &bvc, bool control_miner, bool relay_block);
 
+    bool check_tx_syntax(const Transaction &tx);
+    //check correct values, amounts and all lightweight checks not related with database
+    bool check_tx_semantic(const Transaction &tx, bool keeped_by_block, uint32_t &height);
+    //check if tx already in memory pool or in main blockchain
 
+    bool check_tx_ring_signature(const KeyInput &tx, const Crypto::Hash &tx_prefix_hash, const std::vector<Crypto::Signature> &sig);
+    bool is_tx_spendtime_unlocked(uint64_t unlock_time);
+    bool update_miner_block_template();
+    bool handle_command_line(const boost::program_options::variables_map &vm);
+    bool on_update_blocktemplate_interval();
+    bool check_tx_inputs_keyimages_diff(const Transaction &tx);
+    virtual void blockchainUpdated() override;
+    virtual void txDeletedFromPool() override;
+    void poolUpdated();
 
-     bool check_tx_ring_signature(const KeyInput& tx, const Crypto::Hash& tx_prefix_hash, const std::vector<Crypto::Signature>& sig);
-     bool is_tx_spendtime_unlocked(uint64_t unlock_time);
-     bool update_miner_block_template();
-     bool handle_command_line(const boost::program_options::variables_map& vm);
-     bool on_update_blocktemplate_interval();
-     bool check_tx_inputs_keyimages_diff(const Transaction& tx);
-     virtual void blockchainUpdated() override;
-     virtual void txDeletedFromPool() override;
-     void poolUpdated();
+    bool findStartAndFullOffsets(const std::vector<Crypto::Hash> &knownBlockIds, uint64_t timestamp, uint32_t &startOffset, uint32_t &startFullOffset);
+    std::vector<Crypto::Hash> findIdsForShortBlocks(uint32_t startOffset, uint32_t startFullOffset);
 
-     bool findStartAndFullOffsets(const std::vector<Crypto::Hash>& knownBlockIds, uint64_t timestamp, uint32_t& startOffset, uint32_t& startFullOffset);
-     std::vector<Crypto::Hash> findIdsForShortBlocks(uint32_t startOffset, uint32_t startFullOffset);
-
-     const Currency& m_currency;
-     Logging::LoggerRef logger;
-     CryptoNote::RealTimeProvider m_timeProvider;
-     tx_memory_pool m_mempool;
-     Blockchain m_blockchain;
-     i_cryptonote_protocol* m_pprotocol;
-     std::unique_ptr<miner> m_miner;
-     std::string m_config_folder;
-     cryptonote_protocol_stub m_protocol_stub;
-     friend class tx_validate_inputs;
-     std::atomic<bool> m_starter_message_showed;
-     Tools::ObserverManager<ICoreObserver> m_observerManager;
+    const Currency &m_currency;
+    Logging::LoggerRef logger;
+    CryptoNote::RealTimeProvider m_timeProvider;
+    tx_memory_pool m_mempool;
+    Blockchain m_blockchain;
+    i_cryptonote_protocol *m_pprotocol;
+    std::unique_ptr<miner> m_miner;
+    std::string m_config_folder;
+    cryptonote_protocol_stub m_protocol_stub;
+    friend class tx_validate_inputs;
+    std::atomic<bool> m_starter_message_showed;
+    Tools::ObserverManager<ICoreObserver> m_observerManager;
    };
 }
