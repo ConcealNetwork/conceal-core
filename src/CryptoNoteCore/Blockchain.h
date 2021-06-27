@@ -204,7 +204,7 @@ namespace CryptoNote
     struct TransactionIndex
     {
       uint32_t block;
-      uint32_t transaction;
+      uint16_t transaction;
 
       void serialize(ISerializer &s)
       {
@@ -220,7 +220,7 @@ namespace CryptoNote
     struct MultisignatureOutputUsage
     {
       TransactionIndex transactionIndex;
-      uint32_t outputIndex;
+      uint16_t outputIndex;
       bool isUsed;
 
       void serialize(ISerializer &s)
