@@ -153,6 +153,7 @@ bool RpcServer::processJsonRpcRequest(const HttpRequest& request, HttpResponse& 
         {"submitblock", {makeMemberMethod(&RpcServer::on_submitblock), false}},
         {"getlastblockheader", {makeMemberMethod(&RpcServer::on_get_last_block_header), false}},
         {"getblockheaderbyhash", {makeMemberMethod(&RpcServer::on_get_block_header_by_hash), false}},
+        {"getblocktimestamp", {makeMemberMethod(&RpcServer::on_get_block_timestamp_by_height), true}},
         {"getblockheaderbyheight", {makeMemberMethod(&RpcServer::on_get_block_header_by_height), false}}};
 
     auto it = jsonRpcHandlers.find(jsonRequest.getMethod());
@@ -219,6 +220,21 @@ bool RpcServer::on_get_blocks(const COMMAND_RPC_GET_BLOCKS_FAST::request& req, C
   }
 
   res.status = CORE_RPC_STATUS_OK;
+  return true;
+}
+
+bool RpcServer::on_get_block_timestamp_by_height(const COMMAND_RPC_GET_BLOCK_TIMESTAMP_BY_HEIGHT::request &req, COMMAND_RPC_GET_BLOCK_TIMESTAMP_BY_HEIGHT::response &res)
+{
+  if (m_core.get_current_blockchain_height() <= req.height)
+  {
+    throw JsonRpc::JsonRpcError{CORE_RPC_ERROR_CODE_TOO_BIG_HEIGHT,
+                                std::string("To big height: ") + std::to_string(req.height) + ", current blockchain height = " + std::to_string(m_core.get_current_blockchain_height())};
+  }
+
+  res.status = CORE_RPC_STATUS_OK;
+
+  m_core.getBlockTimestamp(req.height, res.timestamp);
+
   return true;
 }
 
