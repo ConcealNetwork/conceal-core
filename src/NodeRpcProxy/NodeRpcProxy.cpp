@@ -500,6 +500,25 @@ std::error_code NodeRpcProxy::doGetNewBlocks(std::vector<Crypto::Hash>& knownBlo
   return ec;
 }
 
+std::error_code NodeRpcProxy::doGetBlock(const uint32_t blockHeight, f_block_details_response& block)
+{
+  COMMAND_RPC_GET_BLOCK_DETAILS_BY_HEIGHT::request req = AUTO_VAL_INIT(req);
+  COMMAND_RPC_GET_BLOCK_DETAILS_BY_HEIGHT::response resp = AUTO_VAL_INIT(resp);
+
+  req.blockHeight = blockHeight;
+
+  std::error_code ec = jsonCommand("get_block_details_by_height", req, resp);
+
+  if (ec)
+  {
+    return ec;
+  }
+
+  block = std::move(resp.block);
+
+  return ec;
+}
+
 std::error_code NodeRpcProxy::doGetTransactionOutsGlobalIndices(const Crypto::Hash& transactionHash,
                                                                 std::vector<uint32_t>& outsGlobalIndices) {
   CryptoNote::COMMAND_RPC_GET_TX_GLOBAL_OUTPUTS_INDEXES::request req = AUTO_VAL_INIT(req);

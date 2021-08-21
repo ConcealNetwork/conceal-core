@@ -145,6 +145,8 @@ bool RpcServer::processJsonRpcRequest(const HttpRequest& request, HttpResponse& 
         {"check_tx_proof", {makeMemberMethod(&RpcServer::k_on_check_tx_proof), false}},
         {"check_reserve_proof", {makeMemberMethod(&RpcServer::k_on_check_reserve_proof), false}},
         {"getblockcount", {makeMemberMethod(&RpcServer::on_getblockcount), true}},
+        {"getblockhash", {makeMemberMethod(&RpcServer::on_getblockhash), true}},
+        {"getblockbyheight", {makeMemberMethod(&RpcServer::on_get_block_details_by_height), true}},
         {"on_getblockhash", {makeMemberMethod(&RpcServer::on_getblockhash), false}},
         {"getblocktemplate", {makeMemberMethod(&RpcServer::on_getblocktemplate), false}},
         {"getcurrencyid", {makeMemberMethod(&RpcServer::on_get_currency_id), true}},
@@ -220,6 +222,32 @@ bool RpcServer::on_get_blocks(const COMMAND_RPC_GET_BLOCKS_FAST::request& req, C
   return true;
 }
 
+bool RpcServer::on_getblockhash(const COMMAND_RPC_GETBLOCKHASH::request &req, COMMAND_RPC_GETBLOCKHASH::response &res)
+{
+  if (req.size() != 1)
+  {
+    throw JsonRpc::JsonRpcError{CORE_RPC_ERROR_CODE_WRONG_PARAM, "Wrong parameters, expected height"};
+  }
+
+  uint32_t h = static_cast<uint32_t>(req[0]);
+  Crypto::Hash blockId = m_core.getBlockIdByHeight(h);
+  if (blockId == NULL_HASH)
+  {
+    throw JsonRpc::JsonRpcError{
+      CORE_RPC_ERROR_CODE_TOO_BIG_HEIGHT,
+          std::string("To big height: ") + std::to_string(h) + ", current blockchain height = " + std::to_string(m_core.get_current_blockchain_height())
+    };
+  }
+
+  res = Common::podToHex(blockId);
+  return true;
+}
+
+bool RpcServer::on_get_block_details_by_height(const COMMAND_RPC_GET_BLOCK_DETAILS_BY_HEIGHT::request &req, COMMAND_RPC_GET_BLOCK_DETAILS_BY_HEIGHT::response &rsp)
+{
+  
+  return true;
+}
 
 bool RpcServer::k_on_check_tx_proof(const K_COMMAND_RPC_CHECK_TX_PROOF::request& req, K_COMMAND_RPC_CHECK_TX_PROOF::response& res) {
 	// parse txid
@@ -1111,24 +1139,6 @@ bool RpcServer::f_on_transactions_pool_json(const F_COMMAND_RPC_GET_POOL::reques
 bool RpcServer::on_getblockcount(const COMMAND_RPC_GETBLOCKCOUNT::request& req, COMMAND_RPC_GETBLOCKCOUNT::response& res) {
   res.count = m_core.get_current_blockchain_height();
   res.status = CORE_RPC_STATUS_OK;
-  return true;
-}
-
-bool RpcServer::on_getblockhash(const COMMAND_RPC_GETBLOCKHASH::request& req, COMMAND_RPC_GETBLOCKHASH::response& res) {
-  if (req.size() != 1) {
-    throw JsonRpc::JsonRpcError{ CORE_RPC_ERROR_CODE_WRONG_PARAM, "Wrong parameters, expected height" };
-  }
-
-  uint32_t h = static_cast<uint32_t>(req[0]);
-  Crypto::Hash blockId = m_core.getBlockIdByHeight(h);
-  if (blockId == NULL_HASH) {
-    throw JsonRpc::JsonRpcError{
-      CORE_RPC_ERROR_CODE_TOO_BIG_HEIGHT,
-      std::string("To big height: ") + std::to_string(h) + ", current blockchain height = " + std::to_string(m_core.get_current_blockchain_height())
-    };
-  }
-
-  res = Common::podToHex(blockId);
   return true;
 }
 
