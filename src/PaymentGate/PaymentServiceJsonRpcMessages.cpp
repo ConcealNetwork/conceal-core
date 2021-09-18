@@ -26,6 +26,24 @@ void Reset::Request::serialize(CryptoNote::ISerializer& serializer) {
 void Reset::Response::serialize(CryptoNote::ISerializer& serializer) {
 }
 
+void ExportWallet::Request::serialize(CryptoNote::ISerializer &serializer)
+{
+  serializer(exportFilename, "exportFilename");
+}
+
+void ExportWallet::Response::serialize(CryptoNote::ISerializer &serializer)
+{
+}
+
+void ExportWalletKeys::Request::serialize(CryptoNote::ISerializer &serializer)
+{
+  serializer(exportFilename, "exportFilename");
+}
+
+void ExportWalletKeys::Response::serialize(CryptoNote::ISerializer &serializer)
+{
+}
+
 void GetViewKey::Request::serialize(CryptoNote::ISerializer &serializer)
 {
 }

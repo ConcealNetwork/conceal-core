@@ -6,7 +6,7 @@
 
 #include "KVBinaryOutputStreamSerializer.h"
 #include "KVBinaryCommon.h"
-
+#include <limits>
 #include <cassert>
 #include <stdexcept>
 #include <Common/StreamTools.h>
