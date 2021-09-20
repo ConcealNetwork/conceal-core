@@ -61,7 +61,7 @@ namespace CryptoNote
 		const size_t DIFFICULTY_LAG = 15;
 		const size_t DIFFICULTY_LAG_V1 = DIFFICULTY_LAG;
 		const size_t DIFFICULTY_LAG_V2 = DIFFICULTY_LAG;
-		const size_t MINIMUM_MIXIN = 4;
+		const size_t MINIMUM_MIXIN = 5;
 
 		static_assert(2 * DIFFICULTY_CUT <= DIFFICULTY_WINDOW - 2, "Bad DIFFICULTY_WINDOW or DIFFICULTY_CUT");
 
