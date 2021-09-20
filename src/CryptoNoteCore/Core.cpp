@@ -934,6 +934,17 @@ bool core::getBlockDifficulty(uint32_t height, difficulty_type& difficulty) {
   return true;
 }
 
+bool core::getBlockTimestamp(uint32_t height, uint64_t &timestamp)
+{
+  if (height > get_current_blockchain_height())
+  {
+    return false;
+  }
+
+  timestamp = m_blockchain.getBlockTimestamp(height);
+  return true;
+}
+
 bool core::getBlockContainingTx(const Crypto::Hash& txId, Crypto::Hash& blockId, uint32_t& blockHeight) {
   return m_blockchain.getBlockContainingTransaction(txId, blockId, blockHeight);
 }
