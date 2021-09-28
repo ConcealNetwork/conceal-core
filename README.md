@@ -1,15 +1,16 @@
-![image](https://github.com/ConcealNetwork/conceal-imagery/blob/master/tqRGU34m_400x400.jpg)
+![image](https://github.com/ConcealNetwork/conceal-imagery/blob/master/logos/splash.png)
 
-![](https://github.com/bomb-on/conceal-core/workflows/Ubuntu%2016.04/badge.svg) ![](https://github.com/bomb-on/conceal-core/workflows/Ubuntu%2018.04/badge.svg) ![](https://github.com/bomb-on/conceal-core/workflows/Windows/badge.svg) ![](https://github.com/bomb-on/conceal-core/workflows/macOS/badge.svg) [![Codacy Badge](https://app.codacy.com/project/badge/Grade/4b47060713f444b8afb5f5284d4b9716)](https://www.codacy.com/manual/cryptokatz/conceal-core?utm_source=github.com&amp;utm_medium=referral&amp;utm_content=cryptokatz/conceal-core&amp;utm_campaign=Badge_Grade)
+![](https://github.com/bomb-on/conceal-core/workflows/Ubuntu%2016.04/badge.svg) ![](https://github.com/bomb-on/conceal-core/workflows/Ubuntu%2018.04/badge.svg) ![](https://github.com/bomb-on/conceal-core/workflows/Windows/badge.svg) ![](https://github.com/bomb-on/conceal-core/workflows/macOS/badge.svg)
 
 # Conceal Core (CLI)
 Latest Release: v6.4.9
+
 Maintained by Conceal Developers.
 
 ## Information
-Conceal is a decentralized banking platform with encrypted messages and own privacy protected cryptocurrency.
+Conceal Network is a secure peer-to-peer privacy framework empowering individuals and organizations to anonymously communicate and interact financially in a decentralized and censorship resistant ecosystem.
 
-Conceal is based on the Cryptonote protocol and runs on a secure peer-to-peer network technology to operate with no central authority. You control your private keys to your funds, you control your destiny. Conceal Network is accessible by anyone in the world regardless of his/her geographic location or status. Our blockchain is resistant to any kind of analysis. All your CCX transactions and messages are anonymous. Conceal Network provides an instant secure, untraceable and unlinkable way of encrypted communication - crypto messages.
+Conceal is based on the original Cryptonote protocol and runs on a secure peer-to-peer network technology to operate with no central authority. You control your private keys to your funds, you control your destiny. Conceal Network is accessible by anyone in the world regardless of his/her geographic location or status. Our blockchain is resistant to any kind of analysis. All your CCX transactions and messages are anonymous. Conceal Network provides an instant secure, untraceable and unlinkable way of encrypted communication - crypto messages.
 
 Conceal is open-source, community driven and truly decentralized. No one owns it, everyone can take part.
 
