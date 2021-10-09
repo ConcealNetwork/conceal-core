@@ -398,6 +398,8 @@ struct COMMAND_RPC_GET_FEE_ADDRESS {
   };
 };
 
+
+
 struct COMMAND_RPC_GETBLOCKHASH {
   typedef std::vector<uint64_t> request;
   typedef std::string response;
@@ -864,6 +866,56 @@ struct reserve_proof {
 		KV_MEMBER(proofs)
 		KV_MEMBER(signature)
 	}
+};
+
+struct COMMAND_RPC_GET_BLOCK_TIMESTAMP_BY_HEIGHT
+{
+  struct request
+  {
+    uint32_t height;
+
+    void serialize(ISerializer &s)
+    {
+      KV_MEMBER(height)
+    }
+  };
+
+  struct response
+  {
+    uint64_t timestamp;
+    std::string status;
+
+    void serialize(ISerializer &s)
+    {
+      KV_MEMBER(timestamp)
+      KV_MEMBER(status)
+    }
+  };
+};
+
+struct COMMAND_RPC_GET_BLOCK_DETAILS_BY_HEIGHT
+{
+  struct request
+  {
+    uint32_t blockHeight;
+
+    void serialize(ISerializer &s)
+    {
+      KV_MEMBER(blockHeight)
+    }
+  };
+
+  struct response
+  {
+    f_block_details_response block;
+    std::string status;
+
+    void serialize(ISerializer &s)
+    {
+      KV_MEMBER(status)
+      KV_MEMBER(block)
+    }
+  };
 };
 
 struct K_COMMAND_RPC_CHECK_TX_PROOF {
