@@ -251,6 +251,7 @@ if(ARM)
 endif()
 
 if(STATIC)
+  set(Boost_NO_BOOST_CMAKE ON)
   set(Boost_USE_STATIC_LIBS ON)
   set(Boost_USE_STATIC_RUNTIME ON)
 endif()

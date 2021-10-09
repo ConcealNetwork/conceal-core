@@ -60,41 +60,6 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-  build-ubuntu16:
-    name: Ubuntu 16.04
-    runs-on: ubuntu-16.04
-    steps:
-      - uses: actions/checkout@master
-
-      - name: Build
-        id: build
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y libboost-all-dev
-          build_folder="build/debug"
-          ccx_ver=${GITHUB_SHA::7}
-          ccx_ver_folder=$(echo $ccx_ver | sed 's/\.//g')
-          release_name=ccx-cli-ubuntu-1604-dev"$ccx_ver"
-          mkdir -p "$build_folder"
-          cd "$build_folder"
-          cmake ../.. -DCMAKE_BUILD_TYPE=Debug
-          make -j2
-          mkdir -p "$release_name"
-          exeFiles=()
-          for f in src/*; do [[ -x $f && -f $f ]] && exeFiles+=( "$f" ); done
-          strip "${exeFiles[@]}"
-          cp "${exeFiles[@]}" "$release_name/"
-          echo "::set-output name=release_name::${release_name}.zip"
-          echo "::set-output name=artifact_path::$build_folder/$release_name"
-
-      - name: Upload To GH Artifacts
-        uses: actions/upload-artifact@v1.0.0
-        with:
-          name: ${{ steps.build.outputs.release_name }}
-          path: ${{ steps.build.outputs.artifact_path }}
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-
   build-ubuntu18:
     name: Ubuntu 18.04
     runs-on: ubuntu-18.04
@@ -181,7 +146,7 @@ jobs:
           brew install gcc boost
           mkdir "$build_folder"
           cd "$build_folder"
-          cmake -DCMAKE_C_FLAGS="-mmacosx-version-min=10.12" -DCMAKE_CXX_FLAGS="-mmacosx-version-min=10.12" ..
+          cmake -DCMAKE_C_FLAGS="-mmacosx-version-min=10.12" -DCMAKE_CXX_FLAGS="-mmacosx-version-min=10.12" -DSTATIC=ON ..
           make -j2
           mkdir "$release_name"
           exeFiles=()
