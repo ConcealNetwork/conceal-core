@@ -395,11 +395,19 @@ int CryptoNoteProtocolHandler::handle_notify_new_transactions(int command, NOTIF
 int CryptoNoteProtocolHandler::handle_request_get_objects(int command, NOTIFY_REQUEST_GET_OBJECTS::request &arg, CryptoNoteConnectionContext &context)
 {
   logger(Logging::TRACE) << context << "NOTIFY_REQUEST_GET_OBJECTS";
+  if(arg.blocks.size() > COMMAND_RPC_GET_OBJECTS_MAX_COUNT || arg.txs.size() > COMMAND_RPC_GET_OBJECTS_MAX_COUNT)
+  {
+    logger(Logging::ERROR) << context << "GET_OBJECTS_MAX_COUNT exceeded blocks: " << arg.blocks.size() << " txes: " << arg.txs.size();
+    context.m_state = CryptoNoteConnectionContext::state_shutdown;
+    return 1;
+  }
+
   NOTIFY_RESPONSE_GET_OBJECTS::request rsp;
   if (!m_core.handle_get_objects(arg, rsp))
   {
     logger(Logging::ERROR) << context << "failed to handle request NOTIFY_REQUEST_GET_OBJECTS, dropping connection";
     context.m_state = CryptoNoteConnectionContext::state_shutdown;
+    return 1;
   }
   logger(Logging::TRACE) << context << "-->>NOTIFY_RESPONSE_GET_OBJECTS: blocks.size()=" << rsp.blocks.size() << ", txs.size()=" << rsp.txs.size()
                          << ", rsp.m_current_blockchain_height=" << rsp.current_blockchain_height << ", missed_ids.size()=" << rsp.missed_ids.size();
