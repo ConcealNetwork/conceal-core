@@ -87,6 +87,8 @@ private:
   bool f_on_transactions_pool_json(const F_COMMAND_RPC_GET_POOL::request& req, F_COMMAND_RPC_GET_POOL::response& res);
   bool f_getMixin(const Transaction& transaction, uint64_t& mixin);
 
+  bool fill_f_block_details_response(const Crypto::Hash& hash, f_block_details_response& block);
+
   Logging::LoggerRef logger;
   core& m_core;
   NodeServer& m_p2p;

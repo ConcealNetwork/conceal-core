@@ -112,11 +112,11 @@ namespace Crypto {
       return (std::numeric_limits<T>::max)();
     }
 #else
-    static T(min)() {
+    constexpr static T(min)() {
       return (std::numeric_limits<T>::min)();
     }
 
-    static T(max)() {
+    constexpr static T(max)() {
       return (std::numeric_limits<T>::max)();
     }
 #endif

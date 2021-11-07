@@ -283,4 +283,3 @@ namespace CryptoNote
 
 } // namespace CryptoNote
 
-#define ALLOW_DEBUG_COMMANDS
