@@ -872,7 +872,7 @@ struct COMMAND_RPC_GET_BLOCK_TIMESTAMP_BY_HEIGHT
 {
   struct request
   {
-    uint32_t height;
+    uint64_t height;
 
     void serialize(ISerializer &s)
     {
@@ -897,11 +897,11 @@ struct COMMAND_RPC_GET_BLOCK_DETAILS_BY_HEIGHT
 {
   struct request
   {
-    uint32_t blockHeight;
+    uint64_t height;
 
     void serialize(ISerializer &s)
     {
-      KV_MEMBER(blockHeight)
+      KV_MEMBER(height)
     }
   };
 
