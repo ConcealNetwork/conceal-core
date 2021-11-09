@@ -1,10 +1,10 @@
 cmake_minimum_required(VERSION 3.0)
 
 include(CheckCXXCompilerFlag)
-set(VERSION "6.5.0.1")
-set(VERSION_BUILD_NO "Poseidon")
+set(VERSION "6.5.0")
+set(VERSION_BUILD_NO "Endovelicus")
 # Packaged from main commits
-set(COMMIT 72946d9)
+set(COMMIT 518136dbd5fef1994a25f889ef95d4d913a26600)
 set(REFS " (HEAD -> master)")
 
 set(CMAKE_CXX_STANDARD 11)
