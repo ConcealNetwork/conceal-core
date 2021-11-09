@@ -242,7 +242,7 @@ public:
   bool perform1()
   {
     using namespace Tests::Common;
-    using namespace cryptonote;
+    using namespace CryptoNote;
     const uint64_t FEE = 1000000;
     launchTestnet(2);
     LOG_TRACE("STEP 1 PASSED");
@@ -428,7 +428,7 @@ public:
 
   bool perform4()
   {
-    using namespace cryptonote;
+    using namespace CryptoNote;
     using namespace Tests::Common;
     launchTestnet(3, Star);
     LOG_TRACE("STEP 1 PASSED");
@@ -565,7 +565,7 @@ public:
   bool perform5()
   {
     using namespace Tests::Common;
-    using namespace cryptonote;
+    using namespace CryptoNote;
     const uint64_t FEE = 1000000;
     launchTestnetWithInprocNode(2);
 
@@ -720,7 +720,7 @@ public:
   bool perform6()
   {
     using namespace Tests::Common;
-    using namespace cryptonote;
+    using namespace CryptoNote;
     const uint64_t FEE = 1000000;
     launchTestnetWithInprocNode(2);
 

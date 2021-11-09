@@ -11,7 +11,7 @@
 #include "WalletLegacyObserver.h"
 
 using namespace Tests;
-using namespace cryptonote;
+using namespace CryptoNote;
 
 class WalletLegacyTests : public BaseTest
 {

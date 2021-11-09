@@ -28,7 +28,7 @@ public:
 
   bool init()
   {
-    using namespace cryptonote;
+    using namespace CryptoNote;
 
     if (!base_class::init())
       return false;

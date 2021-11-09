@@ -21,8 +21,8 @@
 
 #include "TransactionApiHelpers.h"
 
-using namespace cryptonote;
-using namespace cryptonote;
+using namespace CryptoNote;
+using namespace CryptoNote;
 
 class TransactionValidator : public CryptoNote::ITransactionValidator {
   virtual bool checkTransactionInputs(const CryptoNote::Transaction& tx, BlockInfo& maxUsedBlock) override {

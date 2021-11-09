@@ -9,7 +9,7 @@
 #include <string>
 #include <system_error>
 
-namespace cryptonote {
+namespace CryptoNote {
 namespace error {
 
 // custom error conditions enum type:

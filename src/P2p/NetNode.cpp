@@ -47,7 +47,7 @@
 
 using namespace Common;
 using namespace Logging;
-using namespace cryptonote;
+using namespace CryptoNote;
 
 namespace {
 
@@ -102,7 +102,7 @@ bool parse_peer_from_string(NetworkAddress& pe, const std::string& node_addr) {
 }
 
 
-namespace cryptonote
+namespace CryptoNote
 {
   namespace
   {

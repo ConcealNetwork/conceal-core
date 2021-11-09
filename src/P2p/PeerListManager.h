@@ -17,7 +17,7 @@
 #include "P2pProtocolTypes.h"
 #include "CryptoNoteConfig.h"
 
-namespace cryptonote {
+namespace CryptoNote {
 
 class ISerializer;
 /************************************************************************/

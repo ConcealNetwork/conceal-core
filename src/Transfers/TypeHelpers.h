@@ -10,7 +10,7 @@
 #include <functional>
 #include <cstring>
 
-namespace cryptonote {
+namespace CryptoNote {
 
 inline bool operator==(const AccountPublicAddress &_v1, const AccountPublicAddress &_v2) {
   return memcmp(&_v1, &_v2, sizeof(AccountPublicAddress)) == 0;

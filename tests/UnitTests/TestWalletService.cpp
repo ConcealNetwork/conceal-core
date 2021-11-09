@@ -20,10 +20,10 @@
 #include "INodeStubs.h"
 #include "Wallet/WalletErrors.h"
 
-using namespace cryptonote;
+using namespace CryptoNote;
 using namespace PaymentService;
 
-namespace cryptonote {
+namespace CryptoNote {
 
 bool operator== (const WalletOrder& lhs, const WalletOrder& rhs) {
   return std::make_tuple(lhs.address, lhs.amount) == std::make_tuple(rhs.address, rhs.amount);
@@ -33,7 +33,7 @@ bool operator== (const DonationSettings& lhs, const DonationSettings& rhs) {
   return std::make_tuple(lhs.address, lhs.threshold) == std::make_tuple(rhs.address, rhs.threshold);
 }
 
-} //namespace cryptonote
+} //namespace CryptoNote
 
 struct IWalletBaseStub : public CryptoNote::IWallet {
   IWalletBaseStub(System::Dispatcher& dispatcher) : m_eventOccurred(dispatcher) {}

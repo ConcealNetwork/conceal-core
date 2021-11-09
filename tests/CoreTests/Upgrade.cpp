@@ -6,7 +6,7 @@
 #include "Upgrade.h"
 #include "TestGenerator.h"
 
-using namespace cryptonote;
+using namespace CryptoNote;
 
 namespace {
   bool makeBlocks(std::vector<test_event_entry>& events, test_generator& generator, Block& lastBlock,

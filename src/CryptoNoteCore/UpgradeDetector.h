@@ -17,7 +17,7 @@
 #include "CryptoNoteConfig.h"
 #include <Logging/LoggerRef.h>
 
-namespace cryptonote {
+namespace CryptoNote {
   class UpgradeDetectorBase {
   public:
     enum : uint32_t {

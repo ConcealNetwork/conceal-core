@@ -19,7 +19,7 @@
 #include "Logger.h"
 #include "NodeCallback.h"
 
-using namespace cryptonote;
+using namespace CryptoNote;
 using namespace System;
 
 namespace Tests {

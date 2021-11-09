@@ -24,7 +24,7 @@ void throwIfNotGood(std::istream& stream) {
 
 }
 
-namespace cryptonote {
+namespace CryptoNote {
 
 HttpResponse::HTTP_STATUS HttpParser::parseResponseStatusFromString(const std::string& status) {
   if (status == "200 OK" || status == "200 Ok") return CryptoNote::HttpResponse::STATUS_200;

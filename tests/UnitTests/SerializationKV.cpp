@@ -14,9 +14,9 @@
 
 #include <array>
 
-using namespace cryptonote;
+using namespace CryptoNote;
 
-namespace cryptonote {
+namespace CryptoNote {
 
 struct TestElement {
   std::string name;

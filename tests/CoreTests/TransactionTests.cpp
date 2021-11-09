@@ -13,7 +13,7 @@
 
 #include "Chaingen.h"
 
-using namespace cryptonote;
+using namespace CryptoNote;
 
 bool test_transaction_generation_and_ring_signature()
 {

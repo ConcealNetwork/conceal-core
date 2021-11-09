@@ -13,7 +13,7 @@
 #include "Common/Math.h"
 #include "CoreRpcServerCommandsDefinitions.h"
 
-namespace cryptonote {
+namespace CryptoNote {
 
 class core;
 class NodeServer;

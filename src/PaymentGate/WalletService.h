@@ -22,7 +22,7 @@
 #include <boost/multi_index/member.hpp>
 #include <boost/multi_index/hashed_index.hpp>
 
-namespace cryptonote
+namespace CryptoNote
 {
 class IFusionManager;
 }

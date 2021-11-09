@@ -10,7 +10,7 @@
 
 #include "CryptoNoteCore/Currency.h"
 
-namespace cryptonote {
+namespace CryptoNote {
 
 bool validateAddress(const std::string& address, const CryptoNote::Currency& currency);
 void throwIfKeysMissmatch(const Crypto::SecretKey& secretKey, const Crypto::PublicKey& expectedPublicKey, const std::string& message = "");

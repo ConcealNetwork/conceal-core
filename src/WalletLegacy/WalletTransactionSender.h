@@ -17,7 +17,7 @@
 
 #include "ITransfersContainer.h"
 
-namespace cryptonote {
+namespace CryptoNote {
 
 class INode;
 
@@ -115,4 +115,4 @@ private:
   INode& m_node; //used solely to get last known block height for calculateInterest
 };
 
-} /* namespace cryptonote */
+} /* namespace CryptoNote */

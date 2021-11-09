@@ -10,7 +10,7 @@
 #include "P2p/PeerListManager.h"
 #include "P2p/PeerListManager.cpp"
 
-using namespace cryptonote;
+using namespace CryptoNote;
 
 #define MAKE_IP( a1, a2, a3, a4 )	(a1|(a2<<8)|(a3<<16)|(a4<<24))
 

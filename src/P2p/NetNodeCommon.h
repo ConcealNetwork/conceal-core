@@ -11,7 +11,7 @@
 #include <list>
 #include <boost/uuid/uuid.hpp>
 
-namespace cryptonote {
+namespace CryptoNote {
 
   struct CryptoNoteConnectionContext;
 

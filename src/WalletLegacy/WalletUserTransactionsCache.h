@@ -19,7 +19,7 @@
 #include "WalletLegacy/WalletLegacyEvent.h"
 #include "WalletLegacy/WalletUnconfirmedTransactions.h"
 
-namespace cryptonote {
+namespace CryptoNote {
 class ISerializer;
 }
 
@@ -35,7 +35,7 @@ namespace std {
   };
 }
 
-namespace cryptonote {
+namespace CryptoNote {
 
 typedef std::vector<DepositInfo> UserDeposits;
 
@@ -143,4 +143,4 @@ private:
   UserPaymentIndex m_paymentsIndex;
 };
 
-} //namespace cryptonote
+} //namespace CryptoNote

@@ -9,7 +9,7 @@
 #include <string>
 #include <system_error>
 
-namespace cryptonote {
+namespace CryptoNote {
 namespace error {
 
 enum class BlockchainExplorerErrorCodes : int {
@@ -47,7 +47,7 @@ private:
 };
 
 } //namespace error
-} //namespace cryptonote
+} //namespace CryptoNote
 
 inline std::error_code make_error_code(CryptoNote::error::BlockchainExplorerErrorCodes e) {
   return std::error_code(static_cast<int>(e), CryptoNote::error::BlockchainExplorerErrorCategory::INSTANCE);

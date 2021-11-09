@@ -13,7 +13,7 @@ namespace System {
 class Dispatcher;
 }
 
-namespace cryptonote {
+namespace CryptoNote {
 class Currency;
 }
 

@@ -14,7 +14,7 @@
 
 using namespace System;
 
-namespace cryptonote {
+namespace CryptoNote {
 
 P2pConnectionProxy::P2pConnectionProxy(P2pContextOwner&& ctx, IP2pNodeInternal& node)
   : m_contextOwner(std::move(ctx)), m_context(m_contextOwner.get()), m_node(node) {}

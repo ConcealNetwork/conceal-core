@@ -6,7 +6,7 @@
 
 #include "IBlock.h"
 
-namespace cryptonote {
+namespace CryptoNote {
 IBlock::~IBlock() {
 }
 }

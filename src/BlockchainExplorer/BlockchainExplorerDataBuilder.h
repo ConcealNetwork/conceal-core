@@ -13,7 +13,7 @@
 #include "CryptoNoteCore/ICore.h"
 #include "BlockchainExplorerData.h"
 
-namespace cryptonote {
+namespace CryptoNote {
 
 class BlockchainExplorerDataBuilder
 {

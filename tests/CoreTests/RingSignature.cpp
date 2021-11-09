@@ -5,7 +5,7 @@
 
 #include "RingSignature.h"
 
-using namespace cryptonote;
+using namespace CryptoNote;
 
 
 ////////

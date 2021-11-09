@@ -26,7 +26,7 @@
 
 #define TX_EXTRA_NONCE_PAYMENT_ID           0x00
 
-namespace cryptonote {
+namespace CryptoNote {
 
 class ISerializer;
 

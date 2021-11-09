@@ -73,7 +73,7 @@ void loadKeysFromFile(const std::string& filename, const std::string& password, 
 
 }
 
-namespace cryptonote {
+namespace CryptoNote {
 
 void importLegacyKeys(const std::string& legacyKeysFilename, const std::string& password, std::ostream& destination) {
   CryptoNote::AccountBase account;
@@ -86,4 +86,4 @@ void importLegacyKeys(const std::string& legacyKeysFilename, const std::string& 
   importer.serialize(destination, password, false, cache);
 }
 
-} //namespace cryptonote
+} //namespace CryptoNote

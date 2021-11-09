@@ -15,7 +15,7 @@
 #include "Rpc/HttpServer.h"
 
 
-namespace cryptonote {
+namespace CryptoNote {
 class HttpResponse;
 class HttpRequest;
 }
@@ -28,7 +28,7 @@ namespace System {
 class TcpConnection;
 }
 
-namespace cryptonote {
+namespace CryptoNote {
 
 class JsonRpcServer : HttpServer {
 public:
@@ -56,4 +56,4 @@ private:
   Logging::LoggerRef logger;
 };
 
-} //namespace cryptonote
+} //namespace CryptoNote

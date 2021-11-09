@@ -26,7 +26,7 @@
 
 #include <Logging/LoggerMessage.h>
 
-namespace cryptonote {
+namespace CryptoNote {
 
   struct core_stat_info;
   class miner;

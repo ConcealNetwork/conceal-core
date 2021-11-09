@@ -14,7 +14,7 @@
 
 #include "../IntegrationTestLib/ObservableValue.h"
 
-namespace cryptonote {
+namespace CryptoNote {
 
 class WalletLegacyObserver: public IWalletLegacyObserver {
 public:

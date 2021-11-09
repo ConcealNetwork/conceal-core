@@ -15,7 +15,7 @@
 #include <System/Dispatcher.h>
 
 
-namespace cryptonote {
+namespace CryptoNote {
 class core;
 class CryptoNoteProtocolHandler;
 class NodeServer;

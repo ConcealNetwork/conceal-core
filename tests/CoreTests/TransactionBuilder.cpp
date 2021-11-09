@@ -7,7 +7,7 @@
 #include "CryptoNoteCore/TransactionExtra.h"
 #include "CryptoNoteCore/CryptoNoteTools.h"
 
-using namespace cryptonote;
+using namespace CryptoNote;
 using namespace Crypto;
 using namespace Common;
 

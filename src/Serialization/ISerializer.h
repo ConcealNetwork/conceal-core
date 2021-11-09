@@ -11,7 +11,7 @@
 
 #include <Common/StringView.h>
 
-namespace cryptonote {
+namespace CryptoNote {
 
 class ISerializer {
 public:

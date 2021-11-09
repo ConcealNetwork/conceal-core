@@ -14,7 +14,7 @@
 
 #include <boost/variant.hpp>
 
-namespace cryptonote {
+namespace CryptoNote {
 
 enum class TransactionRemoveReason : uint8_t 
 { 

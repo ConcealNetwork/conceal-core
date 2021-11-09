@@ -16,7 +16,7 @@
 using namespace Common;
 using namespace Crypto;
 
-namespace cryptonote {
+namespace CryptoNote {
 
 void serialize(TransactionInformation& ti, CryptoNote::ISerializer& s) {
   s(ti.transactionHash, "");

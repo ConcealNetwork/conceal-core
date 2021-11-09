@@ -8,7 +8,7 @@
 #include "CryptoNoteSerialization.h"
 #include "crypto/keccak.c"
 
-namespace cryptonote {
+namespace CryptoNote {
 //-----------------------------------------------------------------
 AccountBase::AccountBase() {
   setNull();

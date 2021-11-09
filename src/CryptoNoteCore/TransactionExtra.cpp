@@ -18,7 +18,7 @@
 using namespace Crypto;
 using namespace Common;
 
-namespace cryptonote
+namespace CryptoNote
 {
 
   bool parseTransactionExtra(const std::vector<uint8_t> &transactionExtra, std::vector<TransactionExtraField> &transactionExtraFields)
@@ -438,4 +438,4 @@ namespace cryptonote
     return true;
   }
 
-} // namespace cryptonote
+} // namespace CryptoNote

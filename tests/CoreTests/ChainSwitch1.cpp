@@ -5,7 +5,7 @@
 
 #include "ChainSwitch1.h"
 
-using namespace cryptonote;
+using namespace CryptoNote;
 
 
 gen_chain_switch_1::gen_chain_switch_1()

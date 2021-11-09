@@ -13,7 +13,7 @@
 #include "IWalletLegacy.h"
 #include "ITransfersContainer.h"
 
-namespace cryptonote {
+namespace CryptoNote {
 
 struct TxDustPolicy
 {
@@ -38,4 +38,4 @@ struct SendTransactionContext
   uint32_t depositTerm;
 };
 
-} //namespace cryptonote
+} //namespace CryptoNote

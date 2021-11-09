@@ -9,7 +9,7 @@
 #include "CryptoNoteFormatUtils.h"
 #include "TransactionExtra.h"
 
-namespace cryptonote {
+namespace CryptoNote {
 
   class TransactionExtra {
   public:

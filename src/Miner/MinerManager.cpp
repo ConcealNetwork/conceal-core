@@ -19,7 +19,7 @@
 #include "Rpc/CoreRpcServerCommandsDefinitions.h"
 #include "Rpc/JsonRpc.h"
 
-using namespace cryptonote;
+using namespace CryptoNote;
 
 namespace Miner {
 

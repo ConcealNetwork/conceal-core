@@ -16,7 +16,7 @@
 #include "UnorderedContainersBoostSerialization.h"
 #include "crypto/crypto.h"
 
-//namespace cryptonote {
+//namespace CryptoNote {
 namespace boost
 {
   namespace serialization

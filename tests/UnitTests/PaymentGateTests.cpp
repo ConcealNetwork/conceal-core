@@ -17,7 +17,7 @@
 #include "TestBlockchainGenerator.h"
 
 using namespace PaymentService;
-using namespace cryptonote;
+using namespace CryptoNote;
 
 class PaymentGateTest : public testing::Test {
 public:

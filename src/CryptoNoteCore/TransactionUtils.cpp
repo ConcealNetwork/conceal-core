@@ -15,7 +15,7 @@
 
 using namespace Crypto;
 
-namespace cryptonote {
+namespace CryptoNote {
 
 bool checkInputsKeyimagesDiff(const CryptoNote::TransactionPrefix& tx) {
   std::unordered_set<Crypto::KeyImage> ki;

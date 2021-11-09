@@ -28,7 +28,7 @@ inline std::vector<uint8_t> stringToVector(const std::string& s) {
 
 }
 
-namespace cryptonote {
+namespace CryptoNote {
 
 BlockchainSynchronizer::BlockchainSynchronizer(INode& node, const Hash& genesisBlockHash) :
   m_node(node),

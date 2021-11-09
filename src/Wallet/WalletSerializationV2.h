@@ -24,7 +24,7 @@
 #include "Wallet/WalletIndices.h"
 #include "IWallet.h"
 
-namespace cryptonote {
+namespace CryptoNote {
 
 class WalletSerializerV2 {
 public:
@@ -94,4 +94,4 @@ private:
   std::unordered_set<Crypto::PublicKey> m_deletedKeys;
 };
 
-} //namespace cryptonote
+} //namespace CryptoNote

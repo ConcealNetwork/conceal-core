@@ -13,7 +13,7 @@
 #include "IWalletLegacy.h"
 #include "Wallet/WalletErrors.h"
 
-namespace cryptonote {
+namespace CryptoNote {
 
 inline void throwIf(bool expr, CryptoNote::error::WalletErrorCodes ec)
 {
@@ -34,4 +34,4 @@ inline std::ostream& operator <<(std::ostream& ostr, const Crypto::Hash& hash) {
   return ostr;
 }
 
-} //namespace cryptonote
+} //namespace CryptoNote

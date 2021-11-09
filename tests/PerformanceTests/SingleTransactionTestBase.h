@@ -16,7 +16,7 @@ class single_tx_test_base
 public:
   bool init()
   {
-    using namespace cryptonote;
+    using namespace CryptoNote;
 
     Currency currency = CurrencyBuilder(m_nullLog).currency();
     m_bob.generate();

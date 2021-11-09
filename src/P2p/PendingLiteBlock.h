@@ -9,11 +9,11 @@
 
 #include <unordered_set>
 
-namespace cryptonote
+namespace CryptoNote
 {
     struct PendingLiteBlock
     {
         NOTIFY_NEW_LITE_BLOCK_request request;
         std::unordered_set<Crypto::Hash> missed_transactions;
     };
-} // namespace cryptonote
+} // namespace CryptoNote

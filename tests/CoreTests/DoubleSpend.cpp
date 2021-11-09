@@ -6,7 +6,7 @@
 #include "DoubleSpend.h"
 #include "TestGenerator.h"
 
-using namespace cryptonote;
+using namespace CryptoNote;
 
 //======================================================================================================================
 

@@ -28,7 +28,7 @@
 
 using namespace Logging;
 
-namespace cryptonote
+namespace CryptoNote
 {
 
   miner::miner(const Currency& currency, IMinerHandler& handler, Logging::ILogger& log) :

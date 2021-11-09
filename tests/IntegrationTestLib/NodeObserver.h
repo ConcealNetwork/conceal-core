@@ -9,7 +9,7 @@
 #include <mutex>
 #include <condition_variable>
 
-namespace cryptonote {
+namespace CryptoNote {
 
 
 template <typename T>

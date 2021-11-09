@@ -261,7 +261,7 @@ CryptoNote::WalletTransfer convert(const CryptoNote::WalletLegacyTransfer& tr) {
 
 }
 
-namespace cryptonote {
+namespace CryptoNote {
 
 const uint32_t WalletSerializer::SERIALIZATION_VERSION = 5;
 
@@ -931,4 +931,4 @@ void WalletSerializer::addWalletV1Details(const std::vector<WalletLegacyTransact
   }
 }
 
-} //namespace cryptonote
+} //namespace CryptoNote

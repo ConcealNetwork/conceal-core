@@ -21,7 +21,7 @@
 #include "Common/StringTools.h"
 
 using namespace Crypto;
-using namespace cryptonote;
+using namespace CryptoNote;
 using namespace Common;
 
 struct CallbackStatus {

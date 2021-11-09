@@ -27,9 +27,9 @@
 #include "BaseTests.h"
 
 using namespace Tests;
-using namespace cryptonote;
+using namespace CryptoNote;
 
-namespace cryptonote
+namespace CryptoNote
 {
 void serialize(BlockShortEntry &v, ISerializer &s)
 {
@@ -74,7 +74,7 @@ bool operator==(const TransactionShortInfo &a, const TransactionShortInfo &b)
 {
   return a.txId == b.txId;
 }
-} // namespace cryptonote
+} // namespace CryptoNote
 
 struct BlockchainInfo
 {

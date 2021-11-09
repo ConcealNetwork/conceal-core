@@ -9,7 +9,7 @@
 #include <cstdint>
 #include <memory>
 
-namespace cryptonote {
+namespace CryptoNote {
 
 class IInputStream {
 public:

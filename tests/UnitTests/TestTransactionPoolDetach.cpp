@@ -22,7 +22,7 @@
 #include <future>
 #include <algorithm>
 
-using namespace cryptonote;
+using namespace CryptoNote;
 
 /*
 class TransfersObserver : public ITransfersObserver {

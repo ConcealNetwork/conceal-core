@@ -29,7 +29,7 @@
 #include "Transfers/BlockchainSynchronizer.h"
 #include "Transfers/TransfersSynchronizer.h"
 
-namespace cryptonote {
+namespace CryptoNote {
 
 class SyncStarter;
 
@@ -195,4 +195,4 @@ private:
   std::unique_ptr<SyncStarter> m_onInitSyncStarter;
 };
 
-} //namespace cryptonote
+} //namespace CryptoNote

@@ -34,7 +34,7 @@
 
 #include <Logging/LoggerRef.h>
 
-namespace cryptonote {
+namespace CryptoNote {
 
   class ISerializer;
 

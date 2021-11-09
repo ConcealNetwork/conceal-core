@@ -10,7 +10,7 @@
 #include <fstream>
 #include <boost/filesystem.hpp>
 
-using namespace cryptonote;
+using namespace CryptoNote;
 
 namespace {
 

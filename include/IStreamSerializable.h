@@ -8,7 +8,7 @@
 
 #include <sstream>
 
-namespace cryptonote {
+namespace CryptoNote {
 
 class IStreamSerializable {
 public:

@@ -19,7 +19,7 @@
 #include "HttpClient.h"
 #include "CryptoNoteCore/TransactionPool.h"
 
-namespace cryptonote {
+namespace CryptoNote {
 
 namespace JsonRpc {
 

@@ -10,7 +10,7 @@
 
 using namespace Common;
 using namespace Crypto;
-using namespace cryptonote;
+using namespace CryptoNote;
 
 #define BLOCK_VALIDATION_INIT_GENERATE()                        \
   GENERATE_ACCOUNT(miner_account);                              \

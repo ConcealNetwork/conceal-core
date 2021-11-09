@@ -7,7 +7,7 @@
 #include "CryptoNoteCore/CryptoNoteTools.h"
 #include <Common/Math.h>
 
-using namespace cryptonote;
+using namespace CryptoNote;
 
 namespace
 {

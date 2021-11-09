@@ -15,7 +15,7 @@
 using namespace Common;
 using namespace Crypto;
 
-namespace cryptonote {
+namespace CryptoNote {
 
 const uint32_t TRANSFERS_STORAGE_ARCHIVE_VERSION = 0;
 

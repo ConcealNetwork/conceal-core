@@ -7,7 +7,7 @@
 
 #include <CryptoNoteCore/DepositIndex.h>
 
-using namespace cryptonote;
+using namespace CryptoNote;
 
 class DepositIndexTest : public ::testing::Test {
 public:

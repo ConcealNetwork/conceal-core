@@ -17,7 +17,7 @@
 #include "P2p/NetNode.h"
 #include "InProcessNode/InProcessNode.h"
 
-using namespace cryptonote;
+using namespace CryptoNote;
 
 #undef ERROR
 

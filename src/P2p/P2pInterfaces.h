@@ -11,7 +11,7 @@
 
 #include <CryptoNote.h>
 
-namespace cryptonote {
+namespace CryptoNote {
 
 struct P2pMessage {
   uint32_t type;

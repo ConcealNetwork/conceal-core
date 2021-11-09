@@ -13,12 +13,12 @@
 #include "crypto/hash.h"
 #include "crypto/chacha8.h"
 
-namespace cryptonote {
+namespace CryptoNote {
 class AccountBase;
 class ISerializer;
 }
 
-namespace cryptonote {
+namespace CryptoNote {
 
 class WalletUserTransactionsCache;
 
@@ -42,4 +42,4 @@ private:
   const uint32_t walletSerializationVersion;
 };
 
-} //namespace cryptonote
+} //namespace CryptoNote

@@ -9,7 +9,7 @@
 #include <cstdint>
 #include <string>
 
-namespace cryptonote {
+namespace CryptoNote {
 
 struct MiningConfig {
   MiningConfig();
@@ -29,4 +29,4 @@ struct MiningConfig {
   bool help;
 };
 
-} //namespace cryptonote
+} //namespace CryptoNote

@@ -9,7 +9,7 @@
 #include <ctype.h>
 #include <exception>
 
-namespace cryptonote {
+namespace CryptoNote {
 
 namespace {
 
@@ -27,4 +27,4 @@ JsonInputStreamSerializer::JsonInputStreamSerializer(std::istream& stream) : Jso
 JsonInputStreamSerializer::~JsonInputStreamSerializer() {
 }
 
-} //namespace cryptonote
+} //namespace CryptoNote

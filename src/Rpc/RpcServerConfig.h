@@ -8,7 +8,7 @@
 
 #include <boost/program_options.hpp>
 
-namespace cryptonote {
+namespace CryptoNote {
 
 class RpcServerConfig {
 public:

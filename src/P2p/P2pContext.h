@@ -21,7 +21,7 @@
 #include "P2pProtocolDefinitions.h"
 #include "P2pProtocolTypes.h"
 
-namespace cryptonote {
+namespace CryptoNote {
   
 class P2pContext {
 public:

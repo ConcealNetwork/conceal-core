@@ -13,9 +13,9 @@
 
 #include "Serialization/SerializationOverloads.h"
 
-using namespace cryptonote;
+using namespace CryptoNote;
 
-namespace cryptonote {
+namespace CryptoNote {
   template <typename T, typename Indexes>
   bool serialize(boost::multi_index_container<T, Indexes>& value, Common::StringView name, ISerializer& s) {
     if (s.type() == ISerializer::INPUT) {

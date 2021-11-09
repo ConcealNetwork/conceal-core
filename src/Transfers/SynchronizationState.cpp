@@ -14,7 +14,7 @@
 
 using namespace Common;
 
-namespace cryptonote {
+namespace CryptoNote {
 
 SynchronizationState::ShortHistory SynchronizationState::getShortHistory(uint32_t localHeight) const {
   ShortHistory history;

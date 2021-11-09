@@ -7,7 +7,7 @@
 #include "CryptoNoteCore/CryptoNoteBasic.h"
 #include "ITransaction.h"
 
-namespace cryptonote {
+namespace CryptoNote {
 
 bool checkInputsKeyimagesDiff(const CryptoNote::TransactionPrefix& tx);
 
@@ -28,4 +28,4 @@ const TransactionOutput& getOutputChecked(const CryptoNote::TransactionPrefix& t
 bool findOutputsToAccount(const CryptoNote::TransactionPrefix& transaction, const AccountPublicAddress& addr,
         const Crypto::SecretKey& viewSecretKey, std::vector<uint32_t>& out, uint64_t& amount);
 
-} //namespace cryptonote
+} //namespace CryptoNote

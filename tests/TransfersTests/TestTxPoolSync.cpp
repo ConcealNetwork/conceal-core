@@ -19,7 +19,7 @@
 #include "../IntegrationTestLib/TestWalletLegacy.h"
 
 
-using namespace cryptonote;
+using namespace CryptoNote;
 using namespace Tests::Common;
 using namespace Crypto;
 

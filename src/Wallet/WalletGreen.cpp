@@ -40,7 +40,7 @@
 
 using namespace Common;
 using namespace Crypto;
-using namespace cryptonote;
+using namespace CryptoNote;
 using namespace Logging;
 
 namespace
@@ -267,7 +267,7 @@ namespace
 
 } // namespace
 
-namespace cryptonote
+namespace CryptoNote
 {
 
   WalletGreen::WalletGreen(System::Dispatcher &dispatcher, const Currency &currency, INode &node, Logging::ILogger &logger, uint32_t transactionSoftLockTime) : m_dispatcher(dispatcher),
@@ -4597,4 +4597,4 @@ namespace cryptonote
     shutdown();
   }
 
-} //namespace cryptonote
+} //namespace CryptoNote

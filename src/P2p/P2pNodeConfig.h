@@ -9,7 +9,7 @@
 #include <chrono>
 #include "NetNodeConfig.h"
 
-namespace cryptonote {
+namespace CryptoNote {
 
 class P2pNodeConfig : public NetNodeConfig {
 public:

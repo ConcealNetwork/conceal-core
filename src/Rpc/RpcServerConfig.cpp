@@ -8,7 +8,7 @@
 #include "Common/CommandLine.h"
 #include "CryptoNoteConfig.h"
 
-namespace cryptonote {
+namespace CryptoNote {
 
   namespace {
 

@@ -16,7 +16,7 @@
 #include "CryptoNoteBasic.h"
 #include "Difficulty.h"
 
-namespace cryptonote
+namespace CryptoNote
 {
 
   class AccountBase;
@@ -610,4 +610,4 @@ namespace cryptonote
     Currency m_currency;
   };
 
-} // namespace cryptonote
+} // namespace CryptoNote

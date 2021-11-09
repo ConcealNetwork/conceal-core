@@ -11,7 +11,7 @@
 #include "ISerializer.h"
 #include "MemoryStream.h"
 
-namespace cryptonote {
+namespace CryptoNote {
 
 class KVBinaryOutputStreamSerializer : public ISerializer {
 public:

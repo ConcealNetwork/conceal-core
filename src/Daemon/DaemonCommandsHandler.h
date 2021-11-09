@@ -12,7 +12,7 @@
 #include <Logging/LoggerRef.h>
 #include <Logging/LoggerManager.h>
 
-namespace cryptonote {
+namespace CryptoNote {
 class core;
 class Currency;
 class NodeServer;

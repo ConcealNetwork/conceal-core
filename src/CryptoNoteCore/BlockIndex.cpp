@@ -11,7 +11,7 @@
 #include "CryptoNoteSerialization.h"
 #include "Serialization/SerializationOverloads.h"
 
-namespace cryptonote {
+namespace CryptoNote {
   Crypto::Hash BlockIndex::getBlockId(uint32_t height) const {
     assert(height < m_container.size());
 

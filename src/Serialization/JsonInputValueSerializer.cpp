@@ -12,7 +12,7 @@
 #include "Common/StringTools.h"
 
 using Common::JsonValue;
-using namespace cryptonote;
+using namespace CryptoNote;
 
 JsonInputValueSerializer::JsonInputValueSerializer(const Common::JsonValue& value) {
   if (!value.isObject()) {

@@ -12,7 +12,7 @@
 #include <vector>
 #include <Common/IOutputStream.h>
 
-namespace cryptonote {
+namespace CryptoNote {
 
 class MemoryStream: public Common::IOutputStream {
 public:

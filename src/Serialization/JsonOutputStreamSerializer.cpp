@@ -10,9 +10,9 @@
 #include "Common/StringTools.h"
 
 using Common::JsonValue;
-using namespace cryptonote;
+using namespace CryptoNote;
 
-namespace cryptonote {
+namespace CryptoNote {
 std::ostream& operator<<(std::ostream& out, const JsonOutputStreamSerializer& enumerator) {
   out << enumerator.root;
   return out;

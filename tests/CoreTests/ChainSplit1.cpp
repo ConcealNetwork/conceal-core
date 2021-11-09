@@ -6,7 +6,7 @@
 #include "ChainSplit1.h"
 
 using namespace std;
-using namespace cryptonote;
+using namespace CryptoNote;
 
 
 gen_simple_chain_split_1::gen_simple_chain_split_1()

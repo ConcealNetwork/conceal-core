@@ -14,7 +14,7 @@
 #include "IObservable.h"
 #include "IStreamSerializable.h"
 
-namespace cryptonote
+namespace CryptoNote
 {
 
   const uint32_t UNCONFIRMED_TRANSACTION_GLOBAL_OUTPUT_INDEX = std::numeric_limits<uint32_t>::max();
@@ -118,4 +118,4 @@ namespace cryptonote
     virtual bool getTransfer(const Crypto::Hash &transactionHash, uint32_t outputInTransaction, TransactionOutputInformation &transfer, TransferState &transferState) const = 0;
   };
 
-} // namespace cryptonote
+} // namespace CryptoNote

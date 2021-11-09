@@ -10,7 +10,7 @@
 #include "TransfersContainer.h"
 #include "IObservableImpl.h"
 
-namespace cryptonote {
+namespace CryptoNote {
 
 class TransfersSubscription : public IObservableImpl < ITransfersObserver, ITransfersSubscription > {
 public:

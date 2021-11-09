@@ -23,7 +23,7 @@
 using namespace Logging;
 using namespace Common;
 
-namespace cryptonote
+namespace CryptoNote
 {
 
 namespace
@@ -1124,4 +1124,4 @@ int CryptoNoteProtocolHandler::doPushLiteBlock(NOTIFY_NEW_LITE_BLOCK::request ar
   return 1;
 }
 
-}; // namespace cryptonote
+}; // namespace CryptoNote

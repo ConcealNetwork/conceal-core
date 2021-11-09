@@ -20,7 +20,7 @@
 #include "Transfers/TransfersSynchronizer.h"
 #include "Transfers/BlockchainSynchronizer.h"
 
-namespace cryptonote
+namespace CryptoNote
 {
 
 class WalletGreen : public IWallet,
@@ -415,4 +415,4 @@ protected:
   BlockHashesContainer m_blockchain;
 };
 
-} //namespace cryptonote
+} //namespace CryptoNote

@@ -35,7 +35,7 @@
 
 #undef ERROR
 using phmap::parallel_flat_hash_map;
-namespace cryptonote
+namespace CryptoNote
 {
   struct NOTIFY_REQUEST_GET_OBJECTS_request;
   struct NOTIFY_RESPONSE_GET_OBJECTS_request;
@@ -427,4 +427,4 @@ namespace cryptonote
 
     return true;
   }
-} // namespace cryptonote
+} // namespace CryptoNote

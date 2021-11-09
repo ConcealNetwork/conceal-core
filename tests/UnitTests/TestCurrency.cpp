@@ -12,7 +12,7 @@
 
 #include "TransactionApiHelpers.h"
 
-using namespace cryptonote;
+using namespace CryptoNote;
 
 namespace {
 

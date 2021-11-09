@@ -29,7 +29,7 @@
 #include <System/Ipv4Address.h>
 
 std::string remote_fee_address;
-namespace cryptonote
+namespace CryptoNote
 {
   /************************************************************************/
   /*                                                                      */

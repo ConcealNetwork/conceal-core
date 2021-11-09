@@ -7,7 +7,7 @@
 
 #include "IWallet.h"
 
-namespace cryptonote {
+namespace CryptoNote {
 
 struct DepositInfo {
   Deposit deposit;

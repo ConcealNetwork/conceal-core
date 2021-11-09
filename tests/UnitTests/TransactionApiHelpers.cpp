@@ -6,7 +6,7 @@
 #include "TransactionApiHelpers.h"
 #include "CryptoNoteCore/TransactionApi.h"
 
-using namespace cryptonote;
+using namespace CryptoNote;
 using namespace Crypto;
 
 namespace {

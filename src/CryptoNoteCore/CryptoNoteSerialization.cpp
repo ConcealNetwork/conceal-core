@@ -31,7 +31,7 @@ using namespace Common;
 
 namespace {
 
-using namespace cryptonote;
+using namespace CryptoNote;
 using namespace Common;
 
 size_t getSignaturesCount(const TransactionInput& input) {
@@ -170,7 +170,7 @@ bool serialize(EllipticCurvePoint& ecPoint, Common::StringView name, CryptoNote:
 
 }
 
-namespace cryptonote {
+namespace CryptoNote {
 
 void serialize(TransactionPrefix& txP, ISerializer& serializer) {
   serializer(txP.version, "version");
@@ -365,4 +365,4 @@ void serialize(KeyPair& keyPair, ISerializer& serializer) {
 }
 
 
-} //namespace cryptonote
+} //namespace CryptoNote

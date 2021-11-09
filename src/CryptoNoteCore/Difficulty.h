@@ -11,7 +11,7 @@
 
 #include "crypto/hash.h"
 
-namespace cryptonote
+namespace CryptoNote
 {
     typedef std::uint64_t difficulty_type;
 

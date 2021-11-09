@@ -9,7 +9,7 @@
 #include <limits>
 #include <stdexcept>
 
-namespace cryptonote {
+namespace CryptoNote {
 
 void serializeBlockHeight(ISerializer& s, uint32_t& blockHeight, Common::StringView name) {
   if (s.type() == ISerializer::INPUT) {
@@ -32,4 +32,4 @@ void serializeGlobalOutputIndex(ISerializer& s, uint32_t& globalOutputIndex, Com
   serializeBlockHeight(s, globalOutputIndex, name);
 }
 
-} //namespace cryptonote
+} //namespace CryptoNote

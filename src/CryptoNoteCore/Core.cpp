@@ -35,7 +35,7 @@ using namespace Logging;
 
 using namespace  Common;
 
-namespace cryptonote {
+namespace CryptoNote {
 
 class BlockWithTransactions : public IBlock {
 public:

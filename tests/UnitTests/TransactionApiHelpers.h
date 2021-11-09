@@ -17,7 +17,7 @@
 
 namespace {
 
-  using namespace cryptonote;
+  using namespace CryptoNote;
   using namespace Crypto;
 
   inline AccountKeys accountKeysFromKeypairs(
@@ -102,7 +102,7 @@ namespace {
   }
 }
 
-namespace cryptonote {
+namespace CryptoNote {
 
 class TestTransactionBuilder {
 public:
@@ -198,7 +198,7 @@ private:
 
 }
 
-namespace cryptonote {
+namespace CryptoNote {
 inline bool operator == (const AccountKeys& a, const AccountKeys& b) { 
   return memcmp(&a, &b, sizeof(a)) == 0; 
 }

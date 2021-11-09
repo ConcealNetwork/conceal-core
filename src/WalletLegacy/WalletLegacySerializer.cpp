@@ -39,7 +39,7 @@ void throwIfKeysMissmatch(const Crypto::SecretKey& sec, const Crypto::PublicKey&
 
 }
 
-namespace cryptonote {
+namespace CryptoNote {
 
 WalletLegacySerializer::WalletLegacySerializer(CryptoNote::AccountBase& account, WalletUserTransactionsCache& transactionsCache) :
   account(account),

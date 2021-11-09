@@ -16,7 +16,7 @@
 #include "Serialization/SerializationOverloads.h"
 #include "CryptoNoteCore/CryptoNoteSerialization.h"
 
-namespace cryptonote
+namespace CryptoNote
 {
 
 #define BC_COMMANDS_POOL_BASE 2000
@@ -243,5 +243,5 @@ namespace cryptonote
     const static int ID = BC_COMMANDS_POOL_BASE + 10;
     typedef NOTIFY_MISSING_TXS_request request;
   };
-} // namespace cryptonote
+} // namespace CryptoNote
 

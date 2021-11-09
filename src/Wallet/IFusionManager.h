@@ -9,7 +9,7 @@
 #include <cstdint>
 #include <utility>
 
-namespace cryptonote {
+namespace CryptoNote {
 
 class IFusionManager {
 public:

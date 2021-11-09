@@ -22,7 +22,7 @@ namespace System {
   class Event;
 }
 
-namespace cryptonote {
+namespace CryptoNote {
 
 class HttpClient;
 

@@ -25,7 +25,7 @@
 
 using namespace Logging;
 
-namespace cryptonote {
+namespace CryptoNote {
 //---------------------------------------------------------------------------
 Checkpoints::Checkpoints(Logging::ILogger &log) : logger(log, "checkpoints") {}
 //---------------------------------------------------------------------------

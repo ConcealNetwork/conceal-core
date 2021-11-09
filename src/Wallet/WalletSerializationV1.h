@@ -15,7 +15,7 @@
 
 #include "crypto/chacha8.h"
 
-namespace cryptonote
+namespace CryptoNote
 {
 
 struct CryptoContext
@@ -109,4 +109,4 @@ private:
   UncommitedTransactions &uncommitedTransactions;
 };
 
-} //namespace cryptonote
+} //namespace CryptoNote

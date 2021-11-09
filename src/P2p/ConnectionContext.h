@@ -17,7 +17,7 @@
 #include "P2p/PendingLiteBlock.h"
 #include "crypto/hash.h"
 
-namespace cryptonote {
+namespace CryptoNote {
 
 struct CryptoNoteConnectionContext {
   uint8_t version;

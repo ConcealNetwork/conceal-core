@@ -12,7 +12,7 @@
 #include "CryptoNoteCore/CryptoNoteTools.h"
 
 using namespace std;
-using namespace cryptonote;
+using namespace CryptoNote;
 
 #ifndef CHECK_AND_ASSERT_MES
 #define CHECK_AND_ASSERT_MES(expr, fail_ret_val, message)   do{if(!(expr)) {std::cerr << message << std::endl; return fail_ret_val;};}while(0)

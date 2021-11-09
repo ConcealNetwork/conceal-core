@@ -20,7 +20,7 @@
 
 #include "Logging/LoggerRef.h"
 
-namespace cryptonote {
+namespace CryptoNote {
 
 class BlockchainExplorer : public IBlockchainExplorer, public INodeObserver {
 public:

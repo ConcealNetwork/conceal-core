@@ -13,7 +13,7 @@
 #include "crypto/hash.h"
 #include "IWalletLegacy.h"
 
-namespace cryptonote {
+namespace CryptoNote {
 namespace WalletHelper {
 
 class SaveWalletResultObserver : public CryptoNote::IWalletLegacyObserver {

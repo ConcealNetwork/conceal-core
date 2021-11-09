@@ -19,7 +19,7 @@
 #include "BlockchainExplorerData.h"
 #include "ITransaction.h"
 
-namespace cryptonote {
+namespace CryptoNote {
 
 class INodeObserver {
 public:

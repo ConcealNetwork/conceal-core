@@ -19,7 +19,7 @@
 
 using namespace Crypto;
 
-namespace cryptonote {
+namespace CryptoNote {
 
 struct LegacyDeposit {
   TransactionId creatingTransactionId;
@@ -673,4 +673,4 @@ void WalletUserTransactionsCache::eraseCreatedDeposit(DepositId id) {
   m_unconfirmedTransactions.eraseCreatedDeposit(id);
 }
 
-} //namespace cryptonote
+} //namespace CryptoNote

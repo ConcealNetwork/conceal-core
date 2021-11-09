@@ -7,7 +7,7 @@
 #include "LevinProtocol.h"
 #include <System/TcpConnection.h>
 
-using namespace cryptonote;
+using namespace CryptoNote;
 
 namespace {
 

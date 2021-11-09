@@ -11,7 +11,7 @@
 
 #include "NodeRpcProxy/NodeRpcProxy.h"
 
-using namespace cryptonote;
+using namespace CryptoNote;
 using namespace Logging;
 
 #undef ERROR

@@ -20,7 +20,7 @@
 
 #include <Logging/ConsoleLogger.h>
 
-using namespace cryptonote;
+using namespace CryptoNote;
 
 class TransfersObserver : public ITransfersObserver {
 public:

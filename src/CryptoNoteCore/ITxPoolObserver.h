@@ -6,7 +6,7 @@
 
 #pragma once
 
-namespace cryptonote {
+namespace CryptoNote {
 class ITxPoolObserver {
 public:
   virtual ~ITxPoolObserver() {

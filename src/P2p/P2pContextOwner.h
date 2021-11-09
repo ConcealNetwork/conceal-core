@@ -9,7 +9,7 @@
 #include <list>
 #include <memory>
 
-namespace cryptonote {
+namespace CryptoNote {
 
 class P2pContext;
 

@@ -10,7 +10,7 @@
 
 #include <stdint.h>
 
-namespace cryptonote {
+namespace CryptoNote {
 
 class ISerializer;
 
@@ -27,4 +27,4 @@ struct KeysStorage {
   void serialize(ISerializer& serializer, const std::string& name);
 };
 
-} //namespace cryptonote
+} //namespace CryptoNote

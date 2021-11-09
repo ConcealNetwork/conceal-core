@@ -19,7 +19,7 @@
 #include "Serialization/SerializationOverloads.h"
 #include "CryptoNoteCore/CryptoNoteSerialization.h"
 
-namespace cryptonote
+namespace CryptoNote
 {
   inline bool serialize(uuid& v, Common::StringView name, ISerializer& s) {
     return s.binary(&v, sizeof(v), name);

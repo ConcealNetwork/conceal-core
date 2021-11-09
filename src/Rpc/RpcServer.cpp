@@ -36,7 +36,7 @@ using namespace Common;
 
 
 
-namespace cryptonote {
+namespace CryptoNote {
 
 namespace {
 

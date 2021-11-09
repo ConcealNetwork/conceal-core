@@ -9,7 +9,7 @@
 #include "IWalletLegacy.h"
 #include "Common/ObserverManager.h"
 
-namespace cryptonote
+namespace CryptoNote
 {
 
 class WalletLegacyEvent
@@ -198,4 +198,4 @@ private:
 
 
 
-} /* namespace cryptonote */
+} /* namespace CryptoNote */

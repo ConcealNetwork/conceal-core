@@ -44,7 +44,7 @@ const char* getErrorBody(CryptoNote::HttpResponse::HTTP_STATUS status) {
 
 } //namespace
 
-namespace cryptonote {
+namespace CryptoNote {
 
 HttpResponse::HttpResponse() {
   status = STATUS_200;
@@ -87,4 +87,4 @@ std::ostream& HttpResponse::printHttpResponse(std::ostream& os) const {
   return os;
 }
 
-} //namespace cryptonote
+} //namespace CryptoNote
