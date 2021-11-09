@@ -3,7 +3,7 @@
 ![](https://github.com/bomb-on/conceal-core/workflows/Ubuntu%2016.04/badge.svg) ![](https://github.com/bomb-on/conceal-core/workflows/Ubuntu%2018.04/badge.svg) ![](https://github.com/bomb-on/conceal-core/workflows/Windows/badge.svg) ![](https://github.com/bomb-on/conceal-core/workflows/macOS/badge.svg)
 
 # Conceal Core (CLI)
-Latest Release: v6.5.0.1-Beta
+Latest Release: v6.5.0-Beta (Pre-Release)
 
 Maintained by Conceal Developers.
 
