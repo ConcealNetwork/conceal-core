@@ -1,6 +1,7 @@
 // Copyright (c) 2011-2017 The Cryptonote developers
 // Copyright (c) 2017-2018 The Circle Foundation & Conceal Devs
 // Copyright (c) 2018-2021 Conceal Network & Conceal Devs
+//
 // Distributed under the MIT/X11 software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -308,11 +309,11 @@ bool DaemonCommandsHandler::print_stat(const std::vector<std::string> &args)
   uint64_t amountOfActiveCoins = totalCoinsInNetwork - totalCoinsOnDeposits;
 
   const auto &currency = m_core.currency();
-  std::cout << "Block height: " << height << std::endl;
-  std::cout << "Block difficulty: " << m_core.difficultyAtHeight(height) << std::endl;
-  std::cout << "Total coins in network:  " << currency.formatAmount(totalCoinsInNetwork) << std::endl;
-  std::cout << "Total coins banked: " << currency.formatAmount(totalCoinsOnDeposits) << " (" << currency.formatAmount(calculatePercent(currency, totalCoinsOnDeposits, totalCoinsInNetwork)) << "%)" << std::endl;
-  std::cout << "Amount of active coins:  " << currency.formatAmount(amountOfActiveCoins) << " (" << currency.formatAmount(calculatePercent(currency, amountOfActiveCoins, totalCoinsInNetwork)) << "%)" << std::endl;
+  std::cout << "Block Height: " << height << std::endl;
+  std::cout << "Block Difficulty: " << m_core.difficultyAtHeight(height) << std::endl;
+  std::cout << "Coins Minted (Total Supply):  " << currency.formatAmount(totalCoinsInNetwork) << std::endl;
+  std::cout << "Coins Banked (Locked): " << currency.formatAmount(totalCoinsOnDeposits) << " (" << currency.formatAmount(calculatePercent(currency, totalCoinsOnDeposits, totalCoinsInNetwork)) << "%)" << std::endl;
+  std::cout << "Active Coins (Circulation Supply):  " << currency.formatAmount(amountOfActiveCoins) << " (" << currency.formatAmount(calculatePercent(currency, amountOfActiveCoins, totalCoinsInNetwork)) << "%)" << std::endl;
 
   return true;
 }
@@ -416,3 +417,4 @@ bool DaemonCommandsHandler::stop_mining(const std::vector<std::string> &args)
   m_core.get_miner().stop();
   return true;
 }
+
