@@ -26,7 +26,7 @@
 #include "ITransaction.h"
 #include "ITransfersContainer.h"
 
-namespace CryptoNote {
+namespace cryptonote {
 
 struct TransactionOutputInformationIn;
 

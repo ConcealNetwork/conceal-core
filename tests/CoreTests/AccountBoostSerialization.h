@@ -8,7 +8,7 @@
 #include "CryptoNoteCore/Account.h"
 #include "CryptoNoteBoostSerialization.h"
 
-//namespace CryptoNote {
+//namespace cryptonote {
 namespace boost
 {
   namespace serialization

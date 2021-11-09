@@ -31,7 +31,7 @@
 
 #include <Logging/LoggerRef.h>
 
-namespace CryptoNote {
+namespace cryptonote {
 
 class HttpServer {
 

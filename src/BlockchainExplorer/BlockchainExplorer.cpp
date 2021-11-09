@@ -19,7 +19,7 @@
 using namespace Logging;
 using namespace Crypto;
 
-namespace CryptoNote {
+namespace cryptonote {
 
 class ContextCounterHolder
 {

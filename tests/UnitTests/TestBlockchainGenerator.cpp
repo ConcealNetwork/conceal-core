@@ -14,7 +14,7 @@
 
 #include "../PerformanceTests/MultiTransactionTestBase.h"
 
-using namespace CryptoNote;
+using namespace cryptonote;
 
 class TransactionForAddressCreator : public multi_tx_test_base<5>
 {

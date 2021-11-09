@@ -11,7 +11,7 @@
 #include "Serialization/SerializationOverloads.h"
 #include "CryptoNoteCore/CryptoNoteSerialization.h"
 
-namespace CryptoNote {
+namespace cryptonote {
 
 void KeysStorage::serialize(ISerializer& serializer, const std::string& name) {
   serializer.beginObject(name);

@@ -9,7 +9,7 @@
 #include <memory>
 #include "ITransaction.h"
 
-namespace CryptoNote {
+namespace cryptonote {
   std::unique_ptr<ITransaction> createTransaction();
   std::unique_ptr<ITransaction> createTransaction(const BinaryArray& transactionBlob);
   std::unique_ptr<ITransaction> createTransaction(const Transaction& tx);

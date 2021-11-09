@@ -14,7 +14,7 @@
 #include "Serialization/ISerializer.h"
 #include "Serialization/SerializationOverloads.h"
 
-namespace CryptoNote {
+namespace cryptonote {
 
 void serialize(UnconfirmedTransferDetails& utd, CryptoNote::ISerializer& serializer) {
   serializer(utd.tx, "transaction");
@@ -103,4 +103,4 @@ void serialize(DepositInfo& depositInfo, CryptoNote::ISerializer& serializer) {
   serializer(depositInfo.outputInTransaction, "output_in_transaction");
 }
 
-} //namespace CryptoNote
+} //namespace cryptonote

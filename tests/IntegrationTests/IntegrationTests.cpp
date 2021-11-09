@@ -12,7 +12,7 @@
 #include "WalletLegacy/WalletLegacy.h"
 #include "WalletLegacyObserver.h"
 
-using namespace CryptoNote;
+using namespace cryptonote;
 using namespace Logging;
 
 extern Tests::Common::BaseFunctionalTestsConfig baseCfg;

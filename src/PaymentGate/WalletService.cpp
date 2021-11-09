@@ -54,7 +54,7 @@
 #include "Common/PathTools.h"
 #include "CryptoNoteProtocol/CryptoNoteProtocolHandler.h"
 
-using namespace CryptoNote;
+using namespace cryptonote;
 
 namespace PaymentService
 {

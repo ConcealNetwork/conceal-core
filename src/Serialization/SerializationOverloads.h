@@ -23,7 +23,7 @@
 
 using phmap::flat_hash_map;
 using phmap::parallel_flat_hash_map;
-namespace CryptoNote
+namespace cryptonote
 {
 
 template <typename T>
@@ -57,7 +57,7 @@ else
   }
   serializer.binary(blob, name);
 }
-} // namespace CryptoNote
+} // namespace cryptonote
 
 template <typename T>
 typename std::enable_if<std::is_pod<T>::value>::type
@@ -323,4 +323,4 @@ bool serialize(parallel_flat_hash_map<K, V, Hash> &value, Common::StringView nam
   //convinience function since we change global output index type
   void serializeGlobalOutputIndex(ISerializer & s, uint32_t & globalOutputIndex, Common::StringView name);
 
-} // namespace CryptoNote
+} // namespace cryptonote

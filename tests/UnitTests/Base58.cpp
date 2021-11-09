@@ -16,7 +16,7 @@
 #include "Common/Base58.cpp"
 
 using namespace Tools;
-using namespace CryptoNote;
+using namespace cryptonote;
 
 #define MAKE_STR(arr) std::string(arr, sizeof(arr) - 1)
 

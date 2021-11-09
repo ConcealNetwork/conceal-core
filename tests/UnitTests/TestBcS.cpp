@@ -19,7 +19,7 @@
 #include "EventWaiter.h"
 
 using namespace Crypto;
-using namespace CryptoNote;
+using namespace cryptonote;
 
 
 namespace {

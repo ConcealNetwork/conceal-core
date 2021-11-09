@@ -8,7 +8,7 @@
 
 #include "CryptoNoteCore/CryptoNoteBasic.h"
 
-namespace CryptoNote {
+namespace cryptonote {
 
   struct BlockInfo {
     uint32_t height;

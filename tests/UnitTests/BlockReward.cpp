@@ -10,7 +10,7 @@
 #include "CryptoNoteCore/Currency.h"
 #include "Logging/ConsoleLogger.h"
 
-using namespace CryptoNote;
+using namespace cryptonote;
 
 namespace
 {

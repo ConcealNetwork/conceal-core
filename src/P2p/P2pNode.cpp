@@ -32,7 +32,7 @@ using namespace Common;
 using namespace Logging;
 using namespace System;
 
-namespace CryptoNote {
+namespace cryptonote {
 
 namespace {
 

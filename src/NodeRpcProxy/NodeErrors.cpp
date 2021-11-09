@@ -6,7 +6,7 @@
 
 #include "NodeErrors.h"
 
-namespace CryptoNote {
+namespace cryptonote {
 namespace error {
 
 NodeErrorCategory NodeErrorCategory::INSTANCE;

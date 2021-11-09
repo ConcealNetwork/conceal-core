@@ -14,7 +14,7 @@
 
 #include <fstream>
 
-namespace CryptoNote {
+namespace cryptonote {
 
 template <typename T>
 BinaryArray storeToBinary(const T& obj) {

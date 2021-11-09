@@ -14,7 +14,7 @@
 #include "crypto/crypto.h"
 #include "TransactionApiHelpers.h"
 
-using namespace CryptoNote;
+using namespace cryptonote;
 
 namespace {
  

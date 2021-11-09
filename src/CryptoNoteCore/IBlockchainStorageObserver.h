@@ -6,7 +6,7 @@
 
 #pragma once
 
-namespace CryptoNote {
+namespace cryptonote {
   class IBlockchainStorageObserver {
   public:
     virtual ~IBlockchainStorageObserver() {

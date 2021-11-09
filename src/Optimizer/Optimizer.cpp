@@ -34,7 +34,7 @@
 namespace po = boost::program_options;
 using Common::JsonValue;
 using namespace Logging;
-using namespace CryptoNote;
+using namespace cryptonote;
 using namespace PaymentService;
 
 #ifndef ENDL

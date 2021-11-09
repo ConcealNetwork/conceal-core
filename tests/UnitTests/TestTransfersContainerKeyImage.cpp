@@ -16,7 +16,7 @@
 
 #include "TransactionApiHelpers.h"
 
-using namespace CryptoNote;
+using namespace cryptonote;
 
 
 namespace {

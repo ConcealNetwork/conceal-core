@@ -8,7 +8,7 @@
 #include <vector>
 #include <CryptoNote.h>
 
-using namespace CryptoNote;
+using namespace cryptonote;
 
 namespace Common {
 

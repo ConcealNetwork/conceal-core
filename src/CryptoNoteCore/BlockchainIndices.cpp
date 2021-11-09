@@ -12,7 +12,7 @@
 #include "BlockchainExplorer/BlockchainExplorerDataBuilder.h"
 #include "CryptoNoteBasicImpl.h"
 
-namespace CryptoNote {
+namespace cryptonote {
 
 bool PaymentIdIndex::add(const Transaction& transaction) {
   Crypto::Hash paymentId;

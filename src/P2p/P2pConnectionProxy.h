@@ -13,7 +13,7 @@
 #include "P2pContextOwner.h"
 #include "P2pInterfaces.h"
 
-namespace CryptoNote {
+namespace cryptonote {
 
 class P2pContext;
 class P2pNode;

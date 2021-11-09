@@ -22,7 +22,7 @@
 #include "ITransfersContainer.h"
 #include "IWallet.h"
 
-namespace CryptoNote {
+namespace cryptonote {
 
 typedef size_t TransactionId;
 typedef size_t TransferId;

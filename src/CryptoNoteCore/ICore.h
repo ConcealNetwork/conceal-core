@@ -19,7 +19,7 @@
 #include "CryptoNoteCore/MessageQueue.h"
 #include "CryptoNoteCore/BlockchainMessages.h"
 
-namespace CryptoNote {
+namespace cryptonote {
 
 struct COMMAND_RPC_GET_RANDOM_OUTPUTS_FOR_AMOUNTS_request;
 struct COMMAND_RPC_GET_RANDOM_OUTPUTS_FOR_AMOUNTS_response;
@@ -114,4 +114,4 @@ public:
   virtual bool removeMessageQueue(MessageQueue<BlockchainMessage>& messageQueue) = 0;
 };
 
-} //namespace CryptoNote
+} //namespace cryptonote

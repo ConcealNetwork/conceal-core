@@ -32,7 +32,7 @@ using namespace Logging;
 
 #undef ERROR
 
-namespace CryptoNote
+namespace cryptonote
 {
 
   //---------------------------------------------------------------------------------
@@ -858,4 +858,4 @@ namespace CryptoNote
     std::lock_guard<std::recursive_mutex> lock(m_transactions_lock);
     return m_timestampIndex.find(timestampBegin, timestampEnd, transactionsNumberLimit, hashes, transactionsNumberWithinTimestamps);
   }
-} // namespace CryptoNote
+} // namespace cryptonote

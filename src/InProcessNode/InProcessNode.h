@@ -18,7 +18,7 @@
 #include <thread>
 #include <boost/asio.hpp>
 
-namespace CryptoNote {
+namespace cryptonote {
 
 class core;
 
@@ -143,4 +143,4 @@ private:
   mutable std::mutex mutex;
 };
 
-} //namespace CryptoNote
+} //namespace cryptonote

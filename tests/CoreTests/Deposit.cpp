@@ -13,7 +13,7 @@
 
 namespace DepositTests {
 
-using namespace CryptoNote;
+using namespace cryptonote;
 
 bool DepositTestsBase::check_emission(core& c, size_t ev_index, const std::vector<test_event_entry>& events) {
   emission = c.getTotalGeneratedAmount();

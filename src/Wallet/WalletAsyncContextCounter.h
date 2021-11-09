@@ -10,7 +10,7 @@
 #include <mutex>
 #include <stdint.h>
 
-namespace CryptoNote {
+namespace cryptonote {
 
 class WalletAsyncContextCounter
 {
@@ -29,4 +29,4 @@ private:
   std::mutex m_mutex;
 };
 
-} //namespace CryptoNote
+} //namespace cryptonote

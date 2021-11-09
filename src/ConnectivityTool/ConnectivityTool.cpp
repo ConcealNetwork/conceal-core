@@ -29,7 +29,7 @@
 #include "version.h"
 
 namespace po = boost::program_options;
-using namespace CryptoNote;
+using namespace cryptonote;
 
 #ifndef ENDL
 #define ENDL std::endl

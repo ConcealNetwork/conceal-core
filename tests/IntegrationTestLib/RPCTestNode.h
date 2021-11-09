@@ -13,7 +13,7 @@
 
 #include "TestNode.h"
 
-using namespace CryptoNote;
+using namespace cryptonote;
 
 namespace Tests {
   class RPCTestNode : public TestNode {

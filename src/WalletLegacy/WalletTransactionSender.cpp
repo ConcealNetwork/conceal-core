@@ -21,7 +21,7 @@ using namespace Crypto;
 
 namespace
 {
-  using namespace CryptoNote;
+  using namespace cryptonote;
 
   uint64_t countNeededMoney(uint64_t fee, const std::vector<WalletLegacyTransfer> &transfers)
   {
@@ -166,7 +166,7 @@ namespace
 
 } //namespace
 
-namespace CryptoNote
+namespace cryptonote
 {
   WalletTransactionSender::WalletTransactionSender(const Currency &currency, WalletUserTransactionsCache &transactionsCache, AccountKeys keys, ITransfersContainer &transfersContainer, INode &node) : m_currency(currency),
                                                                                                                                                                                                        m_transactionsCache(transactionsCache),
@@ -319,7 +319,7 @@ namespace CryptoNote
                                                                                 const std::vector<WalletLegacyTransfer> &transfers, const std::list<TransactionOutputInformation> &fusionInputs, uint64_t fee, const std::string &extra, uint64_t mixIn, uint64_t unlockTimestamp)
   {
 
-    using namespace CryptoNote;
+    using namespace cryptonote;
 
     throwIf(transfers.empty(), error::ZERO_DESTINATION);
     validateTransfersAddresses(transfers);
@@ -937,4 +937,4 @@ namespace CryptoNote
     }
   }
 
-} /* namespace CryptoNote */
+} /* namespace cryptonote */

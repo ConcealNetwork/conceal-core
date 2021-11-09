@@ -10,7 +10,7 @@
 #include <cstddef>
 #include <cstdint>
 
-namespace CryptoNote {
+namespace cryptonote {
 class ISerializer;
 
 class InvestmentIndex {

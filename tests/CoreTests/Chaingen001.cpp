@@ -6,7 +6,7 @@
 #include "Chaingen001.h"
 
 using namespace std;
-using namespace CryptoNote;
+using namespace cryptonote;
 
 ////////
 // class one_block;

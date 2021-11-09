@@ -16,7 +16,7 @@
 #include "CryptoNoteCore/TransactionExtra.h"
 #include "CryptoNoteConfig.h"
 
-namespace CryptoNote {
+namespace cryptonote {
 
 BlockchainExplorerDataBuilder::BlockchainExplorerDataBuilder(CryptoNote::ICore& core, CryptoNote::ICryptoNoteProtocolQuery& protocol) :
 core(core),

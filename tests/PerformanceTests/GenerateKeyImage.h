@@ -17,7 +17,7 @@ public:
 
   bool init()
   {
-    using namespace CryptoNote;
+    using namespace cryptonote;
 
     if (!single_tx_test_base::init())
       return false;

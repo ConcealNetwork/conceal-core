@@ -17,11 +17,11 @@
 
 #include "Logging/LoggerRef.h"
 
-namespace CryptoNote {
+namespace cryptonote {
 class Currency;
 }
 
-namespace CryptoNote {
+namespace cryptonote {
  
 class TransfersConsumer;
 class INode;

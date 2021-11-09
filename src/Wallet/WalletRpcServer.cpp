@@ -36,7 +36,7 @@
 #include "Rpc/JsonRpc.h"
 
 using namespace Logging;
-using namespace CryptoNote;
+using namespace cryptonote;
 
 namespace Tools {
 
@@ -104,7 +104,7 @@ bool wallet_rpc_server::init(const boost::program_options::variables_map& vm) {
 
 void wallet_rpc_server::processRequest(const CryptoNote::HttpRequest& request, CryptoNote::HttpResponse& response) {
 
-  using namespace CryptoNote::JsonRpc;
+  using namespace cryptonote::JsonRpc;
 
   JsonRpcRequest jsonRequest;
   JsonRpcResponse jsonResponse;

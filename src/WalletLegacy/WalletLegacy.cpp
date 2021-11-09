@@ -122,7 +122,7 @@ uint64_t calculateInvestmentsAmount(const std::vector<CryptoNote::TransactionOut
 
 } //namespace
 
-namespace CryptoNote {
+namespace cryptonote {
 
 class SyncStarter : public CryptoNote::IWalletLegacyObserver {
 public:
@@ -1471,4 +1471,4 @@ bool WalletLegacy::checkWalletPassword(std::istream& source, const std::string& 
 //KK
 
 
-} //namespace CryptoNote
+} //namespace cryptonote

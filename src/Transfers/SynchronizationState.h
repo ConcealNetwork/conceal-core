@@ -12,7 +12,7 @@
 #include <vector>
 #include <map>
 
-namespace CryptoNote {
+namespace cryptonote {
 
 class SynchronizationState : public IStreamSerializable {
 public:

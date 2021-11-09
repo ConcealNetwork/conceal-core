@@ -8,7 +8,7 @@
 
 #include <cstdint>
 
-namespace CryptoNote {
+namespace cryptonote {
 
 const uint32_t PORTABLE_STORAGE_SIGNATUREA = 0x01011101;
 const uint32_t PORTABLE_STORAGE_SIGNATUREB = 0x01020101; // bender's nightmare 

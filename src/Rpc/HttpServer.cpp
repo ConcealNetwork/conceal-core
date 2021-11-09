@@ -37,7 +37,7 @@ namespace {
 	}
 }
 
-namespace CryptoNote {
+namespace cryptonote {
 
 HttpServer::HttpServer(System::Dispatcher& dispatcher, Logging::ILogger& log)
   : m_dispatcher(dispatcher), workingContextGroup(dispatcher), logger(log, "HttpServer") {

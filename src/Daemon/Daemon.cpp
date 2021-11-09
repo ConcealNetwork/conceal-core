@@ -35,7 +35,7 @@
 #endif
 
 using Common::JsonValue;
-using namespace CryptoNote;
+using namespace cryptonote;
 using namespace Logging;
 
 namespace po = boost::program_options;

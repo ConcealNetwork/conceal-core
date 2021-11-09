@@ -6,7 +6,7 @@
 
 #pragma once
 
-namespace CryptoNote
+namespace cryptonote
 {
   struct NOTIFY_NEW_BLOCK_request;
   struct NOTIFY_NEW_TRANSACTIONS_request;

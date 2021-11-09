@@ -32,9 +32,9 @@
 
 using namespace Crypto;
 using namespace Common;
-using namespace CryptoNote;
+using namespace cryptonote;
 
-namespace CryptoNote {
+namespace cryptonote {
     std::ostream& operator<<(std::ostream& o, const WalletTransactionState& st) {
       switch (st) {
         case WalletTransactionState::FAILED:

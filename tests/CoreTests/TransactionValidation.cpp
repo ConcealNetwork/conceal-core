@@ -7,7 +7,7 @@
 #include "TestGenerator.h"
 #include "CryptoNoteCore/CryptoNoteTools.h"
 
-using namespace CryptoNote;
+using namespace cryptonote;
 
 namespace
 {

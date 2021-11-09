@@ -26,7 +26,7 @@
 //#include "cryptonote_boost_serialization.h"
 
 using namespace std;
-using namespace CryptoNote;
+using namespace cryptonote;
 
 struct output_index {
     const CryptoNote::TransactionOutputTarget out;

@@ -6,7 +6,7 @@
 
 #include "IntegerOverflow.h"
 
-using namespace CryptoNote;
+using namespace cryptonote;
 
 namespace
 {

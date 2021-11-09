@@ -13,7 +13,7 @@
 #include "Logging/ConsoleLogger.h"
 #include <WalletLegacy/WalletUserTransactionsCache.h>
 
-using namespace CryptoNote;
+using namespace cryptonote;
 
 class WalletUserTransactionsCacheTest : public testing::Test {
 public:

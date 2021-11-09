@@ -10,7 +10,7 @@
 #include "crypto/crypto.h"
 #include "Wallet/WalletErrors.h"
 
-namespace CryptoNote {
+namespace cryptonote {
 
 bool validateAddress(const std::string& address, const CryptoNote::Currency& currency) {
   CryptoNote::AccountPublicAddress ignore;

@@ -16,7 +16,7 @@
 
 using namespace Crypto;
 
-namespace CryptoNote {
+namespace cryptonote {
 
 class TransactionPrefixImpl : public ITransactionReader {
 public:

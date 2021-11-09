@@ -8,7 +8,7 @@
 
 #include "CryptoNote.h"
 
-namespace CryptoNote {
+namespace cryptonote {
 class IBlock {
 public:
   virtual ~IBlock();

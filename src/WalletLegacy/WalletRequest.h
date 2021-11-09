@@ -17,7 +17,7 @@
 #include <functional>
 #include <memory>
 
-namespace CryptoNote {
+namespace cryptonote {
 
 class WalletRequest
 {
@@ -81,4 +81,4 @@ private:
   Callback m_cb;
 };
 
-} //namespace CryptoNote
+} //namespace cryptonote

@@ -22,7 +22,7 @@
 using namespace Crypto;
 using namespace Common;
 
-namespace CryptoNote {
+namespace cryptonote {
 
 InProcessNode::InProcessNode(CryptoNote::ICore& core, CryptoNote::ICryptoNoteProtocolQuery& protocol) :
     state(NOT_INITIALIZED),
@@ -1054,4 +1054,4 @@ void InProcessNode::isSynchronizedAsync(bool& syncStatus, const Callback& callba
   callback(std::error_code());
 }
 
-} //namespace CryptoNote
+} //namespace cryptonote

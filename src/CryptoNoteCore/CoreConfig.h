@@ -10,7 +10,7 @@
 
 #include <boost/program_options.hpp>
 
-namespace CryptoNote {
+namespace cryptonote {
 
 class CoreConfig {
 public:
@@ -23,4 +23,4 @@ public:
   bool configFolderDefaulted = true;
 };
 
-} //namespace CryptoNote
+} //namespace cryptonote

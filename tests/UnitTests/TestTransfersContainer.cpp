@@ -16,7 +16,7 @@
 
 #include "TransactionApiHelpers.h"
 
-using namespace CryptoNote;
+using namespace cryptonote;
 
 namespace {
   const size_t TEST_TRANSACTION_SPENDABLE_AGE = 1;

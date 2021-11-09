@@ -24,7 +24,7 @@ bool serialize(EllipticCurvePoint& ecPoint, Common::StringView name, CryptoNote:
 
 }
 
-namespace CryptoNote {
+namespace cryptonote {
 
 struct AccountKeys;
 struct TransactionExtraMergeMiningTag;

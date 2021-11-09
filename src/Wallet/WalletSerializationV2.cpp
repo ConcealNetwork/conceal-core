@@ -163,7 +163,7 @@ void serialize(WalletDepositDtoV2& value, CryptoNote::ISerializer& serializer) {
 
 }
 
-namespace CryptoNote {
+namespace cryptonote {
 
 WalletSerializerV2::WalletSerializerV2(
   ITransfersObserver& transfersObserver,
@@ -499,4 +499,4 @@ void WalletSerializerV2::saveUnlockTransactionsJobs(CryptoNote::ISerializer& ser
   }
 }
 
-} //namespace CryptoNote
+} //namespace cryptonote

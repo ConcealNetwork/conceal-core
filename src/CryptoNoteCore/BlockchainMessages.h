@@ -10,7 +10,7 @@
 
 #include <CryptoNote.h>
 
-namespace CryptoNote {
+namespace cryptonote {
 
 class NewBlockMessage {
 public:

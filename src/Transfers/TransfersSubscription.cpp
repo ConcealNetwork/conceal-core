@@ -9,7 +9,7 @@
 
 using namespace Crypto;
 
-namespace CryptoNote {
+namespace cryptonote {
 
 TransfersSubscription::TransfersSubscription(const CryptoNote::Currency& currency, const AccountSubscription& sub)
   : subscription(sub), transfers(currency, sub.transactionSpendableAge) {}

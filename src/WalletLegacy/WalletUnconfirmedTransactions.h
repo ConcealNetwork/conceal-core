@@ -18,7 +18,7 @@
 #include "CryptoNoteCore/CryptoNoteBasic.h"
 #include "WalletLegacy/WalletUnconfirmedTransactions.h"
 
-namespace CryptoNote {
+namespace cryptonote {
 class ISerializer;
 
 typedef std::pair<Crypto::PublicKey, size_t> TransactionOutputId;
@@ -35,7 +35,7 @@ struct hash<CryptoNote::TransactionOutputId> {
 
 }
 
-namespace CryptoNote {
+namespace cryptonote {
 
 
 struct UnconfirmedTransferDetails {
@@ -110,4 +110,4 @@ private:
   std::unordered_map<Crypto::Hash, UnconfirmedSpentDepositDetails> m_spentDeposits;
 };
 
-} // namespace CryptoNote
+} // namespace cryptonote

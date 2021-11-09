@@ -13,7 +13,7 @@
 #include "CryptoNote.h"
 #include "CryptoNoteConfig.h"
 
-namespace CryptoNote
+namespace cryptonote
 {
 
 typedef size_t DepositId;
@@ -246,4 +246,4 @@ public:
   virtual WalletEvent getEvent() = 0;
 };
 
-} // namespace CryptoNote
+} // namespace cryptonote

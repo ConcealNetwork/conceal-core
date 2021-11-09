@@ -28,7 +28,7 @@ public:
 
   bool init()
   {
-    using namespace CryptoNote;
+    using namespace cryptonote;
 
     Currency currency = CurrencyBuilder(m_logger).currency();
 

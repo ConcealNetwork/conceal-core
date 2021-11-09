@@ -17,7 +17,7 @@
 #include <atomic>
 #include <future>
 
-namespace CryptoNote {
+namespace cryptonote {
 
 class BlockchainSynchronizer :
   public IObservableImpl<IBlockchainSynchronizerObserver, IBlockchainSynchronizer>,

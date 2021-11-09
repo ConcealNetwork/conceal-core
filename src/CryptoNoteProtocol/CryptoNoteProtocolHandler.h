@@ -27,7 +27,7 @@ namespace System {
   class Dispatcher;
 }
 
-namespace CryptoNote
+namespace cryptonote
 {
   class Currency;
 

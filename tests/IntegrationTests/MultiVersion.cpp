@@ -14,7 +14,7 @@
 
 #undef ERROR
 
-using namespace CryptoNote;
+using namespace cryptonote;
 using namespace Logging;
 
 inline std::string shortAddress(const std::string &addr)

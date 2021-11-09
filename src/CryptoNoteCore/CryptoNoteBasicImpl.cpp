@@ -16,7 +16,7 @@
 using namespace Crypto;
 using namespace Common;
 
-namespace CryptoNote {
+namespace cryptonote {
 
   /************************************************************************/
   /* CryptoNote helper functions                                          */

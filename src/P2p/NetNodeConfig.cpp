@@ -14,7 +14,7 @@
 #include "crypto/crypto.h"
 #include "CryptoNoteConfig.h"
 
-namespace CryptoNote {
+namespace cryptonote {
 namespace {
 
 const command_line::arg_descriptor<std::string> arg_p2p_bind_ip        = {"p2p-bind-ip", "Interface for p2p network protocol", "0.0.0.0"};

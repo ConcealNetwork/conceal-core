@@ -11,7 +11,7 @@ namespace Tests
 namespace Common
 {
 
-using namespace CryptoNote;
+using namespace cryptonote;
 using namespace Crypto;
 
 const std::string TEST_PASSWORD = "password";

@@ -50,7 +50,7 @@
 #include <crtdbg.h>
 #endif
 
-using namespace CryptoNote;
+using namespace cryptonote;
 using namespace Logging;
 using Common::JsonValue;
 

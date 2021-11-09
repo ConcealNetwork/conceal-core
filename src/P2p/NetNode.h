@@ -40,7 +40,7 @@ namespace System {
 class TcpConnection;
 }
 
-namespace CryptoNote
+namespace cryptonote
 {
   class LevinProtocol;
   class ISerializer;

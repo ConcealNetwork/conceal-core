@@ -60,13 +60,13 @@ namespace std
 #define CURRENT_BLOCKCACHE_STORAGE_ARCHIVE_VER 4
 #define CURRENT_BLOCKCHAININDICES_STORAGE_ARCHIVE_VER 1
 
-namespace CryptoNote
+namespace cryptonote
 {
   class BlockCacheSerializer;
   class BlockchainIndicesSerializer;
-} // namespace CryptoNote
+} // namespace cryptonote
 
-namespace CryptoNote
+namespace cryptonote
 {
 
   template <typename K, typename V, typename Hash>
@@ -3257,4 +3257,4 @@ namespace CryptoNote
     return m_checkpoints.is_in_checkpoint_zone(height);
   }
 
-} // namespace CryptoNote
+} // namespace cryptonote

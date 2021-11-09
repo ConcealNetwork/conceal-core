@@ -28,7 +28,7 @@
 
 #include "Serialization/SerializationTools.h"
 
-namespace CryptoNote {
+namespace cryptonote {
 
 class ConnectException : public std::runtime_error  {
 public:

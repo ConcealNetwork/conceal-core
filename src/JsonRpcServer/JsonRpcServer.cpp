@@ -24,7 +24,7 @@
 #include "Serialization/JsonInputValueSerializer.h"
 #include "Serialization/JsonOutputStreamSerializer.h"
 
-namespace CryptoNote {
+namespace cryptonote {
 
 JsonRpcServer::JsonRpcServer(System::Dispatcher& sys, System::Event& stopEvent, Logging::ILogger& loggerGroup) :
   HttpServer(sys, loggerGroup), 

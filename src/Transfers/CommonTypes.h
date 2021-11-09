@@ -15,7 +15,7 @@
 #include "INode.h"
 #include "ITransaction.h"
 
-namespace CryptoNote {
+namespace cryptonote {
 
 struct BlockchainInterval {
   uint32_t startHeight;

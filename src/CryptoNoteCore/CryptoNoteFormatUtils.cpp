@@ -29,7 +29,7 @@ using namespace Logging;
 using namespace Crypto;
 using namespace Common;
 
-namespace CryptoNote {
+namespace cryptonote {
 
 bool parseAndValidateTransactionFromBinaryArray(const BinaryArray& tx_blob, Transaction& tx, Hash& tx_hash, Hash& tx_prefix_hash) {
   if (!fromBinaryArray(tx, tx_blob)) {

@@ -19,7 +19,7 @@
 #include "TransfersObserver.h"
 #include "TestBlockchainGenerator.h"
 
-using namespace CryptoNote;
+using namespace cryptonote;
 
 AccountSubscription getAccountSubscription(const AccountKeys& accountKeys) {
   AccountSubscription subscription;
