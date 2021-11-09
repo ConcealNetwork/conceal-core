@@ -184,9 +184,9 @@ namespace CryptoNote
 
 	// Seed Nodes
 	const std::initializer_list<const char *> SEED_NODES = {
-		"188.213.165.210:15000", // Omega
-		"89.40.118.85:15000",	 // Delta
-		"94.177.245.107:15000"	 // Lambda
+		"185.58.227.32:15000", // UK
+		"185.35.64.209:15000",	 // France 
+		"94.177.245.107:15000"	 // Germany
 	};
 
 	struct CheckpointData
