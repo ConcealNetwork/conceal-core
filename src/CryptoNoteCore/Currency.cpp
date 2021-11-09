@@ -1437,3 +1437,4 @@ namespace CryptoNote
   }
 
 } // namespace CryptoNote
+
