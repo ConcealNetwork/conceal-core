@@ -411,6 +411,37 @@ namespace CryptoNote
     size_t id = validateSaveAndSendTransaction(*transaction, {}, false, true);
   }
 
+  Crypto::SecretKey WalletGreen::getTransactionDeterministicSecretKey(Crypto::Hash &transactionHash) const
+  {
+    throwIfNotInitialized();
+    throwIfStopped();
+
+    Crypto::SecretKey txKey = CryptoNote::NULL_SECRET_KEY;
+
+    auto getTransactionCompleted = std::promise<std::error_code>();
+    auto getTransactionWaitFuture = getTransactionCompleted.get_future();
+    CryptoNote::Transaction tx;
+    m_node.getTransaction(std::move(transactionHash), std::ref(tx),
+                          [&getTransactionCompleted](std::error_code ec) {
+                            auto detachedPromise = std::move(getTransactionCompleted);
+                            detachedPromise.set_value(ec);
+                          });
+    std::error_code ec = getTransactionWaitFuture.get();
+    if (ec)
+    {
+      m_logger(ERROR) << "Failed to get tx: " << ec << ", " << ec.message();
+      return CryptoNote::NULL_SECRET_KEY;
+    }
+
+    Crypto::PublicKey txPubKey = getTransactionPublicKeyFromExtra(tx.extra);
+    KeyPair deterministicTxKeys;
+    bool ok = generateDeterministicTransactionKeys(tx, m_viewSecretKey, deterministicTxKeys) && deterministicTxKeys.publicKey == txPubKey;
+
+    return ok ? deterministicTxKeys.secretKey : CryptoNote::NULL_SECRET_KEY;
+
+    return txKey;
+  }
+
   std::vector<MultisignatureInput> WalletGreen::prepareMultisignatureInputs(const std::vector<TransactionOutputInformation> &selectedTransfers)
   {
     std::vector<MultisignatureInput> inputs;
@@ -946,7 +977,7 @@ namespace CryptoNote
     incIv(dstPrefix->nextIv);
   }
 
-  void WalletGreen::exportWallet(const std::string &path, bool encrypt, WalletSaveLevel saveLevel, const std::string &extra)
+  void WalletGreen::exportWalletKeys(const std::string &path, bool encrypt, WalletSaveLevel saveLevel, const std::string &extra)
   {
     m_logger(INFO, BRIGHT_WHITE) << "Exporting container...";
 
@@ -954,7 +985,58 @@ namespace CryptoNote
     throwIfStopped();
     stopBlockchainSynchronizer();
 
-    saveLevel = WalletSaveLevel::SAVE_KEYS_ONLY;
+    try
+    {
+      bool storageCreated = false;
+      Tools::ScopeExit failExitHandler([path, &storageCreated] {
+        // Don't delete file if it has existed
+        if (storageCreated)
+        {
+          boost::system::error_code ignore;
+          boost::filesystem::remove(path, ignore);
+        }
+      });
+
+      ContainerStorage newStorage(path, FileMappedVectorOpenMode::CREATE, m_containerStorage.prefixSize());
+      storageCreated = true;
+
+      chacha8_key newStorageKey;
+      if (encrypt)
+      {
+        newStorageKey = m_key;
+      }
+      else
+      {
+        cn_context cnContext;
+        generate_chacha8_key(cnContext, "", newStorageKey);
+      }
+
+      copyContainerStoragePrefix(m_containerStorage, m_key, newStorage, newStorageKey);
+      copyContainerStorageKeys(m_containerStorage, m_key, newStorage, newStorageKey);
+      saveWalletCache(newStorage, newStorageKey, saveLevel, extra);
+
+      failExitHandler.cancel();
+
+      m_logger(INFO) << "Container export finished";
+    }
+    catch (const std::exception &e)
+    {
+      m_logger(ERROR, BRIGHT_RED) << "Failed to export container: " << e.what();
+      startBlockchainSynchronizer();
+      throw;
+    }
+
+    startBlockchainSynchronizer();
+    m_logger(INFO, BRIGHT_WHITE) << "Container exported";
+  }
+
+  void WalletGreen::exportWallet(const std::string &path, bool encrypt, WalletSaveLevel saveLevel, const std::string &extra)
+  {
+    m_logger(INFO, BRIGHT_WHITE) << "Exporting container...";
+
+    throwIfNotInitialized();
+    throwIfStopped();
+    stopBlockchainSynchronizer();
 
     try
     {
@@ -1711,6 +1793,11 @@ namespace CryptoNote
     deleteFromUncommitedTransactions(deletedTransactions);
 
     m_walletsContainer.get<KeysIndex>().erase(it);
+
+    auto addressIndex = std::distance(
+        m_walletsContainer.get<RandomAccessIndex>().begin(), m_walletsContainer.project<RandomAccessIndex>(it));
+
+    m_containerStorage.erase(std::next(m_containerStorage.begin(), addressIndex));
 
     if (m_walletsContainer.get<RandomAccessIndex>().size() != 0)
     {

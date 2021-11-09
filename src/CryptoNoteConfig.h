@@ -61,7 +61,7 @@ namespace CryptoNote
 		const size_t DIFFICULTY_LAG = 15;
 		const size_t DIFFICULTY_LAG_V1 = DIFFICULTY_LAG;
 		const size_t DIFFICULTY_LAG_V2 = DIFFICULTY_LAG;
-		const size_t MINIMUM_MIXIN = 4;
+		const size_t MINIMUM_MIXIN = 5;
 
 		static_assert(2 * DIFFICULTY_CUT <= DIFFICULTY_WINDOW - 2, "Bad DIFFICULTY_WINDOW or DIFFICULTY_CUT");
 
@@ -150,6 +150,7 @@ namespace CryptoNote
 	const size_t BLOCKS_IDS_SYNCHRONIZING_DEFAULT_COUNT = 10000; // by default, blocks ids count in synchronizing
 	const size_t BLOCKS_SYNCHRONIZING_DEFAULT_COUNT = 128;		 // by default, blocks count in blocks downloading
 	const size_t COMMAND_RPC_GET_BLOCKS_FAST_MAX_COUNT = 1000;
+    const size_t COMMAND_RPC_GET_OBJECTS_MAX_COUNT = 1000;
 
 	const int P2P_DEFAULT_PORT = 15000;
 	const int RPC_DEFAULT_PORT = 16000;
@@ -276,9 +277,9 @@ namespace CryptoNote
 			{680000, "6774c21beb0f4e2383069da967654ce4d26743f313aa7c705f222c055fcf0e05"},
 			{690000, "33e1ddd732edfb8e850cdca304ae398a2eb495fd2a6876ff759725788f5b1135"},
 			{700000, "a6b8e9707cd5ac93931b3fcc6bb516d11e7cb840bf49c8d3712bdeba605557be"},
-			{710000, "922f1ca029163e58a24d6573e7de6bf9bcecc16ae164ebfd0285c0eda57d4eec"}
-	};
+			{710000, "922f1ca029163e58a24d6573e7de6bf9bcecc16ae164ebfd0285c0eda57d4eec"},
+			{750000, "0e22dabd4379040815f078525ed02ae95e26ae92bc9eb35628a5d588e176b900"}
+			};
 
 } // namespace CryptoNote
 
-#define ALLOW_DEBUG_COMMANDS

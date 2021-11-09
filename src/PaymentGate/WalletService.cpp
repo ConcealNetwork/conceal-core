@@ -707,8 +707,6 @@ namespace PaymentService
 
   std::error_code WalletService::exportWallet(const std::string &fileName)
   {
-
-
     try
     {
       System::EventLock lk(readyEvent);
@@ -728,6 +726,43 @@ namespace PaymentService
 
       logger(Logging::INFO, Logging::BRIGHT_WHITE) << "Exporting wallet to " << exportPath.string();
       wallet.exportWallet(exportPath.string());
+    }
+    catch (std::system_error &x)
+    {
+      logger(Logging::WARNING, Logging::BRIGHT_YELLOW) << "Error while exporting wallet: " << x.what();
+      return x.code();
+    }
+    catch (std::exception &x)
+    {
+      logger(Logging::WARNING, Logging::BRIGHT_YELLOW) << "Error while exporting wallet: " << x.what();
+      return make_error_code(CryptoNote::error::INTERNAL_WALLET_ERROR);
+    }
+
+    return std::error_code();
+  }
+
+  std::error_code WalletService::exportWalletKeys(const std::string &fileName)
+  {
+
+    try
+    {
+      System::EventLock lk(readyEvent);
+
+      saveWallet();
+
+      if (!inited)
+      {
+        logger(Logging::WARNING, Logging::BRIGHT_YELLOW) << "Export impossible: Wallet Service is not initialized";
+        return make_error_code(CryptoNote::error::NOT_INITIALIZED);
+      }
+
+      boost::filesystem::path walletPath(config.walletFile);
+      boost::filesystem::path exportPath = walletPath.parent_path() / fileName;
+
+      logger(Logging::INFO, Logging::BRIGHT_WHITE) << "Exporting wallet keys to filename" << exportPath.string();
+
+      logger(Logging::INFO, Logging::BRIGHT_WHITE) << "Exporting wallet keys to " << exportPath.string();
+      wallet.exportWalletKeys(exportPath.string());
     }
     catch (std::system_error &x)
     {

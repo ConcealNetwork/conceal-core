@@ -124,7 +124,8 @@ public:
 
   virtual uint64_t pendingBalance() = 0;
   virtual uint64_t actualDepositBalance() = 0;
-  virtual uint64_t actualInvestmentBalance() = 0;  
+  virtual uint64_t actualInvestmentBalance() = 0;
+  virtual uint64_t getWalletMaximum() = 0;
   virtual uint64_t pendingDepositBalance() = 0;
   virtual uint64_t pendingInvestmentBalance() = 0;  
 
