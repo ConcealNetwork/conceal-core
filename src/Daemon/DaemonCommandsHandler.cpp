@@ -313,8 +313,8 @@ bool DaemonCommandsHandler::print_stat(const std::vector<std::string> &args)
   std::cout << "Block Difficulty: " << m_core.difficultyAtHeight(height) << std::endl;
   std::cout << "Coins Minted (Total Supply):  " << currency.formatAmount(totalCoinsInNetwork) << std::endl;
   std::cout << "Deposits (Locked Coins): " << currency.formatAmount(totalCoinsOnDeposits) << " (" << currency.formatAmount(calculatePercent(currency, totalCoinsOnDeposits, totalCoinsInNetwork)) << "%)" << std::endl;
-  std::cout << "Rewards (Paid Interest): " << currency.formatAmount(m_core.depositInterestAtHeight(height)) << std::endl;
   std::cout << "Active Coins (Circulation Supply):  " << currency.formatAmount(amountOfActiveCoins) << " (" << currency.formatAmount(calculatePercent(currency, amountOfActiveCoins, totalCoinsInNetwork)) << "%)" << std::endl;
+  std::cout << "Rewards (Paid Interest): " << currency.formatAmount(m_core.depositInterestAtHeight(height)) << std::endl;
 
   return true;
 }
