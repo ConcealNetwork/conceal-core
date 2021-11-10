@@ -55,12 +55,16 @@ For example if you have 8GB of RAM, then your SWAP size should be 5GB
 	sudo dphys-swapfile swapon
 	```
 
-### Linux / Ubuntu
+### Linux / Ubuntu / Debian
 
 #### Prerequisites
 
 - You will need the following dependencies to build the Conceal CLI: boost, cmake, git, gcc, g++, python, and make.
-- On Ubuntu: `sudo apt-get install -y build-essential python-dev gcc g++ git cmake libboost-all-dev`
+- On Ubuntu:
+	```
+	sudo apt update
+	sudo apt-get install -y build-essential python-dev gcc g++ git cmake libboost-all-dev
+	```
 
 #### Building
 
@@ -72,7 +76,7 @@ For example if you have 8GB of RAM, then your SWAP size should be 5GB
 
 If the build is successful the binaries will be in the `src` folder.
 
-### Raspberry Pi / ARM
+### ARM / Raspberry Pi
 
 Tested on a Raspberry Pi 4 with Raspberry Pi OS (32/64bit) images.
 
