@@ -71,11 +71,13 @@ For example if you have 8GB of RAM, then your SWAP size should be 5GB
 
 #### Building
 
-git clone https://github.com/ConcealNetwork/conceal-core`
-cd conceal-core`
-mkdir build && cd $_`
-cmake ..`
-make`
+	```bash
+	$ git clone https://github.com/ConcealNetwork/conceal-core`
+	$ cd conceal-core
+	$ mkdir build && cd $_
+	$ cmake ..
+	$ make
+	```
 
 If the build is successful the binaries will be in the `src` folder.
 
