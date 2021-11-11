@@ -71,12 +71,12 @@ For example if you have 8GB of RAM, then your SWAP size should be 5GB
 
 #### Building
 
-```
-	$ git clone https://github.com/ConcealNetwork/conceal-core
-	$ cd conceal-core
-	$ mkdir build && cd $_
-	$ cmake ..
-	$ make
+```bash
+	git clone https://github.com/ConcealNetwork/conceal-core
+	cd conceal-core
+	mkdir build && cd $_
+	cmake ..
+	make
 ```
 
 If the build is successful the binaries will be in the `src` folder.
@@ -119,32 +119,32 @@ If the build is successful the binaries will be in the `src/Release` folder.
 In order to install prerequisites, [XCode](https://developer.apple.com/xcode/) and [Homebrew](https://brew.sh/) needs to be installed.
 Once both are ready, open Terminal app and run the following command to install additional tools:
 
-```
-	$ xcode-select --install
+```bash
+	xcode-select --install
 ```
 
 On newer macOS versions (v10.14 and higher) this step is done through Software Update in System Preferences.
 
 After that, proceed with installing dependencies:
 
-```bash
-	$ brew install git python cmake gcc boost
-```
+	```bash
+	brew install git python cmake gcc boost
+	```
 
 
 #### Building
 
 When all dependencies are installed, build Conceal Core binaries:
 
-```
-	$ git clone https://github.com/ConcealNetwork/conceal-core
-	$ cd conceal-core
-	$ mkdir build && cd $_
-	$ cmake ..
-	$ make
-```
+	```bash
+	git clone https://github.com/ConcealNetwork/conceal-core
+	cd conceal-core
+	mkdir build && cd $_
+	cmake ..
+	make
+	```
 
 If the build is successful the binaries will be located in `src` directory.
 
 #### Special Thanks
-Special thanks goes out to the developers from Cryptonote, Bytecoin, Monero, Forknote, TurtleCoin, Karbo and Masari.
+Special thanks goes out to the developers from Cryptonote, Bytecoin, Ryo, Monero, Forknote, TurtleCoin, Karbo and Masari.
