@@ -71,7 +71,7 @@ For example if you have 8GB of RAM, then your SWAP size should be 5GB
 	
 #### Building
 
-	```bash
+	```shell
 	git clone https://github.com/ConcealNetwork/conceal-core
 	cd conceal-core
 	mkdir build && cd $_
@@ -102,7 +102,7 @@ Other ARM CPU/OS combinations should be possible if the CPU supports Neon/AES.
 
 From the start menu, open 'x64 Native Tools Command Prompt for vs2019' or run "C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\Common7\Tools\VsMSBuildCmd.bat" from any command prompt.
 
-	```bash
+	```ps
 	git clone https://github.com/ConcealNetwork/conceal-core
 	cd conceal-core
 	mkdir build
