@@ -76,7 +76,8 @@ For example if you have 8GB of RAM, then your SWAP size should be 5GB
 	cd conceal-core
 	mkdir build && cd $_
 	cmake ..
-	make```
+	make
+	```
 
 If the build is successful the binaries will be in the `src` folder.
 
@@ -106,7 +107,8 @@ From the start menu, open 'x64 Native Tools Command Prompt for vs2019' or run "C
 	cd conceal-core
 	mkdir build
 	cmake .. -G "Visual Studio 16 2019" -A x64 -DBOOST_LIBRARYDIR="c:\local\boost_1_73_0\lib64-msvc-14.2"
-	msbuild concealX.sln /p:Configuration=Release /m```
+	msbuild concealX.sln /p:Configuration=Release /m
+	```
 
 If the build is successful the binaries will be in the `src/Release` folder.
 
@@ -118,14 +120,16 @@ In order to install prerequisites, [XCode](https://developer.apple.com/xcode/) a
 Once both are ready, open Terminal app and run the following command to install additional tools:
 
 	```bash
-	xcode-select --install```
+	xcode-select --install
+	```
 
 On newer macOS versions (v10.14 and higher) this step is done through Software Update in System Preferences.
 
 After that, proceed with installing dependencies:
 
 	```bash
-	brew install git python cmake gcc boost```
+	brew install git python cmake gcc boost
+	```
 
 
 #### Building
@@ -137,7 +141,8 @@ When all dependencies are installed, build Conceal Core binaries:
 	cd conceal-core
 	mkdir build && cd $_
 	cmake ..
-	make```
+	make
+	```
 
 If the build is successful the binaries will be located in `src` directory.
 
