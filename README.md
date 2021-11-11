@@ -1,11 +1,14 @@
 ![image](https://github.com/ConcealNetwork/conceal-imagery/blob/master/logos/splash.png)
 
-![](https://github.com/bomb-on/conceal-core/workflows/Ubuntu%2016.04/badge.svg) ![](https://github.com/bomb-on/conceal-core/workflows/Ubuntu%2018.04/badge.svg) ![](https://github.com/bomb-on/conceal-core/workflows/Windows/badge.svg) ![](https://github.com/bomb-on/conceal-core/workflows/macOS/badge.svg)
-
 # Conceal Core (CLI)
+[![Ubuntu 20.04](https://github.com/ConcealNetwork/conceal-core/actions/workflows/ubuntu20.yml/badge.svg)](https://github.com/ConcealNetwork/conceal-core/actions/workflows/ubuntu20.yml)
+[![Ubuntu 18.04](https://github.com/ConcealNetwork/conceal-core/actions/workflows/ubuntu18.yml/badge.svg)](https://github.com/ConcealNetwork/conceal-core/actions/workflows/ubuntu18.yml)
+[![Windows](https://github.com/ConcealNetwork/conceal-core/actions/workflows/windows.yml/badge.svg)](https://github.com/ConcealNetwork/conceal-core/actions/workflows/windows.yml)
+[![macOS](https://github.com/ConcealNetwork/conceal-core/actions/workflows/macOS.yml/badge.svg)](https://github.com/ConcealNetwork/conceal-core/actions/workflows/macOS.yml)
+
 Latest Release: v6.5.1
 
-Maintained by Conceal Developers.
+Maintained by Conceal Developers, overseen by Conceal Team and driven by Conceal Community.
 
 ## Information
 Conceal Network is a secure peer-to-peer privacy framework empowering individuals and organizations to anonymously communicate and interact financially in a decentralized and censorship resistant ecosystem.
@@ -37,23 +40,23 @@ In some build scenarios it may be necessary to increase the size of the SWAP to 
 For example if you have 8GB of RAM, then your SWAP size should be 5GB
 
 - Ubuntu / Linux
-	```bash
-	sudo fallocate -l 5G /swapfile
-	sudo chmod 600 /swapfile
-	sudo mkswap /swapfile
-	sudo swapon /swapfile
-	```
+```
+	$ sudo fallocate -l 5G /swapfile
+	$ sudo chmod 600 /swapfile
+	$ sudo mkswap /swapfile
+	$ sudo swapon /swapfile
+```
 
 - Rasberry Pi OS
-	```bash
-	sudo dphys-swapfile swapoff
-	sudo nano /etc/dphys-swapfile
-	CONF_SWAPSIZE=5120
-	sudo nano /sbin/dphys-swapfile
-	#CONF_MAXSWAP=2048
-	sudo dphys-swapfile setup
-	sudo dphys-swapfile swapon
-	```
+```
+	$ sudo dphys-swapfile swapoff
+	$ sudo nano /etc/dphys-swapfile
+	$ CONF_SWAPSIZE=5120
+	$ sudo nano /sbin/dphys-swapfile
+	$ #CONF_MAXSWAP=2048
+	$ sudo dphys-swapfile setup
+	$ sudo dphys-swapfile swapon
+```
 
 ### Linux / Ubuntu / Debian
 
@@ -61,18 +64,20 @@ For example if you have 8GB of RAM, then your SWAP size should be 5GB
 
 - You will need the following dependencies to build the Conceal CLI: boost, cmake, git, gcc, g++, python, and make.
 - On Ubuntu:
-	```
-	sudo apt update
-	sudo apt-get install -y build-essential python-dev gcc g++ git cmake libboost-all-dev
-	```
+```
+	$ sudo apt update
+	$ sudo apt-get install -y build-essential python-dev gcc g++ git cmake libboost-all-dev
+```
 
 #### Building
 
-- `git clone https://github.com/ConcealNetwork/conceal-core`
-- `cd conceal-core`
-- `mkdir build && cd $_`
-- `cmake ..`
-- `make`
+```
+	$ git clone https://github.com/ConcealNetwork/conceal-core
+	$ cd conceal-core
+	$ mkdir build && cd $_
+	$ cmake ..
+	$ make
+```
 
 If the build is successful the binaries will be in the `src` folder.
 
@@ -97,12 +102,12 @@ Other ARM CPU/OS combinations should be possible if the CPU supports Neon/AES.
 
 From the start menu, open 'x64 Native Tools Command Prompt for vs2019' or run "C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\Common7\Tools\VsMSBuildCmd.bat" from any command prompt.
 
-```bash
-git clone https://github.com/ConcealNetwork/conceal-core
-cd conceal-core
-mkdir build
-cmake .. -G "Visual Studio 16 2019" -A x64 -DBOOST_LIBRARYDIR="c:\local\boost_1_73_0\lib64-msvc-14.2"
-msbuild concealX.sln /p:Configuration=Release /m
+```
+  git clone https://github.com/ConcealNetwork/conceal-core
+  cd conceal-core
+  mkdir build
+  cmake .. -G "Visual Studio 16 2019" -A x64 -DBOOST_LIBRARYDIR="c:\local\boost_1_73_0\lib64-msvc-14.2"
+  msbuild concealX.sln /p:Configuration=Release /m
 ```
 
 If the build is successful the binaries will be in the `src/Release` folder.
@@ -114,8 +119,8 @@ If the build is successful the binaries will be in the `src/Release` folder.
 In order to install prerequisites, [XCode](https://developer.apple.com/xcode/) and [Homebrew](https://brew.sh/) needs to be installed.
 Once both are ready, open Terminal app and run the following command to install additional tools:
 
-```bash
-$ xcode-select --install
+```
+	$ xcode-select --install
 ```
 
 On newer macOS versions (v10.14 and higher) this step is done through Software Update in System Preferences.
@@ -123,19 +128,20 @@ On newer macOS versions (v10.14 and higher) this step is done through Software U
 After that, proceed with installing dependencies:
 
 ```bash
-$ brew install git python cmake gcc boost
+	$ brew install git python cmake gcc boost
 ```
+
 
 #### Building
 
 When all dependencies are installed, build Conceal Core binaries:
 
-```bash
-$ git clone https://github.com/ConcealNetwork/conceal-core
-$ cd conceal-core
-$ mkdir build && cd $_
-$ cmake ..
-$ make
+```
+	$ git clone https://github.com/ConcealNetwork/conceal-core
+	$ cd conceal-core
+	$ mkdir build && cd $_
+	$ cmake ..
+	$ make
 ```
 
 If the build is successful the binaries will be located in `src` directory.
