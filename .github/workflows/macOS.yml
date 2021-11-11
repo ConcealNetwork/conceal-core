@@ -16,8 +16,8 @@ jobs:
         id: build
         run: |
           build_folder="build/"
-          ccx_ver=$(echo ${{ github.ref }} | sed 's|refs/tags/||')
-          release_name="ccx-cli-macOS-v$ccx_ver"
+          ccx_version=$(echo ${{ github.ref }} | sed 's|refs/tags/||')
+          release_name="ccx-cli-macOS-v$ccx_version"
           brew install gcc boost
           mkdir "$build_folder"
           cd "$build_folder"
@@ -33,15 +33,17 @@ jobs:
           echo "::set-output name=sha256::${sha256}"
           echo "::set-output name=release_name::${release_name}.zip"
           echo "::set-output name=asset_path::${asset_path}"
-          echo "::set-output name=ccx_ver::${ccx_ver}"
+          echo "::set-output name=ccx_version::${ccx_version}"
 
+      # since https://github.com/softprops/action-gh-release/pull/145 body is replaced instead of being appended
+      # use v0.1.12 for now
       - name: Create Release
-        uses: softprops/action-gh-release@v1
+        uses: softprops/action-gh-release@v0.1.12
         with:
           files: ${{ steps.build.outputs.asset_path }}
-          name: Conceal Core CLI v${{ steps.build.outputs.ccx_ver }}
+          name: Conceal Core CLI v${{ steps.build.outputs.ccx_version }}
           body: |
-            **${{ steps.build.outputs.release_name }}**
-            ${{ steps.build.outputs.sha256 }}
+            [Download for macOS](../../releases/download/${{ steps.build.outputs.ccx_version }}/${{ steps.build.outputs.release_name }}) **${{ steps.build.outputs.release_name }}**
+            `SHA256 : ${{ steps.build.outputs.sha256 }}`
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
