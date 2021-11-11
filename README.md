@@ -70,6 +70,8 @@ For example if you have 8GB of RAM, then your SWAP size should be 5GB
 	```
 
 #### Building
+
+test
 	```bash
 	git clone https://github.com/ConcealNetwork/conceal-core
 	cd conceal-core
