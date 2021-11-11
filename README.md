@@ -135,13 +135,13 @@ After that, proceed with installing dependencies:
 
 When all dependencies are installed, build Conceal Core binaries:
 
-	```
+```
 	$ git clone https://github.com/ConcealNetwork/conceal-core
 	$ cd conceal-core
 	$ mkdir build && cd $_
 	$ cmake ..
 	$ make
-	```
+```
 
 If the build is successful the binaries will be located in `src` directory.
 
