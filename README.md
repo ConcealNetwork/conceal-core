@@ -48,7 +48,7 @@ For example if you have 8GB of RAM, then your SWAP size should be 5GB
 	```
 
 - Rasberry Pi OS
-	```
+	```bash
 	sudo dphys-swapfile swapoff
 	sudo nano /etc/dphys-swapfile
 	CONF_SWAPSIZE=5120
@@ -66,7 +66,7 @@ For example if you have 8GB of RAM, then your SWAP size should be 5GB
 - On Ubuntu:
 	```bash
 	sudo apt update
-	$ sudo apt-get install -y build-essential python-dev gcc g++ git cmake libboost-all-dev
+	sudo apt-get install -y build-essential python-dev gcc g++ git cmake libboost-all-dev
 	```
 
 #### Building
