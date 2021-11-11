@@ -7,6 +7,7 @@ Latest Release: v6.5.1
 [![Windows](https://github.com/ConcealNetwork/conceal-core/actions/workflows/windows.yml/badge.svg)](https://github.com/ConcealNetwork/conceal-core/actions/workflows/windows.yml)
 [![macOS](https://github.com/ConcealNetwork/conceal-core/actions/workflows/macOS.yml/badge.svg)](https://github.com/ConcealNetwork/conceal-core/actions/workflows/macOS.yml)
 
+
 Maintained by Conceal Developers, overseen by Conceal Team and driven by Conceal Community.
 
 ## Information
