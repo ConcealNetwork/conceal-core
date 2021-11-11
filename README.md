@@ -102,13 +102,13 @@ Other ARM CPU/OS combinations should be possible if the CPU supports Neon/AES.
 
 From the start menu, open 'x64 Native Tools Command Prompt for vs2019' or run "C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\Common7\Tools\VsMSBuildCmd.bat" from any command prompt.
 
-	```
-	git clone https://github.com/ConcealNetwork/conceal-core
-	cd conceal-core
-	mkdir build
-	cmake .. -G "Visual Studio 16 2019" -A x64 -DBOOST_LIBRARYDIR="c:\local\boost_1_73_0\lib64-msvc-14.2"
-	msbuild concealX.sln /p:Configuration=Release /m
-	```
+```
+  git clone https://github.com/ConcealNetwork/conceal-core
+  cd conceal-core
+  mkdir build
+  cmake .. -G "Visual Studio 16 2019" -A x64 -DBOOST_LIBRARYDIR="c:\local\boost_1_73_0\lib64-msvc-14.2"
+  msbuild concealX.sln /p:Configuration=Release /m
+```
 
 If the build is successful the binaries will be in the `src/Release` folder.
 
