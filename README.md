@@ -135,7 +135,7 @@ After that, proceed with installing dependencies:
 
 When all dependencies are installed, build Conceal Core binaries:
 
-	```bash
+	```
 	$ git clone https://github.com/ConcealNetwork/conceal-core
 	$ cd conceal-core
 	$ mkdir build && cd $_
