@@ -128,8 +128,8 @@ On newer macOS versions (v10.14 and higher) this step is done through Software U
 After that, proceed with installing dependencies:
 
 	```bash
-	$ brew install git python cmake gcc boost
-	```
+	$ brew install git python cmake gcc boost```
+
 
 #### Building
 
