@@ -121,7 +121,7 @@ Once both are ready, open Terminal app and run the following command to install 
 	xcode-select --install
 	```
 
-On newer macOS versions (v10.14 and higher) this step is done through Software Update in System Preferences.
+- On newer macOS versions (v10.14 and higher) this step is done through Software Update in System Preferences.
 
 - After that, proceed with installing dependencies:
 	```bash
