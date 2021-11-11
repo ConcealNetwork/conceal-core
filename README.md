@@ -68,10 +68,9 @@ For example if you have 8GB of RAM, then your SWAP size should be 5GB
 	sudo apt update
 	sudo apt-get install -y build-essential python-dev gcc g++ git cmake libboost-all-dev
 	```
-
+	
 #### Building
 
-test
 	```bash
 	git clone https://github.com/ConcealNetwork/conceal-core
 	cd conceal-core
