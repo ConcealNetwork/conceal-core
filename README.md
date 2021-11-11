@@ -1,12 +1,11 @@
 ![image](https://github.com/ConcealNetwork/conceal-imagery/blob/master/logos/splash.png)
 
+# Conceal Core (CLI)
+Latest Release: v6.5.1
 [![Ubuntu 20.04](https://github.com/ConcealNetwork/conceal-core/actions/workflows/ubuntu20.yml/badge.svg)](https://github.com/ConcealNetwork/conceal-core/actions/workflows/ubuntu20.yml)
 [![Ubuntu 18.04](https://github.com/ConcealNetwork/conceal-core/actions/workflows/ubuntu18.yml/badge.svg)](https://github.com/ConcealNetwork/conceal-core/actions/workflows/ubuntu18.yml)
 [![Windows](https://github.com/ConcealNetwork/conceal-core/actions/workflows/windows.yml/badge.svg)](https://github.com/ConcealNetwork/conceal-core/actions/workflows/windows.yml)
 [![macOS](https://github.com/ConcealNetwork/conceal-core/actions/workflows/macOS.yml/badge.svg)](https://github.com/ConcealNetwork/conceal-core/actions/workflows/macOS.yml)
-
-# Conceal Core (CLI)
-Latest Release: v6.5.1
 
 Maintained by Conceal Developers, overseen by Conceal Team and driven by Conceal Community.
 
@@ -40,7 +39,7 @@ In some build scenarios it may be necessary to increase the size of the SWAP to 
 For example if you have 8GB of RAM, then your SWAP size should be 5GB
 
 - Ubuntu / Linux
-	```bash
+	```
 	$ sudo fallocate -l 5G /swapfile
 	$ sudo chmod 600 /swapfile
 	$ sudo mkswap /swapfile
