@@ -12,10 +12,10 @@
 
 namespace CryptoNote {
 
-inline bool operator==(const AccountPublicAddress &_v1, const AccountPublicAddress &_v2) {
-  return memcmp(&_v1, &_v2, sizeof(AccountPublicAddress)) == 0;
-}
-
+  inline bool operator==(const AccountPublicAddress &_v1, const AccountPublicAddress &_v2)
+  {
+    return _v1.spendPublicKey == _v2.spendPublicKey && _v1.viewPublicKey == _v2.viewPublicKey;
+  }
 }
 
 namespace std {

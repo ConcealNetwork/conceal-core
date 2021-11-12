@@ -1092,7 +1092,12 @@ namespace CryptoNote
 
     uint64_t T = 120; // target solvetime seconds
     uint64_t N = 60;  //  N=45, 60, and 90 for T=600, 120, 60.
-    uint64_t L(0), ST, sum_3_ST(0), next_D, prev_D, this_timestamp, previous_timestamp;
+    uint64_t L = 0;
+    uint64_t sum_3_ST = 0;
+    uint64_t next_D = 0;
+    uint64_t prev_D;
+    uint64_t this_timestamp;
+    uint64_t previous_timestamp;
 
     // Make sure timestamps & CD vectors are not bigger than they are supposed to be.
     // assert(timestamps.size() == cumulative_difficulties.size() &&
@@ -1100,9 +1105,9 @@ namespace CryptoNote
 
     // If it's a new coin, do startup code.
     // Increase difficulty_guess if it needs to be much higher, but guess lower than lowest guess.
-    uint64_t difficulty_guess = 100;
     if (timestamps.size() <= 10)
     {
+      uint64_t difficulty_guess = 100;
       return difficulty_guess;
     }
     // Use "if" instead of "else if" in case vectors are incorrectly N all the time instead of N+1.
@@ -1130,7 +1135,7 @@ namespace CryptoNote
         this_timestamp = previous_timestamp + 1;
       }
       // Limit solvetime ST to 6*T to prevent large drop in difficulty that could cause oscillations.
-      ST = std::min(6 * T, this_timestamp - previous_timestamp);
+      uint64_t ST = std::min(6 * T, this_timestamp - previous_timestamp);
       previous_timestamp = this_timestamp;
       L += ST * i; // give linearly higher weight to more recent solvetimes
                    // delete the following line if you do not want the "jump rule"
