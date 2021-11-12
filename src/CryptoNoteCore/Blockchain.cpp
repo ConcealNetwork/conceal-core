@@ -668,7 +668,7 @@ namespace CryptoNote
       {
         const TransactionEntry &transaction = block.transactions[t];
         Crypto::Hash transactionHash = getObjectHash(transaction.tx);
-        TransactionIndex transactionIndex = {b, t};
+        TransactionIndex transactionIndex = {b, static_cast<uint16_t>(t)};
         m_transactionMap.insert(std::make_pair(transactionHash, transactionIndex));
 
         // process inputs
@@ -695,7 +695,7 @@ namespace CryptoNote
           }
           else if (out.target.type() == typeid(MultisignatureOutput))
           {
-            MultisignatureOutputUsage usage = {transactionIndex, o, false};
+            MultisignatureOutputUsage usage = {transactionIndex, static_cast<uint16_t>(o), false};
             m_multisignatureOutputs[out.amount].push_back(usage);
           }
         }
@@ -2752,7 +2752,7 @@ namespace CryptoNote
       {
         auto &amountOutputs = m_multisignatureOutputs[transaction.tx.outputs[output].amount];
         transaction.m_global_output_indexes[output] = static_cast<uint32_t>(amountOutputs.size());
-        MultisignatureOutputUsage outputUsage = {transactionIndex, output, false};
+        MultisignatureOutputUsage outputUsage = {transactionIndex, static_cast<uint16_t>(output), false};
         amountOutputs.push_back(outputUsage);
       }
     }
