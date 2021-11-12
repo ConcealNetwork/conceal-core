@@ -1,10 +1,14 @@
 ![image](https://github.com/ConcealNetwork/conceal-imagery/blob/master/logos/splash.png)
 
-![](https://github.com/bomb-on/conceal-core/workflows/Ubuntu%2016.04/badge.svg) ![](https://github.com/bomb-on/conceal-core/workflows/Ubuntu%2018.04/badge.svg) ![](https://github.com/bomb-on/conceal-core/workflows/Windows/badge.svg) ![](https://github.com/bomb-on/conceal-core/workflows/macOS/badge.svg)
-
 # Conceal Core (CLI)
-Latest Release: v6.4.8
-Maintained by Conceal Developers.
+[![Ubuntu 20.04](https://github.com/ConcealNetwork/conceal-core/actions/workflows/ubuntu20.yml/badge.svg)](https://github.com/ConcealNetwork/conceal-core/actions/workflows/ubuntu20.yml)
+[![Ubuntu 18.04](https://github.com/ConcealNetwork/conceal-core/actions/workflows/ubuntu18.yml/badge.svg)](https://github.com/ConcealNetwork/conceal-core/actions/workflows/ubuntu18.yml)
+[![Windows](https://github.com/ConcealNetwork/conceal-core/actions/workflows/windows.yml/badge.svg)](https://github.com/ConcealNetwork/conceal-core/actions/workflows/windows.yml)
+[![macOS](https://github.com/ConcealNetwork/conceal-core/actions/workflows/macOS.yml/badge.svg)](https://github.com/ConcealNetwork/conceal-core/actions/workflows/macOS.yml)
+
+Latest Release: v6.5.1
+
+Maintained by Conceal Developers, overseen by Conceal Team and driven by Conceal Community.
 
 ## Information
 Conceal Network is a secure peer-to-peer privacy framework empowering individuals and organizations to anonymously communicate and interact financially in a decentralized and censorship resistant ecosystem.
@@ -54,24 +58,30 @@ For example if you have 8GB of RAM, then your SWAP size should be 5GB
 	sudo dphys-swapfile swapon
 	```
 
-### Linux / Ubuntu
+### Linux / Ubuntu / Debian
 
 #### Prerequisites
 
-- You will need the following dependencies to build the Conceal CLI: boost, cmake, git, gcc, g++, python, and make.
-- On Ubuntu: `sudo apt-get install -y build-essential python-dev gcc g++ git cmake libboost-all-dev`
-
+- You will need the following dependencies to build the Conceal CLI: boost, cmake, git, gcc, g++, python, and make:
+	```bash
+	sudo apt update
+	sudo apt-get install -y build-essential python-dev gcc g++ git cmake libboost-all-dev
+	```
+	
 #### Building
 
-- `git clone https://github.com/ConcealNetwork/conceal-core`
-- `cd conceal-core`
-- `mkdir build && cd $_`
-- `cmake ..`
-- `make`
+- On Ubuntu:
+	```bash
+	git clone https://github.com/ConcealNetwork/conceal-core
+	cd conceal-core
+	mkdir build && cd $_
+	cmake ..
+	make
+	```
 
 If the build is successful the binaries will be in the `src` folder.
 
-### Raspberry Pi / ARM
+### ARM / Raspberry Pi
 
 Tested on a Raspberry Pi 4 with Raspberry Pi OS (32/64bit) images.
 
@@ -90,15 +100,14 @@ Other ARM CPU/OS combinations should be possible if the CPU supports Neon/AES.
 
 #### Building
 
-From the start menu, open 'x64 Native Tools Command Prompt for vs2019' or run "C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\Common7\Tools\VsMSBuildCmd.bat" from any command prompt.
-
-```bash
-git clone https://github.com/ConcealNetwork/conceal-core
-cd conceal-core
-mkdir build
-cmake .. -G "Visual Studio 16 2019" -A x64 -DBOOST_LIBRARYDIR="c:\local\boost_1_73_0\lib64-msvc-14.2"
-msbuild concealX.sln /p:Configuration=Release /m
-```
+- From the start menu, open 'x64 Native Tools Command Prompt for vs2019' or run "C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\Common7\Tools\VsMSBuildCmd.bat" from any command prompt.
+	```ps
+	git clone https://github.com/ConcealNetwork/conceal-core
+	cd conceal-core
+	mkdir build
+	cmake .. -G "Visual Studio 16 2019" -A x64 -DBOOST_LIBRARYDIR="c:\local\boost_1_73_0\lib64-msvc-14.2"
+	msbuild concealX.sln /p:Configuration=Release /m
+	```
 
 If the build is successful the binaries will be in the `src/Release` folder.
 
@@ -106,34 +115,32 @@ If the build is successful the binaries will be in the `src/Release` folder.
 
 #### Prerequisites
 
-In order to install prerequisites, [XCode](https://developer.apple.com/xcode/) and [Homebrew](https://brew.sh/) needs to be installed.
+- In order to install prerequisites, [XCode](https://developer.apple.com/xcode/) and [Homebrew](https://brew.sh/) needs to be installed.
 Once both are ready, open Terminal app and run the following command to install additional tools:
+	```bash
+	xcode-select --install
+	```
 
-```bash
-$ xcode-select --install
-```
+- On newer macOS versions (v10.14 and higher) this step is done through Software Update in System Preferences.
 
-On newer macOS versions (v10.14 and higher) this step is done through Software Update in System Preferences.
+- After that, proceed with installing dependencies:
+	```bash
+	brew install git python cmake gcc boost
+	```
 
-After that, proceed with installing dependencies:
-
-```bash
-$ brew install git python cmake gcc boost
-```
 
 #### Building
 
-When all dependencies are installed, build Conceal Core binaries:
-
-```bash
-$ git clone https://github.com/ConcealNetwork/conceal-core
-$ cd conceal-core
-$ mkdir build && cd $_
-$ cmake ..
-$ make
-```
+- When all dependencies are installed, build Conceal Core binaries:
+	```bash
+	git clone https://github.com/ConcealNetwork/conceal-core
+	cd conceal-core
+	mkdir build && cd $_
+	cmake ..
+	make
+	```
 
 If the build is successful the binaries will be located in `src` directory.
 
 #### Special Thanks
-Special thanks goes out to the developers from Cryptonote, Bytecoin, Monero, Forknote, TurtleCoin, Karbo and Masari.
+Special thanks goes out to the developers from Cryptonote, Bytecoin, Ryo, Monero, Forknote, TurtleCoin, Karbo and Masari.

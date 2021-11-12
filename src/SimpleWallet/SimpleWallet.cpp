@@ -1,6 +1,6 @@
 // Copyright (c) 2011-2017 The Cryptonote developers
 // Copyright (c) 2017-2018 The Circle Foundation & Conceal Devs
-// Copyright (c) 2018-2019 Conceal Network & Conceal Devs
+// Copyright (c) 2018-2021 Conceal Network & Conceal Devs
 // Distributed under the MIT/X11 software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -623,6 +623,7 @@ simple_wallet::simple_wallet(System::Dispatcher& dispatcher, const CryptoNote::C
   m_consoleHandler.setHandler("help", boost::bind(&simple_wallet::help, this, boost::arg<1>()), "Show this help");
   m_consoleHandler.setHandler("exit", boost::bind(&simple_wallet::exit, this, boost::arg<1>()), "Close wallet");  
   m_consoleHandler.setHandler("get_reserve_proof", boost::bind(&simple_wallet::get_reserve_proof, this, boost::arg<1>()), "all|<amount> [<message>] - Generate a signature proving that you own at least <amount>, optionally with a challenge string <message>. ");
+  m_consoleHandler.setHandler("save_keys", boost::bind(&simple_wallet::save_keys_to_file, this, boost::arg<1>()), "Save wallet private keys to \"conceal_keys_backup.txt\"");
 }
 
 /* This function shows the number of outputs in the wallet
@@ -1936,6 +1937,33 @@ void simple_wallet::printConnectionError() const {
   fail_msg_writer() << "wallet failed to connect to daemon (" << m_daemon_address << ").";
 }
 
+bool simple_wallet::save_keys_to_file(const std::vector<std::string>& args)
+{
+  std::ofstream backup_file("conceal_keys_backup.txt");
+  AccountKeys keys;
+  m_wallet->getAccountKeys(keys);
+
+  std::string priv_key = "\t\tConceal Keys Backup\n\n";
+  priv_key += "Wallet file name: " + m_wallet_file + "\n";
+  priv_key += "Private spend key: " + Common::podToHex(keys.spendSecretKey) + "\n";
+  priv_key += "Private view key: " +  Common::podToHex(keys.viewSecretKey) + "\n";
+
+  Crypto::PublicKey unused_dummy_variable;
+  Crypto::SecretKey deterministic_private_view_key;
+
+  AccountBase::generateViewFromSpend(keys.spendSecretKey, deterministic_private_view_key, unused_dummy_variable);
+  bool deterministic_private_keys = deterministic_private_view_key == keys.viewSecretKey;
+
+  /* dont show a mnemonic seed if it is an old non-deterministic wallet */
+  if (deterministic_private_keys)
+    priv_key += "Mnemonic seed: " + generate_mnemonic(keys.spendSecretKey) + "\n";
+
+  backup_file << priv_key;
+
+  logger(INFO, BRIGHT_GREEN) << "Wallet keys have been saved to the current folder where \"concealwallet\" is located.";
+
+  return true;
+}
 
 int main(int argc, char* argv[]) {
 #ifdef _WIN32

@@ -1,6 +1,6 @@
 // Copyright (c) 2011-2017 The Cryptonote Developers
 // Copyright (c) 2017-2018 The Circle Foundation & Conceal Devs
-// Copyright (c) 2018-2019 Conceal Network & Conceal Devs
+// Copyright (c) 2018-2021 Conceal Network & Conceal Devs
 //
 // Distributed under the MIT/X11 software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
@@ -61,7 +61,7 @@ namespace CryptoNote
 		const size_t DIFFICULTY_LAG = 15;
 		const size_t DIFFICULTY_LAG_V1 = DIFFICULTY_LAG;
 		const size_t DIFFICULTY_LAG_V2 = DIFFICULTY_LAG;
-		const size_t MINIMUM_MIXIN = 4;
+		const size_t MINIMUM_MIXIN = 5;
 
 		static_assert(2 * DIFFICULTY_CUT <= DIFFICULTY_WINDOW - 2, "Bad DIFFICULTY_WINDOW or DIFFICULTY_CUT");
 
@@ -150,6 +150,7 @@ namespace CryptoNote
 	const size_t BLOCKS_IDS_SYNCHRONIZING_DEFAULT_COUNT = 10000; // by default, blocks ids count in synchronizing
 	const size_t BLOCKS_SYNCHRONIZING_DEFAULT_COUNT = 128;		 // by default, blocks count in blocks downloading
 	const size_t COMMAND_RPC_GET_BLOCKS_FAST_MAX_COUNT = 1000;
+    const size_t COMMAND_RPC_GET_OBJECTS_MAX_COUNT = 1000;
 
 	const int P2P_DEFAULT_PORT = 15000;
 	const int RPC_DEFAULT_PORT = 16000;
@@ -183,9 +184,9 @@ namespace CryptoNote
 
 	// Seed Nodes
 	const std::initializer_list<const char *> SEED_NODES = {
-		"188.213.165.210:15000", // Omega
-		"89.40.118.85:15000",	 // Delta
-		"94.177.245.107:15000"	 // Lambda
+		"185.58.227.32:15000", // UK
+		"185.35.64.209:15000",	 // France 
+		"94.177.245.107:15000"	 // Germany
 	};
 
 	struct CheckpointData
@@ -277,9 +278,22 @@ namespace CryptoNote
 			{690000, "33e1ddd732edfb8e850cdca304ae398a2eb495fd2a6876ff759725788f5b1135"},
 			{700000, "a6b8e9707cd5ac93931b3fcc6bb516d11e7cb840bf49c8d3712bdeba605557be"},
 			{710000, "922f1ca029163e58a24d6573e7de6bf9bcecc16ae164ebfd0285c0eda57d4eec"},
-			{750000, "0e22dabd4379040815f078525ed02ae95e26ae92bc9eb35628a5d588e176b900"}
+			{750000, "0e22dabd4379040815f078525ed02ae95e26ae92bc9eb35628a5d588e176b900"},
+			{760000, "ecc64815b44b4c0c67340ff7e0d9fefee2cfbfbed10d61260c49bbe98aeb6ea2"},
+			{770000, "7c97512a8ffdefa3e97809779841e48ffa6b68bd8a5bf90fcb59c1547f5ad90f"},
+			{780000, "7acd1d5c843245bf1cc12a966f388111e2258c029595d31539b9257bb1217e61"},
+			{790000, "580580b3b628b68532d9b141cc5e3299ebdc6e421c58ed155916c418144704ff"},
+			{800000, "bb0dc113b1bfde3f06bfa341ba7d6de6ea82cebc86b98fc3d122b695e0bfdebe"},
+			{810000, "c8a8e81032d66b137a99087ddd6ca6289040cb336012d4248ff616e1e7abb5b3"},
+			{820000, "98a8373323adca6f09048177c774783150bcf25b62e26c804fd33461fc1af09b"},
+			{830000, "7007d4331703233f48a3f1a2e824734d02ec81e7da46b7e00a2c354edb8de357"},
+			{840000, "eae669f44a964ce5501b971139ee04657b62dc2535e9305857a1c9e2e839790a"},
+			{850000, "e354bf503e8273a90d5d338ce78966ee820b69490b3a3183f0765281429d2f77"},
+			{860000, "11b35a3f0c78686d75991d5bf65e868e565ea4ba15e96c9b0f643a4d9983eedf"},
+			{870000, "21fef5a9cbb6ebe8ba271bdb55ed4d3ccd0468ab31a77f634cabc893e2a9661e"},
+			{880000, "a861367503fec46c12f8ae957438a389c4de7b3c267cfdb21a7be29337885e10"},
+			{890000, "092b29ab3369d0227239f0604d57ab91a3e1794ca3abe0c75fd5e69acb611a66"}
 			};
 
 } // namespace CryptoNote
 
-#define ALLOW_DEBUG_COMMANDS

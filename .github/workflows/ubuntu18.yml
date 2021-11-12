@@ -18,9 +18,9 @@ jobs:
           sudo apt-get update
           sudo apt-get install -y libboost-all-dev
           build_folder="build/debug"
-          ccx_ver=$(echo "$GITHUB_REF" | sed 's|refs/tags/||')
-          ccx_ver_folder=$(echo $ccx_ver | sed 's/\.//g')
-          release_name=ccx-cli-ubuntu-1804-v"$ccx_ver"
+          ccx_version=$(echo "$GITHUB_REF" | sed 's|refs/tags/||')
+          ccx_ver_folder=$(echo $ccx_version | sed 's/\.//g')
+          release_name=ccx-cli-ubuntu-1804-v"$ccx_version"
           mkdir -p "$build_folder"
           cd "$build_folder"
           cmake ../..
@@ -36,15 +36,17 @@ jobs:
           echo "::set-output name=sha256::${sha256}"
           echo "::set-output name=release_name::${release_name}.tar.gz"
           echo "::set-output name=asset_path::${asset_path}"
-          echo "::set-output name=ccx_ver::${ccx_ver}"
+          echo "::set-output name=ccx_version::${ccx_version}"
 
+      # since https://github.com/softprops/action-gh-release/pull/145 body is replaced instead of being appended
+      # use v0.1.12 for now
       - name: Create Release
-        uses: softprops/action-gh-release@v1
+        uses: softprops/action-gh-release@v0.1.12
         with:
           files: ${{ steps.build.outputs.asset_path }}
-          name: Conceal Core CLI v${{ steps.build.outputs.ccx_ver }}
+          name: Conceal Core CLI v${{ steps.build.outputs.ccx_version }}
           body: |
-            **${{ steps.build.outputs.release_name }}**
-            ${{ steps.build.outputs.sha256 }}
+            [Download for Ubuntu 18.04](../../releases/download/${{ steps.build.outputs.ccx_version }}/${{ steps.build.outputs.release_name }}) **${{ steps.build.outputs.release_name }}**
+            `SHA256 : ${{ steps.build.outputs.sha256 }}`
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
