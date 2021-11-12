@@ -445,25 +445,49 @@ namespace CryptoNote
         ss << storeToJson(txd.tx) << std::endl;
       }
 
-      char time[50]; 
-      ctime_r(&txd.receiveTime, time);
-
       ss << "blobSize: " << txd.blobSize << std::endl
          << "fee: " << m_currency.formatAmount(txd.fee) << std::endl
-         << "received: " << time;
+         << "received: ";
+
+      char receivedTimeStr[32];
+      struct tm receivedTimeTm;
+#ifdef _WIN32
+      gmtime_s(&receivedTimeTm, &txd.receiveTime);
+#else
+      gmtime_r(&txd.receiveTime, &receivedTimeTm);
+#endif
+      if (std::strftime(receivedTimeStr, sizeof(receivedTimeStr), "%c", &receivedTimeTm))
+      {
+        ss << receivedTimeStr << " UTC";
+      }
+      else
+      {
+        ss << "unable to get time";
+      }
+      ss << std::endl;
 
       auto ttlIt = m_ttlIndex.find(txd.id);
       if (ttlIt != m_ttlIndex.end())
       {
-        // ctime() returns string that ends with new line       
-        char time[50];
-        ctime_r(reinterpret_cast<const time_t *>(&ttlIt->second), time);
-        ss << "TTL: " << time;
+        char ttlTimeStr[32];
+        struct tm ttlTimeTm;
+        time_t timestamp = reinterpret_cast<time_t>(&ttlIt->second);
+#ifdef _WIN32
+        gmtime_s(&ttlTimeTm, &timestamp);
+#else
+        gmtime_r(&timestamp, &ttlTimeTm);
+#endif
+        if (std::strftime(ttlTimeStr, sizeof(ttlTimeStr), "%c", &ttlTimeTm))
+        {
+          ss << "TTL: " << ttlTimeStr << " UTC";
+        }
+        else
+        {
+          ss << "TTL failed";
+        }
+        ss << std::endl;
       }
-
-      ss << std::endl;
     }
-
     return ss.str();
   }
   //---------------------------------------------------------------------------------
