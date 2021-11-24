@@ -228,8 +228,9 @@ struct TransferCommand {
           bool ok = m_currency.parseAmount(value, de.amount);
 
           if (!ok || 0 == de.amount) {
+            // max should never exceed MONEY_SUPPLY
             logger(ERROR, BRIGHT_RED) << "amount is wrong: " << arg << ' ' << value <<
-              ", expected number from 0 to " << m_currency.formatAmount(std::numeric_limits<uint64_t>::max());
+              ", expected number from 0 to " << m_currency.formatAmount(CryptoNote::parameters::MONEY_SUPPLY);
             return false;
           }
 
