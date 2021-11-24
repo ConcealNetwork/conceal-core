@@ -39,7 +39,7 @@ void BinaryInputStreamSerializer::endObject() {
 bool BinaryInputStreamSerializer::beginArray(size_t& size, Common::StringView name) {
   readVarintAs<uint64_t>(stream, size);
 
-  if (size > 10000 * 1024 * 1024) {
+  if (size > SIZE_MAX) {
     throw std::runtime_error("array size is too big");
   }
 
@@ -90,10 +90,10 @@ bool BinaryInputStreamSerializer::operator()(bool& value, Common::StringView nam
 }
 
 bool BinaryInputStreamSerializer::operator()(std::string& value, Common::StringView name) {
-  uint64_t size;
+  size_t size;
   readVarint(stream, size);
 
-  if (size > 10000 * 1024 * 1024) {
+  if (size > SIZE_MAX) {
     throw std::runtime_error("string size is too big");
   } else if (size > 0) {
     std::vector<char> temp;
