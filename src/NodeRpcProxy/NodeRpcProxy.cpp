@@ -1,6 +1,6 @@
 // Copyright (c) 2011-2017 The Cryptonote developers
 // Copyright (c) 2017-2018 The Circle Foundation & Conceal Devs
-// Copyright (c) 2018-2019 Conceal Network & Conceal Devs
+// Copyright (c) 2018-2021 Conceal Network & Conceal Devs
 // Distributed under the MIT/X11 software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -496,25 +496,6 @@ std::error_code NodeRpcProxy::doGetNewBlocks(std::vector<Crypto::Hash>& knownBlo
     newBlocks = std::move(rsp.blocks);
     startHeight = static_cast<uint32_t>(rsp.start_height);
   }
-
-  return ec;
-}
-
-std::error_code NodeRpcProxy::doGetBlock(const uint32_t blockHeight, f_block_details_response& block)
-{
-  COMMAND_RPC_GET_BLOCK_DETAILS_BY_HEIGHT::request req = AUTO_VAL_INIT(req);
-  COMMAND_RPC_GET_BLOCK_DETAILS_BY_HEIGHT::response resp = AUTO_VAL_INIT(resp);
-
-  req.blockHeight = blockHeight;
-
-  std::error_code ec = jsonCommand("get_block_details_by_height", req, resp);
-
-  if (ec)
-  {
-    return ec;
-  }
-
-  block = std::move(resp.block);
 
   return ec;
 }

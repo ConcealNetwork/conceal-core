@@ -1,6 +1,6 @@
 // Copyright (c) 2011-2017 The Cryptonote developers
 // Copyright (c) 2017-2018 The Circle Foundation & Conceal Devs
-// Copyright (c) 2018-2019 Conceal Network & Conceal Devs
+// Copyright (c) 2018-2021 Conceal Network & Conceal Devs
 // Distributed under the MIT/X11 software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -872,7 +872,7 @@ struct COMMAND_RPC_GET_BLOCK_TIMESTAMP_BY_HEIGHT
 {
   struct request
   {
-    uint32_t height;
+    uint64_t height;
 
     void serialize(ISerializer &s)
     {
@@ -897,11 +897,11 @@ struct COMMAND_RPC_GET_BLOCK_DETAILS_BY_HEIGHT
 {
   struct request
   {
-    uint32_t blockHeight;
+    uint64_t height;
 
     void serialize(ISerializer &s)
     {
-      KV_MEMBER(blockHeight)
+      KV_MEMBER(height)
     }
   };
 

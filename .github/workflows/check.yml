@@ -34,8 +34,8 @@ jobs:
         run: |
           $build_folder = "build"
           $sha = "${{ github.sha }}"
-          $ccx_ver = $sha.SubString(0,7)
-          $release_name = "ccx-cli-win64-v$ccx_ver"
+          $ccx_version = $sha.SubString(0,7)
+          $release_name = "ccx-cli-win64-v$ccx_version"
           mkdir "$build_folder"
           cd "$build_folder"
           cmake -G "Visual Studio 16 2019" ..
@@ -49,43 +49,8 @@ jobs:
           echo "::set-output name=sha256::${sha256}"
           echo "::set-output name=release_name::${release_name}.zip"
           echo "::set-output name=asset_path::${asset_path}"
-          echo "::set-output name=ccx_ver::${ccx_ver}"
+          echo "::set-output name=ccx_version::${ccx_version}"
           echo "::set-output name=artifact_path::$build_folder/src/Release/$release_name"
-
-      - name: Upload To GH Artifacts
-        uses: actions/upload-artifact@v1.0.0
-        with:
-          name: ${{ steps.build.outputs.release_name }}
-          path: ${{ steps.build.outputs.artifact_path }}
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-
-  build-ubuntu16:
-    name: Ubuntu 16.04
-    runs-on: ubuntu-16.04
-    steps:
-      - uses: actions/checkout@master
-
-      - name: Build
-        id: build
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y libboost-all-dev
-          build_folder="build/debug"
-          ccx_ver=${GITHUB_SHA::7}
-          ccx_ver_folder=$(echo $ccx_ver | sed 's/\.//g')
-          release_name=ccx-cli-ubuntu-1604-dev"$ccx_ver"
-          mkdir -p "$build_folder"
-          cd "$build_folder"
-          cmake ../.. -DCMAKE_BUILD_TYPE=Debug
-          make -j2
-          mkdir -p "$release_name"
-          exeFiles=()
-          for f in src/*; do [[ -x $f && -f $f ]] && exeFiles+=( "$f" ); done
-          strip "${exeFiles[@]}"
-          cp "${exeFiles[@]}" "$release_name/"
-          echo "::set-output name=release_name::${release_name}.zip"
-          echo "::set-output name=artifact_path::$build_folder/$release_name"
 
       - name: Upload To GH Artifacts
         uses: actions/upload-artifact@v1.0.0
@@ -107,9 +72,9 @@ jobs:
           sudo apt-get update
           sudo apt-get install -y libboost-all-dev
           build_folder="build/debug"
-          ccx_ver=${GITHUB_SHA::7}
-          ccx_ver_folder=$(echo $ccx_ver | sed 's/\.//g')
-          release_name=ccx-cli-ubuntu-1804-dev"$ccx_ver"
+          ccx_version=${GITHUB_SHA::7}
+          ccx_ver_folder=$(echo $ccx_version | sed 's/\.//g')
+          release_name=ccx-cli-ubuntu-1804-dev"$ccx_version"
           mkdir -p "$build_folder"
           cd "$build_folder"
           cmake ../.. -DCMAKE_BUILD_TYPE=Debug
@@ -142,9 +107,9 @@ jobs:
           sudo apt-get update
           sudo apt-get install -y libboost-all-dev
           build_folder="build/debug"
-          ccx_ver=${GITHUB_SHA::7}
-          ccx_ver_folder=$(echo $ccx_ver | sed 's/\.//g')
-          release_name=ccx-cli-ubuntu-2004-dev"$ccx_ver"
+          ccx_version=${GITHUB_SHA::7}
+          ccx_ver_folder=$(echo $ccx_version | sed 's/\.//g')
+          release_name=ccx-cli-ubuntu-2004-dev"$ccx_version"
           mkdir -p "$build_folder"
           cd "$build_folder"
           cmake ../.. -DCMAKE_BUILD_TYPE=Debug
@@ -175,13 +140,13 @@ jobs:
         id: build
         run: |
           build_folder="build/"
-          ccx_ver=${GITHUB_SHA::7}
-          ccx_ver_folder=$(echo $ccx_ver | sed 's/\.//g')
-          release_name=ccx-cli-macos-dev"$ccx_ver"
+          ccx_version=${GITHUB_SHA::7}
+          ccx_ver_folder=$(echo $ccx_version | sed 's/\.//g')
+          release_name=ccx-cli-macos-dev"$ccx_version"
           brew install gcc boost
           mkdir "$build_folder"
           cd "$build_folder"
-          cmake -DCMAKE_C_FLAGS="-mmacosx-version-min=10.12" -DCMAKE_CXX_FLAGS="-mmacosx-version-min=10.12" ..
+          cmake -DCMAKE_C_FLAGS="-mmacosx-version-min=10.12" -DCMAKE_CXX_FLAGS="-mmacosx-version-min=10.12" -DSTATIC=ON ..
           make -j2
           mkdir "$release_name"
           exeFiles=()

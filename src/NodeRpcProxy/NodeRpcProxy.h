@@ -1,6 +1,6 @@
 // Copyright (c) 2011-2017 The Cryptonote developers
 // Copyright (c) 2017-2018 The Circle Foundation & Conceal Devs
-// Copyright (c) 2018-2019 Conceal Network & Conceal Devs
+// Copyright (c) 2018-2021 Conceal Network & Conceal Devs
 // Distributed under the MIT/X11 software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -88,7 +88,6 @@ private:
   std::error_code doRelayTransaction(const CryptoNote::Transaction& transaction);
   std::error_code doGetRandomOutsByAmounts(std::vector<uint64_t>& amounts, uint64_t outsCount,
                                            std::vector<COMMAND_RPC_GET_RANDOM_OUTPUTS_FOR_AMOUNTS::outs_for_amount>& result);
-  std::error_code doGetBlock(const uint32_t blockHeight, f_block_details_response& block);
 
   std::error_code doGetNewBlocks(std::vector<Crypto::Hash>& knownBlockIds,
     std::vector<CryptoNote::block_complete_entry>& newBlocks, uint32_t& startHeight);

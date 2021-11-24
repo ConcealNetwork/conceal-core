@@ -76,26 +76,6 @@
         "xthread": "cpp",
         "sparse_hash_map": "cpp",
         "sparse_hash_set": "cpp",
-        "sparsetable": "cpp",
-        "bitset": "cpp",
-        "clocale": "cpp",
-        "codecvt": "cpp",
-        "complex": "cpp",
-        "csignal": "cpp",
-        "cstdarg": "cpp",
-        "cwctype": "cpp",
-        "locale": "cpp",
-        "optional": "cpp",
-        "regex": "cpp",
-        "scoped_allocator": "cpp",
-        "shared_mutex": "cpp",
-        "string_view": "cpp",
-        "strstream": "cpp",
-        "typeindex": "cpp",
-        "valarray": "cpp",
-        "variant": "cpp",
-        "xlocbuf": "cpp",
-        "xlocmes": "cpp",
-        "*.ipp": "cpp"
+        "sparsetable": "cpp"
     }
 }
