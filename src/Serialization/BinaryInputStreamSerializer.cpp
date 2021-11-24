@@ -90,7 +90,7 @@ bool BinaryInputStreamSerializer::operator()(bool& value, Common::StringView nam
 }
 
 bool BinaryInputStreamSerializer::operator()(std::string& value, Common::StringView name) {
-  size_t size;
+  uint64_t size;
   readVarint(stream, size);
 
   if (size > SIZE_MAX) {
