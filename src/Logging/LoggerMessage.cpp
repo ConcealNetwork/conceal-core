@@ -64,7 +64,6 @@ LoggerMessage::LoggerMessage(LoggerMessage&& other)
 
     //streambuf swap
     char *_Pfirst = pbase();
-    char *_Pnext = pptr();
     char *_Pend = epptr();
     char *_Gfirst = eback();
     char *_Gnext = gptr();
