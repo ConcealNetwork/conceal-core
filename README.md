@@ -6,7 +6,7 @@
 [![Windows](https://github.com/ConcealNetwork/conceal-core/actions/workflows/windows.yml/badge.svg)](https://github.com/ConcealNetwork/conceal-core/actions/workflows/windows.yml)
 [![macOS](https://github.com/ConcealNetwork/conceal-core/actions/workflows/macOS.yml/badge.svg)](https://github.com/ConcealNetwork/conceal-core/actions/workflows/macOS.yml)
 
-Latest Release: v6.5.1
+Latest Release: v6.5.2
 
 Maintained by Conceal Developers, overseen by Conceal Team and driven by Conceal Community.
 
@@ -40,15 +40,15 @@ In some build scenarios it may be necessary to increase the size of the SWAP to 
 For example if you have 8GB of RAM, then your SWAP size should be 5GB
 
 - Ubuntu / Linux
-	```bash
+```bash
 	sudo fallocate -l 5G /swapfile
 	sudo chmod 600 /swapfile
 	sudo mkswap /swapfile
 	sudo swapon /swapfile
-	```
+```
 
 - Rasberry Pi OS
-	```bash
+```bash
 	sudo dphys-swapfile swapoff
 	sudo nano /etc/dphys-swapfile
 	CONF_SWAPSIZE=5120
@@ -56,28 +56,28 @@ For example if you have 8GB of RAM, then your SWAP size should be 5GB
 	#CONF_MAXSWAP=2048
 	sudo dphys-swapfile setup
 	sudo dphys-swapfile swapon
-	```
+```
 
 ### Linux / Ubuntu / Debian
 
 #### Prerequisites
 
 - You will need the following dependencies to build the Conceal CLI: boost, cmake, git, gcc, g++, python, and make:
-	```bash
+```bash
 	sudo apt update
 	sudo apt-get install -y build-essential python-dev gcc g++ git cmake libboost-all-dev
-	```
+```
 	
 #### Building
 
 - On Ubuntu:
-	```bash
+```bash
 	git clone https://github.com/ConcealNetwork/conceal-core
 	cd conceal-core
 	mkdir build && cd $_
 	cmake ..
 	make
-	```
+```
 
 If the build is successful the binaries will be in the `src` folder.
 
@@ -101,13 +101,13 @@ Other ARM CPU/OS combinations should be possible if the CPU supports Neon/AES.
 #### Building
 
 - From the start menu, open 'x64 Native Tools Command Prompt for vs2019' or run "C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\Common7\Tools\VsMSBuildCmd.bat" from any command prompt.
-	```ps
+```ps
 	git clone https://github.com/ConcealNetwork/conceal-core
 	cd conceal-core
 	mkdir build
 	cmake .. -G "Visual Studio 16 2019" -A x64 -DBOOST_LIBRARYDIR="c:\local\boost_1_73_0\lib64-msvc-14.2"
 	msbuild concealX.sln /p:Configuration=Release /m
-	```
+```
 
 If the build is successful the binaries will be in the `src/Release` folder.
 
@@ -117,28 +117,28 @@ If the build is successful the binaries will be in the `src/Release` folder.
 
 - In order to install prerequisites, [XCode](https://developer.apple.com/xcode/) and [Homebrew](https://brew.sh/) needs to be installed.
 Once both are ready, open Terminal app and run the following command to install additional tools:
-	```bash
+```bash
 	xcode-select --install
-	```
+```
 
 - On newer macOS versions (v10.14 and higher) this step is done through Software Update in System Preferences.
 
 - After that, proceed with installing dependencies:
-	```bash
+```bash
 	brew install git python cmake gcc boost
-	```
+```
 
 
 #### Building
 
 - When all dependencies are installed, build Conceal Core binaries:
-	```bash
+```bash
 	git clone https://github.com/ConcealNetwork/conceal-core
 	cd conceal-core
 	mkdir build && cd $_
 	cmake ..
 	make
-	```
+```
 
 If the build is successful the binaries will be located in `src` directory.
 
