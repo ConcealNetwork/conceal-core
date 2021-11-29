@@ -70,7 +70,7 @@ size_t readVarint(Common::IInputStream& s) {
 
 std::string readString(Common::IInputStream& s) {
   auto size = readVarint(s);
-  if (size > 100 * 1024 * 1024) {
+  if (size > SIZE_MAX) {
     throw std::runtime_error("string size is too big");
   }
 
