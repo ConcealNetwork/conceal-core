@@ -111,9 +111,9 @@ namespace CryptoNote
       CryptoNote::ITransactionValidator &validator,
       CryptoNote::ITimeProvider &timeProvider,
       Logging::ILogger &log) : m_currency(currency),
-                               m_validator(validator),
                                m_timeProvider(timeProvider),
                                m_txCheckInterval(60, timeProvider),
+                               m_validator(validator),
                                m_fee_index(boost::get<1>(m_transactions)),
                                logger(log, "txpool")
   {
