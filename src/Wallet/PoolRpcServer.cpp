@@ -52,15 +52,17 @@ pool_rpc_server::pool_rpc_server(
   CryptoNote::Currency& currency,
   const std::string& walletFile)
   :
-  HttpServer(dispatcher, log),
-  logger(log, "WalletRpc"),
-  m_dispatcher(dispatcher),
-  m_stopComplete(dispatcher),
-  m_wallet(w),
-  m_node(n),
-  m_currency(currency),
-  m_walletFilename(walletFile) {
-}
+    HttpServer(dispatcher, log),
+    logger(log, "WalletRpc"),
+    m_currency(currency),
+    m_walletFilename(walletFile),
+    m_dispatcher(dispatcher),
+    m_stopComplete(dispatcher),
+    m_wallet(w),
+    m_node(n)
+  {
+  }
+
 //------------------------------------------------------------------------------------------------------------------------------
 bool pool_rpc_server::run() {
   start(m_bind_ip, m_port, m_rpcUser, m_rpcPassword);
