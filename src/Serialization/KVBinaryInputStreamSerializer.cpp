@@ -70,7 +70,7 @@ size_t readVarint(Common::IInputStream& s) {
 
 std::string readString(Common::IInputStream& s) {
   auto size = readVarint(s);
-  if (size > 10000 * 1024 * 1024) {
+  if (size > SIZE_MAX) {
     throw std::runtime_error("string size is too big");
   }
 
@@ -130,7 +130,6 @@ JsonValue loadValue(Common::IInputStream& stream, uint8_t type) {
   case BIN_KV_SERIALIZE_TYPE_ARRAY:  return loadArray(stream, type);
   default:
     throw std::runtime_error("Unknown data type");
-    break;
   }
 }
 

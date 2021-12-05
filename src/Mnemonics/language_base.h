@@ -128,8 +128,8 @@ namespace Language
   public:
     Base(const char *language_name, const std::vector<std::string> &words, uint32_t prefix_length):
       word_list(words),
-      unique_prefix_length(prefix_length),
-      language_name(language_name)
+      language_name(language_name),
+      unique_prefix_length(prefix_length)
     {
     }
     virtual ~Base()

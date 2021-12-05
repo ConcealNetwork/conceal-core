@@ -33,10 +33,12 @@ const int keccakf_piln[24] =
 
 void keccakf(uint64_t st[25], int rounds)
 {
-    int i, j, round;
-    uint64_t t, bc[5];
+    int i;
+    int j;
+    uint64_t t;
+    uint64_t bc[5];
 
-    for (round = 0; round < rounds; round++) {
+    for (int round = 0; round < rounds; round++) {
 
         // Theta
         for (i = 0; i < 5; i++)     
@@ -77,7 +79,9 @@ int keccak(const uint8_t *in, int inlen, uint8_t *md, int mdlen)
 {
     state_t st;
     uint8_t temp[144];
-    int i, rsiz, rsizw;
+    int i;
+    int rsiz;
+    int rsizw;
 
     const int HASH_DATA_AREA = 136;
 

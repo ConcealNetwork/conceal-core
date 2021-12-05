@@ -62,12 +62,12 @@ wallet_rpc_server::wallet_rpc_server(
   :
   HttpServer(dispatcher, log),
   logger(log, "WalletRpc"),
+  m_currency(currency),
+  m_walletFilename(walletFile),
   m_dispatcher(dispatcher),
   m_stopComplete(dispatcher),
   m_wallet(w),
-  m_node(n),
-  m_currency(currency),
-  m_walletFilename(walletFile) {
+  m_node(n) {
 }
 //------------------------------------------------------------------------------------------------------------------------------
 bool wallet_rpc_server::run() {

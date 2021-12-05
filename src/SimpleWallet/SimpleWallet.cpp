@@ -14,6 +14,7 @@
 #include <set>
 #include <sstream>
 #include <regex>
+#include <ctime>
 
 #include <boost/format.hpp>
 #include <boost/bind.hpp>
@@ -228,8 +229,9 @@ struct TransferCommand {
           bool ok = m_currency.parseAmount(value, de.amount);
 
           if (!ok || 0 == de.amount) {
+            // max should never exceed MONEY_SUPPLY
             logger(ERROR, BRIGHT_RED) << "amount is wrong: " << arg << ' ' << value <<
-              ", expected number from 0 to " << m_currency.formatAmount(std::numeric_limits<uint64_t>::max());
+              ", expected number from 0 to " << m_currency.formatAmount(CryptoNote::parameters::MONEY_SUPPLY);
             return false;
           }
 
@@ -393,7 +395,7 @@ std::string makeCenteredString(size_t width, const std::string& text) {
   return std::string(offset, ' ') + text + std::string(width - text.size() - offset, ' ');
 }
 
-const size_t TIMESTAMP_MAX_WIDTH = 19;
+const size_t TIMESTAMP_MAX_WIDTH = 32;
 const size_t HASH_MAX_WIDTH = 64;
 const size_t TOTAL_AMOUNT_MAX_WIDTH = 20;
 const size_t FEE_MAX_WIDTH = 14;
@@ -420,13 +422,21 @@ void printListTransfersItem(LoggerRef& logger, const WalletLegacyTransaction& tx
 
   char timeString[TIMESTAMP_MAX_WIDTH + 1];
   time_t timestamp = static_cast<time_t>(txInfo.timestamp);
-  if (std::strftime(timeString, sizeof(timeString), "%Y-%m-%d %H:%M:%S", std::gmtime(&timestamp)) == 0) {
+  struct tm time;
+#ifdef _WIN32
+  gmtime_s(&time, &timestamp);
+#else
+  gmtime_r(&timestamp, &time);
+#endif
+
+  if (!std::strftime(timeString, sizeof(timeString), "%c", &time))
+  {
     throw std::runtime_error("time buffer is too small");
   }
 
   std::string rowColor = txInfo.totalAmount < 0 ? MAGENTA : GREEN;
   logger(INFO, rowColor)
-    << std::setw(TIMESTAMP_MAX_WIDTH) << timeString
+    << std::left << std::setw(TIMESTAMP_MAX_WIDTH) << timeString
     << "  " << std::setw(HASH_MAX_WIDTH) << Common::podToHex(txInfo.hash)
     << "  " << std::setw(TOTAL_AMOUNT_MAX_WIDTH) << currency.formatAmount(txInfo.totalAmount)
     << "  " << std::setw(FEE_MAX_WIDTH) << currency.formatAmount(txInfo.fee)
