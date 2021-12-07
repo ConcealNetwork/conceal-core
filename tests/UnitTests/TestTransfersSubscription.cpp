@@ -15,7 +15,7 @@
 #include "TransactionApiHelpers.h"
 #include "TransfersObserver.h"
 
-using namespace CryptoNote;
+using namespace cn;
 
 namespace {
 

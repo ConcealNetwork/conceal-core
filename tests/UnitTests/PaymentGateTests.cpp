@@ -17,13 +17,13 @@
 #include "TestBlockchainGenerator.h"
 
 using namespace PaymentService;
-using namespace CryptoNote;
+using namespace cn;
 
 class PaymentGateTest : public testing::Test {
 public:
 
   PaymentGateTest() : 
-    currency(CryptoNote::CurrencyBuilder(logger).currency()), 
+    currency(cn::CurrencyBuilder(logger).currency()), 
     generator(currency),
     nodeStub(generator) 
   {}
@@ -33,7 +33,7 @@ public:
   }
 
   std::unique_ptr<WalletService> createWalletService(const WalletConfiguration& cfg) {
-    WalletGreen* walletGreen = new CryptoNote::WalletGreen(dispatcher, currency, nodeStub, logger);
+    WalletGreen* walletGreen = new cn::WalletGreen(dispatcher, currency, nodeStub, logger);
     wallet.reset(walletGreen);
     service->init();
     return service;
@@ -46,12 +46,12 @@ public:
 
 protected:  
   Logging::ConsoleLogger logger;
-  CryptoNote::Currency currency;
+  cn::Currency currency;
   TestBlockchainGenerator generator;
   INodeTrivialRefreshStub nodeStub;
   System::Dispatcher dispatcher;
 
-  std::unique_ptr<CryptoNote::IWallet> wallet;
+  std::unique_ptr<cn::IWallet> wallet;
 };
 
 

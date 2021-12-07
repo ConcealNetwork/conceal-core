@@ -15,11 +15,11 @@
 using namespace Common;
 using namespace Crypto;
 
-namespace CryptoNote {
+namespace cn {
 
 const uint32_t TRANSFERS_STORAGE_ARCHIVE_VERSION = 0;
 
-TransfersSyncronizer::TransfersSyncronizer(const CryptoNote::Currency& currency, Logging::ILogger& logger, IBlockchainSynchronizer& sync, INode& node) :
+TransfersSyncronizer::TransfersSyncronizer(const cn::Currency& currency, Logging::ILogger& logger, IBlockchainSynchronizer& sync, INode& node) :
   m_currency(currency), m_logger(logger, "TransfersSyncronizer"), m_sync(sync), m_node(node) {
 }
 
@@ -151,7 +151,7 @@ void TransfersSyncronizer::save(std::ostream& os) {
   m_sync.save(os);
 
   StdOutputStream stream(os);
-  CryptoNote::BinaryOutputStreamSerializer s(stream);
+  cn::BinaryOutputStreamSerializer s(stream);
   s(const_cast<uint32_t&>(TRANSFERS_STORAGE_ARCHIVE_VERSION), "version");
 
   size_t subscriptionCount = m_consumers.size();
@@ -215,7 +215,7 @@ void TransfersSyncronizer::load(std::istream& is) {
   m_sync.load(is);
 
   StdInputStream inputStream(is);
-  CryptoNote::BinaryInputStreamSerializer s(inputStream);
+  cn::BinaryInputStreamSerializer s(inputStream);
   uint32_t version = 0;
 
   s(version, "version");

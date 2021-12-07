@@ -13,8 +13,10 @@
 #include <parallel_hashmap/phmap.h>
 #include "crypto/hash.h"
 #include "CryptoNoteBasic.h"
+
 using phmap::flat_hash_map;
-namespace CryptoNote {
+
+namespace cn {
 
 class ISerializer;
 

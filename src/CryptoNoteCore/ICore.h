@@ -19,7 +19,7 @@
 #include "CryptoNoteCore/MessageQueue.h"
 #include "CryptoNoteCore/BlockchainMessages.h"
 
-namespace CryptoNote {
+namespace cn {
 
 struct COMMAND_RPC_GET_RANDOM_OUTPUTS_FOR_AMOUNTS_request;
 struct COMMAND_RPC_GET_RANDOM_OUTPUTS_FOR_AMOUNTS_response;
@@ -54,11 +54,11 @@ public:
   virtual bool have_block(const Crypto::Hash& id) = 0;
   virtual std::vector<Crypto::Hash> buildSparseChain() = 0;
   virtual std::vector<Crypto::Hash> buildSparseChain(const Crypto::Hash& startBlockId) = 0;
-  virtual bool get_stat_info(CryptoNote::core_stat_info& st_inf) = 0;
+  virtual bool get_stat_info(cn::core_stat_info& st_inf) = 0;
   virtual bool on_idle() = 0;
   virtual void pause_mining() = 0;
   virtual void update_block_template_and_resume_mining() = 0;
-  virtual bool handle_incoming_block_blob(const CryptoNote::BinaryArray& block_blob, CryptoNote::block_verification_context& bvc, bool control_miner, bool relay_block) = 0;
+  virtual bool handle_incoming_block_blob(const cn::BinaryArray& block_blob, cn::block_verification_context& bvc, bool control_miner, bool relay_block) = 0;
   virtual bool handle_incoming_block(const Block& b, block_verification_context& bvc, bool control_miner, bool relay_block) = 0;
   virtual bool handle_get_objects(NOTIFY_REQUEST_GET_OBJECTS_request& arg, NOTIFY_RESPONSE_GET_OBJECTS_request& rsp) = 0; //Deprecated. Should be removed with CryptoNoteProtocolHandler.
   virtual void on_synchronized() = 0;
@@ -114,4 +114,4 @@ public:
   virtual bool removeMessageQueue(MessageQueue<BlockchainMessage>& messageQueue) = 0;
 };
 
-} //namespace CryptoNote
+} //namespace cn

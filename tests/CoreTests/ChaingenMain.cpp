@@ -74,8 +74,8 @@ int main(int argc, char* argv[])
   else if (command_line::get_arg(vm, arg_generate_and_play_test_data))
   {
 #define GENERATE_AND_PLAY_EX_2VER(TestCase) \
-  GENERATE_AND_PLAY_EX(TestCase(CryptoNote::BLOCK_MAJOR_VERSION_1)) \
-  GENERATE_AND_PLAY_EX(TestCase(CryptoNote::BLOCK_MAJOR_VERSION_2))
+  GENERATE_AND_PLAY_EX(TestCase(cn::BLOCK_MAJOR_VERSION_1)) \
+  GENERATE_AND_PLAY_EX(TestCase(cn::BLOCK_MAJOR_VERSION_2))
 
     GENERATE_AND_PLAY(DepositTests::TransactionWithDepositUnrolesPartOfAmountAfterSwitchToAlternativeChain);
     GENERATE_AND_PLAY(DepositTests::TransactionWithDepositExtendsTotalDeposit);
@@ -121,9 +121,9 @@ int main(int argc, char* argv[])
 
     //// Block verification tests
     GENERATE_AND_PLAY_EX_2VER(TestBlockMajorVersionAccepted);
-    GENERATE_AND_PLAY_EX(TestBlockMajorVersionRejected(CryptoNote::BLOCK_MAJOR_VERSION_1, CryptoNote::BLOCK_MAJOR_VERSION_2));
-    GENERATE_AND_PLAY_EX(TestBlockMajorVersionRejected(CryptoNote::BLOCK_MAJOR_VERSION_2, CryptoNote::BLOCK_MAJOR_VERSION_1));
-    GENERATE_AND_PLAY_EX(TestBlockMajorVersionRejected(CryptoNote::BLOCK_MAJOR_VERSION_2, CryptoNote::BLOCK_MAJOR_VERSION_2 + 1));
+    GENERATE_AND_PLAY_EX(TestBlockMajorVersionRejected(cn::BLOCK_MAJOR_VERSION_1, cn::BLOCK_MAJOR_VERSION_2));
+    GENERATE_AND_PLAY_EX(TestBlockMajorVersionRejected(cn::BLOCK_MAJOR_VERSION_2, cn::BLOCK_MAJOR_VERSION_1));
+    GENERATE_AND_PLAY_EX(TestBlockMajorVersionRejected(cn::BLOCK_MAJOR_VERSION_2, cn::BLOCK_MAJOR_VERSION_2 + 1));
     GENERATE_AND_PLAY_EX_2VER(TestBlockBigMinorVersion);
     GENERATE_AND_PLAY_EX_2VER(gen_block_ts_not_checked);
     GENERATE_AND_PLAY_EX_2VER(gen_block_ts_in_past);

@@ -20,7 +20,7 @@
 #include "Transfers/TransfersSynchronizer.h"
 #include "Transfers/BlockchainSynchronizer.h"
 
-namespace CryptoNote
+namespace cn
 {
 
 class WalletGreen : public IWallet,
@@ -162,7 +162,7 @@ protected:
 
   struct ReceiverAmounts
   {
-    CryptoNote::AccountPublicAddress receiver;
+    cn::AccountPublicAddress receiver;
     std::vector<uint64_t> amounts;
   };
 
@@ -228,14 +228,14 @@ protected:
   WalletOuts pickWallet(const std::string &address) const;
   std::vector<WalletOuts> pickWallets(const std::vector<std::string> &addresses) const;
 
-  void updateBalance(CryptoNote::ITransfersContainer *container);
+  void updateBalance(cn::ITransfersContainer *container);
   void unlockBalances(uint32_t height);
 
   const WalletRecord &getWalletRecord(const Crypto::PublicKey &key) const;
   const WalletRecord &getWalletRecord(const std::string &address) const;
-  const WalletRecord &getWalletRecord(CryptoNote::ITransfersContainer *container) const;
+  const WalletRecord &getWalletRecord(cn::ITransfersContainer *container) const;
 
-  CryptoNote::AccountPublicAddress parseAddress(const std::string &address) const;
+  cn::AccountPublicAddress parseAddress(const std::string &address) const;
   std::string addWallet(const Crypto::PublicKey &spendPublicKey, const Crypto::SecretKey &spendSecretKey, uint64_t creationTimestamp);
   AccountKeys makeAccountKeys(const WalletRecord &wallet) const;
   size_t getTransactionId(const Crypto::Hash &transactionHash) const;
@@ -259,7 +259,7 @@ protected:
                           const std::string &extra,
                           uint64_t unlockTimestamp,
                           const DonationSettings &donation,
-                          const CryptoNote::AccountPublicAddress &changeDestinationAddress,
+                          const cn::AccountPublicAddress &changeDestinationAddress,
                           PreparedTransaction &preparedTransaction,
                           Crypto::SecretKey &transactionSK);
   void validateAddresses(const std::vector<std::string> &addresses) const;
@@ -272,10 +272,10 @@ protected:
 
   void requestMixinOuts(const std::vector<OutputToTransfer> &selectedTransfers,
                         uint64_t mixIn,
-                        std::vector<CryptoNote::COMMAND_RPC_GET_RANDOM_OUTPUTS_FOR_AMOUNTS::outs_for_amount> &mixinResult);
+                        std::vector<cn::COMMAND_RPC_GET_RANDOM_OUTPUTS_FOR_AMOUNTS::outs_for_amount> &mixinResult);
 
   void prepareInputs(const std::vector<OutputToTransfer> &selectedTransfers,
-                     std::vector<CryptoNote::COMMAND_RPC_GET_RANDOM_OUTPUTS_FOR_AMOUNTS::outs_for_amount> &mixinResult,
+                     std::vector<cn::COMMAND_RPC_GET_RANDOM_OUTPUTS_FOR_AMOUNTS::outs_for_amount> &mixinResult,
                      uint64_t mixIn,
                      std::vector<InputInfo> &keysInfo);
 
@@ -289,17 +289,17 @@ protected:
                                                  uint64_t dustThreshold, const Currency &currency);
   ReceiverAmounts splitAmount(uint64_t amount, const AccountPublicAddress &destination, uint64_t dustThreshold);
 
-  std::unique_ptr<CryptoNote::ITransaction> makeTransaction(const std::vector<ReceiverAmounts> &decomposedOutputs,
+  std::unique_ptr<cn::ITransaction> makeTransaction(const std::vector<ReceiverAmounts> &decomposedOutputs,
                                                             std::vector<InputInfo> &keysInfo, const std::vector<WalletMessage> &messages, const std::string &extra, uint64_t unlockTimestamp, Crypto::SecretKey &transactionSK);
 
-  void sendTransaction(const CryptoNote::Transaction &cryptoNoteTransaction);
+  void sendTransaction(const cn::Transaction &cryptoNoteTransaction);
   size_t validateSaveAndSendTransaction(const ITransactionReader &transaction, const std::vector<WalletTransfer> &destinations, bool isFusion, bool send);
 
   size_t insertBlockchainTransaction(const TransactionInformation &info, int64_t txBalance);
   size_t insertOutgoingTransactionAndPushEvent(const Crypto::Hash &transactionHash, uint64_t fee, const BinaryArray &extra, uint64_t unlockTimestamp);
   void updateTransactionStateAndPushEvent(size_t transactionId, WalletTransactionState state);
-  bool updateWalletTransactionInfo(size_t transactionId, const CryptoNote::TransactionInformation &info, int64_t totalAmount);
-  bool updateWalletDepositInfo(size_t depositId, const CryptoNote::Deposit &info);
+  bool updateWalletTransactionInfo(size_t transactionId, const cn::TransactionInformation &info, int64_t totalAmount);
+  bool updateWalletDepositInfo(size_t depositId, const cn::Deposit &info);
 
 
 
@@ -315,7 +315,7 @@ protected:
   bool eraseTransfersByAddress(size_t transactionId, size_t firstTransferIdx, const std::string &address, bool eraseOutputTransfers);
   bool eraseForeignTransfers(size_t transactionId, size_t firstTransferIdx, const std::unordered_set<std::string> &knownAddresses, bool eraseOutputTransfers);
   void pushBackOutgoingTransfers(size_t txId, const std::vector<WalletTransfer> &destinations);
-  void insertUnlockTransactionJob(const Crypto::Hash &transactionHash, uint32_t blockHeight, CryptoNote::ITransfersContainer *container);
+  void insertUnlockTransactionJob(const Crypto::Hash &transactionHash, uint32_t blockHeight, cn::ITransfersContainer *container);
   void deleteUnlockTransactionJob(const Crypto::Hash &transactionHash);
   void startBlockchainSynchronizer();
   void stopBlockchainSynchronizer();
@@ -365,7 +365,7 @@ protected:
   void filterOutTransactions(WalletTransactions &transactions, WalletTransfers &transfers, std::function<bool(const WalletTransaction &)> &&pred) const;
   void initBlockchain(const Crypto::PublicKey& viewPublicKey);
   void getViewKeyKnownBlocks(const Crypto::PublicKey &viewPublicKey);
-  CryptoNote::AccountPublicAddress getChangeDestination(const std::string &changeDestinationAddress, const std::vector<std::string> &sourceAddresses) const;
+  cn::AccountPublicAddress getChangeDestination(const std::string &changeDestinationAddress, const std::vector<std::string> &sourceAddresses) const;
   bool isMyAddress(const std::string &address) const;
 
   void deleteContainerFromUnlockTransactionJobs(const ITransfersContainer *container);
@@ -415,4 +415,4 @@ protected:
   BlockHashesContainer m_blockchain;
 };
 
-} //namespace CryptoNote
+} //namespace cn

@@ -16,7 +16,7 @@ class single_tx_test_base
 public:
   bool init()
   {
-    using namespace CryptoNote;
+    using namespace cn;
 
     Currency currency = CurrencyBuilder(m_nullLog).currency();
     m_bob.generate();
@@ -31,7 +31,7 @@ public:
 protected:
 
   Logging::LoggerGroup m_nullLog;
-  CryptoNote::AccountBase m_bob;
-  CryptoNote::Transaction m_tx;
+  cn::AccountBase m_bob;
+  cn::Transaction m_tx;
   Crypto::PublicKey m_tx_pub_key;
 };

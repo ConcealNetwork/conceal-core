@@ -13,7 +13,7 @@
 #include "HttpRequest.h"
 #include "HttpResponse.h"
 
-namespace CryptoNote {
+namespace cn {
 
 //Blocking HttpParser
 class HttpParser {
@@ -31,6 +31,6 @@ private:
   void readBody(std::istream& stream, std::string& body, const size_t bodyLen);
 };
 
-} //namespace CryptoNote
+} //namespace cn
 
 #endif /* HTTPPARSER_H_ */

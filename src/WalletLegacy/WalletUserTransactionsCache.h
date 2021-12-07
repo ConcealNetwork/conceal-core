@@ -19,7 +19,7 @@
 #include "WalletLegacy/WalletLegacyEvent.h"
 #include "WalletLegacy/WalletUnconfirmedTransactions.h"
 
-namespace CryptoNote {
+namespace cn {
 class ISerializer;
 }
 
@@ -35,7 +35,7 @@ namespace std {
   };
 }
 
-namespace CryptoNote {
+namespace cn {
 
 typedef std::vector<DepositInfo> UserDeposits;
 
@@ -44,8 +44,8 @@ class WalletUserTransactionsCache
 public:
   explicit WalletUserTransactionsCache(uint64_t mempoolTxLiveTime = 60 * 60 * 24);
 
-  bool serialize(CryptoNote::ISerializer& serializer);
-  void deserializeLegacyV1(CryptoNote::ISerializer& serializer);
+  bool serialize(cn::ISerializer& serializer);
+  void deserializeLegacyV1(cn::ISerializer& serializer);
 
   uint64_t unconfirmedTransactionsAmount() const;
   uint64_t unconfrimedOutsAmount() const;
@@ -64,7 +64,7 @@ public:
                                   uint64_t unlockTime,
                                   const std::vector<TransactionMessage>& messages);
   void updateTransaction(TransactionId transactionId,
-                         const CryptoNote::Transaction& tx,
+                         const cn::Transaction& tx,
                          uint64_t amount,
                          const std::vector<TransactionOutputInformation>& usedOutputs);
   void updateTransactionSendingState(TransactionId transactionId, std::error_code ec);
@@ -143,4 +143,4 @@ private:
   UserPaymentIndex m_paymentsIndex;
 };
 
-} //namespace CryptoNote
+} //namespace cn

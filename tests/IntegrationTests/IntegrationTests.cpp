@@ -12,7 +12,7 @@
 #include "WalletLegacy/WalletLegacy.h"
 #include "WalletLegacyObserver.h"
 
-using namespace CryptoNote;
+using namespace cn;
 using namespace Logging;
 
 extern Tests::Common::BaseFunctionalTestsConfig baseCfg;
@@ -38,7 +38,7 @@ class IntegrationTest : public Tests::Common::BaseFunctionalTests, public ::test
 public:
 
   IntegrationTest() : 
-    currency(CryptoNote::CurrencyBuilder(log).testnet(true).currency()), 
+    currency(cn::CurrencyBuilder(log).testnet(true).currency()), 
     BaseFunctionalTests(currency, dispatcher, baseCfg),
     logger(log, "IntegrationTest") {
   }
@@ -62,7 +62,7 @@ public:
     Logging::ConsoleLogger m_logger;
     for (auto& n: inodes) {
       
-      std::unique_ptr<CryptoNote::IWalletLegacy> wallet(new CryptoNote::WalletLegacy(m_currency, *n, m_logger));
+      std::unique_ptr<cn::IWalletLegacy> wallet(new cn::WalletLegacy(m_currency, *n, m_logger));
       std::unique_ptr<WalletLegacyObserver> observer(new WalletLegacyObserver());
 
       wallet->initAndGenerate(walletPassword);
@@ -112,14 +112,14 @@ public:
       << "Transferring from " << wallets[srcWallet]->getAddress().substr(0, 6) 
       << " to " << wallets[dstWallet]->getAddress().substr(0, 6) << " " << currency.formatAmount(amount);
 
-    CryptoNote::WalletLegacyTransfer tr;
+    cn::WalletLegacyTransfer tr;
     tr.address = wallets[dstWallet]->getAddress();
     tr.amount = amount;
     std::error_code result;
 
-    std::vector<CryptoNote::TransactionMessage> messages;
+    std::vector<cn::TransactionMessage> messages;
     std::string extraString;
-    fee = CryptoNote::parameters::MINIMUM_FEE_V2;
+    fee = cn::parameters::MINIMUM_FEE_V2;
     uint64_t mixIn = 0;
     uint64_t unlockTimestamp = 0;
     uint64_t ttl = 0;
@@ -146,7 +146,7 @@ public:
 
   System::Dispatcher dispatcher;
   std::string walletPassword = "pass";
-  CryptoNote::Currency currency;
+  cn::Currency currency;
   Logging::ConsoleLogger log;
   Logging::LoggerRef logger;
 
@@ -201,10 +201,10 @@ TEST_F(IntegrationTest, BlockPropagationSpeed) {
   makeINodes();
 
   {
-    std::unique_ptr<CryptoNote::INode>& localNode = inodes.front();
-    std::unique_ptr<CryptoNote::INode>& remoteNode = inodes.back();
+    std::unique_ptr<cn::INode>& localNode = inodes.front();
+    std::unique_ptr<cn::INode>& remoteNode = inodes.back();
 
-    std::unique_ptr<CryptoNote::IWalletLegacy> wallet;
+    std::unique_ptr<cn::IWalletLegacy> wallet;
     makeWallet(wallet, localNode);
 
     NodeObserver localObserver(*localNode);

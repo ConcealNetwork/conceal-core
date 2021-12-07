@@ -11,7 +11,7 @@
 
 #include "NodeRpcProxy/NodeRpcProxy.h"
 
-using namespace CryptoNote;
+using namespace cn;
 using namespace Logging;
 
 #undef ERROR
@@ -110,7 +110,7 @@ int main(int argc, const char** argv) {
     logger(ERROR) << "shutdown error";
   }
 
-  CryptoNote::Transaction tx;
+  cn::Transaction tx;
   nodeProxy.relayTransaction(tx, [&](std::error_code ec) {
     if (!ec) {
       logger(INFO) << "relayTransaction called successfully";

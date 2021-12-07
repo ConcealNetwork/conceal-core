@@ -20,7 +20,7 @@ class BaseTest : public testing::Test {
 public:
 
   BaseTest() :
-    currency(CryptoNote::CurrencyBuilder(logger).testnet(true).currency()),
+    currency(cn::CurrencyBuilder(logger).testnet(true).currency()),
     network(dispatcher, currency) {
   }
 
@@ -36,7 +36,7 @@ protected:
 
   System::Dispatcher dispatcher;
   Logging::ConsoleLogger logger;
-  CryptoNote::Currency currency;
+  cn::Currency currency;
   TestNetwork network;
 };
 

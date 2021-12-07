@@ -13,12 +13,12 @@
 #include <System/Event.h>
 #include <System/RemoteContext.h>
 
-#include "CryptoNote.h"
+#include "cn.h"
 #include "CryptoNoteCore/Difficulty.h"
 
 #include "Logging/LoggerRef.h"
 
-namespace CryptoNote {
+namespace cn {
 
 struct BlockMiningParameters {
   Block blockTemplate;
@@ -53,4 +53,4 @@ private:
   bool setStateBlockFound();
 };
 
-} //namespace CryptoNote
+} //namespace cn

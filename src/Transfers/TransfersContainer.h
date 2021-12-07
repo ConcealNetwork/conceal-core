@@ -26,7 +26,7 @@
 #include "ITransaction.h"
 #include "ITransfersContainer.h"
 
-namespace CryptoNote {
+namespace cn {
 
 struct TransactionOutputInformationIn;
 
@@ -106,7 +106,7 @@ struct TransactionOutputInformationEx : public TransactionOutputInformationIn {
 
   TransactionOutputKey getTransactionOutputKey() const { return TransactionOutputKey {transactionHash, outputInTransaction}; }
 
-  void serialize(CryptoNote::ISerializer& s) {
+  void serialize(cn::ISerializer& s) {
     s(reinterpret_cast<uint8_t&>(type), "type");
     s(amount, "");
     serializeGlobalOutputIndex(s, globalOutputIndex, "");
@@ -185,7 +185,7 @@ class TransfersContainer : public ITransfersContainer {
 
 public:
 
-  TransfersContainer(const CryptoNote::Currency& currency, size_t transactionSpendableAge);
+  TransfersContainer(const cn::Currency& currency, size_t transactionSpendableAge);
 
   bool addTransaction(const TransactionBlockInfo& block, const ITransactionReader& tx,
                       const std::vector<TransactionOutputInformationIn>& transfers,
@@ -372,7 +372,7 @@ private:
 
   uint32_t m_currentHeight; // current height is needed to check if a transfer is unlocked
   size_t m_transactionSpendableAge;
-  const CryptoNote::Currency& m_currency;
+  const cn::Currency& m_currency;
   mutable std::mutex m_mutex;
 };
 

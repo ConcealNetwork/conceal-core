@@ -15,7 +15,7 @@
 #include <System/Dispatcher.h>
 
 
-namespace CryptoNote {
+namespace cn {
 class core;
 class CryptoNoteProtocolHandler;
 class NodeServer;
@@ -26,28 +26,28 @@ namespace Tests {
 
 class InProcTestNode : public TestNode {
 public:
-  InProcTestNode(const TestNodeConfiguration& cfg, const CryptoNote::Currency& currency);
+  InProcTestNode(const TestNodeConfiguration& cfg, const cn::Currency& currency);
   ~InProcTestNode();
 
   virtual bool startMining(size_t threadsCount, const std::string &address) override;
   virtual bool stopMining() override;
   virtual bool stopDaemon() override;
-  virtual bool getBlockTemplate(const std::string &minerAddress, CryptoNote::Block &blockTemplate, uint64_t &difficulty) override;
+  virtual bool getBlockTemplate(const std::string &minerAddress, cn::Block &blockTemplate, uint64_t &difficulty) override;
   virtual bool submitBlock(const std::string& block) override;
   virtual bool getTailBlockId(Crypto::Hash &tailBlockId) override;
-  virtual bool makeINode(std::unique_ptr<CryptoNote::INode>& node) override;
+  virtual bool makeINode(std::unique_ptr<cn::INode>& node) override;
   virtual uint64_t getLocalHeight() override;
 
 private:
 
   void workerThread(std::promise<std::string>& initPromise);
 
-  std::unique_ptr<CryptoNote::core> core;
-  std::unique_ptr<CryptoNote::CryptoNoteProtocolHandler> protocol;
-  std::unique_ptr<CryptoNote::NodeServer> p2pNode;
+  std::unique_ptr<cn::core> core;
+  std::unique_ptr<cn::CryptoNoteProtocolHandler> protocol;
+  std::unique_ptr<cn::NodeServer> p2pNode;
 
   std::thread m_thread;
-  const CryptoNote::Currency& m_currency;
+  const cn::Currency& m_currency;
   TestNodeConfiguration m_cfg;
 };
 

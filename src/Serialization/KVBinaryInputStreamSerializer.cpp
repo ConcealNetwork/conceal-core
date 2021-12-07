@@ -14,7 +14,7 @@
 #include "KVBinaryCommon.h"
 
 using namespace Common;
-using namespace CryptoNote;
+using namespace cn;
 
 namespace {
 
@@ -130,6 +130,7 @@ JsonValue loadValue(Common::IInputStream& stream, uint8_t type) {
   case BIN_KV_SERIALIZE_TYPE_ARRAY:  return loadArray(stream, type);
   default:
     throw std::runtime_error("Unknown data type");
+    break;
   }
 }
 

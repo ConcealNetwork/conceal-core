@@ -29,7 +29,7 @@
 #include "version.h"
 
 namespace po = boost::program_options;
-using namespace CryptoNote;
+using namespace cn;
 
 #ifndef ENDL
 #define ENDL std::endl
@@ -184,8 +184,8 @@ bool handle_get_daemon_info(po::variables_map& vm) {
     System::Dispatcher dispatcher;
     HttpClient httpClient(dispatcher, command_line::get_arg(vm, arg_ip), command_line::get_arg(vm, arg_rpc_port));
 
-    CryptoNote::COMMAND_RPC_GET_INFO::request req;
-    CryptoNote::COMMAND_RPC_GET_INFO::response res;
+    cn::COMMAND_RPC_GET_INFO::request req;
+    cn::COMMAND_RPC_GET_INFO::response res;
 
     invokeJsonCommand(httpClient, "/getinfo", req, res); // TODO: timeout
 

@@ -12,7 +12,7 @@
 #include <CryptoNoteCore/CryptoNoteFormatUtils.h>
 #include <CryptoNoteCore/TransactionApi.h>
 
-using namespace CryptoNote;
+using namespace cn;
 
 class CryptoNoteBasicTest : public testing::Test {
 public:

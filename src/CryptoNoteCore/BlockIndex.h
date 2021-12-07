@@ -11,7 +11,7 @@
 #include "crypto/hash.h"
 #include <vector>
 
-namespace CryptoNote
+namespace cn
 {
   class ISerializer;
 

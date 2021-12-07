@@ -7,7 +7,7 @@
 #include "CryptoNoteCore/CryptoNoteTools.h"
 #include <Common/Math.h>
 
-using namespace CryptoNote;
+using namespace cn;
 
 namespace
 {
@@ -42,7 +42,7 @@ namespace
 
 gen_block_reward::gen_block_reward()
   : m_invalid_block_index(0) {
-  CryptoNote::CurrencyBuilder currencyBuilder(m_logger);
+  cn::CurrencyBuilder currencyBuilder(m_logger);
   currencyBuilder.maxBlockSizeInitial(std::numeric_limits<size_t>::max() / 2);
   m_currency = currencyBuilder.currency();
 
@@ -151,7 +151,7 @@ bool gen_block_reward::generate(std::vector<test_event_entry>& events) const
   return true;
 }
 
-bool gen_block_reward::check_block_verification_context(const CryptoNote::block_verification_context& bvc, size_t event_idx, const CryptoNote::Block& /*blk*/)
+bool gen_block_reward::check_block_verification_context(const cn::block_verification_context& bvc, size_t event_idx, const cn::Block& /*blk*/)
 {
   if (m_invalid_block_index == event_idx)
   {
@@ -164,19 +164,19 @@ bool gen_block_reward::check_block_verification_context(const CryptoNote::block_
   }
 }
 
-bool gen_block_reward::mark_invalid_block(CryptoNote::core& /*c*/, size_t ev_index, const std::vector<test_event_entry>& /*events*/)
+bool gen_block_reward::mark_invalid_block(cn::core& /*c*/, size_t ev_index, const std::vector<test_event_entry>& /*events*/)
 {
   m_invalid_block_index = ev_index + 1;
   return true;
 }
 
-bool gen_block_reward::mark_checked_block(CryptoNote::core& /*c*/, size_t ev_index, const std::vector<test_event_entry>& /*events*/)
+bool gen_block_reward::mark_checked_block(cn::core& /*c*/, size_t ev_index, const std::vector<test_event_entry>& /*events*/)
 {
   m_checked_blocks_indices.push_back(ev_index - 1);
   return true;
 }
 
-bool gen_block_reward::check_block_rewards(CryptoNote::core& /*c*/, size_t /*ev_index*/, const std::vector<test_event_entry>& events)
+bool gen_block_reward::check_block_rewards(cn::core& /*c*/, size_t /*ev_index*/, const std::vector<test_event_entry>& events)
 {
   DEFINE_TESTS_ERROR_CONTEXT("gen_block_reward_without_txs::check_block_rewards");
 

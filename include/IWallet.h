@@ -13,7 +13,7 @@
 #include "CryptoNote.h"
 #include "CryptoNoteConfig.h"
 
-namespace CryptoNote
+namespace cn
 {
 
 typedef size_t DepositId;
@@ -142,8 +142,8 @@ struct TransactionParameters
   std::vector<std::string> sourceAddresses;
   std::vector<WalletOrder> destinations;
   std::vector<WalletMessage> messages;
-  uint64_t fee = CryptoNote::parameters::MINIMUM_FEE_V2;
-  uint64_t mixIn = CryptoNote::parameters::MINIMUM_MIXIN;
+  uint64_t fee = cn::parameters::MINIMUM_FEE_V2;
+  uint64_t mixIn = cn::parameters::MINIMUM_MIXIN;
   std::string extra;
   DepositId firstDepositId = WALLET_INVALID_DEPOSIT_ID;
   size_t depositCount = 0;
@@ -246,4 +246,4 @@ public:
   virtual WalletEvent getEvent() = 0;
 };
 
-} // namespace CryptoNote
+} // namespace cn

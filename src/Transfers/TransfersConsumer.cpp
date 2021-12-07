@@ -31,7 +31,7 @@ std::mutex seen_mutex;
 
 namespace {
 
-using namespace CryptoNote;
+using namespace cn;
 
 void checkOutputKey(
   const KeyDerivation& derivation,
@@ -91,7 +91,7 @@ void findMyOutputs(
   }
 }
 
-std::vector<Crypto::Hash> getBlockHashes(const CryptoNote::CompleteBlock* blocks, size_t count) {
+std::vector<Crypto::Hash> getBlockHashes(const cn::CompleteBlock* blocks, size_t count) {
   std::vector<Crypto::Hash> result;
   result.reserve(count);
 
@@ -104,9 +104,9 @@ std::vector<Crypto::Hash> getBlockHashes(const CryptoNote::CompleteBlock* blocks
 
 }
 
-namespace CryptoNote {
+namespace cn {
 
-TransfersConsumer::TransfersConsumer(const CryptoNote::Currency& currency, INode& node, Logging::ILogger& logger, const SecretKey& viewSecret) :
+TransfersConsumer::TransfersConsumer(const cn::Currency& currency, INode& node, Logging::ILogger& logger, const SecretKey& viewSecret) :
   m_node(node), m_viewSecret(viewSecret), m_currency(currency), m_logger(logger, "TransfersConsumer") {
   updateSyncStart();
 }
@@ -418,8 +418,8 @@ std::error_code createTransfers(
       KeyOutput out;
       tx.getOutput(idx, out, amount);
 
-      CryptoNote::KeyPair in_ephemeral;
-      CryptoNote::generate_key_image_helper(
+      cn::KeyPair in_ephemeral;
+      cn::generate_key_image_helper(
         account,
         txPubKey,
         idx,

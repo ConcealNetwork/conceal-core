@@ -14,7 +14,7 @@
 
 #include <fstream>
 
-namespace CryptoNote {
+namespace cn {
 
 template <typename T>
 BinaryArray storeToBinary(const T& obj) {
@@ -43,7 +43,7 @@ bool storeToBinaryFile(const T& obj, const std::string& filename) {
 
     Common::StdOutputStream stream(dataFile);
     BinaryOutputStreamSerializer out(stream);
-    CryptoNote::serialize(const_cast<T&>(obj), out);
+    cn::serialize(const_cast<T&>(obj), out);
       
     if (dataFile.fail()) {
       return false;

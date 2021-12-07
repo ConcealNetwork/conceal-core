@@ -16,9 +16,9 @@
 #include "CryptoNoteCore/TransactionExtra.h"
 #include "CryptoNoteConfig.h"
 
-namespace CryptoNote {
+namespace cn {
 
-BlockchainExplorerDataBuilder::BlockchainExplorerDataBuilder(CryptoNote::ICore& core, CryptoNote::ICryptoNoteProtocolQuery& protocol) :
+BlockchainExplorerDataBuilder::BlockchainExplorerDataBuilder(cn::ICore& core, cn::ICryptoNoteProtocolQuery& protocol) :
 core(core),
 protocol(protocol) {
 }
@@ -224,7 +224,7 @@ bool BlockchainExplorerDataBuilder::fillTransactionDetails(const Transaction& tr
     transactionDetails.fee = 0;
     transactionDetails.mixin = 0;
   } else {
-    transactionDetails.fee = inputsAmount < transactionDetails.totalOutputsAmount ? CryptoNote::parameters::MINIMUM_FEE : core.currency().getTransactionFee(transaction, transactionDetails.blockHeight);
+    transactionDetails.fee = inputsAmount < transactionDetails.totalOutputsAmount ? cn::parameters::MINIMUM_FEE : core.currency().getTransactionFee(transaction, transactionDetails.blockHeight);
     uint64_t mixin;
     if (!getMixin(transaction, mixin)) {
       return false;

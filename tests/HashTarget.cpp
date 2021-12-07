@@ -11,7 +11,7 @@
 #include "CryptoNoteCore/Difficulty.h"
 
 using namespace std;
-using CryptoNote::check_hash;
+using cn::check_hash;
 
 int main(int argc, char *argv[]) {
   Crypto::Hash h;

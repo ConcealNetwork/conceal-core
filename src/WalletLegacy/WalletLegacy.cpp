@@ -42,11 +42,11 @@ void throwNotDefined() {
 class ContextCounterHolder
 {
 public:
-  ContextCounterHolder(CryptoNote::WalletAsyncContextCounter& shutdowner) : m_shutdowner(shutdowner) {}
+  ContextCounterHolder(cn::WalletAsyncContextCounter& shutdowner) : m_shutdowner(shutdowner) {}
   ~ContextCounterHolder() { m_shutdowner.delAsyncContext(); }
 
 private:
-  CryptoNote::WalletAsyncContextCounter& m_shutdowner;
+  cn::WalletAsyncContextCounter& m_shutdowner;
 };
 
 template <typename F>
@@ -55,7 +55,7 @@ void runAtomic(std::mutex& mutex, F f) {
   f();
 }
 
-class InitWaiter : public CryptoNote::IWalletLegacyObserver {
+class InitWaiter : public cn::IWalletLegacyObserver {
 public:
   InitWaiter() : future(promise.get_future()) {}
 
@@ -72,7 +72,7 @@ private:
 };
 
 
-class SaveWaiter : public CryptoNote::IWalletLegacyObserver {
+class SaveWaiter : public cn::IWalletLegacyObserver {
 public:
   SaveWaiter() : future(promise.get_future()) {}
 
@@ -89,9 +89,9 @@ private:
   std::future<std::error_code> future;
 };
 
-uint64_t calculateDepositsAmount(const std::vector<CryptoNote::TransactionOutputInformation>& transfers, const CryptoNote::Currency& currency, const std::vector<uint32_t> heights) {
+uint64_t calculateDepositsAmount(const std::vector<cn::TransactionOutputInformation>& transfers, const cn::Currency& currency, const std::vector<uint32_t> heights) {
 	int index = 0;
-  return std::accumulate(transfers.begin(), transfers.end(), static_cast<uint64_t>(0), [&currency, &index, heights] (uint64_t sum, const CryptoNote::TransactionOutputInformation& deposit) {
+  return std::accumulate(transfers.begin(), transfers.end(), static_cast<uint64_t>(0), [&currency, &index, heights] (uint64_t sum, const cn::TransactionOutputInformation& deposit) {
     if (deposit.term % 64800 != 0) 
     {
       return sum + deposit.amount + currency.calculateInterest(deposit.amount, deposit.term, heights[index++]);
@@ -104,9 +104,9 @@ uint64_t calculateDepositsAmount(const std::vector<CryptoNote::TransactionOutput
   });
 }
 
-uint64_t calculateInvestmentsAmount(const std::vector<CryptoNote::TransactionOutputInformation>& transfers, const CryptoNote::Currency& currency, const std::vector<uint32_t> heights) {
+uint64_t calculateInvestmentsAmount(const std::vector<cn::TransactionOutputInformation>& transfers, const cn::Currency& currency, const std::vector<uint32_t> heights) {
 	int index = 0;
-  return std::accumulate(transfers.begin(), transfers.end(), static_cast<uint64_t>(0), [&currency, &index, heights] (uint64_t sum, const CryptoNote::TransactionOutputInformation& deposit) {
+  return std::accumulate(transfers.begin(), transfers.end(), static_cast<uint64_t>(0), [&currency, &index, heights] (uint64_t sum, const cn::TransactionOutputInformation& deposit) {
     if (deposit.term % 64800 == 0) 
     {
       return sum + deposit.amount + currency.calculateInterest(deposit.amount, deposit.term, heights[index++]);
@@ -122,9 +122,9 @@ uint64_t calculateInvestmentsAmount(const std::vector<CryptoNote::TransactionOut
 
 } //namespace
 
-namespace CryptoNote {
+namespace cn {
 
-class SyncStarter : public CryptoNote::IWalletLegacyObserver {
+class SyncStarter : public cn::IWalletLegacyObserver {
 public:
   SyncStarter(BlockchainSynchronizer& sync) : m_sync(sync) {}
   virtual ~SyncStarter() {}
@@ -138,7 +138,7 @@ public:
   BlockchainSynchronizer& m_sync;
 };
 
-WalletLegacy::WalletLegacy(const CryptoNote::Currency& currency, INode& node, Logging::ILogger& loggerGroup) :
+WalletLegacy::WalletLegacy(const cn::Currency& currency, INode& node, Logging::ILogger& loggerGroup) :
   m_state(NOT_INITIALIZED),
   m_currency(currency),
   m_node(node),
@@ -238,7 +238,7 @@ void WalletLegacy::initAndLoad(std::istream& source, const std::string& password
 void WalletLegacy::initSync() {
   AccountSubscription sub;
   sub.keys = reinterpret_cast<const AccountKeys&>(m_account.getAccountKeys());
-  sub.transactionSpendableAge = CryptoNote::parameters::CRYPTONOTE_DEFAULT_TX_SPENDABLE_AGE;
+  sub.transactionSpendableAge = cn::parameters::CRYPTONOTE_DEFAULT_TX_SPENDABLE_AGE;
   sub.syncStart.height = 0;
   sub.syncStart.timestamp = m_account.get_createtime() - ACCOUN_CREATE_TIME_ACCURACY;
 
@@ -287,7 +287,7 @@ void WalletLegacy::doLoad(std::istream& source) {
     return;
   } catch (std::exception&) {
     runAtomic(m_cacheMutex, [this] () {this->m_state = WalletLegacy::NOT_INITIALIZED;} );
-    m_observerManager.notify(&IWalletLegacyObserver::initCompleted, make_error_code(CryptoNote::error::INTERNAL_WALLET_ERROR));
+    m_observerManager.notify(&IWalletLegacyObserver::initCompleted, make_error_code(cn::error::INTERNAL_WALLET_ERROR));
     return;
   }
 
@@ -363,14 +363,14 @@ std::vector<Payments> WalletLegacy::getTransactionsByPaymentIds(const std::vecto
 
 void WalletLegacy::save(std::ostream& destination, bool saveDetailed, bool saveCache) {
   if(m_isStopping) {
-    m_observerManager.notify(&IWalletLegacyObserver::saveCompleted, make_error_code(CryptoNote::error::OPERATION_CANCELLED));
+    m_observerManager.notify(&IWalletLegacyObserver::saveCompleted, make_error_code(cn::error::OPERATION_CANCELLED));
     return;
   }
 
   {
     std::unique_lock<std::mutex> lock(m_cacheMutex);
 
-    throwIf(m_state != INITIALIZED, CryptoNote::error::WRONG_STATE);
+    throwIf(m_state != INITIALIZED, cn::error::WRONG_STATE);
 
     m_state = SAVING;
   }
@@ -408,7 +408,7 @@ void WalletLegacy::doSave(std::ostream& destination, bool saveDetailed, bool sav
   }
   catch (std::exception&) {
     runAtomic(m_cacheMutex, [this] () {this->m_state = WalletLegacy::INITIALIZED;} );
-    m_observerManager.notify(&IWalletLegacyObserver::saveCompleted, make_error_code(CryptoNote::error::INTERNAL_WALLET_ERROR));
+    m_observerManager.notify(&IWalletLegacyObserver::saveCompleted, make_error_code(cn::error::INTERNAL_WALLET_ERROR));
     return;
   }
 
@@ -421,7 +421,7 @@ std::error_code WalletLegacy::changePassword(const std::string& oldPassword, con
   throwIfNotInitialised();
 
   if (m_password.compare(oldPassword))
-    return make_error_code(CryptoNote::error::WRONG_PASSWORD);
+    return make_error_code(cn::error::WRONG_PASSWORD);
 
   //we don't let the user to change the password while saving
   m_password = newPassword;
@@ -570,19 +570,19 @@ TransactionId WalletLegacy::sendTransaction(Crypto::SecretKey& transactionSK,
      is larger than 0 */
   if (ttl == 0) 
   {
-    fee = CryptoNote::parameters::MINIMUM_FEE_V2;
+    fee = cn::parameters::MINIMUM_FEE_V2;
   }
 
   /* This is the logic that determins if it is an optimization transaction */
   bool optimize = false;
   if (transfers.empty()) 
   {
-    CryptoNote::WalletLegacyTransfer transfer;
+    cn::WalletLegacyTransfer transfer;
     transfer.address = getAddress();
     transfer.amount = 0;
     transfers.push_back(transfer);
     optimize = true;
-    fee = CryptoNote::parameters::MINIMUM_FEE_V2;
+    fee = cn::parameters::MINIMUM_FEE_V2;
   }
 
   TransactionId txId = 0;
@@ -752,7 +752,7 @@ TransactionId WalletLegacy::sendFusionTransaction(const std::list<TransactionOut
   destination.amount = 0;
 
   /* For transaction pool differentiation, fusion and optimization should be 50 X */
-  fee = CryptoNote::parameters::MINIMUM_FEE_V2;
+  fee = cn::parameters::MINIMUM_FEE_V2;
   
   for (auto& out : fusionInputs) {
     destination.amount += out.amount;
@@ -782,7 +782,7 @@ TransactionId WalletLegacy::deposit(uint32_t term, uint64_t amount, uint64_t fee
   std::unique_ptr<WalletRequest> request;
   std::deque<std::unique_ptr<WalletLegacyEvent>> events;
 
-  fee = CryptoNote::parameters::MINIMUM_FEE_V2;
+  fee = cn::parameters::MINIMUM_FEE_V2;
 
   {
     std::unique_lock<std::mutex> lock(m_cacheMutex);
@@ -810,7 +810,7 @@ TransactionId WalletLegacy::withdrawDeposits(const std::vector<DepositId>& depos
   std::unique_ptr<WalletRequest> request;
   std::deque<std::unique_ptr<WalletLegacyEvent>> events;
 
-  fee = CryptoNote::parameters::MINIMUM_FEE;
+  fee = cn::parameters::MINIMUM_FEE;
 
   {
     std::unique_lock<std::mutex> lock(m_cacheMutex);
@@ -902,7 +902,7 @@ void WalletLegacy::synchronizationCallback(WalletRequest::Callback callback, std
 }
 
 std::error_code WalletLegacy::cancelTransaction(size_t transactionId) {
-  return make_error_code(CryptoNote::error::TX_CANCEL_IMPOSSIBLE);
+  return make_error_code(cn::error::TX_CANCEL_IMPOSSIBLE);
 }
 
 void WalletLegacy::synchronizationProgressUpdated(uint32_t current, uint32_t total) {
@@ -1014,7 +1014,7 @@ void WalletLegacy::onTransfersLocked(ITransfersSubscription* object, const std::
 
 void WalletLegacy::throwIfNotInitialised() {
   if (m_state == NOT_INITIALIZED || m_state == LOADING) {
-    throw std::system_error(make_error_code(CryptoNote::error::NOT_INITIALIZED));
+    throw std::system_error(make_error_code(cn::error::NOT_INITIALIZED));
   }
   assert(m_transferDetails);
 }
@@ -1163,7 +1163,7 @@ std::unique_ptr<WalletLegacyEvent> WalletLegacy::getPendingBalanceChangedEvent()
 
 void WalletLegacy::getAccountKeys(AccountKeys& keys) {
   if (m_state == NOT_INITIALIZED) {
-    throw std::system_error(make_error_code(CryptoNote::error::NOT_INITIALIZED));
+    throw std::system_error(make_error_code(cn::error::NOT_INITIALIZED));
   }
 
   keys = m_account.getAccountKeys();
@@ -1284,7 +1284,7 @@ Crypto::SecretKey WalletLegacy::getTxKey(Crypto::Hash &txid)
   {
     auto getTransactionCompleted = std::promise<std::error_code>();
     auto getTransactionWaitFuture = getTransactionCompleted.get_future();
-    CryptoNote::Transaction tx;
+    cn::Transaction tx;
     m_node.getTransaction(std::move(txid), std::ref(tx),
                           [&getTransactionCompleted](std::error_code ec) {
                             auto detachedPromise = std::move(getTransactionCompleted);
@@ -1316,7 +1316,7 @@ bool WalletLegacy::get_tx_key(Crypto::Hash& txid, Crypto::SecretKey& txSecretKey
   return true;
 }
 
-bool WalletLegacy::getTxProof(Crypto::Hash& txid, CryptoNote::AccountPublicAddress& address, Crypto::SecretKey& tx_key, std::string& sig_str) {
+bool WalletLegacy::getTxProof(Crypto::Hash& txid, cn::AccountPublicAddress& address, Crypto::SecretKey& tx_key, std::string& sig_str) {
   Crypto::KeyImage p = *reinterpret_cast<Crypto::KeyImage*>(&address.viewPublicKey);
   Crypto::KeyImage k = *reinterpret_cast<Crypto::KeyImage*>(&tx_key);
   Crypto::KeyImage pk = Crypto::scalarmultKey(p, k);
@@ -1343,7 +1343,7 @@ bool compareTransactionOutputInformationByAmount(const TransactionOutputInformat
 }
 
 std::string WalletLegacy::getReserveProof(const uint64_t &reserve, const std::string &message) {
-	const CryptoNote::AccountKeys keys = m_account.getAccountKeys();
+	const cn::AccountKeys keys = m_account.getAccountKeys();
 	Crypto::SecretKey viewSecretKey = keys.viewSecretKey;
 
 	if (keys.spendSecretKey == NULL_SECRET_KEY) {
@@ -1376,10 +1376,10 @@ std::string WalletLegacy::getReserveProof(const uint64_t &reserve, const std::st
 	
 	// compute signature prefix hash
 	std::string prefix_data = message;
-	prefix_data.append((const char*)&keys.address, sizeof(CryptoNote::AccountPublicAddress));
+	prefix_data.append((const char*)&keys.address, sizeof(cn::AccountPublicAddress));
 	
 	std::vector<Crypto::KeyImage> kimages;
-	CryptoNote::KeyPair ephemeral;
+	cn::KeyPair ephemeral;
 
 	for (size_t i = 0; i < selected_transfers.size(); ++i) {
 
@@ -1389,7 +1389,7 @@ std::string WalletLegacy::getReserveProof(const uint64_t &reserve, const std::st
 
 		// derive ephemeral secret key
 		Crypto::KeyImage ki;
-		const bool r = CryptoNote::generate_key_image_helper(m_account.getAccountKeys(), td.transactionPublicKey, td.outputInTransaction, ephemeral, ki);
+		const bool r = cn::generate_key_image_helper(m_account.getAccountKeys(), td.transactionPublicKey, td.outputInTransaction, ephemeral, ki);
 		if (!r) {
 			throw std::runtime_error("Failed to generate key image");
 		}
@@ -1428,9 +1428,9 @@ std::string WalletLegacy::getReserveProof(const uint64_t &reserve, const std::st
 
 		// derive ephemeral secret key
 		Crypto::KeyImage ki;
-		CryptoNote::KeyPair ephemeral;
+		cn::KeyPair ephemeral;
 
-		const bool r = CryptoNote::generate_key_image_helper(m_account.getAccountKeys(), td.transactionPublicKey, td.outputInTransaction, ephemeral, ki);
+		const bool r = cn::generate_key_image_helper(m_account.getAccountKeys(), td.transactionPublicKey, td.outputInTransaction, ephemeral, ki);
 		if (!r) {
 			throw std::runtime_error("Failed to generate key image");
 		}
@@ -1471,4 +1471,4 @@ bool WalletLegacy::checkWalletPassword(std::istream& source, const std::string& 
 //KK
 
 
-} //namespace CryptoNote
+} //namespace cn

@@ -28,7 +28,7 @@
 
 using namespace Logging;
 
-namespace CryptoNote
+namespace cn
 {
 
   miner::miner(const Currency& currency, IMinerHandler& handler, Logging::ILogger& log) :
@@ -78,7 +78,7 @@ namespace CryptoNote
     Block bl = boost::value_initialized<Block>();
     difficulty_type di = 0;
     uint32_t height;
-    CryptoNote::BinaryArray extra_nonce;
+    cn::BinaryArray extra_nonce;
 
     if(m_extra_messages.size() && m_config.current_extra_message_index < m_extra_messages.size()) {
       extra_nonce = m_extra_messages[m_config.current_extra_message_index];
@@ -162,7 +162,7 @@ namespace CryptoNote
       m_config = boost::value_initialized<decltype(m_config)>();
 
       std::string filebuf;
-      if (Common::loadFileToString(m_config_folder_path + "/" + CryptoNote::parameters::MINER_CONFIG_FILE_NAME, filebuf)) {
+      if (Common::loadFileToString(m_config_folder_path + "/" + cn::parameters::MINER_CONFIG_FILE_NAME, filebuf)) {
         loadFromJson(m_config, filebuf);
       }
 
@@ -389,7 +389,7 @@ namespace CryptoNote
           --m_config.current_extra_message_index;
         } else {
           //success update, lets update config
-          Common::saveStringToFile(m_config_folder_path + "/" + CryptoNote::parameters::MINER_CONFIG_FILE_NAME, storeToJson(m_config));
+          Common::saveStringToFile(m_config_folder_path + "/" + cn::parameters::MINER_CONFIG_FILE_NAME, storeToJson(m_config));
         }
       }
 

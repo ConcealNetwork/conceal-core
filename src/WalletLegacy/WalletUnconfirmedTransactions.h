@@ -18,7 +18,7 @@
 #include "CryptoNoteCore/CryptoNoteBasic.h"
 #include "WalletLegacy/WalletUnconfirmedTransactions.h"
 
-namespace CryptoNote {
+namespace cn {
 class ISerializer;
 
 typedef std::pair<Crypto::PublicKey, size_t> TransactionOutputId;
@@ -27,15 +27,15 @@ typedef std::pair<Crypto::PublicKey, size_t> TransactionOutputId;
 namespace std {
 
 template<> 
-struct hash<CryptoNote::TransactionOutputId> {
-  size_t operator()(const CryptoNote::TransactionOutputId &_v) const {    
+struct hash<cn::TransactionOutputId> {
+  size_t operator()(const cn::TransactionOutputId &_v) const {    
     return hash<Crypto::PublicKey>()(_v.first) ^ _v.second;
   } 
 }; 
 
 }
 
-namespace CryptoNote {
+namespace cn {
 
 
 struct UnconfirmedTransferDetails {
@@ -43,7 +43,7 @@ struct UnconfirmedTransferDetails {
   UnconfirmedTransferDetails() :
     amount(0), sentTime(0), transactionId(WALLET_LEGACY_INVALID_TRANSACTION_ID) {}
 
-  CryptoNote::Transaction tx;
+  cn::Transaction tx;
   uint64_t amount;
   uint64_t outsAmount;
   time_t sentTime;
@@ -63,12 +63,12 @@ public:
 
   explicit WalletUnconfirmedTransactions(uint64_t uncofirmedTransactionsLiveTime);
 
-  bool serialize(CryptoNote::ISerializer& s);
-  bool deserializeV1(CryptoNote::ISerializer& s);
+  bool serialize(cn::ISerializer& s);
+  bool deserializeV1(cn::ISerializer& s);
 
   bool findTransactionId(const Crypto::Hash& hash, TransactionId& id);
   void erase(const Crypto::Hash& hash);
-  void add(const CryptoNote::Transaction& tx, TransactionId transactionId, 
+  void add(const cn::Transaction& tx, TransactionId transactionId, 
     uint64_t amount, const std::vector<TransactionOutputInformation>& usedOutputs);
   void updateTransactionId(const Crypto::Hash& hash, TransactionId id);
 
@@ -110,4 +110,4 @@ private:
   std::unordered_map<Crypto::Hash, UnconfirmedSpentDepositDetails> m_spentDeposits;
 };
 
-} // namespace CryptoNote
+} // namespace cn

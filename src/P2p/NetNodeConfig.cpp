@@ -14,7 +14,7 @@
 #include "crypto/crypto.h"
 #include "CryptoNoteConfig.h"
 
-namespace CryptoNote {
+namespace cn {
 namespace {
 
 const command_line::arg_descriptor<std::string> arg_p2p_bind_ip        = {"p2p-bind-ip", "Interface for p2p network protocol", "0.0.0.0"};
@@ -94,7 +94,7 @@ bool NetNodeConfig::init(const boost::program_options::variables_map& vm)
     configFolder = command_line::get_arg(vm, command_line::arg_data_dir);
   }
 
-  p2pStateFilename = CryptoNote::parameters::P2P_NET_DATA_FILENAME;
+  p2pStateFilename = cn::parameters::P2P_NET_DATA_FILENAME;
 
   if (command_line::has_arg(vm, arg_p2p_add_peer)) {
     std::vector<std::string> perrs = command_line::get_arg(vm, arg_p2p_add_peer);

@@ -9,7 +9,7 @@
 #include <string>
 #include <system_error>
 
-namespace CryptoNote {
+namespace cn {
 namespace error {
 
 enum InProcessNodeErrorCodes {
@@ -51,8 +51,8 @@ private:
 };
 
 } //namespace error
-} //namespace CryptoNote
+} //namespace cn
 
-inline std::error_code make_error_code(CryptoNote::error::InProcessNodeErrorCodes e) {
-  return std::error_code(static_cast<int>(e), CryptoNote::error::InProcessNodeErrorCategory::INSTANCE);
+inline std::error_code make_error_code(cn::error::InProcessNodeErrorCodes e) {
+  return std::error_code(static_cast<int>(e), cn::error::InProcessNodeErrorCategory::INSTANCE);
 }

@@ -31,7 +31,7 @@ using namespace Common;
 
 namespace {
 
-using namespace CryptoNote;
+using namespace cn;
 using namespace Common;
 
 size_t getSignaturesCount(const TransactionInput& input) {
@@ -45,41 +45,41 @@ size_t getSignaturesCount(const TransactionInput& input) {
 }
 
 struct BinaryVariantTagGetter: boost::static_visitor<uint8_t> {
-  uint8_t operator()(const CryptoNote::BaseInput) { return  0xff; }
-  uint8_t operator()(const CryptoNote::KeyInput) { return  0x2; }
-  uint8_t operator()(const CryptoNote::MultisignatureInput) { return  0x3; }
-  uint8_t operator()(const CryptoNote::KeyOutput) { return  0x2; }
-  uint8_t operator()(const CryptoNote::MultisignatureOutput) { return  0x3; }
-  uint8_t operator()(const CryptoNote::Transaction) { return  0xcc; }
-  uint8_t operator()(const CryptoNote::Block) { return  0xbb; }
+  uint8_t operator()(const cn::BaseInput) { return  0xff; }
+  uint8_t operator()(const cn::KeyInput) { return  0x2; }
+  uint8_t operator()(const cn::MultisignatureInput) { return  0x3; }
+  uint8_t operator()(const cn::KeyOutput) { return  0x2; }
+  uint8_t operator()(const cn::MultisignatureOutput) { return  0x3; }
+  uint8_t operator()(const cn::Transaction) { return  0xcc; }
+  uint8_t operator()(const cn::Block) { return  0xbb; }
 };
 
 struct VariantSerializer : boost::static_visitor<> {
-  VariantSerializer(CryptoNote::ISerializer& serializer, const std::string& name) : s(serializer), name(name) {}
+  VariantSerializer(cn::ISerializer& serializer, const std::string& name) : s(serializer), name(name) {}
 
   template <typename T>
   void operator() (T& param) { s(param, name); }
 
-  CryptoNote::ISerializer& s;
+  cn::ISerializer& s;
   std::string name;
 };
 
-void getVariantValue(CryptoNote::ISerializer& serializer, uint8_t tag, CryptoNote::TransactionInput& in) {
+void getVariantValue(cn::ISerializer& serializer, uint8_t tag, cn::TransactionInput& in) {
   switch(tag) {
   case 0xff: {
-    CryptoNote::BaseInput v;
+    cn::BaseInput v;
     serializer(v, "value");
     in = v;
     break;
   }
   case 0x2: {
-    CryptoNote::KeyInput v;
+    cn::KeyInput v;
     serializer(v, "value");
     in = v;
     break;
   }
   case 0x3: {
-    CryptoNote::MultisignatureInput v;
+    cn::MultisignatureInput v;
     serializer(v, "value");
     in = v;
     break;
@@ -89,16 +89,16 @@ void getVariantValue(CryptoNote::ISerializer& serializer, uint8_t tag, CryptoNot
   }
 }
 
-void getVariantValue(CryptoNote::ISerializer& serializer, uint8_t tag, CryptoNote::TransactionOutputTarget& out) {
+void getVariantValue(cn::ISerializer& serializer, uint8_t tag, cn::TransactionOutputTarget& out) {
   switch(tag) {
   case 0x2: {
-    CryptoNote::KeyOutput v;
+    cn::KeyOutput v;
     serializer(v, "data");
     out = v;
     break;
   }
   case 0x3: {
-    CryptoNote::MultisignatureOutput v;
+    cn::MultisignatureOutput v;
     serializer(v, "data");
     out = v;
     break;
@@ -109,11 +109,11 @@ void getVariantValue(CryptoNote::ISerializer& serializer, uint8_t tag, CryptoNot
 }
 
 template <typename T>
-bool serializePod(T& v, Common::StringView name, CryptoNote::ISerializer& serializer) {
+bool serializePod(T& v, Common::StringView name, cn::ISerializer& serializer) {
   return serializer.binary(&v, sizeof(v), name);
 }
 
-bool serializeVarintVector(std::vector<uint32_t>& vector, CryptoNote::ISerializer& serializer, Common::StringView name) {
+bool serializeVarintVector(std::vector<uint32_t>& vector, cn::ISerializer& serializer, Common::StringView name) {
   size_t size = vector.size();
   
   if (!serializer.beginArray(size, name)) {
@@ -135,42 +135,42 @@ bool serializeVarintVector(std::vector<uint32_t>& vector, CryptoNote::ISerialize
 
 namespace Crypto {
 
-bool serialize(PublicKey& pubKey, Common::StringView name, CryptoNote::ISerializer& serializer) {
+bool serialize(PublicKey& pubKey, Common::StringView name, cn::ISerializer& serializer) {
   return serializePod(pubKey, name, serializer);
 }
 
-bool serialize(SecretKey& secKey, Common::StringView name, CryptoNote::ISerializer& serializer) {
+bool serialize(SecretKey& secKey, Common::StringView name, cn::ISerializer& serializer) {
   return serializePod(secKey, name, serializer);
 }
 
-bool serialize(Hash& h, Common::StringView name, CryptoNote::ISerializer& serializer) {
+bool serialize(Hash& h, Common::StringView name, cn::ISerializer& serializer) {
   return serializePod(h, name, serializer);
 }
 
-bool serialize(KeyImage& keyImage, Common::StringView name, CryptoNote::ISerializer& serializer) {
+bool serialize(KeyImage& keyImage, Common::StringView name, cn::ISerializer& serializer) {
   return serializePod(keyImage, name, serializer);
 }
 
-bool serialize(chacha8_iv &chacha8, Common::StringView name, CryptoNote::ISerializer &serializer)
+bool serialize(chacha8_iv &chacha8, Common::StringView name, cn::ISerializer &serializer)
 {
   return serializePod(chacha8, name, serializer);
 }
 
-bool serialize(Signature& sig, Common::StringView name, CryptoNote::ISerializer& serializer) {
+bool serialize(Signature& sig, Common::StringView name, cn::ISerializer& serializer) {
   return serializePod(sig, name, serializer);
 }
 
-bool serialize(EllipticCurveScalar& ecScalar, Common::StringView name, CryptoNote::ISerializer& serializer) {
+bool serialize(EllipticCurveScalar& ecScalar, Common::StringView name, cn::ISerializer& serializer) {
   return serializePod(ecScalar, name, serializer);
 }
 
-bool serialize(EllipticCurvePoint& ecPoint, Common::StringView name, CryptoNote::ISerializer& serializer) {
+bool serialize(EllipticCurvePoint& ecPoint, Common::StringView name, cn::ISerializer& serializer) {
   return serializePod(ecPoint, name, serializer);
 }
 
 }
 
-namespace CryptoNote {
+namespace cn {
 
 void serialize(TransactionPrefix& txP, ISerializer& serializer) {
   serializer(txP.version, "version");
@@ -365,4 +365,4 @@ void serialize(KeyPair& keyPair, ISerializer& serializer) {
 }
 
 
-} //namespace CryptoNote
+} //namespace cn

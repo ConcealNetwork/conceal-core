@@ -6,7 +6,7 @@
 
 #include "CryptoNoteCore/BlockchainMessages.h"
 
-namespace CryptoNote {
+namespace cn {
 
 NewBlockMessage::NewBlockMessage(const Crypto::Hash& hash) : blockHash(hash) {}
 

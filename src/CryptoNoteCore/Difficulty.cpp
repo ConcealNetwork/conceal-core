@@ -15,7 +15,7 @@
 #include "CryptoNoteConfig.h"
 #include "Difficulty.h"
 
-namespace CryptoNote {
+namespace cn {
 
   using std::uint64_t;
   using std::vector;

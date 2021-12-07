@@ -16,7 +16,7 @@
 #include "CryptoNoteBasic.h"
 #include "Difficulty.h"
 
-namespace CryptoNote
+namespace cn
 {
 
   class AccountBase;
@@ -104,8 +104,8 @@ namespace CryptoNote
       }
     };
     size_t difficultyBlocksCount() const { return m_difficultyWindow + m_difficultyLag; }
-    size_t difficultyBlocksCount2() const { return CryptoNote::parameters::DIFFICULTY_BLOCKS_COUNT; }    //LWMA3
-    size_t difficultyBlocksCount3() const { return CryptoNote::parameters::DIFFICULTY_BLOCKS_COUNT_V1; } //LWMA1
+    size_t difficultyBlocksCount2() const { return cn::parameters::DIFFICULTY_BLOCKS_COUNT; }    //LWMA3
+    size_t difficultyBlocksCount3() const { return cn::parameters::DIFFICULTY_BLOCKS_COUNT_V1; } //LWMA1
 
     uint64_t depositMinAmount() const { return m_depositMinAmount; }
     uint32_t depositMinTerm() const { return m_depositMinTerm; }
@@ -610,4 +610,4 @@ namespace CryptoNote
     Currency m_currency;
   };
 
-} // namespace CryptoNote
+} // namespace cn

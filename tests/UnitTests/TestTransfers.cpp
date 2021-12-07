@@ -20,7 +20,7 @@
 
 #include <Logging/ConsoleLogger.h>
 
-using namespace CryptoNote;
+using namespace cn;
 
 class TransfersObserver : public ITransfersObserver {
 public:
@@ -38,7 +38,7 @@ class TransfersApi : public ::testing::Test, public IBlockchainSynchronizerObser
 public:
 
   TransfersApi() :
-    m_currency(CryptoNote::CurrencyBuilder(m_logger).currency()),
+    m_currency(cn::CurrencyBuilder(m_logger).currency()),
     generator(m_currency),
     m_node(generator),
     m_sync(m_node, m_currency.genesisBlockHash()),
@@ -110,13 +110,13 @@ public:
 
   void generateMoneyForAccount(size_t idx) {
     generator.getBlockRewardForAddress(
-      reinterpret_cast<const CryptoNote::AccountPublicAddress&>(m_accounts[idx].address));
+      reinterpret_cast<const cn::AccountPublicAddress&>(m_accounts[idx].address));
   }
 
   std::error_code submitTransaction(ITransactionReader& tx) {
     auto data = tx.getTransactionData();
     Transaction outTx;
-    CryptoNote::fromBinaryArray(outTx, data);
+    cn::fromBinaryArray(outTx, data);
 
     std::promise<std::error_code> result;
     m_node.relayTransaction(outTx, [&result](std::error_code ec) {
@@ -133,7 +133,7 @@ protected:
   std::vector<ITransfersSubscription*> m_subscriptions;
 
   Logging::ConsoleLogger m_logger;
-  CryptoNote::Currency m_currency;
+  cn::Currency m_currency;
   TestBlockchainGenerator generator;
   INodeTrivialRefreshStub m_node;
   BlockchainSynchronizer m_sync;

@@ -21,7 +21,7 @@ using namespace Crypto;
 
 namespace
 {
-  using namespace CryptoNote;
+  using namespace cn;
 
   uint64_t countNeededMoney(uint64_t fee, const std::vector<WalletLegacyTransfer> &transfers)
   {
@@ -40,7 +40,7 @@ namespace
 
   uint64_t getSumWithOverflowCheck(uint64_t amount, uint64_t fee)
   {
-    CryptoNote::throwIf(std::numeric_limits<uint64_t>::max() - amount < fee, error::SUM_OVERFLOW);
+    cn::throwIf(std::numeric_limits<uint64_t>::max() - amount < fee, error::SUM_OVERFLOW);
 
     return amount + fee;
   }
@@ -121,7 +121,7 @@ namespace
   Transaction convertTransaction(const ITransaction &transaction, size_t upperTransactionSizeLimit)
   {
     BinaryArray serializedTransaction = transaction.getTransactionData();
-    CryptoNote::throwIf(serializedTransaction.size() >= upperTransactionSizeLimit, error::TRANSACTION_SIZE_TOO_BIG);
+    cn::throwIf(serializedTransaction.size() >= upperTransactionSizeLimit, error::TRANSACTION_SIZE_TOO_BIG);
 
     Transaction result;
     Crypto::Hash transactionHash;
@@ -166,7 +166,7 @@ namespace
 
 } //namespace
 
-namespace CryptoNote
+namespace cn
 {
   WalletTransactionSender::WalletTransactionSender(const Currency &currency, WalletUserTransactionsCache &transactionsCache, AccountKeys keys, ITransfersContainer &transfersContainer, INode &node) :
     m_currency(currency),
@@ -229,7 +229,7 @@ namespace CryptoNote
     }
     else
     {
-      mixIn = CryptoNote::parameters::MINIMUM_MIXIN;
+      mixIn = cn::parameters::MINIMUM_MIXIN;
       neededMoney = countNeededMoney(fee, transfers);
       context->foundMoney = selectTransfersToSend(neededMoney, false, context->dustPolicy.dustThreshold, context->selectedTransfers);
     }
@@ -320,7 +320,7 @@ namespace CryptoNote
                                                                                 const std::vector<WalletLegacyTransfer> &transfers, const std::list<TransactionOutputInformation> &fusionInputs, uint64_t fee, const std::string &extra, uint64_t mixIn, uint64_t unlockTimestamp)
   {
 
-    using namespace CryptoNote;
+    using namespace cn;
 
     throwIf(transfers.empty(), error::ZERO_DESTINATION);
     validateTransfersAddresses(transfers);
@@ -821,7 +821,7 @@ namespace CryptoNote
     std::default_random_engine randomGenerator(Crypto::rand<std::default_random_engine::result_type>());
     uint64_t foundMoney = 0;
     size_t i = 0;
-    while (!unusedTransfers.empty() && i < CryptoNote::parameters::CRYPTONOTE_OPTIMIZE_SIZE)
+    while (!unusedTransfers.empty() && i < cn::parameters::CRYPTONOTE_OPTIMIZE_SIZE)
     {
       size_t idx = popRandomValue(randomGenerator, unusedTransfers);
       selectedTransfers.push_back(outputs[idx]);
@@ -938,4 +938,4 @@ namespace CryptoNote
     }
   }
 
-} /* namespace CryptoNote */
+} /* namespace cn */

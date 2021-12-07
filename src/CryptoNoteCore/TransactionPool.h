@@ -34,13 +34,13 @@
 
 #include <Logging/LoggerRef.h>
 
-namespace CryptoNote {
+namespace cn {
 
   class ISerializer;
 
   class OnceInTimeInterval {
   public:
-    OnceInTimeInterval(unsigned interval, CryptoNote::ITimeProvider& timeProvider)
+    OnceInTimeInterval(unsigned interval, cn::ITimeProvider& timeProvider)
       : m_interval(interval), m_timeProvider(timeProvider) {
       m_lastWorkedTime = 0;
     }
@@ -61,10 +61,10 @@ namespace CryptoNote {
   private:
     time_t m_lastWorkedTime;
     unsigned m_interval;
-    CryptoNote::ITimeProvider& m_timeProvider;
+    cn::ITimeProvider& m_timeProvider;
   };
 
-  using CryptoNote::BlockInfo;
+  using cn::BlockInfo;
   using namespace boost::multi_index;
 
   /************************************************************************/
@@ -73,9 +73,9 @@ namespace CryptoNote {
   class tx_memory_pool: boost::noncopyable {
   public:
     tx_memory_pool(
-      const CryptoNote::Currency& currency, 
-      CryptoNote::ITransactionValidator& validator,
-      CryptoNote::ITimeProvider& timeProvider,
+      const cn::Currency& currency, 
+      cn::ITransactionValidator& validator,
+      cn::ITimeProvider& timeProvider,
       Logging::ILogger& log);
 
     bool addObserver(ITxPoolObserver* observer);
@@ -186,15 +186,15 @@ namespace CryptoNote {
     void buildIndices();
 
     Tools::ObserverManager<ITxPoolObserver> m_observerManager;
-    const CryptoNote::Currency& m_currency;
+    const cn::Currency& m_currency;
     OnceInTimeInterval m_txCheckInterval;
     mutable std::recursive_mutex m_transactions_lock;
     key_images_container m_spent_key_images;
     GlobalOutputsContainer m_spentOutputs;
 
     std::string m_config_folder;
-    CryptoNote::ITransactionValidator& m_validator;
-    CryptoNote::ITimeProvider& m_timeProvider;
+    cn::ITransactionValidator& m_validator;
+    cn::ITimeProvider& m_timeProvider;
 
     tx_container_t m_transactions;  
     tx_container_t::nth_index<1>::type& m_fee_index;

@@ -27,9 +27,9 @@
 #include "BaseTests.h"
 
 using namespace Tests;
-using namespace CryptoNote;
+using namespace cn;
 
-namespace CryptoNote
+namespace cn
 {
 void serialize(BlockShortEntry &v, ISerializer &s)
 {
@@ -74,7 +74,7 @@ bool operator==(const TransactionShortInfo &a, const TransactionShortInfo &b)
 {
   return a.txId == b.txId;
 }
-} // namespace CryptoNote
+} // namespace cn
 
 struct BlockchainInfo
 {
@@ -203,10 +203,9 @@ TEST_F(NodeTest, generateBlockchain)
     ASSERT_TRUE(daemon.makeINode(mainNode));
 
     std::string password = "pass";
-    CryptoNote::WalletGreen wallet(dispatcher, currency, *mainNode, logger);
+    cn::WalletGreen wallet(dispatcher, currency, *mainNode, logger);
 
-    std::string walletFile("wallet.bin", std::ios::binary | std::ios::trunc);
-    wallet.initialize(walletFile, password);
+    wallet.initialize(password);
 
     std::string minerAddress = wallet.createAddress();
     daemon.startMining(1, minerAddress);
@@ -221,8 +220,8 @@ TEST_F(NodeTest, generateBlockchain)
 
     daemon.stopMining();
 
-    
-    wallet.save();
+    std::ofstream walletFile("wallet.bin", std::ios::binary | std::ios::trunc);
+    wallet.save(walletFile);
     wallet.shutdown();
 
     dumpBlockchainInfo(*mainNode);
@@ -255,10 +254,10 @@ TEST_F(NodeTest, addMoreBlocks)
     auto startHeight = daemon.getLocalHeight();
 
     std::string password = "pass";
-    CryptoNote::WalletGreen wallet(dispatcher, currency, *mainNode, logger);
+    cn::WalletGreen wallet(dispatcher, currency, *mainNode, logger);
 
     {
-      std::string walletFile("wallet.bin", std::ios::binary);
+      std::ifstream walletFile("wallet.bin", std::ios::binary);
       wallet.load(walletFile, password);
     }
 
@@ -276,7 +275,7 @@ TEST_F(NodeTest, addMoreBlocks)
     daemon.stopMining();
 
     std::ofstream walletFile("wallet.bin", std::ios::binary | std::ios::trunc);
-    wallet.save();
+    wallet.save(walletFile);
     wallet.shutdown();
 
     dumpBlockchainInfo(*mainNode);

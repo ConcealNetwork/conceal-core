@@ -26,7 +26,7 @@
 using namespace Logging;
 using namespace Common;
 
-namespace CryptoNote
+namespace cn
 {
 
   const std::vector<uint64_t> Currency::PRETTY_AMOUNTS = {
@@ -187,9 +187,9 @@ namespace CryptoNote
 
     uint64_t base_reward = 0;
 
-    if (height > CryptoNote::parameters::UPGRADE_HEIGHT_V8)
+    if (height > cn::parameters::UPGRADE_HEIGHT_V8)
     {
-      base_reward = CryptoNote::MAX_BLOCK_REWARD_V1;
+      base_reward = cn::MAX_BLOCK_REWARD_V1;
     }
     else
     {
@@ -291,9 +291,9 @@ namespace CryptoNote
     /* early deposit multiplier */
     uint64_t interestHi;
     uint64_t interestLo;
-    if (height <= CryptoNote::parameters::END_MULTIPLIER_BLOCK)
+    if (height <= cn::parameters::END_MULTIPLIER_BLOCK)
     {
-      interestLo = mul128(cLo, CryptoNote::parameters::MULTIPLIER_FACTOR, &interestHi);
+      interestLo = mul128(cLo, cn::parameters::MULTIPLIER_FACTOR, &interestHi);
       assert(interestHi == 0);
     }
     else
@@ -730,7 +730,7 @@ namespace CryptoNote
       return false;
     }
 
-    if (height < CryptoNote::parameters::UPGRADE_HEIGHT_V4 && amount < defaultDustThreshold())
+    if (height < cn::parameters::UPGRADE_HEIGHT_V4 && amount < defaultDustThreshold())
     {
       return false;
     }
@@ -764,7 +764,7 @@ namespace CryptoNote
   bool Currency::parseAccountAddressString(const std::string &str, AccountPublicAddress &addr) const
   {
     uint64_t prefix;
-    if (!CryptoNote::parseAccountAddressString(prefix, addr, str))
+    if (!cn::parseAccountAddressString(prefix, addr, str))
     {
       return false;
     }
@@ -1092,12 +1092,7 @@ namespace CryptoNote
 
     uint64_t T = 120; // target solvetime seconds
     uint64_t N = 60;  //  N=45, 60, and 90 for T=600, 120, 60.
-    uint64_t L = 0;
-    uint64_t sum_3_ST = 0;
-    uint64_t next_D = 0;
-    uint64_t prev_D;
-    uint64_t this_timestamp;
-    uint64_t previous_timestamp;
+    uint64_t L(0), ST, sum_3_ST(0), next_D, prev_D, this_timestamp, previous_timestamp;
 
     // Make sure timestamps & CD vectors are not bigger than they are supposed to be.
     // assert(timestamps.size() == cumulative_difficulties.size() &&
@@ -1105,9 +1100,9 @@ namespace CryptoNote
 
     // If it's a new coin, do startup code.
     // Increase difficulty_guess if it needs to be much higher, but guess lower than lowest guess.
+    uint64_t difficulty_guess = 100;
     if (timestamps.size() <= 10)
     {
-      uint64_t difficulty_guess = 100;
       return difficulty_guess;
     }
     // Use "if" instead of "else if" in case vectors are incorrectly N all the time instead of N+1.
@@ -1135,7 +1130,7 @@ namespace CryptoNote
         this_timestamp = previous_timestamp + 1;
       }
       // Limit solvetime ST to 6*T to prevent large drop in difficulty that could cause oscillations.
-      uint64_t ST = std::min(6 * T, this_timestamp - previous_timestamp);
+      ST = std::min(6 * T, this_timestamp - previous_timestamp);
       previous_timestamp = this_timestamp;
       L += ST * i; // give linearly higher weight to more recent solvetimes
                    // delete the following line if you do not want the "jump rule"
@@ -1379,8 +1374,8 @@ namespace CryptoNote
 
   Transaction CurrencyBuilder::generateGenesisTransaction()
   {
-    CryptoNote::Transaction tx;
-    CryptoNote::AccountPublicAddress ac = boost::value_initialized<CryptoNote::AccountPublicAddress>();
+    cn::Transaction tx;
+    cn::AccountPublicAddress ac = boost::value_initialized<cn::AccountPublicAddress>();
     m_currency.constructMinerTx(0, 0, 0, 0, 0, ac, tx); // zero fee in genesis
 
     return tx;
@@ -1439,5 +1434,5 @@ namespace CryptoNote
     return *this;
   }
 
-} // namespace CryptoNote
+} // namespace cn
 

@@ -10,7 +10,7 @@
 #include "ISerializer.h"
 #include "SerializationOverloads.h"
 
-namespace CryptoNote {
+namespace cn {
 
 class BinaryOutputStreamSerializer : public ISerializer {
 public:

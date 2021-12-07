@@ -60,23 +60,23 @@ namespace std
 #define CURRENT_BLOCKCACHE_STORAGE_ARCHIVE_VER 4
 #define CURRENT_BLOCKCHAININDICES_STORAGE_ARCHIVE_VER 1
 
-namespace CryptoNote
+namespace cn
 {
   class BlockCacheSerializer;
   class BlockchainIndicesSerializer;
-} // namespace CryptoNote
+} // namespace cn
 
-namespace CryptoNote
+namespace cn
 {
 
   template <typename K, typename V, typename Hash>
-  bool serialize(google::sparse_hash_map<K, V, Hash> &value, Common::StringView name, CryptoNote::ISerializer &serializer)
+  bool serialize(google::sparse_hash_map<K, V, Hash> &value, Common::StringView name, cn::ISerializer &serializer)
   {
     return serializeMap(value, name, serializer, [&value](size_t size) { value.resize(size); });
   }
 
   template <typename K, typename Hash>
-  bool serialize(google::sparse_hash_set<K, Hash> &value, Common::StringView name, CryptoNote::ISerializer &serializer)
+  bool serialize(google::sparse_hash_set<K, Hash> &value, Common::StringView name, cn::ISerializer &serializer)
   {
     size_t size = value.size();
     if (!serializer.beginArray(size, name))
@@ -107,7 +107,7 @@ namespace CryptoNote
   }
 
   // custom serialization to speedup cache loading
-  bool serialize(std::vector<std::pair<Blockchain::TransactionIndex, uint16_t>> &value, Common::StringView name, CryptoNote::ISerializer &s)
+  bool serialize(std::vector<std::pair<Blockchain::TransactionIndex, uint16_t>> &value, Common::StringView name, cn::ISerializer &s)
   {
     const size_t elementSize = sizeof(std::pair<Blockchain::TransactionIndex, uint16_t>);
     size_t size = value.size() * elementSize;
@@ -117,7 +117,7 @@ namespace CryptoNote
       return false;
     }
 
-    if (s.type() == CryptoNote::ISerializer::INPUT)
+    if (s.type() == cn::ISerializer::INPUT)
     {
       if (size % elementSize != 0)
       {
@@ -161,7 +161,7 @@ namespace CryptoNote
 
         StdInputStream stream(stdStream);
         BinaryInputStreamSerializer s(stream);
-        CryptoNote::serialize(*this, s);
+        cn::serialize(*this, s);
       }
       catch (std::exception &e)
       {
@@ -181,7 +181,7 @@ namespace CryptoNote
 
         StdOutputStream stream(file);
         BinaryOutputStreamSerializer s(stream);
-        CryptoNote::serialize(*this, s);
+        cn::serialize(*this, s);
       }
       catch (std::exception &)
       {
@@ -406,12 +406,12 @@ namespace CryptoNote
     return m_observerManager.remove(observer);
   }
 
-  bool Blockchain::checkTransactionInputs(const CryptoNote::Transaction &tx, BlockInfo &maxUsedBlock)
+  bool Blockchain::checkTransactionInputs(const cn::Transaction &tx, BlockInfo &maxUsedBlock)
   {
     return checkTransactionInputs(tx, maxUsedBlock.height, maxUsedBlock.id) && check_tx_outputs(tx);
   }
 
-  bool Blockchain::checkTransactionInputs(const CryptoNote::Transaction &tx, BlockInfo &maxUsedBlock, BlockInfo &lastFailed)
+  bool Blockchain::checkTransactionInputs(const cn::Transaction &tx, BlockInfo &maxUsedBlock, BlockInfo &lastFailed)
   {
 
     BlockInfo tail;
@@ -458,7 +458,7 @@ namespace CryptoNote
     return true;
   }
 
-  bool Blockchain::haveSpentKeyImages(const CryptoNote::Transaction &tx)
+  bool Blockchain::haveSpentKeyImages(const cn::Transaction &tx)
   {
     return this->haveTransactionKeyImagesAsSpent(tx);
   }
@@ -664,11 +664,11 @@ namespace CryptoNote
       Crypto::Hash blockHash = get_block_hash(block.bl);
       m_blockIndex.push(blockHash);
       uint64_t interest = 0;
-      for (uint32_t t = 0; t < block.transactions.size(); ++t)
+      for (uint16_t t = 0; t < block.transactions.size(); ++t)
       {
         const TransactionEntry &transaction = block.transactions[t];
         Crypto::Hash transactionHash = getObjectHash(transaction.tx);
-        TransactionIndex transactionIndex = {b, static_cast<uint16_t>(t)};
+        TransactionIndex transactionIndex = {b, t};
         m_transactionMap.insert(std::make_pair(transactionHash, transactionIndex));
 
         // process inputs
@@ -686,7 +686,7 @@ namespace CryptoNote
         }
 
         // process outputs
-        for (uint32_t o = 0; o < transaction.tx.outputs.size(); ++o)
+        for (uint16_t o = 0; o < transaction.tx.outputs.size(); ++o)
         {
           const auto &out = transaction.tx.outputs[o];
           if (out.target.type() == typeid(KeyOutput))
@@ -695,7 +695,7 @@ namespace CryptoNote
           }
           else if (out.target.type() == typeid(MultisignatureOutput))
           {
-            MultisignatureOutputUsage usage = {transactionIndex, static_cast<uint16_t>(o), false};
+            MultisignatureOutputUsage usage = {transactionIndex, o, false};
             m_multisignatureOutputs[out.amount].push_back(usage);
           }
         }
@@ -1504,7 +1504,7 @@ namespace CryptoNote
 
       // Disable merged mining
       TransactionExtraMergeMiningTag mmTag;
-      if (getMergeMiningTagFromExtra(bei.bl.baseTransaction.extra, mmTag) && bei.height >= CryptoNote::parameters::UPGRADE_HEIGHT_V6)
+      if (getMergeMiningTagFromExtra(bei.bl.baseTransaction.extra, mmTag) && bei.height >= cn::parameters::UPGRADE_HEIGHT_V6)
       {
         logger(ERROR, BRIGHT_RED) << "Merge mining tag was found in extra of miner transaction";
         return false;
@@ -2141,7 +2141,7 @@ namespace CryptoNote
       return false;
     }
 
-    if (getCurrentBlockchainHeight() > CryptoNote::parameters::UPGRADE_HEIGHT_V4 && getCurrentBlockchainHeight() < CryptoNote::parameters::UPGRADE_HEIGHT_V5 && txin.outputIndexes.size() < 3)
+    if (getCurrentBlockchainHeight() > cn::parameters::UPGRADE_HEIGHT_V4 && getCurrentBlockchainHeight() < cn::parameters::UPGRADE_HEIGHT_V5 && txin.outputIndexes.size() < 3)
     {
       logger(ERROR, BRIGHT_RED) << "ring size is too small: " << txin.outputIndexes.size() << " Expected: 4";
       return false;
@@ -2414,7 +2414,7 @@ namespace CryptoNote
     TransactionExtraMergeMiningTag mmTag;
     if (m_blockIndex.getBlockHeight(blockHash, height))
     {
-      if (getMergeMiningTagFromExtra(blockData.baseTransaction.extra, mmTag) && height >= CryptoNote::parameters::UPGRADE_HEIGHT_V6)
+      if (getMergeMiningTagFromExtra(blockData.baseTransaction.extra, mmTag) && height >= cn::parameters::UPGRADE_HEIGHT_V6)
       {
         logger(ERROR, BRIGHT_RED) << "Merge mining tag was found in extra of miner transaction";
         return false;
@@ -2500,7 +2500,7 @@ namespace CryptoNote
 
       uint64_t in_amount = m_currency.getTransactionAllInputsAmount(transactions[i], block.height);
       uint64_t out_amount = getOutputAmount(transactions[i]);
-      uint64_t fee = in_amount < out_amount ? CryptoNote::parameters::MINIMUM_FEE : in_amount - out_amount;
+      uint64_t fee = in_amount < out_amount ? cn::parameters::MINIMUM_FEE : in_amount - out_amount;
 
       bool isTransactionValid = true;
       if (block.bl.majorVersion == BLOCK_MAJOR_VERSION_1 && transactions[i].version > TRANSACTION_VERSION_1)
@@ -2740,7 +2740,7 @@ namespace CryptoNote
     }
 
     transaction.m_global_output_indexes.resize(transaction.tx.outputs.size());
-    for (uint32_t output = 0; output < transaction.tx.outputs.size(); ++output)
+    for (uint16_t output = 0; output < transaction.tx.outputs.size(); ++output)
     {
       if (transaction.tx.outputs[output].target.type() == typeid(KeyOutput))
       {
@@ -2752,7 +2752,7 @@ namespace CryptoNote
       {
         auto &amountOutputs = m_multisignatureOutputs[transaction.tx.outputs[output].amount];
         transaction.m_global_output_indexes[output] = static_cast<uint32_t>(amountOutputs.size());
-        MultisignatureOutputUsage outputUsage = {transactionIndex, static_cast<uint16_t>(output), false};
+        MultisignatureOutputUsage outputUsage = {transactionIndex, output, false};
         amountOutputs.push_back(outputUsage);
       }
     }
@@ -3156,7 +3156,7 @@ namespace CryptoNote
         const BlockEntry &block = m_blocks[b];
         m_timestampIndex.add(block.bl.timestamp, get_block_hash(block.bl));
         m_generatedTransactionsIndex.add(block.bl);
-        for (size_t t = 0; t < block.transactions.size(); ++t)
+        for (uint16_t t = 0; t < block.transactions.size(); ++t)
         {
           const TransactionEntry &transaction = block.transactions[t];
           m_paymentIdIndex.add(transaction.tx);
@@ -3257,4 +3257,4 @@ namespace CryptoNote
     return m_checkpoints.is_in_checkpoint_zone(height);
   }
 
-} // namespace CryptoNote
+} // namespace cn

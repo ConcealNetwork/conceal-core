@@ -24,7 +24,7 @@
 #include "P2pProtocolDefinitions.h"
 #include "PeerListManager.h"
 
-namespace CryptoNote {
+namespace cn {
 
 class P2pContext;
 class P2pConnectionProxy;

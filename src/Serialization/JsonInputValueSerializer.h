@@ -9,7 +9,7 @@
 #include "Common/JsonValue.h"
 #include "ISerializer.h"
 
-namespace CryptoNote {
+namespace cn {
 
 //deserialization
 class JsonInputValueSerializer : public ISerializer {

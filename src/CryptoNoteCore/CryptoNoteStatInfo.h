@@ -8,7 +8,7 @@
 
 #include "Serialization/ISerializer.h"
 
-namespace CryptoNote
+namespace cn
 {
   struct core_stat_info
   {

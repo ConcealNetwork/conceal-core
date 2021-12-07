@@ -7,12 +7,12 @@
 #include "CryptoNoteCore/TransactionExtra.h"
 #include "CryptoNoteCore/CryptoNoteTools.h"
 
-using namespace CryptoNote;
+using namespace cn;
 using namespace Crypto;
 using namespace Common;
 
-TransactionBuilder::TransactionBuilder(const CryptoNote::Currency& currency, uint64_t unlockTime)
-  : m_currency(currency), m_version(CryptoNote::TRANSACTION_VERSION_1), m_unlockTime(unlockTime), m_txKey(generateKeyPair()) {}
+TransactionBuilder::TransactionBuilder(const cn::Currency& currency, uint64_t unlockTime)
+  : m_currency(currency), m_version(cn::TRANSACTION_VERSION_1), m_unlockTime(unlockTime), m_txKey(generateKeyPair()) {}
 
 TransactionBuilder& TransactionBuilder::newTxKeys() {
   m_txKey = generateKeyPair();
@@ -23,12 +23,12 @@ KeyPair TransactionBuilder::getTxKeys() const {
   return m_txKey;
 }
 
-TransactionBuilder& TransactionBuilder::setTxKeys(const CryptoNote::KeyPair& txKeys) {
+TransactionBuilder& TransactionBuilder::setTxKeys(const cn::KeyPair& txKeys) {
   m_txKey = txKeys;
   return *this;
 }
 
-TransactionBuilder& TransactionBuilder::setInput(const std::vector<CryptoNote::TransactionSourceEntry>& sources, const CryptoNote::AccountKeys& senderKeys) {
+TransactionBuilder& TransactionBuilder::setInput(const std::vector<cn::TransactionSourceEntry>& sources, const cn::AccountKeys& senderKeys) {
   m_sources = sources;
   m_senderKeys = senderKeys;
   return *this;
@@ -40,12 +40,12 @@ TransactionBuilder& TransactionBuilder::addMultisignatureInput(const Multisignat
   return *this;
 }
 
-TransactionBuilder& TransactionBuilder::setOutput(const std::vector<CryptoNote::TransactionDestinationEntry>& destinations) {
+TransactionBuilder& TransactionBuilder::setOutput(const std::vector<cn::TransactionDestinationEntry>& destinations) {
   m_destinations = destinations;
   return *this;
 }
 
-TransactionBuilder& TransactionBuilder::addOutput(const CryptoNote::TransactionDestinationEntry& dest) {
+TransactionBuilder& TransactionBuilder::addOutput(const cn::TransactionDestinationEntry& dest) {
   m_destinations.push_back(dest);
   return *this;
 }
@@ -74,7 +74,7 @@ Transaction TransactionBuilder::build() const {
   tx.version = static_cast<uint8_t>(m_version);
   tx.unlockTime = m_unlockTime;
 
-  std::vector<CryptoNote::KeyPair> contexts;
+  std::vector<cn::KeyPair> contexts;
 
   fillInputs(tx, contexts);
   fillOutputs(tx);
@@ -86,7 +86,7 @@ Transaction TransactionBuilder::build() const {
   return tx;
 }
 
-void TransactionBuilder::fillInputs(Transaction& tx, std::vector<CryptoNote::KeyPair>& contexts) const {
+void TransactionBuilder::fillInputs(Transaction& tx, std::vector<cn::KeyPair>& contexts) const {
   for (const TransactionSourceEntry& src_entr : m_sources) {
     contexts.push_back(KeyPair());
     KeyPair& in_ephemeral = contexts.back();
@@ -155,7 +155,7 @@ void TransactionBuilder::setVersion(std::size_t version) {
   m_version = version;
 }
 
-void TransactionBuilder::signSources(const Crypto::Hash& prefixHash, const std::vector<CryptoNote::KeyPair>& contexts, Transaction& tx) const {
+void TransactionBuilder::signSources(const Crypto::Hash& prefixHash, const std::vector<cn::KeyPair>& contexts, Transaction& tx) const {
   
   tx.signatures.clear();
 

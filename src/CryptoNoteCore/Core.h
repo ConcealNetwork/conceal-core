@@ -26,7 +26,7 @@
 
 #include <Logging/LoggerMessage.h>
 
-namespace CryptoNote {
+namespace cn {
 
   struct core_stat_info;
   class miner;
@@ -34,7 +34,7 @@ namespace CryptoNote {
 
   class core : public ICore, public IMinerHandler, public IBlockchainStorageObserver, public ITxPoolObserver {
    public:
-     core(const Currency &currency, i_cryptonote_protocol *pprotocol, Logging::ILogger &logger, bool blockchainIndexesEnabled = false, bool blockchainAutosaveEnabled = false);
+     core(const Currency &currency, i_cryptonote_protocol *pprotocol, Logging::ILogger &logger, bool blockchainIndexesEnabled, bool blockchainAutosaveEnabled);
      ~core();
 
      bool on_idle() override;
@@ -179,7 +179,7 @@ namespace CryptoNote {
 
     const Currency &m_currency;
     Logging::LoggerRef logger;
-    CryptoNote::RealTimeProvider m_timeProvider;
+    cn::RealTimeProvider m_timeProvider;
     tx_memory_pool m_mempool;
     Blockchain m_blockchain;
     i_cryptonote_protocol *m_pprotocol;

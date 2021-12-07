@@ -6,7 +6,7 @@
 
 #include "WalletErrors.h"
 
-namespace CryptoNote {
+namespace cn {
 namespace error {
 
 WalletErrorCategory WalletErrorCategory::INSTANCE;

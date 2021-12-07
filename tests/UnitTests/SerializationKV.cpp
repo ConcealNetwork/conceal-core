@@ -14,9 +14,9 @@
 
 #include <array>
 
-using namespace CryptoNote;
+using namespace cn;
 
-namespace CryptoNote {
+namespace cn {
 
 struct TestElement {
   std::string name;
@@ -99,8 +99,8 @@ TEST(KVSerialize, Simple) {
   testData2.name = "bye";
   testData2.nonce = 54321;
 
-  std::string buf = CryptoNote::storeToBinaryKeyValue(testData1);
-  ASSERT_TRUE(CryptoNote::loadFromBinaryKeyValue(testData2, buf));
+  std::string buf = cn::storeToBinaryKeyValue(testData1);
+  ASSERT_TRUE(cn::loadFromBinaryKeyValue(testData2, buf));
   EXPECT_EQ(testData1, testData2);
 }
 
@@ -118,7 +118,7 @@ TEST(KVSerialize, BigCollection) {
 
   TestStruct ts2;
 
-  std::string buf = CryptoNote::storeToBinaryKeyValue(ts1);
-  ASSERT_TRUE(CryptoNote::loadFromBinaryKeyValue(ts2, buf));
+  std::string buf = cn::storeToBinaryKeyValue(ts1);
+  ASSERT_TRUE(cn::loadFromBinaryKeyValue(ts2, buf));
   EXPECT_EQ(ts1, ts2);
 }

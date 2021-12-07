@@ -17,7 +17,7 @@
 #include "CryptoNoteConfig.h"
 #include <Logging/LoggerRef.h>
 
-namespace CryptoNote {
+namespace cn {
   class UpgradeDetectorBase {
   public:
     enum : uint32_t {
@@ -25,7 +25,7 @@ namespace CryptoNote {
     };
   };
 
-  static_assert(CryptoNote::UpgradeDetectorBase::UNDEF_HEIGHT == UINT32_C(0xFFFFFFFF), "UpgradeDetectorBase::UNDEF_HEIGHT has invalid value");
+  static_assert(cn::UpgradeDetectorBase::UNDEF_HEIGHT == UINT32_C(0xFFFFFFFF), "UpgradeDetectorBase::UNDEF_HEIGHT has invalid value");
 
   template <typename BC>
   class BasicUpgradeDetector : public UpgradeDetectorBase {
@@ -123,21 +123,13 @@ namespace CryptoNote {
 
           if (m_blockchain.size() % (60 * 60 / m_currency.difficultyTarget()) == 0) {
             auto interval = m_currency.difficultyTarget() * (upgradeHeight() - m_blockchain.size() + 2);
-            char upgradeTimeStr[32];
-            struct tm upgradeTimeTm;
             time_t upgradeTimestamp = time(nullptr) + static_cast<time_t>(interval);
-#ifdef _WIN32
-            gmtime_s(&upgradeTimeTm, &upgradeTimestamp);
-#else
-            gmtime_r(&upgradeTimestamp, &upgradeTimeTm);
-#endif
-            if (!std::strftime(upgradeTimeStr, sizeof(upgradeTimeStr), "%c", &upgradeTimeTm))
-            {
-              throw std::runtime_error("time buffer is too small");
-            }
+            struct tm* upgradeTime = localtime(&upgradeTimestamp);;
+            char upgradeTimeStr[40];
+            strftime(upgradeTimeStr, 40, "%H:%M:%S %Y.%m.%d", upgradeTime);
 
             logger(Logging::TRACE, Logging::BRIGHT_GREEN) << "###### UPGRADE is going to happen after block index " << upgradeHeight() << " at about " <<
-              upgradeTimeStr << " UTC" << " (in " << Common::timeIntervalToString(interval) << ")! Current last block index " << (m_blockchain.size() - 1) <<
+              upgradeTimeStr << " (in " << Common::timeIntervalToString(interval) << ")! Current last block index " << (m_blockchain.size() - 1) <<
               ", hash " << get_block_hash(m_blockchain.back().bl);
           }
         } else if (m_blockchain.size() == upgradeHeight() + 1) {
@@ -206,7 +198,7 @@ namespace CryptoNote {
       assert(m_currency.upgradeVotingThreshold() > 0 && m_currency.upgradeVotingThreshold() <= 100);
 
       size_t voteCounter = getNumberOfVotes(height);
-      return (size_t) m_currency.upgradeVotingThreshold() * m_currency.upgradeVotingWindow() <= 100 * voteCounter;
+      return m_currency.upgradeVotingThreshold() * m_currency.upgradeVotingWindow() <= 100 * voteCounter;
     }
 
   private:

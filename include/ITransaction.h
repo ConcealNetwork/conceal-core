@@ -13,7 +13,7 @@
 
 #include "CryptoNote.h"
 
-namespace CryptoNote {
+namespace cn {
 
 namespace TransactionTypes {
   

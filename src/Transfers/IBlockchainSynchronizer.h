@@ -18,7 +18,7 @@
 #include "IStreamSerializable.h"
 #include "ITransfersSynchronizer.h"
 
-namespace CryptoNote {
+namespace cn {
 
 struct CompleteBlock;
 

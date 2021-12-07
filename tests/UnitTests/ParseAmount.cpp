@@ -9,7 +9,7 @@
 #include "CryptoNoteCore/Currency.h"
 #include <Logging/LoggerGroup.h>
 
-using namespace CryptoNote;
+using namespace cn;
 
 namespace
 {
@@ -18,7 +18,7 @@ namespace
   void do_pos_test(uint64_t expected, const std::string& str)
   {
     Logging::LoggerGroup logger;
-    CryptoNote::Currency currency = CryptoNote::CurrencyBuilder(logger).numberOfDecimalPlaces(TEST_NUMBER_OF_DECIMAL_PLACES).currency();
+    cn::Currency currency = cn::CurrencyBuilder(logger).numberOfDecimalPlaces(TEST_NUMBER_OF_DECIMAL_PLACES).currency();
     uint64_t val;
     std::string number_str = str;
     std::replace(number_str.begin(), number_str.end(), '_', '.');
@@ -30,7 +30,7 @@ namespace
   void do_neg_test(const std::string& str)
   {
     Logging::LoggerGroup logger;
-    CryptoNote::Currency currency = CryptoNote::CurrencyBuilder(logger).numberOfDecimalPlaces(TEST_NUMBER_OF_DECIMAL_PLACES).currency();
+    cn::Currency currency = cn::CurrencyBuilder(logger).numberOfDecimalPlaces(TEST_NUMBER_OF_DECIMAL_PLACES).currency();
     uint64_t val;
     std::string number_str = str;
     std::replace(number_str.begin(), number_str.end(), '_', '.');

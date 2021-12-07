@@ -12,7 +12,7 @@
 #include <vector>
 #include <map>
 
-namespace CryptoNote {
+namespace cn {
 
 class SynchronizationState : public IStreamSerializable {
 public:
@@ -43,7 +43,7 @@ public:
   virtual void load(std::istream& in) override;
 
   // serialization
-  CryptoNote::ISerializer& serialize(CryptoNote::ISerializer& s, const std::string& name);
+  cn::ISerializer& serialize(cn::ISerializer& s, const std::string& name);
 
 private:
 

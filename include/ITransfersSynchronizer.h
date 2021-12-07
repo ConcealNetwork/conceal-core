@@ -13,7 +13,7 @@
 #include "ITransfersContainer.h"
 #include "IStreamSerializable.h"
 
-namespace CryptoNote {
+namespace cn {
 
 struct SynchronizationStart {
   uint64_t timestamp;

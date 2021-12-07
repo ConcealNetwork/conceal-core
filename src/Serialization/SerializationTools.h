@@ -31,7 +31,7 @@ inline uint64_t getValueAs<uint64_t>(const JsonValue& js) { return static_cast<u
 
 }
 
-namespace CryptoNote {
+namespace cn {
 
 template <typename T>
 Common::JsonValue storeToJsonValue(const T& v) {

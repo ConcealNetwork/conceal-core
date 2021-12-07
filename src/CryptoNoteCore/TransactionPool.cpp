@@ -32,7 +32,7 @@ using namespace Logging;
 
 #undef ERROR
 
-namespace CryptoNote
+namespace cn
 {
 
   //---------------------------------------------------------------------------------
@@ -103,13 +103,13 @@ namespace CryptoNote
     std::vector<Crypto::Hash> m_txHashes;
   };
 
-  using CryptoNote::BlockInfo;
+  using cn::BlockInfo;
 
   //---------------------------------------------------------------------------------
   tx_memory_pool::tx_memory_pool(
-      const CryptoNote::Currency &currency,
-      CryptoNote::ITransactionValidator &validator,
-      CryptoNote::ITimeProvider &timeProvider,
+      const cn::Currency &currency,
+      cn::ITransactionValidator &validator,
+      cn::ITimeProvider &timeProvider,
       Logging::ILogger &log) : m_currency(currency),
                                m_timeProvider(timeProvider),
                                m_txCheckInterval(60, timeProvider),
@@ -447,47 +447,18 @@ namespace CryptoNote
 
       ss << "blobSize: " << txd.blobSize << std::endl
          << "fee: " << m_currency.formatAmount(txd.fee) << std::endl
-         << "received: ";
-
-      char receivedTimeStr[32];
-      struct tm receivedTimeTm;
-#ifdef _WIN32
-      gmtime_s(&receivedTimeTm, &txd.receiveTime);
-#else
-      gmtime_r(&txd.receiveTime, &receivedTimeTm);
-#endif
-      if (std::strftime(receivedTimeStr, sizeof(receivedTimeStr), "%c", &receivedTimeTm))
-      {
-        ss << receivedTimeStr << " UTC";
-      }
-      else
-      {
-        ss << "unable to get time";
-      }
-      ss << std::endl;
+         << "received: " << std::ctime(&txd.receiveTime);
 
       auto ttlIt = m_ttlIndex.find(txd.id);
       if (ttlIt != m_ttlIndex.end())
       {
-        char ttlTimeStr[32];
-        struct tm ttlTimeTm;
-        time_t timestamp = reinterpret_cast<time_t>(&ttlIt->second);
-#ifdef _WIN32
-        gmtime_s(&ttlTimeTm, &timestamp);
-#else
-        gmtime_r(&timestamp, &ttlTimeTm);
-#endif
-        if (std::strftime(ttlTimeStr, sizeof(ttlTimeStr), "%c", &ttlTimeTm))
-        {
-          ss << "TTL: " << ttlTimeStr << " UTC";
-        }
-        else
-        {
-          ss << "TTL failed";
-        }
-        ss << std::endl;
+        // ctime() returns string that ends with new line
+        ss << "TTL: " << std::ctime(reinterpret_cast<const time_t *>(&ttlIt->second));
       }
+
+      ss << std::endl;
     }
+
     return ss.str();
   }
   //---------------------------------------------------------------------------------
@@ -611,7 +582,7 @@ namespace CryptoNote
 
 #define CURRENT_MEMPOOL_ARCHIVE_VER 1
 
-  void serialize(CryptoNote::tx_memory_pool::TransactionDetails &td, ISerializer &s)
+  void serialize(cn::tx_memory_pool::TransactionDetails &td, ISerializer &s)
   {
     s(td.id, "id");
     s(td.blobSize, "blobSize");
@@ -887,4 +858,4 @@ namespace CryptoNote
     std::lock_guard<std::recursive_mutex> lock(m_transactions_lock);
     return m_timestampIndex.find(timestampBegin, timestampEnd, transactionsNumberLimit, hashes, transactionsNumberWithinTimestamps);
   }
-} // namespace CryptoNote
+} // namespace cn

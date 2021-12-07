@@ -23,7 +23,7 @@
 using namespace Logging;
 using namespace Common;
 
-namespace CryptoNote
+namespace cn
 {
 
 namespace
@@ -290,7 +290,7 @@ int CryptoNoteProtocolHandler::handle_notify_new_block(int command, NOTIFY_NEW_B
 
   for (auto tx_blob_it = arg.b.txs.begin(); tx_blob_it != arg.b.txs.end(); tx_blob_it++)
   {
-    CryptoNote::tx_verification_context tvc = boost::value_initialized<decltype(tvc)>();
+    cn::tx_verification_context tvc = boost::value_initialized<decltype(tvc)>();
 
     auto transactionBinary = asBinaryArray(*tx_blob_it);
     //Crypto::Hash transactionHash = Crypto::cn_fast_hash(transactionBinary.data(), transactionBinary.size());
@@ -364,7 +364,7 @@ int CryptoNoteProtocolHandler::handle_notify_new_transactions(int command, NOTIF
       Crypto::Hash transactionHash = Crypto::cn_fast_hash(transactionBinary.data(), transactionBinary.size());
       logger(DEBUGGING) << "transaction " << transactionHash << " came in NOTIFY_NEW_TRANSACTIONS";
 
-      CryptoNote::tx_verification_context tvc = boost::value_initialized<decltype(tvc)>();
+      cn::tx_verification_context tvc = boost::value_initialized<decltype(tvc)>();
       m_core.handle_incoming_tx(transactionBinary, tvc, false);
       if (tvc.m_verification_failed)
       {
@@ -887,7 +887,7 @@ void CryptoNoteProtocolHandler::relay_transactions(NOTIFY_NEW_TRANSACTIONS::requ
 
 void CryptoNoteProtocolHandler::requestMissingPoolTransactions(const CryptoNoteConnectionContext &context)
 {
-  if (context.version < CryptoNote::P2P_VERSION_1)
+  if (context.version < cn::P2P_VERSION_1)
   {
     return;
   }
@@ -1052,7 +1052,7 @@ int CryptoNoteProtocolHandler::doPushLiteBlock(NOTIFY_NEW_LITE_BLOCK::request ar
 
     for (auto transactionBinary : have_txs)
     {
-      CryptoNote::tx_verification_context tvc = boost::value_initialized<decltype(tvc)>();
+      cn::tx_verification_context tvc = boost::value_initialized<decltype(tvc)>();
 
       m_core.handle_incoming_tx(transactionBinary, tvc, true);
       if (tvc.m_verification_failed)
@@ -1122,4 +1122,4 @@ int CryptoNoteProtocolHandler::doPushLiteBlock(NOTIFY_NEW_LITE_BLOCK::request ar
   return 1;
 }
 
-}; // namespace CryptoNote
+}; // namespace cn

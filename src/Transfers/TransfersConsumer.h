@@ -18,14 +18,14 @@
 
 #include <unordered_set>
 
-namespace CryptoNote {
+namespace cn {
 
 class INode;
 
 class TransfersConsumer: public IObservableImpl<IBlockchainConsumerObserver, IBlockchainConsumer> {
 public:
 
-  TransfersConsumer(const CryptoNote::Currency& currency, INode& node, Logging::ILogger& logger, const Crypto::SecretKey& viewSecret);
+  TransfersConsumer(const cn::Currency& currency, INode& node, Logging::ILogger& logger, const Crypto::SecretKey& viewSecret);
 
   ITransfersSubscription& addSubscription(const AccountSubscription& subscription);
   // returns true if no subscribers left
@@ -78,7 +78,7 @@ private:
   std::unordered_set<Crypto::Hash> m_poolTxs;
 
   INode& m_node;
-  const CryptoNote::Currency& m_currency;
+  const cn::Currency& m_currency;
   Logging::LoggerRef m_logger;
 };
 

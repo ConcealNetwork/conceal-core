@@ -32,7 +32,7 @@ using namespace Common;
 using namespace Logging;
 using namespace System;
 
-namespace CryptoNote {
+namespace cn {
 
 namespace {
 
@@ -178,13 +178,13 @@ void P2pNode::serialize(ISerializer& s) {
 void P2pNode::save(std::ostream& os) {
   StdOutputStream stream(os);
   BinaryOutputStreamSerializer a(stream);
-  CryptoNote::serialize(*this, a);
+  cn::serialize(*this, a);
 }
 
 void P2pNode::load(std::istream& in) {
   StdInputStream stream(in);
   BinaryInputStreamSerializer a(stream);
-  CryptoNote::serialize(*this, a);
+  cn::serialize(*this, a);
 }
 
 void P2pNode::acceptLoop() {
@@ -398,10 +398,10 @@ bool P2pNode::fetchPeerList(ContextPtr connection) {
       return false;
     }
 
-    if (response.node_data.version < CryptoNote::P2P_MINIMUM_VERSION) {
+    if (response.node_data.version < cn::P2P_MINIMUM_VERSION) {
       logger(DEBUGGING) << *connection << "COMMAND_HANDSHAKE Failed, peer is wrong version: " << std::to_string(response.node_data.version);
       return false;
-    } else if ((response.node_data.version - CryptoNote::P2P_CURRENT_VERSION) >= CryptoNote::P2P_UPGRADE_WINDOW) {
+    } else if ((response.node_data.version - cn::P2P_CURRENT_VERSION) >= cn::P2P_UPGRADE_WINDOW) {
       logger(WARNING) << *connection << "COMMAND_HANDSHAKE Warning, your software may be out of date. Please upgrade to the latest version.";
     }
 
@@ -450,7 +450,7 @@ std::list<PeerlistEntry> P2pNode::getLocalPeerList() const {
 basic_node_data P2pNode::getNodeData() const {
   basic_node_data nodeData;
   nodeData.network_id = m_cfg.getNetworkId();
-  nodeData.version = CryptoNote::P2P_CURRENT_VERSION;
+  nodeData.version = cn::P2P_CURRENT_VERSION;
   nodeData.local_time = time(nullptr);
   nodeData.peer_id = m_myPeerId;
 
@@ -539,7 +539,7 @@ void P2pNode::handleNodeData(const basic_node_data& node, P2pContext& context) {
     throw std::runtime_error(msg.str());
   }
 
-  if (node.version < CryptoNote::P2P_MINIMUM_VERSION) { 
+  if (node.version < cn::P2P_MINIMUM_VERSION) { 
     std::ostringstream msg;
     msg << context << "COMMAND_HANDSHAKE Failed, peer is wrong version! (" << std::to_string(node.version) << ")";
     throw std::runtime_error(msg.str());

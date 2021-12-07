@@ -35,7 +35,7 @@
 
 #undef ERROR
 using phmap::parallel_flat_hash_map;
-namespace CryptoNote
+namespace cn
 {
   struct NOTIFY_REQUEST_GET_OBJECTS_request;
   struct NOTIFY_RESPONSE_GET_OBJECTS_request;
@@ -43,8 +43,8 @@ namespace CryptoNote
   struct COMMAND_RPC_GET_RANDOM_OUTPUTS_FOR_AMOUNTS_response;
   struct COMMAND_RPC_GET_RANDOM_OUTPUTS_FOR_AMOUNTS_outs_for_amount;
 
-  using CryptoNote::BlockInfo;
-  class Blockchain : public CryptoNote::ITransactionValidator
+  using cn::BlockInfo;
+  class Blockchain : public cn::ITransactionValidator
   {
   public:
     Blockchain(const Currency &currency, tx_memory_pool &tx_pool, Logging::ILogger &logger, bool blockchainIndexesEnabled, bool blockchainAutosaveEnabled);
@@ -56,9 +56,9 @@ namespace CryptoNote
     bool storeCache();
 
     // ITransactionValidator
-    virtual bool checkTransactionInputs(const CryptoNote::Transaction &tx, BlockInfo &maxUsedBlock) override;
-    virtual bool checkTransactionInputs(const CryptoNote::Transaction &tx, BlockInfo &maxUsedBlock, BlockInfo &lastFailed) override;
-    virtual bool haveSpentKeyImages(const CryptoNote::Transaction &tx) override;
+    virtual bool checkTransactionInputs(const cn::Transaction &tx, BlockInfo &maxUsedBlock) override;
+    virtual bool checkTransactionInputs(const cn::Transaction &tx, BlockInfo &maxUsedBlock, BlockInfo &lastFailed) override;
+    virtual bool haveSpentKeyImages(const cn::Transaction &tx) override;
     virtual bool checkTransactionSize(size_t blobSize) override;
 
     bool init() { return init(Tools::getDefaultDataDirectory(), true); }
@@ -292,8 +292,8 @@ namespace CryptoNote
     friend class BlockchainIndicesSerializer;
 
     Blocks m_blocks;
-    CryptoNote::BlockIndex m_blockIndex;
-    CryptoNote::DepositIndex m_depositIndex;
+    cn::BlockIndex m_blockIndex;
+    cn::DepositIndex m_depositIndex;
     TransactionMap m_transactionMap;
     MultisignatureOutputsContainer m_multisignatureOutputs;
     UpgradeDetector m_upgradeDetectorV2;
@@ -427,4 +427,4 @@ namespace CryptoNote
 
     return true;
   }
-} // namespace CryptoNote
+} // namespace cn

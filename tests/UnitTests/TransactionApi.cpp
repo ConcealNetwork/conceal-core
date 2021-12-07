@@ -14,7 +14,7 @@
 #include "crypto/crypto.h"
 #include "TransactionApiHelpers.h"
 
-using namespace CryptoNote;
+using namespace cn;
 
 namespace {
  
@@ -65,7 +65,7 @@ namespace {
     TransactionTypes::InputKeyInfo createInputInfo(uint64_t amount) {
       TransactionTypes::InputKeyInfo info;
 
-      CryptoNote::KeyPair srcTxKeys = CryptoNote::generateKeyPair();
+      cn::KeyPair srcTxKeys = cn::generateKeyPair();
 
       PublicKey targetKey;
 
@@ -372,7 +372,7 @@ TEST_F(TransactionApi, deserializeTransactionInputMultisignature) {
 
   auto index = tx->addInput(inputMsig);
 
-  auto srcTxKey = CryptoNote::generateKeyPair().publicKey;
+  auto srcTxKey = cn::generateKeyPair().publicKey;
   tx->signInputMultisignature(index, srcTxKey, 0, sender);
 
   auto restoredTransaction = reloadedTx(tx);

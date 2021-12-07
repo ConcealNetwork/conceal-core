@@ -10,12 +10,12 @@
 #include "CryptoNoteProtocol/ICryptoNoteProtocolObserver.h"
 #include "CryptoNoteProtocol/ICryptoNoteProtocolQuery.h"
 
-class ICryptoNoteProtocolQueryStub: public CryptoNote::ICryptoNoteProtocolQuery {
+class ICryptoNoteProtocolQueryStub: public cn::ICryptoNoteProtocolQuery {
 public:
   ICryptoNoteProtocolQueryStub() : peers(0), observedHeight(0), synchronized(false) {}
 
-  virtual bool addObserver(CryptoNote::ICryptoNoteProtocolObserver* observer) override;
-  virtual bool removeObserver(CryptoNote::ICryptoNoteProtocolObserver* observer) override;
+  virtual bool addObserver(cn::ICryptoNoteProtocolObserver* observer) override;
+  virtual bool removeObserver(cn::ICryptoNoteProtocolObserver* observer) override;
   virtual uint32_t getObservedHeight() const override;
   virtual size_t getPeerCount() const override;
   virtual bool isSynchronized() const override;

@@ -759,7 +759,7 @@ void FileMappedVector<T>::rename(const std::string& newPath) {
 template<class T>
 template<class F>
 void FileMappedVector<T>::atomicUpdate(F&& func) {
-  atomicUpdate0(capacity(), prefixSize(), suffixSize(), std::forward(func));
+  atomicUpdate0(capacity(), prefixSize(), suffixSize(), std::move(func));
 }
 
 template<class T>

@@ -17,18 +17,18 @@
 
 #include "Logging/LoggerRef.h"
 
-namespace CryptoNote {
+namespace cn {
 class Currency;
 }
 
-namespace CryptoNote {
+namespace cn {
  
 class TransfersConsumer;
 class INode;
 
 class TransfersSyncronizer : public ITransfersSynchronizer, public IBlockchainConsumerObserver {
 public:
-  TransfersSyncronizer(const CryptoNote::Currency& currency, Logging::ILogger& logger, IBlockchainSynchronizer& sync, INode& node);
+  TransfersSyncronizer(const cn::Currency& currency, Logging::ILogger& logger, IBlockchainSynchronizer& sync, INode& node);
   virtual ~TransfersSyncronizer();
 
   void initTransactionPool(const std::unordered_set<Crypto::Hash>& uncommitedTransactions);
@@ -62,7 +62,7 @@ private:
   // std::unordered_map<AccountAddress, std::unique_ptr<TransfersConsumer>> m_subscriptions;
   IBlockchainSynchronizer& m_sync;
   INode& m_node;
-  const CryptoNote::Currency& m_currency;
+  const cn::Currency& m_currency;
 
   virtual void onBlocksAdded(IBlockchainConsumer* consumer, const std::vector<Crypto::Hash>& blockHashes) override;
   virtual void onBlockchainDetach(IBlockchainConsumer* consumer, uint32_t blockIndex) override;

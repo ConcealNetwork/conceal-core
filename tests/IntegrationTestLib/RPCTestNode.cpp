@@ -19,7 +19,7 @@
 #include "Logger.h"
 #include "NodeCallback.h"
 
-using namespace CryptoNote;
+using namespace cn;
 using namespace System;
 
 namespace Tests {
@@ -49,7 +49,7 @@ bool RPCTestNode::startMining(size_t threadsCount, const std::string& address) {
   return true;
 }
 
-bool RPCTestNode::getBlockTemplate(const std::string& minerAddress, CryptoNote::Block& blockTemplate, uint64_t& difficulty) {
+bool RPCTestNode::getBlockTemplate(const std::string& minerAddress, cn::Block& blockTemplate, uint64_t& difficulty) {
   LOG_DEBUG("getBlockTemplate()");
 
   try {
@@ -132,8 +132,8 @@ bool RPCTestNode::getTailBlockId(Crypto::Hash& tailBlockId) {
   return true;
 }
 
-bool RPCTestNode::makeINode(std::unique_ptr<CryptoNote::INode>& node) {
-  std::unique_ptr<CryptoNote::INode> newNode(new CryptoNote::NodeRpcProxy("127.0.0.1", m_rpcPort));
+bool RPCTestNode::makeINode(std::unique_ptr<cn::INode>& node) {
+  std::unique_ptr<cn::INode> newNode(new cn::NodeRpcProxy("127.0.0.1", m_rpcPort));
   NodeCallback cb;
   newNode->init(cb.callback());
   auto ec = cb.get();
@@ -167,8 +167,8 @@ bool RPCTestNode::stopDaemon() {
 
 uint64_t RPCTestNode::getLocalHeight() {
   try {
-    CryptoNote::COMMAND_RPC_GET_INFO::request req;
-    CryptoNote::COMMAND_RPC_GET_INFO::response rsp;
+    cn::COMMAND_RPC_GET_INFO::request req;
+    cn::COMMAND_RPC_GET_INFO::response rsp;
     invokeJsonCommand(m_httpClient, "/getinfo", req, rsp);
     if (rsp.status == CORE_RPC_STATUS_OK) {
       return rsp.height;

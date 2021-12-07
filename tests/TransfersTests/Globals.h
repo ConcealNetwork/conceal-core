@@ -10,7 +10,7 @@
 #include "gtest/gtest.h"
 
 extern System::Dispatcher globalSystem;
-extern CryptoNote::Currency currency;
+extern cn::Currency currency;
 extern Tests::Common::BaseFunctionalTestsConfig config;
 
 class TransfersTest :

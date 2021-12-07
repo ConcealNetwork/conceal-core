@@ -7,7 +7,7 @@
 #include "CryptoNoteTools.h"
 #include "CryptoNoteFormatUtils.h"
 
-namespace CryptoNote {
+namespace cn {
 template<>
 bool toBinaryArray(const BinaryArray& object, BinaryArray& binaryArray) {
   try {

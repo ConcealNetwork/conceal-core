@@ -16,7 +16,7 @@
 
 using namespace Crypto;
 
-namespace CryptoNote {
+namespace cn {
 
 class TransactionPrefixImpl : public ITransactionReader {
 public:
@@ -185,11 +185,11 @@ void TransactionPrefixImpl::getOutput(size_t index, MultisignatureOutput& output
 }
 
 size_t TransactionPrefixImpl::getRequiredSignaturesCount(size_t inputIndex) const {
-  return ::CryptoNote::getRequiredSignaturesCount(getInputChecked(m_txPrefix, inputIndex));
+  return ::cn::getRequiredSignaturesCount(getInputChecked(m_txPrefix, inputIndex));
 }
 
 bool TransactionPrefixImpl::findOutputsToAccount(const AccountPublicAddress& addr, const SecretKey& viewSecretKey, std::vector<uint32_t>& outs, uint64_t& outputAmount) const {
-  return ::CryptoNote::findOutputsToAccount(m_txPrefix, addr, viewSecretKey, outs, outputAmount);
+  return ::cn::findOutputsToAccount(m_txPrefix, addr, viewSecretKey, outs, outputAmount);
 }
 
 bool TransactionPrefixImpl::validateInputs() const {

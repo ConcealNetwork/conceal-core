@@ -15,7 +15,7 @@
 
 #include "crypto/chacha8.h"
 
-namespace CryptoNote
+namespace cn
 {
 
 struct CryptoContext
@@ -87,8 +87,8 @@ private:
   void loadTransactions(Common::IInputStream &source, CryptoContext &cryptoContext);
   void loadTransfers(Common::IInputStream &source, CryptoContext &cryptoContext, uint32_t version);
 
-  void loadWalletV1Keys(CryptoNote::BinaryInputStreamSerializer &serializer);
-  void loadWalletV1Details(CryptoNote::BinaryInputStreamSerializer &serializer);
+  void loadWalletV1Keys(cn::BinaryInputStreamSerializer &serializer);
+  void loadWalletV1Details(cn::BinaryInputStreamSerializer &serializer);
   void addWalletV1Details(const std::vector<WalletLegacyTransaction> &txs, const std::vector<WalletLegacyTransfer> &trs);
   void initTransactionPool();
   void resetCachedBalance();
@@ -109,4 +109,4 @@ private:
   UncommitedTransactions &uncommitedTransactions;
 };
 
-} //namespace CryptoNote
+} //namespace cn
