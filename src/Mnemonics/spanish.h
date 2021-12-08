@@ -64,10 +64,10 @@
 #include <string>
 
 /*!
- * \namespace Language
+ * \namespace language
  * \brief Mnemonic language related namespace.
  */
-namespace Language
+namespace language
 {
   class Spanish: public Base
   {

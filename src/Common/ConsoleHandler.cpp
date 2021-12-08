@@ -19,7 +19,7 @@
 
 #include <boost/algorithm/string.hpp>
 
-using common::Console::Color;
+using common::console::Color;
 
 namespace common {
 
@@ -119,7 +119,7 @@ ConsoleHandler::~ConsoleHandler() {
   stop();
 }
 
-void ConsoleHandler::start(bool startThread, const std::string& prompt, Console::Color promptColor) {
+void ConsoleHandler::start(bool startThread, const std::string& prompt, console::Color promptColor) {
   m_prompt = prompt;
   m_promptColor = promptColor;
   m_consoleReader.start();
@@ -236,14 +236,14 @@ void ConsoleHandler::handlerThread() {
     try {
       if (!m_prompt.empty()) {
         if (m_promptColor != Color::Default) {
-          Console::setTextColor(m_promptColor);
+          console::setTextColor(m_promptColor);
         }
 
         std::cout << m_prompt;
         std::cout.flush();
 
         if (m_promptColor != Color::Default) {
-          Console::setTextColor(Color::Default);
+          console::setTextColor(Color::Default);
         }
       }
 

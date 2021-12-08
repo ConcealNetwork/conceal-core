@@ -35,7 +35,7 @@ namespace po = boost::program_options;
 using common::JsonValue;
 using namespace logging;
 using namespace cn;
-using namespace PaymentService;
+using namespace payment_service;
 
 #ifndef ENDL
 #define ENDL std::endl
@@ -56,22 +56,22 @@ namespace {
   const command_line::arg_descriptor<bool>        arg_preview   = {"preview", "print on screen what it would be doing, but not really doing it", false, true};
   logging::ConsoleLogger log;
   logging::LoggerRef logger(log, "optimizer");
-  System::Dispatcher dispatcher;
+  platform_system::Dispatcher dispatcher;
 }
 
 bool validAddress(po::variables_map& vm, const std::string& address) {
-  PaymentService::GetBalance::Request req;
-  PaymentService::GetBalance::Response res;
+  payment_service::GetBalance::Request req;
+  payment_service::GetBalance::Response res;
 
   req.address = address;
 
   try {
     HttpClient httpClient(dispatcher, command_line::get_arg(vm, arg_ip), command_line::get_arg(vm, arg_rpc_port));
     if (command_line::has_arg(vm, arg_user) && command_line::has_arg(vm, arg_pass)) {
-      JsonRpc::invokeJsonRpcCommand(httpClient, "getBalance", req, res, command_line::get_arg(vm, arg_user), command_line::get_arg(vm, arg_pass));
+      json_rpc::invokeJsonRpcCommand(httpClient, "getBalance", req, res, command_line::get_arg(vm, arg_user), command_line::get_arg(vm, arg_pass));
     }
     else {
-      JsonRpc::invokeJsonRpcCommand(httpClient, "getBalance", req, res);
+      json_rpc::invokeJsonRpcCommand(httpClient, "getBalance", req, res);
     }
   }
   catch (const std::exception& e) {
@@ -90,16 +90,16 @@ std::vector<std::string> getWalletsAddresses(po::variables_map& vm) {
       containerAddresses.push_back(command_line::get_arg(vm, arg_address));
     }
   } else {
-    PaymentService::GetAddresses::Request req;
-    PaymentService::GetAddresses::Response res;
+    payment_service::GetAddresses::Request req;
+    payment_service::GetAddresses::Response res;
 
     try {
       HttpClient httpClient(dispatcher, command_line::get_arg(vm, arg_ip), command_line::get_arg(vm, arg_rpc_port));
       if (command_line::has_arg(vm, arg_user) && command_line::has_arg(vm, arg_pass)) {
-        JsonRpc::invokeJsonRpcCommand(httpClient, "getAddresses", req, res, command_line::get_arg(vm, arg_user), command_line::get_arg(vm, arg_pass));
+        json_rpc::invokeJsonRpcCommand(httpClient, "getAddresses", req, res, command_line::get_arg(vm, arg_user), command_line::get_arg(vm, arg_pass));
       }
       else {
-        JsonRpc::invokeJsonRpcCommand(httpClient, "getAddresses", req, res);
+        json_rpc::invokeJsonRpcCommand(httpClient, "getAddresses", req, res);
       }
     }
     catch (const std::exception& e) {
@@ -118,8 +118,8 @@ bool isWalletEligible(po::variables_map& vm, std::string address) {
     threshold = command_line::get_arg(vm, arg_threshold);
   }
 
-  PaymentService::EstimateFusion::Request req;
-  PaymentService::EstimateFusion::Response res;
+  payment_service::EstimateFusion::Request req;
+  payment_service::EstimateFusion::Response res;
 
   req.threshold = threshold;
   req.addresses.push_back(address);
@@ -127,10 +127,10 @@ bool isWalletEligible(po::variables_map& vm, std::string address) {
   try {
     HttpClient httpClient(dispatcher, command_line::get_arg(vm, arg_ip), command_line::get_arg(vm, arg_rpc_port));
     if (command_line::has_arg(vm, arg_user) && command_line::has_arg(vm, arg_pass)) {
-      JsonRpc::invokeJsonRpcCommand(httpClient, "estimateFusion", req, res, command_line::get_arg(vm, arg_user), command_line::get_arg(vm, arg_pass));
+      json_rpc::invokeJsonRpcCommand(httpClient, "estimateFusion", req, res, command_line::get_arg(vm, arg_user), command_line::get_arg(vm, arg_pass));
     }
     else {
-      JsonRpc::invokeJsonRpcCommand(httpClient, "estimateFusion", req, res);
+      json_rpc::invokeJsonRpcCommand(httpClient, "estimateFusion", req, res);
     }
   }
   catch (const std::exception& e) {
@@ -158,8 +158,8 @@ bool optimizeWallet(po::variables_map& vm, std::string address) {
     anonymity = command_line::get_arg(vm, arg_anonimity);
   }
 
-  PaymentService::SendFusionTransaction::Request req;
-  PaymentService::SendFusionTransaction::Response res;
+  payment_service::SendFusionTransaction::Request req;
+  payment_service::SendFusionTransaction::Response res;
 
   req.threshold = threshold;
   req.anonymity = anonymity;
@@ -170,10 +170,10 @@ bool optimizeWallet(po::variables_map& vm, std::string address) {
     logger(INFO, GREEN) << "Optimizing wallet  : " << address;
     HttpClient httpClient(dispatcher, command_line::get_arg(vm, arg_ip), command_line::get_arg(vm, arg_rpc_port));
     if (command_line::has_arg(vm, arg_user) && command_line::has_arg(vm, arg_pass)) {
-      JsonRpc::invokeJsonRpcCommand(httpClient, "sendFusionTransaction", req, res, command_line::get_arg(vm, arg_user), command_line::get_arg(vm, arg_pass));
+      json_rpc::invokeJsonRpcCommand(httpClient, "sendFusionTransaction", req, res, command_line::get_arg(vm, arg_user), command_line::get_arg(vm, arg_pass));
     }
     else {
-      JsonRpc::invokeJsonRpcCommand(httpClient, "sendFusionTransaction", req, res);
+      json_rpc::invokeJsonRpcCommand(httpClient, "sendFusionTransaction", req, res);
     }
   }
   catch (const std::exception& e) {
@@ -245,16 +245,16 @@ void processWallets(po::variables_map& vm, std::vector<std::string>& containerAd
 
 bool canConnect(po::variables_map& vm) {
 
-  PaymentService::GetStatus::Request req;
-  PaymentService::GetStatus::Response res;
+  payment_service::GetStatus::Request req;
+  payment_service::GetStatus::Response res;
 
   try {
     HttpClient httpClient(dispatcher, command_line::get_arg(vm, arg_ip), command_line::get_arg(vm, arg_rpc_port));
     if (command_line::has_arg(vm, arg_user) && command_line::has_arg(vm, arg_pass)) {
-      JsonRpc::invokeJsonRpcCommand(httpClient, "getStatus", req, res, command_line::get_arg(vm, arg_user), command_line::get_arg(vm, arg_pass));
+      json_rpc::invokeJsonRpcCommand(httpClient, "getStatus", req, res, command_line::get_arg(vm, arg_user), command_line::get_arg(vm, arg_pass));
     }
     else {
-      JsonRpc::invokeJsonRpcCommand(httpClient, "getStatus", req, res);
+      json_rpc::invokeJsonRpcCommand(httpClient, "getStatus", req, res);
     }
   }
   catch (const std::exception& e) {

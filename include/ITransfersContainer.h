@@ -39,7 +39,7 @@ namespace cn
   struct TransactionOutputInformation
   {
     // output info
-    TransactionTypes::OutputType type;
+    transaction_types::OutputType type;
     uint64_t amount;
     uint32_t globalOutputIndex;
     uint32_t outputInTransaction;
@@ -64,7 +64,7 @@ namespace cn
     uint32_t spendingBlockHeight;
     uint64_t timestamp;
     crypto::Hash spendingTransactionHash;
-    crypto::KeyImage keyImage; //!< \attention Used only for TransactionTypes::OutputType::Key
+    crypto::KeyImage keyImage; //!< \attention Used only for transaction_types::OutputType::Key
     uint32_t inputInTransaction;
   };
 

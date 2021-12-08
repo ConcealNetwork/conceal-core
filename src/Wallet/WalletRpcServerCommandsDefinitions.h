@@ -11,7 +11,7 @@
 #include "Rpc/CoreRpcServerCommandsDefinitions.h"
 #include "WalletRpcServerErrorCodes.h"
 
-namespace Tools
+namespace tools
 {
 namespace wallet_rpc
 {

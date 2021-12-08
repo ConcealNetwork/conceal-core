@@ -9,7 +9,7 @@
 #include "../IntegrationTestLib/Logger.h"
 #include "gtest/gtest.h"
 
-extern System::Dispatcher globalSystem;
+extern platform_system::Dispatcher globalSystem;
 extern cn::Currency currency;
 extern Tests::common::BaseFunctionalTestsConfig config;
 

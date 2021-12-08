@@ -36,7 +36,7 @@ namespace cn
   /************************************************************************/
   class simple_wallet : public cn::INodeObserver, public cn::IWalletLegacyObserver, public cn::INodeRpcProxyObserver {
   public:
-    simple_wallet(System::Dispatcher& dispatcher, const cn::Currency& currency, logging::LoggerManager& log);
+    simple_wallet(platform_system::Dispatcher& dispatcher, const cn::Currency& currency, logging::LoggerManager& log);
 
     bool init(const boost::program_options::variables_map& vm);
     bool deinit();
@@ -175,7 +175,7 @@ namespace cn
     common::ConsoleHandler m_consoleHandler;
     const cn::Currency& m_currency;
     logging::LoggerManager& logManager;
-    System::Dispatcher& m_dispatcher;
+    platform_system::Dispatcher& m_dispatcher;
     logging::LoggerRef logger;
 
     std::unique_ptr<cn::NodeRpcProxy> m_node;

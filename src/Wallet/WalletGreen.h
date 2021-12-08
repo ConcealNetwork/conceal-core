@@ -30,7 +30,7 @@ class WalletGreen : public IWallet,
                     public IFusionManager
 {
 public:
-  WalletGreen(System::Dispatcher &dispatcher, const Currency &currency, INode &node, logging::ILogger &logger, uint32_t transactionSoftLockTime = 1);
+  WalletGreen(platform_system::Dispatcher &dispatcher, const Currency &currency, INode &node, logging::ILogger &logger, uint32_t transactionSoftLockTime = 1);
   virtual ~WalletGreen();
 
   /* Deposit related functions */
@@ -149,7 +149,7 @@ protected:
 
   struct InputInfo
   {
-    TransactionTypes::InputKeyInfo keyInfo;
+    transaction_types::InputKeyInfo keyInfo;
     WalletRecord *walletRecord = nullptr;
     KeyPair ephKeys;
   };
@@ -372,7 +372,7 @@ protected:
   std::vector<size_t> deleteTransfersForAddress(const std::string &address, std::vector<size_t> &deletedTransactions);
   void deleteFromUncommitedTransactions(const std::vector<size_t> &deletedTransactions);
 
-  System::Dispatcher &m_dispatcher;
+  platform_system::Dispatcher &m_dispatcher;
   const Currency &m_currency;
   INode &m_node;
   mutable logging::LoggerRef m_logger;
@@ -390,9 +390,9 @@ protected:
   BlockchainSynchronizer m_blockchainSynchronizer;
   TransfersSyncronizer m_synchronizer;
 
-  System::Event m_eventOccurred;
+  platform_system::Event m_eventOccurred;
   std::queue<WalletEvent> m_events;
-  mutable System::Event m_readyEvent;
+  mutable platform_system::Event m_readyEvent;
 
   WalletState m_state;
 

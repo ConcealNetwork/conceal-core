@@ -61,7 +61,7 @@ namespace cn
     virtual bool haveSpentKeyImages(const cn::Transaction &tx) override;
     virtual bool checkTransactionSize(size_t blobSize) override;
 
-    bool init() { return init(Tools::getDefaultDataDirectory(), true); }
+    bool init() { return init(tools::getDefaultDataDirectory(), true); }
     bool init(const std::string &config_folder, bool load_existing);
     bool deinit();
 
@@ -272,7 +272,7 @@ namespace cn
     tx_memory_pool &m_tx_pool;
     mutable std::recursive_mutex m_blockchain_lock; // TODO: add here reader/writer lock
     crypto::cn_context m_cn_context;
-    Tools::ObserverManager<IBlockchainStorageObserver> m_observerManager;
+    tools::ObserverManager<IBlockchainStorageObserver> m_observerManager;
 
     key_images_container m_spent_keys;
     size_t m_current_block_cumul_sz_limit;

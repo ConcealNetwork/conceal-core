@@ -57,7 +57,7 @@ namespace cn {
     // inputs
     virtual size_t getInputCount() const override;
     virtual uint64_t getInputTotalAmount() const override;
-    virtual TransactionTypes::InputType getInputType(size_t index) const override;
+    virtual transaction_types::InputType getInputType(size_t index) const override;
     virtual void getInput(size_t index, KeyInput& input) const override;
     virtual void getInput(size_t index, MultisignatureInput& input) const override;
     virtual std::vector<TransactionInput> getInputs() const override;
@@ -65,7 +65,7 @@ namespace cn {
     // outputs
     virtual size_t getOutputCount() const override;
     virtual uint64_t getOutputTotalAmount() const override;
-    virtual TransactionTypes::OutputType getOutputType(size_t index) const override;
+    virtual transaction_types::OutputType getOutputType(size_t index) const override;
     virtual void getOutput(size_t index, KeyOutput& output, uint64_t& amount) const override;
     virtual void getOutput(size_t index, MultisignatureOutput& output, uint64_t& amount) const override;
 
@@ -90,14 +90,14 @@ namespace cn {
     // Inputs/Outputs 
     virtual size_t addInput(const KeyInput& input) override;
     virtual size_t addInput(const MultisignatureInput& input) override;
-    virtual size_t addInput(const AccountKeys& senderKeys, const TransactionTypes::InputKeyInfo& info, KeyPair& ephKeys) override;
+    virtual size_t addInput(const AccountKeys& senderKeys, const transaction_types::InputKeyInfo& info, KeyPair& ephKeys) override;
 
     virtual size_t addOutput(uint64_t amount, const AccountPublicAddress& to) override;
     virtual size_t addOutput(uint64_t amount, const std::vector<AccountPublicAddress>& to, uint32_t requiredSignatures, uint32_t term = 0) override;
     virtual size_t addOutput(uint64_t amount, const KeyOutput& out) override;
     virtual size_t addOutput(uint64_t amount, const MultisignatureOutput& out) override;
 
-    virtual void signInputKey(size_t input, const TransactionTypes::InputKeyInfo& info, const KeyPair& ephKeys) override;
+    virtual void signInputKey(size_t input, const transaction_types::InputKeyInfo& info, const KeyPair& ephKeys) override;
     virtual void signInputMultisignature(size_t input, const PublicKey& sourceTransactionKey, size_t outputIndex, const AccountKeys& accountKeys) override;
     virtual void signInputMultisignature(size_t input, const KeyPair& ephemeralKeys) override;
 
@@ -243,7 +243,7 @@ namespace cn {
     return transaction.inputs.size() - 1;
   }
 
-  size_t TransactionImpl::addInput(const AccountKeys& senderKeys, const TransactionTypes::InputKeyInfo& info, KeyPair& ephKeys) {
+  size_t TransactionImpl::addInput(const AccountKeys& senderKeys, const transaction_types::InputKeyInfo& info, KeyPair& ephKeys) {
     checkIfSigning();
     KeyInput input;
     input.amount = info.amount;
@@ -324,8 +324,8 @@ namespace cn {
     return outputIndex;
   }
 
-  void TransactionImpl::signInputKey(size_t index, const TransactionTypes::InputKeyInfo& info, const KeyPair& ephKeys) {
-    const auto& input = boost::get<KeyInput>(getInputChecked(transaction, index, TransactionTypes::InputType::Key));
+  void TransactionImpl::signInputKey(size_t index, const transaction_types::InputKeyInfo& info, const KeyPair& ephKeys) {
+    const auto& input = boost::get<KeyInput>(getInputChecked(transaction, index, transaction_types::InputType::Key));
     Hash prefixHash = getTransactionPrefixHash();
 
     std::vector<Signature> signatures;
@@ -461,16 +461,16 @@ namespace cn {
       return val + getTransactionInputAmount(in); });
   }
 
-  TransactionTypes::InputType TransactionImpl::getInputType(size_t index) const {
+  transaction_types::InputType TransactionImpl::getInputType(size_t index) const {
     return getTransactionInputType(getInputChecked(transaction, index));
   }
 
   void TransactionImpl::getInput(size_t index, KeyInput& input) const {
-    input = boost::get<KeyInput>(getInputChecked(transaction, index, TransactionTypes::InputType::Key));
+    input = boost::get<KeyInput>(getInputChecked(transaction, index, transaction_types::InputType::Key));
   }
 
   void TransactionImpl::getInput(size_t index, MultisignatureInput& input) const {
-    input = boost::get<MultisignatureInput>(getInputChecked(transaction, index, TransactionTypes::InputType::Multisignature));
+    input = boost::get<MultisignatureInput>(getInputChecked(transaction, index, transaction_types::InputType::Multisignature));
   }
 
   size_t TransactionImpl::getOutputCount() const {
@@ -487,18 +487,18 @@ namespace cn {
       return val + out.amount; });
   }
 
-  TransactionTypes::OutputType TransactionImpl::getOutputType(size_t index) const {
+  transaction_types::OutputType TransactionImpl::getOutputType(size_t index) const {
     return getTransactionOutputType(getOutputChecked(transaction, index).target);
   }
 
   void TransactionImpl::getOutput(size_t index, KeyOutput& output, uint64_t& amount) const {
-    const auto& out = getOutputChecked(transaction, index, TransactionTypes::OutputType::Key);
+    const auto& out = getOutputChecked(transaction, index, transaction_types::OutputType::Key);
     output = boost::get<KeyOutput>(out.target);
     amount = out.amount;
   }
 
   void TransactionImpl::getOutput(size_t index, MultisignatureOutput& output, uint64_t& amount) const {
-    const auto& out = getOutputChecked(transaction, index, TransactionTypes::OutputType::Multisignature);
+    const auto& out = getOutputChecked(transaction, index, transaction_types::OutputType::Multisignature);
     output = boost::get<MultisignatureOutput>(out.target);
     amount = out.amount;
   }

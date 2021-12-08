@@ -17,7 +17,7 @@
 
 #include <thread>
 
-using namespace System;
+using namespace platform_system;
 
 TEST(ContextGroupTests, testHangingUp) {
   Dispatcher dispatcher;

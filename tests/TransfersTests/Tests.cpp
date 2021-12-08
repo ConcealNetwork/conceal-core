@@ -359,16 +359,16 @@ std::unique_ptr<ITransaction> createTransferToMultisignature(
 
   auto tx = createTransaction();
 
-  std::vector<std::pair<TransactionTypes::InputKeyInfo, KeyPair>> inputs;
+  std::vector<std::pair<transaction_types::InputKeyInfo, KeyPair>> inputs;
 
   uint64_t foundMoney = 0;
 
   for (const auto& t : transfers) {
-    TransactionTypes::InputKeyInfo info;
+    transaction_types::InputKeyInfo info;
 
     info.amount = t.amount;
 
-    TransactionTypes::GlobalOutput globalOut;
+    transaction_types::GlobalOutput globalOut;
     globalOut.outputIndex = t.globalOutputIndex;
     globalOut.targetKey = t.outputKey;
     info.outputs.push_back(globalOut);

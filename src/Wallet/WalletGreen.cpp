@@ -69,7 +69,7 @@ namespace
     });
   }
 
-  void asyncRequestCompletion(System::Event &requestFinished)
+  void asyncRequestCompletion(platform_system::Event &requestFinished)
   {
     requestFinished.set();
   }
@@ -270,7 +270,7 @@ namespace
 namespace cn
 {
 
-  WalletGreen::WalletGreen(System::Dispatcher &dispatcher, const Currency &currency, INode &node, logging::ILogger &logger, uint32_t transactionSoftLockTime) : m_dispatcher(dispatcher),
+  WalletGreen::WalletGreen(platform_system::Dispatcher &dispatcher, const Currency &currency, INode &node, logging::ILogger &logger, uint32_t transactionSoftLockTime) : m_dispatcher(dispatcher),
                                                                                                                                                                 m_currency(currency),
                                                                                                                                                                 m_node(node),
                                                                                                                                                                 m_logger(logger, "WalletGreen"),
@@ -449,7 +449,7 @@ namespace cn
 
     for (const auto &output : selectedTransfers)
     {
-      assert(output.type == TransactionTypes::OutputType::Multisignature);
+      assert(output.type == transaction_types::OutputType::Multisignature);
       assert(output.requiredSignatures == 1); //Other types are currently unsupported
 
       MultisignatureInput input;
@@ -939,7 +939,7 @@ namespace cn
     dst.reserve(src.size());
 
     dst.setAutoFlush(false);
-    Tools::ScopeExit exitHandler([&dst] {
+    tools::ScopeExit exitHandler([&dst] {
       dst.setAutoFlush(true);
       dst.flush();
     });
@@ -988,7 +988,7 @@ namespace cn
     try
     {
       bool storageCreated = false;
-      Tools::ScopeExit failExitHandler([path, &storageCreated] {
+      tools::ScopeExit failExitHandler([path, &storageCreated] {
         // Don't delete file if it has existed
         if (storageCreated)
         {
@@ -1041,7 +1041,7 @@ namespace cn
     try
     {
       bool storageCreated = false;
-      Tools::ScopeExit failExitHandler([path, &storageCreated] {
+      tools::ScopeExit failExitHandler([path, &storageCreated] {
         // Don't delete file if it has existed
         if (storageCreated)
         {
@@ -1112,7 +1112,7 @@ namespace cn
       bakPath = boost::filesystem::unique_path(path + ".%%%%-%%%%" + ".backup");
     }
 
-    Tools::ScopeExit tmpFileDeleter([&tmpPath] {
+    tools::ScopeExit tmpFileDeleter([&tmpPath] {
       boost::system::error_code ignore;
       boost::filesystem::remove(tmpPath, ignore);
     });
@@ -1354,7 +1354,7 @@ namespace cn
           m_logger(INFO, BRIGHT_WHITE) << "Known Transfers " << allTransfers.size();
           for (auto &o : allTransfers)
           {
-            if (o.type != TransactionTypes::OutputType::Invalid)
+            if (o.type != transaction_types::OutputType::Invalid)
             {
               m_synchronizer.addPublicKeysSeen(addr, o.transactionHash, o.outputKey);
             }
@@ -1640,7 +1640,7 @@ namespace cn
           m_containerStorage.setAutoFlush(false);
         }
 
-        Tools::ScopeExit exitHandler([this] {
+        tools::ScopeExit exitHandler([this] {
           if (!m_containerStorage.getAutoFlush())
           {
             m_containerStorage.setAutoFlush(true);
@@ -1954,11 +1954,11 @@ namespace cn
 
   size_t WalletGreen::transfer(const TransactionParameters &transactionParameters, crypto::SecretKey &transactionSK)
   {
-    Tools::ScopeExit releaseContext([this] {
+    tools::ScopeExit releaseContext([this] {
       m_dispatcher.yield();
     });
 
-    System::EventLock lk(m_readyEvent);
+    platform_system::EventLock lk(m_readyEvent);
 
     throwIfNotInitialized();
     throwIfTrackingMode();
@@ -2074,7 +2074,7 @@ namespace cn
   size_t WalletGreen::makeTransaction(const TransactionParameters &sendingTransaction)
   {
     size_t id = WALLET_INVALID_TRANSACTION_ID;
-    Tools::ScopeExit releaseContext([this, &id] {
+    tools::ScopeExit releaseContext([this, &id] {
       m_dispatcher.yield();
 
       if (id != WALLET_INVALID_TRANSACTION_ID)
@@ -2083,7 +2083,7 @@ namespace cn
       }
     });
 
-    System::EventLock lk(m_readyEvent);
+    platform_system::EventLock lk(m_readyEvent);
 
     throwIfNotInitialized();
     throwIfTrackingMode();
@@ -2124,7 +2124,7 @@ namespace cn
 
   void WalletGreen::commitTransaction(size_t transactionId)
   {
-    System::EventLock lk(m_readyEvent);
+    platform_system::EventLock lk(m_readyEvent);
 
     throwIfNotInitialized();
     throwIfStopped();
@@ -2142,7 +2142,7 @@ namespace cn
       throw std::system_error(make_error_code(error::TX_TRANSFER_IMPOSSIBLE));
     }
 
-    System::Event completion(m_dispatcher);
+    platform_system::Event completion(m_dispatcher);
     std::error_code ec;
 
     m_node.relayTransaction(m_uncommitedTransactions[transactionId], [&ec, &completion, this](std::error_code error) {
@@ -2164,11 +2164,11 @@ namespace cn
 
   void WalletGreen::rollbackUncommitedTransaction(size_t transactionId)
   {
-    Tools::ScopeExit releaseContext([this] {
+    tools::ScopeExit releaseContext([this] {
       m_dispatcher.yield();
     });
 
-    System::EventLock lk(m_readyEvent);
+    platform_system::EventLock lk(m_readyEvent);
 
     throwIfNotInitialized();
     throwIfStopped();
@@ -2757,7 +2757,7 @@ namespace cn
 
   void WalletGreen::sendTransaction(const cn::Transaction &cryptoNoteTransaction)
   {
-    System::Event completion(m_dispatcher);
+    platform_system::Event completion(m_dispatcher);
     std::error_code ec;
 
     throwIfStopped();
@@ -2801,7 +2801,7 @@ namespace cn
 
     uint64_t fee = transaction.getInputTotalAmount() < transaction.getOutputTotalAmount() ? cn::parameters::MINIMUM_FEE : transaction.getInputTotalAmount() - transaction.getOutputTotalAmount();
     size_t transactionId = insertOutgoingTransactionAndPushEvent(transaction.getTransactionHash(), fee, transaction.getExtra(), transaction.getUnlockTime());
-    Tools::ScopeExit rollbackTransactionInsertion([this, transactionId] {
+    tools::ScopeExit rollbackTransactionInsertion([this, transactionId] {
       updateTransactionStateAndPushEvent(transactionId, WalletTransactionState::FAILED);
     });
 
@@ -2809,7 +2809,7 @@ namespace cn
     pushBackOutgoingTransfers(transactionId, destinations);
 
     addUnconfirmedTransaction(transaction);
-    Tools::ScopeExit rollbackAddingUnconfirmedTransaction([this, &transaction] {
+    tools::ScopeExit rollbackAddingUnconfirmedTransaction([this, &transaction] {
       try
       {
         removeUnconfirmedTransaction(transaction.getTransactionHash());
@@ -2861,7 +2861,7 @@ namespace cn
       amounts.push_back(out.out.amount);
     }
 
-    System::Event requestFinished(m_dispatcher);
+    platform_system::Event requestFinished(m_dispatcher);
     std::error_code mixinError;
 
     throwIfStopped();
@@ -3035,7 +3035,7 @@ namespace cn
     size_t i = 0;
     for (const auto &input : selectedTransfers)
     {
-      TransactionTypes::InputKeyInfo keyInfo;
+      transaction_types::InputKeyInfo keyInfo;
       keyInfo.amount = input.out.amount;
 
       if (mixinResult.size())
@@ -3050,7 +3050,7 @@ namespace cn
             continue;
           }
 
-          TransactionTypes::GlobalOutput globalOutput;
+          transaction_types::GlobalOutput globalOutput;
           globalOutput.outputIndex = static_cast<uint32_t>(fakeOut.global_amount_index);
           globalOutput.targetKey = reinterpret_cast<PublicKey &>(fakeOut.out_key);
           keyInfo.outputs.push_back(std::move(globalOutput));
@@ -3060,11 +3060,11 @@ namespace cn
       }
 
       //paste real transaction to the random index
-      auto insertIn = std::find_if(keyInfo.outputs.begin(), keyInfo.outputs.end(), [&](const TransactionTypes::GlobalOutput &a) {
+      auto insertIn = std::find_if(keyInfo.outputs.begin(), keyInfo.outputs.end(), [&](const transaction_types::GlobalOutput &a) {
         return a.outputIndex >= input.out.globalOutputIndex;
       });
 
-      TransactionTypes::GlobalOutput realOutput;
+      transaction_types::GlobalOutput realOutput;
       realOutput.outputIndex = input.out.globalOutputIndex;
       realOutput.targetKey = reinterpret_cast<const PublicKey &>(input.out.outputKey);
 
@@ -3278,7 +3278,7 @@ namespace cn
   {
     assert(processedBlockCount > 0);
 
-    System::EventLock lk(m_readyEvent);
+    platform_system::EventLock lk(m_readyEvent);
 
     if (m_state == WalletState::NOT_INITIALIZED)
     {
@@ -3293,7 +3293,7 @@ namespace cn
 
   void WalletGreen::onSynchronizationCompleted()
   {
-    System::EventLock lk(m_readyEvent);
+    platform_system::EventLock lk(m_readyEvent);
 
     if (m_state == WalletState::NOT_INITIALIZED)
     {
@@ -3310,7 +3310,7 @@ namespace cn
 
   void WalletGreen::blocksAdded(const std::vector<crypto::Hash> &blockHashes)
   {
-    System::EventLock lk(m_readyEvent);
+    platform_system::EventLock lk(m_readyEvent);
 
     if (m_state == WalletState::NOT_INITIALIZED)
     {
@@ -3326,7 +3326,7 @@ namespace cn
 
   void WalletGreen::blocksRollback(uint32_t blockIndex)
   {
-    System::EventLock lk(m_readyEvent);
+    platform_system::EventLock lk(m_readyEvent);
 
     if (m_state == WalletState::NOT_INITIALIZED)
     {
@@ -3419,7 +3419,7 @@ namespace cn
       const Currency &currency,
       uint32_t height)
   {
-    assert(depositOutput.type == TransactionTypes::OutputType::Multisignature);
+    assert(depositOutput.type == transaction_types::OutputType::Multisignature);
     assert(depositOutput.term != 0);
 
     Deposit deposit;
@@ -3474,7 +3474,7 @@ namespace cn
       TransactionInformation transactionInfo,
       const std::vector<ContainerAmounts> &containerAmountsList)
   {
-    System::EventLock lk(m_readyEvent);
+    platform_system::EventLock lk(m_readyEvent);
 
     if (m_state == WalletState::NOT_INITIALIZED)
     {
@@ -3626,7 +3626,7 @@ namespace cn
 
   void WalletGreen::transactionDeleted(ITransfersSubscription *object, const Hash &transactionHash)
   {
-    System::EventLock lk(m_readyEvent);
+    platform_system::EventLock lk(m_readyEvent);
 
     if (m_state == WalletState::NOT_INITIALIZED)
     {
@@ -3697,7 +3697,7 @@ namespace cn
 
   void WalletGreen::addUnconfirmedTransaction(const ITransactionReader &transaction)
   {
-    System::RemoteContext<std::error_code> context(m_dispatcher, [this, &transaction] {
+    platform_system::RemoteContext<std::error_code> context(m_dispatcher, [this, &transaction] {
       return m_blockchainSynchronizer.addUnconfirmedTransaction(transaction).get();
     });
 
@@ -3710,7 +3710,7 @@ namespace cn
 
   void WalletGreen::removeUnconfirmedTransaction(const crypto::Hash &transactionHash)
   {
-    System::RemoteContext<void> context(m_dispatcher, [this, &transactionHash] {
+    platform_system::RemoteContext<void> context(m_dispatcher, [this, &transactionHash] {
       m_blockchainSynchronizer.removeUnconfirmedTransaction(transactionHash).get();
     });
 
@@ -3909,7 +3909,7 @@ namespace cn
   {
 
     size_t id = WALLET_INVALID_TRANSACTION_ID;
-    Tools::ScopeExit releaseContext([this, &id] {
+    tools::ScopeExit releaseContext([this, &id] {
       m_dispatcher.yield();
 
       if (id != WALLET_INVALID_TRANSACTION_ID)
@@ -3918,7 +3918,7 @@ namespace cn
       }
     });
 
-    System::EventLock lk(m_readyEvent);
+    platform_system::EventLock lk(m_readyEvent);
 
     throwIfNotInitialized();
     throwIfTrackingMode();
@@ -4139,7 +4139,7 @@ namespace cn
 
   IFusionManager::EstimateResult WalletGreen::estimate(uint64_t threshold, const std::vector<std::string> &sourceAddresses) const
   {
-    System::EventLock lk(m_readyEvent);
+    platform_system::EventLock lk(m_readyEvent);
 
     throwIfNotInitialized();
     throwIfStopped();
@@ -4535,7 +4535,7 @@ namespace cn
 
   size_t WalletGreen::getTxSize(const TransactionParameters &sendingTransaction)
   {
-    System::EventLock lk(m_readyEvent);
+    platform_system::EventLock lk(m_readyEvent);
 
     throwIfNotInitialized();
     throwIfTrackingMode();

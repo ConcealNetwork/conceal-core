@@ -84,7 +84,7 @@ namespace {
     transaction.getOutput(index, output, amount_);
 
     TransactionOutputInformationIn outputInfo;
-    outputInfo.type = TransactionTypes::OutputType::Key;
+    outputInfo.type = transaction_types::OutputType::Key;
     outputInfo.amount = amount_;
     outputInfo.globalOutputIndex = globalOutputIndex;
     outputInfo.outputInTransaction = index;
@@ -152,7 +152,7 @@ private:
     std::vector<AccountBase> accounts;
   };
 
-  std::unordered_map<size_t, std::pair<TransactionTypes::InputKeyInfo, KeyPair>> keys;
+  std::unordered_map<size_t, std::pair<transaction_types::InputKeyInfo, KeyPair>> keys;
   std::unordered_map<size_t, MsigInfo> msigInputs;
 
   std::unique_ptr<ITransaction> tx;
@@ -228,11 +228,11 @@ inline bool operator==(const TransactionOutputInformation& l, const TransactionO
     return false;
   }
 
-  if (l.type == TransactionTypes::OutputType::Key) {
+  if (l.type == transaction_types::OutputType::Key) {
     if (l.outputKey != r.outputKey) {
       return false;
     }
-  } else if (l.type == TransactionTypes::OutputType::Multisignature) {
+  } else if (l.type == transaction_types::OutputType::Multisignature) {
     if (l.requiredSignatures != r.requiredSignatures) {
       return false;
     }

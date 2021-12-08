@@ -40,15 +40,15 @@ void TestTransactionBuilder::setUnlockTime(uint64_t time) {
 }
 
 size_t TestTransactionBuilder::addTestInput(uint64_t amount, const AccountKeys& senderKeys) {
-  using namespace TransactionTypes;
+  using namespace transaction_types;
 
-  TransactionTypes::InputKeyInfo info;
+  transaction_types::InputKeyInfo info;
   PublicKey targetKey;
 
   cn::KeyPair srcTxKeys = cn::generateKeyPair();
   derivePublicKey(senderKeys, srcTxKeys.publicKey, 5, targetKey);
 
-  TransactionTypes::GlobalOutput gout = { targetKey, 0 };
+  transaction_types::GlobalOutput gout = { targetKey, 0 };
 
   info.amount = amount;
   info.outputs.push_back(gout);
@@ -64,15 +64,15 @@ size_t TestTransactionBuilder::addTestInput(uint64_t amount, const AccountKeys& 
 }
 
 size_t TestTransactionBuilder::addTestInput(uint64_t amount, std::vector<uint32_t> gouts, const AccountKeys& senderKeys) {
-  using namespace TransactionTypes;
+  using namespace transaction_types;
 
-  TransactionTypes::InputKeyInfo info;
+  transaction_types::InputKeyInfo info;
   PublicKey targetKey;
 
   cn::KeyPair srcTxKeys = cn::generateKeyPair();
   derivePublicKey(senderKeys, srcTxKeys.publicKey, 5, targetKey);
 
-  TransactionTypes::GlobalOutput gout = { targetKey, 0 };
+  transaction_types::GlobalOutput gout = { targetKey, 0 };
 
   info.amount = amount;
   info.outputs.push_back(gout);
@@ -80,7 +80,7 @@ size_t TestTransactionBuilder::addTestInput(uint64_t amount, std::vector<uint32_
   SecretKey sk;
   for (auto out : gouts) {
     crypto::generate_keys(pk, sk);
-    info.outputs.push_back(TransactionTypes::GlobalOutput{ pk, out });
+    info.outputs.push_back(transaction_types::GlobalOutput{ pk, out });
   }
 
   info.realOutput.transactionIndex = 0;
@@ -94,10 +94,10 @@ size_t TestTransactionBuilder::addTestInput(uint64_t amount, std::vector<uint32_
 }
 
 void TestTransactionBuilder::addInput(const AccountKeys& senderKeys, const TransactionOutputInformation& t) {
-  TransactionTypes::InputKeyInfo info;
+  transaction_types::InputKeyInfo info;
   info.amount = t.amount;
 
-  TransactionTypes::GlobalOutput globalOut;
+  transaction_types::GlobalOutput globalOut;
   globalOut.outputIndex = t.globalOutputIndex;
   globalOut.targetKey = t.outputKey;
   info.outputs.push_back(globalOut);
@@ -155,7 +155,7 @@ TransactionOutputInformationIn TestTransactionBuilder::addTestKeyOutput(uint64_t
   tx->getOutput(index, output, amount_);
 
   TransactionOutputInformationIn outputInfo;
-  outputInfo.type = TransactionTypes::OutputType::Key;
+  outputInfo.type = transaction_types::OutputType::Key;
   outputInfo.amount = amount_;
   outputInfo.globalOutputIndex = globalOutputIndex;
   outputInfo.outputInTransaction = index;
@@ -174,7 +174,7 @@ TransactionOutputInformationIn TestTransactionBuilder::addTestMultisignatureOutp
   tx->getOutput(index, output, _amount);
 
   TransactionOutputInformationIn outputInfo;
-  outputInfo.type = TransactionTypes::OutputType::Multisignature;
+  outputInfo.type = transaction_types::OutputType::Multisignature;
   outputInfo.amount = _amount;
   outputInfo.globalOutputIndex = globalOutputIndex;
   outputInfo.outputInTransaction = index;

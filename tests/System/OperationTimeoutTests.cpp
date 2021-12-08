@@ -7,7 +7,7 @@
 #include <System/OperationTimeout.h>
 #include <System/InterruptedException.h>
 
-using namespace System;
+using namespace platform_system;
 
 class OperationTimeoutTest : public testing::Test {
 public:

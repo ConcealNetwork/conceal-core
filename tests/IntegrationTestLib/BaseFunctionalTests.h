@@ -98,7 +98,7 @@ namespace Tests {
 
     class BaseFunctionalTests : boost::noncopyable {
     public:
-      BaseFunctionalTests(const cn::Currency& currency, System::Dispatcher& d, const BaseFunctionalTestsConfig& config) :
+      BaseFunctionalTests(const cn::Currency& currency, platform_system::Dispatcher& d, const BaseFunctionalTestsConfig& config) :
           m_dispatcher(d),
           m_currency(currency),
           m_nextTimestamp(time(nullptr) - 365 * 24 * 60 * 60),
@@ -127,7 +127,7 @@ namespace Tests {
       TestNodeConfiguration createNodeConfiguration(size_t i);
 
       std::vector< std::unique_ptr<TestNode> > nodeDaemons;
-      System::Dispatcher& m_dispatcher;
+      platform_system::Dispatcher& m_dispatcher;
       const cn::Currency& m_currency;
 	  logging::ConsoleLogger m_logger;
 

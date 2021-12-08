@@ -6,7 +6,7 @@
 
 #pragma once
 
-namespace System {
+namespace platform_system {
 
 class Event;
 

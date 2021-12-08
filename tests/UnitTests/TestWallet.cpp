@@ -216,7 +216,7 @@ protected:
 
   uint32_t TRANSACTION_SOFTLOCK_TIME;
 
-  System::Dispatcher dispatcher;
+  platform_system::Dispatcher dispatcher;
   logging::ConsoleLogger logger;
   cn::Currency currency;
   TestBlockchainGenerator generator;
@@ -345,7 +345,7 @@ void WalletApi::waitForValue(cn::WalletGreen& wallet, T value, std::function<T (
 }
 
 bool WalletApi::waitForWalletEvent(cn::WalletGreen& wallet, cn::WalletEventType eventType, std::chrono::nanoseconds timeout) {
-  System::Context<> eventContext(dispatcher, [&wallet, eventType] () {
+  platform_system::Context<> eventContext(dispatcher, [&wallet, eventType] () {
     cn::WalletEvent event;
 
     do {
@@ -353,15 +353,15 @@ bool WalletApi::waitForWalletEvent(cn::WalletGreen& wallet, cn::WalletEventType 
     } while(event.type != eventType);
   });
 
-  System::Context<> timeoutContext(dispatcher, [timeout, &eventContext, this] {
-    System::Timer(dispatcher).sleep(timeout);
+  platform_system::Context<> timeoutContext(dispatcher, [timeout, &eventContext, this] {
+    platform_system::Timer(dispatcher).sleep(timeout);
     eventContext.interrupt();
   });
 
   try {
     eventContext.get();
     return true;
-  } catch (System::InterruptedException&) {
+  } catch (platform_system::InterruptedException&) {
     return false;
   }
 }
@@ -552,7 +552,7 @@ size_t WalletApi::makeTransaction(
 }
 
 void WalletApi::wait(uint64_t milliseconds) {
-  System::Timer timer(dispatcher);
+  platform_system::Timer timer(dispatcher);
   timer.sleep(std::chrono::nanoseconds(milliseconds * 1000000));
 }
 
@@ -2425,7 +2425,7 @@ TEST_F(WalletApi_makeTransaction, sendsTransactionCreatedEvent) {
 TEST_F(WalletApi_makeTransaction, ifFailedDoesNotSendTransactionCreatedEvent) {
   generateAndUnlockMoney();
 
-  System::Context<bool> eventContext(dispatcher, [this]() {
+  platform_system::Context<bool> eventContext(dispatcher, [this]() {
     bool res;
 
     for (;;) {
@@ -2435,7 +2435,7 @@ TEST_F(WalletApi_makeTransaction, ifFailedDoesNotSendTransactionCreatedEvent) {
           res = true;
           break;
         }
-      } catch (System::InterruptedException&) {
+      } catch (platform_system::InterruptedException&) {
         res = false;
         break;
       }
@@ -2693,7 +2693,7 @@ TEST_F(WalletApi_rollbackUncommitedTransaction, doesNotSendTransactionUpdatedEve
   alice.commitTransaction(txId);
   ASSERT_TRUE(waitForWalletEvent(alice, WalletEventType::TRANSACTION_UPDATED, std::chrono::seconds(5)));
 
-  System::Context<bool> eventContext(dispatcher, [this]() {
+  platform_system::Context<bool> eventContext(dispatcher, [this]() {
     bool res;
 
     for (;;) {
@@ -2703,7 +2703,7 @@ TEST_F(WalletApi_rollbackUncommitedTransaction, doesNotSendTransactionUpdatedEve
           res = true;
           break;
         }
-      } catch (System::InterruptedException&) {
+      } catch (platform_system::InterruptedException&) {
         res = false;
         break;
       }

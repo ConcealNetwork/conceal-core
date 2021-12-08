@@ -21,7 +21,7 @@ class ICryptoNoteProtocolQuery;
 
 class RpcServer : public HttpServer {
 public:
-  RpcServer(System::Dispatcher& dispatcher, logging::ILogger& log, core& c, NodeServer& p2p, const ICryptoNoteProtocolQuery& protocolQuery);
+  RpcServer(platform_system::Dispatcher& dispatcher, logging::ILogger& log, core& c, NodeServer& p2p, const ICryptoNoteProtocolQuery& protocolQuery);
   typedef std::function<bool(RpcServer*, const HttpRequest& request, HttpResponse& response)> HandlerFunction;
   bool setFeeAddress(const std::string& fee_address, const AccountPublicAddress& fee_acc);
   bool setViewKey(const std::string& view_key);

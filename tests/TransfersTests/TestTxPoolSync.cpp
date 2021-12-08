@@ -23,7 +23,7 @@ using namespace cn;
 using namespace Tests::common;
 using namespace crypto;
 
-extern System::Dispatcher globalSystem;
+extern platform_system::Dispatcher globalSystem;
 extern Tests::common::BaseFunctionalTestsConfig config;
 
 namespace {
@@ -37,17 +37,17 @@ namespace {
 
   protected:
     logging::LoggerManager m_logManager;
-    System::Dispatcher& m_dispatcher;
+    platform_system::Dispatcher& m_dispatcher;
     cn::Currency m_currency;
   };
 
   TEST_F(NodeTxPoolSyncTest, TxPoolsAreRequestedRightAfterANodeIsConnectedToAnotherIfTheirBlockchainsAreSynchronized) {
-    //System::Timer timer(m_dispatcher);
+    //platform_system::Timer timer(m_dispatcher);
     //m_dispatcher.spawn([&m_dispatcher, &timer] {
     //  try {
     //    timer.sleep(std::chrono::minutes(5));
     //    m_dispatcher.
-    //  } catch (System::InterruptedException&) {
+    //  } catch (platform_system::InterruptedException&) {
     //  }
     //});
 
@@ -132,12 +132,12 @@ namespace {
   }
 
   TEST_F(NodeTxPoolSyncTest, TxPoolsAreRequestedRightAfterInitialBlockchainsSynchronization) {
-    //System::Timer timer(m_dispatcher);
+    //platform_system::Timer timer(m_dispatcher);
     //m_dispatcher.spawn([&m_dispatcher, &timer] {
     //  try {
     //    timer.sleep(std::chrono::minutes(5));
     //    m_dispatcher.
-    //  } catch (System::InterruptedException&) {
+    //  } catch (platform_system::InterruptedException&) {
     //  }
     //});
 
@@ -227,12 +227,12 @@ namespace {
   }
 
   TEST_F(NodeTxPoolSyncTest, TxPoolsAreRequestedRightAfterTimedBlockchainsSynchronization) {
-    //System::Timer timer(m_dispatcher);
+    //platform_system::Timer timer(m_dispatcher);
     //m_dispatcher.spawn([&m_dispatcher, &timer] {
     //  try {
     //    timer.sleep(std::chrono::minutes(5));
     //    m_dispatcher.
-    //  } catch (System::InterruptedException&) {
+    //  } catch (platform_system::InterruptedException&) {
     //  }
     //});
 
@@ -314,12 +314,12 @@ namespace {
     // If this condition isn't true, then test must be rewritten a bit
     ASSERT_GT(m_currency.difficultyLag() + m_currency.difficultyCut(), m_currency.minedMoneyUnlockWindow());
 
-    //System::Timer timer(m_dispatcher);
+    //platform_system::Timer timer(m_dispatcher);
     //m_dispatcher.spawn([&m_dispatcher, &timer] {
     //  try {
     //    timer.sleep(std::chrono::minutes(5));
     //    m_dispatcher.
-    //  } catch (System::InterruptedException&) {
+    //  } catch (platform_system::InterruptedException&) {
     //  }
     //});
 

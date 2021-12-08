@@ -21,7 +21,7 @@
 
 namespace cn {
 
-namespace JsonRpc {
+namespace json_rpc {
 
 JsonRpcError::JsonRpcError() : code(0) {}
 
@@ -44,7 +44,7 @@ void invokeJsonRpcCommand(HttpClient& httpClient, JsonRpcRequest& jsReq, JsonRpc
   HttpResponse httpRes;
 
   if (!user.empty() || !password.empty()) {
-    httpReq.addHeader("Authorization", "Basic " + Tools::Base64::encode(user + ":" + password));
+    httpReq.addHeader("Authorization", "Basic " + tools::base_64::encode(user + ":" + password));
   }
   httpReq.addHeader("Content-Type", "application/json");
   httpReq.setUrl("/json_rpc");

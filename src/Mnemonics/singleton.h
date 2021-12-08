@@ -33,17 +33,17 @@
  */
 
 /*!
- * \namespace Language
+ * \namespace language
  * \brief Mnemonic language related namespace.
  */
-namespace Language
+namespace language
 {
   /*!
    * \class Singleton
    * 
    * \brief Single helper class.
    * 
-   * Do Language::Singleton<YourClass>::instance() to create a singleton instance
+   * Do language::Singleton<YourClass>::instance() to create a singleton instance
    * of `YourClass`.
    */
   template <class T>

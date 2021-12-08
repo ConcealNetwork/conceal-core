@@ -56,7 +56,7 @@
 
 using namespace cn;
 
-namespace PaymentService
+namespace payment_service
 {
 
   namespace
@@ -247,7 +247,7 @@ namespace PaymentService
 
     void replaceWalletFiles(const std::string &path, const std::string &tempFilePath)
     {
-      Tools::replace_file(tempFilePath, path);
+      tools::replace_file(tempFilePath, path);
     }
 
     crypto::Hash parseHash(const std::string &hashString, logging::LoggerRef logger)
@@ -293,9 +293,9 @@ namespace PaymentService
 
     //KD2
 
-    PaymentService::TransactionRpcInfo convertTransactionWithTransfersToTransactionRpcInfo(const cn::WalletTransactionWithTransfers &transactionWithTransfers)
+    payment_service::TransactionRpcInfo convertTransactionWithTransfersToTransactionRpcInfo(const cn::WalletTransactionWithTransfers &transactionWithTransfers)
     {
-      PaymentService::TransactionRpcInfo transactionInfo;
+      payment_service::TransactionRpcInfo transactionInfo;
       transactionInfo.state = static_cast<uint8_t>(transactionWithTransfers.transaction.state);
       transactionInfo.transactionHash = common::podToHex(transactionWithTransfers.transaction.hash);
       transactionInfo.blockIndex = transactionWithTransfers.transaction.blockHeight;
@@ -311,7 +311,7 @@ namespace PaymentService
 
       for (const cn::WalletTransfer &transfer : transactionWithTransfers.transfers)
       {
-        PaymentService::TransferRpcInfo rpcTransfer;
+        payment_service::TransferRpcInfo rpcTransfer;
         rpcTransfer.address = transfer.address;
         rpcTransfer.amount = transfer.amount;
         rpcTransfer.type = static_cast<uint8_t>(transfer.type);
@@ -320,19 +320,19 @@ namespace PaymentService
       return transactionInfo;
     }
 
-    std::vector<PaymentService::TransactionsInBlockRpcInfo> convertTransactionsInBlockInfoToTransactionsInBlockRpcInfo(
+    std::vector<payment_service::TransactionsInBlockRpcInfo> convertTransactionsInBlockInfoToTransactionsInBlockRpcInfo(
         const std::vector<cn::TransactionsInBlockInfo> &blocks, uint32_t &knownBlockCount)
     {
-      std::vector<PaymentService::TransactionsInBlockRpcInfo> rpcBlocks;
+      std::vector<payment_service::TransactionsInBlockRpcInfo> rpcBlocks;
       rpcBlocks.reserve(blocks.size());
       for (const auto &block : blocks)
       {
-        PaymentService::TransactionsInBlockRpcInfo rpcBlock;
+        payment_service::TransactionsInBlockRpcInfo rpcBlock;
         rpcBlock.blockHash = common::podToHex(block.blockHash);
 
         for (const cn::WalletTransactionWithTransfers &transactionWithTransfers : block.transactions)
         {
-          PaymentService::TransactionRpcInfo transactionInfo = convertTransactionWithTransfersToTransactionRpcInfo(transactionWithTransfers);
+          payment_service::TransactionRpcInfo transactionInfo = convertTransactionWithTransfersToTransactionRpcInfo(transactionWithTransfers);
           transactionInfo.confirmations = knownBlockCount - transactionInfo.blockIndex;
           rpcBlock.transactions.push_back(std::move(transactionInfo));
         }
@@ -343,15 +343,15 @@ namespace PaymentService
       return rpcBlocks;
     }
 
-    std::vector<PaymentService::TransactionHashesInBlockRpcInfo> convertTransactionsInBlockInfoToTransactionHashesInBlockRpcInfo(
+    std::vector<payment_service::TransactionHashesInBlockRpcInfo> convertTransactionsInBlockInfoToTransactionHashesInBlockRpcInfo(
         const std::vector<cn::TransactionsInBlockInfo> &blocks)
     {
 
-      std::vector<PaymentService::TransactionHashesInBlockRpcInfo> transactionHashes;
+      std::vector<payment_service::TransactionHashesInBlockRpcInfo> transactionHashes;
       transactionHashes.reserve(blocks.size());
       for (const cn::TransactionsInBlockInfo &block : blocks)
       {
-        PaymentService::TransactionHashesInBlockRpcInfo item;
+        payment_service::TransactionHashesInBlockRpcInfo item;
         item.blockHash = common::podToHex(block.blockHash);
 
         for (const cn::WalletTransactionWithTransfers &transaction : block.transactions)
@@ -377,7 +377,7 @@ namespace PaymentService
       }
     }
 
-    std::vector<std::string> collectDestinationAddresses(const std::vector<PaymentService::WalletRpcOrder> &orders)
+    std::vector<std::string> collectDestinationAddresses(const std::vector<payment_service::WalletRpcOrder> &orders)
     {
       std::vector<std::string> result;
 
@@ -390,9 +390,9 @@ namespace PaymentService
       return result;
     }
 
-    std::vector<PaymentService::WalletRpcMessage> collectMessages(const std::vector<PaymentService::WalletRpcOrder> &orders)
+    std::vector<payment_service::WalletRpcMessage> collectMessages(const std::vector<payment_service::WalletRpcOrder> &orders)
     {
-      std::vector<PaymentService::WalletRpcMessage> result;
+      std::vector<payment_service::WalletRpcMessage> result;
 
       result.reserve(orders.size());
       for (const auto &order : orders)
@@ -406,7 +406,7 @@ namespace PaymentService
       return result;
     }
 
-    std::vector<cn::WalletOrder> convertWalletRpcOrdersToWalletOrders(const std::vector<PaymentService::WalletRpcOrder> &orders)
+    std::vector<cn::WalletOrder> convertWalletRpcOrdersToWalletOrders(const std::vector<payment_service::WalletRpcOrder> &orders)
     {
       std::vector<cn::WalletOrder> result;
       result.reserve(orders.size());
@@ -419,7 +419,7 @@ namespace PaymentService
       return result;
     }
 
-    std::vector<cn::WalletMessage> convertWalletRpcMessagesToWalletMessages(const std::vector<PaymentService::WalletRpcMessage> &messages)
+    std::vector<cn::WalletMessage> convertWalletRpcMessagesToWalletMessages(const std::vector<payment_service::WalletRpcMessage> &messages)
     {
       std::vector<cn::WalletMessage> result;
       result.reserve(messages.size());
@@ -438,7 +438,7 @@ namespace PaymentService
   {
     boost::filesystem::path pathToWalletFile(filename);
     boost::filesystem::path directory = pathToWalletFile.parent_path();
-    if (!directory.empty() && !Tools::directoryExists(directory.string()))
+    if (!directory.empty() && !tools::directoryExists(directory.string()))
     {
       throw std::runtime_error("Directory does not exist: " + directory.string());
     }
@@ -487,7 +487,7 @@ namespace PaymentService
       const cn::Currency &currency,
       const WalletConfiguration &conf,
       logging::ILogger &logger,
-      System::Dispatcher &dispatcher)
+      platform_system::Dispatcher &dispatcher)
   {
     logging::LoggerRef log(logger, "generateNewWallet");
 
@@ -564,7 +564,7 @@ namespace PaymentService
     /* Save the container and exit */
     wallet->save(cn::WalletSaveLevel::SAVE_KEYS_ONLY);
     log(logging::INFO) << "Wallet is saved";
-  } // namespace PaymentService
+  } // namespace payment_service
 
   void importLegacyKeys(const std::string &legacyKeysFile, const WalletConfiguration &conf)
   {
@@ -582,7 +582,7 @@ namespace PaymentService
 
   WalletService::WalletService(
       const cn::Currency &currency,
-      System::Dispatcher &sys,
+      platform_system::Dispatcher &sys,
       cn::INode &node,
       cn::IWallet &wallet,
       cn::IFusionManager &fusionManager,
@@ -631,7 +631,7 @@ namespace PaymentService
   {
     try
     {
-      System::EventLock lk(readyEvent);
+      platform_system::EventLock lk(readyEvent);
 
       logger(logging::INFO, logging::BRIGHT_WHITE) << "Saving wallet...";
 
@@ -678,7 +678,7 @@ namespace PaymentService
   {
     try
     {
-      System::EventLock lk(readyEvent);
+      platform_system::EventLock lk(readyEvent);
 
       logger(logging::INFO, logging::BRIGHT_WHITE) << "Resetting wallet";
 
@@ -709,7 +709,7 @@ namespace PaymentService
   {
     try
     {
-      System::EventLock lk(readyEvent);
+      platform_system::EventLock lk(readyEvent);
 
       saveWallet();
 
@@ -746,7 +746,7 @@ namespace PaymentService
 
     try
     {
-      System::EventLock lk(readyEvent);
+      platform_system::EventLock lk(readyEvent);
 
       saveWallet();
 
@@ -782,7 +782,7 @@ namespace PaymentService
   {
     try
     {
-      System::EventLock lk(readyEvent);
+      platform_system::EventLock lk(readyEvent);
 
       logger(logging::INFO, logging::BRIGHT_WHITE) << "Resetting wallet";
 
@@ -813,7 +813,7 @@ namespace PaymentService
   {
     try
     {
-      System::EventLock lk(readyEvent);
+      platform_system::EventLock lk(readyEvent);
 
       logger(logging::DEBUGGING) << "Creating address";
 
@@ -843,7 +843,7 @@ namespace PaymentService
   {
     try
     {
-      System::EventLock lk(readyEvent);
+      platform_system::EventLock lk(readyEvent);
 
       logger(logging::DEBUGGING) << "Creating address";
 
@@ -864,7 +864,7 @@ namespace PaymentService
   {
     try
     {
-      System::EventLock lk(readyEvent);
+      platform_system::EventLock lk(readyEvent);
       logger(logging::DEBUGGING) << "Creating " << spendSecretKeysText.size() << " addresses...";
       std::vector<crypto::SecretKey> secretKeys;
       std::unordered_set<std::string> unique;
@@ -903,7 +903,7 @@ namespace PaymentService
   {
     try
     {
-      System::EventLock lk(readyEvent);
+      platform_system::EventLock lk(readyEvent);
 
       logger(logging::DEBUGGING) << "Creating tracking address";
 
@@ -930,7 +930,7 @@ namespace PaymentService
   {
     try
     {
-      System::EventLock lk(readyEvent);
+      platform_system::EventLock lk(readyEvent);
 
       logger(logging::DEBUGGING) << "Delete address request came";
       wallet.deleteAddress(address);
@@ -949,7 +949,7 @@ namespace PaymentService
   {
     try
     {
-      System::EventLock lk(readyEvent);
+      platform_system::EventLock lk(readyEvent);
 
       cn::KeyPair key = wallet.getAddressSpendKey(address);
 
@@ -969,7 +969,7 @@ namespace PaymentService
   {
     try
     {
-      System::EventLock lk(readyEvent);
+      platform_system::EventLock lk(readyEvent);
       logger(logging::DEBUGGING) << "Getting balance for address " << address;
 
       availableBalance = wallet.getActualBalance(address);
@@ -991,7 +991,7 @@ namespace PaymentService
   {
     try
     {
-      System::EventLock lk(readyEvent);
+      platform_system::EventLock lk(readyEvent);
       logger(logging::DEBUGGING) << "Getting wallet balance";
 
       availableBalance = wallet.getActualBalance();
@@ -1013,7 +1013,7 @@ namespace PaymentService
   {
     try
     {
-      System::EventLock lk(readyEvent);
+      platform_system::EventLock lk(readyEvent);
       std::vector<crypto::Hash> hashes = wallet.getBlockHashes(firstBlockIndex, blockCount);
 
       blockHashes.reserve(hashes.size());
@@ -1035,7 +1035,7 @@ namespace PaymentService
   {
     try
     {
-      System::EventLock lk(readyEvent);
+      platform_system::EventLock lk(readyEvent);
       cn::KeyPair viewKey = wallet.getViewKey();
       viewSecretKey = common::podToHex(viewKey.secretKey);
     }
@@ -1056,7 +1056,7 @@ namespace PaymentService
   {
     try
     {
-      System::EventLock lk(readyEvent);
+      platform_system::EventLock lk(readyEvent);
       validateAddresses(addresses, currency, logger);
 
       if (!paymentId.empty())
@@ -1088,7 +1088,7 @@ namespace PaymentService
   {
     try
     {
-      System::EventLock lk(readyEvent);
+      platform_system::EventLock lk(readyEvent);
       validateAddresses(addresses, currency, logger);
 
       if (!paymentId.empty())
@@ -1117,7 +1117,7 @@ namespace PaymentService
   {
     try
     {
-      System::EventLock lk(readyEvent);
+      platform_system::EventLock lk(readyEvent);
       Deposit deposit = wallet.getDeposit(depositId);
       amount = deposit.amount;
       term = deposit.term;
@@ -1163,7 +1163,7 @@ namespace PaymentService
   {
     try
     {
-      System::EventLock lk(readyEvent);
+      platform_system::EventLock lk(readyEvent);
       validateAddresses(addresses, currency, logger);
 
       if (!paymentId.empty())
@@ -1196,7 +1196,7 @@ namespace PaymentService
   {
     try
     {
-      System::EventLock lk(readyEvent);
+      platform_system::EventLock lk(readyEvent);
       validateAddresses(addresses, currency, logger);
 
       if (!paymentId.empty())
@@ -1228,7 +1228,7 @@ namespace PaymentService
   {
     try
     {
-      System::EventLock lk(readyEvent);
+      platform_system::EventLock lk(readyEvent);
       crypto::Hash hash = parseHash(transactionHash, logger);
 
       cn::WalletTransactionWithTransfers transactionWithTransfers = wallet.getTransaction(hash);
@@ -1266,7 +1266,7 @@ namespace PaymentService
 
       for (const cn::WalletTransfer &transfer : transactionWithTransfers.transfers)
       {
-        PaymentService::TransferRpcInfo rpcTransfer;
+        payment_service::TransferRpcInfo rpcTransfer;
         rpcTransfer.address = transfer.address;
         rpcTransfer.amount = transfer.amount;
         rpcTransfer.type = static_cast<uint8_t>(transfer.type);
@@ -1303,7 +1303,7 @@ namespace PaymentService
   {
     try
     {
-      System::EventLock lk(readyEvent);
+      platform_system::EventLock lk(readyEvent);
 
       addresses.clear();
       addresses.reserve(wallet.getAddressCount());
@@ -1327,7 +1327,7 @@ namespace PaymentService
 
     try
     {
-      System::EventLock lk(readyEvent);
+      platform_system::EventLock lk(readyEvent);
 
       uint64_t knownBlockCount = node.getKnownBlockCount();
       uint64_t localBlockCount = node.getLocalBlockCount();
@@ -1340,7 +1340,7 @@ namespace PaymentService
 
       validateAddresses(request.sourceAddresses, currency, logger);
       validateAddresses(collectDestinationAddresses(request.transfers), currency, logger);
-      std::vector<PaymentService::WalletRpcMessage> messages = collectMessages(request.transfers);
+      std::vector<payment_service::WalletRpcMessage> messages = collectMessages(request.transfers);
       if (!request.changeAddress.empty())
       {
         validateAddresses({request.changeAddress}, currency, logger);
@@ -1388,11 +1388,11 @@ namespace PaymentService
   {
     try
     {
-      System::EventLock lk(readyEvent);
+      platform_system::EventLock lk(readyEvent);
 
       validateAddresses(request.addresses, currency, logger);
       validateAddresses(collectDestinationAddresses(request.transfers), currency, logger);
-      std::vector<PaymentService::WalletRpcMessage> messages = collectMessages(request.transfers);
+      std::vector<payment_service::WalletRpcMessage> messages = collectMessages(request.transfers);
       if (!request.changeAddress.empty())
       {
         validateAddresses({request.changeAddress}, currency, logger);
@@ -1455,7 +1455,7 @@ namespace PaymentService
     logger(logging::INFO) << "keys:" + keys;
 
     /* Create the integrated address the same way you make a public address */
-    integrated_address = Tools::Base58::encode_addr(
+    integrated_address = tools::base_58::encode_addr(
         cn::parameters::CRYPTONOTE_PUBLIC_ADDRESS_BASE58_PREFIX,
         payment_id_str + keys);
 
@@ -1475,7 +1475,7 @@ namespace PaymentService
     /* Decode the address and extract the payment id */
     std::string decoded;
     uint64_t prefix;
-    if (Tools::Base58::decode_addr(integrated_address_str, prefix, decoded))
+    if (tools::base_58::decode_addr(integrated_address_str, prefix, decoded))
     {
       payment_id = decoded.substr(0, 64);
     }
@@ -1507,7 +1507,7 @@ namespace PaymentService
   {
     try
     {
-      System::EventLock lk(readyEvent);
+      platform_system::EventLock lk(readyEvent);
 
       std::vector<size_t> transactionIds = wallet.getDelayedTransactionIds();
       transactionHashes.reserve(transactionIds.size());
@@ -1535,7 +1535,7 @@ namespace PaymentService
   {
     try
     {
-      System::EventLock lk(readyEvent);
+      platform_system::EventLock lk(readyEvent);
 
       parseHash(transactionHash, logger); //validate transactionHash parameter
 
@@ -1568,7 +1568,7 @@ namespace PaymentService
   {
     try
     {
-      System::EventLock lk(readyEvent);
+      platform_system::EventLock lk(readyEvent);
 
       parseHash(transactionHash, logger); //validate transactionHash parameter
 
@@ -1601,7 +1601,7 @@ namespace PaymentService
   {
     try
     {
-      System::EventLock lk(readyEvent);
+      platform_system::EventLock lk(readyEvent);
 
       validateAddresses(addresses, currency, logger);
 
@@ -1642,7 +1642,7 @@ namespace PaymentService
   {
     try
     {
-      System::EventLock lk(readyEvent);
+      platform_system::EventLock lk(readyEvent);
 
       auto estimateResult = fusionManager.estimate(1000000, {});
       knownBlockCount = node.getKnownBlockCount();
@@ -1688,7 +1688,7 @@ namespace PaymentService
           return make_error_code(cn::error::DAEMON_NOT_SYNCED);
         }
         
-        System::EventLock lk(readyEvent);
+        platform_system::EventLock lk(readyEvent);
 
         /* Validate the source addresse if it is are not empty */
         if (!sourceAddress.empty())
@@ -1761,7 +1761,7 @@ namespace PaymentService
     {
       try
       {
-        System::EventLock lk(readyEvent);
+        platform_system::EventLock lk(readyEvent);
 
         /* Validate both the source and destination addresses
        if they are not empty */
@@ -1814,7 +1814,7 @@ namespace PaymentService
     {
       try
       {
-        System::EventLock lk(readyEvent);
+        platform_system::EventLock lk(readyEvent);
 
         std::vector<uint8_t> extraBin = common::fromHex(extra);
         crypto::PublicKey publicKey = cn::getTransactionPublicKeyFromExtra(extraBin);
@@ -1875,7 +1875,7 @@ namespace PaymentService
 
       try
       {
-        System::EventLock lk(readyEvent);
+        platform_system::EventLock lk(readyEvent);
 
         validateAddresses(addresses, currency, logger);
 
@@ -1902,7 +1902,7 @@ namespace PaymentService
     {
       try
       {
-        System::EventLock lk(readyEvent);
+        platform_system::EventLock lk(readyEvent);
 
         uint64_t knownBlockCount = node.getKnownBlockCount();
         uint64_t localBlockCount = node.getLocalBlockCount();
@@ -1986,7 +1986,7 @@ namespace PaymentService
     {
       try
       {
-        System::EventLock lk(readyEvent);
+        platform_system::EventLock lk(readyEvent);
 
         crypto::SecretKey viewSecretKey;
         if (!common::podFromHex(viewSecretKeyText, viewSecretKey))
@@ -2093,4 +2093,4 @@ namespace PaymentService
       return convertTransactionsInBlockInfoToTransactionsInBlockRpcInfo(filteredTransactions, knownBlockCount);
     }
 
-  } //namespace PaymentService
+  } //namespace payment_service

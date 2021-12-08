@@ -26,7 +26,7 @@
 #include <bits/reg.h>
 #endif
 
-namespace System {
+namespace platform_system {
 
 struct NativeContextGroup;
 
@@ -77,7 +77,7 @@ public:
   void remoteSpawn(std::function<void()>&& procedure);
   void yield();
 
-  // system-dependent
+  // platform_system-dependent
   int getEpoll() const;
   NativeContext& getReusableContext();
   void pushReusableContext(NativeContext&);

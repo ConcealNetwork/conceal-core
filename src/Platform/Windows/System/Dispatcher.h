@@ -22,7 +22,7 @@
 #include <map>
 #include <queue>
 
-namespace System {
+namespace platform_system {
 
 struct NativeContextGroup;
 

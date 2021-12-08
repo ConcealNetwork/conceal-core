@@ -30,7 +30,7 @@
 
 using namespace common;
 using namespace logging;
-using namespace System;
+using namespace platform_system;
 
 namespace cn {
 
@@ -83,15 +83,15 @@ NetworkAddress getRemoteAddress(const TcpConnection& connection) {
   return remoteAddress;
 }
 
-void doWithTimeoutAndThrow(System::Dispatcher& dispatcher, std::chrono::nanoseconds timeout, std::function<void()> f) {
+void doWithTimeoutAndThrow(platform_system::Dispatcher& dispatcher, std::chrono::nanoseconds timeout, std::function<void()> f) {
   std::string result;
-  System::ContextGroup cg(dispatcher);
-  System::ContextGroupTimeout cgTimeout(dispatcher, cg, timeout);
+  platform_system::ContextGroup cg(dispatcher);
+  platform_system::ContextGroupTimeout cgTimeout(dispatcher, cg, timeout);
 
   cg.spawn([&] {
     try {
       f();
-    } catch (System::InterruptedException&) {
+    } catch (platform_system::InterruptedException&) {
       result = "Operation timeout";
     } catch (std::exception& e) {
       result = e.what();

@@ -290,12 +290,12 @@ int main(int argc, char** argv) {
       return 0; //help message requested or so
     }
 
-    logging::LoggerRef(pg.getLogger(), "main")(logging::INFO) << "PaymentService " << " v" << PROJECT_VERSION_LONG;
+    logging::LoggerRef(pg.getLogger(), "main")(logging::INFO) << "payment_service " << " v" << PROJECT_VERSION_LONG;
 
     const auto& config = pg.getConfig();
 
     if (config.gateConfiguration.generateNewContainer) {
-      System::Dispatcher d;
+      platform_system::Dispatcher d;
       generateNewWallet(pg.getCurrency(), pg.getWalletConfig(), pg.getLogger(), d);
       return 0;
     }
@@ -316,7 +316,7 @@ int main(int argc, char** argv) {
       pg.run();
     }
 
-  } catch (PaymentService::ConfigurationError& ex) {
+  } catch (payment_service::ConfigurationError& ex) {
     std::cerr << "Configuration error: " << ex.what() << std::endl;
     return 1;
   } catch (std::exception& ex) {

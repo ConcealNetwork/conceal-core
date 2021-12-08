@@ -14,13 +14,13 @@
 #include "Serialization/JsonInputValueSerializer.h"
 #include "Serialization/JsonOutputStreamSerializer.h"
 
-namespace PaymentService {
+namespace payment_service {
 
 class WalletService;
 
 class PaymentServiceJsonRpcServer : public cn::JsonRpcServer {
 public:
-  PaymentServiceJsonRpcServer(System::Dispatcher& sys, System::Event& stopEvent, WalletService& service, logging::ILogger& loggerGroup);
+  PaymentServiceJsonRpcServer(platform_system::Dispatcher& sys, platform_system::Event& stopEvent, WalletService& service, logging::ILogger& loggerGroup);
   PaymentServiceJsonRpcServer(const PaymentServiceJsonRpcServer&) = delete;
 
 protected:
@@ -93,4 +93,4 @@ private:
   std::error_code handleSendFusionTransaction(const SendFusionTransaction::Request& request, SendFusionTransaction::Response& response);
 };
 
-}//namespace PaymentService
+}//namespace payment_service

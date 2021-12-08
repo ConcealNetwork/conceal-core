@@ -10,7 +10,7 @@
 
 #include <string>
 
-namespace PaymentService {
+namespace payment_service {
 
 class NodeFactory {
 public:
@@ -25,4 +25,4 @@ private:
   static NodeFactory factory;
 };
 
-} //namespace PaymentService
+} //namespace payment_service

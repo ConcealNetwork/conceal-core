@@ -41,10 +41,10 @@
 #include <string>
 
 /*!
- * \namespace Language
+ * \namespace language
  * \brief Mnemonic language related namespace.
  */
-namespace Language
+namespace language
 {
   class English: public Base
   {
@@ -1396,7 +1396,7 @@ namespace Language
         "symptoms",
         "syndrome",
         "syringe",
-        "system",
+        "platform_system",
         "taboo",
         "tacit",
         "tadpoles",

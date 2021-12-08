@@ -9,8 +9,8 @@
 TEST(PathTools, NativePathToGeneric) {
 
 #ifdef _WIN32
-  const std::string input = "C:\\Windows\\System\\etc\\file.exe";
-  const std::string output = "C:/Windows/System/etc/file.exe";
+  const std::string input = "C:\\Windows\\platform_system\\etc\\file.exe";
+  const std::string output = "C:/Windows/platform_system/etc/file.exe";
 #else
   const std::string input = "/var/tmp/file.tmp";
   const std::string output = input;

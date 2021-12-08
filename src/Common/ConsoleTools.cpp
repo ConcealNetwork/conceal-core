@@ -16,7 +16,7 @@
 #include <unistd.h>
 #endif
 
-namespace common { namespace Console { 
+namespace common { namespace console { 
 
 bool isConsoleTty() {
 #if defined(WIN32)

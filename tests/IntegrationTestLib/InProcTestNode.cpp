@@ -53,7 +53,7 @@ InProcTestNode::~InProcTestNode() {
 
 void InProcTestNode::workerThread(std::promise<std::string>& initPromise) {
 
-  System::Dispatcher dispatcher;
+  platform_system::Dispatcher dispatcher;
 
   logging::ConsoleLogger log;
 

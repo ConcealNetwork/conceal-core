@@ -31,7 +31,7 @@
 #include <unistd.h>
 #endif
 
-using namespace PaymentService;
+using namespace payment_service;
 
 void changeDirectory(const std::string& path) {
   if (chdir(path.c_str())) {
@@ -90,13 +90,13 @@ const cn::Currency PaymentGateService::getCurrency() {
 
 void PaymentGateService::run() {
   
-  System::Dispatcher localDispatcher;
-  System::Event localStopEvent(localDispatcher);
+  platform_system::Dispatcher localDispatcher;
+  platform_system::Event localStopEvent(localDispatcher);
 
   this->dispatcher = &localDispatcher;
   this->stopEvent = &localStopEvent;
 
-  Tools::SignalHandler::install(std::bind(&stopSignalHandler, this));
+  tools::SignalHandler::install(std::bind(&stopSignalHandler, this));
 
   logging::LoggerRef log(logger, "run");
 
@@ -126,11 +126,11 @@ void PaymentGateService::stop() {
 
 void PaymentGateService::runInProcess(logging::LoggerRef& log) {
   if (!config.coreConfig.configFolderDefaulted) {
-    if (!Tools::directoryExists(config.coreConfig.configFolder)) {
+    if (!tools::directoryExists(config.coreConfig.configFolder)) {
       throw std::runtime_error("Directory does not exist: " + config.coreConfig.configFolder);
     }
   } else {
-    if (!Tools::create_directories_if_necessary(config.coreConfig.configFolder)) {
+    if (!tools::create_directories_if_necessary(config.coreConfig.configFolder)) {
       throw std::runtime_error("Can't create directory: " + config.coreConfig.configFolder);
     }
   }
@@ -183,9 +183,9 @@ void PaymentGateService::runInProcess(logging::LoggerRef& log) {
 
   log(logging::INFO) << "Spawning p2p server";
 
-  System::Event p2pStarted(*dispatcher);
+  platform_system::Event p2pStarted(*dispatcher);
   
-  System::Context<> context(*dispatcher, [&]() {
+  platform_system::Context<> context(*dispatcher, [&]() {
     p2pStarted.set();
     p2pNode.run();
   });
@@ -208,7 +208,7 @@ void PaymentGateService::runRpcProxy(logging::LoggerRef& log) {
   cn::Currency currency = currencyBuilder.currency();
   
   std::unique_ptr<cn::INode> node(
-    PaymentService::NodeFactory::createNode(
+    payment_service::NodeFactory::createNode(
       config.remoteNodeConfig.daemonHost, 
       config.remoteNodeConfig.daemonPort));
 
@@ -216,15 +216,15 @@ void PaymentGateService::runRpcProxy(logging::LoggerRef& log) {
 }
 
 void PaymentGateService::runWalletService(const cn::Currency& currency, cn::INode& node) {
-  PaymentService::WalletConfiguration walletConfiguration{
+  payment_service::WalletConfiguration walletConfiguration{
     config.gateConfiguration.containerFile,
     config.gateConfiguration.containerPassword
   };
 
   std::unique_ptr<cn::WalletGreen> wallet(new cn::WalletGreen(*dispatcher, currency, node, logger));
 
-  service = new PaymentService::WalletService(currency, *dispatcher, node, *wallet, *wallet, walletConfiguration, logger);
-  std::unique_ptr<PaymentService::WalletService> serviceGuard(service);
+  service = new payment_service::WalletService(currency, *dispatcher, node, *wallet, *wallet, walletConfiguration, logger);
+  std::unique_ptr<payment_service::WalletService> serviceGuard(service);
   try {
     service->init();
   } catch (std::exception& e) {
@@ -240,7 +240,7 @@ void PaymentGateService::runWalletService(const cn::Currency& currency, cn::INod
       std::cout << "Address: " << address << std::endl;
     }
   } else {
-    PaymentService::PaymentServiceJsonRpcServer rpcServer(*dispatcher, *stopEvent, *service, logger);
+    payment_service::PaymentServiceJsonRpcServer rpcServer(*dispatcher, *stopEvent, *service, logger);
     rpcServer.start(config.gateConfiguration.bindAddress, config.gateConfiguration.bindPort,
       config.gateConfiguration.rpcUser, config.gateConfiguration.rpcPassword);
 

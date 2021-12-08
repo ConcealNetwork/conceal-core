@@ -160,7 +160,7 @@ TestNodeConfiguration TestNetworkBuilder::buildNodeConfiguration(size_t index) {
 
 }
 
-TestNetwork::TestNetwork(System::Dispatcher& dispatcher, const cn::Currency& currency) : 
+TestNetwork::TestNetwork(platform_system::Dispatcher& dispatcher, const cn::Currency& currency) : 
   m_dispatcher(dispatcher),
   m_currency(currency) {
 }

@@ -20,11 +20,11 @@
 #include "NodeCallback.h"
 
 using namespace cn;
-using namespace System;
+using namespace platform_system;
 
 namespace Tests {
 
-RPCTestNode::RPCTestNode(uint16_t port, System::Dispatcher& d) : 
+RPCTestNode::RPCTestNode(uint16_t port, platform_system::Dispatcher& d) : 
   m_rpcPort(port), m_dispatcher(d), m_httpClient(d, "127.0.0.1", port) {
 }
 
@@ -58,7 +58,7 @@ bool RPCTestNode::getBlockTemplate(const std::string& minerAddress, cn::Block& b
     req.wallet_address = minerAddress;
     req.reserve_size = 0;
 
-    JsonRpc::invokeJsonRpcCommand(m_httpClient, "getblocktemplate", req, rsp);
+    json_rpc::invokeJsonRpcCommand(m_httpClient, "getblocktemplate", req, rsp);
     if (rsp.status != CORE_RPC_STATUS_OK) {
       throw std::runtime_error(rsp.status);
     }
@@ -82,7 +82,7 @@ bool RPCTestNode::submitBlock(const std::string& block) {
     COMMAND_RPC_SUBMITBLOCK::request req;
     COMMAND_RPC_SUBMITBLOCK::response res;
     req.push_back(block);
-    JsonRpc::invokeJsonRpcCommand(m_httpClient, "submitblock", req, res);
+    json_rpc::invokeJsonRpcCommand(m_httpClient, "submitblock", req, res);
     if (res.status != CORE_RPC_STATUS_OK) {
       throw std::runtime_error(res.status);
     }
@@ -118,7 +118,7 @@ bool RPCTestNode::getTailBlockId(crypto::Hash& tailBlockId) {
   try {
     COMMAND_RPC_GET_LAST_BLOCK_HEADER::request req;
     COMMAND_RPC_GET_LAST_BLOCK_HEADER::response rsp;
-    JsonRpc::invokeJsonRpcCommand(m_httpClient, "getlastblockheader", req, rsp);
+    json_rpc::invokeJsonRpcCommand(m_httpClient, "getlastblockheader", req, rsp);
     if (rsp.status != CORE_RPC_STATUS_OK) {
       throw std::runtime_error(rsp.status);
     }

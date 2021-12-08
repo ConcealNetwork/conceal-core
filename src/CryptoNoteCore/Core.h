@@ -188,6 +188,6 @@ namespace cn {
     cryptonote_protocol_stub m_protocol_stub;
     friend class tx_validate_inputs;
     std::atomic<bool> m_starter_message_showed;
-    Tools::ObserverManager<ICoreObserver> m_observerManager;
+    tools::ObserverManager<ICoreObserver> m_observerManager;
    };
 }

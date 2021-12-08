@@ -14,9 +14,9 @@
 #include "int-util.h"
 #include "Varint.h"
 
-namespace Tools
+namespace tools
 {
-  namespace Base58
+  namespace base_58
   {
     namespace
     {
@@ -237,7 +237,7 @@ namespace Tools
       std::string expected_checksum(reinterpret_cast<const char*>(&hash), addr_checksum_size);
       if (expected_checksum != checksum) return false;
 
-      int read = Tools::read_varint(addr_data.begin(), addr_data.end(), tag);
+      int read = tools::read_varint(addr_data.begin(), addr_data.end(), tag);
       if (read <= 0) return false;
 
       data = addr_data.substr(read);

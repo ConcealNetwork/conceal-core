@@ -30,11 +30,11 @@ protected:
     network.shutdown();
   }
 
-  System::Dispatcher& getDispatcher() {
+  platform_system::Dispatcher& getDispatcher() {
     return dispatcher;
   }
 
-  System::Dispatcher dispatcher;
+  platform_system::Dispatcher dispatcher;
   logging::ConsoleLogger logger;
   cn::Currency currency;
   TestNetwork network;

@@ -38,7 +38,7 @@ public:
 class HttpClient {
 public:
 
-  HttpClient(System::Dispatcher& dispatcher, const std::string& address, uint16_t port);
+  HttpClient(platform_system::Dispatcher& dispatcher, const std::string& address, uint16_t port);
   ~HttpClient();
   void request(const HttpRequest& req, HttpResponse& res);
   
@@ -52,9 +52,9 @@ private:
   const uint16_t m_port;
 
   bool m_connected = false;
-  System::Dispatcher& m_dispatcher;
-  System::TcpConnection m_connection;
-  std::unique_ptr<System::TcpStreambuf> m_streamBuf;
+  platform_system::Dispatcher& m_dispatcher;
+  platform_system::TcpConnection m_connection;
+  std::unique_ptr<platform_system::TcpStreambuf> m_streamBuf;
 };
 
 template <typename Request, typename Response>
@@ -64,7 +64,7 @@ void invokeJsonCommand(HttpClient& client, const std::string& url, const Request
 
   hreq.addHeader("Content-Type", "application/json");
   if (!user.empty() || !password.empty()) {
-    hreq.addHeader("Authorization", "Basic " + Tools::Base64::encode(user + ":" + password));
+    hreq.addHeader("Authorization", "Basic " + tools::base_64::encode(user + ":" + password));
   }
   hreq.setUrl(url);
   hreq.setBody(storeToJson(req));
@@ -83,7 +83,7 @@ template <typename Request, typename Response>
 void invokeJsonRpcCommand(HttpClient& client, const std::string& method, const Request& req, Response& res, const std::string& user = "", const std::string& password = "") {
   try {
 
-    JsonRpc::JsonRpcRequest jsReq;
+    json_rpc::JsonRpcRequest jsReq;
 
     jsReq.setMethod(method);
     jsReq.setParams(req);
@@ -93,14 +93,14 @@ void invokeJsonRpcCommand(HttpClient& client, const std::string& method, const R
 
     httpReq.addHeader("Content-Type", "application/json");
     if (!user.empty() || !password.empty()) {
-      httpReq.addHeader("Authorization", "Basic " + Tools::Base64::encode(user + ":" + password));
+      httpReq.addHeader("Authorization", "Basic " + tools::base_64::encode(user + ":" + password));
     }
     httpReq.setUrl("/json_rpc");
     httpReq.setBody(jsReq.getBody());
 
     client.request(httpReq, httpRes);
 
-    JsonRpc::JsonRpcResponse jsRes;
+    json_rpc::JsonRpcResponse jsRes;
 
     //if (httpRes.getStatus() == HttpResponse::STATUS_200) {
       jsRes.parse(httpRes.getBody());
@@ -122,7 +122,7 @@ void invokeBinaryCommand(HttpClient& client, const std::string& url, const Reque
   HttpResponse hres;
 
   if (!user.empty() || !password.empty()) {
-    hreq.addHeader("Authorization", "Basic " + Tools::Base64::encode(user + ":" + password));
+    hreq.addHeader("Authorization", "Basic " + tools::base_64::encode(user + ":" + password));
   }
   hreq.setUrl(url);
   hreq.setBody(storeToBinaryKeyValue(req));

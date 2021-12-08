@@ -36,7 +36,7 @@
 #include "P2pNetworks.h"
 #include "PeerListManager.h"
 
-namespace System {
+namespace platform_system {
 class TcpConnection;
 }
 
@@ -75,11 +75,11 @@ namespace cn
     using Clock = std::chrono::steady_clock;
     using TimePoint = Clock::time_point;
 
-    System::Context<void>* context;
+    platform_system::Context<void>* context;
     PeerIdType peerId;
-    System::TcpConnection connection;
+    platform_system::TcpConnection connection;
 
-    P2pConnectionContext(System::Dispatcher& dispatcher, logging::ILogger& log, System::TcpConnection&& conn) :
+    P2pConnectionContext(platform_system::Dispatcher& dispatcher, logging::ILogger& log, platform_system::TcpConnection&& conn) :
       context(nullptr),
       peerId(0),
       connection(std::move(conn)),
@@ -107,7 +107,7 @@ namespace cn
   private:
     logging::LoggerRef logger;
     TimePoint writeOperationStartTime;
-    System::Event queueEvent;
+    platform_system::Event queueEvent;
     std::vector<P2pMessage> writeQueue;
     size_t writeQueueSize = 0;
     bool stopped;
@@ -119,7 +119,7 @@ namespace cn
 
     static void init_options(boost::program_options::options_description& desc);
 
-    NodeServer(System::Dispatcher& dispatcher, cn::CryptoNoteProtocolHandler& payload_handler, logging::ILogger& log);
+    NodeServer(platform_system::Dispatcher& dispatcher, cn::CryptoNoteProtocolHandler& payload_handler, logging::ILogger& log);
 
     bool run();
     bool init(const NetNodeConfig& config);
@@ -246,12 +246,12 @@ namespace cn
     bool m_hide_my_port;
     std::string m_p2p_state_filename;
 
-    System::Dispatcher& m_dispatcher;
-    System::ContextGroup m_workingContextGroup;
-    System::Event m_stopEvent;
-    System::Timer m_idleTimer;
-    System::Timer m_timeoutTimer;
-    System::TcpListener m_listener;
+    platform_system::Dispatcher& m_dispatcher;
+    platform_system::ContextGroup m_workingContextGroup;
+    platform_system::Event m_stopEvent;
+    platform_system::Timer m_idleTimer;
+    platform_system::Timer m_timeoutTimer;
+    platform_system::TcpListener m_listener;
     logging::LoggerRef logger;
     std::atomic<bool> m_stop;
 
@@ -261,7 +261,7 @@ namespace cn
     // OnceInInterval m_peer_handshake_idle_maker_interval;
     OnceInInterval m_connections_maker_interval;
     OnceInInterval m_peerlist_store_interval;
-    System::Timer m_timedSyncTimer;
+    platform_system::Timer m_timedSyncTimer;
 
     std::string m_bind_ip;
     std::string m_port;

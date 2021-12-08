@@ -16,7 +16,7 @@ using namespace crypto;
 
 const std::string TEST_PASSWORD = "password";
 
-TestWalletLegacy::TestWalletLegacy(System::Dispatcher &dispatcher, const Currency &currency, INode &node) : m_dispatcher(dispatcher),
+TestWalletLegacy::TestWalletLegacy(platform_system::Dispatcher &dispatcher, const Currency &currency, INode &node) : m_dispatcher(dispatcher),
                                                                                                             m_synchronizationCompleted(dispatcher),
                                                                                                             m_someTransactionUpdated(dispatcher),
                                                                                                             m_currency(currency),
@@ -49,13 +49,13 @@ namespace
 {
 struct TransactionSendingWaiter : public IWalletLegacyObserver
 {
-  System::Dispatcher &m_dispatcher;
-  System::Event m_event;
+  platform_system::Dispatcher &m_dispatcher;
+  platform_system::Event m_event;
   bool m_waiting = false;
   TransactionId m_expectedTxId;
   std::error_code m_result;
 
-  TransactionSendingWaiter(System::Dispatcher &dispatcher) : m_dispatcher(dispatcher), m_event(dispatcher)
+  TransactionSendingWaiter(platform_system::Dispatcher &dispatcher) : m_dispatcher(dispatcher), m_event(dispatcher)
   {
   }
 

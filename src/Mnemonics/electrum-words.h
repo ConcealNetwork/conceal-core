@@ -52,11 +52,11 @@
 namespace crypto
 {
   /*!
-   * \namespace crypto::ElectrumWords
+   * \namespace crypto::electrum_words
    * 
    * \brief Mnemonic seed word generation and wallet restoration helper functions.
    */
-  namespace ElectrumWords
+  namespace electrum_words
   {
 
     const int seed_length = 24;
@@ -67,7 +67,7 @@ namespace crypto
      * \param  dst             To put the secret data restored from the words.
      * \param  len             The number of bytes to expect, 0 if unknown
      * \param  duplicate       If true and len is not zero, we accept half the data, and duplicate it
-     * \param  language_name   Language of the seed as found gets written here.
+     * \param  language_name   language of the seed as found gets written here.
      * \return                 false if not a multiple of 3 words, or if word is not in the words list
      */
     bool words_to_bytes(std::string words, std::string& dst, size_t len, bool duplicate,
@@ -76,7 +76,7 @@ namespace crypto
      * \brief Converts seed words to bytes (secret key).
      * \param  words           String containing the words separated by spaces.
      * \param  dst             To put the secret key restored from the words.
-     * \param  language_name   Language of the seed as found gets written here.
+     * \param  language_name   language of the seed as found gets written here.
      * \return                 false if not a multiple of 3 words, or if word is not in the words list
      */
     bool words_to_bytes(std::string words, crypto::SecretKey& dst,

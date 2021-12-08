@@ -12,13 +12,13 @@
 #include <System/Future.h>
 #include <System/InterruptedException.h>
 
-namespace System {
+namespace platform_system {
 
 template<class T = void> class RemoteContext {
 public:
   // Start a thread, execute operation in it, continue execution of current context.
   RemoteContext(Dispatcher& d, std::function<T()>&& operation)
-      : dispatcher(d), event(d), procedure(std::move(operation)), future(System::Detail::async<T>([this] { return asyncProcedure(); })), interrupted(false) {
+      : dispatcher(d), event(d), procedure(std::move(operation)), future(platform_system::detail::async<T>([this] { return asyncProcedure(); })), interrupted(false) {
   }
 
   // Run other task on dispatcher until future is ready, then return lambda's result, or rethrow exception. UB if called more than once.
@@ -84,7 +84,7 @@ private:
   Dispatcher& dispatcher;
   mutable Event event;
   std::function<T()> procedure;
-  mutable System::Detail::Future<T> future;
+  mutable platform_system::detail::Future<T> future;
   mutable bool interrupted;
 };
 

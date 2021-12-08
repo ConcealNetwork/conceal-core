@@ -12,7 +12,7 @@
 #include "IWallet.h"
 #include "Serialization/ISerializer.h"
 
-namespace PaymentService
+namespace payment_service
 {
 
 const uint32_t DEFAULT_ANONYMITY_LEVEL = 4;
@@ -643,4 +643,4 @@ struct SendFusionTransaction
   };
 };
 
-} //namespace PaymentService
+} //namespace payment_service

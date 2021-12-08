@@ -28,7 +28,7 @@ namespace Tests {
     }
 
     auto cmdline = ss.str();
-    system(cmdline.c_str());
+    platform_system(cmdline.c_str());
 
 #else
     std::vector<const char*> cargs;

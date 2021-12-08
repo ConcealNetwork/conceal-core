@@ -23,7 +23,7 @@
 
 #include <Logging/LoggerRef.h>
 
-namespace System {
+namespace platform_system {
   class Dispatcher;
 }
 
@@ -48,7 +48,7 @@ namespace cn
       }
     };
 
-    CryptoNoteProtocolHandler(const Currency& currency, System::Dispatcher& dispatcher, ICore& rcore, IP2pEndpoint* p_net_layout, logging::ILogger& log);
+    CryptoNoteProtocolHandler(const Currency& currency, platform_system::Dispatcher& dispatcher, ICore& rcore, IP2pEndpoint* p_net_layout, logging::ILogger& log);
 
     virtual bool addObserver(ICryptoNoteProtocolObserver* observer) override;
     virtual bool removeObserver(ICryptoNoteProtocolObserver* observer) override;
@@ -102,7 +102,7 @@ namespace cn
   private:
     int doPushLiteBlock(NOTIFY_NEW_LITE_BLOCK::request block, CryptoNoteConnectionContext &context, std::vector<BinaryArray> missingTxs);
 
-    System::Dispatcher& m_dispatcher;
+    platform_system::Dispatcher& m_dispatcher;
     ICore& m_core;
     const Currency& m_currency;
 
@@ -116,6 +116,6 @@ namespace cn
     uint32_t m_observedHeight;
 
     std::atomic<size_t> m_peersCount;
-    Tools::ObserverManager<ICryptoNoteProtocolObserver> m_observerManager;
+    tools::ObserverManager<ICryptoNoteProtocolObserver> m_observerManager;
   };
 }

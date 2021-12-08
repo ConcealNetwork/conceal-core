@@ -16,7 +16,7 @@
 #include "Common/ObserverManager.h"
 #include "INode.h"
 
-namespace System {
+namespace platform_system {
   class ContextGroup;
   class Dispatcher;
   class Event;
@@ -119,16 +119,16 @@ private:
   std::mutex m_mutex;
   std::condition_variable m_cv_initialized;
   std::thread m_workerThread;
-  System::Dispatcher* m_dispatcher = nullptr;
-  System::ContextGroup* m_context_group = nullptr;
-  Tools::ObserverManager<cn::INodeObserver> m_observerManager;
-  Tools::ObserverManager<cn::INodeRpcProxyObserver> m_rpcProxyObserverManager;
+  platform_system::Dispatcher* m_dispatcher = nullptr;
+  platform_system::ContextGroup* m_context_group = nullptr;
+  tools::ObserverManager<cn::INodeObserver> m_observerManager;
+  tools::ObserverManager<cn::INodeRpcProxyObserver> m_rpcProxyObserverManager;
 
   const std::string m_nodeHost;
   const unsigned short m_nodePort;
   unsigned int m_rpcTimeout;
   HttpClient* m_httpClient = nullptr;
-  System::Event* m_httpEvent = nullptr;
+  platform_system::Event* m_httpEvent = nullptr;
 
   uint64_t m_pullInterval;
 

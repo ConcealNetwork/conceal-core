@@ -280,8 +280,8 @@ namespace cn
 
   void appendTTLToExtra(std::vector<uint8_t> &tx_extra, uint64_t ttl)
   {
-    std::string ttlData = Tools::get_varint_data(ttl);
-    std::string extraFieldSize = Tools::get_varint_data(ttlData.size());
+    std::string ttlData = tools::get_varint_data(ttl);
+    std::string extraFieldSize = tools::get_varint_data(ttlData.size());
 
     tx_extra.reserve(tx_extra.size() + 1 + extraFieldSize.size() + ttlData.size());
     tx_extra.push_back(TX_EXTRA_TTL);

@@ -605,7 +605,7 @@ std::vector<DepositId> WalletUserTransactionsCache::createNewDeposits(Transactio
 
 DepositId WalletUserTransactionsCache::insertNewDeposit(const TransactionOutputInformation& depositOutput, TransactionId creatingTransactionId,
   const Currency& currency, uint32_t height) {
-  assert(depositOutput.type == TransactionTypes::OutputType::Multisignature);
+  assert(depositOutput.type == transaction_types::OutputType::Multisignature);
   assert(depositOutput.term != 0);
   assert(m_transactionOutputToDepositIndex.find(std::tie(depositOutput.transactionHash, depositOutput.outputInTransaction)) == m_transactionOutputToDepositIndex.end());
 

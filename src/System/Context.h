@@ -10,7 +10,7 @@
 #include <System/Event.h>
 #include <System/InterruptedException.h>
 
-namespace System {
+namespace platform_system {
 
 template<typename ResultType = void>
 class Context {

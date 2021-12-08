@@ -7,7 +7,7 @@
 #include "PaymentServiceJsonRpcMessages.h"
 #include "Serialization/SerializationOverloads.h"
 
-namespace PaymentService
+namespace payment_service
 {
 
 void Save::Request::serialize(cn::ISerializer & /*serializer*/)
@@ -524,4 +524,4 @@ void SendFusionTransaction::Response::serialize(cn::ISerializer &serializer)
   serializer(transactionHash, "transactionHash");
 }
 
-} // namespace PaymentService
+} // namespace payment_service

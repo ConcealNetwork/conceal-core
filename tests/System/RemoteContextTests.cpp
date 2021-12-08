@@ -11,7 +11,7 @@
 #include <System/Timer.h>
 #include <gtest/gtest.h>
 
-using namespace System;
+using namespace platform_system;
 
 class RemoteContextTests : public testing::Test {
 public:
@@ -94,7 +94,7 @@ TEST_F(RemoteContextTests, canExecuteOtherContextsWhileWaiting) {
     });
   });
   cg.spawn([&] {
-    System::Timer(dispatcher).sleep(std::chrono::milliseconds(50));
+    platform_system::Timer(dispatcher).sleep(std::chrono::milliseconds(50));
     auto end = std::chrono::high_resolution_clock::now();
     ASSERT_GE(std::chrono::duration_cast<std::chrono::milliseconds>(end - start).count(), 50);
     ASSERT_LT(std::chrono::duration_cast<std::chrono::milliseconds>(end - start).count(), 100);

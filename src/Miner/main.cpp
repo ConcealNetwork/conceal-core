@@ -28,8 +28,8 @@ int main(int argc, char** argv) {
     logging::ConsoleLogger consoleLogger(static_cast<logging::Level>(config.logLevel));
     loggerGroup.addLogger(consoleLogger);
 
-    System::Dispatcher dispatcher;
-    Miner::MinerManager app(dispatcher, config, loggerGroup);
+    platform_system::Dispatcher dispatcher;
+    miner::MinerManager app(dispatcher, config, loggerGroup);
 
     app.start();
   } catch (std::exception& e) {

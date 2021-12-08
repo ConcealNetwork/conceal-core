@@ -8,9 +8,9 @@
 
 #include <future>
 
-namespace System {
+namespace platform_system {
 
-namespace Detail {
+namespace detail {
 
 template<class T> using Future = std::future<T>;
 

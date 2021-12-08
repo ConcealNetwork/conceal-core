@@ -28,7 +28,7 @@
 
 namespace concolor
 {
-  using namespace common::Console;
+  using namespace common::console;
 
   inline std::basic_ostream<char, std::char_traits<char> >& bright_white(std::basic_ostream<char, std::char_traits<char> >& ostr)
   {
@@ -417,7 +417,7 @@ template<class t_test_class>
 inline bool do_replay_file(const std::string& filename)
 {
   std::vector<test_event_entry> events;
-  if (!Tools::unserialize_obj_from_file(events, filename))
+  if (!tools::unserialize_obj_from_file(events, filename))
   {
     std::cout << concolor::magenta << "Failed to deserialize data from file: " << filename << concolor::normal << std::endl;
     return false;
@@ -524,7 +524,7 @@ inline bool do_replay_file(const std::string& filename)
         std::vector<test_event_entry> events; \
         genclass g; \
         g.generate(events); \
-        if (!Tools::serialize_obj_to_file(events, filename)) \
+        if (!tools::serialize_obj_to_file(events, filename)) \
         { \
             std::cout << concolor::magenta << "Failed to serialize data to file: " << filename << concolor::normal << std::endl; \
             throw std::runtime_error("Failed to serialize data to file"); \

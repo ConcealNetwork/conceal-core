@@ -45,7 +45,7 @@
 #endif
 
 Tests::common::BaseFunctionalTestsConfig baseCfg;
-// System::Dispatcher globalDispatcher;
+// platform_system::Dispatcher globalDispatcher;
 
 namespace po = boost::program_options;
 namespace
@@ -119,7 +119,7 @@ protected:
 class SimpleTest : public Tests::common::BaseFunctionalTests
 {
 public:
-  SimpleTest(const cn::Currency &currency, System::Dispatcher &system, const Tests::common::BaseFunctionalTestsConfig &config) : BaseFunctionalTests(currency, system, config) {}
+  SimpleTest(const cn::Currency &currency, platform_system::Dispatcher &platform_system, const Tests::common::BaseFunctionalTestsConfig &config) : BaseFunctionalTests(currency, platform_system, config) {}
 
   class WaitForActualGrowObserver : public cn::IWalletLegacyObserver
   {
@@ -846,7 +846,7 @@ public:
   }
 };
 
-void testMultiVersion(const cn::Currency &currency, System::Dispatcher &d, const Tests::common::BaseFunctionalTestsConfig &config);
+void testMultiVersion(const cn::Currency &currency, platform_system::Dispatcher &d, const Tests::common::BaseFunctionalTestsConfig &config);
 
 class SimpleTestCase : public ::testing::Test
 {
@@ -857,7 +857,7 @@ public:
   {
   }
 
-  System::Dispatcher dispatcher;
+  platform_system::Dispatcher dispatcher;
   logging::ConsoleLogger logger;
   cn::Currency currency;
   SimpleTest test;

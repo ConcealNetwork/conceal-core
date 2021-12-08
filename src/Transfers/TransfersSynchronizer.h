@@ -55,7 +55,7 @@ private:
   typedef std::unordered_map<crypto::PublicKey, std::unique_ptr<TransfersConsumer>> ConsumersContainer;
   ConsumersContainer m_consumers;
 
-  typedef Tools::ObserverManager<ITransfersSynchronizerObserver> SubscribersNotifier;
+  typedef tools::ObserverManager<ITransfersSynchronizerObserver> SubscribersNotifier;
   typedef std::unordered_map<crypto::PublicKey, std::unique_ptr<SubscribersNotifier>> SubscribersContainer;
   SubscribersContainer m_subscribers;
 

@@ -30,7 +30,7 @@ namespace cn {
 
 class HttpClient;
   
-namespace JsonRpc {
+namespace json_rpc {
 
 const int errParseError = -32700;
 const int errInvalidRequest = -32600;
@@ -206,14 +206,14 @@ bool invokeMethod(const JsonRpcRequest& jsReq, JsonRpcResponse& jsRes, Handler h
   Response res;
 
   if (!std::is_same<Request, cn::EMPTY_STRUCT>::value && !jsReq.loadParams(req)) {
-    throw JsonRpcError(JsonRpc::errInvalidParams);
+    throw JsonRpcError(json_rpc::errInvalidParams);
   }
 
   bool result = handler(req, res);
 
   if (result) {
     if (!jsRes.setResult(res)) {
-      throw JsonRpcError(JsonRpc::errInternalError);
+      throw JsonRpcError(json_rpc::errInternalError);
     }
   }
   return result;
@@ -224,7 +224,7 @@ typedef std::function<bool(void*, const JsonRpcRequest& req, JsonRpcResponse& re
 template <typename Class, typename Params, typename Result>
 JsonMemberMethod makeMemberMethod(bool (Class::*handler)(const Params&, Result&)) {
   return [handler](void* obj, const JsonRpcRequest& req, JsonRpcResponse& res) {
-    return JsonRpc::invokeMethod<Params, Result>(
+    return json_rpc::invokeMethod<Params, Result>(
       req, res, std::bind(handler, static_cast<Class*>(obj), std::placeholders::_1, std::placeholders::_2));
   };
 }

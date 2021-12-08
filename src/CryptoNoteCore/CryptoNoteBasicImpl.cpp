@@ -54,7 +54,7 @@ namespace cn {
     BinaryArray ba;
     bool r = toBinaryArray(adr, ba);
     assert(r);
-    return Tools::Base58::encode_addr(prefix, common::asString(ba));
+    return tools::base_58::encode_addr(prefix, common::asString(ba));
   }
   //-----------------------------------------------------------------------
   bool is_coinbase(const Transaction& tx) {
@@ -73,7 +73,7 @@ namespace cn {
     std::string data;
 
     return
-      Tools::Base58::decode_addr(str, prefix, data) &&
+      tools::base_58::decode_addr(str, prefix, data) &&
       fromBinaryArray(adr, asBinaryArray(data)) &&
       // ::serialization::parse_binary(data, adr) &&
       check_key(adr.spendPublicKey) &&

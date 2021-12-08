@@ -88,7 +88,7 @@ JsonValue buildLoggerConfiguration(Level level, const std::string& logfile) {
 }
 
 void renameDataDir() {
-  std::string concealXDir = Tools::getDefaultDataDirectory();
+  std::string concealXDir = tools::getDefaultDataDirectory();
   boost::filesystem::path concealXDirPath(concealXDir);
   if (boost::filesystem::exists(concealXDirPath)) {
     return;
@@ -129,7 +129,7 @@ int main(int argc, char* argv[])
    command_line::add_arg(desc_cmd_only, command_line::arg_help);
    command_line::add_arg(desc_cmd_only, command_line::arg_version);
    command_line::add_arg(desc_cmd_only, arg_os_version);
-   command_line::add_arg(desc_cmd_only, command_line::arg_data_dir, Tools::getDefaultDataDirectory());
+   command_line::add_arg(desc_cmd_only, command_line::arg_data_dir, tools::getDefaultDataDirectory());
    command_line::add_arg(desc_cmd_only, arg_config_file);
    command_line::add_arg(desc_cmd_sett, arg_set_fee_address);
    command_line::add_arg(desc_cmd_sett, arg_log_file);
@@ -245,16 +245,16 @@ int main(int argc, char* argv[])
     rpcConfig.init(vm);
 
     if (!coreConfig.configFolderDefaulted) {
-      if (!Tools::directoryExists(coreConfig.configFolder)) {
+      if (!tools::directoryExists(coreConfig.configFolder)) {
         throw std::runtime_error("Directory does not exist: " + coreConfig.configFolder);
       }
     } else {
-      if (!Tools::create_directories_if_necessary(coreConfig.configFolder)) {
+      if (!tools::create_directories_if_necessary(coreConfig.configFolder)) {
         throw std::runtime_error("Can't create directory: " + coreConfig.configFolder);
       }
     }
 
-    System::Dispatcher dispatcher;
+    platform_system::Dispatcher dispatcher;
 
     cn::CryptoNoteProtocolHandler cprotocol(currency, dispatcher, ccore, nullptr, logManager);
     cn::NodeServer p2psrv(dispatcher, cprotocol, logManager);
@@ -317,7 +317,7 @@ int main(int argc, char* argv[])
     rpcServer.start(rpcConfig.bindIp, rpcConfig.bindPort);
     logger(INFO) << "Core rpc server started ok";
 
-    Tools::SignalHandler::install([&dch, &p2psrv] {
+    tools::SignalHandler::install([&dch, &p2psrv] {
       dch.stop_handling();
       p2psrv.sendStopSignal();
     });
@@ -359,7 +359,7 @@ bool command_line_preprocessor(const boost::program_options::variables_map &vm, 
   }
 
   if (command_line::get_arg(vm, arg_os_version)) {
-    std::cout << "OS: " << Tools::get_os_version_string() << ENDL;
+    std::cout << "OS: " << tools::get_os_version_string() << ENDL;
     exit = true;
   }
 

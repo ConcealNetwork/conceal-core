@@ -34,7 +34,7 @@
 
 using namespace crypto;
 using namespace common;
-using namespace System;
+using namespace platform_system;
 
 namespace cn {
 
@@ -709,7 +709,7 @@ std::error_code NodeRpcProxy::jsonRpcCommand(const std::string& method, const Re
   try {
     EventLock eventLock(*m_httpEvent);
 
-    JsonRpc::JsonRpcRequest jsReq;
+    json_rpc::JsonRpcRequest jsReq;
 
     jsReq.setMethod(method);
     jsReq.setParams(req);
@@ -722,7 +722,7 @@ std::error_code NodeRpcProxy::jsonRpcCommand(const std::string& method, const Re
 
     m_httpClient->request(httpReq, httpRes);
 
-    JsonRpc::JsonRpcResponse jsRes;
+    json_rpc::JsonRpcResponse jsRes;
 
     if (httpRes.getStatus() == HttpResponse::STATUS_200) {
       jsRes.parse(httpRes.getBody());

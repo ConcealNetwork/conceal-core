@@ -28,7 +28,7 @@
 #include <ucontext.h>
 #include <unistd.h>
 
-namespace System {
+namespace platform_system {
 
 namespace {
 

@@ -20,7 +20,7 @@
 #endif
 #pragma warning(disable : 4996)
 
-namespace Tools
+namespace tools
 {
 #ifdef _WIN32
   std::string get_windows_version_display_string()

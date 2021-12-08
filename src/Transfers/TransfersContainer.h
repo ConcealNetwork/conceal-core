@@ -75,7 +75,7 @@ public:
   size_t hash() const;
 
 private:
-  TransactionTypes::OutputType m_type;
+  transaction_types::OutputType m_type;
   union {
     const crypto::KeyImage* m_keyImage;
     struct {
@@ -92,7 +92,7 @@ struct SpentOutputDescriptorHasher {
 };
 
 struct TransactionOutputInformationIn : public TransactionOutputInformation {
-  crypto::KeyImage keyImage;  //!< \attention Used only for TransactionTypes::OutputType::Key
+  crypto::KeyImage keyImage;  //!< \attention Used only for transaction_types::OutputType::Key
 };
 
 struct TransactionOutputInformationEx : public TransactionOutputInformationIn {
@@ -119,9 +119,9 @@ struct TransactionOutputInformationEx : public TransactionOutputInformationIn {
     s(transactionHash, "");
     s(visible, "");
 
-    if (type == TransactionTypes::OutputType::Key) {
+    if (type == transaction_types::OutputType::Key) {
       s(outputKey, "");
-    } else if (type == TransactionTypes::OutputType::Multisignature) {
+    } else if (type == transaction_types::OutputType::Multisignature) {
       s(requiredSignatures, "");
       s(term, "");
     }

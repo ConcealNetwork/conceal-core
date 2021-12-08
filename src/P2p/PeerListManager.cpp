@@ -136,7 +136,7 @@ bool PeerlistManager::get_gray_peer_by_index(PeerlistEntry& p, size_t i) const {
 
 bool PeerlistManager::is_ip_allowed(uint32_t ip) const
 {
-  System::Ipv4Address addr(networkToHost(ip));
+  platform_system::Ipv4Address addr(networkToHost(ip));
 
   //never allow loopback ip
   if (addr.isLoopback()) {

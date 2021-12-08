@@ -21,7 +21,7 @@
 
 using namespace cn;
 
-namespace Miner {
+namespace miner {
 
 namespace {
 
@@ -39,7 +39,7 @@ MinerEvent BlockchainUpdatedEvent() {
 
 }
 
-MinerManager::MinerManager(System::Dispatcher& dispatcher, const cn::MiningConfig& config, logging::ILogger& logger) :
+MinerManager::MinerManager(platform_system::Dispatcher& dispatcher, const cn::MiningConfig& config, logging::ILogger& logger) :
   m_dispatcher(dispatcher),
   m_logger(logger, "MinerManager"),
   m_contextGroup(dispatcher),
@@ -67,7 +67,7 @@ void MinerManager::start() {
       params = requestMiningParameters(m_dispatcher, m_config.daemonHost, m_config.daemonPort, m_config.miningAddress);
     } catch (ConnectException& e) {
       m_logger(logging::WARNING) << "Couldn't connect to daemon: " << e.what();
-      System::Timer timer(m_dispatcher);
+      platform_system::Timer timer(m_dispatcher);
       timer.sleep(std::chrono::seconds(m_config.scanPeriod));
       continue;
     }
@@ -152,7 +152,7 @@ void MinerManager::startMining(const cn::BlockMiningParameters& params) {
     try {
       m_minedBlock = m_miner.mine(params, m_config.threadCount);
       pushEvent(BlockMinedEvent());
-    } catch (System::InterruptedException&) {
+    } catch (platform_system::InterruptedException&) {
     } catch (std::exception& e) {
       m_logger(logging::ERROR) << "Miner context unexpectedly finished: " << e.what();
     }
@@ -168,7 +168,7 @@ void MinerManager::startBlockchainMonitoring() {
     try {
       m_blockchainMonitor.waitBlockchainUpdate();
       pushEvent(BlockchainUpdatedEvent());
-    } catch (System::InterruptedException&) {
+    } catch (platform_system::InterruptedException&) {
     } catch (std::exception& e) {
       m_logger(logging::ERROR) << "BlockchainMonitor context unexpectedly finished: " << e.what();
     }
@@ -188,8 +188,8 @@ bool MinerManager::submitBlock(const Block& minedBlock, const std::string& daemo
 
     COMMAND_RPC_SUBMITBLOCK::response response;
 
-    System::EventLock lk(m_httpEvent);
-    JsonRpc::invokeJsonRpcCommand(client, "submitblock", request, response);
+    platform_system::EventLock lk(m_httpEvent);
+    json_rpc::invokeJsonRpcCommand(client, "submitblock", request, response);
 
     m_logger(logging::INFO) << "Block has been successfully submitted. Block hash: " << common::podToHex(get_block_hash(minedBlock));
     return true;
@@ -199,7 +199,7 @@ bool MinerManager::submitBlock(const Block& minedBlock, const std::string& daemo
   }
 }
 
-BlockMiningParameters MinerManager::requestMiningParameters(System::Dispatcher& dispatcher, const std::string& daemonHost, uint16_t daemonPort, const std::string& miningAddress) {
+BlockMiningParameters MinerManager::requestMiningParameters(platform_system::Dispatcher& dispatcher, const std::string& daemonHost, uint16_t daemonPort, const std::string& miningAddress) {
   try {
     HttpClient client(dispatcher, daemonHost, daemonPort);
 
@@ -209,8 +209,8 @@ BlockMiningParameters MinerManager::requestMiningParameters(System::Dispatcher& 
 
     COMMAND_RPC_GETBLOCKTEMPLATE::response response;
 
-    System::EventLock lk(m_httpEvent);
-    JsonRpc::invokeJsonRpcCommand(client, "getblocktemplate", request, response);
+    platform_system::EventLock lk(m_httpEvent);
+    json_rpc::invokeJsonRpcCommand(client, "getblocktemplate", request, response);
 
     if (response.status != CORE_RPC_STATUS_OK) {
       throw std::runtime_error("Core responded with wrong status: " + response.status);
@@ -245,4 +245,4 @@ void MinerManager::adjustBlockTemplate(cn::Block& blockTemplate) const {
   }
 }
 
-} //namespace Miner
+} //namespace miner

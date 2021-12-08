@@ -276,7 +276,7 @@ void WalletLegacy::doLoad(std::istream& source) {
     m_transferDetails->getOutputs(allTransfers, ITransfersContainer::IncludeAll);
     std::cout << "Loaded " + std::to_string(allTransfers.size()) + " known transfer(s)\r\n";
     for (auto& o : allTransfers) {
-      if (o.type == TransactionTypes::OutputType::Key) {
+      if (o.type == transaction_types::OutputType::Key) {
         m_transfersSync.addPublicKeysSeen(m_account.getAccountKeys().address, o.transactionHash, o.outputKey);
       }
     }
@@ -1332,8 +1332,8 @@ bool WalletLegacy::getTxProof(crypto::Hash& txid, cn::AccountPublicAddress& addr
   }
 
   sig_str = std::string("ProofV1") +
-    Tools::Base58::encode(std::string((const char *)&rA, sizeof(crypto::PublicKey))) +
-    Tools::Base58::encode(std::string((const char *)&sig, sizeof(crypto::Signature)));
+    tools::base_58::encode(std::string((const char *)&rA, sizeof(crypto::PublicKey))) +
+    tools::base_58::encode(std::string((const char *)&sig, sizeof(crypto::Signature)));
 
   return true;
 }
@@ -1456,7 +1456,7 @@ std::string WalletLegacy::getReserveProof(const uint64_t &reserve, const std::st
 	BinaryArray ba = toBinaryArray(p);
 	std::string ret = common::toHex(ba);
 
-	ret = "ReserveProofV1" + Tools::Base58::encode(ret);
+	ret = "ReserveProofV1" + tools::base_58::encode(ret);
 
 	return ret;
 }

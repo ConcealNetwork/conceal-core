@@ -9,7 +9,7 @@
 #include <Logging/ConsoleLogger.h>
 
 logging::ConsoleLogger logger;
-System::Dispatcher globalSystem;
+platform_system::Dispatcher globalSystem;
 cn::Currency currency = cn::CurrencyBuilder(logger).testnet(true).currency();
 Tests::common::BaseFunctionalTestsConfig config;
 

@@ -33,8 +33,8 @@ public:
   void TearDown() override;
 
 protected:
-  System::Dispatcher dispatcher;
-  System::ContextGroup contextGroup;
+  platform_system::Dispatcher dispatcher;
+  platform_system::ContextGroup contextGroup;
   IntrusiveLinkedList<MessageQueue<BlockchainMessage>> blockchainMessageQueueList;
 };
 
@@ -236,7 +236,7 @@ TEST_F(MessageQueueTest, interruptWaiting) {
     randomHashes.push_back(randomHash);
   }
 
-  System::Event shutdownEvent(dispatcher);
+  platform_system::Event shutdownEvent(dispatcher);
   contextGroup.spawn([&]() {
     shutdownEvent.wait();
     for (size_t i = 0; i < NUMBER_OF_LISTENERS; ++i) {
