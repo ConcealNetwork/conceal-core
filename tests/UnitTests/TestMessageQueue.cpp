@@ -70,7 +70,7 @@ TEST_F(MessageQueueTest, singleNewBlockMessage) {
   MessageQueue<BlockchainMessage> queue(dispatcher);
   MesageQueueGuard<MessageQueueTest, BlockchainMessage> guard(*this, queue);
 
-  Crypto::Hash randomHash;
+  crypto::Hash randomHash;
   for (uint8_t& i : randomHash.data) {
     i = rand();
   }
@@ -79,7 +79,7 @@ TEST_F(MessageQueueTest, singleNewBlockMessage) {
   contextGroup.spawn([&]() {
     const BlockchainMessage& m = queue.front();
     ASSERT_EQ(m.getType(), BlockchainMessage::MessageType::NEW_BLOCK_MESSAGE);
-    Crypto::Hash h;
+    crypto::Hash h;
     ASSERT_TRUE(m.getNewBlockHash(h));
     ASSERT_EQ(h, randomHash);
     ASSERT_NO_THROW(queue.pop());
@@ -94,7 +94,7 @@ TEST_F(MessageQueueTest, singleNewAlternativeBlockMessage) {
   MessageQueue<BlockchainMessage> queue(dispatcher);
   MesageQueueGuard<MessageQueueTest, BlockchainMessage> guard(*this, queue);
 
-  Crypto::Hash randomHash;
+  crypto::Hash randomHash;
   for (uint8_t& i : randomHash.data) {
     i = rand();
   }
@@ -102,7 +102,7 @@ TEST_F(MessageQueueTest, singleNewAlternativeBlockMessage) {
   contextGroup.spawn([&]() {
     const BlockchainMessage& m = queue.front();
     ASSERT_EQ(m.getType(), BlockchainMessage::MessageType::NEW_ALTERNATIVE_BLOCK_MESSAGE);
-    Crypto::Hash h;
+    crypto::Hash h;
     ASSERT_TRUE(m.getNewAlternativeBlockHash(h));
     ASSERT_EQ(h, randomHash);
     ASSERT_NO_THROW(queue.pop());
@@ -118,9 +118,9 @@ TEST_F(MessageQueueTest, singleChainSwitchMessage) {
   MesageQueueGuard<MessageQueueTest, BlockchainMessage> guard(*this, queue);
 
   const size_t NUMBER_OF_BLOCKS = 10;
-  std::vector<Crypto::Hash> randomHashes;
+  std::vector<crypto::Hash> randomHashes;
   for (size_t i = 0; i < NUMBER_OF_BLOCKS; ++i) {
-    Crypto::Hash randomHash;
+    crypto::Hash randomHash;
     for (uint8_t& j : randomHash.data) {
       j = rand();
     }
@@ -130,14 +130,14 @@ TEST_F(MessageQueueTest, singleChainSwitchMessage) {
   contextGroup.spawn([&]() {
     const BlockchainMessage& m = queue.front();
     ASSERT_EQ(m.getType(), BlockchainMessage::MessageType::CHAIN_SWITCH_MESSAGE);
-    std::vector<Crypto::Hash> res;
+    std::vector<crypto::Hash> res;
     ASSERT_TRUE(m.getChainSwitch(res));
     ASSERT_EQ(res, randomHashes);
     ASSERT_NO_THROW(queue.pop());
   });
 
 
-  std::vector<Crypto::Hash> copy = randomHashes;
+  std::vector<crypto::Hash> copy = randomHashes;
   ASSERT_NO_THROW(sendBlockchainMessage(BlockchainMessage(ChainSwitchMessage(std::move(copy)))));
 
   contextGroup.wait();
@@ -148,9 +148,9 @@ TEST_F(MessageQueueTest, manyMessagesOneListener) {
   MesageQueueGuard<MessageQueueTest, BlockchainMessage> guard(*this, queue);
 
   const size_t NUMBER_OF_BLOCKS = 10;
-  std::vector<Crypto::Hash> randomHashes;
+  std::vector<crypto::Hash> randomHashes;
   for (size_t i = 0; i < NUMBER_OF_BLOCKS; ++i) {
-    Crypto::Hash randomHash;
+    crypto::Hash randomHash;
     for (uint8_t& j : randomHash.data) {
       j = rand();
     }
@@ -161,7 +161,7 @@ TEST_F(MessageQueueTest, manyMessagesOneListener) {
     for (size_t i = 0; i < NUMBER_OF_BLOCKS; ++i) {
       const BlockchainMessage& m = queue.front();
       ASSERT_EQ(m.getType(), BlockchainMessage::MessageType::NEW_BLOCK_MESSAGE);
-      Crypto::Hash h;
+      crypto::Hash h;
       ASSERT_TRUE(m.getNewBlockHash(h));
       ASSERT_EQ(h, randomHashes[i]);
       ASSERT_NO_THROW(queue.pop());
@@ -186,9 +186,9 @@ TEST_F(MessageQueueTest, manyMessagesManyListeners) {
   }
 
   const size_t NUMBER_OF_BLOCKS = 10;
-  std::vector<Crypto::Hash> randomHashes;
+  std::vector<crypto::Hash> randomHashes;
   for (size_t i = 0; i < NUMBER_OF_BLOCKS; ++i) {
-    Crypto::Hash randomHash;
+    crypto::Hash randomHash;
     for (uint8_t& j : randomHash.data) {
       j = rand();
     }
@@ -200,7 +200,7 @@ TEST_F(MessageQueueTest, manyMessagesManyListeners) {
       for (size_t j = 0; j < NUMBER_OF_BLOCKS; ++j) {
         const BlockchainMessage& m = queues[i]->front();
         ASSERT_EQ(m.getType(), BlockchainMessage::MessageType::NEW_BLOCK_MESSAGE);
-        Crypto::Hash h;
+        crypto::Hash h;
         ASSERT_TRUE(m.getNewBlockHash(h));
         ASSERT_EQ(h, randomHashes[j]);
         ASSERT_NO_THROW(queues[i]->pop());
@@ -227,9 +227,9 @@ TEST_F(MessageQueueTest, interruptWaiting) {
   }
 
   const size_t NUMBER_OF_BLOCKS = 10;
-  std::vector<Crypto::Hash> randomHashes;
+  std::vector<crypto::Hash> randomHashes;
   for (size_t i = 0; i < NUMBER_OF_BLOCKS; ++i) {
-    Crypto::Hash randomHash;
+    crypto::Hash randomHash;
     for (uint8_t& j : randomHash.data) {
       j = rand();
     }
@@ -243,7 +243,7 @@ TEST_F(MessageQueueTest, interruptWaiting) {
       for (size_t j = 0; j < NUMBER_OF_BLOCKS; ++j) {
         const BlockchainMessage& m = queues[i]->front();
         ASSERT_EQ(m.getType(), BlockchainMessage::MessageType::NEW_BLOCK_MESSAGE);
-        Crypto::Hash h;
+        crypto::Hash h;
         ASSERT_TRUE(m.getNewBlockHash(h));
         ASSERT_EQ(h, randomHashes[j]);
         ASSERT_NO_THROW(queues[i]->pop());

@@ -113,7 +113,7 @@ public:
     addCallback("check_block_purged");
   }
 
-  Logging::LoggerGroup logger;
+  logging::LoggerGroup logger;
   test_generator generator;
   cn::Block genesisBlock;
   cn::Block lastBlock;

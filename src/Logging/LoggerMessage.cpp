@@ -6,7 +6,7 @@
 
 #include "LoggerMessage.h"
 
-namespace Logging {
+namespace logging {
 
 LoggerMessage::LoggerMessage(ILogger& logger, const std::string& category, Level level, const std::string& color)
   : std::ostream(this)

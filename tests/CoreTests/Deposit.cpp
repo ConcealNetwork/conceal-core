@@ -327,17 +327,17 @@ bool TransactionWithNumberOfRequiredSignaturesGreaterThanKeysIsRejected::generat
   return true;
 }
 
-Crypto::PublicKey generate_invalid_pub_key() {
+crypto::PublicKey generate_invalid_pub_key() {
   for (int i = 0; i <= 0xFF; ++i) {
-    Crypto::PublicKey key;
-    memset(&key, i, sizeof(Crypto::PublicKey));
-    if (!Crypto::check_key(key)) {
+    crypto::PublicKey key;
+    memset(&key, i, sizeof(crypto::PublicKey));
+    if (!crypto::check_key(key)) {
       return key;
     }
   }
 
   throw std::runtime_error("invalid public key wasn't found");
-  return Crypto::PublicKey();
+  return crypto::PublicKey();
 }
 
 bool TransactionWithInvalidKeyIsRejected::generate(std::vector<test_event_entry>& events) {

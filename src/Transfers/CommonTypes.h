@@ -19,11 +19,11 @@ namespace cn {
 
 struct BlockchainInterval {
   uint32_t startHeight;
-  std::vector<Crypto::Hash> blocks;
+  std::vector<crypto::Hash> blocks;
 };
 
 struct CompleteBlock {
-  Crypto::Hash blockHash;
+  crypto::Hash blockHash;
   boost::optional<cn::Block> block;
   // first transaction is always coinbase
   std::list<std::shared_ptr<ITransactionReader>> transactions;

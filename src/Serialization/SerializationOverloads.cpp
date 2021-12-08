@@ -11,7 +11,7 @@
 
 namespace cn {
 
-void serializeBlockHeight(ISerializer& s, uint32_t& blockHeight, Common::StringView name) {
+void serializeBlockHeight(ISerializer& s, uint32_t& blockHeight, common::StringView name) {
   if (s.type() == ISerializer::INPUT) {
     uint64_t height;
     s(height, name);
@@ -28,7 +28,7 @@ void serializeBlockHeight(ISerializer& s, uint32_t& blockHeight, Common::StringV
   }
 }
 
-void serializeGlobalOutputIndex(ISerializer& s, uint32_t& globalOutputIndex, Common::StringView name) {
+void serializeGlobalOutputIndex(ISerializer& s, uint32_t& globalOutputIndex, common::StringView name) {
   serializeBlockHeight(s, globalOutputIndex, name);
 }
 

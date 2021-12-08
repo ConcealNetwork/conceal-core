@@ -10,9 +10,9 @@
 #include <Common/ConsoleTools.h>
 
 
-namespace Logging {
+namespace logging {
 
-using Common::Console::Color;
+using common::Console::Color;
 
 ConsoleLogger::ConsoleLogger(Level level) : CommonLogger(level) {
 }
@@ -49,7 +49,7 @@ void ConsoleLogger::doLogString(const std::string& message) {
       color += message[charPos];
       if (readingText) {
         auto it = colorMapping.find(color);
-        Common::Console::setTextColor(it == colorMapping.end() ? Color::Default : it->second);
+        common::Console::setTextColor(it == colorMapping.end() ? Color::Default : it->second);
         changedColor = true;
         color.clear();
       }
@@ -61,7 +61,7 @@ void ConsoleLogger::doLogString(const std::string& message) {
   }
 
   if (changedColor) {
-    Common::Console::setTextColor(Color::Default);
+    common::Console::setTextColor(Color::Default);
   }
 }
 

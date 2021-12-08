@@ -17,7 +17,7 @@ using namespace cn;
 
 namespace cn {
   template <typename T, typename Indexes>
-  bool serialize(boost::multi_index_container<T, Indexes>& value, Common::StringView name, ISerializer& s) {
+  bool serialize(boost::multi_index_container<T, Indexes>& value, common::StringView name, ISerializer& s) {
     if (s.type() == ISerializer::INPUT) {
       readSequence<T>(std::inserter(value, value.end()), name, s);
     } else {

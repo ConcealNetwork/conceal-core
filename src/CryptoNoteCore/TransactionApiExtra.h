@@ -48,7 +48,7 @@ namespace cn {
       fields.push_back(value);
     }
 
-    bool getPublicKey(Crypto::PublicKey& pk) const {
+    bool getPublicKey(crypto::PublicKey& pk) const {
       cn::TransactionExtraPublicKey extraPk;
       if (!get(extraPk)) {
         return false;

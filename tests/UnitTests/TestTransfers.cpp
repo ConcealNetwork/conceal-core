@@ -53,10 +53,10 @@ public:
 
   void addPaymentAccounts(size_t count) {
     KeyPair p1;
-    Crypto::generate_keys(p1.publicKey, p1.secretKey);
+    crypto::generate_keys(p1.publicKey, p1.secretKey);
     auto viewKeys = p1;
     while (count--) {
-      Crypto::generate_keys(p1.publicKey, p1.secretKey);
+      crypto::generate_keys(p1.publicKey, p1.secretKey);
       m_accounts.push_back(accountKeysFromKeypairs(viewKeys, p1));
     }
   }
@@ -132,7 +132,7 @@ protected:
   std::vector<AccountKeys> m_accounts;
   std::vector<ITransfersSubscription*> m_subscriptions;
 
-  Logging::ConsoleLogger m_logger;
+  logging::ConsoleLogger m_logger;
   cn::Currency m_currency;
   TestBlockchainGenerator generator;
   INodeTrivialRefreshStub m_node;

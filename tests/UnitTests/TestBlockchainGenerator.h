@@ -29,38 +29,38 @@ public:
   bool generateTransactionsInOneBlock(const cn::AccountPublicAddress& address, size_t n);
   bool getSingleOutputTransaction(const cn::AccountPublicAddress& address, uint64_t amount);
   void addTxToBlockchain(const cn::Transaction& transaction);
-  bool getTransactionByHash(const Crypto::Hash& hash, cn::Transaction& tx, bool checkTxPool = false);
+  bool getTransactionByHash(const crypto::Hash& hash, cn::Transaction& tx, bool checkTxPool = false);
   const cn::AccountBase& getMinerAccount() const;
   bool generateFromBaseTx(const cn::AccountBase& address);
 
   void putTxToPool(const cn::Transaction& tx);
-  void getPoolSymmetricDifference(std::vector<Crypto::Hash>&& known_pool_tx_ids, Crypto::Hash known_block_id, bool& is_bc_actual,
-    std::vector<cn::Transaction>& new_txs, std::vector<Crypto::Hash>& deleted_tx_ids);
+  void getPoolSymmetricDifference(std::vector<crypto::Hash>&& known_pool_tx_ids, crypto::Hash known_block_id, bool& is_bc_actual,
+    std::vector<cn::Transaction>& new_txs, std::vector<crypto::Hash>& deleted_tx_ids);
   void putTxPoolToBlockchain();
   void clearTxPool();
 
   void cutBlockchain(uint32_t height);
 
-  bool addOrphan(const Crypto::Hash& hash, uint32_t height);
+  bool addOrphan(const crypto::Hash& hash, uint32_t height);
   bool getGeneratedTransactionsNumber(uint32_t height, uint64_t& generatedTransactions);
-  bool getOrphanBlockIdsByHeight(uint32_t height, std::vector<Crypto::Hash>& blockHashes);
-  bool getBlockIdsByTimestamp(uint64_t timestampBegin, uint64_t timestampEnd, uint32_t blocksNumberLimit, std::vector<Crypto::Hash>& hashes, uint32_t& blocksNumberWithinTimestamps);
-  bool getPoolTransactionIdsByTimestamp(uint64_t timestampBegin, uint64_t timestampEnd, uint32_t transactionsNumberLimit, std::vector<Crypto::Hash>& hashes, uint64_t& transactionsNumberWithinTimestamps);
-  bool getTransactionIdsByPaymentId(const Crypto::Hash& paymentId, std::vector<Crypto::Hash>& transactionHashes);
+  bool getOrphanBlockIdsByHeight(uint32_t height, std::vector<crypto::Hash>& blockHashes);
+  bool getBlockIdsByTimestamp(uint64_t timestampBegin, uint64_t timestampEnd, uint32_t blocksNumberLimit, std::vector<crypto::Hash>& hashes, uint32_t& blocksNumberWithinTimestamps);
+  bool getPoolTransactionIdsByTimestamp(uint64_t timestampBegin, uint64_t timestampEnd, uint32_t transactionsNumberLimit, std::vector<crypto::Hash>& hashes, uint64_t& transactionsNumberWithinTimestamps);
+  bool getTransactionIdsByPaymentId(const crypto::Hash& paymentId, std::vector<crypto::Hash>& transactionHashes);
   uint32_t getCurrentHeight() const { return static_cast<uint32_t>(m_blockchain.size()) - 1; }
 
-  bool getTransactionGlobalIndexesByHash(const Crypto::Hash& transactionHash, std::vector<uint32_t>& globalIndexes);
+  bool getTransactionGlobalIndexesByHash(const crypto::Hash& transactionHash, std::vector<uint32_t>& globalIndexes);
   bool getMultisignatureOutputByGlobalIndex(uint64_t amount, uint32_t globalIndex, cn::MultisignatureOutput& out);
   void setMinerAccount(const cn::AccountBase& account);
 
 private:
   struct MultisignatureOutEntry {
-    Crypto::Hash transactionHash;
+    crypto::Hash transactionHash;
     uint16_t indexOut;
   };
 
   struct KeyOutEntry {
-    Crypto::Hash transactionHash;
+    crypto::Hash transactionHash;
     uint16_t indexOut;
   };
   
@@ -71,12 +71,12 @@ private:
   test_generator generator;
   cn::AccountBase miner_acc;
   std::vector<cn::Block> m_blockchain;
-  std::unordered_map<Crypto::Hash, cn::Transaction> m_txs;
-  std::unordered_map<Crypto::Hash, std::vector<uint32_t>> transactionGlobalOuts;
+  std::unordered_map<crypto::Hash, cn::Transaction> m_txs;
+  std::unordered_map<crypto::Hash, std::vector<uint32_t>> transactionGlobalOuts;
   std::unordered_map<uint64_t, std::vector<MultisignatureOutEntry>> multisignatureOutsIndex;
   std::unordered_map<uint64_t, std::vector<KeyOutEntry>> keyOutsIndex;
 
-  std::unordered_map<Crypto::Hash, cn::Transaction> m_txPool;
+  std::unordered_map<crypto::Hash, cn::Transaction> m_txPool;
   mutable std::mutex m_mutex;
 
   cn::PaymentIdIndex m_paymentIdIndex;

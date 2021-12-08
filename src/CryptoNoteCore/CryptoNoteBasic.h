@@ -10,9 +10,9 @@
 #include <CryptoNote.h>
 
 namespace cn {
-  const Crypto::Hash NULL_HASH = boost::value_initialized<Crypto::Hash>();
-  const Crypto::PublicKey NULL_PUBLIC_KEY = boost::value_initialized<Crypto::PublicKey>();
-  const Crypto::SecretKey NULL_SECRET_KEY = boost::value_initialized<Crypto::SecretKey>();
+  const crypto::Hash NULL_HASH = boost::value_initialized<crypto::Hash>();
+  const crypto::PublicKey NULL_PUBLIC_KEY = boost::value_initialized<crypto::PublicKey>();
+  const crypto::SecretKey NULL_SECRET_KEY = boost::value_initialized<crypto::SecretKey>();
 
   KeyPair generateKeyPair();
 }

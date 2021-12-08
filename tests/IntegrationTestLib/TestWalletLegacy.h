@@ -16,7 +16,7 @@
 
 namespace Tests
 {
-namespace Common
+namespace common
 {
 
 class TestWalletLegacy : private cn::IWalletLegacyObserver
@@ -26,7 +26,7 @@ public:
   ~TestWalletLegacy();
 
   std::error_code init();
-  std::error_code sendTransaction(const std::string &address, uint64_t amount, Crypto::Hash &txHash);
+  std::error_code sendTransaction(const std::string &address, uint64_t amount, crypto::Hash &txHash);
   void waitForSynchronizationToHeight(uint32_t height);
   cn::IWalletLegacy *wallet();
   cn::AccountPublicAddress address() const;
@@ -42,7 +42,7 @@ private:
 
   cn::INode &m_node;
   const cn::Currency &m_currency;
-  Logging::ConsoleLogger m_logger;
+  logging::ConsoleLogger m_logger;
   std::unique_ptr<cn::IWalletLegacy> m_wallet;
   std::unique_ptr<cn::IWalletLegacyObserver> m_walletObserver;
   uint32_t m_currentHeight;
@@ -50,5 +50,5 @@ private:
   std::error_code m_lastSynchronizationResult;
 };
 
-} // namespace Common
+} // namespace common
 } // namespace Tests

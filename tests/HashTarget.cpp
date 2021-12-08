@@ -14,15 +14,15 @@ using namespace std;
 using cn::check_hash;
 
 int main(int argc, char *argv[]) {
-  Crypto::Hash h;
+  crypto::Hash h;
   for (uint64_t diff = 1;; diff += 1 + (diff >> 8)) {
     for (int b = 0; b < 256; b++) {
-      memset(&h, b, sizeof(Crypto::Hash));
+      memset(&h, b, sizeof(crypto::Hash));
       if (check_hash(h, diff) != (b == 0 || diff <= 255 / b)) {
         return 1;
       }
       if (b > 0) {
-        memset(&h, 0, sizeof(Crypto::Hash));
+        memset(&h, 0, sizeof(crypto::Hash));
         ((char *) &h)[31] = b;
         if (check_hash(h, diff) != (diff <= 255 / b)) {
           return 1;

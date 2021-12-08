@@ -32,12 +32,12 @@ namespace {
     return a;
   }
 
-  void derivePublicKey(const AccountKeys& reciever, const Crypto::PublicKey& srcTxKey, size_t outputIndex, PublicKey& ephemeralKey) {
-    Crypto::KeyDerivation derivation;
-    Crypto::generate_key_derivation(srcTxKey, reinterpret_cast<const Crypto::SecretKey&>(reciever.viewSecretKey), derivation);
-    Crypto::derive_public_key(derivation, outputIndex, 
-      reinterpret_cast<const Crypto::PublicKey&>(reciever.address.spendPublicKey), 
-      reinterpret_cast<Crypto::PublicKey&>(ephemeralKey));
+  void derivePublicKey(const AccountKeys& reciever, const crypto::PublicKey& srcTxKey, size_t outputIndex, PublicKey& ephemeralKey) {
+    crypto::KeyDerivation derivation;
+    crypto::generate_key_derivation(srcTxKey, reinterpret_cast<const crypto::SecretKey&>(reciever.viewSecretKey), derivation);
+    crypto::derive_public_key(derivation, outputIndex, 
+      reinterpret_cast<const crypto::PublicKey&>(reciever.address.spendPublicKey), 
+      reinterpret_cast<crypto::PublicKey&>(ephemeralKey));
   }
 
 
@@ -155,7 +155,7 @@ TEST_F(TransactionApi, addAndSignInputMsig) {
   ASSERT_EQ(3, tx->getRequiredSignaturesCount(index));
 
   KeyPair kp1;
-  Crypto::generate_keys(kp1.publicKey, kp1.secretKey );
+  crypto::generate_keys(kp1.publicKey, kp1.secretKey );
 
   auto srcTxKey = kp1.publicKey;
   AccountKeys accounts[] = { generateAccountKeys(), generateAccountKeys(), generateAccountKeys() };
@@ -217,7 +217,7 @@ TEST_F(TransactionApi, secretKey) {
   ASSERT_TRUE(tx->getTransactionSecretKey(txSecretKey));
   
   KeyPair kp1;
-  Crypto::generate_keys(kp1.publicKey, kp1.secretKey);
+  crypto::generate_keys(kp1.publicKey, kp1.secretKey);
   SecretKey sk = kp1.secretKey;
   ASSERT_ANY_THROW(tx2->setTransactionSecretKey(sk)); // unrelated secret key should not be accepted
   
@@ -255,7 +255,7 @@ TEST_F(TransactionApi, findOutputs) {
 }
 
 TEST_F(TransactionApi, setGetPaymentId) {
-  Hash paymentId = Crypto::rand<Hash>();
+  Hash paymentId = crypto::rand<Hash>();
 
   ASSERT_FALSE(tx->getPaymentId(paymentId));
 
@@ -275,7 +275,7 @@ TEST_F(TransactionApi, setGetPaymentId) {
 }
 
 TEST_F(TransactionApi, setExtraNonce) {
-  BinaryArray extraNonce = Common::asBinaryArray("Hello, world"); // just a sequence of bytes
+  BinaryArray extraNonce = common::asBinaryArray("Hello, world"); // just a sequence of bytes
   BinaryArray s;
 
   ASSERT_FALSE(tx->getExtraNonce(s));
@@ -342,7 +342,7 @@ TEST_F(TransactionApi, unableToModifySignedTransaction) {
   auto index = tx->addInput(inputMsig);
 
   KeyPair kp1;
-  Crypto::generate_keys(kp1.publicKey, kp1.secretKey);
+  crypto::generate_keys(kp1.publicKey, kp1.secretKey);
 
   auto srcTxKey = kp1.publicKey;
 
@@ -354,7 +354,7 @@ TEST_F(TransactionApi, unableToModifySignedTransaction) {
 
   Hash paymentId;
   ASSERT_ANY_THROW(tx->setPaymentId(paymentId));
-  ASSERT_ANY_THROW(tx->setExtraNonce(Common::asBinaryArray("smth")));
+  ASSERT_ANY_THROW(tx->setExtraNonce(common::asBinaryArray("smth")));
 
   // but can add more signatures
   tx->signInputMultisignature(index, srcTxKey, 0, generateAccountKeys());

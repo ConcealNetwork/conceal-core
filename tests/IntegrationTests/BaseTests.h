@@ -35,7 +35,7 @@ protected:
   }
 
   System::Dispatcher dispatcher;
-  Logging::ConsoleLogger logger;
+  logging::ConsoleLogger logger;
   cn::Currency currency;
   TestNetwork network;
 };

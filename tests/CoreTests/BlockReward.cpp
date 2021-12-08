@@ -126,7 +126,7 @@ bool gen_block_reward::generate(std::vector<test_event_entry>& events) const
 
     std::vector<size_t> block_sizes;
     generator.getLastNBlockSizes(block_sizes, get_block_hash(blk_7), m_currency.rewardBlocksWindow());
-    size_t median = Common::medianValue(block_sizes);
+    size_t median = common::medianValue(block_sizes);
 
     Transaction miner_tx;
     bool r = constructMinerTxBySize(m_currency, miner_tx, get_block_height(blk_7) + 1, generator.getAlreadyGeneratedCoins(blk_7),
@@ -134,13 +134,13 @@ bool gen_block_reward::generate(std::vector<test_event_entry>& events) const
     if (!r)
       return false;
 
-    std::vector<Crypto::Hash> txs_1_hashes;
+    std::vector<crypto::Hash> txs_1_hashes;
     txs_1_hashes.push_back(getObjectHash(tx_1));
     txs_1_hashes.push_back(getObjectHash(tx_2));
 
     Block blk_8;
     generator.constructBlockManually(blk_8, blk_7, miner_account, test_generator::bf_miner_tx | test_generator::bf_tx_hashes,
-      0, 0, 0, Crypto::Hash(), 0, miner_tx, txs_1_hashes, txs_1_size, txs_fee);
+      0, 0, 0, crypto::Hash(), 0, miner_tx, txs_1_hashes, txs_1_size, txs_fee);
 
     events.push_back(blk_8);
     DO_CALLBACK(events, "mark_checked_block");

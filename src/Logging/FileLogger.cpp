@@ -6,7 +6,7 @@
 
 #include "FileLogger.h"
 
-namespace Logging {
+namespace logging {
 
 FileLogger::FileLogger(Level level) : StreamLogger(level) {
 }

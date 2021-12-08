@@ -18,7 +18,7 @@
 #include "TestBlockchainGenerator.h"
 #include "EventWaiter.h"
 
-using namespace Crypto;
+using namespace crypto;
 using namespace cn;
 
 
@@ -111,7 +111,7 @@ public:
     m_blockchain.push_back(genesisBlockHash);
   }
 
-  void addPoolTransaction(const Crypto::Hash& hash) {
+  void addPoolTransaction(const crypto::Hash& hash) {
     m_pool.emplace(hash);
   }
 
@@ -144,7 +144,7 @@ public:
     return m_blockchain;
   }
 
-  virtual const std::unordered_set<Crypto::Hash>& getKnownPoolTxIds() const override {
+  virtual const std::unordered_set<crypto::Hash>& getKnownPoolTxIds() const override {
     return m_pool;
   }
 
@@ -164,12 +164,12 @@ public:
     throw std::runtime_error("Not implemented");
   }
 
-  void removeUnconfirmedTransaction(const Crypto::Hash& /*transactionHash*/) override {
+  void removeUnconfirmedTransaction(const crypto::Hash& /*transactionHash*/) override {
     throw std::runtime_error("Not implemented");
   }
 
 private:
-  std::unordered_set<Crypto::Hash> m_pool;
+  std::unordered_set<crypto::Hash> m_pool;
   std::vector<Hash> m_blockchain;
 };
 
@@ -228,7 +228,7 @@ public:
   }
 
 protected:
-  Logging::ConsoleLogger m_logger;
+  logging::ConsoleLogger m_logger;
   Currency m_currency;
   TestBlockchainGenerator generator;
 
@@ -604,7 +604,7 @@ TEST_F(BcSTest, firstPoolSynchronizationCheck) {
 
 TEST_F(BcSTest, firstPoolSynchronizationCheckNonActual) {
   addConsumers(2);
-  m_consumers.front()->addPoolTransaction(Crypto::rand<Crypto::Hash>());
+  m_consumers.front()->addPoolTransaction(crypto::rand<crypto::Hash>());
 
   int requestsCount = 0;
 
@@ -639,7 +639,7 @@ TEST_F(BcSTest, firstPoolSynchronizationCheckNonActual) {
 
 TEST_F(BcSTest, firstPoolSynchronizationCheckGetPoolErr) {
   addConsumers(2);
-  m_consumers.front()->addPoolTransaction(Crypto::rand<Crypto::Hash>());
+  m_consumers.front()->addPoolTransaction(crypto::rand<crypto::Hash>());
 
   int requestsCount = 0;
 

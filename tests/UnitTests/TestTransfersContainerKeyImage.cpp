@@ -119,7 +119,7 @@ namespace {
       return finalTx;
     }
 
-    Logging::ConsoleLogger logger;
+    logging::ConsoleLogger logger;
     Currency currency;
     TransfersContainer container;
     AccountKeys account;

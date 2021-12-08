@@ -27,7 +27,7 @@ struct BlockMiningParameters {
 
 class Miner {
 public:
-  Miner(System::Dispatcher& dispatcher, Logging::ILogger& logger);
+  Miner(System::Dispatcher& dispatcher, logging::ILogger& logger);
   ~Miner();
 
   Block mine(const BlockMiningParameters& blockMiningParameters, size_t threadCount);
@@ -46,7 +46,7 @@ private:
 
   Block m_block;
 
-  Logging::LoggerRef m_logger;
+  logging::LoggerRef m_logger;
 
   void runWorkers(BlockMiningParameters blockMiningParameters, size_t threadCount);
   void workerFunc(const Block& blockTemplate, difficulty_type difficulty, uint32_t nonceStep);

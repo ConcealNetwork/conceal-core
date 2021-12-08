@@ -25,7 +25,7 @@ namespace Tests {
 
 namespace {
 bool parse_peer_from_string(NetworkAddress &pe, const std::string &node_addr) {
-  return ::Common::parseIpAddressAndPort(pe.ip, pe.port, node_addr);
+  return ::common::parseIpAddressAndPort(pe.ip, pe.port, node_addr);
 }
 }
 
@@ -55,9 +55,9 @@ void InProcTestNode::workerThread(std::promise<std::string>& initPromise) {
 
   System::Dispatcher dispatcher;
 
-  Logging::ConsoleLogger log;
+  logging::ConsoleLogger log;
 
-  Logging::LoggerRef logger(log, "InProcTestNode");
+  logging::LoggerRef logger(log, "InProcTestNode");
 
   try {
 
@@ -101,7 +101,7 @@ void InProcTestNode::workerThread(std::promise<std::string>& initPromise) {
     initPromise.set_value(std::string());
 
   } catch (std::exception& e) {
-    logger(Logging::ERROR) << "Failed to initialize: " << e.what();
+    logger(logging::ERROR) << "Failed to initialize: " << e.what();
     initPromise.set_value(e.what());
     return;
   }
@@ -109,7 +109,7 @@ void InProcTestNode::workerThread(std::promise<std::string>& initPromise) {
   try {
     p2pNode->run();
   } catch (std::exception& e) {
-    logger(Logging::ERROR) << "exception in p2p::run: " << e.what();
+    logger(logging::ERROR) << "exception in p2p::run: " << e.what();
   }
 
   core->deinit();
@@ -153,11 +153,11 @@ bool InProcTestNode::getBlockTemplate(const std::string &minerAddress, cn::Block
 
 bool InProcTestNode::submitBlock(const std::string& block) {
   block_verification_context bvc = boost::value_initialized<block_verification_context>();
-  core->handle_incoming_block_blob(Common::fromHex(block), bvc, true, true);
+  core->handle_incoming_block_blob(common::fromHex(block), bvc, true, true);
   return bvc.m_added_to_main_chain;
 }
 
-bool InProcTestNode::getTailBlockId(Crypto::Hash &tailBlockId) {
+bool InProcTestNode::getTailBlockId(crypto::Hash &tailBlockId) {
   tailBlockId = core->get_tail_id();
   return true;
 }

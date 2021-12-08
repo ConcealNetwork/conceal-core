@@ -8,7 +8,7 @@
 #include <iostream>
 #include <sstream>
 
-namespace Logging {
+namespace logging {
 
 StreamLogger::StreamLogger(Level level) : CommonLogger(level), stream(nullptr) {
 }

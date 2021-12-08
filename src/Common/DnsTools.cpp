@@ -45,7 +45,7 @@
 #endif
 #include "DnsTools.h"
 
-namespace Common {
+namespace common {
 
 #ifndef __ANDROID__
 

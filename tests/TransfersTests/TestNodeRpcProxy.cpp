@@ -14,14 +14,14 @@
 
 
 using namespace cn;
-using namespace Crypto;
-using namespace Tests::Common;
+using namespace crypto;
+using namespace Tests::common;
 
 extern System::Dispatcher globalSystem;
-extern Tests::Common::BaseFunctionalTestsConfig config;
+extern Tests::common::BaseFunctionalTestsConfig config;
 
 namespace {
-  class NodeRpcProxyTest : public Tests::Common::BaseFunctionalTests, public ::testing::Test {
+  class NodeRpcProxyTest : public Tests::common::BaseFunctionalTests, public ::testing::Test {
   public:
     NodeRpcProxyTest() :
       BaseFunctionalTests(m_currency, globalSystem, config),
@@ -29,7 +29,7 @@ namespace {
     }
 
   protected:
-    Logging::LoggerManager m_logManager;
+    logging::LoggerManager m_logManager;
     cn::Currency m_currency;
   };
 
@@ -58,7 +58,7 @@ namespace {
     const size_t NODE_0 = 0;
     const size_t NODE_1 = 1;
 
-    launchTestnet(2, Tests::Common::BaseFunctionalTests::Line);
+    launchTestnet(2, Tests::common::BaseFunctionalTests::Line);
 
     std::unique_ptr<cn::INode> node0;
     std::unique_ptr<cn::INode> node1;

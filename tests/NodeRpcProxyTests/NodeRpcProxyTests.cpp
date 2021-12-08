@@ -12,7 +12,7 @@
 #include "NodeRpcProxy/NodeRpcProxy.h"
 
 using namespace cn;
-using namespace Logging;
+using namespace logging;
 
 #undef ERROR
 
@@ -62,8 +62,8 @@ private:
 
 int main(int argc, const char** argv) {
 
-  Logging::ConsoleLogger log;
-  Logging::LoggerRef logger(log, "main");
+  logging::ConsoleLogger log;
+  logging::LoggerRef logger(log, "main");
   NodeRpcProxy nodeProxy("127.0.0.1", 18081);
 
   NodeObserver observer1("obs1", nodeProxy, log);

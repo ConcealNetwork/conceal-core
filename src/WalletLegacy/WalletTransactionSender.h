@@ -28,7 +28,7 @@ public:
 
   void stop();
 
-  std::unique_ptr<WalletRequest> makeSendRequest(Crypto::SecretKey& transactionSK,
+  std::unique_ptr<WalletRequest> makeSendRequest(crypto::SecretKey& transactionSK,
                                                  bool optimize,
                                                  TransactionId& transactionId,
                                                  std::deque<std::unique_ptr<WalletLegacyEvent>>& events,
@@ -57,8 +57,8 @@ std::shared_ptr<WalletRequest> makeSendFusionRequest(TransactionId& transactionI
                                                      uint64_t fee, const std::string& extra = "", uint64_t mixIn = 0, uint64_t unlockTimestamp = 0);
 
 private:
-  std::unique_ptr<WalletRequest> makeGetRandomOutsRequest(std::shared_ptr<SendTransactionContext>&& context, bool isMultisigTransaction, Crypto::SecretKey& transactionSK);
-  std::unique_ptr<WalletRequest> doSendTransaction(std::shared_ptr<SendTransactionContext>&& context, std::deque<std::unique_ptr<WalletLegacyEvent>>& events, Crypto::SecretKey& transactionSK);
+  std::unique_ptr<WalletRequest> makeGetRandomOutsRequest(std::shared_ptr<SendTransactionContext>&& context, bool isMultisigTransaction, crypto::SecretKey& transactionSK);
+  std::unique_ptr<WalletRequest> doSendTransaction(std::shared_ptr<SendTransactionContext>&& context, std::deque<std::unique_ptr<WalletLegacyEvent>>& events, crypto::SecretKey& transactionSK);
   std::unique_ptr<WalletRequest> doSendMultisigTransaction(std::shared_ptr<SendTransactionContext>&& context, std::deque<std::unique_ptr<WalletLegacyEvent>>& events);
   std::unique_ptr<WalletRequest> doSendDepositWithdrawTransaction(std::shared_ptr<SendTransactionContext>&& context,
                                                                   std::deque<std::unique_ptr<WalletLegacyEvent>>& events,
@@ -66,7 +66,7 @@ private:
 
   void sendTransactionRandomOutsByAmount(bool isMultisigTransaction,
                                          std::shared_ptr<SendTransactionContext> context,
-                                         Crypto::SecretKey& transactionSK,
+                                         crypto::SecretKey& transactionSK,
                                          std::deque<std::unique_ptr<WalletLegacyEvent>>& events,
                                          std::unique_ptr<WalletRequest>& nextRequest,
                                          std::error_code ec);

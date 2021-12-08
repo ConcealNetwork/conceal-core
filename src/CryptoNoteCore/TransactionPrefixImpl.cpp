@@ -14,7 +14,7 @@
 #include "TransactionUtils.h"
 #include "CryptoNoteCore/CryptoNoteTools.h"
 
-using namespace Crypto;
+using namespace crypto;
 
 namespace cn {
 
@@ -95,7 +95,7 @@ Hash TransactionPrefixImpl::getTransactionInputsHash() const
 }
 
 PublicKey TransactionPrefixImpl::getTransactionPublicKey() const {
-  Crypto::PublicKey pk(NULL_PUBLIC_KEY);
+  crypto::PublicKey pk(NULL_PUBLIC_KEY);
   m_extra.getPublicKey(pk);
   return pk;
 }
@@ -108,7 +108,7 @@ bool TransactionPrefixImpl::getPaymentId(Hash& hash) const {
   BinaryArray nonce;
 
   if (getExtraNonce(nonce)) {
-    Crypto::Hash paymentId;
+    crypto::Hash paymentId;
     if (getPaymentIdFromTransactionExtraNonce(nonce, paymentId)) {
       hash = reinterpret_cast<const Hash&>(paymentId);
       return true;

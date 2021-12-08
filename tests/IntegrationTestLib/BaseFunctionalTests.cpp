@@ -42,7 +42,7 @@ const std::string DAEMON_FILENAME = "conceald.exe";
 const std::string DAEMON_FILENAME = "conceald";
 #endif
 
-using namespace Tests::Common;
+using namespace Tests::common;
 using namespace Tests;
 
 void BaseFunctionalTests::launchTestnet(size_t count, Topology t)
@@ -385,7 +385,7 @@ bool BaseFunctionalTests::prepareAndSubmitBlock(TestNode &node, cn::Block &&bloc
   }
 
   BinaryArray blockBlob = cn::toBinaryArray(blockTemplate);
-  return node.submitBlock(::Common::toHex(blockBlob.data(), blockBlob.size()));
+  return node.submitBlock(::common::toHex(blockBlob.data(), blockBlob.size()));
 }
 
 bool BaseFunctionalTests::mineBlock(std::unique_ptr<cn::IWalletLegacy> &wallet)
@@ -621,7 +621,7 @@ bool BaseFunctionalTests::getNodeTransactionPool(size_t nodeIndex, cn::INode &no
   assert(nodeIndex < nodeDaemons.size() && nodeDaemons[nodeIndex].get() != nullptr);
   auto &daemon = *nodeDaemons[nodeIndex];
 
-  Crypto::Hash tailBlockId;
+  crypto::Hash tailBlockId;
   bool updateTailBlockId = true;
   while (true)
   {
@@ -638,8 +638,8 @@ bool BaseFunctionalTests::getNodeTransactionPool(size_t nodeIndex, cn::INode &no
     std::error_code ec;
     bool isTailBlockActual;
     std::vector<std::unique_ptr<ITransactionReader>> addedTxs;
-    std::vector<Crypto::Hash> deletedTxsIds;
-    node.getPoolSymmetricDifference(std::vector<Crypto::Hash>(), tailBlockId, isTailBlockActual, addedTxs, deletedTxsIds,
+    std::vector<crypto::Hash> deletedTxsIds;
+    node.getPoolSymmetricDifference(std::vector<crypto::Hash>(), tailBlockId, isTailBlockActual, addedTxs, deletedTxsIds,
                                     [this, &poolReceivedEvent, &ec](std::error_code result) {
                                       ec = result;
                                       m_dispatcher.remoteSpawn([&poolReceivedEvent]() { poolReceivedEvent.set(); });

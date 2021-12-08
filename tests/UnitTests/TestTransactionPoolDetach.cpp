@@ -58,7 +58,7 @@ public:
   }
 
 
-  void getPoolSymmetricDifference(std::vector<Crypto::Hash>&& known_pool_tx_ids, Crypto::Hash known_block_id, bool& is_bc_actual, std::vector<std::unique_ptr<cn::ITransactionReader>>& new_txs, std::vector<Crypto::Hash>& deleted_tx_ids, const Callback& callback) override
+  void getPoolSymmetricDifference(std::vector<crypto::Hash>&& known_pool_tx_ids, crypto::Hash known_block_id, bool& is_bc_actual, std::vector<std::unique_ptr<cn::ITransactionReader>>& new_txs, std::vector<crypto::Hash>& deleted_tx_ids, const Callback& callback) override
   {
     std::unique_lock<std::mutex> lk(mutex);
     std::sort(relayedTxs.begin(), relayedTxs.end(), [](const std::pair<uint32_t, cn::Transaction>& val1, const std::pair<uint32_t, cn::Transaction>& val2)->bool {return val1.first < val2.first; });
@@ -181,7 +181,7 @@ protected:
   std::vector<AccountKeys> m_accounts;
   std::vector<ITransfersSubscription*> m_subscriptions;
 
-  Logging::ConsoleLogger m_logger;
+  logging::ConsoleLogger m_logger;
   cn::Currency m_currency;
   TestBlockchainGenerator generator;
   INodeStubWithPoolTx m_node;
@@ -290,7 +290,7 @@ TEST_F(DetachTest, testBlockchainDetach) {
   ASSERT_EQ(0, tc2.balance(ITransfersContainer::IncludeAllUnlocked));
   ASSERT_EQ(1, tc2.transactionsCount());
 
-  std::vector<Crypto::Hash> unconfirmed;
+  std::vector<crypto::Hash> unconfirmed;
   tc2.getUnconfirmedTransactions(unconfirmed);  
   ASSERT_EQ(0, unconfirmed.size());
 

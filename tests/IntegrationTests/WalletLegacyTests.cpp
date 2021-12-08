@@ -28,7 +28,7 @@ TEST_F(WalletLegacyTests, checkNetworkShutdown)
   auto &daemon = network.getNode(0);
 
   {
-    Logging::ConsoleLogger m_logger;
+    logging::ConsoleLogger m_logger;
     auto node = daemon.makeINode();
     WalletLegacy wallet(currency, *node, m_logger);
     wallet.initAndGenerate("pass");

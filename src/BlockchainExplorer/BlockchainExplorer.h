@@ -24,7 +24,7 @@ namespace cn {
 
 class BlockchainExplorer : public IBlockchainExplorer, public INodeObserver {
 public:
-  BlockchainExplorer(INode& node, Logging::ILogger& logger);
+  BlockchainExplorer(INode& node, logging::ILogger& logger);
 
   BlockchainExplorer(const BlockchainExplorer&) = delete;
   BlockchainExplorer(BlockchainExplorer&&) = delete;
@@ -38,15 +38,15 @@ public:
   virtual bool removeObserver(IBlockchainObserver* observer) override;
 
   virtual bool getBlocks(const std::vector<uint32_t>& blockHeights, std::vector<std::vector<BlockDetails>>& blocks) override;
-  virtual bool getBlocks(const std::vector<Crypto::Hash>& blockHashes, std::vector<BlockDetails>& blocks) override;
+  virtual bool getBlocks(const std::vector<crypto::Hash>& blockHashes, std::vector<BlockDetails>& blocks) override;
   virtual bool getBlocks(uint64_t timestampBegin, uint64_t timestampEnd, uint32_t blocksNumberLimit, std::vector<BlockDetails>& blocks, uint32_t& blocksNumberWithinTimestamps) override;
 
   virtual bool getBlockchainTop(BlockDetails& topBlock) override;
 
-  virtual bool getTransactions(const std::vector<Crypto::Hash>& transactionHashes, std::vector<TransactionDetails>& transactions) override;
-  virtual bool getTransactionsByPaymentId(const Crypto::Hash& paymentId, std::vector<TransactionDetails>& transactions) override;
+  virtual bool getTransactions(const std::vector<crypto::Hash>& transactionHashes, std::vector<TransactionDetails>& transactions) override;
+  virtual bool getTransactionsByPaymentId(const crypto::Hash& paymentId, std::vector<TransactionDetails>& transactions) override;
   virtual bool getPoolTransactions(uint64_t timestampBegin, uint64_t timestampEnd, uint32_t transactionsNumberLimit, std::vector<TransactionDetails>& transactions, uint64_t& transactionsNumberWithinTimestamps) override;
-  virtual bool getPoolState(const std::vector<Crypto::Hash>& knownPoolTransactionHashes, Crypto::Hash knownBlockchainTop, bool& isBlockchainActual, std::vector<TransactionDetails>& newTransactions, std::vector<Crypto::Hash>& removedTransactions) override;
+  virtual bool getPoolState(const std::vector<crypto::Hash>& knownPoolTransactionHashes, crypto::Hash knownBlockchainTop, bool& isBlockchainActual, std::vector<TransactionDetails>& newTransactions, std::vector<crypto::Hash>& removedTransactions) override;
 
   virtual uint64_t getRewardBlocksWindow() override;
   virtual uint64_t getFullRewardMaxBlockSize(uint8_t majorVersion) override;
@@ -89,7 +89,7 @@ private:
 
   BlockDetails knownBlockchainTop;
   uint32_t knownBlockchainTopHeight;
-  std::unordered_set<Crypto::Hash> knownPoolState;
+  std::unordered_set<crypto::Hash> knownPoolState;
 
   std::atomic<State> state;
   std::atomic<bool> synchronized;
@@ -99,7 +99,7 @@ private:
   std::mutex mutex;
 
   INode& node;
-  Logging::LoggerRef logger;
+  logging::LoggerRef logger;
 
   AsyncContextCounter asyncContextCounter;
   PoolUpdateGuard poolUpdateGuard;

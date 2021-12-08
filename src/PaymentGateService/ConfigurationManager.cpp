@@ -21,7 +21,7 @@ ConfigurationManager::ConfigurationManager() {
 }
 
 bool ConfigurationManager::init(int argc, char** argv) {
-  po::options_description cmdGeneralOptions("Common Options");
+  po::options_description cmdGeneralOptions("common Options");
 
   cmdGeneralOptions.add_options()
       ("config,c", po::value<std::string>(), "configuration file");

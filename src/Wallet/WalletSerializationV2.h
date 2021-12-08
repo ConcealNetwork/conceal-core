@@ -30,8 +30,8 @@ class WalletSerializerV2 {
 public:
   WalletSerializerV2(
     ITransfersObserver& transfersObserver,
-    Crypto::PublicKey& viewPublicKey,
-    Crypto::SecretKey& viewSecretKey,
+    crypto::PublicKey& viewPublicKey,
+    crypto::SecretKey& viewSecretKey,
     uint64_t& actualBalance,
     uint64_t& pendingBalance,
     uint64_t& lockedDepositBalance,
@@ -47,11 +47,11 @@ public:
     uint32_t transactionSoftLockTime
   );
 
-  void load(Common::IInputStream& source, uint8_t version);
-  void save(Common::IOutputStream& destination, WalletSaveLevel saveLevel);
+  void load(common::IInputStream& source, uint8_t version);
+  void save(common::IOutputStream& destination, WalletSaveLevel saveLevel);
 
-  std::unordered_set<Crypto::PublicKey>& addedKeys();
-  std::unordered_set<Crypto::PublicKey>& deletedKeys();
+  std::unordered_set<crypto::PublicKey>& addedKeys();
+  std::unordered_set<crypto::PublicKey>& deletedKeys();
 
   static const uint8_t MIN_VERSION = 6;
   static const uint8_t SERIALIZATION_VERSION = 6;
@@ -90,8 +90,8 @@ private:
   std::string& m_extra;
   uint32_t m_transactionSoftLockTime;
 
-  std::unordered_set<Crypto::PublicKey> m_addedKeys;
-  std::unordered_set<Crypto::PublicKey> m_deletedKeys;
+  std::unordered_set<crypto::PublicKey> m_addedKeys;
+  std::unordered_set<crypto::PublicKey> m_deletedKeys;
 };
 
 } //namespace cn

@@ -30,8 +30,8 @@ namespace cn
 
     struct WalletRecord
     {
-        Crypto::PublicKey spendPublicKey;
-        Crypto::SecretKey spendSecretKey;
+        crypto::PublicKey spendPublicKey;
+        crypto::SecretKey spendSecretKey;
         cn::ITransfersContainer *container = nullptr;
         uint64_t pendingBalance = 0;
         uint64_t actualBalance = 0;
@@ -42,9 +42,9 @@ namespace cn
 
 #pragma pack(push, 1)
 struct EncryptedWalletRecord {
-  Crypto::chacha8_iv iv;
+  crypto::chacha8_iv iv;
   // Secret key, public key and creation timestamp
-  uint8_t data[sizeof(Crypto::PublicKey) + sizeof(Crypto::SecretKey) + sizeof(uint64_t)];
+  uint8_t data[sizeof(crypto::PublicKey) + sizeof(crypto::SecretKey) + sizeof(uint64_t)];
 };
 #pragma pack(pop)
 
@@ -83,7 +83,7 @@ struct EncryptedWalletRecord {
         boost::multi_index::indexed_by<
             boost::multi_index::random_access<boost::multi_index::tag<RandomAccessIndex>>,
             boost::multi_index::hashed_unique<boost::multi_index::tag<KeysIndex>,
-                                              BOOST_MULTI_INDEX_MEMBER(WalletRecord, Crypto::PublicKey, spendPublicKey)>,
+                                              BOOST_MULTI_INDEX_MEMBER(WalletRecord, crypto::PublicKey, spendPublicKey)>,
             boost::multi_index::hashed_unique<boost::multi_index::tag<TransfersContainerIndex>,
                                               BOOST_MULTI_INDEX_MEMBER(WalletRecord, cn::ITransfersContainer *, container)>>>
         WalletsContainer;
@@ -92,7 +92,7 @@ struct EncryptedWalletRecord {
     {
         uint32_t blockHeight;
         cn::ITransfersContainer *container;
-        Crypto::Hash transactionHash;
+        crypto::Hash transactionHash;
     };
 
     typedef boost::multi_index_container<
@@ -101,7 +101,7 @@ struct EncryptedWalletRecord {
             boost::multi_index::ordered_non_unique<boost::multi_index::tag<BlockHeightIndex>,
                                                    BOOST_MULTI_INDEX_MEMBER(UnlockTransactionJob, uint32_t, blockHeight)>,
             boost::multi_index::hashed_non_unique<boost::multi_index::tag<TransactionHashIndex>,
-                                                  BOOST_MULTI_INDEX_MEMBER(UnlockTransactionJob, Crypto::Hash, transactionHash)>>>
+                                                  BOOST_MULTI_INDEX_MEMBER(UnlockTransactionJob, crypto::Hash, transactionHash)>>>
         UnlockTransactionJobs;
 
     typedef boost::multi_index_container<
@@ -109,7 +109,7 @@ struct EncryptedWalletRecord {
         boost::multi_index::indexed_by<
             boost::multi_index::random_access<boost::multi_index::tag<RandomAccessIndex>>,
             boost::multi_index::hashed_unique<boost::multi_index::tag<TransactionIndex>,
-                                              boost::multi_index::member<cn::Deposit, Crypto::Hash, &cn::Deposit::transactionHash>>,
+                                              boost::multi_index::member<cn::Deposit, crypto::Hash, &cn::Deposit::transactionHash>>,
             boost::multi_index::ordered_non_unique<boost::multi_index::tag<BlockHeightIndex>,
                                                    boost::multi_index::member<cn::Deposit, uint64_t, &cn::Deposit::height>>>>
          WalletDeposits;
@@ -119,25 +119,25 @@ struct EncryptedWalletRecord {
         boost::multi_index::indexed_by<
             boost::multi_index::random_access<boost::multi_index::tag<RandomAccessIndex>>,
             boost::multi_index::hashed_unique<boost::multi_index::tag<TransactionIndex>,
-                                              boost::multi_index::member<cn::WalletTransaction, Crypto::Hash, &cn::WalletTransaction::hash>>,
+                                              boost::multi_index::member<cn::WalletTransaction, crypto::Hash, &cn::WalletTransaction::hash>>,
             boost::multi_index::ordered_non_unique<boost::multi_index::tag<BlockHeightIndex>,
                                                    boost::multi_index::member<cn::WalletTransaction, uint32_t, &cn::WalletTransaction::blockHeight>>>>
         WalletTransactions;
         
-    typedef Common::FileMappedVector<EncryptedWalletRecord> ContainerStorage;
+    typedef common::FileMappedVector<EncryptedWalletRecord> ContainerStorage;
     typedef std::pair<size_t, cn::WalletTransfer> TransactionTransferPair;
     typedef std::vector<TransactionTransferPair> WalletTransfers;
 
     typedef std::map<size_t, cn::Transaction> UncommitedTransactions;
 
     typedef boost::multi_index_container<
-        Crypto::Hash,
+        crypto::Hash,
         boost::multi_index::indexed_by<
             boost::multi_index::random_access<
                 boost::multi_index::tag<BlockHeightIndex>>,
             boost::multi_index::hashed_unique<
                 boost::multi_index::tag<BlockHashIndex>,
-                boost::multi_index::identity<Crypto::Hash>>>>
+                boost::multi_index::identity<crypto::Hash>>>>
         BlockHashesContainer;
 
 } // namespace cn

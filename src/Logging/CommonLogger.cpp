@@ -6,7 +6,7 @@
 
 #include "CommonLogger.h"
 
-namespace Logging {
+namespace logging {
 
 namespace {
 

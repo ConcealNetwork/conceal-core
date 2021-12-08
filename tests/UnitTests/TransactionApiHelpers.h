@@ -18,7 +18,7 @@
 namespace {
 
   using namespace cn;
-  using namespace Crypto;
+  using namespace crypto;
 
   inline AccountKeys accountKeysFromKeypairs(
     const KeyPair& viewKeys, 
@@ -34,8 +34,8 @@ namespace {
   inline AccountKeys generateAccountKeys() {
     KeyPair p1;
     KeyPair p2;
-    Crypto::generate_keys(p2.publicKey, p2.secretKey);
-    Crypto::generate_keys(p1.publicKey, p1.secretKey);
+    crypto::generate_keys(p2.publicKey, p2.secretKey);
+    crypto::generate_keys(p1.publicKey, p1.secretKey);
     return accountKeysFromKeypairs(p1, p2);
   }
 
@@ -50,7 +50,7 @@ namespace {
   }
   
   KeyImage generateKeyImage() {
-    return Crypto::rand<KeyImage>();
+    return crypto::rand<KeyImage>();
   }
 
   KeyImage generateKeyImage(const AccountKeys& keys, size_t idx, const PublicKey& txPubKey) {
@@ -108,7 +108,7 @@ class TestTransactionBuilder {
 public:
 
   TestTransactionBuilder();
-  TestTransactionBuilder(const BinaryArray& txTemplate, const Crypto::SecretKey& secretKey);
+  TestTransactionBuilder(const BinaryArray& txTemplate, const crypto::SecretKey& secretKey);
 
   PublicKey getTransactionPublicKey() const;
   void appendExtra(const BinaryArray& extraData);
@@ -134,16 +134,16 @@ public:
   std::unique_ptr<ITransactionReader> build();
 
   // get built transaction hash (call only after build)
-  Crypto::Hash getTransactionHash() const;
+  crypto::Hash getTransactionHash() const;
 
 private:
 
-  void derivePublicKey(const AccountKeys& reciever, const Crypto::PublicKey& srcTxKey, size_t outputIndex, PublicKey& ephemeralKey) {
-    Crypto::KeyDerivation derivation;
-    Crypto::generate_key_derivation(srcTxKey, reinterpret_cast<const Crypto::SecretKey&>(reciever.viewSecretKey), derivation);
-    Crypto::derive_public_key(derivation, outputIndex,
-      reinterpret_cast<const Crypto::PublicKey&>(reciever.address.spendPublicKey),
-      reinterpret_cast<Crypto::PublicKey&>(ephemeralKey));
+  void derivePublicKey(const AccountKeys& reciever, const crypto::PublicKey& srcTxKey, size_t outputIndex, PublicKey& ephemeralKey) {
+    crypto::KeyDerivation derivation;
+    crypto::generate_key_derivation(srcTxKey, reinterpret_cast<const crypto::SecretKey&>(reciever.viewSecretKey), derivation);
+    crypto::derive_public_key(derivation, outputIndex,
+      reinterpret_cast<const crypto::PublicKey&>(reciever.address.spendPublicKey),
+      reinterpret_cast<crypto::PublicKey&>(ephemeralKey));
   }
 
   struct MsigInfo {
@@ -156,7 +156,7 @@ private:
   std::unordered_map<size_t, MsigInfo> msigInputs;
 
   std::unique_ptr<ITransaction> tx;
-  Crypto::Hash transactionHash;
+  crypto::Hash transactionHash;
 };
 
 class FusionTransactionBuilder {

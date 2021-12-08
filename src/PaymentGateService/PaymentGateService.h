@@ -31,12 +31,12 @@ public:
   void run();
   void stop();
   
-  Logging::ILogger& getLogger() { return logger; }
+  logging::ILogger& getLogger() { return logger; }
 
 private:
 
-  void runInProcess(Logging::LoggerRef& log);
-  void runRpcProxy(Logging::LoggerRef& log);
+  void runInProcess(logging::LoggerRef& log);
+  void runRpcProxy(logging::LoggerRef& log);
 
   void runWalletService(const cn::Currency& currency, cn::INode& node);
 
@@ -46,8 +46,8 @@ private:
   PaymentService::WalletService* service;
   cn::CurrencyBuilder currencyBuilder;
   
-  Logging::LoggerGroup logger;
+  logging::LoggerGroup logger;
   std::ofstream fileStream;
-  Logging::StreamLogger fileLogger;
-  Logging::ConsoleLogger consoleLogger;
+  logging::StreamLogger fileLogger;
+  logging::ConsoleLogger consoleLogger;
 };

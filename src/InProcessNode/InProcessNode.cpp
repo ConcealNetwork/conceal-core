@@ -19,8 +19,8 @@
 #include "InProcessNodeErrors.h"
 #include "Common/StringTools.h"
 
-using namespace Crypto;
-using namespace Common;
+using namespace crypto;
+using namespace common;
 
 namespace cn {
 
@@ -96,7 +96,7 @@ void InProcessNode::workerFunc() {
   ioService.run();
 }
 
-void InProcessNode::getNewBlocks(std::vector<Crypto::Hash>&& knownBlockIds, std::vector<cn::block_complete_entry>& newBlocks,
+void InProcessNode::getNewBlocks(std::vector<crypto::Hash>&& knownBlockIds, std::vector<cn::block_complete_entry>& newBlocks,
   uint32_t& startHeight, const Callback& callback)
 {
   std::unique_lock<std::mutex> lock(mutex);
@@ -117,7 +117,7 @@ void InProcessNode::getNewBlocks(std::vector<Crypto::Hash>&& knownBlockIds, std:
   );
 }
 
-void InProcessNode::getNewBlocksAsync(std::vector<Crypto::Hash>& knownBlockIds, std::vector<cn::block_complete_entry>& newBlocks,
+void InProcessNode::getNewBlocksAsync(std::vector<crypto::Hash>& knownBlockIds, std::vector<cn::block_complete_entry>& newBlocks,
   uint32_t& startHeight, const Callback& callback)
 {
   std::error_code ec = doGetNewBlocks(std::move(knownBlockIds), newBlocks, startHeight);
@@ -125,7 +125,7 @@ void InProcessNode::getNewBlocksAsync(std::vector<Crypto::Hash>& knownBlockIds, 
 }
 
 //it's always protected with mutex
-std::error_code InProcessNode::doGetNewBlocks(std::vector<Crypto::Hash>&& knownBlockIds, std::vector<cn::block_complete_entry>& newBlocks, uint32_t& startHeight) {
+std::error_code InProcessNode::doGetNewBlocks(std::vector<crypto::Hash>&& knownBlockIds, std::vector<cn::block_complete_entry>& newBlocks, uint32_t& startHeight) {
   {
     std::unique_lock<std::mutex> lock(mutex);
     if (state != INITIALIZED) {
@@ -144,7 +144,7 @@ std::error_code InProcessNode::doGetNewBlocks(std::vector<Crypto::Hash>&& knownB
     }
 
     uint32_t totalBlockCount;
-    std::vector<Crypto::Hash> supplement = core.findBlockchainSupplement(knownBlockIds, cn::COMMAND_RPC_GET_BLOCKS_FAST_MAX_COUNT, totalBlockCount, startHeight);
+    std::vector<crypto::Hash> supplement = core.findBlockchainSupplement(knownBlockIds, cn::COMMAND_RPC_GET_BLOCKS_FAST_MAX_COUNT, totalBlockCount, startHeight);
 
     for (const auto& blockId : supplement) {
       assert(core.have_block(blockId));
@@ -170,7 +170,7 @@ std::error_code InProcessNode::doGetNewBlocks(std::vector<Crypto::Hash>&& knownB
   return std::error_code();
 }
 
-void InProcessNode::getTransactionOutsGlobalIndices(const Crypto::Hash& transactionHash, std::vector<uint32_t>& outsGlobalIndices,
+void InProcessNode::getTransactionOutsGlobalIndices(const crypto::Hash& transactionHash, std::vector<uint32_t>& outsGlobalIndices,
     const Callback& callback)
 {
   std::unique_lock<std::mutex> lock(mutex);
@@ -190,7 +190,7 @@ void InProcessNode::getTransactionOutsGlobalIndices(const Crypto::Hash& transact
   );
 }
 
-void InProcessNode::getTransactionOutsGlobalIndicesAsync(const Crypto::Hash& transactionHash, std::vector<uint32_t>& outsGlobalIndices,
+void InProcessNode::getTransactionOutsGlobalIndicesAsync(const crypto::Hash& transactionHash, std::vector<uint32_t>& outsGlobalIndices,
     const Callback& callback)
 {
   std::error_code ec = doGetTransactionOutsGlobalIndices(transactionHash, outsGlobalIndices);
@@ -198,7 +198,7 @@ void InProcessNode::getTransactionOutsGlobalIndicesAsync(const Crypto::Hash& tra
 }
 
 //it's always protected with mutex
-std::error_code InProcessNode::doGetTransactionOutsGlobalIndices(const Crypto::Hash& transactionHash, std::vector<uint32_t>& outsGlobalIndices) {
+std::error_code InProcessNode::doGetTransactionOutsGlobalIndices(const crypto::Hash& transactionHash, std::vector<uint32_t>& outsGlobalIndices) {
   {
     std::unique_lock<std::mutex> lock(mutex);
     if (state != INITIALIZED) {
@@ -358,7 +358,7 @@ uint32_t InProcessNode::getLocalBlockCount() const {
   }
 
   uint32_t lastIndex;
-  Crypto::Hash ignore;
+  crypto::Hash ignore;
 
   core.get_blockchain_top(lastIndex, ignore);
 
@@ -385,7 +385,7 @@ uint32_t InProcessNode::getLastLocalBlockHeight() const {
   }
 
   uint32_t height;
-  Crypto::Hash ignore;
+  crypto::Hash ignore;
 
   core.get_blockchain_top(height, ignore);
 
@@ -411,7 +411,7 @@ uint64_t InProcessNode::getLastLocalBlockTimestamp() const {
   lock.unlock();
 
   uint32_t ignore;
-  Crypto::Hash hash;
+  crypto::Hash hash;
 
   core.get_blockchain_top(ignore, hash);
 
@@ -433,7 +433,7 @@ void InProcessNode::lastKnownBlockHeightUpdated(uint32_t height) {
 
 void InProcessNode::blockchainUpdated() {
   uint32_t height;
-  Crypto::Hash ignore;
+  crypto::Hash ignore;
 
   core.get_blockchain_top(height, ignore);
   observerManager.notify(&INodeObserver::localBlockchainUpdated, height);
@@ -447,7 +447,7 @@ void InProcessNode::blockchainSynchronized(uint32_t topHeight) {
   observerManager.notify(&INodeObserver::blockchainSynchronized, topHeight);
 }
 
-void InProcessNode::queryBlocks(std::vector<Crypto::Hash>&& knownBlockIds, uint64_t timestamp, std::vector<BlockShortEntry>& newBlocks,
+void InProcessNode::queryBlocks(std::vector<crypto::Hash>&& knownBlockIds, uint64_t timestamp, std::vector<BlockShortEntry>& newBlocks,
   uint32_t& startHeight, const Callback& callback) {
   std::unique_lock<std::mutex> lock(mutex);
   if (state != INITIALIZED) {
@@ -468,13 +468,13 @@ void InProcessNode::queryBlocks(std::vector<Crypto::Hash>&& knownBlockIds, uint6
   );
 }
 
-void InProcessNode::queryBlocksLiteAsync(std::vector<Crypto::Hash>& knownBlockIds, uint64_t timestamp, std::vector<BlockShortEntry>& newBlocks, uint32_t& startHeight,
+void InProcessNode::queryBlocksLiteAsync(std::vector<crypto::Hash>& knownBlockIds, uint64_t timestamp, std::vector<BlockShortEntry>& newBlocks, uint32_t& startHeight,
                          const Callback& callback) {
   std::error_code ec = doQueryBlocksLite(std::move(knownBlockIds), timestamp, newBlocks, startHeight);
   callback(ec);
 }
 
-std::error_code InProcessNode::doQueryBlocksLite(std::vector<Crypto::Hash>&& knownBlockIds, uint64_t timestamp, std::vector<BlockShortEntry>& newBlocks, uint32_t& startHeight) {
+std::error_code InProcessNode::doQueryBlocksLite(std::vector<crypto::Hash>&& knownBlockIds, uint64_t timestamp, std::vector<BlockShortEntry>& newBlocks, uint32_t& startHeight) {
   uint32_t currentHeight, fullOffset;
   std::vector<cn::BlockShortInfo> entries;
 
@@ -509,8 +509,8 @@ std::error_code InProcessNode::doQueryBlocksLite(std::vector<Crypto::Hash>&& kno
 
 }
 
-void InProcessNode::getPoolSymmetricDifference(std::vector<Crypto::Hash>&& knownPoolTxIds, Crypto::Hash knownBlockId, bool& isBcActual,
-        std::vector<std::unique_ptr<ITransactionReader>>& newTxs, std::vector<Crypto::Hash>& deletedTxIds, const Callback& callback) {
+void InProcessNode::getPoolSymmetricDifference(std::vector<crypto::Hash>&& knownPoolTxIds, crypto::Hash knownBlockId, bool& isBcActual,
+        std::vector<std::unique_ptr<ITransactionReader>>& newTxs, std::vector<crypto::Hash>& deletedTxIds, const Callback& callback) {
   std::unique_lock<std::mutex> lock(mutex);
   if (state != INITIALIZED) {
     lock.unlock();
@@ -523,8 +523,8 @@ void InProcessNode::getPoolSymmetricDifference(std::vector<Crypto::Hash>&& known
   });
 }
 
-void InProcessNode::getPoolSymmetricDifferenceAsync(std::vector<Crypto::Hash>&& knownPoolTxIds, Crypto::Hash knownBlockId, bool& isBcActual,
-        std::vector<std::unique_ptr<ITransactionReader>>& newTxs, std::vector<Crypto::Hash>& deletedTxIds, const Callback& callback) {
+void InProcessNode::getPoolSymmetricDifferenceAsync(std::vector<crypto::Hash>&& knownPoolTxIds, crypto::Hash knownBlockId, bool& isBcActual,
+        std::vector<std::unique_ptr<ITransactionReader>>& newTxs, std::vector<crypto::Hash>& deletedTxIds, const Callback& callback) {
   std::error_code ec = std::error_code();
 
   std::vector<TransactionPrefixInfo> added;
@@ -613,13 +613,13 @@ void InProcessNode::getBlocksAsync(const std::vector<uint32_t>& blockHeights, st
 std::error_code InProcessNode::doGetBlocks(const std::vector<uint32_t>& blockHeights, std::vector<std::vector<BlockDetails>>& blocks) {
   try {
     uint32_t topHeight = 0;
-    Crypto::Hash topHash = boost::value_initialized<Crypto::Hash>();
+    crypto::Hash topHash = boost::value_initialized<crypto::Hash>();
     core.get_blockchain_top(topHeight, topHash);
     for (const uint32_t& height : blockHeights) {
       if (height > topHeight) {
         return make_error_code(cn::error::REQUEST_ERROR);
       }
-      Crypto::Hash hash = core.getBlockIdByHeight(height);
+      crypto::Hash hash = core.getBlockIdByHeight(height);
       Block block;
       if (!core.getBlockByHash(hash, block)) {
         return make_error_code(cn::error::INTERNAL_NODE_ERROR);
@@ -652,7 +652,7 @@ std::error_code InProcessNode::doGetBlocks(const std::vector<uint32_t>& blockHei
   return std::error_code();
 }
 
-void InProcessNode::getBlocks(const std::vector<Crypto::Hash>& blockHashes, std::vector<BlockDetails>& blocks, const Callback& callback) {
+void InProcessNode::getBlocks(const std::vector<crypto::Hash>& blockHashes, std::vector<BlockDetails>& blocks, const Callback& callback) {
   std::unique_lock<std::mutex> lock(mutex);
   if (state != INITIALIZED) {
     lock.unlock();
@@ -664,7 +664,7 @@ void InProcessNode::getBlocks(const std::vector<Crypto::Hash>& blockHashes, std:
     std::bind(
       static_cast<
         void(InProcessNode::*)(
-          const std::vector<Crypto::Hash>&,
+          const std::vector<crypto::Hash>&,
           std::vector<BlockDetails>&,
           const Callback&
         )
@@ -677,12 +677,12 @@ void InProcessNode::getBlocks(const std::vector<Crypto::Hash>& blockHashes, std:
   );
 }
 
-void InProcessNode::getBlocksAsync(const std::vector<Crypto::Hash>& blockHashes, std::vector<BlockDetails>& blocks, const Callback& callback) {
+void InProcessNode::getBlocksAsync(const std::vector<crypto::Hash>& blockHashes, std::vector<BlockDetails>& blocks, const Callback& callback) {
   std::error_code ec = core.executeLocked(
     std::bind(
       static_cast<
         std::error_code(InProcessNode::*)(
-          const std::vector<Crypto::Hash>&,
+          const std::vector<crypto::Hash>&,
           std::vector<BlockDetails>&
         )
       >(&InProcessNode::doGetBlocks),
@@ -694,9 +694,9 @@ void InProcessNode::getBlocksAsync(const std::vector<Crypto::Hash>& blockHashes,
   callback(ec);
 }
 
-std::error_code InProcessNode::doGetBlocks(const std::vector<Crypto::Hash>& blockHashes, std::vector<BlockDetails>& blocks) {
+std::error_code InProcessNode::doGetBlocks(const std::vector<crypto::Hash>& blockHashes, std::vector<BlockDetails>& blocks) {
   try {
-    for (const Crypto::Hash& hash : blockHashes) {
+    for (const crypto::Hash& hash : blockHashes) {
       Block block;
       if (!core.getBlockByHash(hash, block)) {
         return make_error_code(cn::error::REQUEST_ERROR);
@@ -791,7 +791,7 @@ std::error_code InProcessNode::doGetBlocks(uint64_t timestampBegin, uint64_t tim
   return std::error_code();
 }
 
-void InProcessNode::getTransactions(const std::vector<Crypto::Hash>& transactionHashes, std::vector<TransactionDetails>& transactions, const Callback& callback) {
+void InProcessNode::getTransactions(const std::vector<crypto::Hash>& transactionHashes, std::vector<TransactionDetails>& transactions, const Callback& callback) {
   std::unique_lock<std::mutex> lock(mutex);
   if (state != INITIALIZED) {
     lock.unlock();
@@ -803,7 +803,7 @@ void InProcessNode::getTransactions(const std::vector<Crypto::Hash>& transaction
     std::bind(
       static_cast<
         void(InProcessNode::*)(
-          const std::vector<Crypto::Hash>&,
+          const std::vector<crypto::Hash>&,
           std::vector<TransactionDetails>&,
           const Callback&
         )
@@ -816,12 +816,12 @@ void InProcessNode::getTransactions(const std::vector<Crypto::Hash>& transaction
   );
 }
 
-void InProcessNode::getTransactionsAsync(const std::vector<Crypto::Hash>& transactionHashes, std::vector<TransactionDetails>& transactions, const Callback& callback) {
+void InProcessNode::getTransactionsAsync(const std::vector<crypto::Hash>& transactionHashes, std::vector<TransactionDetails>& transactions, const Callback& callback) {
   std::error_code ec = core.executeLocked(
     std::bind(
       static_cast<
         std::error_code(InProcessNode::*)(
-          const std::vector<Crypto::Hash>&,
+          const std::vector<crypto::Hash>&,
           std::vector<TransactionDetails>&
         )
       >(&InProcessNode::doGetTransactions),
@@ -833,10 +833,10 @@ void InProcessNode::getTransactionsAsync(const std::vector<Crypto::Hash>& transa
   callback(ec);
 }
 
-std::error_code InProcessNode::doGetTransactions(const std::vector<Crypto::Hash>& transactionHashes, std::vector<TransactionDetails>& transactions) {
+std::error_code InProcessNode::doGetTransactions(const std::vector<crypto::Hash>& transactionHashes, std::vector<TransactionDetails>& transactions) {
   try {
     std::list<Transaction> txs;
-    std::list<Crypto::Hash> missed_txs;
+    std::list<crypto::Hash> missed_txs;
     core.getTransactions(transactionHashes, txs, missed_txs, true);
     if (missed_txs.size() > 0) {
       return make_error_code(cn::error::REQUEST_ERROR);
@@ -915,7 +915,7 @@ std::error_code InProcessNode::doGetPoolTransactions(uint64_t timestampBegin, ui
   return std::error_code();
 }
 
-void InProcessNode::getTransactionsByPaymentId(const Crypto::Hash& paymentId, std::vector<TransactionDetails>& transactions, const Callback& callback) {
+void InProcessNode::getTransactionsByPaymentId(const crypto::Hash& paymentId, std::vector<TransactionDetails>& transactions, const Callback& callback) {
   std::unique_lock<std::mutex> lock(mutex);
   if (state != INITIALIZED) {
     lock.unlock();
@@ -934,7 +934,7 @@ void InProcessNode::getTransactionsByPaymentId(const Crypto::Hash& paymentId, st
   );
 }
 
-void InProcessNode::getTransaction(const Crypto::Hash &transactionHash, cn::Transaction &transaction, const Callback &callback)
+void InProcessNode::getTransaction(const crypto::Hash &transactionHash, cn::Transaction &transaction, const Callback &callback)
 {
   std::unique_lock<std::mutex> lock(mutex);
   if (state != INITIALIZED)
@@ -948,7 +948,7 @@ void InProcessNode::getTransaction(const Crypto::Hash &transactionHash, cn::Tran
       std::bind(
           static_cast<
               void (InProcessNode::*)(
-                  const Crypto::Hash &,
+                  const crypto::Hash &,
                   cn::Transaction &,
                   const Callback &)>(&InProcessNode::getTransactionAsync),
           this,
@@ -957,13 +957,13 @@ void InProcessNode::getTransaction(const Crypto::Hash &transactionHash, cn::Tran
           callback));
 }
 
-void InProcessNode::getTransactionAsync(const Crypto::Hash &transactionHash, cn::Transaction &transaction, const Callback &callback)
+void InProcessNode::getTransactionAsync(const crypto::Hash &transactionHash, cn::Transaction &transaction, const Callback &callback)
 {
   std::error_code ec = core.executeLocked(
       std::bind(
           static_cast<
               std::error_code (InProcessNode::*)(
-                  const Crypto::Hash &,
+                  const crypto::Hash &,
                   cn::Transaction &)>(&InProcessNode::doGetTransaction),
           this,
           std::cref(transactionHash),
@@ -971,13 +971,13 @@ void InProcessNode::getTransactionAsync(const Crypto::Hash &transactionHash, cn:
   callback(ec);
 }
 
-std::error_code InProcessNode::doGetTransaction(const Crypto::Hash &transactionHash, cn::Transaction &transaction)
+std::error_code InProcessNode::doGetTransaction(const crypto::Hash &transactionHash, cn::Transaction &transaction)
 {
   try
   {
     std::list<Transaction> txs;
-    std::list<Crypto::Hash> missed_txs;
-    std::vector<Crypto::Hash> transactionHashes;
+    std::list<crypto::Hash> missed_txs;
+    std::vector<crypto::Hash> transactionHashes;
     transactionHashes.push_back(transactionHash);
     core.getTransactions(transactionHashes, txs, missed_txs, true);
     if (missed_txs.size() > 0)
@@ -997,7 +997,7 @@ std::error_code InProcessNode::doGetTransaction(const Crypto::Hash &transactionH
   return std::error_code();
 }
 
-void InProcessNode::getTransactionsByPaymentIdAsync(const Crypto::Hash& paymentId, std::vector<TransactionDetails>& transactions, const Callback& callback) {
+void InProcessNode::getTransactionsByPaymentIdAsync(const crypto::Hash& paymentId, std::vector<TransactionDetails>& transactions, const Callback& callback) {
   std::error_code ec = core.executeLocked(
     std::bind(
       &InProcessNode::doGetTransactionsByPaymentId,
@@ -1010,7 +1010,7 @@ void InProcessNode::getTransactionsByPaymentIdAsync(const Crypto::Hash& paymentI
   callback(ec);
 }
 
-std::error_code InProcessNode::doGetTransactionsByPaymentId(const Crypto::Hash& paymentId, std::vector<TransactionDetails>& transactions) {
+std::error_code InProcessNode::doGetTransactionsByPaymentId(const crypto::Hash& paymentId, std::vector<TransactionDetails>& transactions) {
   try {
     std::vector<Transaction> rawTransactions;
     if (!core.getTransactionsByPaymentId(paymentId, rawTransactions)) {

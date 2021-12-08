@@ -25,14 +25,14 @@ namespace Miner {
 
 class MinerManager {
 public:
-  MinerManager(System::Dispatcher& dispatcher, const cn::MiningConfig& config, Logging::ILogger& logger);
+  MinerManager(System::Dispatcher& dispatcher, const cn::MiningConfig& config, logging::ILogger& logger);
   ~MinerManager();
 
   void start();
 
 private:
   System::Dispatcher& m_dispatcher;
-  Logging::LoggerRef m_logger;
+  logging::LoggerRef m_logger;
   System::ContextGroup m_contextGroup;
   cn::MiningConfig m_config;
   cn::Miner m_miner;

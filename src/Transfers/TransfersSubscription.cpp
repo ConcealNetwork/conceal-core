@@ -7,7 +7,7 @@
 #include "TransfersSubscription.h"
 #include "IWalletLegacy.h"
 
-using namespace Crypto;
+using namespace crypto;
 
 namespace cn {
 

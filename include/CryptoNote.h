@@ -19,7 +19,7 @@ struct BaseInput {
 struct KeyInput {
   uint64_t amount;
   std::vector<uint32_t> outputIndexes;
-  Crypto::KeyImage keyImage;
+  crypto::KeyImage keyImage;
 };
 
 struct MultisignatureInput {
@@ -30,11 +30,11 @@ struct MultisignatureInput {
 };
 
 struct KeyOutput {
-  Crypto::PublicKey key;
+  crypto::PublicKey key;
 };
 
 struct MultisignatureOutput {
-  std::vector<Crypto::PublicKey> keys;
+  std::vector<crypto::PublicKey> keys;
   uint8_t requiredSignatureCount;
   uint32_t term;
 };
@@ -59,7 +59,7 @@ struct TransactionPrefix {
 };
 
 struct Transaction : public TransactionPrefix {
-  std::vector<std::vector<Crypto::Signature>> signatures;
+  std::vector<std::vector<crypto::Signature>> signatures;
 };
 
 struct BlockHeader {
@@ -67,28 +67,28 @@ struct BlockHeader {
   uint8_t minorVersion;
   uint32_t nonce;
   uint64_t timestamp;
-  Crypto::Hash previousBlockHash;
+  crypto::Hash previousBlockHash;
 };
 
 struct Block : public BlockHeader {
   Transaction baseTransaction;
-  std::vector<Crypto::Hash> transactionHashes;
+  std::vector<crypto::Hash> transactionHashes;
 };
 
 struct AccountPublicAddress {
-  Crypto::PublicKey spendPublicKey;
-  Crypto::PublicKey viewPublicKey;
+  crypto::PublicKey spendPublicKey;
+  crypto::PublicKey viewPublicKey;
 };
 
 struct AccountKeys {
   AccountPublicAddress address;
-  Crypto::SecretKey spendSecretKey;
-  Crypto::SecretKey viewSecretKey;
+  crypto::SecretKey spendSecretKey;
+  crypto::SecretKey viewSecretKey;
 };
 
 struct KeyPair {
-  Crypto::PublicKey publicKey;
-  Crypto::SecretKey secretKey;
+  crypto::PublicKey publicKey;
+  crypto::SecretKey secretKey;
 };
 
 using BinaryArray = std::vector<uint8_t>;

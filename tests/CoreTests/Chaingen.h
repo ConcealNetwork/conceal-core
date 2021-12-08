@@ -28,7 +28,7 @@
 
 namespace concolor
 {
-  using namespace Common::Console;
+  using namespace common::Console;
 
   inline std::basic_ostream<char, std::char_traits<char> >& bright_white(std::basic_ostream<char, std::char_traits<char> >& ostr)
   {
@@ -150,7 +150,7 @@ private:
 //VARIANT_TAG(binary_archive, event_visitor_settings, 0xcf);
 
 typedef boost::variant<cn::Block, cn::Transaction, cn::AccountBase, callback_entry, serialized_block, serialized_transaction, event_visitor_settings> test_event_entry;
-typedef std::unordered_map<Crypto::Hash, const cn::Transaction*> map_hash2tx_t;
+typedef std::unordered_map<crypto::Hash, const cn::Transaction*> map_hash2tx_t;
 
 class test_chain_unit_base: boost::noncopyable
 {
@@ -168,7 +168,7 @@ public:
 
 protected:
 
-  mutable Logging::ConsoleLogger m_logger;
+  mutable logging::ConsoleLogger m_logger;
   cn::Currency m_currency;
 
 private:
@@ -176,15 +176,15 @@ private:
 };
 
 
-bool construct_tx_to_key(Logging::ILogger& logger, const std::vector<test_event_entry>& events, cn::Transaction& tx,
+bool construct_tx_to_key(logging::ILogger& logger, const std::vector<test_event_entry>& events, cn::Transaction& tx,
                          const cn::Block& blk_head, const cn::AccountBase& from, const cn::AccountBase& to,
                          uint64_t amount, uint64_t fee, size_t nmix);
-cn::Transaction construct_tx_with_fee(Logging::ILogger& logger, std::vector<test_event_entry>& events, const cn::Block& blk_head,
+cn::Transaction construct_tx_with_fee(logging::ILogger& logger, std::vector<test_event_entry>& events, const cn::Block& blk_head,
                                             const cn::AccountBase& acc_from, const cn::AccountBase& acc_to,
                                             uint64_t amount, uint64_t fee);
 
 void get_confirmed_txs(const std::vector<cn::Block>& blockchain, const map_hash2tx_t& mtx, map_hash2tx_t& confirmed_txs);
-bool find_block_chain(const std::vector<test_event_entry>& events, std::vector<cn::Block>& blockchain, map_hash2tx_t& mtx, const Crypto::Hash& head);
+bool find_block_chain(const std::vector<test_event_entry>& events, std::vector<cn::Block>& blockchain, map_hash2tx_t& mtx, const crypto::Hash& head);
 void fill_tx_sources_and_destinations(const std::vector<test_event_entry>& events, const cn::Block& blk_head,
                                       const cn::AccountBase& from, const cn::AccountBase& to,
                                       uint64_t amount, uint64_t fee, size_t nmix,
@@ -398,7 +398,7 @@ inline bool do_replay_events(std::vector<test_event_entry>& events, t_test_class
   if (!r)
     return false;
 
-  Logging::ConsoleLogger logger;
+  logging::ConsoleLogger logger;
   cn::CoreConfig coreConfig;
   coreConfig.init(vm);
   cn::MinerConfig emptyMinerConfig;

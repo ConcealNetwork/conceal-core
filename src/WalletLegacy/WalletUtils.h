@@ -21,7 +21,7 @@ inline void throwIf(bool expr, cn::error::WalletErrorCodes ec)
     throw std::system_error(make_error_code(ec));
 }
 
-inline std::ostream& operator <<(std::ostream& ostr, const Crypto::Hash& hash) {
+inline std::ostream& operator <<(std::ostream& ostr, const crypto::Hash& hash) {
   std::ios_base::fmtflags flags = ostr.setf(std::ios_base::hex, std::ios_base::basefield);
   char fill = ostr.fill('0');
 

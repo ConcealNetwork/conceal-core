@@ -27,16 +27,16 @@ namespace cn
     }
 
     // returns true if new element was inserted, false if already exists
-    bool push(const Crypto::Hash& h) {
+    bool push(const crypto::Hash& h) {
       auto result = m_container.push_back(h);
       return result.second;
     }
 
-    bool hasBlock(const Crypto::Hash& h) const {
+    bool hasBlock(const crypto::Hash& h) const {
       return m_index.find(h) != m_index.end();
     }
 
-    bool getBlockHeight(const Crypto::Hash& h, uint32_t& height) const {
+    bool getBlockHeight(const crypto::Hash& h, uint32_t& height) const {
       auto hi = m_index.find(h);
       if (hi == m_index.end())
         return false;
@@ -53,21 +53,21 @@ namespace cn
       m_container.clear();
     }
 
-    Crypto::Hash getBlockId(uint32_t height) const;
-    std::vector<Crypto::Hash> getBlockIds(uint32_t startBlockIndex, uint32_t maxCount) const;
-    bool findSupplement(const std::vector<Crypto::Hash>& ids, uint32_t& offset) const;
-    std::vector<Crypto::Hash> buildSparseChain(const Crypto::Hash& startBlockId) const;
-    Crypto::Hash getTailId() const;
+    crypto::Hash getBlockId(uint32_t height) const;
+    std::vector<crypto::Hash> getBlockIds(uint32_t startBlockIndex, uint32_t maxCount) const;
+    bool findSupplement(const std::vector<crypto::Hash>& ids, uint32_t& offset) const;
+    std::vector<crypto::Hash> buildSparseChain(const crypto::Hash& startBlockId) const;
+    crypto::Hash getTailId() const;
 
     void serialize(ISerializer& s);
 
   private:
 
     typedef boost::multi_index_container <
-      Crypto::Hash,
+      crypto::Hash,
       boost::multi_index::indexed_by<
         boost::multi_index::random_access<>,
-        boost::multi_index::hashed_unique<boost::multi_index::identity<Crypto::Hash>>
+        boost::multi_index::hashed_unique<boost::multi_index::identity<crypto::Hash>>
       >
     > ContainerT;
 

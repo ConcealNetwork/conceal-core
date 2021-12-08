@@ -34,8 +34,8 @@ private:
   void saveKeys(cn::ISerializer& serializer);
   void loadKeys(cn::ISerializer& serializer);
 
-  Crypto::chacha8_iv encrypt(const std::string& plain, const std::string& password, std::string& cipher);
-  void decrypt(const std::string& cipher, std::string& plain, Crypto::chacha8_iv iv, const std::string& password);
+  crypto::chacha8_iv encrypt(const std::string& plain, const std::string& password, std::string& cipher);
+  void decrypt(const std::string& cipher, std::string& plain, crypto::chacha8_iv iv, const std::string& password);
 
   cn::AccountBase& account;
   WalletUserTransactionsCache& transactionsCache;

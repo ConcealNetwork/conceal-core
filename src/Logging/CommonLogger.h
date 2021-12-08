@@ -9,7 +9,7 @@
 #include <set>
 #include "ILogger.h"
 
-namespace Logging {
+namespace logging {
 
 class CommonLogger : public ILogger {
 public:

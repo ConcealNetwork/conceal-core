@@ -25,7 +25,7 @@
 namespace cn {
   class miner {
   public:
-    miner(const Currency& currency, IMinerHandler& handler, Logging::ILogger& log);
+    miner(const Currency& currency, IMinerHandler& handler, logging::ILogger& log);
     ~miner();
 
     bool init(const MinerConfig& config);
@@ -39,7 +39,7 @@ namespace cn {
     bool on_idle();
     void on_synchronized();
     //synchronous analog (for fast calls)
-    static bool find_nonce_for_given_block(Crypto::cn_context &context, Block& bl, const difficulty_type& diffic);
+    static bool find_nonce_for_given_block(crypto::cn_context &context, Block& bl, const difficulty_type& diffic);
     void pause();
     void resume();
     void do_print_hashrate(bool do_hr);
@@ -58,7 +58,7 @@ namespace cn {
     };
 
     const Currency& m_currency;
-    Logging::LoggerRef logger;
+    logging::LoggerRef logger;
 
     std::atomic<bool> m_stop;
     std::mutex m_template_lock;

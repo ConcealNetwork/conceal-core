@@ -20,7 +20,7 @@ namespace cn {
   public:
     AccountBase();
     void generate();
-    static void generateViewFromSpend(Crypto::SecretKey &, Crypto::SecretKey &, Crypto::PublicKey &);
+    static void generateViewFromSpend(crypto::SecretKey &, crypto::SecretKey &, crypto::PublicKey &);
 
 
     const AccountKeys& getAccountKeys() const;

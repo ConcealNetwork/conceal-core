@@ -114,19 +114,19 @@ TEST(parseTransactionExtra, handles_pub_key_and_padding)
 
 TEST(parse_and_validate_tx_extra, is_valid_tx_extra_parsed)
 {
-  Logging::LoggerGroup logger;
+  logging::LoggerGroup logger;
   cn::Currency currency = cn::CurrencyBuilder(logger).currency();
   cn::Transaction tx = AUTO_VAL_INIT(tx);
   cn::AccountBase acc;
   acc.generate();
-  cn::BinaryArray b = Common::asBinaryArray("dsdsdfsdfsf");
+  cn::BinaryArray b = common::asBinaryArray("dsdsdfsdfsf");
   ASSERT_TRUE(currency.constructMinerTx(0, 0, 10000000000000, 1000, currency.minimumFee(), acc.getAccountKeys().address, tx, b, 1));
-  Crypto::PublicKey tx_pub_key = cn::getTransactionPublicKeyFromExtra(tx.extra);
+  crypto::PublicKey tx_pub_key = cn::getTransactionPublicKeyFromExtra(tx.extra);
   ASSERT_NE(tx_pub_key, cn::NULL_PUBLIC_KEY);
 }
 TEST(parse_and_validate_tx_extra, fails_on_big_extra_nonce)
 {
-  Logging::LoggerGroup logger;
+  logging::LoggerGroup logger;
   cn::Currency currency = cn::CurrencyBuilder(logger).currency();
   cn::Transaction tx = AUTO_VAL_INIT(tx);
   cn::AccountBase acc;
@@ -145,7 +145,7 @@ TEST(parse_and_validate_tx_extra, fails_on_wrong_size_in_extra_nonce)
 }
 TEST(validate_parse_amount_case, validate_parse_amount)
 {
-  Logging::LoggerGroup logger;
+  logging::LoggerGroup logger;
   cn::Currency currency = cn::CurrencyBuilder(logger).numberOfDecimalPlaces(8).currency();
   uint64_t res = 0;
   bool r = currency.parseAmount("0.0001", res);

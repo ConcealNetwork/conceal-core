@@ -51,7 +51,7 @@ struct DepositTestsBase : public test_chain_unit_base {
   void addDepositOutput(cn::Transaction& transaction);
   void addDepositInput(cn::Transaction& transaction);
 
-  Logging::ConsoleLogger m_logger;
+  logging::ConsoleLogger m_logger;
   cn::Transaction transaction;
   cn::AccountBase from;
   cn::AccountBase to;

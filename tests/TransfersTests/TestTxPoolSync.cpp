@@ -20,14 +20,14 @@
 
 
 using namespace cn;
-using namespace Tests::Common;
-using namespace Crypto;
+using namespace Tests::common;
+using namespace crypto;
 
 extern System::Dispatcher globalSystem;
-extern Tests::Common::BaseFunctionalTestsConfig config;
+extern Tests::common::BaseFunctionalTestsConfig config;
 
 namespace {
-  class NodeTxPoolSyncTest : public Tests::Common::BaseFunctionalTests, public ::testing::Test {
+  class NodeTxPoolSyncTest : public Tests::common::BaseFunctionalTests, public ::testing::Test {
   public:
     NodeTxPoolSyncTest() :
         BaseFunctionalTests(m_currency, globalSystem, config),
@@ -36,7 +36,7 @@ namespace {
     }
 
   protected:
-    Logging::LoggerManager m_logManager;
+    logging::LoggerManager m_logManager;
     System::Dispatcher& m_dispatcher;
     cn::Currency m_currency;
   };
@@ -56,7 +56,7 @@ namespace {
     const size_t NODE_2 = 2;
     const size_t NODE_3 = 3;
 
-    launchTestnet(4, Tests::Common::BaseFunctionalTests::Line);
+    launchTestnet(4, Tests::common::BaseFunctionalTests::Line);
 
     std::unique_ptr<cn::INode> node0;
     std::unique_ptr<cn::INode> node1;
@@ -146,7 +146,7 @@ namespace {
     const size_t NODE_2 = 2;
     const size_t NODE_3 = 3;
 
-    launchTestnet(4, Tests::Common::BaseFunctionalTests::Line);
+    launchTestnet(4, Tests::common::BaseFunctionalTests::Line);
 
     std::unique_ptr<cn::INode> node0;
     std::unique_ptr<cn::INode> node1;
@@ -242,7 +242,7 @@ namespace {
     const size_t NODE_3 = 3;
     const size_t NODE_4 = 4;
 
-    launchTestnet(5, Tests::Common::BaseFunctionalTests::Line);
+    launchTestnet(5, Tests::common::BaseFunctionalTests::Line);
 
     std::unique_ptr<cn::INode> node0;
     std::unique_ptr<cn::INode> node1;
@@ -328,7 +328,7 @@ namespace {
     const size_t NODE_2 = 2;
     const size_t NODE_3 = 3;
 
-    launchTestnet(4, Tests::Common::BaseFunctionalTests::Line);
+    launchTestnet(4, Tests::common::BaseFunctionalTests::Line);
 
     std::unique_ptr<cn::INode> node0;
     std::unique_ptr<cn::INode> node1;

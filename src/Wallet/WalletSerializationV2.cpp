@@ -21,8 +21,8 @@
 #include "Serialization/BinaryInputStreamSerializer.h"
 #include "Serialization/BinaryOutputStreamSerializer.h"
 
-using namespace Common;
-using namespace Crypto;
+using namespace common;
+using namespace crypto;
 
 namespace {
 
@@ -30,7 +30,7 @@ namespace {
 struct UnlockTransactionJobDtoV2 {
   uint32_t blockHeight;
   Hash transactionHash;
-  Crypto::PublicKey walletSpendPublicKey;
+  crypto::PublicKey walletSpendPublicKey;
 };
 
 //DO NOT CHANGE IT
@@ -111,7 +111,7 @@ struct WalletDepositDtoV2 {
   uint64_t unlockHeight;
   bool locked;
   uint32_t outputInTransaction;
-  Crypto::Hash transactionHash;
+  crypto::Hash transactionHash;
   std::string address;
 };
 
@@ -167,8 +167,8 @@ namespace cn {
 
 WalletSerializerV2::WalletSerializerV2(
   ITransfersObserver& transfersObserver,
-  Crypto::PublicKey& viewPublicKey,
-  Crypto::SecretKey& viewSecretKey,
+  crypto::PublicKey& viewPublicKey,
+  crypto::SecretKey& viewSecretKey,
   uint64_t& actualBalance,
   uint64_t& pendingBalance,
     uint64_t& lockedDepositBalance,
@@ -200,7 +200,7 @@ WalletSerializerV2::WalletSerializerV2(
 {
 }
 
-void WalletSerializerV2::load(Common::IInputStream& source, uint8_t version) {
+void WalletSerializerV2::load(common::IInputStream& source, uint8_t version) {
   cn::BinaryInputStreamSerializer s(source);
 
   uint8_t saveLevelValue;
@@ -224,7 +224,7 @@ void WalletSerializerV2::load(Common::IInputStream& source, uint8_t version) {
   s(m_extra, "extra");
 }
 
-void WalletSerializerV2::save(Common::IOutputStream& destination, WalletSaveLevel saveLevel) {
+void WalletSerializerV2::save(common::IOutputStream& destination, WalletSaveLevel saveLevel) {
   cn::BinaryOutputStreamSerializer s(destination);
 
   uint8_t saveLevelValue = static_cast<uint8_t>(saveLevel);
@@ -247,11 +247,11 @@ void WalletSerializerV2::save(Common::IOutputStream& destination, WalletSaveLeve
   s(m_extra, "extra");
 }
 
-std::unordered_set<Crypto::PublicKey>& WalletSerializerV2::addedKeys() {
+std::unordered_set<crypto::PublicKey>& WalletSerializerV2::addedKeys() {
   return m_addedKeys;
 }
 
-std::unordered_set<Crypto::PublicKey>& WalletSerializerV2::deletedKeys() {
+std::unordered_set<crypto::PublicKey>& WalletSerializerV2::deletedKeys() {
   return m_deletedKeys;
 }
 
@@ -265,10 +265,10 @@ void WalletSerializerV2::loadKeyListAndBanalces(cn::ISerializer& serializer, boo
   m_unlockedDepositBalance = 0;
   m_deletedKeys.clear();
 
-  std::unordered_set<Crypto::PublicKey> cachedKeySet;
+  std::unordered_set<crypto::PublicKey> cachedKeySet;
   auto& index = m_walletsContainer.get<KeysIndex>();
   for (size_t i = 0; i < walletCount; ++i) {
-    Crypto::PublicKey spendPublicKey;
+    crypto::PublicKey spendPublicKey;
     uint64_t actualBalance;
     uint64_t pendingBalance;
     uint64_t lockedDepositBalance;

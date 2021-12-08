@@ -40,7 +40,7 @@ namespace {
 
   protected:
 
-    Logging::ConsoleLogger logger;
+    logging::ConsoleLogger logger;
   };
 
   class UpgradeDetector_voting_init : public UpgradeTest {};

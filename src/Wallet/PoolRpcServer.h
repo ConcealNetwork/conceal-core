@@ -28,7 +28,7 @@ namespace Tools
 
     pool_rpc_server(
       System::Dispatcher& dispatcher,
-      Logging::ILogger& log,
+      logging::ILogger& log,
       cn::IWalletLegacy &w,
       cn::INode &n,
       cn::Currency& currency,
@@ -65,7 +65,7 @@ namespace Tools
 
     bool handle_command_line(const boost::program_options::variables_map& vm);
 
-    Logging::LoggerRef logger;
+    logging::LoggerRef logger;
     cn::IWalletLegacy& m_wallet;
     cn::INode& m_node;
     uint16_t m_port;

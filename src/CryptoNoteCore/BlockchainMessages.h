@@ -14,29 +14,29 @@ namespace cn {
 
 class NewBlockMessage {
 public:
-  NewBlockMessage(const Crypto::Hash& hash);
+  NewBlockMessage(const crypto::Hash& hash);
   NewBlockMessage() = default;
-  void get(Crypto::Hash& hash) const;
+  void get(crypto::Hash& hash) const;
 private:
-  Crypto::Hash blockHash;
+  crypto::Hash blockHash;
 };
 
 class NewAlternativeBlockMessage {
 public:
-  NewAlternativeBlockMessage(const Crypto::Hash& hash);
+  NewAlternativeBlockMessage(const crypto::Hash& hash);
   NewAlternativeBlockMessage() = default;
-  void get(Crypto::Hash& hash) const;
+  void get(crypto::Hash& hash) const;
 private:
-  Crypto::Hash blockHash;
+  crypto::Hash blockHash;
 };
 
 class ChainSwitchMessage {
 public:
-  ChainSwitchMessage(std::vector<Crypto::Hash>&& hashes);
+  ChainSwitchMessage(std::vector<crypto::Hash>&& hashes);
   ChainSwitchMessage(const ChainSwitchMessage& other);
-  void get(std::vector<Crypto::Hash>& hashes) const;
+  void get(std::vector<crypto::Hash>& hashes) const;
 private:
-  std::vector<Crypto::Hash> blocksFromCommonRoot;
+  std::vector<crypto::Hash> blocksFromCommonRoot;
 };
 
 class BlockchainMessage {
@@ -57,9 +57,9 @@ public:
 
   MessageType getType() const;
 
-  bool getNewBlockHash(Crypto::Hash& hash) const;
-  bool getNewAlternativeBlockHash(Crypto::Hash& hash) const;
-  bool getChainSwitch(std::vector<Crypto::Hash>& hashes) const;
+  bool getNewBlockHash(crypto::Hash& hash) const;
+  bool getNewAlternativeBlockHash(crypto::Hash& hash) const;
+  bool getChainSwitch(std::vector<crypto::Hash>& hashes) const;
 private:
   const MessageType type;
 

@@ -17,7 +17,7 @@
 #include "Serialization/SerializationOverloads.h"
 #include <algorithm>
 
-using namespace Crypto;
+using namespace crypto;
 
 namespace cn {
 
@@ -342,7 +342,7 @@ std::deque<std::unique_ptr<WalletLegacyEvent>> WalletUserTransactionsCache::onTr
   return events;
 }
 
-std::deque<std::unique_ptr<WalletLegacyEvent>> WalletUserTransactionsCache::onTransactionDeleted(const Crypto::Hash& transactionHash) {
+std::deque<std::unique_ptr<WalletLegacyEvent>> WalletUserTransactionsCache::onTransactionDeleted(const crypto::Hash& transactionHash) {
   TransactionId id = cn::WALLET_LEGACY_INVALID_TRANSACTION_ID;
   if (m_unconfirmedTransactions.findTransactionId(transactionHash, id)) {
     m_unconfirmedTransactions.erase(transactionHash);

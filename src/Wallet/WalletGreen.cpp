@@ -38,10 +38,10 @@
 #include "WalletErrors.h"
 #include "WalletUtils.h"
 
-using namespace Common;
-using namespace Crypto;
+using namespace common;
+using namespace crypto;
 using namespace cn;
-using namespace Logging;
+using namespace logging;
 
 namespace
 {
@@ -270,7 +270,7 @@ namespace
 namespace cn
 {
 
-  WalletGreen::WalletGreen(System::Dispatcher &dispatcher, const Currency &currency, INode &node, Logging::ILogger &logger, uint32_t transactionSoftLockTime) : m_dispatcher(dispatcher),
+  WalletGreen::WalletGreen(System::Dispatcher &dispatcher, const Currency &currency, INode &node, logging::ILogger &logger, uint32_t transactionSoftLockTime) : m_dispatcher(dispatcher),
                                                                                                                                                                 m_currency(currency),
                                                                                                                                                                 m_node(node),
                                                                                                                                                                 m_logger(logger, "WalletGreen"),
@@ -305,11 +305,11 @@ namespace cn
       const std::string &path,
       const std::string &password)
   {
-    Crypto::PublicKey viewPublicKey;
-    Crypto::SecretKey viewSecretKey;
-    Crypto::generate_keys(viewPublicKey, viewSecretKey);
+    crypto::PublicKey viewPublicKey;
+    crypto::SecretKey viewSecretKey;
+    crypto::generate_keys(viewPublicKey, viewSecretKey);
     initWithKeys(path, password, viewPublicKey, viewSecretKey);
-    m_logger(DEBUGGING, BRIGHT_WHITE) << "New container initialized, public view key " << Common::podToHex(viewPublicKey);
+    m_logger(DEBUGGING, BRIGHT_WHITE) << "New container initialized, public view key " << common::podToHex(viewPublicKey);
   }
 
   void WalletGreen::withdrawDeposit(
@@ -380,12 +380,12 @@ namespace cn
     }
 
     transaction->setUnlockTime(0);
-    Crypto::SecretKey transactionSK;
+    crypto::SecretKey transactionSK;
     transaction->getTransactionSecretKey(transactionSK);
 
     /* Add the transaction extra */
     std::vector<WalletMessage> messages;
-    Crypto::PublicKey publicKey = transaction->getTransactionPublicKey();
+    crypto::PublicKey publicKey = transaction->getTransactionPublicKey();
     cn::KeyPair kp = {publicKey, transactionSK};
     for (size_t i = 0; i < messages.size(); ++i)
     {
@@ -407,16 +407,16 @@ namespace cn
       transaction->signInputMultisignature(i, selectedTransfers[i].transactionPublicKey, selectedTransfers[i].outputInTransaction, account);
     }
 
-    transactionHash = Common::podToHex(transaction->getTransactionHash());
+    transactionHash = common::podToHex(transaction->getTransactionHash());
     size_t id = validateSaveAndSendTransaction(*transaction, {}, false, true);
   }
 
-  Crypto::SecretKey WalletGreen::getTransactionDeterministicSecretKey(Crypto::Hash &transactionHash) const
+  crypto::SecretKey WalletGreen::getTransactionDeterministicSecretKey(crypto::Hash &transactionHash) const
   {
     throwIfNotInitialized();
     throwIfStopped();
 
-    Crypto::SecretKey txKey = cn::NULL_SECRET_KEY;
+    crypto::SecretKey txKey = cn::NULL_SECRET_KEY;
 
     auto getTransactionCompleted = std::promise<std::error_code>();
     auto getTransactionWaitFuture = getTransactionCompleted.get_future();
@@ -433,7 +433,7 @@ namespace cn
       return cn::NULL_SECRET_KEY;
     }
 
-    Crypto::PublicKey txPubKey = getTransactionPublicKeyFromExtra(tx.extra);
+    crypto::PublicKey txPubKey = getTransactionPublicKeyFromExtra(tx.extra);
     KeyPair deterministicTxKeys;
     bool ok = generateDeterministicTransactionKeys(tx, m_viewSecretKey, deterministicTxKeys) && deterministicTxKeys.publicKey == txPubKey;
 
@@ -550,7 +550,7 @@ namespace cn
     }
 
     /* For the sake of privacy, we shuffle the output order randomly */
-    std::shuffle(amountsToAddresses.begin(), amountsToAddresses.end(), std::default_random_engine{Crypto::rand<std::default_random_engine::result_type>()});
+    std::shuffle(amountsToAddresses.begin(), amountsToAddresses.end(), std::default_random_engine{crypto::rand<std::default_random_engine::result_type>()});
     std::sort(amountsToAddresses.begin(), amountsToAddresses.end(), [](const AmountToAddress &left, const AmountToAddress &right) {
       return left.second < right.second;
     });
@@ -572,13 +572,13 @@ namespace cn
 
     /* Now add the other components of the transaction such as the transaction secret key, unlocktime
      since this is a deposit, we don't need to add messages or added extras beyond the transaction publick key */
-    Crypto::SecretKey transactionSK;
+    crypto::SecretKey transactionSK;
     transaction->getTransactionSecretKey(transactionSK);
     transaction->setUnlockTime(0);
 
     /* Add the transaction extra */
     std::vector<WalletMessage> messages;
-    Crypto::PublicKey publicKey = transaction->getTransactionPublicKey();
+    crypto::PublicKey publicKey = transaction->getTransactionPublicKey();
     cn::KeyPair kp = {publicKey, transactionSK};
     for (size_t i = 0; i < messages.size(); ++i)
     {
@@ -617,7 +617,7 @@ namespace cn
     }
 
     /* Return the transaction hash */
-    transactionHash = Common::podToHex(transaction->getTransactionHash());
+    transactionHash = common::podToHex(transaction->getTransactionHash());
     size_t id = validateSaveAndSendTransaction(*transaction, {}, false, true);
   }
 
@@ -639,7 +639,7 @@ namespace cn
   }
 
   void WalletGreen::decryptKeyPair(const EncryptedWalletRecord &cipher, PublicKey &publicKey, SecretKey &secretKey,
-                                   uint64_t &creationTimestamp, const Crypto::chacha8_key &key)
+                                   uint64_t &creationTimestamp, const crypto::chacha8_key &key)
   {
 
     std::array<char, sizeof(cipher.data)> buffer;
@@ -658,7 +658,7 @@ namespace cn
     decryptKeyPair(cipher, publicKey, secretKey, creationTimestamp, m_key);
   }
 
-  EncryptedWalletRecord WalletGreen::encryptKeyPair(const PublicKey &publicKey, const SecretKey &secretKey, uint64_t creationTimestamp, const Crypto::chacha8_key &key, const Crypto::chacha8_iv &iv)
+  EncryptedWalletRecord WalletGreen::encryptKeyPair(const PublicKey &publicKey, const SecretKey &secretKey, uint64_t creationTimestamp, const crypto::chacha8_key &key, const crypto::chacha8_iv &iv)
   {
 
     EncryptedWalletRecord result;
@@ -679,7 +679,7 @@ namespace cn
     return result;
   }
 
-  Crypto::chacha8_iv WalletGreen::getNextIv() const
+  crypto::chacha8_iv WalletGreen::getNextIv() const
   {
     const auto *prefix = reinterpret_cast<const ContainerStoragePrefix *>(m_containerStorage.prefix());
     return prefix->nextIv;
@@ -715,7 +715,7 @@ namespace cn
       }
       else
       {
-        if (!Crypto::check_key(wallet.spendPublicKey))
+        if (!crypto::check_key(wallet.spendPublicKey))
         {
           throw std::system_error(make_error_code(error::WRONG_PASSWORD), "Public spend key is incorrect");
         }
@@ -742,17 +742,17 @@ namespace cn
     }
   }
 
-  void WalletGreen::initializeWithViewKey(const std::string &path, const std::string &password, const Crypto::SecretKey &viewSecretKey)
+  void WalletGreen::initializeWithViewKey(const std::string &path, const std::string &password, const crypto::SecretKey &viewSecretKey)
   {
-    Crypto::PublicKey viewPublicKey;
-    if (!Crypto::secret_key_to_public_key(viewSecretKey, viewPublicKey))
+    crypto::PublicKey viewPublicKey;
+    if (!crypto::secret_key_to_public_key(viewSecretKey, viewPublicKey))
     {
-      m_logger(ERROR, BRIGHT_RED) << "initializeWithViewKey(" << Common::podToHex(viewSecretKey) << ") Failed to convert secret key to public key";
+      m_logger(ERROR, BRIGHT_RED) << "initializeWithViewKey(" << common::podToHex(viewSecretKey) << ") Failed to convert secret key to public key";
       throw std::system_error(make_error_code(cn::error::KEY_GENERATION_ERROR));
     }
 
     initWithKeys(path, password, viewPublicKey, viewSecretKey);
-    m_logger(INFO, BRIGHT_WHITE) << "Container initialized with view secret key, public view key " << Common::podToHex(viewPublicKey);
+    m_logger(INFO, BRIGHT_WHITE) << "Container initialized with view secret key, public view key " << common::podToHex(viewPublicKey);
   }
 
   void WalletGreen::shutdown()
@@ -763,13 +763,13 @@ namespace cn
     m_dispatcher.yield(); //let remote spawns finish
   }
 
-  void WalletGreen::initBlockchain(const Crypto::PublicKey &viewPublicKey)
+  void WalletGreen::initBlockchain(const crypto::PublicKey &viewPublicKey)
   {
-    std::vector<Crypto::Hash> blockchain = m_synchronizer.getViewKeyKnownBlocks(m_viewPublicKey);
+    std::vector<crypto::Hash> blockchain = m_synchronizer.getViewKeyKnownBlocks(m_viewPublicKey);
     m_blockchain.insert(m_blockchain.end(), blockchain.begin(), blockchain.end());
   }
 
-  void WalletGreen::deleteOrphanTransactions(const std::unordered_set<Crypto::PublicKey> &deletedKeys)
+  void WalletGreen::deleteOrphanTransactions(const std::unordered_set<crypto::PublicKey> &deletedKeys)
   {
     for (auto spendPublicKey : deletedKeys)
     {
@@ -784,7 +784,7 @@ namespace cn
     }
   }
 
-  void WalletGreen::saveWalletCache(ContainerStorage &storage, const Crypto::chacha8_key &key, WalletSaveLevel saveLevel, const std::string &extra)
+  void WalletGreen::saveWalletCache(ContainerStorage &storage, const crypto::chacha8_key &key, WalletSaveLevel saveLevel, const std::string &extra)
   {
     m_logger(INFO) << "Saving cache...";
 
@@ -812,7 +812,7 @@ namespace cn
     }
 
     std::string containerData;
-    Common::StringOutputStream containerStream(containerData);
+    common::StringOutputStream containerStream(containerData);
     WalletSerializerV2 s(
         *this,
         m_viewPublicKey,
@@ -861,7 +861,7 @@ namespace cn
 
   void WalletGreen::initTransactionPool()
   {
-    std::unordered_set<Crypto::Hash> uncommitedTransactionsSet;
+    std::unordered_set<crypto::Hash> uncommitedTransactionsSet;
     std::transform(m_uncommitedTransactions.begin(), m_uncommitedTransactions.end(), std::inserter(uncommitedTransactionsSet, uncommitedTransactionsSet.end()),
                    [](const UncommitedTransactions::value_type &pair) {
                      return getObjectHash(pair.second);
@@ -870,7 +870,7 @@ namespace cn
   }
 
   void WalletGreen::initWithKeys(const std::string &path, const std::string &password,
-                                 const Crypto::PublicKey &viewPublicKey, const Crypto::SecretKey &viewSecretKey)
+                                 const crypto::PublicKey &viewPublicKey, const crypto::SecretKey &viewSecretKey)
   {
 
     if (m_state != WalletState::NOT_INITIALIZED)
@@ -881,13 +881,13 @@ namespace cn
 
     throwIfStopped();
 
-    ContainerStorage newStorage(path, Common::FileMappedVectorOpenMode::CREATE, sizeof(ContainerStoragePrefix));
+    ContainerStorage newStorage(path, common::FileMappedVectorOpenMode::CREATE, sizeof(ContainerStoragePrefix));
     ContainerStoragePrefix *prefix = reinterpret_cast<ContainerStoragePrefix *>(newStorage.prefix());
     prefix->version = static_cast<uint8_t>(WalletSerializerV2::SERIALIZATION_VERSION);
-    prefix->nextIv = Crypto::rand<Crypto::chacha8_iv>();
+    prefix->nextIv = crypto::rand<crypto::chacha8_iv>();
 
-    Crypto::cn_context cnContext;
-    Crypto::generate_chacha8_key(cnContext, password, m_key);
+    crypto::cn_context cnContext;
+    crypto::generate_chacha8_key(cnContext, password, m_key);
 
     uint64_t creationTimestamp = time(nullptr);
     prefix->encryptedViewKeys = encryptKeyPair(viewPublicKey, viewSecretKey, creationTimestamp, m_key, prefix->nextIv);
@@ -900,7 +900,7 @@ namespace cn
     m_viewSecretKey = viewSecretKey;
     m_password = password;
     m_path = path;
-    m_logger = Logging::LoggerRef(m_logger.getLogger(), "WalletGreen/" + podToHex(m_viewPublicKey).substr(0, 5));
+    m_logger = logging::LoggerRef(m_logger.getLogger(), "WalletGreen/" + podToHex(m_viewPublicKey).substr(0, 5));
 
     assert(m_blockchain.empty());
     m_blockchain.push_back(m_currency.genesisBlockHash());
@@ -948,14 +948,14 @@ namespace cn
 
     for (auto &encryptedSpendKeys : src)
     {
-      Crypto::PublicKey publicKey;
-      Crypto::SecretKey secretKey;
+      crypto::PublicKey publicKey;
+      crypto::SecretKey secretKey;
       uint64_t creationTimestamp;
       decryptKeyPair(encryptedSpendKeys, publicKey, secretKey, creationTimestamp, srcKey);
 
       // push_back() can resize container, and dstPrefix address can be changed, so it is requested for each key pair
       ContainerStoragePrefix *dstPrefix = reinterpret_cast<ContainerStoragePrefix *>(dst.prefix());
-      Crypto::chacha8_iv keyPairIv = dstPrefix->nextIv;
+      crypto::chacha8_iv keyPairIv = dstPrefix->nextIv;
       incIv(dstPrefix->nextIv);
 
       dst.push_back(encryptKeyPair(publicKey, secretKey, creationTimestamp, dstKey, keyPairIv));
@@ -967,10 +967,10 @@ namespace cn
     ContainerStoragePrefix *srcPrefix = reinterpret_cast<ContainerStoragePrefix *>(src.prefix());
     ContainerStoragePrefix *dstPrefix = reinterpret_cast<ContainerStoragePrefix *>(dst.prefix());
     dstPrefix->version = srcPrefix->version;
-    dstPrefix->nextIv = Crypto::randomChachaIV();
+    dstPrefix->nextIv = crypto::randomChachaIV();
 
-    Crypto::PublicKey publicKey;
-    Crypto::SecretKey secretKey;
+    crypto::PublicKey publicKey;
+    crypto::SecretKey secretKey;
     uint64_t creationTimestamp;
     decryptKeyPair(srcPrefix->encryptedViewKeys, publicKey, secretKey, creationTimestamp, srcKey);
     dstPrefix->encryptedViewKeys = encryptKeyPair(publicKey, secretKey, creationTimestamp, dstKey, dstPrefix->nextIv);
@@ -1116,10 +1116,10 @@ namespace cn
       boost::system::error_code ignore;
       boost::filesystem::remove(tmpPath, ignore);
     });
-    m_containerStorage.open(tmpPath.string(), Common::FileMappedVectorOpenMode::CREATE, sizeof(ContainerStoragePrefix));
+    m_containerStorage.open(tmpPath.string(), common::FileMappedVectorOpenMode::CREATE, sizeof(ContainerStoragePrefix));
     ContainerStoragePrefix *prefix = reinterpret_cast<ContainerStoragePrefix *>(m_containerStorage.prefix());
     prefix->version = WalletSerializerV2::SERIALIZATION_VERSION;
-    prefix->nextIv = Crypto::randomChachaIV();
+    prefix->nextIv = crypto::randomChachaIV();
     uint64_t creationTimestamp = time(nullptr);
     prefix->encryptedViewKeys = encryptKeyPair(m_viewPublicKey, m_viewSecretKey, creationTimestamp);
     for (auto spendKeys : m_walletsContainer.get<RandomAccessIndex>())
@@ -1146,16 +1146,16 @@ namespace cn
 
   void WalletGreen::incNextIv()
   {
-    static_assert(sizeof(uint64_t) == sizeof(Crypto::chacha8_iv), "Bad Crypto::chacha8_iv size");
+    static_assert(sizeof(uint64_t) == sizeof(crypto::chacha8_iv), "Bad crypto::chacha8_iv size");
     auto *prefix = reinterpret_cast<ContainerStoragePrefix *>(m_containerStorage.prefix());
     incIv(prefix->nextIv);
   }
 
-  void WalletGreen::loadAndDecryptContainerData(ContainerStorage &storage, const Crypto::chacha8_key &key, BinaryArray &containerData)
+  void WalletGreen::loadAndDecryptContainerData(ContainerStorage &storage, const crypto::chacha8_key &key, BinaryArray &containerData)
   {
-    Common::MemoryInputStream suffixStream(storage.suffix(), storage.suffixSize());
+    common::MemoryInputStream suffixStream(storage.suffix(), storage.suffixSize());
     BinaryInputStreamSerializer suffixSerializer(suffixStream);
-    Crypto::chacha8_iv suffixIv;
+    crypto::chacha8_iv suffixIv;
     BinaryArray encryptedContainer;
     suffixSerializer(suffixIv, "suffixIv");
     suffixSerializer(encryptedContainer, "encryptedContainer");
@@ -1164,7 +1164,7 @@ namespace cn
     chacha8(encryptedContainer.data(), encryptedContainer.size(), key, suffixIv, reinterpret_cast<char *>(containerData.data()));
   }
 
-  void WalletGreen::loadWalletCache(std::unordered_set<Crypto::PublicKey> &addedKeys, std::unordered_set<Crypto::PublicKey> &deletedKeys, std::string &extra)
+  void WalletGreen::loadWalletCache(std::unordered_set<crypto::PublicKey> &addedKeys, std::unordered_set<crypto::PublicKey> &deletedKeys, std::string &extra)
   {
     assert(m_containerStorage.isOpened());
 
@@ -1189,7 +1189,7 @@ namespace cn
         extra,
         m_transactionSoftLockTime);
 
-    Common::MemoryInputStream containerStream(contanerData.data(), contanerData.size());
+    common::MemoryInputStream containerStream(contanerData.data(), contanerData.size());
     s.load(containerStream, reinterpret_cast<const ContainerStoragePrefix *>(m_containerStorage.prefix())->version);
     addedKeys = std::move(s.addedKeys());
     deletedKeys = std::move(s.deletedKeys());
@@ -1209,7 +1209,7 @@ namespace cn
       uint64_t creationTimestamp;
       decryptKeyPair(prefix->encryptedViewKeys, m_viewPublicKey, m_viewSecretKey, creationTimestamp);
       throwIfKeysMissmatch(m_viewSecretKey, m_viewPublicKey, "Restored view public key doesn't correspond to secret key");
-      m_logger = Logging::LoggerRef(m_logger.getLogger(), "WalletGreen/" + podToHex(m_viewPublicKey).substr(0, 5));
+      m_logger = logging::LoggerRef(m_logger.getLogger(), "WalletGreen/" + podToHex(m_viewPublicKey).substr(0, 5));
 
       loadSpendKeys();
 
@@ -1226,11 +1226,11 @@ namespace cn
     }
   }
 
-  void WalletGreen::encryptAndSaveContainerData(ContainerStorage &storage, const Crypto::chacha8_key &key, const void *containerData, size_t containerDataSize)
+  void WalletGreen::encryptAndSaveContainerData(ContainerStorage &storage, const crypto::chacha8_key &key, const void *containerData, size_t containerDataSize)
   {
     ContainerStoragePrefix *prefix = reinterpret_cast<ContainerStoragePrefix *>(storage.prefix());
 
-    Crypto::chacha8_iv suffixIv = prefix->nextIv;
+    crypto::chacha8_iv suffixIv = prefix->nextIv;
     incIv(prefix->nextIv);
 
     BinaryArray encryptedContainer;
@@ -1238,7 +1238,7 @@ namespace cn
     chacha8(containerData, containerDataSize, key, suffixIv, reinterpret_cast<char *>(encryptedContainer.data()));
 
     std::string suffix;
-    Common::StringOutputStream suffixStream(suffix);
+    common::StringOutputStream suffixStream(suffix);
     BinaryOutputStreamSerializer suffixSerializer(suffixStream);
     suffixSerializer(suffixIv, "suffixIv");
     suffixSerializer(encryptedContainer, "encryptedContainer");
@@ -1247,9 +1247,9 @@ namespace cn
     std::copy(suffix.begin(), suffix.end(), storage.suffix());
   }
 
-  void WalletGreen::incIv(Crypto::chacha8_iv &iv)
+  void WalletGreen::incIv(crypto::chacha8_iv &iv)
   {
-    static_assert(sizeof(uint64_t) == sizeof(Crypto::chacha8_iv), "Bad Crypto::chacha8_iv size");
+    static_assert(sizeof(uint64_t) == sizeof(crypto::chacha8_iv), "Bad crypto::chacha8_iv size");
     uint64_t *i = reinterpret_cast<uint64_t *>(&iv);
     if (*i < std::numeric_limits<uint64_t>::max())
     {
@@ -1275,7 +1275,7 @@ namespace cn
 
     stopBlockchainSynchronizer();
 
-    Crypto::cn_context cnContext;
+    crypto::cn_context cnContext;
     generate_chacha8_key(cnContext, password, m_key);
 
     std::ifstream walletFileStream(path, std::ios_base::binary);
@@ -1307,8 +1307,8 @@ namespace cn
       {
         try
         {
-          std::unordered_set<Crypto::PublicKey> addedSpendKeys;
-          std::unordered_set<Crypto::PublicKey> deletedSpendKeys;
+          std::unordered_set<crypto::PublicKey> addedSpendKeys;
+          std::unordered_set<crypto::PublicKey> deletedSpendKeys;
           loadWalletCache(addedSpendKeys, deletedSpendKeys, extra);
 
           if (!addedSpendKeys.empty())
@@ -1390,7 +1390,7 @@ namespace cn
     m_extra = extra;
 
     m_state = WalletState::INITIALIZED;
-    m_logger(INFO, BRIGHT_WHITE) << "Container loaded, view public key " << Common::podToHex(m_viewPublicKey) << ", wallet count " << m_walletsContainer.size() << ", actual balance " << m_currency.formatAmount(m_actualBalance) << ", pending balance " << m_currency.formatAmount(m_pendingBalance);
+    m_logger(INFO, BRIGHT_WHITE) << "Container loaded, view public key " << common::podToHex(m_viewPublicKey) << ", wallet count " << m_walletsContainer.size() << ", actual balance " << m_currency.formatAmount(m_actualBalance) << ", pending balance " << m_currency.formatAmount(m_pendingBalance);
   }
 
   void WalletGreen::clearCaches(bool clearTransactions, bool clearCachedData)
@@ -1575,16 +1575,16 @@ namespace cn
   std::string WalletGreen::createAddress()
   {
     KeyPair spendKey;
-    Crypto::generate_keys(spendKey.publicKey, spendKey.secretKey);
+    crypto::generate_keys(spendKey.publicKey, spendKey.secretKey);
     uint64_t creationTimestamp = static_cast<uint64_t>(time(nullptr));
 
     return doCreateAddress(spendKey.publicKey, spendKey.secretKey, creationTimestamp);
   }
 
-  std::string WalletGreen::createAddress(const Crypto::SecretKey &spendSecretKey)
+  std::string WalletGreen::createAddress(const crypto::SecretKey &spendSecretKey)
   {
-    Crypto::PublicKey spendPublicKey;
-    if (!Crypto::secret_key_to_public_key(spendSecretKey, spendPublicKey))
+    crypto::PublicKey spendPublicKey;
+    if (!crypto::secret_key_to_public_key(spendSecretKey, spendPublicKey))
     {
       throw std::system_error(make_error_code(cn::error::KEY_GENERATION_ERROR));
     }
@@ -1592,9 +1592,9 @@ namespace cn
     return doCreateAddress(spendPublicKey, spendSecretKey, creationTimestamp);
   }
 
-  std::string WalletGreen::createAddress(const Crypto::PublicKey &spendPublicKey)
+  std::string WalletGreen::createAddress(const crypto::PublicKey &spendPublicKey)
   {
-    if (!Crypto::check_key(spendPublicKey))
+    if (!crypto::check_key(spendPublicKey))
     {
       throw std::system_error(make_error_code(error::WRONG_PARAMETERS), "Wrong public key format");
     }
@@ -1602,13 +1602,13 @@ namespace cn
     return doCreateAddress(spendPublicKey, NULL_SECRET_KEY, creationTimestamp);
   }
 
-  std::vector<std::string> WalletGreen::createAddressList(const std::vector<Crypto::SecretKey> &spendSecretKeys, bool reset)
+  std::vector<std::string> WalletGreen::createAddressList(const std::vector<crypto::SecretKey> &spendSecretKeys, bool reset)
   {
     std::vector<NewAddressData> addressDataList(spendSecretKeys.size());
     for (size_t i = 0; i < spendSecretKeys.size(); ++i)
     {
-      Crypto::PublicKey spendPublicKey;
-      if (!Crypto::secret_key_to_public_key(spendSecretKeys[i], spendPublicKey))
+      crypto::PublicKey spendPublicKey;
+      if (!crypto::secret_key_to_public_key(spendSecretKeys[i], spendPublicKey))
       {
         m_logger(ERROR) << "createAddressList(): failed to convert secret key to public key";
         throw std::system_error(make_error_code(cn::error::KEY_GENERATION_ERROR));
@@ -1681,7 +1681,7 @@ namespace cn
     return addresses;
   }
 
-  std::string WalletGreen::doCreateAddress(const Crypto::PublicKey &spendPublicKey, const Crypto::SecretKey &spendSecretKey, uint64_t creationTimestamp)
+  std::string WalletGreen::doCreateAddress(const crypto::PublicKey &spendPublicKey, const crypto::SecretKey &spendSecretKey, uint64_t creationTimestamp)
   {
     assert(creationTimestamp <= std::numeric_limits<uint64_t>::max() - m_currency.blockFutureTimeLimit());
 
@@ -1693,7 +1693,7 @@ namespace cn
     return addresses.front();
   }
 
-  std::string WalletGreen::addWallet(const Crypto::PublicKey &spendPublicKey, const Crypto::SecretKey &spendSecretKey, uint64_t creationTimestamp)
+  std::string WalletGreen::addWallet(const crypto::PublicKey &spendPublicKey, const crypto::SecretKey &spendSecretKey, uint64_t creationTimestamp)
   {
     auto &index = m_walletsContainer.get<KeysIndex>();
 
@@ -1952,7 +1952,7 @@ namespace cn
     return bounds;
   }
 
-  size_t WalletGreen::transfer(const TransactionParameters &transactionParameters, Crypto::SecretKey &transactionSK)
+  size_t WalletGreen::transfer(const TransactionParameters &transactionParameters, crypto::SecretKey &transactionSK)
   {
     Tools::ScopeExit releaseContext([this] {
       m_dispatcher.yield();
@@ -1978,7 +1978,7 @@ namespace cn
       const DonationSettings &donation,
       const cn::AccountPublicAddress &changeDestination,
       PreparedTransaction &preparedTransaction,
-      Crypto::SecretKey &transactionSK)
+      crypto::SecretKey &transactionSK)
   {
 
     preparedTransaction.destinations = convertOrdersToTransfers(orders);
@@ -2039,7 +2039,7 @@ namespace cn
     validateOrders(transactionParameters.destinations);
   }
 
-  size_t WalletGreen::doTransfer(const TransactionParameters &transactionParameters, Crypto::SecretKey &transactionSK)
+  size_t WalletGreen::doTransfer(const TransactionParameters &transactionParameters, crypto::SecretKey &transactionSK)
   {
     validateTransactionParameters(transactionParameters);
     cn::AccountPublicAddress changeDestination = getChangeDestination(transactionParameters.changeDestination, transactionParameters.sourceAddresses);
@@ -2104,7 +2104,7 @@ namespace cn
     }
 
     PreparedTransaction preparedTransaction;
-    Crypto::SecretKey txSecretKey;
+    crypto::SecretKey txSecretKey;
     prepareTransaction(
         std::move(wallets),
         sendingTransaction.destinations,
@@ -2309,7 +2309,7 @@ namespace cn
       // Fix LegacyWallet error. Some old versions didn't fill extra field
       if (transaction.extra.empty() && !info.extra.empty())
       {
-        transaction.extra = Common::asString(info.extra);
+        transaction.extra = common::asString(info.extra);
         updated = true;
       }
 
@@ -2425,8 +2425,8 @@ namespace cn
     /* As a reference so we can update it */
     for (auto &encryptedSpendKeys : m_containerStorage)
     {
-      Crypto::PublicKey publicKey;
-      Crypto::SecretKey secretKey;
+      crypto::PublicKey publicKey;
+      crypto::SecretKey secretKey;
       uint64_t oldTimestamp;
 
       /* Decrypt the key pair we're pointing to */
@@ -2696,13 +2696,13 @@ namespace cn
   }
 
   std::unique_ptr<cn::ITransaction> WalletGreen::makeTransaction(const std::vector<ReceiverAmounts> &decomposedOutputs,
-                                                                         std::vector<InputInfo> &keysInfo, const std::vector<WalletMessage> &messages, const std::string &extra, uint64_t unlockTimestamp, Crypto::SecretKey &transactionSK)
+                                                                         std::vector<InputInfo> &keysInfo, const std::vector<WalletMessage> &messages, const std::string &extra, uint64_t unlockTimestamp, crypto::SecretKey &transactionSK)
   {
 
     std::unique_ptr<ITransaction> tx = createTransaction();
 
     tx->getTransactionSecretKey(transactionSK);
-    Crypto::PublicKey publicKey = tx->getTransactionPublicKey();
+    crypto::PublicKey publicKey = tx->getTransactionPublicKey();
     cn::KeyPair kp = {publicKey, transactionSK};
     for (size_t i = 0; i < messages.size(); ++i)
     {
@@ -2728,7 +2728,7 @@ namespace cn
       }
     }
 
-    std::shuffle(amountsToAddresses.begin(), amountsToAddresses.end(), std::default_random_engine{Crypto::rand<std::default_random_engine::result_type>()});
+    std::shuffle(amountsToAddresses.begin(), amountsToAddresses.end(), std::default_random_engine{crypto::rand<std::default_random_engine::result_type>()});
     std::sort(amountsToAddresses.begin(), amountsToAddresses.end(), [](const AmountToAddress &left, const AmountToAddress &right) {
       return left.second < right.second;
     });
@@ -2739,7 +2739,7 @@ namespace cn
     }
 
     tx->setUnlockTime(unlockTimestamp);
-    tx->appendExtra(Common::asBinaryArray(extra));
+    tx->appendExtra(common::asBinaryArray(extra));
 
     for (auto &input : keysInfo)
     {
@@ -3083,7 +3083,7 @@ namespace cn
     }
   }
 
-  WalletTransactionWithTransfers WalletGreen::getTransaction(const Crypto::Hash &transactionHash) const
+  WalletTransactionWithTransfers WalletGreen::getTransaction(const crypto::Hash &transactionHash) const
   {
     throwIfNotInitialized();
     throwIfStopped();
@@ -3102,7 +3102,7 @@ namespace cn
     return walletTransaction;
   }
 
-  std::vector<TransactionsInBlockInfo> WalletGreen::getTransactions(const Crypto::Hash &blockHash, size_t count) const
+  std::vector<TransactionsInBlockInfo> WalletGreen::getTransactions(const crypto::Hash &blockHash, size_t count) const
   {
     throwIfNotInitialized();
     throwIfStopped();
@@ -3120,7 +3120,7 @@ namespace cn
     return getTransactionsInBlocks(blockIndex, count);
   }
 
-  std::vector<DepositsInBlockInfo> WalletGreen::getDeposits(const Crypto::Hash &blockHash, size_t count) const
+  std::vector<DepositsInBlockInfo> WalletGreen::getDeposits(const crypto::Hash &blockHash, size_t count) const
   {
     throwIfNotInitialized();
     throwIfStopped();
@@ -3154,7 +3154,7 @@ namespace cn
     return getDepositsInBlocks(blockIndex, count);
   }
 
-  std::vector<Crypto::Hash> WalletGreen::getBlockHashes(uint32_t blockIndex, size_t count) const
+  std::vector<crypto::Hash> WalletGreen::getBlockHashes(uint32_t blockIndex, size_t count) const
   {
     throwIfNotInitialized();
     throwIfStopped();
@@ -3163,12 +3163,12 @@ namespace cn
 
     if (blockIndex >= index.size())
     {
-      return std::vector<Crypto::Hash>();
+      return std::vector<crypto::Hash>();
     }
 
     auto start = std::next(index.begin(), blockIndex);
     auto end = std::next(index.begin(), std::min(index.size(), blockIndex + count));
-    return std::vector<Crypto::Hash>(start, end);
+    return std::vector<crypto::Hash>(start, end);
   }
 
   uint32_t WalletGreen::getBlockCount() const
@@ -3303,12 +3303,12 @@ namespace cn
     pushEvent(makeSyncCompletedEvent());
   }
 
-  void WalletGreen::onBlocksAdded(const Crypto::PublicKey &viewPublicKey, const std::vector<Crypto::Hash> &blockHashes)
+  void WalletGreen::onBlocksAdded(const crypto::PublicKey &viewPublicKey, const std::vector<crypto::Hash> &blockHashes)
   {
     m_dispatcher.remoteSpawn([this, blockHashes]() { blocksAdded(blockHashes); });
   }
 
-  void WalletGreen::blocksAdded(const std::vector<Crypto::Hash> &blockHashes)
+  void WalletGreen::blocksAdded(const std::vector<crypto::Hash> &blockHashes)
   {
     System::EventLock lk(m_readyEvent);
 
@@ -3319,7 +3319,7 @@ namespace cn
     m_blockchain.insert(m_blockchain.end(), blockHashes.begin(), blockHashes.end());
   }
 
-  void WalletGreen::onBlockchainDetach(const Crypto::PublicKey &viewPublicKey, uint32_t blockIndex)
+  void WalletGreen::onBlockchainDetach(const crypto::PublicKey &viewPublicKey, uint32_t blockIndex)
   {
     m_dispatcher.remoteSpawn([this, blockIndex]() { blocksRollback(blockIndex); });
   }
@@ -3337,23 +3337,23 @@ namespace cn
     blockHeightIndex.erase(std::next(blockHeightIndex.begin(), blockIndex), blockHeightIndex.end());
   }
 
-  void WalletGreen::onTransactionDeleteBegin(const Crypto::PublicKey &viewPublicKey, Crypto::Hash transactionHash)
+  void WalletGreen::onTransactionDeleteBegin(const crypto::PublicKey &viewPublicKey, crypto::Hash transactionHash)
   {
     m_dispatcher.remoteSpawn([=]() { transactionDeleteBegin(transactionHash); });
   }
 
   // TODO remove
-  void WalletGreen::transactionDeleteBegin(Crypto::Hash /*transactionHash*/)
+  void WalletGreen::transactionDeleteBegin(crypto::Hash /*transactionHash*/)
   {
   }
 
-  void WalletGreen::onTransactionDeleteEnd(const Crypto::PublicKey &viewPublicKey, Crypto::Hash transactionHash)
+  void WalletGreen::onTransactionDeleteEnd(const crypto::PublicKey &viewPublicKey, crypto::Hash transactionHash)
   {
     m_dispatcher.remoteSpawn([=]() { transactionDeleteEnd(transactionHash); });
   }
 
   // TODO remove
-  void WalletGreen::transactionDeleteEnd(Crypto::Hash transactionHash)
+  void WalletGreen::transactionDeleteEnd(crypto::Hash transactionHash)
   {
   }
 
@@ -3374,14 +3374,14 @@ namespace cn
     }
   }
 
-  void WalletGreen::onTransactionUpdated(ITransfersSubscription * /*object*/, const Crypto::Hash & /*transactionHash*/)
+  void WalletGreen::onTransactionUpdated(ITransfersSubscription * /*object*/, const crypto::Hash & /*transactionHash*/)
   {
-    // Deprecated, ignore it. New event handler is onTransactionUpdated(const Crypto::PublicKey&, const Crypto::Hash&, const std::vector<ITransfersContainer*>&)
+    // Deprecated, ignore it. New event handler is onTransactionUpdated(const crypto::PublicKey&, const crypto::Hash&, const std::vector<ITransfersContainer*>&)
   }
 
   void WalletGreen::onTransactionUpdated(
-      const Crypto::PublicKey &,
-      const Crypto::Hash &transactionHash,
+      const crypto::PublicKey &,
+      const crypto::Hash &transactionHash,
       const std::vector<ITransfersContainer *> &containers)
   {
     assert(!containers.empty());
@@ -3708,7 +3708,7 @@ namespace cn
     }
   }
 
-  void WalletGreen::removeUnconfirmedTransaction(const Crypto::Hash &transactionHash)
+  void WalletGreen::removeUnconfirmedTransaction(const crypto::Hash &transactionHash)
   {
     System::RemoteContext<void> context(m_dispatcher, [this, &transactionHash] {
       m_blockchainSynchronizer.removeUnconfirmedTransaction(transactionHash).get();
@@ -3763,7 +3763,7 @@ namespace cn
     std::vector<uint32_t> heights2;
     for (auto transfer2 : transfers2)
     {
-      Crypto::Hash hash2 = transfer2.transactionHash;
+      crypto::Hash hash2 = transfer2.transactionHash;
       TransactionInformation info2;
       bool ok2 = container->getTransactionInformation(hash2, info2, NULL, NULL);
       if (ok2)
@@ -3782,7 +3782,7 @@ namespace cn
     std::vector<uint32_t> heights;
     for (auto transfer : transfers)
     {
-      Crypto::Hash hash = transfer.transactionHash;
+      crypto::Hash hash = transfer.transactionHash;
       TransactionInformation info;
       bool ok = container->getTransactionInformation(hash, info, NULL, NULL);
       assert(ok);
@@ -3988,7 +3988,7 @@ namespace cn
       ReceiverAmounts decomposedOutputs = decomposeFusionOutputs(destination, inputsAmount);
       assert(decomposedOutputs.amounts.size() <= MAX_FUSION_OUTPUT_COUNT);
 
-      Crypto::SecretKey txkey;
+      crypto::SecretKey txkey;
       std::vector<WalletMessage> messages;
       fusionTransaction = makeTransaction(std::vector<ReceiverAmounts>{decomposedOutputs}, keysInfo, messages, "", 0, txkey);
       transactionSize = getTransactionSize(*fusionTransaction);
@@ -4201,7 +4201,7 @@ namespace cn
     //now, pick the bucket
     std::vector<uint8_t> bucketNumbers(bucketSizes.size());
     std::iota(bucketNumbers.begin(), bucketNumbers.end(), 0);
-    std::shuffle(bucketNumbers.begin(), bucketNumbers.end(), std::default_random_engine{Crypto::rand<std::default_random_engine::result_type>()});
+    std::shuffle(bucketNumbers.begin(), bucketNumbers.end(), std::default_random_engine{crypto::rand<std::default_random_engine::result_type>()});
     size_t bucketNumberIndex = 0;
     for (; bucketNumberIndex < bucketNumbers.size(); ++bucketNumberIndex)
     {
@@ -4245,7 +4245,7 @@ namespace cn
       return selectedOuts;
     }
 
-    ShuffleGenerator<size_t, Crypto::random_engine<size_t>> generator(selectedOuts.size());
+    ShuffleGenerator<size_t, crypto::random_engine<size_t>> generator(selectedOuts.size());
     std::vector<WalletGreen::OutputToTransfer> trimmedSelectedOuts;
     trimmedSelectedOuts.reserve(maxInputCount);
     for (size_t i = 0; i < maxInputCount; ++i)
@@ -4337,7 +4337,7 @@ namespace cn
     return result;
   }
 
-  Crypto::Hash WalletGreen::getBlockHashByIndex(uint32_t blockIndex) const
+  crypto::Hash WalletGreen::getBlockHashByIndex(uint32_t blockIndex) const
   {
     assert(blockIndex < m_blockchain.size());
     return m_blockchain.get<BlockHeightIndex>()[blockIndex];
@@ -4399,9 +4399,9 @@ namespace cn
     }
   }
 
-  void WalletGreen::getViewKeyKnownBlocks(const Crypto::PublicKey &viewPublicKey)
+  void WalletGreen::getViewKeyKnownBlocks(const crypto::PublicKey &viewPublicKey)
   {
-    std::vector<Crypto::Hash> blockchain = m_synchronizer.getViewKeyKnownBlocks(m_viewPublicKey);
+    std::vector<crypto::Hash> blockchain = m_synchronizer.getViewKeyKnownBlocks(m_viewPublicKey);
     m_blockchain.insert(m_blockchain.end(), blockchain.begin(), blockchain.end());
   }
 
@@ -4554,7 +4554,7 @@ namespace cn
     }
 
     PreparedTransaction preparedTransaction;
-    Crypto::SecretKey txSecretKey;
+    crypto::SecretKey txSecretKey;
     prepareTransaction(
         std::move(wallets),
         sendingTransaction.destinations,

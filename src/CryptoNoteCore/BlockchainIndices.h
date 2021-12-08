@@ -26,7 +26,7 @@ public:
 
   bool add(const Transaction& transaction);
   bool remove(const Transaction& transaction);
-  bool find(const Crypto::Hash& paymentId, std::vector<Crypto::Hash>& transactionHashes);
+  bool find(const crypto::Hash& paymentId, std::vector<crypto::Hash>& transactionHashes);
   void clear();
 
   void serialize(ISerializer& s);
@@ -36,16 +36,16 @@ public:
     archive & index;
   }
 private:
-  std::unordered_multimap<Crypto::Hash, Crypto::Hash> index;
+  std::unordered_multimap<crypto::Hash, crypto::Hash> index;
 };
 
 class TimestampBlocksIndex {
 public:
   TimestampBlocksIndex() = default;
 
-  bool add(uint64_t timestamp, const Crypto::Hash& hash);
-  bool remove(uint64_t timestamp, const Crypto::Hash& hash);
-  bool find(uint64_t timestampBegin, uint64_t timestampEnd, uint32_t hashesNumberLimit, std::vector<Crypto::Hash>& hashes, uint32_t& hashesNumberWithinTimestamps);
+  bool add(uint64_t timestamp, const crypto::Hash& hash);
+  bool remove(uint64_t timestamp, const crypto::Hash& hash);
+  bool find(uint64_t timestampBegin, uint64_t timestampEnd, uint32_t hashesNumberLimit, std::vector<crypto::Hash>& hashes, uint32_t& hashesNumberWithinTimestamps);
   void clear();
 
   void serialize(ISerializer& s);
@@ -55,16 +55,16 @@ public:
     archive & index;
   }
 private:
-  std::multimap<uint64_t, Crypto::Hash> index;
+  std::multimap<uint64_t, crypto::Hash> index;
 };
 
 class TimestampTransactionsIndex {
 public:
   TimestampTransactionsIndex() = default;
 
-  bool add(uint64_t timestamp, const Crypto::Hash& hash);
-  bool remove(uint64_t timestamp, const Crypto::Hash& hash);
-  bool find(uint64_t timestampBegin, uint64_t timestampEnd, uint64_t hashesNumberLimit, std::vector<Crypto::Hash>& hashes, uint64_t& hashesNumberWithinTimestamps);
+  bool add(uint64_t timestamp, const crypto::Hash& hash);
+  bool remove(uint64_t timestamp, const crypto::Hash& hash);
+  bool find(uint64_t timestampBegin, uint64_t timestampEnd, uint64_t hashesNumberLimit, std::vector<crypto::Hash>& hashes, uint64_t& hashesNumberWithinTimestamps);
   void clear();
 
   void serialize(ISerializer& s);
@@ -74,7 +74,7 @@ public:
     archive & index;
   }
 private:
-  std::multimap<uint64_t, Crypto::Hash> index;
+  std::multimap<uint64_t, crypto::Hash> index;
 };
 
 class GeneratedTransactionsIndex {
@@ -104,10 +104,10 @@ public:
 
   bool add(const Block& block);
   bool remove(const Block& block);
-  bool find(uint32_t height, std::vector<Crypto::Hash>& blockHashes);
+  bool find(uint32_t height, std::vector<crypto::Hash>& blockHashes);
   void clear();
 private:
-  std::unordered_multimap<uint32_t, Crypto::Hash> index;
+  std::unordered_multimap<uint32_t, crypto::Hash> index;
 };
 
 }

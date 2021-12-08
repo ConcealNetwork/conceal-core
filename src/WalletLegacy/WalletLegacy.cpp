@@ -29,7 +29,7 @@
 
 #include "CryptoNoteConfig.h"
 
-using namespace Crypto;
+using namespace crypto;
 
 namespace {
 
@@ -138,7 +138,7 @@ public:
   BlockchainSynchronizer& m_sync;
 };
 
-WalletLegacy::WalletLegacy(const cn::Currency& currency, INode& node, Logging::ILogger& loggerGroup) :
+WalletLegacy::WalletLegacy(const cn::Currency& currency, INode& node, logging::ILogger& loggerGroup) :
   m_state(NOT_INITIALIZED),
   m_currency(currency),
   m_node(node),
@@ -540,7 +540,7 @@ std::vector<TransactionOutputInformation> WalletLegacy::getUnspentOutputs() {
   return outputs;
 }
 
-TransactionId WalletLegacy::sendTransaction(Crypto::SecretKey& transactionSK,
+TransactionId WalletLegacy::sendTransaction(crypto::SecretKey& transactionSK,
                                             const WalletLegacyTransfer& transfer,
                                             uint64_t fee,
                                             const std::string& extra,
@@ -555,7 +555,7 @@ TransactionId WalletLegacy::sendTransaction(Crypto::SecretKey& transactionSK,
   return sendTransaction(transactionSK, transfers, fee, extra, mixIn, unlockTimestamp, messages, ttl);
 }
 
-TransactionId WalletLegacy::sendTransaction(Crypto::SecretKey& transactionSK,
+TransactionId WalletLegacy::sendTransaction(crypto::SecretKey& transactionSK,
                                             std::vector<WalletLegacyTransfer>& transfers,
                                             uint64_t fee,
                                             const std::string& extra,
@@ -692,7 +692,7 @@ std::list<TransactionOutputInformation> WalletLegacy::selectFusionTransfersToSen
   //now, pick the bucket
   std::vector<uint8_t> bucketNumbers(bucketSizes.size());
   std::iota(bucketNumbers.begin(), bucketNumbers.end(), 0);
-  std::shuffle(bucketNumbers.begin(), bucketNumbers.end(), std::default_random_engine{ Crypto::rand<std::default_random_engine::result_type>() });
+  std::shuffle(bucketNumbers.begin(), bucketNumbers.end(), std::default_random_engine{ crypto::rand<std::default_random_engine::result_type>() });
   size_t bucketNumberIndex = 0;
   for (; bucketNumberIndex < bucketNumbers.size(); ++bucketNumberIndex) {
 	  if (bucketSizes[bucketNumbers[bucketNumberIndex]] >= minInputCount) {
@@ -730,7 +730,7 @@ std::list<TransactionOutputInformation> WalletLegacy::selectFusionTransfersToSen
 	  return selectedOutputs;
   }
 
-  ShuffleGenerator<size_t, Crypto::random_engine<size_t>> generator(selectedOuts.size());
+  ShuffleGenerator<size_t, crypto::random_engine<size_t>> generator(selectedOuts.size());
   std::vector<TransactionOutputInformation> trimmedSelectedOuts;
   trimmedSelectedOuts.reserve(maxInputCount);
   for (size_t i = 0; i < maxInputCount; ++i) {
@@ -1172,7 +1172,7 @@ void WalletLegacy::getAccountKeys(AccountKeys& keys) {
 bool WalletLegacy::isTrackingWallet() {
   AccountKeys keys;
   getAccountKeys(keys);
-  return keys.spendSecretKey == boost::value_initialized<Crypto::SecretKey>();
+  return keys.spendSecretKey == boost::value_initialized<crypto::SecretKey>();
 }
 
 
@@ -1198,7 +1198,7 @@ uint64_t WalletLegacy::calculateActualInvestmentBalance() {
 std::vector<uint32_t> WalletLegacy::getTransactionHeights(const std::vector<TransactionOutputInformation> transfers){
   std::vector<uint32_t> heights;
   for (auto transfer : transfers){
-	  Crypto::Hash hash = transfer.transactionHash;
+	  crypto::Hash hash = transfer.transactionHash;
 	  TransactionInformation info;
 	  bool ok = m_transferDetails->getTransactionInformation(hash, info, NULL, NULL);
 	  assert(ok);
@@ -1271,14 +1271,14 @@ void WalletLegacy::pushBalanceUpdatedEvents(std::deque<std::unique_ptr<WalletLeg
   }
 }
 
-Crypto::SecretKey WalletLegacy::getTxKey(Crypto::Hash &txid)
+crypto::SecretKey WalletLegacy::getTxKey(crypto::Hash &txid)
 {
   TransactionId ti = m_transactionsCache.findTransactionByHash(txid);
   WalletLegacyTransaction transaction;
   getTransaction(ti, transaction);
-  if (transaction.secretKey && NULL_SECRET_KEY != reinterpret_cast<const Crypto::SecretKey &>(transaction.secretKey.get()))
+  if (transaction.secretKey && NULL_SECRET_KEY != reinterpret_cast<const crypto::SecretKey &>(transaction.secretKey.get()))
   {
-    return reinterpret_cast<const Crypto::SecretKey &>(transaction.secretKey.get());
+    return reinterpret_cast<const crypto::SecretKey &>(transaction.secretKey.get());
   }
   else
   {
@@ -1294,17 +1294,17 @@ Crypto::SecretKey WalletLegacy::getTxKey(Crypto::Hash &txid)
     if (ec)
     {
       //m_logger(ERROR) << "Failed to get tx: " << ec << ", " << ec.message();
-      return reinterpret_cast<const Crypto::SecretKey &>(transaction.secretKey.get());
+      return reinterpret_cast<const crypto::SecretKey &>(transaction.secretKey.get());
     }
 
-    Crypto::PublicKey txPubKey = getTransactionPublicKeyFromExtra(tx.extra);
+    crypto::PublicKey txPubKey = getTransactionPublicKeyFromExtra(tx.extra);
     KeyPair deterministicTxKeys;
     bool ok = generateDeterministicTransactionKeys(tx, m_account.getAccountKeys().viewSecretKey, deterministicTxKeys) && deterministicTxKeys.publicKey == txPubKey;
 
-    return ok ? deterministicTxKeys.secretKey : reinterpret_cast<const Crypto::SecretKey &>(transaction.secretKey.get());
+    return ok ? deterministicTxKeys.secretKey : reinterpret_cast<const crypto::SecretKey &>(transaction.secretKey.get());
   }
 }
-bool WalletLegacy::get_tx_key(Crypto::Hash& txid, Crypto::SecretKey& txSecretKey) {
+bool WalletLegacy::get_tx_key(crypto::Hash& txid, crypto::SecretKey& txSecretKey) {
   TransactionId ti = m_transactionsCache.findTransactionByHash(txid);
   WalletLegacyTransaction transaction;
   getTransaction(ti, transaction);
@@ -1316,24 +1316,24 @@ bool WalletLegacy::get_tx_key(Crypto::Hash& txid, Crypto::SecretKey& txSecretKey
   return true;
 }
 
-bool WalletLegacy::getTxProof(Crypto::Hash& txid, cn::AccountPublicAddress& address, Crypto::SecretKey& tx_key, std::string& sig_str) {
-  Crypto::KeyImage p = *reinterpret_cast<Crypto::KeyImage*>(&address.viewPublicKey);
-  Crypto::KeyImage k = *reinterpret_cast<Crypto::KeyImage*>(&tx_key);
-  Crypto::KeyImage pk = Crypto::scalarmultKey(p, k);
-  Crypto::PublicKey R;
-  Crypto::PublicKey rA = reinterpret_cast<const PublicKey&>(pk);
-  Crypto::secret_key_to_public_key(tx_key, R);
-  Crypto::Signature sig;
+bool WalletLegacy::getTxProof(crypto::Hash& txid, cn::AccountPublicAddress& address, crypto::SecretKey& tx_key, std::string& sig_str) {
+  crypto::KeyImage p = *reinterpret_cast<crypto::KeyImage*>(&address.viewPublicKey);
+  crypto::KeyImage k = *reinterpret_cast<crypto::KeyImage*>(&tx_key);
+  crypto::KeyImage pk = crypto::scalarmultKey(p, k);
+  crypto::PublicKey R;
+  crypto::PublicKey rA = reinterpret_cast<const PublicKey&>(pk);
+  crypto::secret_key_to_public_key(tx_key, R);
+  crypto::Signature sig;
   try {
-    Crypto::generate_tx_proof(txid, R, address.viewPublicKey, rA, tx_key, sig);
+    crypto::generate_tx_proof(txid, R, address.viewPublicKey, rA, tx_key, sig);
   }
   catch (std::runtime_error) {
     return false;
   }
 
   sig_str = std::string("ProofV1") +
-    Tools::Base58::encode(std::string((const char *)&rA, sizeof(Crypto::PublicKey))) +
-    Tools::Base58::encode(std::string((const char *)&sig, sizeof(Crypto::Signature)));
+    Tools::Base58::encode(std::string((const char *)&rA, sizeof(crypto::PublicKey))) +
+    Tools::Base58::encode(std::string((const char *)&sig, sizeof(crypto::Signature)));
 
   return true;
 }
@@ -1344,7 +1344,7 @@ bool compareTransactionOutputInformationByAmount(const TransactionOutputInformat
 
 std::string WalletLegacy::getReserveProof(const uint64_t &reserve, const std::string &message) {
 	const cn::AccountKeys keys = m_account.getAccountKeys();
-	Crypto::SecretKey viewSecretKey = keys.viewSecretKey;
+	crypto::SecretKey viewSecretKey = keys.viewSecretKey;
 
 	if (keys.spendSecretKey == NULL_SECRET_KEY) {
 		throw std::runtime_error("Reserve proof can only be generated by a full wallet");
@@ -1378,7 +1378,7 @@ std::string WalletLegacy::getReserveProof(const uint64_t &reserve, const std::st
 	std::string prefix_data = message;
 	prefix_data.append((const char*)&keys.address, sizeof(cn::AccountPublicAddress));
 	
-	std::vector<Crypto::KeyImage> kimages;
+	std::vector<crypto::KeyImage> kimages;
 	cn::KeyPair ephemeral;
 
 	for (size_t i = 0; i < selected_transfers.size(); ++i) {
@@ -1388,18 +1388,18 @@ std::string WalletLegacy::getReserveProof(const uint64_t &reserve, const std::st
 		const TransactionOutputInformation &td = selected_transfers[i];
 
 		// derive ephemeral secret key
-		Crypto::KeyImage ki;
+		crypto::KeyImage ki;
 		const bool r = cn::generate_key_image_helper(m_account.getAccountKeys(), td.transactionPublicKey, td.outputInTransaction, ephemeral, ki);
 		if (!r) {
 			throw std::runtime_error("Failed to generate key image");
 		}
 		// now we can insert key image
-		prefix_data.append((const char*)&ki, sizeof(Crypto::PublicKey));
+		prefix_data.append((const char*)&ki, sizeof(crypto::PublicKey));
 		kimages.push_back(ki);
 	}
 
-	Crypto::Hash prefix_hash;
-	Crypto::cn_fast_hash(prefix_data.data(), prefix_data.size(), prefix_hash);
+	crypto::Hash prefix_hash;
+	crypto::cn_fast_hash(prefix_data.data(), prefix_data.size(), prefix_hash);
 
 	// generate proof entries
 	std::vector<reserve_proof_entry> proofs(selected_transfers.size());
@@ -1414,20 +1414,20 @@ std::string WalletLegacy::getReserveProof(const uint64_t &reserve, const std::st
 		auto txPubKey = td.transactionPublicKey;
 
 		for (int i = 0; i < 2; ++i)	{
-			Crypto::KeyImage sk = Crypto::scalarmultKey(*reinterpret_cast<const Crypto::KeyImage*>(&txPubKey), *reinterpret_cast<const Crypto::KeyImage*>(&viewSecretKey));
-            proof.shared_secret = *reinterpret_cast<const Crypto::PublicKey *>(&sk);
+			crypto::KeyImage sk = crypto::scalarmultKey(*reinterpret_cast<const crypto::KeyImage*>(&txPubKey), *reinterpret_cast<const crypto::KeyImage*>(&viewSecretKey));
+            proof.shared_secret = *reinterpret_cast<const crypto::PublicKey *>(&sk);
 
-			Crypto::KeyDerivation derivation;
-			if (!Crypto::generate_key_derivation(proof.shared_secret, viewSecretKey, derivation)) {
+			crypto::KeyDerivation derivation;
+			if (!crypto::generate_key_derivation(proof.shared_secret, viewSecretKey, derivation)) {
 				throw std::runtime_error("Failed to generate key derivation");
 			}
 		}
 
 		// generate signature for shared secret
-		Crypto::generate_tx_proof(prefix_hash, keys.address.viewPublicKey, txPubKey, proof.shared_secret, viewSecretKey, proof.shared_secret_sig);
+		crypto::generate_tx_proof(prefix_hash, keys.address.viewPublicKey, txPubKey, proof.shared_secret, viewSecretKey, proof.shared_secret_sig);
 
 		// derive ephemeral secret key
-		Crypto::KeyImage ki;
+		crypto::KeyImage ki;
 		cn::KeyPair ephemeral;
 
 		const bool r = cn::generate_key_image_helper(m_account.getAccountKeys(), td.transactionPublicKey, td.outputInTransaction, ephemeral, ki);
@@ -1440,13 +1440,13 @@ std::string WalletLegacy::getReserveProof(const uint64_t &reserve, const std::st
 		}
 
 		// generate signature for key image
-		const std::vector<const Crypto::PublicKey *>& pubs = { &ephemeral.publicKey };
+		const std::vector<const crypto::PublicKey *>& pubs = { &ephemeral.publicKey };
 
-		Crypto::generate_ring_signature(prefix_hash, proof.key_image, &pubs[0], 1, ephemeral.secretKey, 0, &proof.key_image_sig);
+		crypto::generate_ring_signature(prefix_hash, proof.key_image, &pubs[0], 1, ephemeral.secretKey, 0, &proof.key_image_sig);
 	}
 	// generate signature for the spend key that received those outputs
-	Crypto::Signature signature;
-	Crypto::generate_signature(prefix_hash, keys.address.spendPublicKey, keys.spendSecretKey, signature);
+	crypto::Signature signature;
+	crypto::generate_signature(prefix_hash, keys.address.spendPublicKey, keys.spendSecretKey, signature);
 
 	// serialize & encode
 	reserve_proof p;
@@ -1454,7 +1454,7 @@ std::string WalletLegacy::getReserveProof(const uint64_t &reserve, const std::st
 	memcpy(&p.signature, &signature, sizeof(signature));
 
 	BinaryArray ba = toBinaryArray(p);
-	std::string ret = Common::toHex(ba);
+	std::string ret = common::toHex(ba);
 
 	ret = "ReserveProofV1" + Tools::Base58::encode(ret);
 

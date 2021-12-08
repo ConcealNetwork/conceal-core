@@ -13,5 +13,5 @@
 namespace cn {
 
 bool validateAddress(const std::string& address, const cn::Currency& currency);
-void throwIfKeysMissmatch(const Crypto::SecretKey& secretKey, const Crypto::PublicKey& expectedPublicKey, const std::string& message = "");
+void throwIfKeysMissmatch(const crypto::SecretKey& secretKey, const crypto::PublicKey& expectedPublicKey, const std::string& message = "");
 }

@@ -15,8 +15,8 @@
 #include "Serialization/BinaryOutputStreamSerializer.h"
 #include "Serialization/BinaryInputStreamSerializer.h"
 
-using namespace Crypto;
-using namespace Common;
+using namespace crypto;
+using namespace common;
 
 namespace cn
 {
@@ -253,7 +253,7 @@ namespace cn
     return true;
   }
 
-  std::vector<std::string> get_messages_from_extra(const std::vector<uint8_t> &extra, const Crypto::PublicKey &txkey, const Crypto::SecretKey *recepient_secret_key)
+  std::vector<std::string> get_messages_from_extra(const std::vector<uint8_t> &extra, const crypto::PublicKey &txkey, const crypto::SecretKey *recepient_secret_key)
   {
     std::vector<TransactionExtraField> tx_extra_fields;
     std::vector<std::string> result;
@@ -309,7 +309,7 @@ namespace cn
 
   bool parsePaymentId(const std::string &paymentIdString, Hash &paymentId)
   {
-    return Common::podFromHex(paymentIdString, paymentId);
+    return common::podFromHex(paymentIdString, paymentId);
   }
 
   bool createTxExtraWithPaymentId(const std::string &paymentIdString, std::vector<uint8_t> &extra)
@@ -391,7 +391,7 @@ namespace cn
     return true;
   }
 
-  bool tx_extra_message::decrypt(size_t index, const Crypto::PublicKey &txkey, const Crypto::SecretKey *recepient_secret_key, std::string &message) const
+  bool tx_extra_message::decrypt(size_t index, const crypto::PublicKey &txkey, const crypto::SecretKey *recepient_secret_key, std::string &message) const
   {
     size_t mlen = data.size();
     if (mlen < TX_EXTRA_MESSAGE_CHECKSUM_SIZE)

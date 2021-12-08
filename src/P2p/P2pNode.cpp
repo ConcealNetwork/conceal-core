@@ -28,8 +28,8 @@
 #include "P2pContextOwner.h"
 #include "P2pNetworks.h"
 
-using namespace Common;
-using namespace Logging;
+using namespace common;
+using namespace logging;
 using namespace System;
 
 namespace cn {
@@ -66,7 +66,7 @@ private:
       return 0;
     }
 
-    size_t x = Crypto::rand<size_t>() % (maxIndex + 1);
+    size_t x = crypto::rand<size_t>() % (maxIndex + 1);
     return (x * x * x) / (maxIndex * maxIndex);
   }
 
@@ -107,7 +107,7 @@ void doWithTimeoutAndThrow(System::Dispatcher& dispatcher, std::chrono::nanoseco
 
 }
 
-P2pNode::P2pNode(const P2pNodeConfig& cfg, Dispatcher& dispatcher, Logging::ILogger& log, const Crypto::Hash& genesisHash, PeerIdType peerId) :
+P2pNode::P2pNode(const P2pNodeConfig& cfg, Dispatcher& dispatcher, logging::ILogger& log, const crypto::Hash& genesisHash, PeerIdType peerId) :
   logger(log, "P2pNode:" + std::to_string(cfg.getBindPort())),
   m_stopRequested(false),
   m_cfg(cfg),
@@ -287,7 +287,7 @@ bool P2pNode::makeNewConnectionFromPeerlist(const PeerlistManager::Peerlist& pee
     }
 
     logger(DEBUGGING) << "Selected peer: [" << peer.id << " " << peer.adr << "] last_seen: " <<
-      (peer.last_seen ? Common::timeIntervalToString(time(NULL) - peer.last_seen) : "never");
+      (peer.last_seen ? common::timeIntervalToString(time(NULL) - peer.last_seen) : "never");
 
     auto conn = tryToConnectPeer(peer.adr);
     if (conn.get()) {
@@ -357,7 +357,7 @@ P2pNode::ContextPtr P2pNode::tryToConnectPeer(const NetworkAddress& address) {
 
     doWithTimeoutAndThrow(m_dispatcher, m_cfg.getConnectTimeout(), [&] {
       tcpConnection = connector.connect(
-        Ipv4Address(Common::ipAddressToString(address.ip)),
+        Ipv4Address(common::ipAddressToString(address.ip)),
         static_cast<uint16_t>(address.port));
     });
 
@@ -507,7 +507,7 @@ void P2pNode::tryPing(P2pContext& ctx) {
     TcpConnection connection;
 
     doWithTimeoutAndThrow(m_dispatcher, m_cfg.getConnectTimeout(), [&] {
-      connection = connector.connect(Ipv4Address(Common::ipAddressToString(peerAddress.ip)), static_cast<uint16_t>(peerAddress.port));
+      connection = connector.connect(Ipv4Address(common::ipAddressToString(peerAddress.ip)), static_cast<uint16_t>(peerAddress.port));
     });
 
     doWithTimeoutAndThrow(m_dispatcher, m_cfg.getHandshakeTimeout(), [&]  {
@@ -523,7 +523,7 @@ void P2pNode::tryPing(P2pContext& ctx) {
         entry.last_seen = time(nullptr);
         m_peerlist.append_with_peer_white(entry);
       } else {
-        logger(Logging::DEBUGGING) << ctx << "back ping invoke wrong response \"" << response.status << "\" from"
+        logger(logging::DEBUGGING) << ctx << "back ping invoke wrong response \"" << response.status << "\" from"
           << peerAddress << ", expected peerId=" << ctx.getPeerId() << ", got " << response.peer_id;
       }
     });

@@ -13,8 +13,8 @@
 #include "crypto/hash.h"
 #include "Common/int-util.h"
 
-using namespace Crypto;
-using namespace Common;
+using namespace crypto;
+using namespace common;
 
 namespace cn {
 
@@ -54,7 +54,7 @@ namespace cn {
     BinaryArray ba;
     bool r = toBinaryArray(adr, ba);
     assert(r);
-    return Tools::Base58::encode_addr(prefix, Common::asString(ba));
+    return Tools::Base58::encode_addr(prefix, common::asString(ba));
   }
   //-----------------------------------------------------------------------
   bool is_coinbase(const Transaction& tx) {
@@ -90,6 +90,6 @@ namespace cn {
 }
 
 //--------------------------------------------------------------------------------
-bool parse_hash256(const std::string& str_hash, Crypto::Hash& hash) {
-  return Common::podFromHex(str_hash, hash);
+bool parse_hash256(const std::string& str_hash, crypto::Hash& hash) {
+  return common::podFromHex(str_hash, hash);
 }

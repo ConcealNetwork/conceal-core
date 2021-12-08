@@ -15,8 +15,8 @@
 namespace cn {
 
 bool PaymentIdIndex::add(const Transaction& transaction) {
-  Crypto::Hash paymentId;
-  Crypto::Hash transactionHash = getObjectHash(transaction);
+  crypto::Hash paymentId;
+  crypto::Hash transactionHash = getObjectHash(transaction);
   if (!BlockchainExplorerDataBuilder::getPaymentId(transaction, paymentId)) {
     return false;
   }
@@ -27,8 +27,8 @@ bool PaymentIdIndex::add(const Transaction& transaction) {
 }
 
 bool PaymentIdIndex::remove(const Transaction& transaction) {
-  Crypto::Hash paymentId;
-  Crypto::Hash transactionHash = getObjectHash(transaction);
+  crypto::Hash paymentId;
+  crypto::Hash transactionHash = getObjectHash(transaction);
   if (!BlockchainExplorerDataBuilder::getPaymentId(transaction, paymentId)) {
     return false;
   }
@@ -44,7 +44,7 @@ bool PaymentIdIndex::remove(const Transaction& transaction) {
   return false;
 }
 
-bool PaymentIdIndex::find(const Crypto::Hash& paymentId, std::vector<Crypto::Hash>& transactionHashes) {
+bool PaymentIdIndex::find(const crypto::Hash& paymentId, std::vector<crypto::Hash>& transactionHashes) {
   bool found = false;
   auto range = index.equal_range(paymentId);
   for (auto iter = range.first; iter != range.second; ++iter){
@@ -63,12 +63,12 @@ void PaymentIdIndex::serialize(ISerializer& s) {
   s(index, "index");
 }
 
-bool TimestampBlocksIndex::add(uint64_t timestamp, const Crypto::Hash& hash) {
+bool TimestampBlocksIndex::add(uint64_t timestamp, const crypto::Hash& hash) {
   index.emplace(timestamp, hash);
   return true;
 }
 
-bool TimestampBlocksIndex::remove(uint64_t timestamp, const Crypto::Hash& hash) {
+bool TimestampBlocksIndex::remove(uint64_t timestamp, const crypto::Hash& hash) {
   auto range = index.equal_range(timestamp);
   for (auto iter = range.first; iter != range.second; ++iter) {
     if (iter->second == hash) {
@@ -80,7 +80,7 @@ bool TimestampBlocksIndex::remove(uint64_t timestamp, const Crypto::Hash& hash) 
   return false;
 }
 
-bool TimestampBlocksIndex::find(uint64_t timestampBegin, uint64_t timestampEnd, uint32_t hashesNumberLimit, std::vector<Crypto::Hash>& hashes, uint32_t& hashesNumberWithinTimestamps) {
+bool TimestampBlocksIndex::find(uint64_t timestampBegin, uint64_t timestampEnd, uint32_t hashesNumberLimit, std::vector<crypto::Hash>& hashes, uint32_t& hashesNumberWithinTimestamps) {
   uint32_t hashesNumber = 0;
   if (timestampBegin > timestampEnd) {
     //std::swap(timestampBegin, timestampEnd);
@@ -106,12 +106,12 @@ void TimestampBlocksIndex::serialize(ISerializer& s) {
   s(index, "index");
 }
 
-bool TimestampTransactionsIndex::add(uint64_t timestamp, const Crypto::Hash& hash) {
+bool TimestampTransactionsIndex::add(uint64_t timestamp, const crypto::Hash& hash) {
   index.emplace(timestamp, hash);
   return true;
 }
 
-bool TimestampTransactionsIndex::remove(uint64_t timestamp, const Crypto::Hash& hash) {
+bool TimestampTransactionsIndex::remove(uint64_t timestamp, const crypto::Hash& hash) {
   auto range = index.equal_range(timestamp);
   for (auto iter = range.first; iter != range.second; ++iter) {
     if (iter->second == hash) {
@@ -123,7 +123,7 @@ bool TimestampTransactionsIndex::remove(uint64_t timestamp, const Crypto::Hash& 
   return false;
 }
 
-bool TimestampTransactionsIndex::find(uint64_t timestampBegin, uint64_t timestampEnd, uint64_t hashesNumberLimit, std::vector<Crypto::Hash>& hashes, uint64_t& hashesNumberWithinTimestamps) {
+bool TimestampTransactionsIndex::find(uint64_t timestampBegin, uint64_t timestampEnd, uint64_t hashesNumberLimit, std::vector<crypto::Hash>& hashes, uint64_t& hashesNumberWithinTimestamps) {
   uint32_t hashesNumber = 0;
   if (timestampBegin > timestampEnd) {
     //std::swap(timestampBegin, timestampEnd);
@@ -214,14 +214,14 @@ void GeneratedTransactionsIndex::serialize(ISerializer& s) {
 }
 
 bool OrphanBlocksIndex::add(const Block& block) {
-  Crypto::Hash blockHash = get_block_hash(block);
+  crypto::Hash blockHash = get_block_hash(block);
   uint32_t blockHeight = boost::get<BaseInput>(block.baseTransaction.inputs.front()).blockIndex;
   index.emplace(blockHeight, blockHash);
   return true;
 }
 
 bool OrphanBlocksIndex::remove(const Block& block) {
-  Crypto::Hash blockHash = get_block_hash(block);
+  crypto::Hash blockHash = get_block_hash(block);
   uint32_t blockHeight = boost::get<BaseInput>(block.baseTransaction.inputs.front()).blockIndex;
   auto range = index.equal_range(blockHeight);
   for (auto iter = range.first; iter != range.second; ++iter) {
@@ -234,7 +234,7 @@ bool OrphanBlocksIndex::remove(const Block& block) {
   return false;
 }
 
-bool OrphanBlocksIndex::find(uint32_t height, std::vector<Crypto::Hash>& blockHashes) {
+bool OrphanBlocksIndex::find(uint32_t height, std::vector<crypto::Hash>& blockHashes) {
   if (height > std::numeric_limits<uint32_t>::max()) {
     return false;
   }

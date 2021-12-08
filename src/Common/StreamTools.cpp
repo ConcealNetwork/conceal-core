@@ -9,7 +9,7 @@
 #include "IInputStream.h"
 #include "IOutputStream.h"
 
-namespace Common {
+namespace common {
 
 void read(IInputStream& in, void* data, size_t size) {
   while (size > 0) {

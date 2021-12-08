@@ -37,7 +37,7 @@ class HttpServer {
 
 public:
 
-  HttpServer(System::Dispatcher& dispatcher, Logging::ILogger& log);
+  HttpServer(System::Dispatcher& dispatcher, logging::ILogger& log);
 
   void start(const std::string& address, uint16_t port, const std::string& user = "", const std::string& password = "");
   void stop();
@@ -56,7 +56,7 @@ private:
   bool authenticate(const HttpRequest& request) const;
 
   System::ContextGroup workingContextGroup;
-  Logging::LoggerRef logger;
+  logging::LoggerRef logger;
   System::TcpListener m_listener;
   std::unordered_set<System::TcpConnection*> m_connections;
   std::string m_credentials;

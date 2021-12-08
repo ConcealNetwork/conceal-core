@@ -18,11 +18,11 @@ class ISerializer;
 struct KeysStorage {
   uint64_t creationTimestamp;
 
-  Crypto::PublicKey spendPublicKey;
-  Crypto::SecretKey spendSecretKey;
+  crypto::PublicKey spendPublicKey;
+  crypto::SecretKey spendSecretKey;
 
-  Crypto::PublicKey viewPublicKey;
-  Crypto::SecretKey viewSecretKey;
+  crypto::PublicKey viewPublicKey;
+  crypto::SecretKey viewSecretKey;
 
   void serialize(ISerializer& serializer, const std::string& name);
 };

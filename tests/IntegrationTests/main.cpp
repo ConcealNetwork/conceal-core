@@ -44,7 +44,7 @@
   } while (0)
 #endif
 
-Tests::Common::BaseFunctionalTestsConfig baseCfg;
+Tests::common::BaseFunctionalTestsConfig baseCfg;
 // System::Dispatcher globalDispatcher;
 
 namespace po = boost::program_options;
@@ -56,7 +56,7 @@ public:
   ConfigurationError(const char *desc) : std::runtime_error(desc) {}
 };
 
-struct Configuration : public Tests::Common::BaseFunctionalTestsConfig
+struct Configuration : public Tests::common::BaseFunctionalTestsConfig
 {
   Configuration() : desc("Allowed options")
   {
@@ -116,19 +116,19 @@ protected:
 };
 } // namespace
 
-class SimpleTest : public Tests::Common::BaseFunctionalTests
+class SimpleTest : public Tests::common::BaseFunctionalTests
 {
 public:
-  SimpleTest(const cn::Currency &currency, System::Dispatcher &system, const Tests::Common::BaseFunctionalTestsConfig &config) : BaseFunctionalTests(currency, system, config) {}
+  SimpleTest(const cn::Currency &currency, System::Dispatcher &system, const Tests::common::BaseFunctionalTestsConfig &config) : BaseFunctionalTests(currency, system, config) {}
 
   class WaitForActualGrowObserver : public cn::IWalletLegacyObserver
   {
-    Tests::Common::Semaphore &m_GotActual;
+    Tests::common::Semaphore &m_GotActual;
 
     uint64_t m_lastFunds;
 
   public:
-    WaitForActualGrowObserver(Tests::Common::Semaphore &GotActual, uint64_t lastFunds) : m_GotActual(GotActual), m_lastFunds(lastFunds) {}
+    WaitForActualGrowObserver(Tests::common::Semaphore &GotActual, uint64_t lastFunds) : m_GotActual(GotActual), m_lastFunds(lastFunds) {}
 
     virtual void actualBalanceUpdated(uint64_t actualBalance) override
     {
@@ -142,12 +142,12 @@ public:
 
   class WaitForActualDwindleObserver : public cn::IWalletLegacyObserver
   {
-    Tests::Common::Semaphore &m_GotActual;
+    Tests::common::Semaphore &m_GotActual;
 
     uint64_t m_lastFunds;
 
   public:
-    WaitForActualDwindleObserver(Tests::Common::Semaphore &GotActual, uint64_t lastFunds) : m_GotActual(GotActual), m_lastFunds(lastFunds) {}
+    WaitForActualDwindleObserver(Tests::common::Semaphore &GotActual, uint64_t lastFunds) : m_GotActual(GotActual), m_lastFunds(lastFunds) {}
 
     virtual void actualBalanceUpdated(uint64_t actualBalance) override
     {
@@ -161,12 +161,12 @@ public:
 
   class WaitForPendingGrowObserver : public cn::IWalletLegacyObserver
   {
-    Tests::Common::Semaphore &m_GotActual;
+    Tests::common::Semaphore &m_GotActual;
 
     uint64_t m_lastFunds;
 
   public:
-    WaitForPendingGrowObserver(Tests::Common::Semaphore &GotActual, uint64_t lastFunds) : m_GotActual(GotActual), m_lastFunds(lastFunds) {}
+    WaitForPendingGrowObserver(Tests::common::Semaphore &GotActual, uint64_t lastFunds) : m_GotActual(GotActual), m_lastFunds(lastFunds) {}
 
     virtual void pendingBalanceUpdated(uint64_t pendingBalance) override
     {
@@ -180,12 +180,12 @@ public:
 
   class WaitForConfirmationObserver : public cn::IWalletLegacyObserver
   {
-    Tests::Common::Semaphore &m_confirmed;
+    Tests::common::Semaphore &m_confirmed;
 
     std::function<bool(uint64_t)> m_pred;
 
   public:
-    WaitForConfirmationObserver(Tests::Common::Semaphore &confirmed, std::function<bool(uint64_t)> pred) : m_confirmed(confirmed), m_pred(pred) {}
+    WaitForConfirmationObserver(Tests::common::Semaphore &confirmed, std::function<bool(uint64_t)> pred) : m_confirmed(confirmed), m_pred(pred) {}
 
     virtual void pendingBalanceUpdated(uint64_t pendingBalance) override
     {
@@ -196,12 +196,12 @@ public:
 
   class WaitForSendCompletedObserver : public cn::IWalletLegacyObserver
   {
-    Tests::Common::Semaphore &m_Sent;
+    Tests::common::Semaphore &m_Sent;
     std::error_code &m_error;
     cn::TransactionId &m_transactionId;
 
   public:
-    WaitForSendCompletedObserver(Tests::Common::Semaphore &Sent, cn::TransactionId &transactionId, std::error_code &error) : m_Sent(Sent), m_transactionId(transactionId), m_error(error) {}
+    WaitForSendCompletedObserver(Tests::common::Semaphore &Sent, cn::TransactionId &transactionId, std::error_code &error) : m_Sent(Sent), m_transactionId(transactionId), m_error(error) {}
     virtual void sendTransactionCompleted(cn::TransactionId transactionId, std::error_code result) override
     {
       m_error = result;
@@ -241,7 +241,7 @@ public:
 
   bool perform1()
   {
-    using namespace Tests::Common;
+    using namespace Tests::common;
     using namespace cn;
     const uint64_t FEE = 1000000;
     launchTestnet(2);
@@ -305,7 +305,7 @@ public:
     uint64_t mixIn = 0;
     uint64_t unlockTimestamp = 0;
     uint64_t ttl = 0;
-    Crypto::SecretKey transactionSK;
+    crypto::SecretKey transactionSK;
 
     wallet1->sendTransaction(transactionSK, tr, fee, extraString, mixIn, unlockTimestamp, messages, ttl);
     CHECK_AND_ASSERT_MES(startMining(1), false, "startMining(1) failed");
@@ -365,10 +365,10 @@ public:
 
   class WaitForBlockchainHeightChangeObserver : public cn::INodeObserver
   {
-    Tests::Common::Semaphore &m_changed;
+    Tests::common::Semaphore &m_changed;
 
   public:
-    WaitForBlockchainHeightChangeObserver(Tests::Common::Semaphore &changed) : m_changed(changed) {}
+    WaitForBlockchainHeightChangeObserver(Tests::common::Semaphore &changed) : m_changed(changed) {}
     virtual void lastKnownBlockHeightUpdated(uint32_t height) override
     {
       m_changed.notify();
@@ -389,7 +389,7 @@ public:
 
   bool perform2(size_t blocksCount = 10)
   {
-    using namespace Tests::Common;
+    using namespace Tests::common;
     launchTestnet(3, Line);
     std::this_thread::sleep_for(std::chrono::milliseconds(10000));
     LOG_TRACE("STEP 1 PASSED");
@@ -429,7 +429,7 @@ public:
   bool perform4()
   {
     using namespace cn;
-    using namespace Tests::Common;
+    using namespace Tests::common;
     launchTestnet(3, Star);
     LOG_TRACE("STEP 1 PASSED");
 
@@ -564,7 +564,7 @@ public:
 
   bool perform5()
   {
-    using namespace Tests::Common;
+    using namespace Tests::common;
     using namespace cn;
     const uint64_t FEE = 1000000;
     launchTestnetWithInprocNode(2);
@@ -640,7 +640,7 @@ public:
     uint64_t mixIn = 0;
     uint64_t unlockTimestamp = 0;
     uint64_t ttl = 0;
-    Crypto::SecretKey transactionSK;
+    crypto::SecretKey transactionSK;
     wallet1->sendTransaction(transactionSK, tr, fee, extraString, mixIn, unlockTimestamp, messages, ttl);
 
     auto txId = future.get();
@@ -719,7 +719,7 @@ public:
 
   bool perform6()
   {
-    using namespace Tests::Common;
+    using namespace Tests::common;
     using namespace cn;
     const uint64_t FEE = 1000000;
     launchTestnetWithInprocNode(2);
@@ -794,7 +794,7 @@ public:
     uint64_t mixIn = 0;
     uint64_t unlockTimestamp = 0;
     uint64_t ttl = 0;
-    Crypto::SecretKey transactionSK;
+    crypto::SecretKey transactionSK;
     wallet1->sendTransaction(transactionSK, tr, fee, extraString, mixIn, unlockTimestamp, messages, ttl);
 
     auto txId = future.get();
@@ -846,7 +846,7 @@ public:
   }
 };
 
-void testMultiVersion(const cn::Currency &currency, System::Dispatcher &d, const Tests::Common::BaseFunctionalTestsConfig &config);
+void testMultiVersion(const cn::Currency &currency, System::Dispatcher &d, const Tests::common::BaseFunctionalTestsConfig &config);
 
 class SimpleTestCase : public ::testing::Test
 {
@@ -858,7 +858,7 @@ public:
   }
 
   System::Dispatcher dispatcher;
-  Logging::ConsoleLogger logger;
+  logging::ConsoleLogger logger;
   cn::Currency currency;
   SimpleTest test;
 };

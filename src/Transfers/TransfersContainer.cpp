@@ -13,8 +13,8 @@
 #include "Serialization/BinaryOutputStreamSerializer.h"
 #include "Serialization/SerializationOverloads.h"
 
-using namespace Common;
-using namespace Crypto;
+using namespace common;
+using namespace crypto;
 
 namespace cn {
 
@@ -375,7 +375,7 @@ bool TransfersContainer::addTransactionInputs(const TransactionBlockInfo& block,
   return inputsAdded;
 }
 
-bool TransfersContainer::deleteUnconfirmedTransaction(const Crypto::Hash& transactionHash) {
+bool TransfersContainer::deleteUnconfirmedTransaction(const crypto::Hash& transactionHash) {
   std::unique_lock<std::mutex> lock(m_mutex);
 
   auto it = m_transactions.find(transactionHash);
@@ -390,7 +390,7 @@ bool TransfersContainer::deleteUnconfirmedTransaction(const Crypto::Hash& transa
   }
 }
 
-bool TransfersContainer::markTransactionConfirmed(const TransactionBlockInfo& block, const Crypto::Hash& transactionHash,
+bool TransfersContainer::markTransactionConfirmed(const TransactionBlockInfo& block, const crypto::Hash& transactionHash,
                                                   const std::vector<uint32_t>& globalIndices) {
   if (block.height == WALLET_LEGACY_UNCONFIRMED_TRANSACTION_HEIGHT) {
     throw std::invalid_argument("Block height equals WALLET_LEGACY_UNCONFIRMED_TRANSACTION_HEIGHT");
@@ -463,7 +463,7 @@ bool TransfersContainer::markTransactionConfirmed(const TransactionBlockInfo& bl
 /**
  * \pre m_mutex is locked.
  */
-void TransfersContainer::deleteTransactionTransfers(const Crypto::Hash& transactionHash) {
+void TransfersContainer::deleteTransactionTransfers(const crypto::Hash& transactionHash) {
   auto& spendingTransactionIndex = m_spentTransfers.get<SpendingTransactionIndex>();
   auto spentTransfersRange = spendingTransactionIndex.equal_range(transactionHash);
   for (auto it = spentTransfersRange.first; it != spentTransfersRange.second;) {
@@ -526,7 +526,7 @@ void TransfersContainer::copyToSpent(const TransactionBlockInfo& block, const IT
   assert(result.second);
 }
 
-void TransfersContainer::detach(uint32_t height, std::vector<Crypto::Hash>& deletedTransactions, std::vector<TransactionOutputInformation>& lockedTransfers) {
+void TransfersContainer::detach(uint32_t height, std::vector<crypto::Hash>& deletedTransactions, std::vector<TransactionOutputInformation>& lockedTransfers) {
   // This method expects that WALLET_LEGACY_UNCONFIRMED_TRANSACTION_HEIGHT is a big positive number
   assert(height < WALLET_LEGACY_UNCONFIRMED_TRANSACTION_HEIGHT);
 
@@ -684,7 +684,7 @@ void TransfersContainer::getOutputs(std::vector<TransactionOutputInformation>& t
   }
 }
 
-bool TransfersContainer::getTransactionInformation(const Crypto::Hash& transactionHash, TransactionInformation& info, uint64_t* amountIn, uint64_t* amountOut) const {
+bool TransfersContainer::getTransactionInformation(const crypto::Hash& transactionHash, TransactionInformation& info, uint64_t* amountIn, uint64_t* amountOut) const {
   std::lock_guard<std::mutex> lk(m_mutex);
   auto it = m_transactions.find(transactionHash);
   if (it == m_transactions.end()) {
@@ -725,7 +725,7 @@ bool TransfersContainer::getTransactionInformation(const Crypto::Hash& transacti
   return true;
 }
 
-std::vector<TransactionOutputInformation> TransfersContainer::getTransactionOutputs(const Crypto::Hash& transactionHash,
+std::vector<TransactionOutputInformation> TransfersContainer::getTransactionOutputs(const crypto::Hash& transactionHash,
                                                                                     uint32_t flags) const {
   std::lock_guard<std::mutex> lk(m_mutex);
 
@@ -760,7 +760,7 @@ std::vector<TransactionOutputInformation> TransfersContainer::getTransactionOutp
   return result;
 }
 
-std::vector<TransactionOutputInformation> TransfersContainer::getTransactionInputs(const Crypto::Hash& transactionHash, uint32_t flags) const {
+std::vector<TransactionOutputInformation> TransfersContainer::getTransactionInputs(const crypto::Hash& transactionHash, uint32_t flags) const {
   //only type flags are feasible
   assert((flags & IncludeStateAll) == 0);
   flags |= IncludeStateUnlocked;
@@ -778,12 +778,12 @@ std::vector<TransactionOutputInformation> TransfersContainer::getTransactionInpu
   return result;
 }
 
-void TransfersContainer::getUnconfirmedTransactions(std::vector<Crypto::Hash>& transactions) const {
+void TransfersContainer::getUnconfirmedTransactions(std::vector<crypto::Hash>& transactions) const {
   std::lock_guard<std::mutex> lk(m_mutex);
   transactions.clear();
   for (auto& element : m_transactions) {
     if (element.blockHeight == WALLET_LEGACY_UNCONFIRMED_TRANSACTION_HEIGHT) {
-      transactions.push_back(*reinterpret_cast<const Crypto::Hash*>(&element.transactionHash));
+      transactions.push_back(*reinterpret_cast<const crypto::Hash*>(&element.transactionHash));
     }
   }
 }
@@ -811,7 +811,7 @@ std::vector<TransactionSpentOutputInformation> TransfersContainer::getSpentOutpu
   return spentOutputs;
 }
 
-bool TransfersContainer::getTransfer(const Crypto::Hash& transactionHash, uint32_t outputInTransaction, TransactionOutputInformation& transfer, TransferState& transferState) const {
+bool TransfersContainer::getTransfer(const crypto::Hash& transactionHash, uint32_t outputInTransaction, TransactionOutputInformation& transfer, TransferState& transferState) const {
   TransactionOutputKey transferId { transactionHash, outputInTransaction };
 
   std::lock_guard<std::mutex> lk(m_mutex);
@@ -1017,7 +1017,7 @@ std::vector<TransactionOutputInformation> TransfersContainer::getUnlockingTransf
 /**
  *  \pre m_mutex is locked
  */
-void TransfersContainer::getLockingTransfers(uint32_t prevHeight, uint32_t currentHeight, const std::vector<Crypto::Hash>& deletedTransactions,
+void TransfersContainer::getLockingTransfers(uint32_t prevHeight, uint32_t currentHeight, const std::vector<crypto::Hash>& deletedTransactions,
   std::vector<TransactionOutputInformation>& lockingTransfers) {
 
   if (currentHeight > prevHeight) {

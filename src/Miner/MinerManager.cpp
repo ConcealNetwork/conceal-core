@@ -39,7 +39,7 @@ MinerEvent BlockchainUpdatedEvent() {
 
 }
 
-MinerManager::MinerManager(System::Dispatcher& dispatcher, const cn::MiningConfig& config, Logging::ILogger& logger) :
+MinerManager::MinerManager(System::Dispatcher& dispatcher, const cn::MiningConfig& config, logging::ILogger& logger) :
   m_dispatcher(dispatcher),
   m_logger(logger, "MinerManager"),
   m_contextGroup(dispatcher),
@@ -57,16 +57,16 @@ MinerManager::~MinerManager() {
 }
 
 void MinerManager::start() {
-  m_logger(Logging::DEBUGGING) << "starting";
+  m_logger(logging::DEBUGGING) << "starting";
 
   BlockMiningParameters params;
   for (;;) {
-    m_logger(Logging::INFO) << "requesting mining parameters";
+    m_logger(logging::INFO) << "requesting mining parameters";
 
     try {
       params = requestMiningParameters(m_dispatcher, m_config.daemonHost, m_config.daemonPort, m_config.miningAddress);
     } catch (ConnectException& e) {
-      m_logger(Logging::WARNING) << "Couldn't connect to daemon: " << e.what();
+      m_logger(logging::WARNING) << "Couldn't connect to daemon: " << e.what();
       System::Timer timer(m_dispatcher);
       timer.sleep(std::chrono::seconds(m_config.scanPeriod));
       continue;
@@ -86,19 +86,19 @@ void MinerManager::eventLoop() {
   size_t blocksMined = 0;
 
   for (;;) {
-    m_logger(Logging::DEBUGGING) << "waiting for event";
+    m_logger(logging::DEBUGGING) << "waiting for event";
     MinerEvent event = waitEvent();
 
     switch (event.type) {
       case MinerEventType::BLOCK_MINED: {
-        m_logger(Logging::DEBUGGING) << "got BLOCK_MINED event";
+        m_logger(logging::DEBUGGING) << "got BLOCK_MINED event";
         stopBlockchainMonitoring();
 
         if (submitBlock(m_minedBlock, m_config.daemonHost, m_config.daemonPort)) {
           m_lastBlockTimestamp = m_minedBlock.timestamp;
 
           if (m_config.blocksLimit != 0 && ++blocksMined == m_config.blocksLimit) {
-            m_logger(Logging::INFO) << "Miner mined requested " << m_config.blocksLimit << " blocks. Quitting";
+            m_logger(logging::INFO) << "Miner mined requested " << m_config.blocksLimit << " blocks. Quitting";
             return;
           }
         }
@@ -112,7 +112,7 @@ void MinerManager::eventLoop() {
       }
 
       case MinerEventType::BLOCKCHAIN_UPDATED: {
-        m_logger(Logging::DEBUGGING) << "got BLOCKCHAIN_UPDATED event";
+        m_logger(logging::DEBUGGING) << "got BLOCKCHAIN_UPDATED event";
         stopMining();
         stopBlockchainMonitoring();
         BlockMiningParameters params = requestMiningParameters(m_dispatcher, m_config.daemonHost, m_config.daemonPort, m_config.miningAddress);
@@ -154,7 +154,7 @@ void MinerManager::startMining(const cn::BlockMiningParameters& params) {
       pushEvent(BlockMinedEvent());
     } catch (System::InterruptedException&) {
     } catch (std::exception& e) {
-      m_logger(Logging::ERROR) << "Miner context unexpectedly finished: " << e.what();
+      m_logger(logging::ERROR) << "Miner context unexpectedly finished: " << e.what();
     }
   });
 }
@@ -170,7 +170,7 @@ void MinerManager::startBlockchainMonitoring() {
       pushEvent(BlockchainUpdatedEvent());
     } catch (System::InterruptedException&) {
     } catch (std::exception& e) {
-      m_logger(Logging::ERROR) << "BlockchainMonitor context unexpectedly finished: " << e.what();
+      m_logger(logging::ERROR) << "BlockchainMonitor context unexpectedly finished: " << e.what();
     }
   });
 }
@@ -184,17 +184,17 @@ bool MinerManager::submitBlock(const Block& minedBlock, const std::string& daemo
     HttpClient client(m_dispatcher, daemonHost, daemonPort);
 
     COMMAND_RPC_SUBMITBLOCK::request request;
-    request.emplace_back(Common::toHex(toBinaryArray(minedBlock)));
+    request.emplace_back(common::toHex(toBinaryArray(minedBlock)));
 
     COMMAND_RPC_SUBMITBLOCK::response response;
 
     System::EventLock lk(m_httpEvent);
     JsonRpc::invokeJsonRpcCommand(client, "submitblock", request, response);
 
-    m_logger(Logging::INFO) << "Block has been successfully submitted. Block hash: " << Common::podToHex(get_block_hash(minedBlock));
+    m_logger(logging::INFO) << "Block has been successfully submitted. Block hash: " << common::podToHex(get_block_hash(minedBlock));
     return true;
   } catch (std::exception& e) {
-    m_logger(Logging::WARNING) << "Couldn't submit block: " << Common::podToHex(get_block_hash(minedBlock)) << ", reason: " << e.what();
+    m_logger(logging::WARNING) << "Couldn't submit block: " << common::podToHex(get_block_hash(minedBlock)) << ", reason: " << e.what();
     return false;
   }
 }
@@ -219,14 +219,14 @@ BlockMiningParameters MinerManager::requestMiningParameters(System::Dispatcher& 
     BlockMiningParameters params;
     params.difficulty = response.difficulty;
 
-    if(!fromBinaryArray(params.blockTemplate, Common::fromHex(response.blocktemplate_blob))) {
+    if(!fromBinaryArray(params.blockTemplate, common::fromHex(response.blocktemplate_blob))) {
       throw std::runtime_error("Couldn't deserialize block template");
     }
 
-    m_logger(Logging::DEBUGGING) << "Requested block template with previous block hash: " << Common::podToHex(params.blockTemplate.previousBlockHash);
+    m_logger(logging::DEBUGGING) << "Requested block template with previous block hash: " << common::podToHex(params.blockTemplate.previousBlockHash);
     return params;
   } catch (std::exception& e) {
-    m_logger(Logging::WARNING) << "Couldn't get block template: " << e.what();
+    m_logger(logging::WARNING) << "Couldn't get block template: " << e.what();
     throw;
   }
 }

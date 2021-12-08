@@ -11,7 +11,7 @@
 #include <stdexcept>
 #include <vector>
 
-namespace Common {
+namespace common {
 
 std::string asString(const void* data, size_t size); // Does not throw
 std::string asString(const std::vector<uint8_t>& data); // Does not throw

@@ -118,7 +118,7 @@ bool gen_double_spend_in_tx<txs_keeped_by_block>::generate(std::vector<test_even
   destinations.push_back(de);
 
   cn::Transaction tx_1;
-  Crypto::SecretKey txSK;
+  crypto::SecretKey txSK;
   if (!constructTransaction(bob_account.getAccountKeys(), sources, destinations, std::vector<uint8_t>(), tx_1, 0, this->m_logger, txSK))
     return false;
 

@@ -8,11 +8,11 @@
 
 namespace Tests
 {
-namespace Common
+namespace common
 {
 
 using namespace cn;
-using namespace Crypto;
+using namespace crypto;
 
 const std::string TEST_PASSWORD = "password";
 
@@ -92,7 +92,7 @@ std::error_code TestWalletLegacy::sendTransaction(const std::string &address, ui
   uint64_t mixIn = 0;
   uint64_t unlockTimestamp = 0;
   uint64_t ttl = 0;
-  Crypto::SecretKey transactionSK;
+  crypto::SecretKey transactionSK;
   auto txId = m_wallet->sendTransaction(transactionSK, transfer, fee, extraString, mixIn, unlockTimestamp, messages, ttl);
 
   transactionSendingWaiter.wait(txId);
@@ -151,5 +151,5 @@ void TestWalletLegacy::synchronizationProgressUpdated(uint32_t current, uint32_t
   });
 }
 
-} // namespace Common
+} // namespace common
 } // namespace Tests

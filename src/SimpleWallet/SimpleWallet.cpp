@@ -51,8 +51,8 @@
 #endif
 
 using namespace cn;
-using namespace Logging;
-using Common::JsonValue;
+using namespace logging;
+using common::JsonValue;
 
 namespace po = boost::program_options;
 
@@ -83,7 +83,7 @@ bool parseUrlAddress(const std::string& url, std::string& address, uint16_t& por
 
   if (addrEnd != std::string::npos) {
     auto portEnd = url.find('/', addrEnd);
-    port = Common::fromString<uint16_t>(url.substr(
+    port = common::fromString<uint16_t>(url.substr(
       addrEnd + 1, portEnd == std::string::npos ? std::string::npos : portEnd - addrEnd - 1));
   } else {
     addrEnd = url.find('/');
@@ -173,7 +173,7 @@ struct TransferCommand {
             messages.emplace_back(value);
           } else if (arg == "-ttl") {
             fee = 0;
-            if (!Common::fromString(value, ttl) || ttl < 1 || ttl * 60 > m_currency.mempoolTxLiveTime()) {
+            if (!common::fromString(value, ttl) || ttl < 1 || ttl * 60 > m_currency.mempoolTxLiveTime()) {
               logger(ERROR, BRIGHT_RED) << "TTL has invalid format: \"" << value << "\", " <<
                 "enter time from 1 to " << (m_currency.mempoolTxLiveTime() / 60) << " minutes";
               return false;
@@ -204,7 +204,7 @@ struct TransferCommand {
             /* create the address from the public keys */
             std::string keys = decoded.substr(paymentIDLen, std::string::npos);
             cn::AccountPublicAddress addr;
-            cn::BinaryArray ba = Common::asBinaryArray(keys);
+            cn::BinaryArray ba = common::asBinaryArray(keys);
 
             if (!cn::fromBinaryArray(addr, ba)) {
               return true;
@@ -414,10 +414,10 @@ void printListTransfersHeader(LoggerRef& logger) {
 }
 
 void printListTransfersItem(LoggerRef& logger, const WalletLegacyTransaction& txInfo, IWalletLegacy& wallet, const Currency& currency) {
-  std::vector<uint8_t> extraVec = Common::asBinaryArray(txInfo.extra);
+  std::vector<uint8_t> extraVec = common::asBinaryArray(txInfo.extra);
 
-  Crypto::Hash paymentId;
-  std::string paymentIdStr = (getPaymentIdFromTxExtra(extraVec, paymentId) && paymentId != NULL_HASH ? Common::podToHex(paymentId) : "");
+  crypto::Hash paymentId;
+  std::string paymentIdStr = (getPaymentIdFromTxExtra(extraVec, paymentId) && paymentId != NULL_HASH ? common::podToHex(paymentId) : "");
 
   char timeString[TIMESTAMP_MAX_WIDTH + 1];
   time_t timestamp = static_cast<time_t>(txInfo.timestamp);
@@ -428,7 +428,7 @@ void printListTransfersItem(LoggerRef& logger, const WalletLegacyTransaction& tx
   std::string rowColor = txInfo.totalAmount < 0 ? MAGENTA : GREEN;
   logger(INFO, rowColor)
     << std::setw(TIMESTAMP_MAX_WIDTH) << timeString
-    << "  " << std::setw(HASH_MAX_WIDTH) << Common::podToHex(txInfo.hash)
+    << "  " << std::setw(HASH_MAX_WIDTH) << common::podToHex(txInfo.hash)
     << "  " << std::setw(TOTAL_AMOUNT_MAX_WIDTH) << currency.formatAmount(txInfo.totalAmount)
     << "  " << std::setw(FEE_MAX_WIDTH) << currency.formatAmount(txInfo.fee)
     << "  " << std::setw(BLOCK_MAX_WIDTH) << txInfo.blockHeight
@@ -582,7 +582,7 @@ bool simple_wallet::exit(const std::vector<std::string> &args) {
   return true;
 }
 
-simple_wallet::simple_wallet(System::Dispatcher& dispatcher, const cn::Currency& currency, Logging::LoggerManager& log) :
+simple_wallet::simple_wallet(System::Dispatcher& dispatcher, const cn::Currency& currency, logging::LoggerManager& log) :
   m_dispatcher(dispatcher),
   m_daemon_port(0),
   m_currency(currency),
@@ -633,17 +633,17 @@ bool simple_wallet::set_log(const std::vector<std::string> &args) {
   }
 
   uint16_t l = 0;
-  if (!Common::fromString(args[0], l)) {
+  if (!common::fromString(args[0], l)) {
     fail_msg_writer() << "wrong number format, use: set_log <log_level_number_0-4>";
     return true;
   }
 
-  if (l > Logging::TRACE) {
+  if (l > logging::TRACE) {
     fail_msg_writer() << "wrong number range, use: set_log <log_level_number_0-4>";
     return true;
   }
 
-  logManager.setMaxLevel(static_cast<Logging::Level>(l));
+  logManager.setMaxLevel(static_cast<logging::Level>(l));
   return true;
 }
 
@@ -813,8 +813,8 @@ bool simple_wallet::init(const boost::program_options::variables_map& vm) {
     std::string private_spend_key_string;
     std::string private_view_key_string;
 
-Crypto::SecretKey private_spend_key;
-Crypto::SecretKey private_view_key;
+crypto::SecretKey private_spend_key;
+crypto::SecretKey private_view_key;
 
 if (key_import) {
     do {
@@ -838,24 +838,24 @@ if (key_import) {
   } while (!is_valid_mnemonic(mnemonic_phrase, private_spend_key));
 
   /* This is not used, but is needed to be passed to the function, not sure how we can avoid this */
-  Crypto::PublicKey unused_dummy_variable;
+  crypto::PublicKey unused_dummy_variable;
 
   AccountBase::generateViewFromSpend(private_spend_key, private_view_key, unused_dummy_variable);
 }
 
 /* We already have our keys if we import via mnemonic seed */
 if (key_import) {
-    Crypto::Hash private_spend_key_hash;
-    Crypto::Hash private_view_key_hash;
+    crypto::Hash private_spend_key_hash;
+    crypto::Hash private_view_key_hash;
     size_t size;
-    if (!Common::fromHex(private_spend_key_string, &private_spend_key_hash, sizeof(private_spend_key_hash), size) || size != sizeof(private_spend_key_hash)) {
+    if (!common::fromHex(private_spend_key_string, &private_spend_key_hash, sizeof(private_spend_key_hash), size) || size != sizeof(private_spend_key_hash)) {
       return false;
     }
-    if (!Common::fromHex(private_view_key_string, &private_view_key_hash, sizeof(private_view_key_hash), size) || size != sizeof(private_spend_key_hash)) {
+    if (!common::fromHex(private_view_key_string, &private_view_key_hash, sizeof(private_view_key_hash), size) || size != sizeof(private_spend_key_hash)) {
       return false;
     }
-      private_spend_key = *(struct Crypto::SecretKey *) &private_spend_key_hash;
-      private_view_key = *(struct Crypto::SecretKey *) &private_view_key_hash;
+      private_spend_key = *(struct crypto::SecretKey *) &private_spend_key_hash;
+      private_view_key = *(struct crypto::SecretKey *) &private_view_key_hash;
     }
 
     if (!new_wallet(private_spend_key, private_view_key, walletFileName, pwd_container.password())) {
@@ -895,7 +895,7 @@ if (key_import) {
 /* adding support for 25 word electrum seeds. however, we have to ensure that all old wallets that are
 not deterministic, dont get a seed to avoid any loss of funds.
 */
-std::string simple_wallet::generate_mnemonic(Crypto::SecretKey &private_spend_key) {
+std::string simple_wallet::generate_mnemonic(crypto::SecretKey &private_spend_key) {
 
   std::string mnemonic_str;
 
@@ -917,7 +917,7 @@ void simple_wallet::log_incorrect_words(std::vector<std::string> words) {
   }
 }
 //----------------------------------------------------------------------------------------------------
-bool simple_wallet::is_valid_mnemonic(std::string &mnemonic_phrase, Crypto::SecretKey &private_spend_key) {
+bool simple_wallet::is_valid_mnemonic(std::string &mnemonic_phrase, crypto::SecretKey &private_spend_key) {
 
   static std::string languages[] = {"English"};
   static const int num_of_languages = 1;
@@ -1000,8 +1000,8 @@ bool simple_wallet::new_wallet(const std::string &wallet_file, const std::string
     logger(INFO, BRIGHT_GREEN) << "ConcealWallet is an open-source, client-side, free wallet which allow you to send and receive CCX instantly on the blockchain. You are  in control of your funds & your keys. When you generate a new wallet, login, send, receive or deposit $CCX everything happens locally. Your seed is never transmitted, received or stored. That's why its imperative to write, print or save your seed somewhere safe. The backup of keys is your responsibility. If you lose your seed, your account can not be recovered. The Conceal Team doesn't take any responsibility for lost funds due to nonexistent/missing/lost private keys." << std::endl << std::endl;
 
     std::cout << "Wallet Address: " << m_wallet->getAddress() << std::endl;
-    std::cout << "Private spend key: " << Common::podToHex(keys.spendSecretKey) << std::endl;
-    std::cout << "Private view key: " <<  Common::podToHex(keys.viewSecretKey) << std::endl;
+    std::cout << "Private spend key: " << common::podToHex(keys.spendSecretKey) << std::endl;
+    std::cout << "Private view key: " <<  common::podToHex(keys.viewSecretKey) << std::endl;
     std::cout << "Mnemonic Seed: " << generate_mnemonic(keys.spendSecretKey) << std::endl;
 
   }
@@ -1021,7 +1021,7 @@ bool simple_wallet::new_wallet(const std::string &wallet_file, const std::string
   return true;
 }
 //----------------------------------------------------------------------------------------------------
-bool simple_wallet::new_wallet(Crypto::SecretKey &secret_key, Crypto::SecretKey &view_key, const std::string &wallet_file, const std::string& password) {
+bool simple_wallet::new_wallet(crypto::SecretKey &secret_key, crypto::SecretKey &view_key, const std::string &wallet_file, const std::string& password) {
                 m_wallet_file = wallet_file;
 
                 m_wallet.reset(new WalletLegacy(m_currency, *m_node.get(), logManager));
@@ -1034,8 +1034,8 @@ bool simple_wallet::new_wallet(Crypto::SecretKey &secret_key, Crypto::SecretKey 
                   AccountKeys wallet_keys;
                   wallet_keys.spendSecretKey = secret_key;
                   wallet_keys.viewSecretKey = view_key;
-                  Crypto::secret_key_to_public_key(wallet_keys.spendSecretKey, wallet_keys.address.spendPublicKey);
-                  Crypto::secret_key_to_public_key(wallet_keys.viewSecretKey, wallet_keys.address.viewPublicKey);
+                  crypto::secret_key_to_public_key(wallet_keys.spendSecretKey, wallet_keys.address.spendPublicKey);
+                  crypto::secret_key_to_public_key(wallet_keys.viewSecretKey, wallet_keys.address.viewPublicKey);
 
                   m_wallet->initWithKeys(wallet_keys, password);
                   auto initError = f_initError.get();
@@ -1132,7 +1132,7 @@ bool simple_wallet::start_mining(const std::vector<std::string>& args) {
     req.threads_count = 1;
   } else if (1 == args.size()) {
     uint16_t num = 1;
-    ok = Common::fromString(args[0], num);
+    ok = common::fromString(args[0], num);
     ok = ok && (1 <= num && num <= max_mining_threads_count);
     req.threads_count = num;
   } else {
@@ -1244,7 +1244,7 @@ bool simple_wallet::get_tx_proof(const std::vector<std::string> &args)
   }
 
   const std::string &str_hash = args[0];
-  Crypto::Hash txid;
+  crypto::Hash txid;
   if (!parse_hash256(str_hash, txid)) {
     fail_msg_writer() << "Failed to parse txid";
     return true;
@@ -1258,17 +1258,17 @@ bool simple_wallet::get_tx_proof(const std::vector<std::string> &args)
   }
 
   std::string sig_str;
-  Crypto::SecretKey tx_key, tx_key2;
+  crypto::SecretKey tx_key, tx_key2;
   bool r = m_wallet->get_tx_key(txid, tx_key);
 
   if (args.size() == 3) {
-    Crypto::Hash tx_key_hash;
+    crypto::Hash tx_key_hash;
     size_t size;
-    if (!Common::fromHex(args[2], &tx_key_hash, sizeof(tx_key_hash), size) || size != sizeof(tx_key_hash)) {
+    if (!common::fromHex(args[2], &tx_key_hash, sizeof(tx_key_hash), size) || size != sizeof(tx_key_hash)) {
       fail_msg_writer() << "failed to parse tx_key";
       return true;
     }
-    tx_key2 = *(struct Crypto::SecretKey *) &tx_key_hash;
+    tx_key2 = *(struct crypto::SecretKey *) &tx_key_hash;
 
     if (r) {
       if (args.size() == 3 && tx_key != tx_key2) {
@@ -1319,11 +1319,11 @@ void simple_wallet::externalTransactionCreated(cn::TransactionId transactionId) 
 
   if (txInfo.totalAmount >= 0) {
     logger(INFO, GREEN) <<
-      logPrefix.str() << " transaction " << Common::podToHex(txInfo.hash) <<
+      logPrefix.str() << " transaction " << common::podToHex(txInfo.hash) <<
       ", received " << m_currency.formatAmount(txInfo.totalAmount);
   } else {
     logger(INFO, MAGENTA) <<
-      logPrefix.str() << " transaction " << Common::podToHex(txInfo.hash) <<
+      logPrefix.str() << " transaction " << common::podToHex(txInfo.hash) <<
       ", spent " << m_currency.formatAmount(static_cast<uint64_t>(-txInfo.totalAmount));
   }
 
@@ -1365,10 +1365,10 @@ bool simple_wallet::sign_message(const std::vector<std::string>& args)
   AccountKeys keys;
   m_wallet->getAccountKeys(keys);
 
-  Crypto::Hash message_hash;
-  Crypto::Signature sig;
-  Crypto::cn_fast_hash(args[0].data(), args[0].size(), message_hash);
-  Crypto::generate_signature(message_hash, keys.address.spendPublicKey, keys.spendSecretKey, sig);
+  crypto::Hash message_hash;
+  crypto::Signature sig;
+  crypto::cn_fast_hash(args[0].data(), args[0].size(), message_hash);
+  crypto::generate_signature(message_hash, keys.address.spendPublicKey, keys.spendSecretKey, sig);
   
   success_msg_writer() << "Sig" << Tools::Base58::encode(std::string(reinterpret_cast<char*>(&sig)));
 
@@ -1392,11 +1392,11 @@ bool simple_wallet::verify_signature(const std::vector<std::string>& args)
     return true;
   } 
   
-  Crypto::Hash message_hash;
-  Crypto::cn_fast_hash(args[0].data(), args[0].size(), message_hash);
+  crypto::Hash message_hash;
+  crypto::cn_fast_hash(args[0].data(), args[0].size(), message_hash);
   
   std::string decodedSig;
-  Crypto::Signature sig;
+  crypto::Signature sig;
   Tools::Base58::decode(encodedSig.substr(prefix_size), decodedSig);
   memcpy(&sig, decodedSig.data(), sizeof(sig));
   
@@ -1404,7 +1404,7 @@ bool simple_wallet::verify_signature(const std::vector<std::string>& args)
   cn::AccountPublicAddress addr;
   cn::parseAccountAddressString(prefix, addr, args[1]);
   
-  if(Crypto::check_signature(message_hash, addr.spendPublicKey, sig))
+  if(crypto::check_signature(message_hash, addr.spendPublicKey, sig))
     success_msg_writer() << "Valid";
   else
     success_msg_writer() << "Invalid";
@@ -1448,7 +1448,7 @@ bool simple_wallet::create_integrated(const std::vector<std::string>& args/* = s
 
   cn::BinaryArray ba;
   cn::toBinaryArray(addr, ba);
-  std::string keys = Common::asString(ba);
+  std::string keys = common::asString(ba);
 
   /* create the integrated address the same way you make a public address */
   std::string integratedAddress = Tools::Base58::encode_addr (cn::parameters::CRYPTONOTE_PUBLIC_ADDRESS_BASE58_PREFIX,
@@ -1472,11 +1472,11 @@ bool simple_wallet::export_keys(const std::vector<std::string>& args/* = std::ve
 
   logger(INFO, BRIGHT_GREEN) << std::endl << "ConcealWallet is an open-source, client-side, free wallet which allow you to send and receive CCX instantly on the blockchain. You are  in control of your funds & your keys. When you generate a new wallet, login, send, receive or deposit $CCX everything happens locally. Your seed is never transmitted, received or stored. That's why its imperative to write, print or save your seed somewhere safe. The backup of keys is your responsibility. If you lose your seed, your account can not be recovered. The Conceal Team doesn't take any responsibility for lost funds due to nonexistent/missing/lost private keys." << std::endl << std::endl;
 
-  std::cout << "Private spend key: " << Common::podToHex(keys.spendSecretKey) << std::endl;
-  std::cout << "Private view key: " <<  Common::podToHex(keys.viewSecretKey) << std::endl;
+  std::cout << "Private spend key: " << common::podToHex(keys.spendSecretKey) << std::endl;
+  std::cout << "Private view key: " <<  common::podToHex(keys.viewSecretKey) << std::endl;
 
-  Crypto::PublicKey unused_dummy_variable;
-  Crypto::SecretKey deterministic_private_view_key;
+  crypto::PublicKey unused_dummy_variable;
+  crypto::SecretKey deterministic_private_view_key;
 
   AccountBase::generateViewFromSpend(keys.spendSecretKey, deterministic_private_view_key, unused_dummy_variable);
 
@@ -1499,7 +1499,7 @@ bool simple_wallet::show_incoming_transfers(const std::vector<std::string>& args
     hasTransfers = true;
     logger(INFO) << "        amount       \t                              tx id";
     logger(INFO, GREEN) <<
-      std::setw(21) << m_currency.formatAmount(txInfo.totalAmount) << '\t' << Common::podToHex(txInfo.hash);
+      std::setw(21) << m_currency.formatAmount(txInfo.totalAmount) << '\t' << common::podToHex(txInfo.hash);
   }
 
   if (!hasTransfers) success_msg_writer() << "No incoming transfers";
@@ -1586,14 +1586,14 @@ bool simple_wallet::show_payments(const std::vector<std::string> &args) {
     for (auto& payment : payments) {
       for (auto& transaction : payment.transactions) {
         success_msg_writer(true) <<
-          Common::podToHex(payment.paymentId) << '\t' <<
-          Common::podToHex(transaction.hash) << '\t' <<
+          common::podToHex(payment.paymentId) << '\t' <<
+          common::podToHex(transaction.hash) << '\t' <<
           std::setw(8) << transaction.blockHeight << '\t' <<
           std::setw(21) << m_currency.formatAmount(transaction.totalAmount);
       }
 
       if (payment.transactions.empty()) {
-        success_msg_writer() << "No payments with id " << Common::podToHex(payment.paymentId);
+        success_msg_writer() << "No payments with id " << common::podToHex(payment.paymentId);
       }
     }
   } catch (std::exception& e) {
@@ -1640,7 +1640,7 @@ bool simple_wallet::optimize_outputs(const std::vector<std::string>& args) {
     uint64_t mixIn = 0;
     uint64_t unlockTimestamp = 0;
     uint64_t ttl = 0;
-    Crypto::SecretKey transactionSK;
+    crypto::SecretKey transactionSK;
     cn::TransactionId tx = m_wallet->sendTransaction(transactionSK, transfers, fee, extraString, mixIn, unlockTimestamp, messages, ttl);
     if (tx == WALLET_LEGACY_INVALID_TRANSACTION_ID) {
       fail_msg_writer() << "Can't send money";
@@ -1657,8 +1657,8 @@ bool simple_wallet::optimize_outputs(const std::vector<std::string>& args) {
 
     cn::WalletLegacyTransaction txInfo;
     m_wallet->getTransaction(tx, txInfo);
-    success_msg_writer(true) << "Money successfully sent, transaction " << Common::podToHex(txInfo.hash);
-    success_msg_writer(true) << "Transaction secret key " << Common::podToHex(transactionSK);
+    success_msg_writer(true) << "Money successfully sent, transaction " << common::podToHex(txInfo.hash);
+    success_msg_writer(true) << "Transaction secret key " << common::podToHex(transactionSK);
 
     try {
       cn::WalletHelper::storeWallet(*m_wallet, m_wallet_file);
@@ -1708,7 +1708,7 @@ bool simple_wallet::optimize_all_outputs(const std::vector<std::string>& args) {
       uint64_t mixIn = 0;
       uint64_t unlockTimestamp = 0;
       uint64_t ttl = 0;
-      Crypto::SecretKey transactionSK;
+      crypto::SecretKey transactionSK;
       cn::TransactionId tx = m_wallet->sendTransaction(transactionSK, transfers, fee, extraString, mixIn, unlockTimestamp, messages, ttl);
       if (tx == WALLET_LEGACY_INVALID_TRANSACTION_ID) {
         fail_msg_writer() << "Can't send money";
@@ -1725,7 +1725,7 @@ bool simple_wallet::optimize_all_outputs(const std::vector<std::string>& args) {
 
       cn::WalletLegacyTransaction txInfo;
       m_wallet->getTransaction(tx, txInfo);
-      success_msg_writer(true) << a << ". Optimization transaction successfully sent, transaction " << Common::podToHex(txInfo.hash);
+      success_msg_writer(true) << a << ". Optimization transaction successfully sent, transaction " << common::podToHex(txInfo.hash);
 
       try {
         cn::WalletHelper::storeWallet(*m_wallet, m_wallet_file);
@@ -1752,7 +1752,7 @@ std::string simple_wallet::resolveAlias(const std::string& aliasUrl) {
 	std::vector<std::string>records;
 	std::string address;
 
-	if (!Common::fetch_dns_txt(aliasUrl, records)) {
+	if (!common::fetch_dns_txt(aliasUrl, records)) {
 		throw std::runtime_error("Failed to lookup DNS record");
 	}
 
@@ -1860,7 +1860,7 @@ bool simple_wallet::transfer(const std::vector<std::string> &args) {
       cmd.fee = cn::parameters::MINIMUM_FEE_V2;
     }
 
-    Crypto::SecretKey transactionSK;
+    crypto::SecretKey transactionSK;
     cn::TransactionId tx = m_wallet->sendTransaction(transactionSK, cmd.dsts, cmd.fee, extraString, cmd.fake_outs_count, 0, messages, ttl);
     if (tx == WALLET_LEGACY_INVALID_TRANSACTION_ID) {
       fail_msg_writer() << "Can't send money";
@@ -1877,8 +1877,8 @@ bool simple_wallet::transfer(const std::vector<std::string> &args) {
 
     cn::WalletLegacyTransaction txInfo;
     m_wallet->getTransaction(tx, txInfo);
-    success_msg_writer(true) << "Money successfully sent, transaction hash: " << Common::podToHex(txInfo.hash);
-    success_msg_writer(true) << "Transaction secret key " << Common::podToHex(transactionSK); 
+    success_msg_writer(true) << "Money successfully sent, transaction hash: " << common::podToHex(txInfo.hash);
+    success_msg_writer(true) << "Transaction secret key " << common::podToHex(transactionSK); 
 
     try {
       cn::WalletHelper::storeWallet(*m_wallet, m_wallet_file);
@@ -1908,7 +1908,7 @@ bool simple_wallet::run() {
   std::cout << std::endl;
 
   std::string addr_start = m_wallet->getAddress().substr(0, 6);
-  m_consoleHandler.start(false, "[wallet " + addr_start + "]: ", Common::Console::Color::BrightYellow);
+  m_consoleHandler.start(false, "[wallet " + addr_start + "]: ", common::Console::Color::BrightYellow);
   return true;
 }
 //----------------------------------------------------------------------------------------------------
@@ -1937,11 +1937,11 @@ bool simple_wallet::save_keys_to_file(const std::vector<std::string>& args)
 
   std::string priv_key = "\t\tConceal Keys Backup\n\n";
   priv_key += "Wallet file name: " + m_wallet_file + "\n";
-  priv_key += "Private spend key: " + Common::podToHex(keys.spendSecretKey) + "\n";
-  priv_key += "Private view key: " +  Common::podToHex(keys.viewSecretKey) + "\n";
+  priv_key += "Private spend key: " + common::podToHex(keys.spendSecretKey) + "\n";
+  priv_key += "Private view key: " +  common::podToHex(keys.viewSecretKey) + "\n";
 
-  Crypto::PublicKey unused_dummy_variable;
-  Crypto::SecretKey deterministic_private_view_key;
+  crypto::PublicKey unused_dummy_variable;
+  crypto::SecretKey deterministic_private_view_key;
 
   AccountBase::generateViewFromSpend(keys.spendSecretKey, deterministic_private_view_key, unused_dummy_variable);
   bool deterministic_private_keys = deterministic_private_view_key == keys.viewSecretKey;
@@ -1984,8 +1984,8 @@ int main(int argc, char* argv[]) {
   po::options_description desc_all;
   desc_all.add(desc_general).add(desc_params);
 
-  Logging::LoggerManager logManager;
-  Logging::LoggerRef logger(logManager, "simplewallet");
+  logging::LoggerManager logManager;
+  logging::LoggerRef logger(logManager, "simplewallet");
   System::Dispatcher dispatcher;
 
   po::variables_map vm;
@@ -2022,7 +2022,7 @@ int main(int argc, char* argv[]) {
     logLevel = static_cast<Level>(command_line::get_arg(vm, arg_log_level));
   }
 
-  logManager.configure(buildLoggerConfiguration(logLevel, Common::ReplaceExtenstion(argv[0], ".log")));
+  logManager.configure(buildLoggerConfiguration(logLevel, common::ReplaceExtenstion(argv[0], ".log")));
 
   logger(INFO, BRIGHT_GREEN) << "Conceal Wallet v" << PROJECT_VERSION_LONG;
 

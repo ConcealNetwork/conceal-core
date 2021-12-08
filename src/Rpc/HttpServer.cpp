@@ -26,7 +26,7 @@
 #include <System/TcpStream.h>
 #include <System/Ipv4Address.h>
 
-using namespace Logging;
+using namespace logging;
 
 namespace {
 	void fillUnauthorizedResponse(cn::HttpResponse& response) {
@@ -39,7 +39,7 @@ namespace {
 
 namespace cn {
 
-HttpServer::HttpServer(System::Dispatcher& dispatcher, Logging::ILogger& log)
+HttpServer::HttpServer(System::Dispatcher& dispatcher, logging::ILogger& log)
   : m_dispatcher(dispatcher), workingContextGroup(dispatcher), logger(log, "HttpServer") {
 
 }

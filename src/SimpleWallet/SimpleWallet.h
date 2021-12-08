@@ -36,7 +36,7 @@ namespace cn
   /************************************************************************/
   class simple_wallet : public cn::INodeObserver, public cn::IWalletLegacyObserver, public cn::INodeRpcProxyObserver {
   public:
-    simple_wallet(System::Dispatcher& dispatcher, const cn::Currency& currency, Logging::LoggerManager& log);
+    simple_wallet(System::Dispatcher& dispatcher, const cn::Currency& currency, logging::LoggerManager& log);
 
     bool init(const boost::program_options::variables_map& vm);
     bool deinit();
@@ -51,12 +51,12 @@ namespace cn
 
   private:
 
-    Logging::LoggerMessage success_msg_writer(bool color = false) {
-      return logger(Logging::INFO, color ? Logging::GREEN : Logging::DEFAULT);
+    logging::LoggerMessage success_msg_writer(bool color = false) {
+      return logger(logging::INFO, color ? logging::GREEN : logging::DEFAULT);
     }
 
-    Logging::LoggerMessage fail_msg_writer() const {
-      auto msg = logger(Logging::ERROR, Logging::BRIGHT_RED);
+    logging::LoggerMessage fail_msg_writer() const {
+      auto msg = logger(logging::ERROR, logging::BRIGHT_RED);
       msg << "Error: ";
       return msg;
     }
@@ -66,7 +66,7 @@ namespace cn
     bool run_console_handler();
 
     bool new_wallet(const std::string &wallet_file, const std::string& password);
-    bool new_wallet(Crypto::SecretKey &secret_key, Crypto::SecretKey &view_key, const std::string &wallet_file, const std::string& password);
+    bool new_wallet(crypto::SecretKey &secret_key, crypto::SecretKey &view_key, const std::string &wallet_file, const std::string& password);
     bool open_wallet(const std::string &wallet_file, const std::string& password);
     bool close_wallet();
 
@@ -99,9 +99,9 @@ namespace cn
     std::string resolveAlias(const std::string& aliasUrl);
     void printConnectionError() const;
 
-    std::string generate_mnemonic(Crypto::SecretKey &);
+    std::string generate_mnemonic(crypto::SecretKey &);
     void log_incorrect_words(std::vector<std::string>);
-    bool is_valid_mnemonic(std::string &, Crypto::SecretKey &);
+    bool is_valid_mnemonic(std::string &, crypto::SecretKey &);
 
 
     //---------------- IWalletLegacyObserver -------------------------
@@ -172,11 +172,11 @@ namespace cn
 
     std::unique_ptr<std::promise<std::error_code>> m_initResultPromise;
 
-    Common::ConsoleHandler m_consoleHandler;
+    common::ConsoleHandler m_consoleHandler;
     const cn::Currency& m_currency;
-    Logging::LoggerManager& logManager;
+    logging::LoggerManager& logManager;
     System::Dispatcher& m_dispatcher;
-    Logging::LoggerRef logger;
+    logging::LoggerRef logger;
 
     std::unique_ptr<cn::NodeRpcProxy> m_node;
     std::unique_ptr<cn::IWalletLegacy> m_wallet;

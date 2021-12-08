@@ -21,7 +21,7 @@
 namespace cn {
 class ISerializer;
 
-typedef std::pair<Crypto::PublicKey, size_t> TransactionOutputId;
+typedef std::pair<crypto::PublicKey, size_t> TransactionOutputId;
 }
 
 namespace std {
@@ -29,7 +29,7 @@ namespace std {
 template<> 
 struct hash<cn::TransactionOutputId> {
   size_t operator()(const cn::TransactionOutputId &_v) const {    
-    return hash<Crypto::PublicKey>()(_v.first) ^ _v.second;
+    return hash<crypto::PublicKey>()(_v.first) ^ _v.second;
   } 
 }; 
 
@@ -66,14 +66,14 @@ public:
   bool serialize(cn::ISerializer& s);
   bool deserializeV1(cn::ISerializer& s);
 
-  bool findTransactionId(const Crypto::Hash& hash, TransactionId& id);
-  void erase(const Crypto::Hash& hash);
+  bool findTransactionId(const crypto::Hash& hash, TransactionId& id);
+  void erase(const crypto::Hash& hash);
   void add(const cn::Transaction& tx, TransactionId transactionId, 
     uint64_t amount, const std::vector<TransactionOutputInformation>& usedOutputs);
-  void updateTransactionId(const Crypto::Hash& hash, TransactionId id);
+  void updateTransactionId(const crypto::Hash& hash, TransactionId id);
 
   void addCreatedDeposit(DepositId id, uint64_t totalAmount);
-  void addDepositSpendingTransaction(const Crypto::Hash& transactionHash, const UnconfirmedSpentDepositDetails& details);
+  void addDepositSpendingTransaction(const crypto::Hash& transactionHash, const UnconfirmedSpentDepositDetails& details);
 
   void eraseCreatedDeposit(DepositId id);
 
@@ -93,13 +93,13 @@ private:
   void collectUsedOutputs();
   void deleteUsedOutputs(const std::vector<TransactionOutputId>& usedOutputs);
 
-  bool eraseUnconfirmedTransaction(const Crypto::Hash& hash);
-  bool eraseDepositSpendingTransaction(const Crypto::Hash& hash);
+  bool eraseUnconfirmedTransaction(const crypto::Hash& hash);
+  bool eraseDepositSpendingTransaction(const crypto::Hash& hash);
 
-  bool findUnconfirmedTransactionId(const Crypto::Hash& hash, TransactionId& id);
-  bool findUnconfirmedDepositSpendingTransactionId(const Crypto::Hash& hash, TransactionId& id);
+  bool findUnconfirmedTransactionId(const crypto::Hash& hash, TransactionId& id);
+  bool findUnconfirmedDepositSpendingTransactionId(const crypto::Hash& hash, TransactionId& id);
 
-  typedef std::unordered_map<Crypto::Hash, UnconfirmedTransferDetails, boost::hash<Crypto::Hash>> UnconfirmedTxsContainer;
+  typedef std::unordered_map<crypto::Hash, UnconfirmedTransferDetails, boost::hash<crypto::Hash>> UnconfirmedTxsContainer;
   typedef std::unordered_set<TransactionOutputId> UsedOutputsContainer;
 
   UnconfirmedTxsContainer m_unconfirmedTxs;
@@ -107,7 +107,7 @@ private:
   uint64_t m_uncofirmedTransactionsLiveTime;
 
   std::unordered_map<DepositId, uint64_t> m_createdDeposits;
-  std::unordered_map<Crypto::Hash, UnconfirmedSpentDepositDetails> m_spentDeposits;
+  std::unordered_map<crypto::Hash, UnconfirmedSpentDepositDetails> m_spentDeposits;
 };
 
 } // namespace cn

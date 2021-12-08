@@ -17,7 +17,7 @@
 #include "crypto.h"
 #include "hash.h"
 
-namespace Crypto {
+namespace crypto {
 
   using std::abort;
   using std::int32_t;

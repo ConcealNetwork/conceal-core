@@ -37,7 +37,7 @@ public:
 
     std::vector<TransactionDestinationEntry> destinations;
     destinations.push_back(TransactionDestinationEntry(this->m_source_amount, m_alice.getAccountKeys().address));
-    Crypto::SecretKey txSK;
+    crypto::SecretKey txSK;
     if (!constructTransaction(this->m_miners[this->real_source_idx].getAccountKeys(), this->m_sources, destinations, std::vector<uint8_t>(), m_tx, 0, this->m_logger, txSK))
       return false;
 
@@ -49,11 +49,11 @@ public:
   bool test()
   {
     const cn::KeyInput& txin = boost::get<cn::KeyInput>(m_tx.inputs[0]);
-    return Crypto::check_ring_signature(m_tx_prefix_hash, txin.keyImage, this->m_public_key_ptrs, ring_size, m_tx.signatures[0].data());
+    return crypto::check_ring_signature(m_tx_prefix_hash, txin.keyImage, this->m_public_key_ptrs, ring_size, m_tx.signatures[0].data());
   }
 
 private:
   cn::AccountBase m_alice;
   cn::Transaction m_tx;
-  Crypto::Hash m_tx_prefix_hash;
+  crypto::Hash m_tx_prefix_hash;
 };

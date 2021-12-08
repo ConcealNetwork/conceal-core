@@ -24,8 +24,8 @@ public:
   bool addTransaction(const TransactionBlockInfo& blockInfo, const ITransactionReader& tx,
                       const std::vector<TransactionOutputInformationIn>& transfers, std::vector<std::string>&& messages);
 
-  void deleteUnconfirmedTransaction(const Crypto::Hash& transactionHash);
-  void markTransactionConfirmed(const TransactionBlockInfo& block, const Crypto::Hash& transactionHash, const std::vector<uint32_t>& globalIndices);
+  void deleteUnconfirmedTransaction(const crypto::Hash& transactionHash);
+  void markTransactionConfirmed(const TransactionBlockInfo& block, const crypto::Hash& transactionHash, const std::vector<uint32_t>& globalIndices);
 
   // ITransfersSubscription
   virtual AccountPublicAddress getAddress() override;

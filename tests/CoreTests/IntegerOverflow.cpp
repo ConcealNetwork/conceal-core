@@ -82,7 +82,7 @@ bool gen_uint_overflow_1::generate(std::vector<test_event_entry>& events) const
   MAKE_MINER_TX_MANUALLY(miner_tx_0, blk_0);
   split_miner_tx_outs(miner_tx_0, std::numeric_limits<uint64_t>::max());
   Block blk_1;
-  if (!generator.constructBlockManually(blk_1, blk_0, miner_account, test_generator::bf_miner_tx, 0, 0, 0, Crypto::Hash(), 0, miner_tx_0))
+  if (!generator.constructBlockManually(blk_1, blk_0, miner_account, test_generator::bf_miner_tx, 0, 0, 0, crypto::Hash(), 0, miner_tx_0))
     return false;
   events.push_back(blk_1);
 
@@ -90,7 +90,7 @@ bool gen_uint_overflow_1::generate(std::vector<test_event_entry>& events) const
   MAKE_MINER_TX_MANUALLY(miner_tx_1, blk_1);
   split_miner_tx_outs(miner_tx_1, std::numeric_limits<uint64_t>::max());
   Block blk_2;
-  if (!generator.constructBlockManually(blk_2, blk_1, miner_account, test_generator::bf_miner_tx, 0, 0, 0, Crypto::Hash(), 0, miner_tx_1))
+  if (!generator.constructBlockManually(blk_2, blk_1, miner_account, test_generator::bf_miner_tx, 0, 0, 0, crypto::Hash(), 0, miner_tx_1))
     return false;
   events.push_back(blk_2);
 
@@ -146,7 +146,7 @@ bool gen_uint_overflow_2::generate(std::vector<test_event_entry>& events) const
   destinations.push_back(TransactionDestinationEntry(sources.front().amount - std::numeric_limits<uint64_t>::max() - std::numeric_limits<uint64_t>::max() + 1 - m_currency.minimumFee(), bob_addr));
 
   cn::Transaction tx_1;
-  Crypto::SecretKey txSK;
+  crypto::SecretKey txSK;
   if (!constructTransaction(miner_account.getAccountKeys(), sources, destinations, std::vector<uint8_t>(), tx_1, 0, m_logger, txSK))
     return false;
   events.push_back(tx_1);
@@ -173,7 +173,7 @@ bool gen_uint_overflow_2::generate(std::vector<test_event_entry>& events) const
   destinations.push_back(de);
 
   cn::Transaction tx_2;
-  Crypto::SecretKey txSK2;
+  crypto::SecretKey txSK2;
   if (!constructTransaction(bob_account.getAccountKeys(), sources, destinations, std::vector<uint8_t>(), tx_2, 0, m_logger, txSK2))
     return false;
   events.push_back(tx_2);

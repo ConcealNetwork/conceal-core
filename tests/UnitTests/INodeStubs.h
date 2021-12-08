@@ -32,23 +32,23 @@ public:
   virtual uint32_t getKnownBlockCount() const override { return 0; };
   virtual uint64_t getLastLocalBlockTimestamp() const override { return 0; }
 
-  virtual void getNewBlocks(std::vector<Crypto::Hash>&& knownBlockIds, std::vector<cn::block_complete_entry>& newBlocks, uint32_t& height, const Callback& callback) override { callback(std::error_code()); };
+  virtual void getNewBlocks(std::vector<crypto::Hash>&& knownBlockIds, std::vector<cn::block_complete_entry>& newBlocks, uint32_t& height, const Callback& callback) override { callback(std::error_code()); };
 
   virtual void relayTransaction(const cn::Transaction& transaction, const Callback& callback) override { callback(std::error_code()); };
   virtual void getRandomOutsByAmounts(std::vector<uint64_t>&& amounts, uint64_t outsCount, std::vector<cn::COMMAND_RPC_GET_RANDOM_OUTPUTS_FOR_AMOUNTS::outs_for_amount>& result, const Callback& callback) override { callback(std::error_code()); };
-  virtual void getTransactionOutsGlobalIndices(const Crypto::Hash& transactionHash, std::vector<uint32_t>& outsGlobalIndices, const Callback& callback) override { callback(std::error_code()); };
-  virtual void getPoolSymmetricDifference(std::vector<Crypto::Hash>&& known_pool_tx_ids, Crypto::Hash known_block_id, bool& is_bc_actual,
-          std::vector<std::unique_ptr<cn::ITransactionReader>>& new_txs, std::vector<Crypto::Hash>& deleted_tx_ids, const Callback& callback) override {
+  virtual void getTransactionOutsGlobalIndices(const crypto::Hash& transactionHash, std::vector<uint32_t>& outsGlobalIndices, const Callback& callback) override { callback(std::error_code()); };
+  virtual void getPoolSymmetricDifference(std::vector<crypto::Hash>&& known_pool_tx_ids, crypto::Hash known_block_id, bool& is_bc_actual,
+          std::vector<std::unique_ptr<cn::ITransactionReader>>& new_txs, std::vector<crypto::Hash>& deleted_tx_ids, const Callback& callback) override {
     is_bc_actual = true; callback(std::error_code());
   };
-  virtual void queryBlocks(std::vector<Crypto::Hash>&& knownBlockIds, uint64_t timestamp, std::vector<cn::BlockShortEntry>& newBlocks,
+  virtual void queryBlocks(std::vector<crypto::Hash>&& knownBlockIds, uint64_t timestamp, std::vector<cn::BlockShortEntry>& newBlocks,
           uint32_t& startHeight, const Callback& callback) override { callback(std::error_code()); };
 
   virtual void getBlocks(const std::vector<uint32_t>& blockHeights, std::vector<std::vector<cn::BlockDetails>>& blocks, const Callback& callback) override { callback(std::error_code()); };
-  virtual void getBlocks(const std::vector<Crypto::Hash>& blockHashes, std::vector<cn::BlockDetails>& blocks, const Callback& callback) override { callback(std::error_code()); };
+  virtual void getBlocks(const std::vector<crypto::Hash>& blockHashes, std::vector<cn::BlockDetails>& blocks, const Callback& callback) override { callback(std::error_code()); };
   virtual void getBlocks(uint64_t timestampBegin, uint64_t timestampEnd, uint32_t blocksNumberLimit, std::vector<cn::BlockDetails>& blocks, uint32_t& blocksNumberWithinTimestamps, const Callback& callback) override { callback(std::error_code()); };
-  virtual void getTransactions(const std::vector<Crypto::Hash>& transactionHashes, std::vector<cn::TransactionDetails>& transactions, const Callback& callback) override { callback(std::error_code()); };
-  virtual void getTransactionsByPaymentId(const Crypto::Hash& paymentId, std::vector<cn::TransactionDetails>& transactions, const Callback& callback) override { callback(std::error_code()); };
+  virtual void getTransactions(const std::vector<crypto::Hash>& transactionHashes, std::vector<cn::TransactionDetails>& transactions, const Callback& callback) override { callback(std::error_code()); };
+  virtual void getTransactionsByPaymentId(const crypto::Hash& paymentId, std::vector<cn::TransactionDetails>& transactions, const Callback& callback) override { callback(std::error_code()); };
   virtual void getPoolTransactions(uint64_t timestampBegin, uint64_t timestampEnd, uint32_t transactionsNumberLimit, std::vector<cn::TransactionDetails>& transactions, uint64_t& transactionsNumberWithinTimestamps, const Callback& callback) override { callback(std::error_code()); };
   virtual void isSynchronized(bool& syncStatus, const Callback& callback) override { callback(std::error_code()); };
   virtual void getMultisignatureOutputByGlobalIndex(uint64_t amount, uint32_t gindex, cn::MultisignatureOutput& out, const Callback& callback) override { callback(std::error_code()); }
@@ -73,20 +73,20 @@ public:
   virtual uint32_t getLocalBlockCount() const override { return static_cast<uint32_t>(m_blockchainGenerator.getBlockchain().size()); }
   virtual uint32_t getKnownBlockCount() const override { return static_cast<uint32_t>(m_blockchainGenerator.getBlockchain().size()); }
 
-  virtual void getNewBlocks(std::vector<Crypto::Hash>&& knownBlockIds, std::vector<cn::block_complete_entry>& newBlocks, uint32_t& startHeight, const Callback& callback) override;
+  virtual void getNewBlocks(std::vector<crypto::Hash>&& knownBlockIds, std::vector<cn::block_complete_entry>& newBlocks, uint32_t& startHeight, const Callback& callback) override;
 
   virtual void relayTransaction(const cn::Transaction& transaction, const Callback& callback) override;
   virtual void getRandomOutsByAmounts(std::vector<uint64_t>&& amounts, uint64_t outsCount, std::vector<cn::COMMAND_RPC_GET_RANDOM_OUTPUTS_FOR_AMOUNTS::outs_for_amount>& result, const Callback& callback) override;
-  virtual void getTransactionOutsGlobalIndices(const Crypto::Hash& transactionHash, std::vector<uint32_t>& outsGlobalIndices, const Callback& callback) override;
-  virtual void queryBlocks(std::vector<Crypto::Hash>&& knownBlockIds, uint64_t timestamp, std::vector<cn::BlockShortEntry>& newBlocks, uint32_t& startHeight, const Callback& callback) override;
-  virtual void getPoolSymmetricDifference(std::vector<Crypto::Hash>&& known_pool_tx_ids, Crypto::Hash known_block_id, bool& is_bc_actual,
-          std::vector<std::unique_ptr<cn::ITransactionReader>>& new_txs, std::vector<Crypto::Hash>& deleted_tx_ids, const Callback& callback) override;
+  virtual void getTransactionOutsGlobalIndices(const crypto::Hash& transactionHash, std::vector<uint32_t>& outsGlobalIndices, const Callback& callback) override;
+  virtual void queryBlocks(std::vector<crypto::Hash>&& knownBlockIds, uint64_t timestamp, std::vector<cn::BlockShortEntry>& newBlocks, uint32_t& startHeight, const Callback& callback) override;
+  virtual void getPoolSymmetricDifference(std::vector<crypto::Hash>&& known_pool_tx_ids, crypto::Hash known_block_id, bool& is_bc_actual,
+          std::vector<std::unique_ptr<cn::ITransactionReader>>& new_txs, std::vector<crypto::Hash>& deleted_tx_ids, const Callback& callback) override;
 
   virtual void getBlocks(const std::vector<uint32_t>& blockHeights, std::vector<std::vector<cn::BlockDetails>>& blocks, const Callback& callback) override;
-  virtual void getBlocks(const std::vector<Crypto::Hash>& blockHashes, std::vector<cn::BlockDetails>& blocks, const Callback& callback) override;
+  virtual void getBlocks(const std::vector<crypto::Hash>& blockHashes, std::vector<cn::BlockDetails>& blocks, const Callback& callback) override;
   virtual void getBlocks(uint64_t timestampBegin, uint64_t timestampEnd, uint32_t blocksNumberLimit, std::vector<cn::BlockDetails>& blocks, uint32_t& blocksNumberWithinTimestamps, const Callback& callback) override;
-  virtual void getTransactions(const std::vector<Crypto::Hash>& transactionHashes, std::vector<cn::TransactionDetails>& transactions, const Callback& callback) override;
-  virtual void getTransactionsByPaymentId(const Crypto::Hash& paymentId, std::vector<cn::TransactionDetails>& transactions, const Callback& callback)  override;
+  virtual void getTransactions(const std::vector<crypto::Hash>& transactionHashes, std::vector<cn::TransactionDetails>& transactions, const Callback& callback) override;
+  virtual void getTransactionsByPaymentId(const crypto::Hash& paymentId, std::vector<cn::TransactionDetails>& transactions, const Callback& callback)  override;
   virtual void getPoolTransactions(uint64_t timestampBegin, uint64_t timestampEnd, uint32_t transactionsNumberLimit, std::vector<cn::TransactionDetails>& transactions, uint64_t& transactionsNumberWithinTimestamps, const Callback& callback)  override;
   virtual void isSynchronized(bool& syncStatus, const Callback& callback) override;
   virtual void getMultisignatureOutputByGlobalIndex(uint64_t amount, uint32_t gindex, cn::MultisignatureOutput& out, const Callback& callback) override;
@@ -104,29 +104,29 @@ public:
   void sendPoolChanged();
   void sendLocalBlockchainUpdated();
 
-  std::vector<Crypto::Hash> calls_getTransactionOutsGlobalIndices;
+  std::vector<crypto::Hash> calls_getTransactionOutsGlobalIndices;
 
   virtual ~INodeTrivialRefreshStub();
 
-  std::function<void(const Crypto::Hash&, std::vector<uint32_t>&)> getGlobalOutsFunctor = [](const Crypto::Hash&, std::vector<uint32_t>&) {};
+  std::function<void(const crypto::Hash&, std::vector<uint32_t>&)> getGlobalOutsFunctor = [](const crypto::Hash&, std::vector<uint32_t>&) {};
 
   void waitForAsyncContexts();
 
 protected:
-  void doGetNewBlocks(std::vector<Crypto::Hash> knownBlockIds, std::vector<cn::block_complete_entry>& newBlocks,
+  void doGetNewBlocks(std::vector<crypto::Hash> knownBlockIds, std::vector<cn::block_complete_entry>& newBlocks,
           uint32_t& startHeight, std::vector<cn::Block> blockchain, const Callback& callback);
-  void doGetTransactionOutsGlobalIndices(const Crypto::Hash& transactionHash, std::vector<uint32_t>& outsGlobalIndices, const Callback& callback);
+  void doGetTransactionOutsGlobalIndices(const crypto::Hash& transactionHash, std::vector<uint32_t>& outsGlobalIndices, const Callback& callback);
   void doRelayTransaction(const cn::Transaction& transaction, const Callback& callback);
   void doGetRandomOutsByAmounts(std::vector<uint64_t> amounts, uint64_t outsCount, std::vector<cn::COMMAND_RPC_GET_RANDOM_OUTPUTS_FOR_AMOUNTS::outs_for_amount>& result, const Callback& callback);
-  void doGetPoolSymmetricDifference(std::vector<Crypto::Hash>&& known_pool_tx_ids, Crypto::Hash known_block_id, bool& is_bc_actual,
-          std::vector<std::unique_ptr<cn::ITransactionReader>>& new_txs, std::vector<Crypto::Hash>& deleted_tx_ids, const Callback& callback);
+  void doGetPoolSymmetricDifference(std::vector<crypto::Hash>&& known_pool_tx_ids, crypto::Hash known_block_id, bool& is_bc_actual,
+          std::vector<std::unique_ptr<cn::ITransactionReader>>& new_txs, std::vector<crypto::Hash>& deleted_tx_ids, const Callback& callback);
 
   void doGetBlocks(const std::vector<uint32_t>& blockHeights, std::vector<std::vector<cn::BlockDetails>>& blocks, const Callback& callback);
-  void doGetBlocks(const std::vector<Crypto::Hash>& blockHashes, std::vector<cn::BlockDetails>& blocks, const Callback& callback);
+  void doGetBlocks(const std::vector<crypto::Hash>& blockHashes, std::vector<cn::BlockDetails>& blocks, const Callback& callback);
   void doGetBlocks(uint64_t timestampBegin, uint64_t timestampEnd, uint32_t blocksNumberLimit, std::vector<cn::BlockDetails>& blocks, uint32_t& blocksNumberWithinTimestamps, const Callback& callback);
-  void doGetTransactions(const std::vector<Crypto::Hash>& transactionHashes, std::vector<cn::TransactionDetails>& transactions, const Callback& callback);
+  void doGetTransactions(const std::vector<crypto::Hash>& transactionHashes, std::vector<cn::TransactionDetails>& transactions, const Callback& callback);
   void doGetPoolTransactions(uint64_t timestampBegin, uint64_t timestampEnd, uint32_t transactionsNumberLimit, std::vector<cn::TransactionDetails>& transactions, uint64_t& transactionsNumberWithinTimestamps, const Callback& callback);
-  void doGetTransactionsByPaymentId(const Crypto::Hash& paymentId, std::vector<cn::TransactionDetails>& transactions, const Callback& callback);
+  void doGetTransactionsByPaymentId(const crypto::Hash& paymentId, std::vector<cn::TransactionDetails>& transactions, const Callback& callback);
   void doGetOutByMSigGIndex(uint64_t amount, uint32_t gindex, cn::MultisignatureOutput& out, const Callback& callback);
 
 
