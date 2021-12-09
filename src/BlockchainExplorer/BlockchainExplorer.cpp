@@ -131,11 +131,11 @@ private:
 };
 
 BlockchainExplorer::BlockchainExplorer(INode& node, Logging::ILogger& logger) :
+  synchronized(false),
+  observersCounter(0),
   node(node),
   logger(logger, "BlockchainExplorer"),
-  state(NOT_INITIALIZED),
-  synchronized(false),
-  observersCounter(0) {
+  state(NOT_INITIALIZED) {
 }
 
 BlockchainExplorer::~BlockchainExplorer() {}

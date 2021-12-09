@@ -168,13 +168,14 @@ namespace
 
 namespace CryptoNote
 {
-  WalletTransactionSender::WalletTransactionSender(const Currency &currency, WalletUserTransactionsCache &transactionsCache, AccountKeys keys, ITransfersContainer &transfersContainer, INode &node) : m_currency(currency),
-                                                                                                                                                                                                       m_transactionsCache(transactionsCache),
-                                                                                                                                                                                                       m_isStoping(false),
-                                                                                                                                                                                                       m_keys(keys),
-                                                                                                                                                                                                       m_transferDetails(transfersContainer),
-                                                                                                                                                                                                       m_upperTransactionSizeLimit(m_currency.transactionMaxSize()),
-                                                                                                                                                                                                       m_node(node)
+  WalletTransactionSender::WalletTransactionSender(const Currency &currency, WalletUserTransactionsCache &transactionsCache, AccountKeys keys, ITransfersContainer &transfersContainer, INode &node) :
+    m_currency(currency),
+    m_isStoping(false),
+    m_transferDetails(transfersContainer),
+    m_transactionsCache(transactionsCache),
+    m_upperTransactionSizeLimit(m_currency.transactionMaxSize()),
+    m_keys(keys),
+    m_node(node)
   {
   }
 

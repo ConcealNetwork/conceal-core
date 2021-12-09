@@ -29,10 +29,10 @@ LoggerMessage::~LoggerMessage() {
 LoggerMessage::LoggerMessage(LoggerMessage&& other)
   : std::ostream(std::move(other))
   , std::streambuf(std::move(other))
+  , message(other.message)
   , category(other.category)
   , logLevel(other.logLevel)
   , logger(other.logger)
-  , message(other.message)
   , timestamp(boost::posix_time::microsec_clock::local_time())
   , gotText(false) {
   this->set_rdbuf(this);

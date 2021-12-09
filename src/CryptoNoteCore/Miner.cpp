@@ -37,18 +37,18 @@ namespace CryptoNote
     m_stop(true),
     m_template(boost::value_initialized<Block>()),
     m_template_no(0),
-    m_diffic(0),
     m_handler(handler),
-    m_pausers_count(0),
-    m_threads_total(0),
     m_starter_nonce(0),
-    m_last_hr_merge_time(0),
-    m_hashes(0),
+    m_threads_total(0),
+    m_pausers_count(0),
+    m_diffic(0),
     m_do_print_hashrate(false),
     m_do_mining(false),
-    m_current_hash_rate(0),
     m_update_block_template_interval(5),
-    m_update_merge_hr_interval(2)
+    m_update_merge_hr_interval(2),
+    m_current_hash_rate(0),
+    m_last_hr_merge_time(0),
+    m_hashes(0)
   {
   }
   //-----------------------------------------------------------------------------------------------------

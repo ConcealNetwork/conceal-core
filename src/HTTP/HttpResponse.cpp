@@ -10,37 +10,37 @@
 
 namespace {
 
-const char* getStatusString(CryptoNote::HttpResponse::HTTP_STATUS status) {
-  switch (status) {
-  case CryptoNote::HttpResponse::STATUS_200:
-    return "200 OK";
-  case CryptoNote::HttpResponse::STATUS_401:
-    return "401 Unauthorized";
-  case CryptoNote::HttpResponse::STATUS_404:
-    return "404 Not Found";
-  case CryptoNote::HttpResponse::STATUS_500:
-    return "500 Internal Server Error";
-  default:
-    throw std::runtime_error("Unknown HTTP status code is given");
+  const char *getStatusString(CryptoNote::HttpResponse::HTTP_STATUS status)
+  {
+    switch (status)
+    {
+    case CryptoNote::HttpResponse::STATUS_200:
+      return "200 OK";
+    case CryptoNote::HttpResponse::STATUS_401:
+      return "401 Unauthorized";
+    case CryptoNote::HttpResponse::STATUS_404:
+      return "404 Not Found";
+    case CryptoNote::HttpResponse::STATUS_500:
+      return "500 Internal Server Error";
+    default:
+      throw std::runtime_error("Unknown HTTP status code is given");
+    }
   }
 
-  return ""; //unaccessible
-}
-
-const char* getErrorBody(CryptoNote::HttpResponse::HTTP_STATUS status) {
-  switch (status) {
-  case CryptoNote::HttpResponse::STATUS_401:
-    return "Authorization required\n";
-  case CryptoNote::HttpResponse::STATUS_404:
-    return "Requested url is not found\n";
-  case CryptoNote::HttpResponse::STATUS_500:
-    return "Internal server error is occurred\n";
-  default:
-    throw std::runtime_error("Error body for given status is not available");
+  const char *getErrorBody(CryptoNote::HttpResponse::HTTP_STATUS status)
+  {
+    switch (status)
+    {
+    case CryptoNote::HttpResponse::STATUS_401:
+      return "Authorization required\n";
+    case CryptoNote::HttpResponse::STATUS_404:
+      return "Requested url is not found\n";
+    case CryptoNote::HttpResponse::STATUS_500:
+      return "Internal server error is occurred\n";
+    default:
+      throw std::runtime_error("Error body for given status is not available");
+    }
   }
-
-  return ""; //unaccessible
-}
 
 } //namespace
 
