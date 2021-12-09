@@ -48,6 +48,7 @@ For example if you have 8GB of RAM, then your SWAP size should be 5GB
 ```
 
 - Rasberry Pi OS
+
 ```bash
 	sudo dphys-swapfile swapoff
 	sudo nano /etc/dphys-swapfile
@@ -63,6 +64,7 @@ For example if you have 8GB of RAM, then your SWAP size should be 5GB
 #### Prerequisites
 
 - You will need the following dependencies to build the Conceal CLI: boost, cmake, git, gcc, g++, python, and make:
+
 ```bash
 	sudo apt update
 	sudo apt-get install -y build-essential python-dev gcc g++ git cmake libboost-all-dev
@@ -71,6 +73,7 @@ For example if you have 8GB of RAM, then your SWAP size should be 5GB
 #### Building
 
 - On Ubuntu:
+
 ```bash
 	git clone https://github.com/ConcealNetwork/conceal-core
 	cd conceal-core
@@ -101,6 +104,7 @@ Other ARM CPU/OS combinations should be possible if the CPU supports Neon/AES.
 #### Building
 
 - From the start menu, open 'x64 Native Tools Command Prompt for vs2019' or run "C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\Common7\Tools\VsMSBuildCmd.bat" from any command prompt.
+
 ```ps
 	git clone https://github.com/ConcealNetwork/conceal-core
 	cd conceal-core
@@ -117,6 +121,7 @@ If the build is successful the binaries will be in the `src/Release` folder.
 
 - In order to install prerequisites, [XCode](https://developer.apple.com/xcode/) and [Homebrew](https://brew.sh/) needs to be installed.
 Once both are ready, open Terminal app and run the following command to install additional tools:
+
 ```bash
 	xcode-select --install
 ```
@@ -124,6 +129,7 @@ Once both are ready, open Terminal app and run the following command to install 
 - On newer macOS versions (v10.14 and higher) this step is done through Software Update in System Preferences.
 
 - After that, proceed with installing dependencies:
+
 ```bash
 	brew install git python cmake gcc boost
 ```
@@ -132,6 +138,7 @@ Once both are ready, open Terminal app and run the following command to install 
 #### Building
 
 - When all dependencies are installed, build Conceal Core binaries:
+
 ```bash
 	git clone https://github.com/ConcealNetwork/conceal-core
 	cd conceal-core
