@@ -64,6 +64,31 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
+      - name: core_tests
+        shell: powershell
+        run: |
+          cd build/bin
+          ./core_tests.exe --generate_and_play_test_data
+
+      - name: difficulty_tests
+        shell: powershell
+        run: |
+          cp tests/Difficulty/data.txt build/bin
+          cd build/bin
+          ./difficulty_tests.exe data.txt
+
+      - name: performance_tests
+        shell: powershell
+        run: |
+          cd build/bin
+          ./performance_tests.exe
+
+      - name: system_tests
+        shell: powershell
+        run: |
+          cd build/bin
+          ./system_tests.exe
+
   build-ubuntu18:
     name: Ubuntu 18.04
     runs-on: ubuntu-18.04
@@ -107,6 +132,27 @@ jobs:
           path: build/bin
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: core_tests
+        run: |
+          cd build/bin
+          ./core_tests --generate_and_play_test_data
+
+      - name: difficulty_tests
+        run: |
+          cp tests/Difficulty/data.txt build/bin
+          cd build/bin
+          ./difficulty_tests data.txt
+
+      - name: performance_tests
+        run: |
+          cd build/bin
+          ./performance_tests
+
+      - name: system_tests
+        run: |
+          cd build/bin
+          ./system_tests
 
   build-ubuntu20:
     name: Ubuntu 20.04
@@ -152,6 +198,27 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
+      - name: core_tests
+        run: |
+          cd build/bin
+          ./core_tests --generate_and_play_test_data
+
+      - name: difficulty_tests
+        run: |
+          cp tests/Difficulty/data.txt build/bin
+          cd build/bin
+          ./difficulty_tests data.txt
+
+      - name: performance_tests
+        run: |
+          cd build/bin
+          ./performance_tests
+
+      - name: system_tests
+        run: |
+          cd build/bin
+          ./system_tests
+
   build-ubuntu20-clang:
     name: Ubuntu 20.04 clang
     runs-on: ubuntu-20.04
@@ -196,6 +263,27 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
+      - name: core_tests
+        run: |
+          cd build/bin
+          ./core_tests --generate_and_play_test_data
+
+      - name: difficulty_tests
+        run: |
+          cp tests/Difficulty/data.txt build/bin
+          cd build/bin
+          ./difficulty_tests data.txt
+
+      - name: performance_tests
+        run: |
+          cd build/bin
+          ./performance_tests
+
+      - name: system_tests
+        run: |
+          cd build/bin
+          ./system_tests
+
   build-macos11:
     name: macOS
     runs-on: macos-11
@@ -238,3 +326,24 @@ jobs:
           path: build/bin
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: core_tests
+        run: |
+          cd build/bin
+          ./core_tests --generate_and_play_test_data
+
+      - name: difficulty_tests
+        run: |
+          cp tests/Difficulty/data.txt build/bin
+          cd build/bin
+          ./difficulty_tests data.txt
+
+      - name: performance_tests
+        run: |
+          cd build/bin
+          ./performance_tests
+
+      - name: system_tests
+        run: |
+          cd build/bin
+          ./system_tests
