@@ -35,13 +35,13 @@ public:
   }
 
   bool test() {
-    Crypto::Hash hash;
-    Crypto::cn_slow_hash_v0(m_context, &m_data, sizeof(m_data), hash);
+    crypto::Hash hash;
+    crypto::cn_slow_hash_v0(m_context, &m_data, sizeof(m_data), hash);
     return hash == m_expected_hash;
   }
 
 private:
   data_t m_data;
-  Crypto::Hash m_expected_hash;
-  Crypto::cn_context m_context;
+  crypto::Hash m_expected_hash;
+  crypto::cn_context m_context;
 };

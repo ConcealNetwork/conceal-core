@@ -13,7 +13,7 @@
 #include "System/Event.h"
 #include "System/InterruptedException.h"
 
-namespace CryptoNote {
+namespace cn {
 
 template<class MessageType> class MessageQueue {
 public:

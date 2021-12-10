@@ -43,8 +43,8 @@ bool ConfigurationManager::init(int argc, char** argv) {
   Configuration::initOptions(confGeneralOptions);
 
   po::options_description netNodeOptions("Local Node Options");
-  CryptoNote::NetNodeConfig::initOptions(netNodeOptions);
-  CryptoNote::CoreConfig::initOptions(netNodeOptions);
+  cn::NetNodeConfig::initOptions(netNodeOptions);
+  cn::CoreConfig::initOptions(netNodeOptions);
 
   po::options_description remoteNodeOptions("Daemon Options");
   RpcNodeConfiguration::initOptions(remoteNodeOptions);

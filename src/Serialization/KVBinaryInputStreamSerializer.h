@@ -10,7 +10,7 @@
 #include "ISerializer.h"
 #include "JsonInputValueSerializer.h"
 
-namespace CryptoNote {
+namespace cn {
 
 class KVBinaryInputStreamSerializer : public JsonInputValueSerializer {
 public:

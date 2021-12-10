@@ -19,8 +19,8 @@
 
 #include "../IntegrationTestLib/TestWalletLegacy.h"
 
-using namespace CryptoNote;
-using namespace Crypto;
+using namespace cn;
+using namespace crypto;
 using namespace Tests::Common;
 
 
@@ -82,14 +82,14 @@ public:
     return true;
   }
 
-  std::error_code onPoolUpdated(const std::vector<std::unique_ptr<ITransactionReader>>& addedTransactions, const std::vector<Crypto::Hash>& deletedTransactions) override {
+  std::error_code onPoolUpdated(const std::vector<std::unique_ptr<ITransactionReader>>& addedTransactions, const std::vector<crypto::Hash>& deletedTransactions) override {
     //stub
     return std::error_code();
   }
 
-  const std::unordered_set<Crypto::Hash>& getKnownPoolTxIds() const override {
+  const std::unordered_set<crypto::Hash>& getKnownPoolTxIds() const override {
     //stub
-    static std::unordered_set<Crypto::Hash> empty;
+    static std::unordered_set<crypto::Hash> empty;
     return empty;
   }
 
@@ -97,7 +97,7 @@ public:
     throw std::runtime_error("Not implemented");
   }
 
-  void removeUnconfirmedTransaction(const Crypto::Hash& /*transactionHash*/) override {
+  void removeUnconfirmedTransaction(const crypto::Hash& /*transactionHash*/) override {
     throw std::runtime_error("Not implemented");
   }
 
@@ -195,7 +195,7 @@ public:
     m_sync(sync) {}
 
   void generateAccounts(size_t count) {
-    CryptoNote::AccountBase acc;
+    cn::AccountBase acc;
 
     while (count--) {
       acc.generate();
@@ -293,13 +293,13 @@ TEST_F(TransfersTest, base) {
 
   launchTestnet(2);
 
-  std::unique_ptr<CryptoNote::INode> node1;
-  std::unique_ptr<CryptoNote::INode> node2;
+  std::unique_ptr<cn::INode> node1;
+  std::unique_ptr<cn::INode> node2;
 
   nodeDaemons[0]->makeINode(node1);
   nodeDaemons[1]->makeINode(node2);
 
-  CryptoNote::AccountBase dstAcc;
+  cn::AccountBase dstAcc;
   dstAcc.generate();
   Logging::ConsoleLogger m_logger; 
   AccountKeys dstKeys = reinterpret_cast<const AccountKeys&>(dstAcc.getAccountKeys());
@@ -408,7 +408,7 @@ std::unique_ptr<ITransaction> createTransferToMultisignature(
 std::error_code submitTransaction(INode& node, ITransactionReader& tx) {
   auto data = tx.getTransactionData();
 
-  CryptoNote::Transaction outTx;
+  cn::Transaction outTx;
   fromBinaryArray(outTx, data);
 
 
@@ -465,8 +465,8 @@ std::unique_ptr<ITransaction> createTransferFromMultisignature(
 
 TEST_F(MultisignatureTest, createMulitisignatureTransaction) {
 
-  std::unique_ptr<CryptoNote::INode> node1;
-  std::unique_ptr<CryptoNote::INode> node2;
+  std::unique_ptr<cn::INode> node1;
+  std::unique_ptr<cn::INode> node2;
 
   nodeDaemons[0]->makeINode(node1);
   nodeDaemons[1]->makeINode(node2);

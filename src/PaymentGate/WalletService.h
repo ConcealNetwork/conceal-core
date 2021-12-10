@@ -22,7 +22,7 @@
 #include <boost/multi_index/member.hpp>
 #include <boost/multi_index/hashed_index.hpp>
 
-namespace CryptoNote
+namespace cn
 {
 class IFusionManager;
 }
@@ -38,14 +38,14 @@ struct WalletConfiguration
   std::string secretViewKey;
 };
 
-void generateNewWallet(const CryptoNote::Currency &currency, const WalletConfiguration &conf, Logging::ILogger &logger, System::Dispatcher &dispatcher);
+void generateNewWallet(const cn::Currency &currency, const WalletConfiguration &conf, Logging::ILogger &logger, System::Dispatcher &dispatcher);
 
 struct TransactionsInBlockInfoFilter;
 
 class WalletService
 {
 public:
-  WalletService(const CryptoNote::Currency &currency, System::Dispatcher &sys, CryptoNote::INode &node, CryptoNote::IWallet &wallet, CryptoNote::IFusionManager &fusionManager, const WalletConfiguration &conf, Logging::ILogger &logger);
+  WalletService(const cn::Currency &currency, System::Dispatcher &sys, cn::INode &node, cn::IWallet &wallet, cn::IFusionManager &fusionManager, const WalletConfiguration &conf, Logging::ILogger &logger);
   virtual ~WalletService();
 
   void init();
@@ -103,24 +103,24 @@ private:
   void loadWallet();
   void loadTransactionIdIndex();
 
-  void replaceWithNewWallet(const Crypto::SecretKey &viewSecretKey);
+  void replaceWithNewWallet(const crypto::SecretKey &viewSecretKey);
 
-  std::vector<CryptoNote::TransactionsInBlockInfo> getTransactions(const Crypto::Hash &blockHash, size_t blockCount) const;
-  std::vector<CryptoNote::TransactionsInBlockInfo> getTransactions(uint32_t firstBlockIndex, size_t blockCount) const;
+  std::vector<cn::TransactionsInBlockInfo> getTransactions(const crypto::Hash &blockHash, size_t blockCount) const;
+  std::vector<cn::TransactionsInBlockInfo> getTransactions(uint32_t firstBlockIndex, size_t blockCount) const;
 
-  std::vector<CryptoNote::DepositsInBlockInfo> getDeposits(const Crypto::Hash &blockHash, size_t blockCount) const;
-  std::vector<CryptoNote::DepositsInBlockInfo> getDeposits(uint32_t firstBlockIndex, size_t blockCount) const;
+  std::vector<cn::DepositsInBlockInfo> getDeposits(const crypto::Hash &blockHash, size_t blockCount) const;
+  std::vector<cn::DepositsInBlockInfo> getDeposits(uint32_t firstBlockIndex, size_t blockCount) const;
 
-  std::vector<TransactionHashesInBlockRpcInfo> getRpcTransactionHashes(const Crypto::Hash &blockHash, size_t blockCount, const TransactionsInBlockInfoFilter &filter) const;
+  std::vector<TransactionHashesInBlockRpcInfo> getRpcTransactionHashes(const crypto::Hash &blockHash, size_t blockCount, const TransactionsInBlockInfoFilter &filter) const;
   std::vector<TransactionHashesInBlockRpcInfo> getRpcTransactionHashes(uint32_t firstBlockIndex, size_t blockCount, const TransactionsInBlockInfoFilter &filter) const;
 
-  std::vector<TransactionsInBlockRpcInfo> getRpcTransactions(const Crypto::Hash &blockHash, size_t blockCount, const TransactionsInBlockInfoFilter &filter) const;
+  std::vector<TransactionsInBlockRpcInfo> getRpcTransactions(const crypto::Hash &blockHash, size_t blockCount, const TransactionsInBlockInfoFilter &filter) const;
   std::vector<TransactionsInBlockRpcInfo> getRpcTransactions(uint32_t firstBlockIndex, size_t blockCount, const TransactionsInBlockInfoFilter &filter) const;
 
-  const CryptoNote::Currency &currency;
-  CryptoNote::IWallet &wallet;
-  CryptoNote::IFusionManager &fusionManager;
-  CryptoNote::INode &node;
+  const cn::Currency &currency;
+  cn::IWallet &wallet;
+  cn::IFusionManager &fusionManager;
+  cn::INode &node;
   const WalletConfiguration &config;
   bool inited;
   Logging::LoggerRef logger;

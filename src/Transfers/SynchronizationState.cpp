@@ -14,7 +14,7 @@
 
 using namespace Common;
 
-namespace CryptoNote {
+namespace cn {
 
 SynchronizationState::ShortHistory SynchronizationState::getShortHistory(uint32_t localHeight) const {
   ShortHistory history;
@@ -81,7 +81,7 @@ void SynchronizationState::detach(uint32_t height) {
   m_blockchain.resize(height);
 }
 
-void SynchronizationState::addBlocks(const Crypto::Hash* blockHashes, uint32_t height, uint32_t count) {
+void SynchronizationState::addBlocks(const crypto::Hash* blockHashes, uint32_t height, uint32_t count) {
   assert(blockHashes);
   auto size = m_blockchain.size();
   assert( size == height);
@@ -92,23 +92,23 @@ uint32_t SynchronizationState::getHeight() const {
   return static_cast<uint32_t>(m_blockchain.size());
 }
 
-const std::vector<Crypto::Hash>& SynchronizationState::getKnownBlockHashes() const {
+const std::vector<crypto::Hash>& SynchronizationState::getKnownBlockHashes() const {
   return m_blockchain;
 }
 
 void SynchronizationState::save(std::ostream& os) {
   StdOutputStream stream(os);
-  CryptoNote::BinaryOutputStreamSerializer s(stream);
+  cn::BinaryOutputStreamSerializer s(stream);
   serialize(s, "state");
 }
 
 void SynchronizationState::load(std::istream& in) {
   StdInputStream stream(in);
-  CryptoNote::BinaryInputStreamSerializer s(stream);
+  cn::BinaryInputStreamSerializer s(stream);
   serialize(s, "state");
 }
 
-CryptoNote::ISerializer& SynchronizationState::serialize(CryptoNote::ISerializer& s, const std::string& name) {
+cn::ISerializer& SynchronizationState::serialize(cn::ISerializer& s, const std::string& name) {
   s.beginObject(name);
   s(m_blockchain, "blockchain");
   s.endObject();

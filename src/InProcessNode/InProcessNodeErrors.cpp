@@ -6,10 +6,10 @@
 
 #include "InProcessNodeErrors.h"
 
-namespace CryptoNote {
+namespace cn {
 namespace error {
 
 InProcessNodeErrorCategory InProcessNodeErrorCategory::INSTANCE;
 
 } //namespace error
-} //namespace CryptoNote
+} //namespace cn

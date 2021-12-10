@@ -17,7 +17,7 @@
 #include "CryptoNoteConfig.h"
 #include <Logging/LoggerRef.h>
 
-namespace CryptoNote {
+namespace cn {
   class UpgradeDetectorBase {
   public:
     enum : uint32_t {
@@ -25,7 +25,7 @@ namespace CryptoNote {
     };
   };
 
-  static_assert(CryptoNote::UpgradeDetectorBase::UNDEF_HEIGHT == UINT32_C(0xFFFFFFFF), "UpgradeDetectorBase::UNDEF_HEIGHT has invalid value");
+  static_assert(cn::UpgradeDetectorBase::UNDEF_HEIGHT == UINT32_C(0xFFFFFFFF), "UpgradeDetectorBase::UNDEF_HEIGHT has invalid value");
 
   template <typename BC>
   class BasicUpgradeDetector : public UpgradeDetectorBase {

@@ -31,5 +31,5 @@ private:
 
   Logging::LoggerRef m_logger;
 
-  Crypto::Hash requestLastBlockHash();
+  crypto::Hash requestLastBlockHash();
 };

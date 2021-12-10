@@ -14,7 +14,7 @@
 
 #undef ERROR
 
-using namespace CryptoNote;
+using namespace cn;
 using namespace Logging;
 
 inline std::string shortAddress(const std::string &addr)
@@ -25,7 +25,7 @@ inline std::string shortAddress(const std::string &addr)
 class MultiVersionTest : Tests::Common::BaseFunctionalTests
 {
 public:
-  MultiVersionTest(const CryptoNote::Currency &currency, System::Dispatcher &d, const Tests::Common::BaseFunctionalTestsConfig &config, Logging::ILogger &log) : BaseFunctionalTests(currency, d, config), m_config(config), m_nodeCount(config.daemons.size()), logger(log, "MultiVersion") {}
+  MultiVersionTest(const cn::Currency &currency, System::Dispatcher &d, const Tests::Common::BaseFunctionalTestsConfig &config, Logging::ILogger &log) : BaseFunctionalTests(currency, d, config), m_config(config), m_nodeCount(config.daemons.size()), logger(log, "MultiVersion") {}
 
   void run()
   {
@@ -42,7 +42,7 @@ public:
     miningTest();
 
     // create some address for mining
-    CryptoNote::AccountBase stashAddress;
+    cn::AccountBase stashAddress;
     stashAddress.generate();
     auto stashAddressStr = m_currency.accountAddressAsString(stashAddress);
 
@@ -64,17 +64,17 @@ public:
       {
         if (i != wi)
         {
-          CryptoNote::WalletLegacyTransfer transfer;
+          cn::WalletLegacyTransfer transfer;
           transfer.address = m_wallets[wi]->getAddress();
           transfer.amount = (i * 1000 + wi * 100) * m_currency.coin();
           logger(INFO, BRIGHT_YELLOW) << "Sending from " << shortAddress(srcWallet.getAddress()) << " to " << shortAddress(transfer.address) << " amount = " << m_currency.formatAmount(transfer.amount);
-          std::vector<CryptoNote::TransactionMessage> messages;
+          std::vector<cn::TransactionMessage> messages;
           std::string extraString;
-          uint64_t fee = CryptoNote::parameters::MINIMUM_FEE_V2;
+          uint64_t fee = cn::parameters::MINIMUM_FEE_V2;
           uint64_t mixIn = 0;
           uint64_t unlockTimestamp = 0;
           uint64_t ttl = 0;
-          Crypto::SecretKey transactionSK;
+          crypto::SecretKey transactionSK;
           auto txid = srcWallet.sendTransaction(transactionSK, transfer, fee, extraString, mixIn, unlockTimestamp, messages, ttl);
 
           balances[i] -= transfer.amount + m_currency.minimumFee();
@@ -260,7 +260,7 @@ private:
   Logging::LoggerRef logger;
 };
 
-void testMultiVersion(const CryptoNote::Currency &currency, System::Dispatcher &d, const Tests::Common::BaseFunctionalTestsConfig &config)
+void testMultiVersion(const cn::Currency &currency, System::Dispatcher &d, const Tests::Common::BaseFunctionalTestsConfig &config)
 {
   Logging::ConsoleLogger log;
   MultiVersionTest test(currency, d, config, log);

@@ -19,14 +19,14 @@
 #include "WalletLegacy/WalletLegacyEvent.h"
 #include "WalletLegacy/WalletUnconfirmedTransactions.h"
 
-namespace CryptoNote {
+namespace cn {
 class ISerializer;
 }
 
 namespace std {
   template<>
-  struct hash<std::tuple<Crypto::Hash, uint32_t>> {
-    size_t operator()(const std::tuple<Crypto::Hash, uint32_t>& item) const {
+  struct hash<std::tuple<crypto::Hash, uint32_t>> {
+    size_t operator()(const std::tuple<crypto::Hash, uint32_t>& item) const {
       size_t hash = 0;
       boost::hash_combine(hash, std::get<0>(item));
       boost::hash_combine(hash, std::get<1>(item));
@@ -35,7 +35,7 @@ namespace std {
   };
 }
 
-namespace CryptoNote {
+namespace cn {
 
 typedef std::vector<DepositInfo> UserDeposits;
 
@@ -44,8 +44,8 @@ class WalletUserTransactionsCache
 public:
   explicit WalletUserTransactionsCache(uint64_t mempoolTxLiveTime = 60 * 60 * 24);
 
-  bool serialize(CryptoNote::ISerializer& serializer);
-  void deserializeLegacyV1(CryptoNote::ISerializer& serializer);
+  bool serialize(cn::ISerializer& serializer);
+  void deserializeLegacyV1(cn::ISerializer& serializer);
 
   uint64_t unconfirmedTransactionsAmount() const;
   uint64_t unconfrimedOutsAmount() const;
@@ -64,20 +64,20 @@ public:
                                   uint64_t unlockTime,
                                   const std::vector<TransactionMessage>& messages);
   void updateTransaction(TransactionId transactionId,
-                         const CryptoNote::Transaction& tx,
+                         const cn::Transaction& tx,
                          uint64_t amount,
                          const std::vector<TransactionOutputInformation>& usedOutputs);
   void updateTransactionSendingState(TransactionId transactionId, std::error_code ec);
 
   void addCreatedDeposit(DepositId id, uint64_t totalAmount);
-  void addDepositSpendingTransaction(const Crypto::Hash& transactionHash, const UnconfirmedSpentDepositDetails& details);
+  void addDepositSpendingTransaction(const crypto::Hash& transactionHash, const UnconfirmedSpentDepositDetails& details);
 
   std::deque<std::unique_ptr<WalletLegacyEvent>> onTransactionUpdated(const TransactionInformation& txInfo,
                                                                       int64_t txBalance,
                                                                       const std::vector<TransactionOutputInformation>& newDeposits,
                                                                       const std::vector<TransactionOutputInformation>& spentDeposits,
                                                                       const Currency& currency);
-  std::deque<std::unique_ptr<WalletLegacyEvent>> onTransactionDeleted(const Crypto::Hash& transactionHash);
+  std::deque<std::unique_ptr<WalletLegacyEvent>> onTransactionDeleted(const crypto::Hash& transactionHash);
 
   std::vector<DepositId> unlockDeposits(const std::vector<TransactionOutputInformation>& transfers);
   std::vector<DepositId> lockDeposits(const std::vector<TransactionOutputInformation>& transfers);
@@ -96,11 +96,11 @@ public:
 
   std::vector<TransactionId> deleteOutdatedTransactions();
 
-  DepositId insertDeposit(const Deposit& deposit, size_t depositIndexInTransaction, const Crypto::Hash& transactionHash);
-  bool getDepositInTransactionInfo(DepositId depositId, Crypto::Hash& transactionHash, uint32_t& outputInTransaction);
+  DepositId insertDeposit(const Deposit& deposit, size_t depositIndexInTransaction, const crypto::Hash& transactionHash);
+  bool getDepositInTransactionInfo(DepositId depositId, crypto::Hash& transactionHash, uint32_t& outputInTransaction);
 
   std::vector<Payments> getTransactionsByPaymentIds(const std::vector<PaymentId>& paymentIds) const;
-  TransactionId findTransactionByHash(const Crypto::Hash& hash);
+  TransactionId findTransactionByHash(const crypto::Hash& hash);
 private:
 
 
@@ -117,7 +117,7 @@ private:
                              TransactionId creatingTransactionId,
                              const Currency& currency, uint32_t height);
   std::vector<DepositId> processSpentDeposits(TransactionId spendingTransactionId, const std::vector<TransactionOutputInformation>& spentDepositOutputs);
-  DepositId getDepositId(const Crypto::Hash& creatingTransactionHash, uint32_t outputInTransaction);
+  DepositId getDepositId(const crypto::Hash& creatingTransactionHash, uint32_t outputInTransaction);
 
   std::vector<DepositId> getDepositIdsBySpendingTransaction(TransactionId transactionId);
 
@@ -139,8 +139,8 @@ private:
   UserDeposits m_deposits;
   WalletUnconfirmedTransactions m_unconfirmedTransactions;
   //tuple<Creating transaction hash, outputIndexInTransaction> -> depositId
-  std::unordered_map<std::tuple<Crypto::Hash, uint32_t>, DepositId> m_transactionOutputToDepositIndex;
+  std::unordered_map<std::tuple<crypto::Hash, uint32_t>, DepositId> m_transactionOutputToDepositIndex;
   UserPaymentIndex m_paymentsIndex;
 };
 
-} //namespace CryptoNote
+} //namespace cn

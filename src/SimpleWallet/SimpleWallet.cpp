@@ -51,7 +51,7 @@
 #include <crtdbg.h>
 #endif
 
-using namespace CryptoNote;
+using namespace cn;
 using namespace Logging;
 using Common::JsonValue;
 
@@ -138,16 +138,16 @@ private:
 };
 
 struct TransferCommand {
-  const CryptoNote::Currency& m_currency;
+  const cn::Currency& m_currency;
   size_t fake_outs_count;
-  std::vector<CryptoNote::WalletLegacyTransfer> dsts;
+  std::vector<cn::WalletLegacyTransfer> dsts;
   std::vector<uint8_t> extra;
   uint64_t fee;
   std::map<std::string, std::vector<WalletLegacyTransfer>> aliases;
   std::vector<std::string> messages;
   uint64_t ttl;
 
-  TransferCommand(const CryptoNote::Currency& currency) :
+  TransferCommand(const cn::Currency& currency) :
     m_currency(currency), fake_outs_count(0), fee(currency.minimumFeeV2()), ttl(0) {
   }
 
@@ -204,21 +204,21 @@ struct TransferCommand {
 
             /* create the address from the public keys */
             std::string keys = decoded.substr(paymentIDLen, std::string::npos);
-            CryptoNote::AccountPublicAddress addr;
-            CryptoNote::BinaryArray ba = Common::asBinaryArray(keys);
+            cn::AccountPublicAddress addr;
+            cn::BinaryArray ba = Common::asBinaryArray(keys);
 
-            if (!CryptoNote::fromBinaryArray(addr, ba)) {
+            if (!cn::fromBinaryArray(addr, ba)) {
               return true;
             }
 
-            std::string address = CryptoNote::getAccountAddressAsStr(CryptoNote::parameters::CRYPTONOTE_PUBLIC_ADDRESS_BASE58_PREFIX, 
+            std::string address = cn::getAccountAddressAsStr(cn::parameters::CRYPTONOTE_PUBLIC_ADDRESS_BASE58_PREFIX, 
                                                                     addr);   
             arg = address;
           }
 
           WalletLegacyTransfer destination;
           WalletLegacyTransfer feeDestination;          
-          CryptoNote::TransactionDestinationEntry de;
+          cn::TransactionDestinationEntry de;
           std::string aliasUrl;
 
           if (!m_currency.parseAccountAddressString(arg, de.addr)) {
@@ -231,7 +231,7 @@ struct TransferCommand {
           if (!ok || 0 == de.amount) {
             // max should never exceed MONEY_SUPPLY
             logger(ERROR, BRIGHT_RED) << "amount is wrong: " << arg << ' ' << value <<
-              ", expected number from 0 to " << m_currency.formatAmount(CryptoNote::parameters::MONEY_SUPPLY);
+              ", expected number from 0 to " << m_currency.formatAmount(cn::parameters::MONEY_SUPPLY);
             return false;
           }
 
@@ -327,7 +327,7 @@ std::string tryToOpenWalletOrLoadKeysOrThrow(LoggerRef& logger, std::unique_ptr<
     if (initError) { //bad password, or legacy format
       if (keysExists) {
         std::stringstream ss;
-        CryptoNote::importLegacyKeys(keys_file, password, ss);
+        cn::importLegacyKeys(keys_file, password, ss);
         boost::filesystem::rename(keys_file, keys_file + ".back");
         boost::filesystem::rename(walletFileName, walletFileName + ".back");
 
@@ -339,7 +339,7 @@ std::string tryToOpenWalletOrLoadKeysOrThrow(LoggerRef& logger, std::unique_ptr<
         logger(INFO) << "Storing wallet...";
 
         try {
-          CryptoNote::WalletHelper::storeWallet(*wallet, walletFileName);
+          cn::WalletHelper::storeWallet(*wallet, walletFileName);
         } catch (std::exception& e) {
           logger(ERROR, BRIGHT_RED) << "Failed to store wallet: " << e.what();
           throw std::runtime_error("error saving wallet file '" + walletFileName + "'");
@@ -355,7 +355,7 @@ std::string tryToOpenWalletOrLoadKeysOrThrow(LoggerRef& logger, std::unique_ptr<
     }
   } else if (keysExists) { //wallet not exists but keys presented
     std::stringstream ss;
-    CryptoNote::importLegacyKeys(keys_file, password, ss);
+    cn::importLegacyKeys(keys_file, password, ss);
     boost::filesystem::rename(keys_file, keys_file + ".back");
 
     WalletHelper::InitWalletResultObserver initObserver;
@@ -373,7 +373,7 @@ std::string tryToOpenWalletOrLoadKeysOrThrow(LoggerRef& logger, std::unique_ptr<
     logger(INFO) << "Storing wallet...";
 
     try {
-      CryptoNote::WalletHelper::storeWallet(*wallet, walletFileName);
+      cn::WalletHelper::storeWallet(*wallet, walletFileName);
     } catch(std::exception& e) {
       logger(ERROR, BRIGHT_RED) << "Failed to store wallet: " << e.what();
       throw std::runtime_error("error saving wallet file '" + walletFileName + "'");
@@ -417,7 +417,7 @@ void printListTransfersHeader(LoggerRef& logger) {
 void printListTransfersItem(LoggerRef& logger, const WalletLegacyTransaction& txInfo, IWalletLegacy& wallet, const Currency& currency) {
   std::vector<uint8_t> extraVec = Common::asBinaryArray(txInfo.extra);
 
-  Crypto::Hash paymentId;
+  crypto::Hash paymentId;
   std::string paymentIdStr = (getPaymentIdFromTxExtra(extraVec, paymentId) && paymentId != NULL_HASH ? Common::podToHex(paymentId) : "");
 
   char timeString[TIMESTAMP_MAX_WIDTH + 1];
@@ -591,7 +591,7 @@ bool simple_wallet::exit(const std::vector<std::string> &args) {
   return true;
 }
 
-simple_wallet::simple_wallet(System::Dispatcher& dispatcher, const CryptoNote::Currency& currency, Logging::LoggerManager& log) :
+simple_wallet::simple_wallet(System::Dispatcher& dispatcher, const cn::Currency& currency, Logging::LoggerManager& log) :
   m_dispatcher(dispatcher),
   m_daemon_port(0),
   m_currency(currency),
@@ -822,8 +822,8 @@ bool simple_wallet::init(const boost::program_options::variables_map& vm) {
     std::string private_spend_key_string;
     std::string private_view_key_string;
 
-Crypto::SecretKey private_spend_key;
-Crypto::SecretKey private_view_key;
+crypto::SecretKey private_spend_key;
+crypto::SecretKey private_view_key;
 
 if (key_import) {
     do {
@@ -847,15 +847,15 @@ if (key_import) {
   } while (!is_valid_mnemonic(mnemonic_phrase, private_spend_key));
 
   /* This is not used, but is needed to be passed to the function, not sure how we can avoid this */
-  Crypto::PublicKey unused_dummy_variable;
+  crypto::PublicKey unused_dummy_variable;
 
   AccountBase::generateViewFromSpend(private_spend_key, private_view_key, unused_dummy_variable);
 }
 
 /* We already have our keys if we import via mnemonic seed */
 if (key_import) {
-    Crypto::Hash private_spend_key_hash;
-    Crypto::Hash private_view_key_hash;
+    crypto::Hash private_spend_key_hash;
+    crypto::Hash private_view_key_hash;
     size_t size;
     if (!Common::fromHex(private_spend_key_string, &private_spend_key_hash, sizeof(private_spend_key_hash), size) || size != sizeof(private_spend_key_hash)) {
       return false;
@@ -863,8 +863,8 @@ if (key_import) {
     if (!Common::fromHex(private_view_key_string, &private_view_key_hash, sizeof(private_view_key_hash), size) || size != sizeof(private_spend_key_hash)) {
       return false;
     }
-      private_spend_key = *(struct Crypto::SecretKey *) &private_spend_key_hash;
-      private_view_key = *(struct Crypto::SecretKey *) &private_view_key_hash;
+      private_spend_key = *(struct crypto::SecretKey *) &private_spend_key_hash;
+      private_view_key = *(struct crypto::SecretKey *) &private_view_key_hash;
     }
 
     if (!new_wallet(private_spend_key, private_view_key, walletFileName, pwd_container.password())) {
@@ -904,7 +904,7 @@ if (key_import) {
 /* adding support for 25 word electrum seeds. however, we have to ensure that all old wallets that are
 not deterministic, dont get a seed to avoid any loss of funds.
 */
-std::string simple_wallet::generate_mnemonic(Crypto::SecretKey &private_spend_key) {
+std::string simple_wallet::generate_mnemonic(crypto::SecretKey &private_spend_key) {
 
   std::string mnemonic_str;
 
@@ -926,7 +926,7 @@ void simple_wallet::log_incorrect_words(std::vector<std::string> words) {
   }
 }
 //----------------------------------------------------------------------------------------------------
-bool simple_wallet::is_valid_mnemonic(std::string &mnemonic_phrase, Crypto::SecretKey &private_spend_key) {
+bool simple_wallet::is_valid_mnemonic(std::string &mnemonic_phrase, crypto::SecretKey &private_spend_key) {
 
   static std::string languages[] = {"English"};
   static const int num_of_languages = 1;
@@ -994,7 +994,7 @@ bool simple_wallet::new_wallet(const std::string &wallet_file, const std::string
     }
 
     try {
-      CryptoNote::WalletHelper::storeWallet(*m_wallet, m_wallet_file);
+      cn::WalletHelper::storeWallet(*m_wallet, m_wallet_file);
     } catch (std::exception& e) {
       fail_msg_writer() << "failed to save new wallet: " << e.what();
       throw;
@@ -1004,7 +1004,7 @@ bool simple_wallet::new_wallet(const std::string &wallet_file, const std::string
     m_wallet->getAccountKeys(keys);
 
     std::string secretKeysData = std::string(reinterpret_cast<char*>(&keys.spendSecretKey), sizeof(keys.spendSecretKey)) + std::string(reinterpret_cast<char*>(&keys.viewSecretKey), sizeof(keys.viewSecretKey));
-    std::string guiKeys = Tools::Base58::encode_addr(CryptoNote::parameters::CRYPTONOTE_PUBLIC_ADDRESS_BASE58_PREFIX, secretKeysData);
+    std::string guiKeys = Tools::Base58::encode_addr(cn::parameters::CRYPTONOTE_PUBLIC_ADDRESS_BASE58_PREFIX, secretKeysData);
 
     logger(INFO, BRIGHT_GREEN) << "ConcealWallet is an open-source, client-side, free wallet which allow you to send and receive CCX instantly on the blockchain. You are  in control of your funds & your keys. When you generate a new wallet, login, send, receive or deposit $CCX everything happens locally. Your seed is never transmitted, received or stored. That's why its imperative to write, print or save your seed somewhere safe. The backup of keys is your responsibility. If you lose your seed, your account can not be recovered. The Conceal Team doesn't take any responsibility for lost funds due to nonexistent/missing/lost private keys." << std::endl << std::endl;
 
@@ -1030,7 +1030,7 @@ bool simple_wallet::new_wallet(const std::string &wallet_file, const std::string
   return true;
 }
 //----------------------------------------------------------------------------------------------------
-bool simple_wallet::new_wallet(Crypto::SecretKey &secret_key, Crypto::SecretKey &view_key, const std::string &wallet_file, const std::string& password) {
+bool simple_wallet::new_wallet(crypto::SecretKey &secret_key, crypto::SecretKey &view_key, const std::string &wallet_file, const std::string& password) {
                 m_wallet_file = wallet_file;
 
                 m_wallet.reset(new WalletLegacy(m_currency, *m_node.get(), logManager));
@@ -1043,8 +1043,8 @@ bool simple_wallet::new_wallet(Crypto::SecretKey &secret_key, Crypto::SecretKey 
                   AccountKeys wallet_keys;
                   wallet_keys.spendSecretKey = secret_key;
                   wallet_keys.viewSecretKey = view_key;
-                  Crypto::secret_key_to_public_key(wallet_keys.spendSecretKey, wallet_keys.address.spendPublicKey);
-                  Crypto::secret_key_to_public_key(wallet_keys.viewSecretKey, wallet_keys.address.viewPublicKey);
+                  crypto::secret_key_to_public_key(wallet_keys.spendSecretKey, wallet_keys.address.spendPublicKey);
+                  crypto::secret_key_to_public_key(wallet_keys.viewSecretKey, wallet_keys.address.viewPublicKey);
 
                   m_wallet->initWithKeys(wallet_keys, password);
                   auto initError = f_initError.get();
@@ -1055,7 +1055,7 @@ bool simple_wallet::new_wallet(Crypto::SecretKey &secret_key, Crypto::SecretKey 
                   }
 
                   try {
-                    CryptoNote::WalletHelper::storeWallet(*m_wallet, m_wallet_file);
+                    cn::WalletHelper::storeWallet(*m_wallet, m_wallet_file);
                   } catch (std::exception& e) {
                     fail_msg_writer() << "failed to save new wallet: " << e.what();
                     throw;
@@ -1087,7 +1087,7 @@ bool simple_wallet::new_wallet(Crypto::SecretKey &secret_key, Crypto::SecretKey 
 bool simple_wallet::close_wallet()
 {
   try {
-    CryptoNote::WalletHelper::storeWallet(*m_wallet, m_wallet_file);
+    cn::WalletHelper::storeWallet(*m_wallet, m_wallet_file);
   } catch (const std::exception& e) {
     fail_msg_writer() << e.what();
     return false;
@@ -1103,7 +1103,7 @@ bool simple_wallet::close_wallet()
 bool simple_wallet::save(const std::vector<std::string> &args)
 {
   try {
-    CryptoNote::WalletHelper::storeWallet(*m_wallet, m_wallet_file);
+    cn::WalletHelper::storeWallet(*m_wallet, m_wallet_file);
     success_msg_writer() << "Wallet data saved";
   } catch (const std::exception& e) {
     fail_msg_writer() << e.what();
@@ -1253,31 +1253,31 @@ bool simple_wallet::get_tx_proof(const std::vector<std::string> &args)
   }
 
   const std::string &str_hash = args[0];
-  Crypto::Hash txid;
+  crypto::Hash txid;
   if (!parse_hash256(str_hash, txid)) {
     fail_msg_writer() << "Failed to parse txid";
     return true;
   }
 
   const std::string address_string = args[1];
-  CryptoNote::AccountPublicAddress address;
+  cn::AccountPublicAddress address;
   if (!m_currency.parseAccountAddressString(address_string, address)) {
      fail_msg_writer() << "Failed to parse address " << address_string;
      return true;
   }
 
   std::string sig_str;
-  Crypto::SecretKey tx_key, tx_key2;
+  crypto::SecretKey tx_key, tx_key2;
   bool r = m_wallet->get_tx_key(txid, tx_key);
 
   if (args.size() == 3) {
-    Crypto::Hash tx_key_hash;
+    crypto::Hash tx_key_hash;
     size_t size;
     if (!Common::fromHex(args[2], &tx_key_hash, sizeof(tx_key_hash), size) || size != sizeof(tx_key_hash)) {
       fail_msg_writer() << "failed to parse tx_key";
       return true;
     }
-    tx_key2 = *(struct Crypto::SecretKey *) &tx_key_hash;
+    tx_key2 = *(struct crypto::SecretKey *) &tx_key_hash;
 
     if (r) {
       if (args.size() == 3 && tx_key != tx_key2) {
@@ -1315,7 +1315,7 @@ void simple_wallet::connectionStatusUpdated(bool connected) {
   }
 }
 //----------------------------------------------------------------------------------------------------
-void simple_wallet::externalTransactionCreated(CryptoNote::TransactionId transactionId)  {
+void simple_wallet::externalTransactionCreated(cn::TransactionId transactionId)  {
   WalletLegacyTransaction txInfo;
   m_wallet->getTransaction(transactionId, txInfo);
 
@@ -1374,10 +1374,10 @@ bool simple_wallet::sign_message(const std::vector<std::string>& args)
   AccountKeys keys;
   m_wallet->getAccountKeys(keys);
 
-  Crypto::Hash message_hash;
-  Crypto::Signature sig;
-  Crypto::cn_fast_hash(args[0].data(), args[0].size(), message_hash);
-  Crypto::generate_signature(message_hash, keys.address.spendPublicKey, keys.spendSecretKey, sig);
+  crypto::Hash message_hash;
+  crypto::Signature sig;
+  crypto::cn_fast_hash(args[0].data(), args[0].size(), message_hash);
+  crypto::generate_signature(message_hash, keys.address.spendPublicKey, keys.spendSecretKey, sig);
   
   success_msg_writer() << "Sig" << Tools::Base58::encode(std::string(reinterpret_cast<char*>(&sig)));
 
@@ -1401,19 +1401,19 @@ bool simple_wallet::verify_signature(const std::vector<std::string>& args)
     return true;
   } 
   
-  Crypto::Hash message_hash;
-  Crypto::cn_fast_hash(args[0].data(), args[0].size(), message_hash);
+  crypto::Hash message_hash;
+  crypto::cn_fast_hash(args[0].data(), args[0].size(), message_hash);
   
   std::string decodedSig;
-  Crypto::Signature sig;
+  crypto::Signature sig;
   Tools::Base58::decode(encodedSig.substr(prefix_size), decodedSig);
   memcpy(&sig, decodedSig.data(), sizeof(sig));
   
   uint64_t prefix;
-  CryptoNote::AccountPublicAddress addr;
-  CryptoNote::parseAccountAddressString(prefix, addr, args[1]);
+  cn::AccountPublicAddress addr;
+  cn::parseAccountAddressString(prefix, addr, args[1]);
   
-  if(Crypto::check_signature(message_hash, addr.spendPublicKey, sig))
+  if(crypto::check_signature(message_hash, addr.spendPublicKey, sig))
     success_msg_writer() << "Valid";
   else
     success_msg_writer() << "Invalid";
@@ -1446,21 +1446,21 @@ bool simple_wallet::create_integrated(const std::vector<std::string>& args/* = s
 
   std::string address = m_wallet->getAddress();
   uint64_t prefix;
-  CryptoNote::AccountPublicAddress addr;
+  cn::AccountPublicAddress addr;
 
   /* get the spend and view public keys from the address */
-  if(!CryptoNote::parseAccountAddressString(prefix, addr, address))
+  if(!cn::parseAccountAddressString(prefix, addr, address))
   {
     logger(ERROR, BRIGHT_RED) << "Failed to parse account address from string";
     return true;
   }
 
-  CryptoNote::BinaryArray ba;
-  CryptoNote::toBinaryArray(addr, ba);
+  cn::BinaryArray ba;
+  cn::toBinaryArray(addr, ba);
   std::string keys = Common::asString(ba);
 
   /* create the integrated address the same way you make a public address */
-  std::string integratedAddress = Tools::Base58::encode_addr (CryptoNote::parameters::CRYPTONOTE_PUBLIC_ADDRESS_BASE58_PREFIX,
+  std::string integratedAddress = Tools::Base58::encode_addr (cn::parameters::CRYPTONOTE_PUBLIC_ADDRESS_BASE58_PREFIX,
                                                               paymentID + keys
   );
 
@@ -1477,15 +1477,15 @@ bool simple_wallet::export_keys(const std::vector<std::string>& args/* = std::ve
   m_wallet->getAccountKeys(keys);
 
   std::string secretKeysData = std::string(reinterpret_cast<char*>(&keys.spendSecretKey), sizeof(keys.spendSecretKey)) + std::string(reinterpret_cast<char*>(&keys.viewSecretKey), sizeof(keys.viewSecretKey));
-  std::string guiKeys = Tools::Base58::encode_addr(CryptoNote::parameters::CRYPTONOTE_PUBLIC_ADDRESS_BASE58_PREFIX, secretKeysData);
+  std::string guiKeys = Tools::Base58::encode_addr(cn::parameters::CRYPTONOTE_PUBLIC_ADDRESS_BASE58_PREFIX, secretKeysData);
 
   logger(INFO, BRIGHT_GREEN) << std::endl << "ConcealWallet is an open-source, client-side, free wallet which allow you to send and receive CCX instantly on the blockchain. You are  in control of your funds & your keys. When you generate a new wallet, login, send, receive or deposit $CCX everything happens locally. Your seed is never transmitted, received or stored. That's why its imperative to write, print or save your seed somewhere safe. The backup of keys is your responsibility. If you lose your seed, your account can not be recovered. The Conceal Team doesn't take any responsibility for lost funds due to nonexistent/missing/lost private keys." << std::endl << std::endl;
 
   std::cout << "Private spend key: " << Common::podToHex(keys.spendSecretKey) << std::endl;
   std::cout << "Private view key: " <<  Common::podToHex(keys.viewSecretKey) << std::endl;
 
-  Crypto::PublicKey unused_dummy_variable;
-  Crypto::SecretKey deterministic_private_view_key;
+  crypto::PublicKey unused_dummy_variable;
+  crypto::SecretKey deterministic_private_view_key;
 
   AccountBase::generateViewFromSpend(keys.spendSecretKey, deterministic_private_view_key, unused_dummy_variable);
 
@@ -1579,7 +1579,7 @@ bool simple_wallet::show_payments(const std::vector<std::string> &args) {
     paymentIds.reserve(hashes.size());
     std::transform(std::begin(hashes), std::end(hashes), std::back_inserter(paymentIds), [](const std::string& arg) {
       PaymentId paymentId;
-      if (!CryptoNote::parsePaymentId(arg, paymentId)) {
+      if (!cn::parsePaymentId(arg, paymentId)) {
         throw std::runtime_error("payment ID has invalid format: \"" + arg + "\", expected 64-character string");
       }
 
@@ -1639,18 +1639,18 @@ bool simple_wallet::show_num_unlocked_outputs(const std::vector<std::string>& ar
 //----------------------------------------------------------------------------------------------------
 bool simple_wallet::optimize_outputs(const std::vector<std::string>& args) {
   try {
-    CryptoNote::WalletHelper::SendCompleteResultObserver sent;
+    cn::WalletHelper::SendCompleteResultObserver sent;
     WalletHelper::IWalletRemoveObserverGuard removeGuard(*m_wallet, sent);
 
-    std::vector<CryptoNote::WalletLegacyTransfer> transfers;
-    std::vector<CryptoNote::TransactionMessage> messages;
+    std::vector<cn::WalletLegacyTransfer> transfers;
+    std::vector<cn::TransactionMessage> messages;
     std::string extraString;
-    uint64_t fee = CryptoNote::parameters::MINIMUM_FEE_V2;
+    uint64_t fee = cn::parameters::MINIMUM_FEE_V2;
     uint64_t mixIn = 0;
     uint64_t unlockTimestamp = 0;
     uint64_t ttl = 0;
-    Crypto::SecretKey transactionSK;
-    CryptoNote::TransactionId tx = m_wallet->sendTransaction(transactionSK, transfers, fee, extraString, mixIn, unlockTimestamp, messages, ttl);
+    crypto::SecretKey transactionSK;
+    cn::TransactionId tx = m_wallet->sendTransaction(transactionSK, transfers, fee, extraString, mixIn, unlockTimestamp, messages, ttl);
     if (tx == WALLET_LEGACY_INVALID_TRANSACTION_ID) {
       fail_msg_writer() << "Can't send money";
       return true;
@@ -1664,13 +1664,13 @@ bool simple_wallet::optimize_outputs(const std::vector<std::string>& args) {
       return true;
     }
 
-    CryptoNote::WalletLegacyTransaction txInfo;
+    cn::WalletLegacyTransaction txInfo;
     m_wallet->getTransaction(tx, txInfo);
     success_msg_writer(true) << "Money successfully sent, transaction " << Common::podToHex(txInfo.hash);
     success_msg_writer(true) << "Transaction secret key " << Common::podToHex(transactionSK);
 
     try {
-      CryptoNote::WalletHelper::storeWallet(*m_wallet, m_wallet_file);
+      cn::WalletHelper::storeWallet(*m_wallet, m_wallet_file);
     } catch (const std::exception& e) {
       fail_msg_writer() << e.what();
       return true;
@@ -1707,18 +1707,18 @@ bool simple_wallet::optimize_all_outputs(const std::vector<std::string>& args) {
   for(uint64_t a = 1; a < rounds; a = a + 1 ) {
     
     try {
-      CryptoNote::WalletHelper::SendCompleteResultObserver sent;
+      cn::WalletHelper::SendCompleteResultObserver sent;
       WalletHelper::IWalletRemoveObserverGuard removeGuard(*m_wallet, sent);
 
-      std::vector<CryptoNote::WalletLegacyTransfer> transfers;
-      std::vector<CryptoNote::TransactionMessage> messages;
+      std::vector<cn::WalletLegacyTransfer> transfers;
+      std::vector<cn::TransactionMessage> messages;
       std::string extraString;
-      uint64_t fee = CryptoNote::parameters::MINIMUM_FEE_V2;
+      uint64_t fee = cn::parameters::MINIMUM_FEE_V2;
       uint64_t mixIn = 0;
       uint64_t unlockTimestamp = 0;
       uint64_t ttl = 0;
-      Crypto::SecretKey transactionSK;
-      CryptoNote::TransactionId tx = m_wallet->sendTransaction(transactionSK, transfers, fee, extraString, mixIn, unlockTimestamp, messages, ttl);
+      crypto::SecretKey transactionSK;
+      cn::TransactionId tx = m_wallet->sendTransaction(transactionSK, transfers, fee, extraString, mixIn, unlockTimestamp, messages, ttl);
       if (tx == WALLET_LEGACY_INVALID_TRANSACTION_ID) {
         fail_msg_writer() << "Can't send money";
         return true;
@@ -1732,12 +1732,12 @@ bool simple_wallet::optimize_all_outputs(const std::vector<std::string>& args) {
         return true;
       }
 
-      CryptoNote::WalletLegacyTransaction txInfo;
+      cn::WalletLegacyTransaction txInfo;
       m_wallet->getTransaction(tx, txInfo);
       success_msg_writer(true) << a << ". Optimization transaction successfully sent, transaction " << Common::podToHex(txInfo.hash);
 
       try {
-        CryptoNote::WalletHelper::storeWallet(*m_wallet, m_wallet_file);
+        cn::WalletHelper::storeWallet(*m_wallet, m_wallet_file);
       } catch (const std::exception& e) {
         fail_msg_writer() << e.what();
         return true;
@@ -1854,7 +1854,7 @@ bool simple_wallet::transfer(const std::vector<std::string> &args) {
       ttl = static_cast<uint64_t>(time(nullptr)) + cmd.ttl;
     }
 
-    CryptoNote::WalletHelper::SendCompleteResultObserver sent;
+    cn::WalletHelper::SendCompleteResultObserver sent;
 
     std::string extraString;
     std::copy(cmd.extra.begin(), cmd.extra.end(), std::back_inserter(extraString));
@@ -1862,15 +1862,15 @@ bool simple_wallet::transfer(const std::vector<std::string> &args) {
     WalletHelper::IWalletRemoveObserverGuard removeGuard(*m_wallet, sent);
 
     /* set static mixin of 4*/
-    cmd.fake_outs_count = CryptoNote::parameters::MINIMUM_MIXIN;
+    cmd.fake_outs_count = cn::parameters::MINIMUM_MIXIN;
 
     /* force minimum fee */
-    if (cmd.fee < CryptoNote::parameters::MINIMUM_FEE_V2) {
-      cmd.fee = CryptoNote::parameters::MINIMUM_FEE_V2;
+    if (cmd.fee < cn::parameters::MINIMUM_FEE_V2) {
+      cmd.fee = cn::parameters::MINIMUM_FEE_V2;
     }
 
-    Crypto::SecretKey transactionSK;
-    CryptoNote::TransactionId tx = m_wallet->sendTransaction(transactionSK, cmd.dsts, cmd.fee, extraString, cmd.fake_outs_count, 0, messages, ttl);
+    crypto::SecretKey transactionSK;
+    cn::TransactionId tx = m_wallet->sendTransaction(transactionSK, cmd.dsts, cmd.fee, extraString, cmd.fake_outs_count, 0, messages, ttl);
     if (tx == WALLET_LEGACY_INVALID_TRANSACTION_ID) {
       fail_msg_writer() << "Can't send money";
       return true;
@@ -1884,13 +1884,13 @@ bool simple_wallet::transfer(const std::vector<std::string> &args) {
       return true;
     }
 
-    CryptoNote::WalletLegacyTransaction txInfo;
+    cn::WalletLegacyTransaction txInfo;
     m_wallet->getTransaction(tx, txInfo);
     success_msg_writer(true) << "Money successfully sent, transaction hash: " << Common::podToHex(txInfo.hash);
     success_msg_writer(true) << "Transaction secret key " << Common::podToHex(transactionSK); 
 
     try {
-      CryptoNote::WalletHelper::storeWallet(*m_wallet, m_wallet_file);
+      cn::WalletHelper::storeWallet(*m_wallet, m_wallet_file);
     } catch (const std::exception& e) {
       fail_msg_writer() << e.what();
       return true;
@@ -1949,8 +1949,8 @@ bool simple_wallet::save_keys_to_file(const std::vector<std::string>& args)
   priv_key += "Private spend key: " + Common::podToHex(keys.spendSecretKey) + "\n";
   priv_key += "Private view key: " +  Common::podToHex(keys.viewSecretKey) + "\n";
 
-  Crypto::PublicKey unused_dummy_variable;
-  Crypto::SecretKey deterministic_private_view_key;
+  crypto::PublicKey unused_dummy_variable;
+  crypto::SecretKey deterministic_private_view_key;
 
   AccountBase::generateViewFromSpend(keys.spendSecretKey, deterministic_private_view_key, unused_dummy_variable);
   bool deterministic_private_keys = deterministic_private_view_key == keys.viewSecretKey;
@@ -2003,8 +2003,8 @@ int main(int argc, char* argv[]) {
     po::store(command_line::parse_command_line(argc, argv, desc_general, true), vm);
 
     if (command_line::get_arg(vm, command_line::arg_help)) {
-      CryptoNote::Currency tmp_currency = CryptoNote::CurrencyBuilder(logManager).currency();
-      CryptoNote::simple_wallet tmp_wallet(dispatcher, tmp_currency, logManager);
+      cn::Currency tmp_currency = cn::CurrencyBuilder(logManager).currency();
+      cn::simple_wallet tmp_wallet(dispatcher, tmp_currency, logManager);
 
       std::cout << "Conceal Wallet v" << PROJECT_VERSION_LONG << std::endl;
       std::cout << "Usage: concealwallet [--wallet-file=<file>|--generate-new-wallet=<file>] [--daemon-address=<host>:<port>] [<COMMAND>]";
@@ -2035,7 +2035,7 @@ int main(int argc, char* argv[]) {
 
   logger(INFO, BRIGHT_GREEN) << "Conceal Wallet v" << PROJECT_VERSION_LONG;
 
-  CryptoNote::Currency currency = CryptoNote::CurrencyBuilder(logManager).
+  cn::Currency currency = cn::CurrencyBuilder(logManager).
     testnet(command_line::get_arg(vm, arg_testnet)).currency();
 
   if (command_line::has_arg(vm, Tools::wallet_rpc_server::arg_rpc_bind_port)) {
@@ -2115,7 +2115,7 @@ int main(int argc, char* argv[]) {
 
     try {
       logger(INFO) << "Storing wallet...";
-      CryptoNote::WalletHelper::storeWallet(*wallet, walletFileName);
+      cn::WalletHelper::storeWallet(*wallet, walletFileName);
       logger(INFO, BRIGHT_GREEN) << "Stored ok";
     } catch (const std::exception& e) {
       logger(ERROR, BRIGHT_RED) << "Failed to store wallet: " << e.what();
@@ -2123,7 +2123,7 @@ int main(int argc, char* argv[]) {
     }
   } else {
     //runs wallet with console interface
-    CryptoNote::simple_wallet wal(dispatcher, currency, logManager);
+    cn::simple_wallet wal(dispatcher, currency, logManager);
 
     if (!wal.init(vm)) {
       logger(ERROR, BRIGHT_RED) << "Failed to initialize wallet";

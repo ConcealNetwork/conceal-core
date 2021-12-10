@@ -8,7 +8,7 @@
 
 #include <time.h>
 
-namespace CryptoNote
+namespace cn
 {
 
 class OnceInInterval {

@@ -22,8 +22,8 @@
 
 #include "BlockchainExplorer/BlockchainExplorer.h"
 
-using namespace Crypto;
-using namespace CryptoNote;
+using namespace crypto;
+using namespace cn;
 
 namespace {
 Transaction createTx(ITransactionReader& tx) {

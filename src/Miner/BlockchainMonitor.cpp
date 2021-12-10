@@ -33,7 +33,7 @@ void BlockchainMonitor::waitBlockchainUpdate() {
   m_logger(Logging::DEBUGGING) << "Waiting for blockchain updates";
   m_stopped = false;
 
-  Crypto::Hash lastBlockHash = requestLastBlockHash();
+  crypto::Hash lastBlockHash = requestLastBlockHash();
 
   while(!m_stopped) {
     m_sleepingContext.spawn([this] () {
@@ -63,23 +63,23 @@ void BlockchainMonitor::stop() {
   m_sleepingContext.wait();
 }
 
-Crypto::Hash BlockchainMonitor::requestLastBlockHash() {
+crypto::Hash BlockchainMonitor::requestLastBlockHash() {
   m_logger(Logging::DEBUGGING) << "Requesting last block hash";
 
   try {
-    CryptoNote::HttpClient client(m_dispatcher, m_daemonHost, m_daemonPort);
+    cn::HttpClient client(m_dispatcher, m_daemonHost, m_daemonPort);
 
-    CryptoNote::COMMAND_RPC_GET_LAST_BLOCK_HEADER::request request;
-    CryptoNote::COMMAND_RPC_GET_LAST_BLOCK_HEADER::response response;
+    cn::COMMAND_RPC_GET_LAST_BLOCK_HEADER::request request;
+    cn::COMMAND_RPC_GET_LAST_BLOCK_HEADER::response response;
 
     System::EventLock lk(m_httpEvent);
-    CryptoNote::JsonRpc::invokeJsonRpcCommand(client, "getlastblockheader", request, response);
+    cn::JsonRpc::invokeJsonRpcCommand(client, "getlastblockheader", request, response);
 
     if (response.status != CORE_RPC_STATUS_OK) {
       throw std::runtime_error("Core responded with wrong status: " + response.status);
     }
 
-    Crypto::Hash blockHash;
+    crypto::Hash blockHash;
     if (!Common::podFromHex(response.block_header.hash, blockHash)) {
       throw std::runtime_error("Couldn't parse block hash: " + response.block_header.hash);
     }

@@ -327,7 +327,7 @@ namespace crypto
      * \param  language_name   Language of the seed as found gets written here.
      * \return                 false if not a multiple of 3 words, or if word is not in the words list
      */
-    bool words_to_bytes(std::string words, Crypto::SecretKey& dst,
+    bool words_to_bytes(std::string words, crypto::SecretKey& dst,
       std::string &language_name)
     {
       std::string s;
@@ -335,7 +335,7 @@ namespace crypto
         return false;
       if (s.size() != sizeof(dst))
         return false;
-      dst = *(const Crypto::SecretKey*)s.data();
+      dst = *(const crypto::SecretKey*)s.data();
       return true;
     }
 
@@ -439,7 +439,7 @@ namespace crypto
       return true;
     }
 
-    bool bytes_to_words(const Crypto::SecretKey& src, std::string& words,
+    bool bytes_to_words(const crypto::SecretKey& src, std::string& words,
       const std::string &language_name)
     {
       return bytes_to_words(reinterpret_cast<const char*>(src.data), sizeof(src), words, language_name);

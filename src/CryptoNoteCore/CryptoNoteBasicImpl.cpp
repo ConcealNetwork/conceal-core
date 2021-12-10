@@ -13,13 +13,13 @@
 #include "crypto/hash.h"
 #include "Common/int-util.h"
 
-using namespace Crypto;
+using namespace crypto;
 using namespace Common;
 
-namespace CryptoNote {
+namespace cn {
 
   /************************************************************************/
-  /* CryptoNote helper functions                                          */
+  /* cn helper functions                                          */
   /************************************************************************/
   //-----------------------------------------------------------------------------------------------
   uint64_t getPenalizedAmount(uint64_t amount, size_t medianSize, size_t currentBlockSize) {
@@ -80,16 +80,16 @@ namespace CryptoNote {
       check_key(adr.viewPublicKey);
   }
   //-----------------------------------------------------------------------
-  bool operator ==(const CryptoNote::Transaction& a, const CryptoNote::Transaction& b) {
+  bool operator ==(const cn::Transaction& a, const cn::Transaction& b) {
     return getObjectHash(a) == getObjectHash(b);
   }
   //-----------------------------------------------------------------------
-  bool operator ==(const CryptoNote::Block& a, const CryptoNote::Block& b) {
-    return CryptoNote::get_block_hash(a) == CryptoNote::get_block_hash(b);
+  bool operator ==(const cn::Block& a, const cn::Block& b) {
+    return cn::get_block_hash(a) == cn::get_block_hash(b);
   }
 }
 
 //--------------------------------------------------------------------------------
-bool parse_hash256(const std::string& str_hash, Crypto::Hash& hash) {
+bool parse_hash256(const std::string& str_hash, crypto::Hash& hash) {
   return Common::podFromHex(str_hash, hash);
 }

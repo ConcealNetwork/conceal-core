@@ -216,7 +216,7 @@ namespace Tools
     {
       std::string buf = get_varint_data(tag);
       buf += data;
-      Crypto::Hash hash = Crypto::cn_fast_hash(buf.data(), buf.size());
+      crypto::Hash hash = crypto::cn_fast_hash(buf.data(), buf.size());
       const char* hash_data = reinterpret_cast<const char*>(&hash);
       buf.append(hash_data, addr_checksum_size);
       return encode(buf);
@@ -233,7 +233,7 @@ namespace Tools
       checksum = addr_data.substr(addr_data.size() - addr_checksum_size);
 
       addr_data.resize(addr_data.size() - addr_checksum_size);
-      Crypto::Hash hash = Crypto::cn_fast_hash(addr_data.data(), addr_data.size());
+      crypto::Hash hash = crypto::cn_fast_hash(addr_data.data(), addr_data.size());
       std::string expected_checksum(reinterpret_cast<const char*>(&hash), addr_checksum_size);
       if (expected_checksum != checksum) return false;
 

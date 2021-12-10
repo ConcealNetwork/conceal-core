@@ -11,8 +11,8 @@ namespace Tests
 namespace Common
 {
 
-using namespace CryptoNote;
-using namespace Crypto;
+using namespace cn;
+using namespace crypto;
 
 const std::string TEST_PASSWORD = "password";
 
@@ -21,7 +21,7 @@ TestWalletLegacy::TestWalletLegacy(System::Dispatcher &dispatcher, const Currenc
                                                                                                             m_someTransactionUpdated(dispatcher),
                                                                                                             m_currency(currency),
                                                                                                             m_node(node),
-                                                                                                            m_wallet(new CryptoNote::WalletLegacy(currency, node, m_logger)),
+                                                                                                            m_wallet(new cn::WalletLegacy(currency, node, m_logger)),
                                                                                                             m_currentHeight(0)
 {
   m_wallet->addObserver(this);
@@ -37,7 +37,7 @@ TestWalletLegacy::~TestWalletLegacy()
 
 std::error_code TestWalletLegacy::init()
 {
-  CryptoNote::AccountBase walletAccount;
+  cn::AccountBase walletAccount;
   walletAccount.generate();
 
   m_wallet->initWithKeys(walletAccount.getAccountKeys(), TEST_PASSWORD);
@@ -86,13 +86,13 @@ std::error_code TestWalletLegacy::sendTransaction(const std::string &address, ui
   m_wallet->addObserver(&transactionSendingWaiter);
 
   WalletLegacyTransfer transfer{address, static_cast<int64_t>(amount)};
-  std::vector<CryptoNote::TransactionMessage> messages;
+  std::vector<cn::TransactionMessage> messages;
   std::string extraString;
-  uint64_t fee = CryptoNote::parameters::MINIMUM_FEE_V2;
+  uint64_t fee = cn::parameters::MINIMUM_FEE_V2;
   uint64_t mixIn = 0;
   uint64_t unlockTimestamp = 0;
   uint64_t ttl = 0;
-  Crypto::SecretKey transactionSK;
+  crypto::SecretKey transactionSK;
   auto txId = m_wallet->sendTransaction(transactionSK, transfer, fee, extraString, mixIn, unlockTimestamp, messages, ttl);
 
   transactionSendingWaiter.wait(txId);

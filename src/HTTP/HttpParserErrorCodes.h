@@ -9,7 +9,7 @@
 #include <string>
 #include <system_error>
 
-namespace CryptoNote {
+namespace cn {
 namespace error {
 
 enum HttpParserErrorCodes {
@@ -48,8 +48,8 @@ private:
 };
 
 } //namespace error
-} //namespace CryptoNote
+} //namespace cn
 
-inline std::error_code make_error_code(CryptoNote::error::HttpParserErrorCodes e) {
-  return std::error_code(static_cast<int>(e), CryptoNote::error::HttpParserErrorCategory::INSTANCE);
+inline std::error_code make_error_code(cn::error::HttpParserErrorCodes e) {
+  return std::error_code(static_cast<int>(e), cn::error::HttpParserErrorCategory::INSTANCE);
 }

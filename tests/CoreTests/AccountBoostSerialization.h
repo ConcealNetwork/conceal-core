@@ -8,13 +8,13 @@
 #include "CryptoNoteCore/Account.h"
 #include "CryptoNoteBoostSerialization.h"
 
-//namespace CryptoNote {
+//namespace cn {
 namespace boost
 {
   namespace serialization
   {
     template <class Archive>
-    inline void serialize(Archive &a, CryptoNote::AccountKeys &x, const boost::serialization::version_type ver)
+    inline void serialize(Archive &a, cn::AccountKeys &x, const boost::serialization::version_type ver)
     {
       a & x.address;
       a & x.spendSecretKey;
@@ -22,7 +22,7 @@ namespace boost
     }
 
     template <class Archive>
-    inline void serialize(Archive &a, CryptoNote::AccountPublicAddress &x, const boost::serialization::version_type ver)
+    inline void serialize(Archive &a, cn::AccountPublicAddress &x, const boost::serialization::version_type ver)
     {
       a & x.spendPublicKey;
       a & x.viewPublicKey;

@@ -14,7 +14,7 @@
 #include "KVBinaryCommon.h"
 
 using namespace Common;
-using namespace CryptoNote;
+using namespace cn;
 
 namespace {
 

@@ -12,7 +12,7 @@
 
 #include "IWalletLegacy.h"
 
-namespace CryptoNote {
+namespace cn {
 class ISerializer;
 
 struct UnconfirmedTransferDetails;

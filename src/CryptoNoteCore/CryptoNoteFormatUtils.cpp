@@ -26,10 +26,10 @@
 #include "CryptoNoteConfig.h"
 
 using namespace Logging;
-using namespace Crypto;
+using namespace crypto;
 using namespace Common;
 
-namespace CryptoNote {
+namespace cn {
 
 bool parseAndValidateTransactionFromBinaryArray(const BinaryArray& tx_blob, Transaction& tx, Hash& tx_hash, Hash& tx_prefix_hash) {
   if (!fromBinaryArray(tx, tx_blob)) {
@@ -84,7 +84,7 @@ bool constructTransaction(
   Transaction& tx,
   uint64_t unlock_time,
   Logging::ILogger& log,
-  Crypto::SecretKey& transactionSK) {
+  crypto::SecretKey& transactionSK) {
   LoggerRef logger(log, "construct_tx");
 
   tx.inputs.clear();
@@ -239,19 +239,19 @@ bool constructTransaction(
   return true;
 }
 
-bool generateDeterministicTransactionKeys(const Crypto::Hash &inputsHash, const Crypto::SecretKey &viewSecretKey, KeyPair &generatedKeys)
+bool generateDeterministicTransactionKeys(const crypto::Hash &inputsHash, const crypto::SecretKey &viewSecretKey, KeyPair &generatedKeys)
 {
   BinaryArray ba;
   Common::append(ba, std::begin(viewSecretKey.data), std::end(viewSecretKey.data));
   Common::append(ba, std::begin(inputsHash.data), std::end(inputsHash.data));
 
   hash_to_scalar(ba.data(), ba.size(), generatedKeys.secretKey);
-  return Crypto::secret_key_to_public_key(generatedKeys.secretKey, generatedKeys.publicKey);
+  return crypto::secret_key_to_public_key(generatedKeys.secretKey, generatedKeys.publicKey);
 }
 
 bool generateDeterministicTransactionKeys(const Transaction &tx, const SecretKey &viewSecretKey, KeyPair &generatedKeys)
 {
-  Crypto::Hash inputsHash = getObjectHash(tx.inputs);
+  crypto::Hash inputsHash = getObjectHash(tx.inputs);
   return generateDeterministicTransactionKeys(inputsHash, viewSecretKey, generatedKeys);
 }
 
@@ -375,7 +375,7 @@ bool check_inputs_overflow(const TransactionPrefix &tx) {
       amount = boost::get<MultisignatureInput>(in).amount;
       if (boost::get<MultisignatureInput>(in).term != 0) {
         uint64_t hi;
-        uint64_t lo = mul128(amount, CryptoNote::parameters::DEPOSIT_MAX_TOTAL_RATE, &hi);
+        uint64_t lo = mul128(amount, cn::parameters::DEPOSIT_MAX_TOTAL_RATE, &hi);
         uint64_t maxInterestHi;
         uint64_t maxInterestLo;
         div128_32(hi, lo, 100, &maxInterestHi, &maxInterestLo);

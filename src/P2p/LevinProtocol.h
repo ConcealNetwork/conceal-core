@@ -16,7 +16,7 @@ namespace System {
 class TcpConnection;
 }
 
-namespace CryptoNote {
+namespace cn {
 
 enum class LevinError: int32_t {
   OK = 0,

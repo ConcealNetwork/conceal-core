@@ -10,11 +10,11 @@
 #include "CryptoNoteCore/Currency.h"
 #include "Logging/ConsoleLogger.h"
 
-using namespace CryptoNote;
+using namespace cn;
 
 namespace
 {
-using CryptoNote::parameters::CRYPTONOTE_BLOCK_GRANTED_FULL_REWARD_ZONE;
+using cn::parameters::CRYPTONOTE_BLOCK_GRANTED_FULL_REWARD_ZONE;
 
   //--------------------------------------------------------------------------------------------------------------------
   class block_reward_and_height : public ::testing::Test

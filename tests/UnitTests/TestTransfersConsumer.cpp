@@ -19,7 +19,7 @@
 #include "TransfersObserver.h"
 #include "TestBlockchainGenerator.h"
 
-using namespace CryptoNote;
+using namespace cn;
 
 AccountSubscription getAccountSubscription(const AccountKeys& accountKeys) {
   AccountSubscription subscription;
@@ -33,7 +33,7 @@ AccountKeys getAccountKeysWithViewKey(const PublicKey& publicViewKey, const Secr
   viewKp.publicKey = publicViewKey;
   viewKp.secretKey = secretViewKey;
   KeyPair p1;
-  Crypto::generate_keys(p1.publicKey, p1.secretKey);
+  crypto::generate_keys(p1.publicKey, p1.secretKey);
   AccountKeys accountKeys = accountKeysFromKeypairs(viewKp, p1);
 
   return accountKeys;
@@ -72,7 +72,7 @@ protected:
   }
 
   Logging::ConsoleLogger m_logger;
-  CryptoNote::Currency m_currency;
+  cn::Currency m_currency;
   TestBlockchainGenerator m_generator;
   INodeTrivialRefreshStub m_node;
   AccountKeys m_accountKeys;
@@ -80,7 +80,7 @@ protected:
 };
 
 TransfersConsumerTest::TransfersConsumerTest() :
-  m_currency(CryptoNote::CurrencyBuilder(m_logger).currency()),
+  m_currency(cn::CurrencyBuilder(m_logger).currency()),
   m_generator(m_currency),
   m_node(m_generator, true),
   m_accountKeys(generateAccountKeys()),
@@ -305,14 +305,14 @@ TEST_F(TransfersConsumerTest, onBlockchainDetach) {
   addTestKeyOutput(*tx1, 50, 1, keys);
 
   CompleteBlock blocks[3];
-  blocks[0].block = CryptoNote::Block();
+  blocks[0].block = cn::Block();
   blocks[0].block->timestamp = 1233;
 
-  blocks[1].block = CryptoNote::Block();
+  blocks[1].block = cn::Block();
   blocks[1].block->timestamp = 1234;
   blocks[1].transactions.push_back(tx1);
 
-  blocks[2].block = CryptoNote::Block();
+  blocks[2].block = cn::Block();
   blocks[2].block->timestamp = 1235;
   blocks[2].transactions.push_back(tx2);
 
@@ -347,7 +347,7 @@ TEST_F(TransfersConsumerTest, onNewBlocks_OneEmptyBlockOneFilled) {
 
   CompleteBlock blocks[2];
   blocks[0].transactions.push_back(tx1);
-  blocks[1].block = CryptoNote::Block();
+  blocks[1].block = cn::Block();
   blocks[1].block->timestamp = 1235;
   blocks[1].transactions.push_back(tx2);
 
@@ -382,10 +382,10 @@ TEST_F(TransfersConsumerTest, onNewBlocks_DifferentTimestamps) {
 
   CompleteBlock blocks[2];
   blocks[0].transactions.push_back(tx1);
-  blocks[0].block = CryptoNote::Block();
+  blocks[0].block = cn::Block();
   blocks[0].block->timestamp = subscription.syncStart.timestamp - 1;
 
-  blocks[1].block = CryptoNote::Block();
+  blocks[1].block = cn::Block();
   blocks[1].block->timestamp = subscription.syncStart.timestamp;
   blocks[1].transactions.push_back(tx2);
 
@@ -403,7 +403,7 @@ TEST_F(TransfersConsumerTest, onNewBlocks_DifferentTimestamps) {
 TEST_F(TransfersConsumerTest, onNewBlocks_getTransactionOutsGlobalIndicesError) {
   class INodeGlobalIndicesStub: public INodeDummyStub {
   public:
-    virtual void getTransactionOutsGlobalIndices(const Crypto::Hash& transactionHash,
+    virtual void getTransactionOutsGlobalIndices(const crypto::Hash& transactionHash,
       std::vector<uint32_t>& outsGlobalIndices, const Callback& callback) override {
       callback(std::make_error_code(std::errc::operation_canceled));
     };
@@ -420,7 +420,7 @@ TEST_F(TransfersConsumerTest, onNewBlocks_getTransactionOutsGlobalIndicesError) 
   addTestKeyOutput(*tx, 900, 2, m_accountKeys);
 
   CompleteBlock block;
-  block.block = CryptoNote::Block();
+  block.block = cn::Block();
   block.block->timestamp = subscription.syncStart.timestamp;
   block.transactions.push_back(tx);
 
@@ -441,7 +441,7 @@ TEST_F(TransfersConsumerTest, onNewBlocks_updateHeight) {
   addTestKeyOutput(*tx, 900, 0, m_accountKeys);
 
   CompleteBlock block;
-  block.block = CryptoNote::Block();
+  block.block = cn::Block();
   block.block->timestamp = subscription.syncStart.timestamp;
   block.transactions.push_back(tx);
 
@@ -450,7 +450,7 @@ TEST_F(TransfersConsumerTest, onNewBlocks_updateHeight) {
 
   std::unique_ptr<CompleteBlock[]> blocks(new CompleteBlock[subscription.transactionSpendableAge]);
   for (uint32_t i = 0; i < subscription.transactionSpendableAge; ++i) {
-    blocks[i].block = CryptoNote::Block();
+    blocks[i].block = cn::Block();
     auto tr = createTransaction();
     addTestInput(*tr, 1000);
     addTestKeyOutput(*tr, 100, i + 1, generateAccountKeys());
@@ -476,7 +476,7 @@ TEST_F(TransfersConsumerTest, onNewBlocks_DifferentSubscribers) {
   addTestKeyOutput(*tx, amount2, 1, keys);
 
   CompleteBlock block;
-  block.block = CryptoNote::Block();
+  block.block = cn::Block();
   block.block->timestamp = 0;
   block.transactions.push_back(tx);
 
@@ -506,7 +506,7 @@ TEST_F(TransfersConsumerTest, onNewBlocks_MultisignatureTransaction) {
   tx->addOutput(800, { keys.address, keys2.address, keys3.address }, 3);
 
   CompleteBlock block;
-  block.block = CryptoNote::Block();
+  block.block = cn::Block();
   block.block->timestamp = 0;
   block.transactions.push_back(tx);
 
@@ -519,14 +519,14 @@ TEST_F(TransfersConsumerTest, onNewBlocks_MultisignatureTransaction) {
 TEST_F(TransfersConsumerTest, onNewBlocks_getTransactionOutsGlobalIndicesIsProperlyCalled) {
   class INodeGlobalIndicesStub: public INodeDummyStub {
   public:
-    virtual void getTransactionOutsGlobalIndices(const Crypto::Hash& transactionHash,
+    virtual void getTransactionOutsGlobalIndices(const crypto::Hash& transactionHash,
       std::vector<uint32_t>& outsGlobalIndices, const Callback& callback) override {
       outsGlobalIndices.push_back(3);
       hash = transactionHash;
       callback(std::error_code());
     };
 
-    Crypto::Hash hash;
+    crypto::Hash hash;
   };
 
   INodeGlobalIndicesStub node;
@@ -542,13 +542,13 @@ TEST_F(TransfersConsumerTest, onNewBlocks_getTransactionOutsGlobalIndicesIsPrope
   addTestKeyOutput(*tx, 900, 2, m_accountKeys);
 
   CompleteBlock block;
-  block.block = CryptoNote::Block();
+  block.block = cn::Block();
   block.block->timestamp = 0;
   block.transactions.push_back(tx);
 
   ASSERT_TRUE(consumer.onNewBlocks(&block, 1, 1));
-  const Crypto::Hash &hash = tx->getTransactionHash();
-  const Crypto::Hash expectedHash = *reinterpret_cast<const Crypto::Hash*>(&hash);
+  const crypto::Hash &hash = tx->getTransactionHash();
+  const crypto::Hash expectedHash = *reinterpret_cast<const crypto::Hash*>(&hash);
   ASSERT_EQ(expectedHash, node.hash);
 }
 
@@ -557,7 +557,7 @@ TEST_F(TransfersConsumerTest, onNewBlocks_getTransactionOutsGlobalIndicesIsNotCa
   public:
     INodeGlobalIndicesStub() : called(false) {};
 
-    virtual void getTransactionOutsGlobalIndices(const Crypto::Hash& transactionHash,
+    virtual void getTransactionOutsGlobalIndices(const crypto::Hash& transactionHash,
       std::vector<uint32_t>& outsGlobalIndices, const Callback& callback) override {
       outsGlobalIndices.push_back(3);
       called = true;
@@ -580,7 +580,7 @@ TEST_F(TransfersConsumerTest, onNewBlocks_getTransactionOutsGlobalIndicesIsNotCa
   addTestKeyOutput(*tx, 900, 2, generateAccount());
 
   CompleteBlock block;
-  block.block = CryptoNote::Block();
+  block.block = cn::Block();
   block.block->timestamp = 0;
   block.transactions.push_back(tx);
   ASSERT_TRUE(consumer.onNewBlocks(&block, 1, 1));
@@ -609,10 +609,10 @@ TEST_F(TransfersConsumerTest, onNewBlocks_markTransactionConfirmed) {
   ASSERT_EQ(10000, lockedOuts[0].amount);
 
   CompleteBlock blocks[2];
-  blocks[0].block = CryptoNote::Block();
+  blocks[0].block = cn::Block();
   blocks[0].block->timestamp = 0;
   blocks[0].transactions.push_back(tx);
-  blocks[1].block = CryptoNote::Block();
+  blocks[1].block = cn::Block();
   blocks[1].block->timestamp = 0;
   blocks[1].transactions.push_back(createTransaction());
   ASSERT_TRUE(m_consumer.onNewBlocks(&blocks[0], 0, 2));
@@ -625,7 +625,7 @@ TEST_F(TransfersConsumerTest, onNewBlocks_markTransactionConfirmed) {
 class INodeGlobalIndexStub: public INodeDummyStub {
 public:
 
-  virtual void getTransactionOutsGlobalIndices(const Crypto::Hash& transactionHash,
+  virtual void getTransactionOutsGlobalIndices(const crypto::Hash& transactionHash,
     std::vector<uint32_t>& outsGlobalIndices, const Callback& callback) override {
     outsGlobalIndices.push_back(globalIndex);
     callback(std::error_code());
@@ -649,7 +649,7 @@ TEST_F(TransfersConsumerTest, onNewBlocks_checkTransactionOutputInformation) {
   auto out = addTestKeyOutput(*tx, 10000, index, m_accountKeys);
 
   CompleteBlock block;
-  block.block = CryptoNote::Block();
+  block.block = cn::Block();
   block.block->timestamp = 0;
   block.transactions.push_back(tx);
   ASSERT_TRUE(consumer.onNewBlocks(&block, 0, 1));
@@ -690,7 +690,7 @@ TEST_F(TransfersConsumerTest, onNewBlocks_checkTransactionOutputInformationMulti
   expectedOut.requiredSignatures = 2;
 
   CompleteBlock block;
-  block.block = CryptoNote::Block();
+  block.block = cn::Block();
   block.block->timestamp = 0;
   block.transactions.push_back(tx);
   ASSERT_TRUE(consumer.onNewBlocks(&block, 0, 1));
@@ -713,17 +713,17 @@ TEST_F(TransfersConsumerTest, onNewBlocks_checkTransactionInformation) {
   std::shared_ptr<ITransaction> tx(createTransaction());
   addTestInput(*tx, 10000);
   addTestKeyOutput(*tx, 1000, 2, m_accountKeys);
-  Hash paymentId = Crypto::rand<Hash>();
+  Hash paymentId = crypto::rand<Hash>();
   uint64_t unlockTime = 10;
   tx->setPaymentId(paymentId);
   tx->setUnlockTime(unlockTime);
 
   CompleteBlock blocks[2];
-  blocks[0].block = CryptoNote::Block();
+  blocks[0].block = cn::Block();
   blocks[0].block->timestamp = 0;
   blocks[0].transactions.push_back(createTransaction());
 
-  blocks[1].block = CryptoNote::Block();
+  blocks[1].block = cn::Block();
   blocks[1].block->timestamp = 11;
   blocks[1].transactions.push_back(tx);
 
@@ -868,9 +868,9 @@ TEST_F(TransfersConsumerTest, onPoolUpdated_deleteTransactionNotDeleted) {
   TransfersObserver observer;
   sub.addObserver(&observer);
 
-  std::vector<Crypto::Hash> deleted = { 
-    Crypto::rand<Crypto::Hash>(), 
-    Crypto::rand<Crypto::Hash>() 
+  std::vector<crypto::Hash> deleted = { 
+    crypto::rand<crypto::Hash>(), 
+    crypto::rand<crypto::Hash>() 
   };
 
   m_consumer.onPoolUpdated({}, deleted);
@@ -885,7 +885,7 @@ TEST_F(TransfersConsumerTest, onPoolUpdated_deleteTransaction) {
   sub.addObserver(&observer);
 
   std::vector<std::unique_ptr<ITransactionReader>> added;
-  std::vector<Crypto::Hash> deleted;
+  std::vector<crypto::Hash> deleted;
 
   for (uint8_t i = 0; i < TX_COUNT; ++i) {
     // construct tx
@@ -910,7 +910,7 @@ TEST_F(TransfersConsumerTest, onPoolUpdated_deleteTransaction) {
 
 TEST_F(TransfersConsumerTest, getKnownPoolTxIds_empty) {
   addSubscription();
-  const std::unordered_set<Crypto::Hash>& ids = m_consumer.getKnownPoolTxIds();
+  const std::unordered_set<crypto::Hash>& ids = m_consumer.getKnownPoolTxIds();
   ASSERT_TRUE(ids.empty());
 }
 
@@ -941,7 +941,7 @@ TEST_F(TransfersConsumerTest, getKnownPoolTxIds_returnsUnconfirmed) {
   v.push_back(createTransactionPrefix(convertTx(*txs[2])));
   m_consumer.onPoolUpdated(v, {});
 
-  const std::unordered_set<Crypto::Hash>& ids = m_consumer.getKnownPoolTxIds();
+  const std::unordered_set<crypto::Hash>& ids = m_consumer.getKnownPoolTxIds();
 
   ASSERT_EQ(3, ids.size());
 
@@ -962,7 +962,7 @@ TEST_F(TransfersConsumerTest, onNewBlocks_getsDepositOutputCorrectly) {
   tx->addOutput(AMOUNT, std::vector<AccountPublicAddress> {m_accountKeys.address}, REQUIRED_SIGNATURES, TERM);
 
   CompleteBlock block;
-  block.block = CryptoNote::Block();
+  block.block = cn::Block();
   block.block->timestamp = 1235;
   block.transactions.push_back(tx);
 

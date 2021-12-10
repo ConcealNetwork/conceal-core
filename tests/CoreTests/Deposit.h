@@ -14,27 +14,27 @@
 namespace DepositTests {
 struct DepositTestsBase : public test_chain_unit_base {
   DepositTestsBase() {
-    m_currency = CryptoNote::CurrencyBuilder(m_logger).upgradeHeightV2(0).depositMinTerm(10).depositMinTotalRateFactor(100).currency();
+    m_currency = cn::CurrencyBuilder(m_logger).upgradeHeightV2(0).depositMinTerm(10).depositMinTotalRateFactor(100).currency();
     from.generate();
     to.generate();
     REGISTER_CALLBACK_METHOD(DepositTestsBase, mark_invalid_block);
     REGISTER_CALLBACK_METHOD(DepositTestsBase, mark_invalid_tx);
     REGISTER_CALLBACK_METHOD(DepositTestsBase, check_emission);
   }
-  CryptoNote::Transaction createDepositTransaction(std::vector<test_event_entry>& events);
+  cn::Transaction createDepositTransaction(std::vector<test_event_entry>& events);
 
-  bool mark_invalid_tx(CryptoNote::core& c, size_t ev_index, const std::vector<test_event_entry>& events);
+  bool mark_invalid_tx(cn::core& c, size_t ev_index, const std::vector<test_event_entry>& events);
 
-  bool check_emission(CryptoNote::core& c, size_t ev_index, const std::vector<test_event_entry>& events);
+  bool check_emission(cn::core& c, size_t ev_index, const std::vector<test_event_entry>& events);
 
   // TransactionBuilder::MultisignatureSource createSource(uint32_t term = 0) const;
-  TransactionBuilder::MultisignatureSource createSource(uint32_t term, CryptoNote::KeyPair key) const;
+  TransactionBuilder::MultisignatureSource createSource(uint32_t term, cn::KeyPair key) const;
 
-  bool check_tx_verification_context(const CryptoNote::tx_verification_context& tvc, bool tx_added,
-                                     std::size_t event_idx, const CryptoNote::Transaction& /*tx*/);
+  bool check_tx_verification_context(const cn::tx_verification_context& tvc, bool tx_added,
+                                     std::size_t event_idx, const cn::Transaction& /*tx*/);
 
-  bool check_block_verification_context(const CryptoNote::block_verification_context& bvc, size_t eventIdx,
-                                        const CryptoNote::Block& /*blk*/) {
+  bool check_block_verification_context(const cn::block_verification_context& bvc, size_t eventIdx,
+                                        const cn::Block& /*blk*/) {
     if (blockId == eventIdx) {
       return bvc.m_verification_failed;
     } else {
@@ -42,29 +42,29 @@ struct DepositTestsBase : public test_chain_unit_base {
     }
   }
 
-  bool mark_invalid_block(CryptoNote::core& /*c*/, size_t ev_index, const std::vector<test_event_entry>& /*events*/) {
+  bool mark_invalid_block(cn::core& /*c*/, size_t ev_index, const std::vector<test_event_entry>& /*events*/) {
     blockId = ev_index + 1;
     return true;
   }
 
   TestGenerator prepare(std::vector<test_event_entry>& events) const;
-  void addDepositOutput(CryptoNote::Transaction& transaction);
-  void addDepositInput(CryptoNote::Transaction& transaction);
+  void addDepositOutput(cn::Transaction& transaction);
+  void addDepositInput(cn::Transaction& transaction);
 
   Logging::ConsoleLogger m_logger;
-  CryptoNote::Transaction transaction;
-  CryptoNote::AccountBase from;
-  CryptoNote::AccountBase to;
+  cn::Transaction transaction;
+  cn::AccountBase from;
+  cn::AccountBase to;
   std::size_t blockId = 0;
   std::size_t emission = 0;
 };
 
 struct DepositIndexTest : public DepositTestsBase {
-  using Block = CryptoNote::Block;
-  using Core = CryptoNote::core;
+  using Block = cn::Block;
+  using Core = cn::core;
   using Events = std::vector<test_event_entry>;
   DepositIndexTest() {
-    m_currency = CryptoNote::CurrencyBuilder(m_logger).upgradeHeightV2(0).depositMinTerm(10).depositMinTotalRateFactor(100).minimumFee(1000).currency();
+    m_currency = cn::CurrencyBuilder(m_logger).upgradeHeightV2(0).depositMinTerm(10).depositMinTotalRateFactor(100).minimumFee(1000).currency();
     REGISTER_CALLBACK_METHOD(DepositIndexTest, interestZero);
     REGISTER_CALLBACK_METHOD(DepositIndexTest, interestOneMinimal);
     REGISTER_CALLBACK_METHOD(DepositIndexTest, interestTwoMininmal);
@@ -100,25 +100,25 @@ struct DepositIndexTest : public DepositTestsBase {
 
 struct EmissionTest : public DepositTestsBase {
   EmissionTest() {
-    m_currency = CryptoNote::CurrencyBuilder(m_logger).upgradeHeightV2(0).depositMinTerm(10).depositMinTotalRateFactor(100).currency();
+    m_currency = cn::CurrencyBuilder(m_logger).upgradeHeightV2(0).depositMinTerm(10).depositMinTotalRateFactor(100).currency();
     REGISTER_CALLBACK_METHOD(EmissionTest, save_emission_before);
     REGISTER_CALLBACK_METHOD(EmissionTest, save_emission_after);
   }
-  bool check_block_verification_context(const CryptoNote::block_verification_context& bvc, std::size_t eventIdx,
-                                        const CryptoNote::Block& /*blk*/) {
+  bool check_block_verification_context(const cn::block_verification_context& bvc, std::size_t eventIdx,
+                                        const cn::Block& /*blk*/) {
     if (emission_after == 0 || emission_before == 0) {
       return true;
     }
-    return emission_after == emission_before + CryptoNote::START_BLOCK_REWARD + m_currency.calculateInterest(m_currency.depositMinAmount(), m_currency.depositMinTerm(), 0);
+    return emission_after == emission_before + cn::START_BLOCK_REWARD + m_currency.calculateInterest(m_currency.depositMinAmount(), m_currency.depositMinTerm(), 0);
   }
 
-  bool save_emission_before(CryptoNote::core& c, std::size_t /*ev_index*/,
+  bool save_emission_before(cn::core& c, std::size_t /*ev_index*/,
                             const std::vector<test_event_entry>& /*events*/) {
     emission_before = c.getTotalGeneratedAmount();
     return emission_before > 0;
   }
 
-  bool save_emission_after(CryptoNote::core& c, std::size_t ev_index, const std::vector<test_event_entry>& /*events*/) {
+  bool save_emission_after(cn::core& c, std::size_t ev_index, const std::vector<test_event_entry>& /*events*/) {
     emission_after = c.getTotalGeneratedAmount();
     return emission_after > 0;
   }
@@ -128,12 +128,12 @@ struct EmissionTest : public DepositTestsBase {
 };
 
 struct EmissionTestRestore : public EmissionTest {
-  bool check_block_verification_context(const CryptoNote::block_verification_context& bvc, std::size_t eventIdx,
-                                        const CryptoNote::Block& /*blk*/) {
+  bool check_block_verification_context(const cn::block_verification_context& bvc, std::size_t eventIdx,
+                                        const cn::Block& /*blk*/) {
     if (emission_after == 0 || emission_before == 0) {
       return true;
     }
-    return emission_after == emission_before + CryptoNote::START_BLOCK_REWARD * 3 - m_currency.calculateInterest(m_currency.depositMinAmount(), m_currency.depositMinTerm(), 0);
+    return emission_after == emission_before + cn::START_BLOCK_REWARD * 3 - m_currency.calculateInterest(m_currency.depositMinAmount(), m_currency.depositMinTerm(), 0);
   }
 };
 

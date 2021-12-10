@@ -24,7 +24,7 @@
 #include "P2pProtocolDefinitions.h"
 #include "PeerListManager.h"
 
-namespace CryptoNote {
+namespace cn {
 
 class P2pContext;
 class P2pConnectionProxy;
@@ -40,7 +40,7 @@ public:
     const P2pNodeConfig& cfg,
     System::Dispatcher& dispatcher, 
     Logging::ILogger& log, 
-    const Crypto::Hash& genesisHash, 
+    const crypto::Hash& genesisHash, 
     PeerIdType peerId);
 
   ~P2pNode();
@@ -65,7 +65,7 @@ private:
   bool m_stopRequested;
   const P2pNodeConfig m_cfg;
   const PeerIdType m_myPeerId;
-  const Crypto::Hash m_genesisHash;
+  const crypto::Hash m_genesisHash;
   const CORE_SYNC_DATA m_genesisPayload;
 
   System::Dispatcher& m_dispatcher;

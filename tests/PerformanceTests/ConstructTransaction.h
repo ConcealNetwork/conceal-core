@@ -26,7 +26,7 @@ public:
 
   bool init()
   {
-    using namespace CryptoNote;
+    using namespace cn;
 
     if (!base_class::init())
       return false;
@@ -43,12 +43,12 @@ public:
 
   bool test()
   {
-      Crypto::SecretKey txSK;
-    return CryptoNote::constructTransaction(this->m_miners[this->real_source_idx].getAccountKeys(), this->m_sources, m_destinations, std::vector<uint8_t>(), m_tx, 0, this->m_logger, txSK);
+      crypto::SecretKey txSK;
+    return cn::constructTransaction(this->m_miners[this->real_source_idx].getAccountKeys(), this->m_sources, m_destinations, std::vector<uint8_t>(), m_tx, 0, this->m_logger, txSK);
   }
 
 private:
-  CryptoNote::AccountBase m_alice;
-  std::vector<CryptoNote::TransactionDestinationEntry> m_destinations;
-  CryptoNote::Transaction m_tx;
+  cn::AccountBase m_alice;
+  std::vector<cn::TransactionDestinationEntry> m_destinations;
+  cn::Transaction m_tx;
 };

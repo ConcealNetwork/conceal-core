@@ -26,7 +26,7 @@
 #include "Serialization/ISerializer.h"
 #include "Serialization/SerializationTools.h"
 
-namespace CryptoNote {
+namespace cn {
 
 class HttpClient;
   
@@ -205,7 +205,7 @@ bool invokeMethod(const JsonRpcRequest& jsReq, JsonRpcResponse& jsRes, Handler h
   Request req;
   Response res;
 
-  if (!std::is_same<Request, CryptoNote::EMPTY_STRUCT>::value && !jsReq.loadParams(req)) {
+  if (!std::is_same<Request, cn::EMPTY_STRUCT>::value && !jsReq.loadParams(req)) {
     throw JsonRpcError(JsonRpc::errInvalidParams);
   }
 

@@ -20,10 +20,10 @@
 #include "INodeStubs.h"
 #include "Wallet/WalletErrors.h"
 
-using namespace CryptoNote;
+using namespace cn;
 using namespace PaymentService;
 
-namespace CryptoNote {
+namespace cn {
 
 bool operator== (const WalletOrder& lhs, const WalletOrder& rhs) {
   return std::make_tuple(lhs.address, lhs.amount) == std::make_tuple(rhs.address, rhs.amount);
@@ -33,14 +33,14 @@ bool operator== (const DonationSettings& lhs, const DonationSettings& rhs) {
   return std::make_tuple(lhs.address, lhs.threshold) == std::make_tuple(rhs.address, rhs.threshold);
 }
 
-} //namespace CryptoNote
+} //namespace cn
 
-struct IWalletBaseStub : public CryptoNote::IWallet {
+struct IWalletBaseStub : public cn::IWallet {
   IWalletBaseStub(System::Dispatcher& dispatcher) : m_eventOccurred(dispatcher) {}
   virtual ~IWalletBaseStub() {}
 
   virtual void initialize(const std::string& password) override { }
-  virtual void initializeWithViewKey(const Crypto::SecretKey& viewSecretKey, const std::string& password) override { }
+  virtual void initializeWithViewKey(const crypto::SecretKey& viewSecretKey, const std::string& password) override { }
   virtual void load(std::istream& source, const std::string& password) override { }
   virtual void shutdown() override { }
 
@@ -53,8 +53,8 @@ struct IWalletBaseStub : public CryptoNote::IWallet {
   virtual KeyPair getAddressSpendKey(const std::string& address) const override { return KeyPair(); }
   virtual KeyPair getViewKey() const override { return KeyPair(); }
   virtual std::string createAddress() override { return ""; }
-  virtual std::string createAddress(const Crypto::SecretKey& spendSecretKey) override { return ""; }
-  virtual std::string createAddress(const Crypto::PublicKey& spendPublicKey) override { return ""; }
+  virtual std::string createAddress(const crypto::SecretKey& spendSecretKey) override { return ""; }
+  virtual std::string createAddress(const crypto::PublicKey& spendPublicKey) override { return ""; }
   virtual void deleteAddress(const std::string& address) override { }
 
   virtual uint64_t getActualBalance() const override { return 0; }
@@ -67,10 +67,10 @@ struct IWalletBaseStub : public CryptoNote::IWallet {
   virtual size_t getTransactionTransferCount(size_t transactionIndex) const override { return 0; }
   virtual WalletTransfer getTransactionTransfer(size_t transactionIndex, size_t transferIndex) const override { return WalletTransfer(); }
 
-  virtual WalletTransactionWithTransfers getTransaction(const Crypto::Hash& transactionHash) const override { return WalletTransactionWithTransfers(); }
-  virtual std::vector<TransactionsInBlockInfo> getTransactions(const Crypto::Hash& blockHash, size_t count) const override { return {}; }
+  virtual WalletTransactionWithTransfers getTransaction(const crypto::Hash& transactionHash) const override { return WalletTransactionWithTransfers(); }
+  virtual std::vector<TransactionsInBlockInfo> getTransactions(const crypto::Hash& blockHash, size_t count) const override { return {}; }
   virtual std::vector<TransactionsInBlockInfo> getTransactions(uint32_t blockIndex, size_t count) const override { return {}; }
-  virtual std::vector<Crypto::Hash> getBlockHashes(uint32_t blockIndex, size_t count) const override { return {}; }
+  virtual std::vector<crypto::Hash> getBlockHashes(uint32_t blockIndex, size_t count) const override { return {}; }
   virtual uint32_t getBlockCount() const override { return 0; }
   virtual std::vector<WalletTransactionWithTransfers> getUnconfirmedTransactions() const override { return {}; }
   virtual std::vector<size_t> getDelayedTransactionIds() const override { return {}; }
@@ -120,7 +120,7 @@ protected:
 class WalletServiceTest: public ::testing::Test {
 public:
   WalletServiceTest() :
-    currency(CryptoNote::CurrencyBuilder(logger).currency()),
+    currency(cn::CurrencyBuilder(logger).currency()),
     generator(currency),
     nodeStub(generator),
     walletBase(dispatcher)
@@ -136,9 +136,9 @@ protected:
   System::Dispatcher dispatcher;
   IWalletBaseStub walletBase;
 
-  std::unique_ptr<WalletService> createWalletService(CryptoNote::IWallet& wallet);
+  std::unique_ptr<WalletService> createWalletService(cn::IWallet& wallet);
   std::unique_ptr<WalletService> createWalletService();
-  Crypto::Hash generateRandomHash();
+  crypto::Hash generateRandomHash();
 };
 
 void WalletServiceTest::SetUp() {
@@ -148,7 +148,7 @@ void WalletServiceTest::SetUp() {
   walletConfig.walletPassword = "test";
 }
 
-std::unique_ptr<WalletService> WalletServiceTest::createWalletService(CryptoNote::IWallet& wallet) {
+std::unique_ptr<WalletService> WalletServiceTest::createWalletService(cn::IWallet& wallet) {
   return std::unique_ptr<WalletService> (new WalletService(currency, dispatcher, nodeStub, wallet, walletConfig, logger));
 }
 
@@ -156,8 +156,8 @@ std::unique_ptr<WalletService> WalletServiceTest::createWalletService() {
   return createWalletService(walletBase);
 }
 
-Crypto::Hash WalletServiceTest::generateRandomHash() {
-  Crypto::Hash hash;
+crypto::Hash WalletServiceTest::generateRandomHash() {
+  crypto::Hash hash;
   std::generate(std::begin(hash.data), std::end(hash.data), std::rand);
   return hash;
 }
@@ -169,8 +169,8 @@ struct WalletCreateAddressStub: public IWalletBaseStub {
   WalletCreateAddressStub(System::Dispatcher& d) : IWalletBaseStub(d) {}
 
   virtual std::string createAddress() override { return address; }
-  virtual std::string createAddress(const Crypto::SecretKey& spendSecretKey) override { return address; }
-  virtual std::string createAddress(const Crypto::PublicKey& spendPublicKey) override { return address; }
+  virtual std::string createAddress(const crypto::SecretKey& spendSecretKey) override { return address; }
+  virtual std::string createAddress(const crypto::PublicKey& spendPublicKey) override { return address; }
 
   std::string address = "correctAddress";
 };
@@ -191,7 +191,7 @@ TEST_F(WalletServiceTest_createAddress, invalidSecretKey) {
 
   std::string address;
   std::error_code ec = service->createAddress("wrong key", address);
-  ASSERT_EQ(make_error_code(CryptoNote::error::WalletServiceErrorCode::WRONG_KEY_FORMAT), ec);
+  ASSERT_EQ(make_error_code(cn::error::WalletServiceErrorCode::WRONG_KEY_FORMAT), ec);
 }
 
 TEST_F(WalletServiceTest_createAddress, invalidPublicKey) {
@@ -199,13 +199,13 @@ TEST_F(WalletServiceTest_createAddress, invalidPublicKey) {
 
   std::string address;
   std::error_code ec = service->createTrackingAddress("wrong key", address);
-  ASSERT_EQ(make_error_code(CryptoNote::error::WalletServiceErrorCode::WRONG_KEY_FORMAT), ec);
+  ASSERT_EQ(make_error_code(cn::error::WalletServiceErrorCode::WRONG_KEY_FORMAT), ec);
 }
 
 TEST_F(WalletServiceTest_createAddress, correctSecretKey) {
-  Crypto::PublicKey pub;
-  Crypto::SecretKey sec;
-  Crypto::generate_keys(pub, sec);
+  crypto::PublicKey pub;
+  crypto::SecretKey sec;
+  crypto::generate_keys(pub, sec);
 
   WalletCreateAddressStub wallet(dispatcher);
   std::unique_ptr<WalletService> service = createWalletService(wallet);
@@ -218,9 +218,9 @@ TEST_F(WalletServiceTest_createAddress, correctSecretKey) {
 }
 
 TEST_F(WalletServiceTest_createAddress, correctPublicKey) {
-  Crypto::PublicKey pub;
-  Crypto::SecretKey sec;
-  Crypto::generate_keys(pub, sec);
+  crypto::PublicKey pub;
+  crypto::SecretKey sec;
+  crypto::generate_keys(pub, sec);
 
   WalletCreateAddressStub wallet(dispatcher);
   std::unique_ptr<WalletService> service = createWalletService(wallet);
@@ -237,7 +237,7 @@ class WalletServiceTest_getSpendKeys : public WalletServiceTest {
 
 struct WalletgetSpendKeysStub: public IWalletBaseStub {
   WalletgetSpendKeysStub(System::Dispatcher& d) : IWalletBaseStub(d) {
-    Crypto::generate_keys(keyPair.publicKey, keyPair.secretKey);
+    crypto::generate_keys(keyPair.publicKey, keyPair.secretKey);
   }
 
   virtual KeyPair getAddressSpendKey(const std::string& address) const override {
@@ -331,12 +331,12 @@ TEST_F(WalletServiceTest_getBalance, returnsCorrectBalanceByAddress) {
 
 class WalletServiceTest_getBlockHashes : public WalletServiceTest {
 protected:
-  std::vector<Crypto::Hash> convertBlockHashes(const std::vector<std::string>& hashes) {
-    std::vector<Crypto::Hash> result;
+  std::vector<crypto::Hash> convertBlockHashes(const std::vector<std::string>& hashes) {
+    std::vector<crypto::Hash> result;
     result.reserve(hashes.size());
 
     std::for_each(hashes.begin(), hashes.end(), [&result] (const std::string& str) {
-      Crypto::Hash hash;
+      crypto::Hash hash;
       Common::podFromHex(str, hash);
       result.push_back(hash);
     });
@@ -349,11 +349,11 @@ struct WalletGetBlockHashesStub: public IWalletBaseStub {
   WalletGetBlockHashesStub(System::Dispatcher& d) : IWalletBaseStub(d) {
   }
 
-  virtual std::vector<Crypto::Hash> getBlockHashes(uint32_t blockIndex, size_t count) const override {
+  virtual std::vector<crypto::Hash> getBlockHashes(uint32_t blockIndex, size_t count) const override {
     return blockHashes;
   }
 
-  std::vector<Crypto::Hash> blockHashes;
+  std::vector<crypto::Hash> blockHashes;
 };
 
 TEST_F(WalletServiceTest_getBlockHashes, returnsEmptyBlockHashes) {
@@ -380,7 +380,7 @@ class WalletServiceTest_getViewKey : public WalletServiceTest {
 
 struct WalletGetViewKeyStub: public IWalletBaseStub {
   WalletGetViewKeyStub(System::Dispatcher& d) : IWalletBaseStub(d) {
-    Crypto::generate_keys(keyPair.publicKey, keyPair.secretKey);
+    crypto::generate_keys(keyPair.publicKey, keyPair.secretKey);
   }
 
   virtual KeyPair getViewKey() const override {
@@ -401,7 +401,7 @@ TEST_F(WalletServiceTest_getViewKey, returnsCorrectValue) {
 
 class WalletTransactionBuilder {
 public:
-  WalletTransactionBuilder& hash(const Crypto::Hash& hash) {
+  WalletTransactionBuilder& hash(const crypto::Hash& hash) {
     transaction.hash = hash;
     return *this;
   }
@@ -522,7 +522,7 @@ void WalletServiceTest_getTransactions::SetUp() {
 class WalletGetTransactionsStub : public IWalletBaseStub {
 public:
   WalletGetTransactionsStub(System::Dispatcher& d) : IWalletBaseStub(d) {}
-  virtual std::vector<TransactionsInBlockInfo> getTransactions(const Crypto::Hash& blockHash, size_t count) const override {
+  virtual std::vector<TransactionsInBlockInfo> getTransactions(const crypto::Hash& blockHash, size_t count) const override {
     return transactions;
   }
 
@@ -632,7 +632,7 @@ TEST_F(WalletServiceTest_getTransactions, invalidAddress) {
 
   std::vector<TransactionsInBlockRpcInfo> transactions;
   auto ec = service->getTransactions({"invalid address"}, 0, 1, "", transactions);
-  ASSERT_EQ(make_error_code(CryptoNote::error::BAD_ADDRESS), ec);
+  ASSERT_EQ(make_error_code(cn::error::BAD_ADDRESS), ec);
 }
 
 TEST_F(WalletServiceTest_getTransactions, invalidPaymentId) {
@@ -643,7 +643,7 @@ TEST_F(WalletServiceTest_getTransactions, invalidPaymentId) {
 
   std::vector<TransactionsInBlockRpcInfo> transactions;
   auto ec = service->getTransactions({}, 0, 1, "invalid payment id", transactions);
-  ASSERT_EQ(make_error_code(CryptoNote::error::WalletServiceErrorCode::WRONG_PAYMENT_ID_FORMAT), ec);
+  ASSERT_EQ(make_error_code(cn::error::WalletServiceErrorCode::WRONG_PAYMENT_ID_FORMAT), ec);
 }
 
 TEST_F(WalletServiceTest_getTransactions, blockNotFound) {
@@ -652,7 +652,7 @@ TEST_F(WalletServiceTest_getTransactions, blockNotFound) {
   std::vector<TransactionsInBlockRpcInfo> transactions;
 
   auto ec = service->getTransactions({}, 0, 1, "", transactions);
-  ASSERT_EQ(make_error_code(CryptoNote::error::WalletServiceErrorCode::OBJECT_NOT_FOUND), ec);
+  ASSERT_EQ(make_error_code(cn::error::WalletServiceErrorCode::OBJECT_NOT_FOUND), ec);
 }
 
 class WalletServiceTest_getTransaction : public WalletServiceTest_getTransactions {
@@ -662,7 +662,7 @@ struct WalletGetTransactionStub : public IWalletBaseStub {
   WalletGetTransactionStub (System::Dispatcher& dispatcher) : IWalletBaseStub(dispatcher) {
   }
 
-  virtual WalletTransactionWithTransfers getTransaction(const Crypto::Hash& transactionHash) const override {
+  virtual WalletTransactionWithTransfers getTransaction(const crypto::Hash& transactionHash) const override {
     return transaction;
   }
 
@@ -674,7 +674,7 @@ TEST_F(WalletServiceTest_getTransaction, wrongHash) {
 
   TransactionRpcInfo transaction;
   auto ec = service->getTransaction("wrong hash", transaction);
-  ASSERT_EQ(make_error_code(CryptoNote::error::WalletServiceErrorCode::WRONG_HASH_FORMAT), ec);
+  ASSERT_EQ(make_error_code(cn::error::WalletServiceErrorCode::WRONG_HASH_FORMAT), ec);
 }
 
 TEST_F(WalletServiceTest_getTransaction, returnsCorrectFields) {
@@ -696,7 +696,7 @@ TEST_F(WalletServiceTest_getTransaction, returnsCorrectFields) {
   auto service = createWalletService(wallet);
 
   TransactionRpcInfo transaction;
-  auto ec = service->getTransaction(Common::podToHex(Crypto::Hash()), transaction);
+  auto ec = service->getTransaction(Common::podToHex(crypto::Hash()), transaction);
 
   ASSERT_FALSE(ec);
   ASSERT_EQ(static_cast<uint8_t>(wallet.transaction.transaction.state), transaction.state);
@@ -723,7 +723,7 @@ struct WalletGetTransactionThrowStub : public IWalletBaseStub {
   WalletGetTransactionThrowStub (System::Dispatcher& dispatcher) : IWalletBaseStub(dispatcher) {
   }
 
-  virtual WalletTransactionWithTransfers getTransaction(const Crypto::Hash& transactionHash) const override {
+  virtual WalletTransactionWithTransfers getTransaction(const crypto::Hash& transactionHash) const override {
     throw std::system_error(make_error_code(error::OBJECT_NOT_FOUND));
   }
 };
@@ -733,7 +733,7 @@ TEST_F(WalletServiceTest_getTransaction, transactionNotFound) {
   auto service = createWalletService(wallet);
 
   TransactionRpcInfo transaction;
-  auto ec = service->getTransaction(Common::podToHex(Crypto::Hash()), transaction);
+  auto ec = service->getTransaction(Common::podToHex(crypto::Hash()), transaction);
 
   ASSERT_EQ(make_error_code(error::OBJECT_NOT_FOUND), ec);
 }
@@ -753,7 +753,7 @@ void WalletServiceTest_sendTransaction::SetUp() {
 }
 
 struct WalletTransferStub : public IWalletBaseStub {
-  WalletTransferStub(System::Dispatcher& dispatcher, const Crypto::Hash& hash) : IWalletBaseStub(dispatcher), hash(hash) {
+  WalletTransferStub(System::Dispatcher& dispatcher, const crypto::Hash& hash) : IWalletBaseStub(dispatcher), hash(hash) {
   }
 
   virtual size_t transfer(const TransactionParameters& sendingTransaction) override {
@@ -765,7 +765,7 @@ struct WalletTransferStub : public IWalletBaseStub {
     return WalletTransactionBuilder().hash(hash).build();
   }
 
-  Crypto::Hash hash;
+  crypto::Hash hash;
   TransactionParameters params;
 };
 
@@ -805,7 +805,7 @@ TEST_F(WalletServiceTest_sendTransaction, incorrectSourceAddress) {
 
   std::string hash;
   auto ec = service->sendTransaction(request, hash);
-  ASSERT_EQ(make_error_code(CryptoNote::error::BAD_ADDRESS), ec);
+  ASSERT_EQ(make_error_code(cn::error::BAD_ADDRESS), ec);
 }
 
 TEST_F(WalletServiceTest_sendTransaction, incorrectTransferAddress) {
@@ -814,7 +814,7 @@ TEST_F(WalletServiceTest_sendTransaction, incorrectTransferAddress) {
 
   std::string hash;
   auto ec = service->sendTransaction(request, hash);
-  ASSERT_EQ(make_error_code(CryptoNote::error::BAD_ADDRESS), ec);
+  ASSERT_EQ(make_error_code(cn::error::BAD_ADDRESS), ec);
 }
 
 class WalletServiceTest_createDelayedTransaction : public WalletServiceTest_getTransactions {
@@ -832,7 +832,7 @@ void WalletServiceTest_createDelayedTransaction::SetUp() {
 }
 
 struct WalletMakeTransactionStub : public IWalletBaseStub {
-  WalletMakeTransactionStub(System::Dispatcher& dispatcher, const Crypto::Hash& hash) : IWalletBaseStub(dispatcher), hash(hash) {
+  WalletMakeTransactionStub(System::Dispatcher& dispatcher, const crypto::Hash& hash) : IWalletBaseStub(dispatcher), hash(hash) {
   }
 
   virtual size_t makeTransaction(const TransactionParameters& sendingTransaction) override {
@@ -844,7 +844,7 @@ struct WalletMakeTransactionStub : public IWalletBaseStub {
     return WalletTransactionBuilder().hash(hash).build();
   }
 
-  Crypto::Hash hash;
+  crypto::Hash hash;
   TransactionParameters params;
 };
 
@@ -884,7 +884,7 @@ TEST_F(WalletServiceTest_createDelayedTransaction, incorrectSourceAddress) {
 
   std::string hash;
   auto ec = service->createDelayedTransaction(request, hash);
-  ASSERT_EQ(make_error_code(CryptoNote::error::BAD_ADDRESS), ec);
+  ASSERT_EQ(make_error_code(cn::error::BAD_ADDRESS), ec);
 }
 
 TEST_F(WalletServiceTest_createDelayedTransaction, incorrectTransferAddress) {
@@ -893,14 +893,14 @@ TEST_F(WalletServiceTest_createDelayedTransaction, incorrectTransferAddress) {
 
   std::string hash;
   auto ec = service->createDelayedTransaction(request, hash);
-  ASSERT_EQ(make_error_code(CryptoNote::error::BAD_ADDRESS), ec);
+  ASSERT_EQ(make_error_code(cn::error::BAD_ADDRESS), ec);
 }
 
 class WalletServiceTest_getDelayedTransactionHashes: public WalletServiceTest {
 };
 
 struct WalletGetDelayedTransactionIdsStub : public IWalletBaseStub {
-  WalletGetDelayedTransactionIdsStub(System::Dispatcher& dispatcher, const Crypto::Hash& hash) : IWalletBaseStub(dispatcher), hash(hash) {
+  WalletGetDelayedTransactionIdsStub(System::Dispatcher& dispatcher, const crypto::Hash& hash) : IWalletBaseStub(dispatcher), hash(hash) {
   }
 
   virtual std::vector<size_t> getDelayedTransactionIds() const override {
@@ -911,7 +911,7 @@ struct WalletGetDelayedTransactionIdsStub : public IWalletBaseStub {
     return WalletTransactionBuilder().hash(hash).build();
   }
 
-  const Crypto::Hash hash;
+  const crypto::Hash hash;
 };
 
 TEST_F(WalletServiceTest_getDelayedTransactionHashes, returnsCorrectResult) {
@@ -930,7 +930,7 @@ class WalletServiceTest_getUnconfirmedTransactionHashes: public WalletServiceTes
 public:
   virtual void SetUp() override;
 protected:
-  std::vector<CryptoNote::WalletTransactionWithTransfers> transactions;
+  std::vector<cn::WalletTransactionWithTransfers> transactions;
 };
 
 void WalletServiceTest_getUnconfirmedTransactionHashes::SetUp() {
@@ -952,7 +952,7 @@ struct WalletGetUnconfirmedTransactionsStub : public IWalletBaseStub {
     return transactions;
   }
 
-  std::vector<CryptoNote::WalletTransactionWithTransfers> transactions;
+  std::vector<cn::WalletTransactionWithTransfers> transactions;
 };
 
 TEST_F(WalletServiceTest_getUnconfirmedTransactionHashes, returnsAllHashesWithoutAddresses) {
@@ -1002,5 +1002,5 @@ TEST_F(WalletServiceTest_getUnconfirmedTransactionHashes, wrongAddressFilter) {
   std::vector<std::string> hashes;
   auto ec = service->getUnconfirmedTransactionHashes({"wrong address"}, hashes);
 
-  ASSERT_EQ(make_error_code(CryptoNote::error::BAD_ADDRESS), ec);
+  ASSERT_EQ(make_error_code(cn::error::BAD_ADDRESS), ec);
 }

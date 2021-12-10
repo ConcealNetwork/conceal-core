@@ -13,7 +13,7 @@
 
 #include "CryptoNote.h"
 
-namespace CryptoNote {
+namespace cn {
 
 namespace TransactionTypes {
   
@@ -21,14 +21,14 @@ namespace TransactionTypes {
   enum class OutputType : uint8_t { Invalid, Key, Multisignature };
 
   struct GlobalOutput {
-    Crypto::PublicKey targetKey;
+    crypto::PublicKey targetKey;
     uint32_t outputIndex;
   };
 
   typedef std::vector<GlobalOutput> GlobalOutputsContainer;
 
   struct OutputKeyInfo {
-    Crypto::PublicKey transactionPublicKey;
+    crypto::PublicKey transactionPublicKey;
     size_t transactionIndex;
     size_t outputInTransaction;
   };
@@ -47,15 +47,15 @@ class ITransactionReader {
 public:
   virtual ~ITransactionReader() { }
 
-  virtual Crypto::Hash getTransactionHash() const = 0;
-  virtual Crypto::Hash getTransactionPrefixHash() const = 0;
-  virtual Crypto::Hash getTransactionInputsHash() const = 0;
-  virtual Crypto::PublicKey getTransactionPublicKey() const = 0;
-  virtual bool getTransactionSecretKey(Crypto::SecretKey& key) const = 0;
+  virtual crypto::Hash getTransactionHash() const = 0;
+  virtual crypto::Hash getTransactionPrefixHash() const = 0;
+  virtual crypto::Hash getTransactionInputsHash() const = 0;
+  virtual crypto::PublicKey getTransactionPublicKey() const = 0;
+  virtual bool getTransactionSecretKey(crypto::SecretKey& key) const = 0;
   virtual uint64_t getUnlockTime() const = 0;
 
   // extra
-  virtual bool getPaymentId(Crypto::Hash& paymentId) const = 0;
+  virtual bool getPaymentId(crypto::Hash& paymentId) const = 0;
   virtual bool getExtraNonce(BinaryArray& nonce) const = 0;
   virtual BinaryArray getExtra() const = 0;
 
@@ -75,7 +75,7 @@ public:
 
   // signatures
   virtual size_t getRequiredSignaturesCount(size_t inputIndex) const = 0;
-  virtual bool findOutputsToAccount(const AccountPublicAddress& addr, const Crypto::SecretKey& viewSecretKey, std::vector<uint32_t>& outs, uint64_t& outputAmount) const = 0;
+  virtual bool findOutputsToAccount(const AccountPublicAddress& addr, const crypto::SecretKey& viewSecretKey, std::vector<uint32_t>& outs, uint64_t& outputAmount) const = 0;
 
   // various checks
   virtual bool validateInputs() const = 0;
@@ -99,7 +99,7 @@ public:
   virtual void setUnlockTime(uint64_t unlockTime) = 0;
 
   // extra
-  virtual void setPaymentId(const Crypto::Hash& paymentId) = 0;
+  virtual void setPaymentId(const crypto::Hash& paymentId) = 0;
   virtual void setExtraNonce(const BinaryArray& nonce) = 0;
   virtual void appendExtra(const BinaryArray& extraData) = 0;
 
@@ -114,11 +114,11 @@ public:
   virtual size_t addOutput(uint64_t amount, const MultisignatureOutput& out) = 0;
 
   // transaction info
-  virtual void setTransactionSecretKey(const Crypto::SecretKey& key) = 0;
+  virtual void setTransactionSecretKey(const crypto::SecretKey& key) = 0;
 
   // signing
   virtual void signInputKey(size_t input, const TransactionTypes::InputKeyInfo& info, const KeyPair& ephKeys) = 0;
-  virtual void signInputMultisignature(size_t input, const Crypto::PublicKey& sourceTransactionKey, size_t outputIndex, const AccountKeys& accountKeys) = 0;
+  virtual void signInputMultisignature(size_t input, const crypto::PublicKey& sourceTransactionKey, size_t outputIndex, const AccountKeys& accountKeys) = 0;
   virtual void signInputMultisignature(size_t input, const KeyPair& ephemeralKeys) = 0;
 };
 

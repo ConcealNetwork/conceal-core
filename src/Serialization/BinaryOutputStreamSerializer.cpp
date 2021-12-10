@@ -12,7 +12,7 @@
 
 using namespace Common;
 
-namespace CryptoNote {
+namespace cn {
 
 ISerializer::SerializerType BinaryOutputStreamSerializer::type() const {
   return ISerializer::OUTPUT;

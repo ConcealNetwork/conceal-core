@@ -19,7 +19,7 @@
 #include "Rpc/CoreRpcServerCommandsDefinitions.h"
 #include "Rpc/JsonRpc.h"
 
-using namespace CryptoNote;
+using namespace cn;
 
 namespace Miner {
 
@@ -39,7 +39,7 @@ MinerEvent BlockchainUpdatedEvent() {
 
 }
 
-MinerManager::MinerManager(System::Dispatcher& dispatcher, const CryptoNote::MiningConfig& config, Logging::ILogger& logger) :
+MinerManager::MinerManager(System::Dispatcher& dispatcher, const cn::MiningConfig& config, Logging::ILogger& logger) :
   m_dispatcher(dispatcher),
   m_logger(logger, "MinerManager"),
   m_contextGroup(dispatcher),
@@ -147,7 +147,7 @@ void MinerManager::pushEvent(MinerEvent&& event) {
   m_eventOccurred.set();
 }
 
-void MinerManager::startMining(const CryptoNote::BlockMiningParameters& params) {
+void MinerManager::startMining(const cn::BlockMiningParameters& params) {
   m_contextGroup.spawn([this, params] () {
     try {
       m_minedBlock = m_miner.mine(params, m_config.threadCount);
@@ -232,7 +232,7 @@ BlockMiningParameters MinerManager::requestMiningParameters(System::Dispatcher& 
 }
 
 
-void MinerManager::adjustBlockTemplate(CryptoNote::Block& blockTemplate) const {
+void MinerManager::adjustBlockTemplate(cn::Block& blockTemplate) const {
   if (m_config.firstBlockTimestamp == 0) {
     //no need to fix timestamp
     return;

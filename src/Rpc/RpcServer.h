@@ -13,7 +13,7 @@
 #include "Common/Math.h"
 #include "CoreRpcServerCommandsDefinitions.h"
 
-namespace CryptoNote {
+namespace cn {
 
 class core;
 class NodeServer;
@@ -79,7 +79,7 @@ private:
   bool on_get_block_timestamp_by_height(const COMMAND_RPC_GET_BLOCK_TIMESTAMP_BY_HEIGHT::request& req, COMMAND_RPC_GET_BLOCK_TIMESTAMP_BY_HEIGHT::response& res);
   bool on_get_block_details_by_height(const COMMAND_RPC_GET_BLOCK_DETAILS_BY_HEIGHT::request& req, COMMAND_RPC_GET_BLOCK_DETAILS_BY_HEIGHT::response& res);
 
-  void fill_block_header_response(const Block& blk, bool orphan_status, uint64_t height, const Crypto::Hash& hash, block_header_response& responce);
+  void fill_block_header_response(const Block& blk, bool orphan_status, uint64_t height, const crypto::Hash& hash, block_header_response& responce);
 
   bool f_on_blocks_list_json(const F_COMMAND_RPC_GET_BLOCKS_LIST::request& req, F_COMMAND_RPC_GET_BLOCKS_LIST::response& res);
   bool f_on_block_json(const F_COMMAND_RPC_GET_BLOCK_DETAILS::request& req, F_COMMAND_RPC_GET_BLOCK_DETAILS::response& res);
@@ -87,7 +87,7 @@ private:
   bool f_on_transactions_pool_json(const F_COMMAND_RPC_GET_POOL::request& req, F_COMMAND_RPC_GET_POOL::response& res);
   bool f_getMixin(const Transaction& transaction, uint64_t& mixin);
 
-  bool fill_f_block_details_response(const Crypto::Hash& hash, f_block_details_response& block);
+  bool fill_f_block_details_response(const crypto::Hash& hash, f_block_details_response& block);
 
   Logging::LoggerRef logger;
   core& m_core;
@@ -96,7 +96,7 @@ private:
   bool m_restricted_rpc;
   std::string m_cors_domain;
   std::string m_fee_address;
-  Crypto::SecretKey m_view_key = NULL_SECRET_KEY;
+  crypto::SecretKey m_view_key = NULL_SECRET_KEY;
   AccountPublicAddress m_fee_acc; 
 };
 

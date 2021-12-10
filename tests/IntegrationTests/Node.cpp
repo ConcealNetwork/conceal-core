@@ -27,9 +27,9 @@
 #include "BaseTests.h"
 
 using namespace Tests;
-using namespace CryptoNote;
+using namespace cn;
 
-namespace CryptoNote
+namespace cn
 {
 void serialize(BlockShortEntry &v, ISerializer &s)
 {
@@ -74,12 +74,12 @@ bool operator==(const TransactionShortInfo &a, const TransactionShortInfo &b)
 {
   return a.txId == b.txId;
 }
-} // namespace CryptoNote
+} // namespace cn
 
 struct BlockchainInfo
 {
   std::list<BlockShortEntry> blocks;
-  std::unordered_map<Crypto::Hash, std::vector<uint32_t>> globalOutputs;
+  std::unordered_map<crypto::Hash, std::vector<uint32_t>> globalOutputs;
 
   bool operator==(const BlockchainInfo &other) const
   {
@@ -133,7 +133,7 @@ void NodeTest::startNetworkWithBlockchain(const std::string &sourcePath)
 
 void NodeTest::readBlockchainInfo(INode &node, BlockchainInfo &bc)
 {
-  std::vector<Crypto::Hash> history = {currency.genesisBlockHash()};
+  std::vector<crypto::Hash> history = {currency.genesisBlockHash()};
   uint64_t timestamp = 0;
   uint32_t startHeight = 0;
   size_t itemsAdded = 0;
@@ -146,7 +146,7 @@ void NodeTest::readBlockchainInfo(INode &node, BlockchainInfo &bc)
   {
     itemsAdded = 0;
     std::vector<BlockShortEntry> blocks;
-    node.queryBlocks(std::vector<Crypto::Hash>(history.rbegin(), history.rend()), timestamp, blocks, startHeight, cb.callback());
+    node.queryBlocks(std::vector<crypto::Hash>(history.rbegin(), history.rend()), timestamp, blocks, startHeight, cb.callback());
 
     ASSERT_TRUE(cb.get() == std::error_code());
 
@@ -203,7 +203,7 @@ TEST_F(NodeTest, generateBlockchain)
     ASSERT_TRUE(daemon.makeINode(mainNode));
 
     std::string password = "pass";
-    CryptoNote::WalletGreen wallet(dispatcher, currency, *mainNode, logger);
+    cn::WalletGreen wallet(dispatcher, currency, *mainNode, logger);
 
     std::string walletFile("wallet.bin", std::ios::binary | std::ios::trunc);
     wallet.initialize(walletFile, password);
@@ -255,7 +255,7 @@ TEST_F(NodeTest, addMoreBlocks)
     auto startHeight = daemon.getLocalHeight();
 
     std::string password = "pass";
-    CryptoNote::WalletGreen wallet(dispatcher, currency, *mainNode, logger);
+    cn::WalletGreen wallet(dispatcher, currency, *mainNode, logger);
 
     {
       std::string walletFile("wallet.bin", std::ios::binary);

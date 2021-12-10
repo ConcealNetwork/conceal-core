@@ -9,7 +9,7 @@
 #include "CryptoNoteCore/CryptoNoteBasic.h"
 #include "crypto/crypto.h"
 
-namespace CryptoNote {
+namespace cn {
 
   class ISerializer;
 
@@ -20,7 +20,7 @@ namespace CryptoNote {
   public:
     AccountBase();
     void generate();
-    static void generateViewFromSpend(Crypto::SecretKey &, Crypto::SecretKey &, Crypto::PublicKey &);
+    static void generateViewFromSpend(crypto::SecretKey &, crypto::SecretKey &, crypto::PublicKey &);
 
 
     const AccountKeys& getAccountKeys() const;

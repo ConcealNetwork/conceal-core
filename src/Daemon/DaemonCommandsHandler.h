@@ -12,7 +12,7 @@
 #include <Logging/LoggerRef.h>
 #include <Logging/LoggerManager.h>
 
-namespace CryptoNote {
+namespace cn {
 class core;
 class Currency;
 class NodeServer;
@@ -21,7 +21,7 @@ class NodeServer;
 class DaemonCommandsHandler
 {
 public:
-  DaemonCommandsHandler(CryptoNote::core& core, CryptoNote::NodeServer& srv, Logging::LoggerManager& log);
+  DaemonCommandsHandler(cn::core& core, cn::NodeServer& srv, Logging::LoggerManager& log);
 
   bool start_handling() {
     m_consoleHandler.start();
@@ -35,15 +35,15 @@ public:
 private:
 
   Common::ConsoleHandler m_consoleHandler;
-  CryptoNote::core& m_core;
-  CryptoNote::NodeServer& m_srv;
+  cn::core& m_core;
+  cn::NodeServer& m_srv;
   Logging::LoggerRef logger;
   Logging::LoggerManager& m_logManager;
 
   std::string get_commands_str();
   bool print_block_by_height(uint32_t height);
   bool print_block_by_hash(const std::string& arg);
-  uint64_t calculatePercent(const CryptoNote::Currency& currency, uint64_t value, uint64_t total);
+  uint64_t calculatePercent(const cn::Currency& currency, uint64_t value, uint64_t total);
 
   bool exit(const std::vector<std::string>& args);
   bool help(const std::vector<std::string>& args);

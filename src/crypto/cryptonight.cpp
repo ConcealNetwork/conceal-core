@@ -6,7 +6,7 @@
 #include "pow_hash/cn_slow_hash.hpp"
 #include "cryptonight.hpp"
 
-namespace Crypto {
+namespace crypto {
 
 
 void cn_slow_hash_v0(cn_context &context, const void *data, size_t length, Hash &hash) {

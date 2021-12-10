@@ -17,11 +17,11 @@
 #include <Logging/LoggerGroup.h>
 #include <random>
 
-using namespace Crypto;
+using namespace crypto;
 
 namespace
 {
-  using namespace CryptoNote;
+  using namespace cn;
 
   uint64_t countNeededMoney(uint64_t fee, const std::vector<WalletLegacyTransfer> &transfers)
   {
@@ -40,7 +40,7 @@ namespace
 
   uint64_t getSumWithOverflowCheck(uint64_t amount, uint64_t fee)
   {
-    CryptoNote::throwIf(std::numeric_limits<uint64_t>::max() - amount < fee, error::SUM_OVERFLOW);
+    cn::throwIf(std::numeric_limits<uint64_t>::max() - amount < fee, error::SUM_OVERFLOW);
 
     return amount + fee;
   }
@@ -55,14 +55,14 @@ namespace
   }
 
   void constructTx(const AccountKeys keys, const std::vector<TransactionSourceEntry> &sources, const std::vector<TransactionDestinationEntry> &splittedDests,
-                   const std::string &extra, uint64_t unlockTimestamp, uint64_t sizeLimit, Transaction &tx, const std::vector<tx_message_entry> &messages, uint64_t ttl, Crypto::SecretKey &transactionSK)
+                   const std::string &extra, uint64_t unlockTimestamp, uint64_t sizeLimit, Transaction &tx, const std::vector<tx_message_entry> &messages, uint64_t ttl, crypto::SecretKey &transactionSK)
   {
     std::vector<uint8_t> extraVec;
     extraVec.reserve(extra.size());
     std::for_each(extra.begin(), extra.end(), [&extraVec](const char el) { extraVec.push_back(el); });
 
     Logging::LoggerGroup nullLog;
-    Crypto::SecretKey txSK;
+    crypto::SecretKey txSK;
     bool r = constructTransaction(keys, sources, splittedDests, messages, ttl, extraVec, tx, unlockTimestamp, nullLog, txSK);
     transactionSK = txSK;
 
@@ -121,11 +121,11 @@ namespace
   Transaction convertTransaction(const ITransaction &transaction, size_t upperTransactionSizeLimit)
   {
     BinaryArray serializedTransaction = transaction.getTransactionData();
-    CryptoNote::throwIf(serializedTransaction.size() >= upperTransactionSizeLimit, error::TRANSACTION_SIZE_TOO_BIG);
+    cn::throwIf(serializedTransaction.size() >= upperTransactionSizeLimit, error::TRANSACTION_SIZE_TOO_BIG);
 
     Transaction result;
-    Crypto::Hash transactionHash;
-    Crypto::Hash transactionPrefixHash;
+    crypto::Hash transactionHash;
+    crypto::Hash transactionPrefixHash;
     if (!parseAndValidateTransactionFromBinaryArray(serializedTransaction, result, transactionHash, transactionPrefixHash))
     {
       throw std::system_error(make_error_code(error::INTERNAL_WALLET_ERROR), "Cannot convert transaction");
@@ -166,7 +166,7 @@ namespace
 
 } //namespace
 
-namespace CryptoNote
+namespace cn
 {
   WalletTransactionSender::WalletTransactionSender(const Currency &currency, WalletUserTransactionsCache &transactionsCache, AccountKeys keys, ITransfersContainer &transfersContainer, INode &node) :
     m_currency(currency),
@@ -202,7 +202,7 @@ namespace CryptoNote
   }
 
   std::unique_ptr<WalletRequest> WalletTransactionSender::makeSendRequest(
-      Crypto::SecretKey &transactionSK,
+      crypto::SecretKey &transactionSK,
       bool optimize,
       TransactionId &transactionId,
       std::deque<std::unique_ptr<WalletLegacyEvent>> &events,
@@ -229,7 +229,7 @@ namespace CryptoNote
     }
     else
     {
-      mixIn = CryptoNote::parameters::MINIMUM_MIXIN;
+      mixIn = cn::parameters::MINIMUM_MIXIN;
       neededMoney = countNeededMoney(fee, transfers);
       context->foundMoney = selectTransfersToSend(neededMoney, false, context->dustPolicy.dustThreshold, context->selectedTransfers);
     }
@@ -288,7 +288,7 @@ namespace CryptoNote
 
     if (context->mixIn != 0)
     {
-      Crypto::SecretKey transactionSK;
+      crypto::SecretKey transactionSK;
       return makeGetRandomOutsRequest(std::move(context), true, transactionSK);
     }
 
@@ -320,7 +320,7 @@ namespace CryptoNote
                                                                                 const std::vector<WalletLegacyTransfer> &transfers, const std::list<TransactionOutputInformation> &fusionInputs, uint64_t fee, const std::string &extra, uint64_t mixIn, uint64_t unlockTimestamp)
   {
 
-    using namespace CryptoNote;
+    using namespace cn;
 
     throwIf(transfers.empty(), error::ZERO_DESTINATION);
     validateTransfersAddresses(transfers);
@@ -343,7 +343,7 @@ namespace CryptoNote
     transactionId = m_transactionsCache.addNewTransaction(neededMoney, fee, extra, transfers, unlockTimestamp, messages);
     context->transactionId = transactionId;
     context->mixIn = mixIn;
-    Crypto::SecretKey transactionSK;
+    crypto::SecretKey transactionSK;
 
     if (context->mixIn)
     {
@@ -353,7 +353,7 @@ namespace CryptoNote
     return doSendTransaction(std::move(context), events, transactionSK);
   }
 
-  std::unique_ptr<WalletRequest> WalletTransactionSender::makeGetRandomOutsRequest(std::shared_ptr<SendTransactionContext> &&context, bool isMultisigTransaction, Crypto::SecretKey &transactionSK)
+  std::unique_ptr<WalletRequest> WalletTransactionSender::makeGetRandomOutsRequest(std::shared_ptr<SendTransactionContext> &&context, bool isMultisigTransaction, crypto::SecretKey &transactionSK)
   {
     uint64_t outsCount = context->mixIn + 1; // add one to make possible (if need) to skip real output key
     std::vector<uint64_t> amounts;
@@ -370,7 +370,7 @@ namespace CryptoNote
 
   void WalletTransactionSender::sendTransactionRandomOutsByAmount(bool isMultisigTransaction,
                                                                   std::shared_ptr<SendTransactionContext> context,
-                                                                  Crypto::SecretKey &transactionSK,
+                                                                  crypto::SecretKey &transactionSK,
                                                                   std::deque<std::unique_ptr<WalletLegacyEvent>> &events,
                                                                   std::unique_ptr<WalletRequest> &nextRequest,
                                                                   std::error_code ec)
@@ -413,7 +413,7 @@ namespace CryptoNote
 
   std::unique_ptr<WalletRequest> WalletTransactionSender::doSendTransaction(std::shared_ptr<SendTransactionContext> &&context,
                                                                             std::deque<std::unique_ptr<WalletLegacyEvent>> &events,
-                                                                            Crypto::SecretKey &transactionSK)
+                                                                            crypto::SecretKey &transactionSK)
   {
 
     if (m_isStoping)
@@ -818,10 +818,10 @@ namespace CryptoNote
       }
     }
 
-    std::default_random_engine randomGenerator(Crypto::rand<std::default_random_engine::result_type>());
+    std::default_random_engine randomGenerator(crypto::rand<std::default_random_engine::result_type>());
     uint64_t foundMoney = 0;
     size_t i = 0;
-    while (!unusedTransfers.empty() && i < CryptoNote::parameters::CRYPTONOTE_OPTIMIZE_SIZE)
+    while (!unusedTransfers.empty() && i < cn::parameters::CRYPTONOTE_OPTIMIZE_SIZE)
     {
       size_t idx = popRandomValue(randomGenerator, unusedTransfers);
       selectedTransfers.push_back(outputs[idx]);
@@ -938,4 +938,4 @@ namespace CryptoNote
     }
   }
 
-} /* namespace CryptoNote */
+} /* namespace cn */

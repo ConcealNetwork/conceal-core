@@ -13,7 +13,7 @@
 
 #include <System/InterruptedException.h>
 
-namespace CryptoNote {
+namespace cn {
 
 Miner::Miner(System::Dispatcher& dispatcher, Logging::ILogger& logger) :
   m_dispatcher(dispatcher),
@@ -65,7 +65,7 @@ void Miner::runWorkers(BlockMiningParameters blockMiningParameters, size_t threa
   m_logger(Logging::INFO) << "Starting mining for difficulty " << blockMiningParameters.difficulty;
 
   try {
-    blockMiningParameters.blockTemplate.nonce = Crypto::rand<uint32_t>();
+    blockMiningParameters.blockTemplate.nonce = crypto::rand<uint32_t>();
 
     for (size_t i = 0; i < threadCount; ++i) {
       m_workers.emplace_back(std::unique_ptr<System::RemoteContext<void>> (
@@ -88,10 +88,10 @@ void Miner::runWorkers(BlockMiningParameters blockMiningParameters, size_t threa
 void Miner::workerFunc(const Block& blockTemplate, difficulty_type difficulty, uint32_t nonceStep) {
   try {
     Block block = blockTemplate;
-    Crypto::cn_context cryptoContext;
+    crypto::cn_context cryptoContext;
 
     while (m_state == MiningState::MINING_IN_PROGRESS) {
-      Crypto::Hash hash;
+      crypto::Hash hash;
       if (!get_block_longhash(cryptoContext, block, hash)) {
         //error occured
         m_logger(Logging::DEBUGGING) << "calculating long hash error occured";
@@ -143,4 +143,4 @@ bool Miner::setStateBlockFound() {
   }
 }
 
-} //namespace CryptoNote
+} //namespace cn

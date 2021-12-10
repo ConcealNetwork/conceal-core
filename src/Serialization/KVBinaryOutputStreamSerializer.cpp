@@ -12,7 +12,7 @@
 #include <Common/StreamTools.h>
 
 using namespace Common;
-using namespace CryptoNote;
+using namespace cn;
 
 namespace {
 
@@ -56,7 +56,7 @@ size_t writeArraySize(IOutputStream& s, size_t val) {
 
 }
 
-namespace CryptoNote {
+namespace cn {
 
 KVBinaryOutputStreamSerializer::KVBinaryOutputStreamSerializer() {
   beginObject(std::string());

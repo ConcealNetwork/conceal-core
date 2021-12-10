@@ -20,7 +20,7 @@ public:
     if (!single_tx_test_base::init())
       return false;
 
-    Crypto::generate_key_derivation(m_tx_pub_key, m_bob.getAccountKeys().viewSecretKey, m_key_derivation);
+    crypto::generate_key_derivation(m_tx_pub_key, m_bob.getAccountKeys().viewSecretKey, m_key_derivation);
     m_spend_secret_key = m_bob.getAccountKeys().spendSecretKey;
 
     return true;
@@ -28,12 +28,12 @@ public:
 
   bool test()
   {
-    CryptoNote::KeyPair in_ephemeral;
-    Crypto::derive_secret_key(m_key_derivation, 0, m_spend_secret_key, in_ephemeral.secretKey);
+    cn::KeyPair in_ephemeral;
+    crypto::derive_secret_key(m_key_derivation, 0, m_spend_secret_key, in_ephemeral.secretKey);
     return true;
   }
 
 private:
-  Crypto::KeyDerivation m_key_derivation;
-  Crypto::SecretKey m_spend_secret_key;
+  crypto::KeyDerivation m_key_derivation;
+  crypto::SecretKey m_spend_secret_key;
 };

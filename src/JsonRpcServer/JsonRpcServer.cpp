@@ -24,7 +24,7 @@
 #include "Serialization/JsonInputValueSerializer.h"
 #include "Serialization/JsonOutputStreamSerializer.h"
 
-namespace CryptoNote {
+namespace cn {
 
 JsonRpcServer::JsonRpcServer(System::Dispatcher& sys, System::Event& stopEvent, Logging::ILogger& loggerGroup) :
   HttpServer(sys, loggerGroup), 
@@ -40,7 +40,7 @@ void JsonRpcServer::start(const std::string& bindAddress, uint16_t bindPort, con
   HttpServer::stop();
 }
 
-void JsonRpcServer::processRequest(const CryptoNote::HttpRequest& req, CryptoNote::HttpResponse& resp) {
+void JsonRpcServer::processRequest(const cn::HttpRequest& req, cn::HttpResponse& resp) {
   try {
     logger(Logging::TRACE) << "HTTP request came: \n" << req;
 
@@ -54,7 +54,7 @@ void JsonRpcServer::processRequest(const CryptoNote::HttpRequest& req, CryptoNot
       } catch (std::runtime_error&) {
         logger(Logging::DEBUGGING) << "Couldn't parse request: \"" << req.getBody() << "\"";
         makeJsonParsingErrorResponse(jsonRpcResponse);
-        resp.setStatus(CryptoNote::HttpResponse::STATUS_200);
+        resp.setStatus(cn::HttpResponse::STATUS_200);
         resp.setBody(jsonRpcResponse.toString());
         return;
       }
@@ -64,17 +64,17 @@ void JsonRpcServer::processRequest(const CryptoNote::HttpRequest& req, CryptoNot
       std::ostringstream jsonOutputStream;
       jsonOutputStream << jsonRpcResponse;
 
-      resp.setStatus(CryptoNote::HttpResponse::STATUS_200);
+      resp.setStatus(cn::HttpResponse::STATUS_200);
       resp.setBody(jsonOutputStream.str());
 
     } else {
       logger(Logging::WARNING) << "Requested url \"" << req.getUrl() << "\" is not found";
-      resp.setStatus(CryptoNote::HttpResponse::STATUS_404);
+      resp.setStatus(cn::HttpResponse::STATUS_404);
       return;
     }
   } catch (std::exception& e) {
     logger(Logging::WARNING) << "Error while processing http request: " << e.what();
-    resp.setStatus(CryptoNote::HttpResponse::STATUS_500);
+    resp.setStatus(cn::HttpResponse::STATUS_500);
   }
 }
 

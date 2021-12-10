@@ -2629,7 +2629,7 @@ FORCE_INLINE __m128i _mm_alignr_epi8(__m128i a, __m128i b, const int c)
     })
 
 // ******************************************
-// Crypto Extensions
+// crypto Extensions
 // ******************************************
 #if !defined(__ARM_FEATURE_CRYPTO) && defined(__aarch64__)
 // In the absence of crypto extensions, implement aesenc using regular neon

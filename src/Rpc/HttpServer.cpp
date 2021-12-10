@@ -29,15 +29,15 @@
 using namespace Logging;
 
 namespace {
-	void fillUnauthorizedResponse(CryptoNote::HttpResponse& response) {
-		response.setStatus(CryptoNote::HttpResponse::STATUS_401);
+	void fillUnauthorizedResponse(cn::HttpResponse& response) {
+		response.setStatus(cn::HttpResponse::STATUS_401);
 		response.addHeader("WWW-Authenticate", "Basic realm=\"RPC\"");
 		response.addHeader("Content-Type", "text/plain");
 		response.setBody("Authorization required");
 	}
 }
 
-namespace CryptoNote {
+namespace cn {
 
 HttpServer::HttpServer(System::Dispatcher& dispatcher, Logging::ILogger& log)
   : m_dispatcher(dispatcher), workingContextGroup(dispatcher), logger(log, "HttpServer") {

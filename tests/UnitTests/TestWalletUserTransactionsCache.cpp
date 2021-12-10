@@ -13,7 +13,7 @@
 #include "Logging/ConsoleLogger.h"
 #include <WalletLegacy/WalletUserTransactionsCache.h>
 
-using namespace CryptoNote;
+using namespace cn;
 
 class WalletUserTransactionsCacheTest : public testing::Test {
 public:
@@ -44,7 +44,7 @@ public:
     return info;
   }
 
-  void updateTransaction(const CryptoNote::TransactionInformation& info, int64_t balance) {
+  void updateTransaction(const cn::TransactionInformation& info, int64_t balance) {
     std::vector<TransactionOutputInformation> newDeposits;
     std::vector<TransactionOutputInformation> spentDeposits;
     cache.onTransactionUpdated(info, balance, newDeposits, spentDeposits, currency);
@@ -56,7 +56,7 @@ public:
   WalletUserTransactionsCache cache;
   PaymentId paymentId;
   std::vector<uint8_t> rawExtra;
-  Crypto::Hash hash;
+  crypto::Hash hash;
   TransactionId id = 0;
 };
 

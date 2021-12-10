@@ -6,8 +6,8 @@
 #include "TransactionApiHelpers.h"
 #include "CryptoNoteCore/TransactionApi.h"
 
-using namespace CryptoNote;
-using namespace Crypto;
+using namespace cn;
+using namespace crypto;
 
 namespace {
 
@@ -22,7 +22,7 @@ TestTransactionBuilder::TestTransactionBuilder() {
   tx = createTransaction();
 }
 
-TestTransactionBuilder::TestTransactionBuilder(const BinaryArray& txTemplate, const Crypto::SecretKey& secretKey) {
+TestTransactionBuilder::TestTransactionBuilder(const BinaryArray& txTemplate, const crypto::SecretKey& secretKey) {
   tx = createTransaction(txTemplate);
   tx->setTransactionSecretKey(secretKey);
 }
@@ -45,7 +45,7 @@ size_t TestTransactionBuilder::addTestInput(uint64_t amount, const AccountKeys& 
   TransactionTypes::InputKeyInfo info;
   PublicKey targetKey;
 
-  CryptoNote::KeyPair srcTxKeys = CryptoNote::generateKeyPair();
+  cn::KeyPair srcTxKeys = cn::generateKeyPair();
   derivePublicKey(senderKeys, srcTxKeys.publicKey, 5, targetKey);
 
   TransactionTypes::GlobalOutput gout = { targetKey, 0 };
@@ -69,7 +69,7 @@ size_t TestTransactionBuilder::addTestInput(uint64_t amount, std::vector<uint32_
   TransactionTypes::InputKeyInfo info;
   PublicKey targetKey;
 
-  CryptoNote::KeyPair srcTxKeys = CryptoNote::generateKeyPair();
+  cn::KeyPair srcTxKeys = cn::generateKeyPair();
   derivePublicKey(senderKeys, srcTxKeys.publicKey, 5, targetKey);
 
   TransactionTypes::GlobalOutput gout = { targetKey, 0 };
@@ -79,7 +79,7 @@ size_t TestTransactionBuilder::addTestInput(uint64_t amount, std::vector<uint32_
   PublicKey pk;
   SecretKey sk;
   for (auto out : gouts) {
-    Crypto::generate_keys(pk, sk);
+    crypto::generate_keys(pk, sk);
     info.outputs.push_back(TransactionTypes::GlobalOutput{ pk, out });
   }
 
@@ -143,7 +143,7 @@ size_t TestTransactionBuilder::addFakeMultisignatureInput(uint64_t amount, uint3
     accs.push_back(generateAccount());
   }
 
-  msigInputs[idx] = MsigInfo{ Crypto::rand<PublicKey>(), 0, std::move(accs) };
+  msigInputs[idx] = MsigInfo{ crypto::rand<PublicKey>(), 0, std::move(accs) };
   return idx;
 }
 
@@ -225,7 +225,7 @@ std::unique_ptr<ITransactionReader> TestTransactionBuilder::build() {
   return std::move(tx);
 }
 
-Crypto::Hash TestTransactionBuilder::getTransactionHash() const {
+crypto::Hash TestTransactionBuilder::getTransactionHash() const {
   return transactionHash;
 }
 

@@ -26,7 +26,7 @@ public:
 
   const PaymentService::ConfigurationManager& getConfig() const { return config; }
   PaymentService::WalletConfiguration getWalletConfig() const;
-  const CryptoNote::Currency getCurrency();
+  const cn::Currency getCurrency();
 
   void run();
   void stop();
@@ -38,13 +38,13 @@ private:
   void runInProcess(Logging::LoggerRef& log);
   void runRpcProxy(Logging::LoggerRef& log);
 
-  void runWalletService(const CryptoNote::Currency& currency, CryptoNote::INode& node);
+  void runWalletService(const cn::Currency& currency, cn::INode& node);
 
   System::Dispatcher* dispatcher;
   System::Event* stopEvent;
   PaymentService::ConfigurationManager config;
   PaymentService::WalletService* service;
-  CryptoNote::CurrencyBuilder currencyBuilder;
+  cn::CurrencyBuilder currencyBuilder;
   
   Logging::LoggerGroup logger;
   std::ofstream fileStream;

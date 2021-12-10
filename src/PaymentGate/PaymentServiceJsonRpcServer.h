@@ -18,7 +18,7 @@ namespace PaymentService {
 
 class WalletService;
 
-class PaymentServiceJsonRpcServer : public CryptoNote::JsonRpcServer {
+class PaymentServiceJsonRpcServer : public cn::JsonRpcServer {
 public:
   PaymentServiceJsonRpcServer(System::Dispatcher& sys, System::Event& stopEvent, WalletService& service, Logging::ILogger& loggerGroup);
   PaymentServiceJsonRpcServer(const PaymentServiceJsonRpcServer&) = delete;
@@ -39,7 +39,7 @@ private:
       ResponseType response;
 
       try {
-        CryptoNote::JsonInputValueSerializer inputSerializer(const_cast<Common::JsonValue&>(jsonRpcParams));
+        cn::JsonInputValueSerializer inputSerializer(const_cast<Common::JsonValue&>(jsonRpcParams));
         serialize(request, inputSerializer);
       } catch (std::exception&) {
         makeGenericErrorReponse(jsonResponse, "Invalid Request", -32600);
@@ -52,7 +52,7 @@ private:
         return;
       }
 
-      CryptoNote::JsonOutputStreamSerializer outputSerializer;
+      cn::JsonOutputStreamSerializer outputSerializer;
       serialize(response, outputSerializer);
       fillJsonResponse(outputSerializer.getValue(), jsonResponse);
     };

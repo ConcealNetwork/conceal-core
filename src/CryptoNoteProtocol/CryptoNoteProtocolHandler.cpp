@@ -23,7 +23,7 @@
 using namespace Logging;
 using namespace Common;
 
-namespace CryptoNote
+namespace cn
 {
 
 namespace
@@ -165,7 +165,7 @@ std::vector<std::string> CryptoNoteProtocolHandler::all_connections()
 uint32_t CryptoNoteProtocolHandler::get_current_blockchain_height()
 {
   uint32_t height;
-  Crypto::Hash blockId;
+  crypto::Hash blockId;
   m_core.get_blockchain_top(height, blockId);
   return height;
 }
@@ -290,10 +290,10 @@ int CryptoNoteProtocolHandler::handle_notify_new_block(int command, NOTIFY_NEW_B
 
   for (auto tx_blob_it = arg.b.txs.begin(); tx_blob_it != arg.b.txs.end(); tx_blob_it++)
   {
-    CryptoNote::tx_verification_context tvc = boost::value_initialized<decltype(tvc)>();
+    cn::tx_verification_context tvc = boost::value_initialized<decltype(tvc)>();
 
     auto transactionBinary = asBinaryArray(*tx_blob_it);
-    //Crypto::Hash transactionHash = Crypto::cn_fast_hash(transactionBinary.data(), transactionBinary.size());
+    //crypto::Hash transactionHash = crypto::cn_fast_hash(transactionBinary.data(), transactionBinary.size());
     //logger(DEBUGGING) << "transaction " << transactionHash << " came in NOTIFY_NEW_BLOCK";
 
     m_core.handle_incoming_tx(transactionBinary, tvc, true);
@@ -361,10 +361,10 @@ int CryptoNoteProtocolHandler::handle_notify_new_transactions(int command, NOTIF
     for (auto tx_blob_it = arg.txs.begin(); tx_blob_it != arg.txs.end();)
     {
       auto transactionBinary = asBinaryArray(*tx_blob_it);
-      Crypto::Hash transactionHash = Crypto::cn_fast_hash(transactionBinary.data(), transactionBinary.size());
+      crypto::Hash transactionHash = crypto::cn_fast_hash(transactionBinary.data(), transactionBinary.size());
       logger(DEBUGGING) << "transaction " << transactionHash << " came in NOTIFY_NEW_TRANSACTIONS";
 
-      CryptoNote::tx_verification_context tvc = boost::value_initialized<decltype(tvc)>();
+      cn::tx_verification_context tvc = boost::value_initialized<decltype(tvc)>();
       m_core.handle_incoming_tx(transactionBinary, tvc, false);
       if (tvc.m_verification_failed)
       {
@@ -428,7 +428,7 @@ int CryptoNoteProtocolHandler::handle_response_get_objects(int command, NOTIFY_R
   context.m_remote_blockchain_height = arg.current_blockchain_height;
 
   size_t count = 0;
-  std::vector<Crypto::Hash> block_hashes;
+  std::vector<crypto::Hash> block_hashes;
   block_hashes.reserve(arg.blocks.size());
   std::vector<parsed_block_entry> parsed_blocks;
   parsed_blocks.reserve(arg.blocks.size());
@@ -496,7 +496,7 @@ int CryptoNoteProtocolHandler::handle_response_get_objects(int command, NOTIFY_R
   }
 
   uint32_t height;
-  Crypto::Hash top;
+  crypto::Hash top;
   {
     m_core.pause_mining();
 
@@ -550,7 +550,7 @@ int CryptoNoteProtocolHandler::processObjects(CryptoNoteConnectionContext& conte
     //process transactions
     for (size_t i = 0; i < block_entry.txs.size(); ++i) {
       auto transactionBinary = block_entry.txs[i];
-      Crypto::Hash transactionHash = Crypto::cn_fast_hash(transactionBinary.data(), transactionBinary.size());
+      crypto::Hash transactionHash = crypto::cn_fast_hash(transactionBinary.data(), transactionBinary.size());
       logger(DEBUGGING) << "transaction " << transactionHash << " came in processObjects";
 
       // check if tx hashes match
@@ -700,7 +700,7 @@ bool CryptoNoteProtocolHandler::on_connection_synchronized()
     m_core.on_synchronized();
 
     uint32_t height;
-    Crypto::Hash hash;
+    crypto::Hash hash;
     m_core.get_blockchain_top(height, hash);
     m_observerManager.notify(&ICryptoNoteProtocolObserver::blockchainSynchronized, height);
   }
@@ -774,7 +774,7 @@ int CryptoNoteProtocolHandler::handle_notify_missing_txs(int command, NOTIFY_MIS
   NOTIFY_NEW_TRANSACTIONS::request req;
 
   std::list<Transaction> txs;
-  std::list<Crypto::Hash> missedHashes;
+  std::list<crypto::Hash> missedHashes;
   m_core.getTransactions(arg.missing_txs, txs, missedHashes, true);
   if (!missedHashes.empty())
   {
@@ -812,7 +812,7 @@ int CryptoNoteProtocolHandler::handle_request_tx_pool(int command, NOTIFY_REQUES
   logger(Logging::TRACE) << context << "NOTIFY_REQUEST_TX_POOL: txs.size() = " << arg.txs.size();
 
   std::vector<Transaction> addedTransactions;
-  std::vector<Crypto::Hash> deletedTransactions;
+  std::vector<crypto::Hash> deletedTransactions;
   m_core.getPoolChanges(arg.txs, addedTransactions, deletedTransactions);
 
   if (!addedTransactions.empty())
@@ -887,7 +887,7 @@ void CryptoNoteProtocolHandler::relay_transactions(NOTIFY_NEW_TRANSACTIONS::requ
 
 void CryptoNoteProtocolHandler::requestMissingPoolTransactions(const CryptoNoteConnectionContext &context)
 {
-  if (context.version < CryptoNote::P2P_VERSION_1)
+  if (context.version < cn::P2P_VERSION_1)
   {
     return;
   }
@@ -952,7 +952,7 @@ void CryptoNoteProtocolHandler::recalculateMaxObservedHeight(const CryptoNoteCon
   });
 
   uint32_t localHeight = 0;
-  Crypto::Hash ignore;
+  crypto::Hash ignore;
   m_core.get_blockchain_top(localHeight, ignore);
   m_observedHeight = std::max(peerHeight, localHeight + 1);
   if (context.m_state == CryptoNoteConnectionContext::state_normal)
@@ -988,7 +988,7 @@ int CryptoNoteProtocolHandler::doPushLiteBlock(NOTIFY_NEW_LITE_BLOCK::request ar
     return 1;
   }
 
-  std::unordered_map<Crypto::Hash, BinaryArray> provided_txs;
+  std::unordered_map<crypto::Hash, BinaryArray> provided_txs;
   provided_txs.reserve(missingTxs.size());
   for (const auto &missingTx : missingTxs)
   {
@@ -996,7 +996,7 @@ int CryptoNoteProtocolHandler::doPushLiteBlock(NOTIFY_NEW_LITE_BLOCK::request ar
   }
 
   std::vector<BinaryArray> have_txs;
-  std::vector<Crypto::Hash> need_txs;
+  std::vector<crypto::Hash> need_txs;
 
   if (context.m_pending_lite_block)
   {
@@ -1052,7 +1052,7 @@ int CryptoNoteProtocolHandler::doPushLiteBlock(NOTIFY_NEW_LITE_BLOCK::request ar
 
     for (auto transactionBinary : have_txs)
     {
-      CryptoNote::tx_verification_context tvc = boost::value_initialized<decltype(tvc)>();
+      cn::tx_verification_context tvc = boost::value_initialized<decltype(tvc)>();
 
       m_core.handle_incoming_tx(transactionBinary, tvc, true);
       if (tvc.m_verification_failed)
@@ -1122,4 +1122,4 @@ int CryptoNoteProtocolHandler::doPushLiteBlock(NOTIFY_NEW_LITE_BLOCK::request ar
   return 1;
 }
 
-}; // namespace CryptoNote
+}; // namespace cn

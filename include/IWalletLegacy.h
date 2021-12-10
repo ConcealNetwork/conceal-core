@@ -22,7 +22,7 @@
 #include "ITransfersContainer.h"
 #include "IWallet.h"
 
-namespace CryptoNote {
+namespace cn {
 
 typedef size_t TransactionId;
 typedef size_t TransferId;
@@ -61,8 +61,8 @@ struct WalletLegacyTransaction {
   uint64_t         fee;
   uint64_t         sentTime;
   uint64_t         unlockTime;
-  Crypto::Hash     hash;
-  boost::optional<Crypto::SecretKey> secretKey = CryptoNote::NULL_SECRET_KEY;
+  crypto::Hash     hash;
+  boost::optional<crypto::SecretKey> secretKey = cn::NULL_SECRET_KEY;
 
   bool             isCoinbase;
   uint32_t         blockHeight;
@@ -72,7 +72,7 @@ struct WalletLegacyTransaction {
   std::vector<std::string> messages;
 };
 
-using PaymentId = Crypto::Hash;
+using PaymentId = crypto::Hash;
 struct Payments {
   PaymentId paymentId;
   std::vector<WalletLegacyTransaction> transactions;
@@ -141,12 +141,12 @@ public:
   virtual bool getTransfer(TransferId transferId, WalletLegacyTransfer& transfer) = 0;
   virtual bool getDeposit(DepositId depositId, Deposit& deposit) = 0;
   virtual std::vector<Payments> getTransactionsByPaymentIds(const std::vector<PaymentId>& paymentIds) const = 0;
-  virtual bool getTxProof(Crypto::Hash& txid, CryptoNote::AccountPublicAddress& address, Crypto::SecretKey& tx_key, std::string& sig_str) = 0;
+  virtual bool getTxProof(crypto::Hash& txid, cn::AccountPublicAddress& address, crypto::SecretKey& tx_key, std::string& sig_str) = 0;
   virtual std::string getReserveProof(const uint64_t &reserve, const std::string &message) = 0;
-  virtual Crypto::SecretKey getTxKey(Crypto::Hash& txid) = 0;
-  virtual bool get_tx_key(Crypto::Hash& txid, Crypto::SecretKey& txSecretKey) = 0;
-  virtual TransactionId sendTransaction(Crypto::SecretKey& transactionSK, const WalletLegacyTransfer& transfer, uint64_t fee, const std::string& extra = "", uint64_t mixIn = 0, uint64_t unlockTimestamp = 0, const std::vector<TransactionMessage>& messages = std::vector<TransactionMessage>(), uint64_t ttl = 0) = 0;
-  virtual TransactionId sendTransaction(Crypto::SecretKey& transactionSK, std::vector<WalletLegacyTransfer>& transfers, uint64_t fee, const std::string& extra = "", uint64_t mixIn = 0, uint64_t unlockTimestamp = 0, const std::vector<TransactionMessage>& messages = std::vector<TransactionMessage>(), uint64_t ttl = 0) = 0;
+  virtual crypto::SecretKey getTxKey(crypto::Hash& txid) = 0;
+  virtual bool get_tx_key(crypto::Hash& txid, crypto::SecretKey& txSecretKey) = 0;
+  virtual TransactionId sendTransaction(crypto::SecretKey& transactionSK, const WalletLegacyTransfer& transfer, uint64_t fee, const std::string& extra = "", uint64_t mixIn = 0, uint64_t unlockTimestamp = 0, const std::vector<TransactionMessage>& messages = std::vector<TransactionMessage>(), uint64_t ttl = 0) = 0;
+  virtual TransactionId sendTransaction(crypto::SecretKey& transactionSK, std::vector<WalletLegacyTransfer>& transfers, uint64_t fee, const std::string& extra = "", uint64_t mixIn = 0, uint64_t unlockTimestamp = 0, const std::vector<TransactionMessage>& messages = std::vector<TransactionMessage>(), uint64_t ttl = 0) = 0;
   virtual size_t estimateFusion(const uint64_t& threshold) = 0;
   virtual std::list<TransactionOutputInformation> selectFusionTransfersToSend(uint64_t threshold, size_t minInputCount, size_t maxInputCount) = 0;
   virtual TransactionId sendFusionTransaction(const std::list<TransactionOutputInformation>& fusionInputs, uint64_t fee, const std::string& extra = "", uint64_t mixIn = 0, uint64_t unlockTimestamp = 0) = 0;

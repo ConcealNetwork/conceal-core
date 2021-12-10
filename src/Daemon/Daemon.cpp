@@ -35,14 +35,14 @@
 #endif
 
 using Common::JsonValue;
-using namespace CryptoNote;
+using namespace cn;
 using namespace Logging;
 
 namespace po = boost::program_options;
 
 namespace
 {
-  const command_line::arg_descriptor<std::string> arg_config_file = {"config-file", "Specify configuration file", std::string(CryptoNote::CRYPTONOTE_NAME) + ".conf"};
+  const command_line::arg_descriptor<std::string> arg_config_file = {"config-file", "Specify configuration file", std::string(cn::CRYPTONOTE_NAME) + ".conf"};
   const command_line::arg_descriptor<bool>        arg_os_version  = {"os-version", ""};
   const command_line::arg_descriptor<std::string> arg_log_file    = {"log-file", "", ""};
   const command_line::arg_descriptor<std::string> arg_set_fee_address = { "fee-address", "Set a fee address for remote nodes", "" };
@@ -58,8 +58,8 @@ bool command_line_preprocessor(const boost::program_options::variables_map& vm, 
 
 void print_genesis_tx_hex() {
   Logging::ConsoleLogger logger;
-  CryptoNote::Transaction tx = CryptoNote::CurrencyBuilder(logger).generateGenesisTransaction();
-  CryptoNote::BinaryArray txb = CryptoNote::toBinaryArray(tx);
+  cn::Transaction tx = cn::CurrencyBuilder(logger).generateGenesisTransaction();
+  cn::BinaryArray txb = cn::toBinaryArray(tx);
   std::string tx_hex = Common::toHex(txb);
 
   std::cout << "Insert this line into your coin configuration file as is: " << std::endl;
@@ -69,16 +69,16 @@ void print_genesis_tx_hex() {
 }
 
 // void print_genesis_tx_hex(const po::variables_map& vm) {
-  // std::vector<CryptoNote::AccountPublicAddress> targets;
+  // std::vector<cn::AccountPublicAddress> targets;
  //  auto genesis_block_reward_addresses = command_line::get_arg(vm, arg_genesis_block_reward_address);
 
 //   Logging::ConsoleLogger logger;
-//   CryptoNote::CurrencyBuilder currencyBuilder(logger);
+//   cn::CurrencyBuilder currencyBuilder(logger);
 
- //  CryptoNote::Currency currency = currencyBuilder.currency();
+ //  cn::Currency currency = currencyBuilder.currency();
 
  //  for (const auto& address_string : genesis_block_reward_addresses) {
- //     CryptoNote::AccountPublicAddress address;
+ //     cn::AccountPublicAddress address;
    //  if (!currency.parseAccountAddressString(address_string, address)) {
    //    std::cout << "Failed to parse address: " << address_string << std::endl;
    //    return;
@@ -89,20 +89,20 @@ void print_genesis_tx_hex() {
 //   }
 
  //  if (targets.empty()) {
- //    if (CryptoNote::parameters::GENESIS_BLOCK_REWARD > 0) {
+ //    if (cn::parameters::GENESIS_BLOCK_REWARD > 0) {
  //      std::cout << "Error: genesis block reward addresses are not defined" << std::endl;
  //    } else {
 
- //	  CryptoNote::Transaction tx = CryptoNote::CurrencyBuilder(logger).generateGenesisTransaction();
- //	  CryptoNote::BinaryArray txb = CryptoNote::toBinaryArray(tx);
+ //	  cn::Transaction tx = cn::CurrencyBuilder(logger).generateGenesisTransaction();
+ //	  cn::BinaryArray txb = cn::toBinaryArray(tx);
  //	  std::string tx_hex = Common::toHex(txb);
 
 // 	  std::cout << "Insert this line into your coin configuration file as is: " << std::endl;
  //	  std::cout << "const char GENESIS_COINBASE_TX_HEX[] = \"" << tx_hex << "\";" << std::endl;
  //	}
 //   } else {
- //	CryptoNote::Transaction tx = CryptoNote::CurrencyBuilder(logger).generateGenesisTransaction(targets);
- //	CryptoNote::BinaryArray txb = CryptoNote::toBinaryArray(tx);
+ //	cn::Transaction tx = cn::CurrencyBuilder(logger).generateGenesisTransaction(targets);
+ //	cn::BinaryArray txb = cn::toBinaryArray(tx);
  //	std::string tx_hex = Common::toHex(txb);
 
  //	std::cout << "Modify this line into your concealX configuration file as is:  " << std::endl;
@@ -197,7 +197,7 @@ int main(int argc, char* argv[])
 
      if (command_line::get_arg(vm, command_line::arg_help))
      {
-       std::cout << CryptoNote::CRYPTONOTE_NAME << " v" << PROJECT_VERSION_LONG << ENDL << ENDL;
+       std::cout << cn::CRYPTONOTE_NAME << " v" << PROJECT_VERSION_LONG << ENDL << ENDL;
        std::cout << desc_options << std::endl;
        return false;
      }
@@ -264,18 +264,18 @@ int main(int argc, char* argv[])
     }
 
     //create objects and link them
-    CryptoNote::CurrencyBuilder currencyBuilder(logManager);
+    cn::CurrencyBuilder currencyBuilder(logManager);
     currencyBuilder.testnet(testnet_mode);
 
     try {
       currencyBuilder.currency();
     } catch (std::exception&) {
-      std::cout << "GENESIS_COINBASE_TX_HEX constant has an incorrect value. Please launch: " << CryptoNote::CRYPTONOTE_NAME << "d --" << arg_print_genesis_tx.name;
+      std::cout << "GENESIS_COINBASE_TX_HEX constant has an incorrect value. Please launch: " << cn::CRYPTONOTE_NAME << "d --" << arg_print_genesis_tx.name;
       return 1;
     }
 
-    CryptoNote::Currency currency = currencyBuilder.currency();
-    CryptoNote::core ccore(currency, nullptr, logManager, vm["enable-blockchain-indexes"].as<bool>(), vm["enable-autosave"].as<bool>());
+    cn::Currency currency = currencyBuilder.currency();
+    cn::core ccore(currency, nullptr, logManager, vm["enable-blockchain-indexes"].as<bool>(), vm["enable-autosave"].as<bool>());
 
     CoreConfig coreConfig;
     coreConfig.init(vm);
@@ -299,9 +299,9 @@ int main(int argc, char* argv[])
 
     System::Dispatcher dispatcher;
 
-    CryptoNote::CryptoNoteProtocolHandler cprotocol(currency, dispatcher, ccore, nullptr, logManager);
-    CryptoNote::NodeServer p2psrv(dispatcher, cprotocol, logManager);
-    CryptoNote::RpcServer rpcServer(dispatcher, logManager, ccore, p2psrv, cprotocol);
+    cn::CryptoNoteProtocolHandler cprotocol(currency, dispatcher, ccore, nullptr, logManager);
+    cn::NodeServer p2psrv(dispatcher, cprotocol, logManager);
+    cn::RpcServer rpcServer(dispatcher, logManager, ccore, p2psrv, cprotocol);
 
     cprotocol.set_p2p_endpoint(&p2psrv);
     ccore.set_cryptonote_protocol(&cprotocol);
@@ -397,7 +397,7 @@ bool command_line_preprocessor(const boost::program_options::variables_map &vm, 
   bool exit = false;
 
   if (command_line::get_arg(vm, command_line::arg_version)) {
-    std::cout << CryptoNote::CRYPTONOTE_NAME << " v" << PROJECT_VERSION_LONG << ENDL;
+    std::cout << cn::CRYPTONOTE_NAME << " v" << PROJECT_VERSION_LONG << ENDL;
     exit = true;
   }
 

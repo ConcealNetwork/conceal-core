@@ -28,7 +28,7 @@ public:
 
   bool init()
   {
-    using namespace CryptoNote;
+    using namespace cn;
 
     Currency currency = CurrencyBuilder(m_logger).currency();
 
@@ -61,12 +61,12 @@ public:
   }
 
 protected:
-  CryptoNote::AccountBase m_miners[ring_size];
-  CryptoNote::Transaction m_miner_txs[ring_size];
+  cn::AccountBase m_miners[ring_size];
+  cn::Transaction m_miner_txs[ring_size];
   uint64_t m_source_amount;
   Logging::ConsoleLogger m_logger;
 
-  std::vector<CryptoNote::TransactionSourceEntry> m_sources;
-  Crypto::PublicKey m_public_keys[ring_size];
-  const Crypto::PublicKey* m_public_key_ptrs[ring_size];
+  std::vector<cn::TransactionSourceEntry> m_sources;
+  crypto::PublicKey m_public_keys[ring_size];
+  const crypto::PublicKey* m_public_key_ptrs[ring_size];
 };

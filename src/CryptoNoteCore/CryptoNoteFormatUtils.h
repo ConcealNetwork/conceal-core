@@ -18,16 +18,16 @@ namespace Logging {
 class ILogger;
 }
 
-namespace CryptoNote {
+namespace cn {
 
-bool parseAndValidateTransactionFromBinaryArray(const BinaryArray& transactionBinaryArray, Transaction& transaction, Crypto::Hash& transactionHash, Crypto::Hash& transactionPrefixHash);
+bool parseAndValidateTransactionFromBinaryArray(const BinaryArray& transactionBinaryArray, Transaction& transaction, crypto::Hash& transactionHash, crypto::Hash& transactionPrefixHash);
 
 struct TransactionSourceEntry {
-  typedef std::pair<uint32_t, Crypto::PublicKey> OutputEntry;
+  typedef std::pair<uint32_t, crypto::PublicKey> OutputEntry;
 
   std::vector<OutputEntry> outputs;           //index + key
   size_t realOutput;                          //index in outputs vector of real output_entry
-  Crypto::PublicKey realTransactionPublicKey; //incoming real tx public key
+  crypto::PublicKey realTransactionPublicKey; //incoming real tx public key
   size_t realOutputIndexInTransaction;        //index in transaction outputs vector
   uint64_t amount;                            //money
 };
@@ -47,37 +47,37 @@ struct tx_message_entry
   AccountPublicAddress addr;
 };
 
-bool generateDeterministicTransactionKeys(const Crypto::Hash &inputsHash, const Crypto::SecretKey &viewSecretKey, KeyPair &generatedKeys);
-bool generateDeterministicTransactionKeys(const Transaction &tx, const Crypto::SecretKey &viewSecretKey, KeyPair &generatedKeys);
+bool generateDeterministicTransactionKeys(const crypto::Hash &inputsHash, const crypto::SecretKey &viewSecretKey, KeyPair &generatedKeys);
+bool generateDeterministicTransactionKeys(const Transaction &tx, const crypto::SecretKey &viewSecretKey, KeyPair &generatedKeys);
 
 bool constructTransaction(
   const AccountKeys& senderAccountKeys,
   const std::vector<TransactionSourceEntry>& sources,
   const std::vector<TransactionDestinationEntry>& destinations,
   const std::vector<tx_message_entry>& messages,
-  uint64_t ttl, std::vector<uint8_t> extra, Transaction& transaction, uint64_t unlock_time, Logging::ILogger& log, Crypto::SecretKey& transactionSK);
+  uint64_t ttl, std::vector<uint8_t> extra, Transaction& transaction, uint64_t unlock_time, Logging::ILogger& log, crypto::SecretKey& transactionSK);
 
 inline bool constructTransaction(
   const AccountKeys& sender_account_keys,
   const std::vector<TransactionSourceEntry>& sources,
   const std::vector<TransactionDestinationEntry>& destinations,
-  std::vector<uint8_t> extra, Transaction& tx, uint64_t unlock_time, Logging::ILogger& log, Crypto::SecretKey& transactionSK) {
+  std::vector<uint8_t> extra, Transaction& tx, uint64_t unlock_time, Logging::ILogger& log, crypto::SecretKey& transactionSK) {
 
   return constructTransaction(sender_account_keys, sources, destinations, std::vector<tx_message_entry>(), 0, extra, tx, unlock_time, log, transactionSK);
 }
 
-bool is_out_to_acc(const AccountKeys& acc, const KeyOutput& out_key, const Crypto::PublicKey& tx_pub_key, size_t keyIndex);
-bool is_out_to_acc(const AccountKeys& acc, const KeyOutput& out_key, const Crypto::KeyDerivation& derivation, size_t keyIndex);
-bool lookup_acc_outs(const AccountKeys& acc, const Transaction& tx, const Crypto::PublicKey& tx_pub_key, std::vector<size_t>& outs, uint64_t& money_transfered);
+bool is_out_to_acc(const AccountKeys& acc, const KeyOutput& out_key, const crypto::PublicKey& tx_pub_key, size_t keyIndex);
+bool is_out_to_acc(const AccountKeys& acc, const KeyOutput& out_key, const crypto::KeyDerivation& derivation, size_t keyIndex);
+bool lookup_acc_outs(const AccountKeys& acc, const Transaction& tx, const crypto::PublicKey& tx_pub_key, std::vector<size_t>& outs, uint64_t& money_transfered);
 bool lookup_acc_outs(const AccountKeys& acc, const Transaction& tx, std::vector<size_t>& outs, uint64_t& money_transfered);
-bool generate_key_image_helper(const AccountKeys& ack, const Crypto::PublicKey& tx_public_key, size_t real_output_index, KeyPair& in_ephemeral, Crypto::KeyImage& ki);
-std::string short_hash_str(const Crypto::Hash& h);
+bool generate_key_image_helper(const AccountKeys& ack, const crypto::PublicKey& tx_public_key, size_t real_output_index, KeyPair& in_ephemeral, crypto::KeyImage& ki);
+std::string short_hash_str(const crypto::Hash& h);
 
 bool get_block_hashing_blob(const Block& b, BinaryArray& blob);
-bool get_aux_block_header_hash(const Block& b, Crypto::Hash& res);
-bool get_block_hash(const Block& b, Crypto::Hash& res);
-Crypto::Hash get_block_hash(const Block& b);
-bool get_block_longhash(Crypto::cn_context &context, const Block& b, Crypto::Hash& res);
+bool get_aux_block_header_hash(const Block& b, crypto::Hash& res);
+bool get_block_hash(const Block& b, crypto::Hash& res);
+crypto::Hash get_block_hash(const Block& b);
+bool get_block_longhash(crypto::cn_context &context, const Block& b, crypto::Hash& res);
 bool get_inputs_money_amount(const Transaction& tx, uint64_t& money);
 uint64_t get_outs_money_amount(const Transaction& tx);
 bool check_inputs_types_supported(const TransactionPrefix& tx);
@@ -125,9 +125,9 @@ void decompose_amount_into_digits(uint64_t amount, uint64_t dust_threshold, cons
   }
 }
 
-void get_tx_tree_hash(const std::vector<Crypto::Hash>& tx_hashes, Crypto::Hash& h);
-Crypto::Hash get_tx_tree_hash(const std::vector<Crypto::Hash>& tx_hashes);
-Crypto::Hash get_tx_tree_hash(const Block& b);
+void get_tx_tree_hash(const std::vector<crypto::Hash>& tx_hashes, crypto::Hash& h);
+crypto::Hash get_tx_tree_hash(const std::vector<crypto::Hash>& tx_hashes);
+crypto::Hash get_tx_tree_hash(const Block& b);
 bool is_valid_decomposed_amount(uint64_t amount);
 
 

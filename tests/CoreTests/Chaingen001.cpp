@@ -6,7 +6,7 @@
 #include "Chaingen001.h"
 
 using namespace std;
-using namespace CryptoNote;
+using namespace cn;
 
 ////////
 // class one_block;
@@ -27,28 +27,28 @@ bool one_block::generate(std::vector<test_event_entry> &events)
     return true;
 }
 
-bool one_block::verify_1(CryptoNote::core& c, size_t ev_index, const std::vector<test_event_entry> &events)
+bool one_block::verify_1(cn::core& c, size_t ev_index, const std::vector<test_event_entry> &events)
 {
     DEFINE_TESTS_ERROR_CONTEXT("one_block::verify_1");
 
-    alice = boost::get<CryptoNote::AccountBase>(events[1]);
+    alice = boost::get<cn::AccountBase>(events[1]);
 
     // check balances
-    //std::vector<const CryptoNote::Block*> chain;
+    //std::vector<const cn::Block*> chain;
     //map_hash2tx_t mtx;
-    //CHECK_TEST_CONDITION(find_block_chain(events, chain, mtx, get_block_hash(boost::get<CryptoNote::Block>(events[1]))));
+    //CHECK_TEST_CONDITION(find_block_chain(events, chain, mtx, get_block_hash(boost::get<cn::Block>(events[1]))));
     //CHECK_TEST_CONDITION(get_block_reward(0) == get_balance(alice, events, chain, mtx));
 
     // check height
-    std::list<CryptoNote::Block> blocks;
-    std::list<Crypto::PublicKey> outs;
+    std::list<cn::Block> blocks;
+    std::list<crypto::PublicKey> outs;
     bool r = c.get_blocks(0, 100, blocks);
     //c.get_outs(100, outs);
     CHECK_TEST_CONDITION(r);
     CHECK_TEST_CONDITION(blocks.size() == 1);
     //CHECK_TEST_CONDITION(outs.size() == blocks.size());
     CHECK_TEST_CONDITION(c.get_blockchain_total_transactions() == 1);
-    CHECK_TEST_CONDITION(blocks.back() == boost::get<CryptoNote::Block>(events[0]));
+    CHECK_TEST_CONDITION(blocks.back() == boost::get<cn::Block>(events[0]));
 
     return true;
 }
@@ -76,9 +76,9 @@ bool gen_simple_chain_001::generate(std::vector<test_event_entry> &events)
     MAKE_NEXT_BLOCK(events, blk_2, blk_1, miner);
     //MAKE_TX(events, tx_0, first_miner_account, alice, 151, blk_2);
 
-    std::vector<CryptoNote::Block> chain;
+    std::vector<cn::Block> chain;
     map_hash2tx_t mtx;
-    /*bool r = */find_block_chain(events, chain, mtx, get_block_hash(boost::get<CryptoNote::Block>(events[3])));
+    /*bool r = */find_block_chain(events, chain, mtx, get_block_hash(boost::get<cn::Block>(events[3])));
     std::cout << "BALANCE = " << get_balance(miner, chain, mtx) << std::endl;
 
     REWIND_BLOCKS(events, blk_2r, blk_2, miner);
@@ -102,7 +102,7 @@ bool gen_simple_chain_001::generate(std::vector<test_event_entry> &events)
     //MAKE_BLOCK_TX1(events, blk_3, 3, get_block_hash(blk_0), get_test_target(), first_miner_account, ts_start + 10, tx_0);
     //DO_CALLBACK(events, "verify_callback_2");
 
-/*    std::vector<const CryptoNote::Block*> chain;
+/*    std::vector<const cn::Block*> chain;
     map_hash2tx_t mtx;
     if (!find_block_chain(events, chain, mtx, get_block_hash(blk_6)))
         throw;
@@ -112,12 +112,12 @@ bool gen_simple_chain_001::generate(std::vector<test_event_entry> &events)
     return true;
 }
 
-bool gen_simple_chain_001::verify_callback_1(CryptoNote::core& c, size_t ev_index, const std::vector<test_event_entry> &events)
+bool gen_simple_chain_001::verify_callback_1(cn::core& c, size_t ev_index, const std::vector<test_event_entry> &events)
 {
   return true;
 }
 
-bool gen_simple_chain_001::verify_callback_2(CryptoNote::core& c, size_t ev_index, const std::vector<test_event_entry> &events)
+bool gen_simple_chain_001::verify_callback_2(cn::core& c, size_t ev_index, const std::vector<test_event_entry> &events)
 {
   return true;
 }

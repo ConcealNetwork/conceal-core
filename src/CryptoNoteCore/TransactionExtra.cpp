@@ -15,10 +15,10 @@
 #include "Serialization/BinaryOutputStreamSerializer.h"
 #include "Serialization/BinaryInputStreamSerializer.h"
 
-using namespace Crypto;
+using namespace crypto;
 using namespace Common;
 
-namespace CryptoNote
+namespace cn
 {
 
   bool parseTransactionExtra(const std::vector<uint8_t> &transactionExtra, std::vector<TransactionExtraField> &transactionExtraFields)
@@ -253,7 +253,7 @@ namespace CryptoNote
     return true;
   }
 
-  std::vector<std::string> get_messages_from_extra(const std::vector<uint8_t> &extra, const Crypto::PublicKey &txkey, const Crypto::SecretKey *recepient_secret_key)
+  std::vector<std::string> get_messages_from_extra(const std::vector<uint8_t> &extra, const crypto::PublicKey &txkey, const crypto::SecretKey *recepient_secret_key)
   {
     std::vector<TransactionExtraField> tx_extra_fields;
     std::vector<std::string> result;
@@ -322,9 +322,9 @@ namespace CryptoNote
     }
 
     std::vector<uint8_t> extraNonce;
-    CryptoNote::setPaymentIdToTransactionExtraNonce(extraNonce, paymentIdBin);
+    cn::setPaymentIdToTransactionExtraNonce(extraNonce, paymentIdBin);
 
-    if (!CryptoNote::addExtraNonceToTransactionExtra(extra, extraNonce))
+    if (!cn::addExtraNonceToTransactionExtra(extra, extraNonce))
     {
       return false;
     }
@@ -391,7 +391,7 @@ namespace CryptoNote
     return true;
   }
 
-  bool tx_extra_message::decrypt(size_t index, const Crypto::PublicKey &txkey, const Crypto::SecretKey *recepient_secret_key, std::string &message) const
+  bool tx_extra_message::decrypt(size_t index, const crypto::PublicKey &txkey, const crypto::SecretKey *recepient_secret_key, std::string &message) const
   {
     size_t mlen = data.size();
     if (mlen < TX_EXTRA_MESSAGE_CHECKSUM_SIZE)
@@ -438,4 +438,4 @@ namespace CryptoNote
     return true;
   }
 
-} // namespace CryptoNote
+} // namespace cn
