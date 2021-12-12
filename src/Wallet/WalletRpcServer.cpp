@@ -487,7 +487,7 @@ bool wallet_rpc_server::on_create_integrated(const wallet_rpc::COMMAND_RPC_CREAT
     std::string keys = common::asString(ba);
 
     /* create the integrated address the same way you make a public address */
-    std::string integratedAddress = tools::Base58::encode_addr (
+    std::string integratedAddress = tools::base_58::encode_addr (
         cn::parameters::CRYPTONOTE_PUBLIC_ADDRESS_BASE58_PREFIX,
         payment_id_str + keys
     );

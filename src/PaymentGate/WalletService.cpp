@@ -1455,7 +1455,7 @@ namespace PaymentService
     logger(logging::INFO) << "keys:" + keys;
 
     /* Create the integrated address the same way you make a public address */
-    integrated_address = tools::Base58::encode_addr(
+    integrated_address = tools::base_58::encode_addr(
         cn::parameters::CRYPTONOTE_PUBLIC_ADDRESS_BASE58_PREFIX,
         payment_id_str + keys);
 
@@ -1475,7 +1475,7 @@ namespace PaymentService
     /* Decode the address and extract the payment id */
     std::string decoded;
     uint64_t prefix;
-    if (tools::Base58::decode_addr(integrated_address_str, prefix, decoded))
+    if (tools::base_58::decode_addr(integrated_address_str, prefix, decoded))
     {
       payment_id = decoded.substr(0, 64);
     }
