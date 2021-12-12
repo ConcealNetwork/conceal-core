@@ -17,7 +17,7 @@ namespace
 
   void do_pos_test(uint64_t expected, const std::string& str)
   {
-    Logging::LoggerGroup logger;
+    logging::LoggerGroup logger;
     cn::Currency currency = cn::CurrencyBuilder(logger).numberOfDecimalPlaces(TEST_NUMBER_OF_DECIMAL_PLACES).currency();
     uint64_t val;
     std::string number_str = str;
@@ -29,7 +29,7 @@ namespace
 
   void do_neg_test(const std::string& str)
   {
-    Logging::LoggerGroup logger;
+    logging::LoggerGroup logger;
     cn::Currency currency = cn::CurrencyBuilder(logger).numberOfDecimalPlaces(TEST_NUMBER_OF_DECIMAL_PLACES).currency();
     uint64_t val;
     std::string number_str = str;

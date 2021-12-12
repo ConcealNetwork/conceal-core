@@ -308,7 +308,7 @@ protected:
   cn::TransactionId withdrawDeposits(const std::vector<cn::DepositId>& ids, uint64_t fee);
   uint64_t calculateTotalDepositAmount(uint64_t amount, uint32_t term, uint32_t height);
 
-  Logging::ConsoleLogger m_logger;
+  logging::ConsoleLogger m_logger;
   cn::Currency m_currency;
 
   TestBlockchainGenerator generator;

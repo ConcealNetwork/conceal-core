@@ -15,7 +15,7 @@
 
 namespace cn {
 
-Miner::Miner(System::Dispatcher& dispatcher, Logging::ILogger& logger) :
+Miner::Miner(System::Dispatcher& dispatcher, logging::ILogger& logger) :
   m_dispatcher(dispatcher),
   m_miningStopped(dispatcher),
   m_state(MiningState::MINING_STOPPED),
@@ -42,7 +42,7 @@ Block Miner::mine(const BlockMiningParameters& blockMiningParameters, size_t thr
 
   assert(m_state != MiningState::MINING_IN_PROGRESS);
   if (m_state == MiningState::MINING_STOPPED) {
-    m_logger(Logging::DEBUGGING) << "Mining has been stopped";
+    m_logger(logging::DEBUGGING) << "Mining has been stopped";
     throw System::InterruptedException();
   }
 
@@ -62,7 +62,7 @@ void Miner::stop() {
 void Miner::runWorkers(BlockMiningParameters blockMiningParameters, size_t threadCount) {
   assert(threadCount > 0);
 
-  m_logger(Logging::INFO) << "Starting mining for difficulty " << blockMiningParameters.difficulty;
+  m_logger(logging::INFO) << "Starting mining for difficulty " << blockMiningParameters.difficulty;
 
   try {
     blockMiningParameters.blockTemplate.nonce = crypto::rand<uint32_t>();
@@ -78,7 +78,7 @@ void Miner::runWorkers(BlockMiningParameters blockMiningParameters, size_t threa
     m_workers.clear();
 
   } catch (std::exception& e) {
-    m_logger(Logging::ERROR) << "Error occured during mining: " << e.what();
+    m_logger(logging::ERROR) << "Error occured during mining: " << e.what();
     m_state = MiningState::MINING_STOPPED;
   }
 
@@ -94,16 +94,16 @@ void Miner::workerFunc(const Block& blockTemplate, difficulty_type difficulty, u
       crypto::Hash hash;
       if (!get_block_longhash(cryptoContext, block, hash)) {
         //error occured
-        m_logger(Logging::DEBUGGING) << "calculating long hash error occured";
+        m_logger(logging::DEBUGGING) << "calculating long hash error occured";
         m_state = MiningState::MINING_STOPPED;
         return;
       }
 
       if (check_hash(hash, difficulty)) {
-        m_logger(Logging::INFO) << "Found block for difficulty " << difficulty;
+        m_logger(logging::INFO) << "Found block for difficulty " << difficulty;
 
         if (!setStateBlockFound()) {
-          m_logger(Logging::DEBUGGING) << "block is already found or mining stopped";
+          m_logger(logging::DEBUGGING) << "block is already found or mining stopped";
           return;
         }
 
@@ -114,7 +114,7 @@ void Miner::workerFunc(const Block& blockTemplate, difficulty_type difficulty, u
       block.nonce += nonceStep;
     }
   } catch (std::exception& e) {
-    m_logger(Logging::ERROR) << "Miner got error: " << e.what();
+    m_logger(logging::ERROR) << "Miner got error: " << e.what();
     m_state = MiningState::MINING_STOPPED;
   }
 }

@@ -24,8 +24,8 @@ int main(int argc, char** argv) {
       return 0;
     }
 
-    Logging::LoggerGroup loggerGroup;
-    Logging::ConsoleLogger consoleLogger(static_cast<Logging::Level>(config.logLevel));
+    logging::LoggerGroup loggerGroup;
+    logging::ConsoleLogger consoleLogger(static_cast<logging::Level>(config.logLevel));
     loggerGroup.addLogger(consoleLogger);
 
     System::Dispatcher dispatcher;

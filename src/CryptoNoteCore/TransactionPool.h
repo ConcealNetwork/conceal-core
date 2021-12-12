@@ -76,7 +76,7 @@ namespace cn {
       const cn::Currency& currency, 
       cn::ITransactionValidator& validator,
       cn::ITimeProvider& timeProvider,
-      Logging::ILogger& log);
+      logging::ILogger& log);
 
     bool addObserver(ITxPoolObserver* observer);
     bool removeObserver(ITxPoolObserver* observer);
@@ -200,7 +200,7 @@ namespace cn {
     tx_container_t::nth_index<1>::type& m_fee_index;
     std::unordered_map<crypto::Hash, uint64_t> m_recentlyDeletedTransactions;
 
-    Logging::LoggerRef logger;
+    logging::LoggerRef logger;
 
     PaymentIdIndex m_paymentIdIndex;
     TimestampTransactionsIndex m_timestampIndex;

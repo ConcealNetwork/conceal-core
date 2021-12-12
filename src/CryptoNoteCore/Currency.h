@@ -189,7 +189,7 @@ namespace cn
     size_t getApproximateMaximumInputCount(size_t transactionSize, size_t outputCount, size_t mixinCount) const;
 
   private:
-    Currency(Logging::ILogger &log) : logger(log, "currency")
+    Currency(logging::ILogger &log) : logger(log, "currency")
     {
     }
 
@@ -284,7 +284,7 @@ namespace cn
     Block m_genesisBlock;
     crypto::Hash m_genesisBlockHash;
 
-    Logging::LoggerRef logger;
+    logging::LoggerRef logger;
 
     friend class CurrencyBuilder;
   };
@@ -292,7 +292,7 @@ namespace cn
   class CurrencyBuilder : boost::noncopyable
   {
   public:
-    CurrencyBuilder(Logging::ILogger &log);
+    CurrencyBuilder(logging::ILogger &log);
 
     Currency currency()
     {

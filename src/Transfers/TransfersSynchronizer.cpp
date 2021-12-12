@@ -12,14 +12,14 @@
 #include "Serialization/BinaryInputStreamSerializer.h"
 #include "Serialization/BinaryOutputStreamSerializer.h"
 
-using namespace Common;
+using namespace common;
 using namespace crypto;
 
 namespace cn {
 
 const uint32_t TRANSFERS_STORAGE_ARCHIVE_VERSION = 0;
 
-TransfersSyncronizer::TransfersSyncronizer(const cn::Currency& currency, Logging::ILogger& logger, IBlockchainSynchronizer& sync, INode& node) :
+TransfersSyncronizer::TransfersSyncronizer(const cn::Currency& currency, logging::ILogger& logger, IBlockchainSynchronizer& sync, INode& node) :
   m_currency(currency), m_logger(logger, "TransfersSyncronizer"), m_sync(sync), m_node(node) {
 }
 

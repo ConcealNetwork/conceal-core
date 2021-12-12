@@ -22,7 +22,7 @@ int main(int argc, char *argv[]) {
         cerr << "Wrong arguments" << endl;
         return 1;
     }
-    Logging::ConsoleLogger logger;
+    logging::ConsoleLogger logger;
     cn::CurrencyBuilder currencyBuilder(logger);
     currencyBuilder.difficultyTarget(120);
     currencyBuilder.difficultyWindow(720);

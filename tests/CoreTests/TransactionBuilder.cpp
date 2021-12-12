@@ -9,7 +9,7 @@
 
 using namespace cn;
 using namespace crypto;
-using namespace Common;
+using namespace common;
 
 TransactionBuilder::TransactionBuilder(const cn::Currency& currency, uint64_t unlockTime)
   : m_currency(currency), m_version(cn::TRANSACTION_VERSION_1), m_unlockTime(unlockTime), m_txKey(generateKeyPair()) {}

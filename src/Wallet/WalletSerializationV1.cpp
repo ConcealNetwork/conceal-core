@@ -24,7 +24,7 @@
 #include "WalletLegacy/KeysStorage.h"
 #include "WalletLegacy/WalletLegacySerialization.h"
 
-using namespace Common;
+using namespace common;
 using namespace crypto;
 
 namespace {
@@ -162,7 +162,7 @@ std::string serialize(Object& obj, const std::string& name) {
   StdOutputStream output(stream);
   cn::BinaryOutputStreamSerializer s(output);
 
-  s(obj, Common::StringView(name));
+  s(obj, common::StringView(name));
 
   stream.flush();
   return stream.str();
@@ -177,20 +177,20 @@ std::string encrypt(const std::string& plain, cn::CryptoContext& cryptoContext) 
   return cipher;
 }
 
-void addToStream(const std::string& cipher, const std::string& name, Common::IOutputStream& destination) {
+void addToStream(const std::string& cipher, const std::string& name, common::IOutputStream& destination) {
   cn::BinaryOutputStreamSerializer s(destination);
   s(const_cast<std::string& >(cipher), name);
 }
 
 template<typename Object>
-void serializeEncrypted(Object& obj, const std::string& name, cn::CryptoContext& cryptoContext, Common::IOutputStream& destination) {
+void serializeEncrypted(Object& obj, const std::string& name, cn::CryptoContext& cryptoContext, common::IOutputStream& destination) {
   std::string plain = serialize(obj, name);
   std::string cipher = encrypt(plain, cryptoContext);
 
   addToStream(cipher, name, destination);
 }
 
-std::string readCipher(Common::IInputStream& source, const std::string& name) {
+std::string readCipher(common::IInputStream& source, const std::string& name) {
   std::string cipher;
   cn::BinaryInputStreamSerializer s(source);
   s(cipher, name);
@@ -210,11 +210,11 @@ template<typename Object>
 void deserialize(Object& obj, const std::string& name, const std::string& plain) {
   MemoryInputStream stream(plain.data(), plain.size());
   cn::BinaryInputStreamSerializer s(stream);
-  s(obj, Common::StringView(name));
+  s(obj, common::StringView(name));
 }
 
 template<typename Object>
-void deserializeEncrypted(Object& obj, const std::string& name, cn::CryptoContext& cryptoContext, Common::IInputStream& source) {
+void deserializeEncrypted(Object& obj, const std::string& name, cn::CryptoContext& cryptoContext, common::IInputStream& source) {
   std::string cipher = readCipher(source, name);
   std::string plain = decrypt(cipher, cryptoContext);
 
@@ -298,7 +298,7 @@ WalletSerializer::WalletSerializer(
   uncommitedTransactions(uncommitedTransactions)
 { }
 
-void WalletSerializer::save(const std::string& password, Common::IOutputStream& destination, bool saveDetails, bool saveCache) {
+void WalletSerializer::save(const std::string& password, common::IOutputStream& destination, bool saveDetails, bool saveCache) {
   CryptoContext cryptoContext = generateCryptoContext(password);
 
   cn::BinaryOutputStreamSerializer s(destination);
@@ -337,34 +337,34 @@ CryptoContext WalletSerializer::generateCryptoContext(const std::string& passwor
   return context;
 }
 
-void WalletSerializer::saveVersion(Common::IOutputStream& destination) {
+void WalletSerializer::saveVersion(common::IOutputStream& destination) {
   uint32_t version = SERIALIZATION_VERSION;
 
   BinaryOutputStreamSerializer s(destination);
   s(version, "version");
 }
 
-void WalletSerializer::saveIv(Common::IOutputStream& destination, crypto::chacha8_iv& iv) {
+void WalletSerializer::saveIv(common::IOutputStream& destination, crypto::chacha8_iv& iv) {
   BinaryOutputStreamSerializer s(destination);
   s.binary(reinterpret_cast<void *>(&iv.data), sizeof(iv.data), "chacha8_iv");
 }
 
-void WalletSerializer::saveKeys(Common::IOutputStream& destination, CryptoContext& cryptoContext) {
+void WalletSerializer::saveKeys(common::IOutputStream& destination, CryptoContext& cryptoContext) {
   savePublicKey(destination, cryptoContext);
   saveSecretKey(destination, cryptoContext);
 }
 
-void WalletSerializer::savePublicKey(Common::IOutputStream& destination, CryptoContext& cryptoContext) {
+void WalletSerializer::savePublicKey(common::IOutputStream& destination, CryptoContext& cryptoContext) {
   serializeEncrypted(m_viewPublicKey, "public_key", cryptoContext, destination);
   cryptoContext.incIv();
 }
 
-void WalletSerializer::saveSecretKey(Common::IOutputStream& destination, CryptoContext& cryptoContext) {
+void WalletSerializer::saveSecretKey(common::IOutputStream& destination, CryptoContext& cryptoContext) {
   serializeEncrypted(m_viewSecretKey, "secret_key", cryptoContext, destination);
   cryptoContext.incIv();
 }
 
-void WalletSerializer::saveFlags(bool saveDetails, bool saveCache, Common::IOutputStream& destination, CryptoContext& cryptoContext) {
+void WalletSerializer::saveFlags(bool saveDetails, bool saveCache, common::IOutputStream& destination, CryptoContext& cryptoContext) {
   serializeEncrypted(saveDetails, "details", cryptoContext, destination);
   cryptoContext.incIv();
 
@@ -372,7 +372,7 @@ void WalletSerializer::saveFlags(bool saveDetails, bool saveCache, Common::IOutp
   cryptoContext.incIv();
 }
 
-void WalletSerializer::saveWallets(Common::IOutputStream& destination, bool saveCache, CryptoContext& cryptoContext) {
+void WalletSerializer::saveWallets(common::IOutputStream& destination, bool saveCache, CryptoContext& cryptoContext) {
   auto& index = m_walletsContainer.get<RandomAccessIndex>();
 
   uint64_t count = index.size();
@@ -392,7 +392,7 @@ void WalletSerializer::saveWallets(Common::IOutputStream& destination, bool save
   }
 }
 
-void WalletSerializer::saveBalances(Common::IOutputStream& destination, bool saveCache, CryptoContext& cryptoContext) {
+void WalletSerializer::saveBalances(common::IOutputStream& destination, bool saveCache, CryptoContext& cryptoContext) {
   uint64_t actual = saveCache ? m_actualBalance : 0;
   uint64_t pending = saveCache ? m_pendingBalance : 0;
 
@@ -403,7 +403,7 @@ void WalletSerializer::saveBalances(Common::IOutputStream& destination, bool sav
   cryptoContext.incIv();
 }
 
-void WalletSerializer::saveTransfersSynchronizer(Common::IOutputStream& destination, CryptoContext& cryptoContext) {
+void WalletSerializer::saveTransfersSynchronizer(common::IOutputStream& destination, CryptoContext& cryptoContext) {
   std::stringstream stream;
   m_synchronizer.save(stream);
   stream.flush();
@@ -413,7 +413,7 @@ void WalletSerializer::saveTransfersSynchronizer(Common::IOutputStream& destinat
   cryptoContext.incIv();
 }
 
-void WalletSerializer::saveUnlockTransactionsJobs(Common::IOutputStream& destination, CryptoContext& cryptoContext) {
+void WalletSerializer::saveUnlockTransactionsJobs(common::IOutputStream& destination, CryptoContext& cryptoContext) {
   auto& index = m_unlockTransactions.get<TransactionHashIndex>();
   auto& wallets = m_walletsContainer.get<TransfersContainerIndex>();
 
@@ -440,11 +440,11 @@ void WalletSerializer::saveUnlockTransactionsJobs(Common::IOutputStream& destina
   }
 }
 
-void WalletSerializer::saveUncommitedTransactions(Common::IOutputStream& destination, CryptoContext& cryptoContext) {
+void WalletSerializer::saveUncommitedTransactions(common::IOutputStream& destination, CryptoContext& cryptoContext) {
   serializeEncrypted(uncommitedTransactions, "uncommited_transactions", cryptoContext, destination);
 }
 
-void WalletSerializer::saveTransactions(Common::IOutputStream& destination, CryptoContext& cryptoContext) {
+void WalletSerializer::saveTransactions(common::IOutputStream& destination, CryptoContext& cryptoContext) {
   uint64_t count = m_transactions.size();
   serializeEncrypted(count, "transactions_count", cryptoContext, destination);
   cryptoContext.incIv();
@@ -456,7 +456,7 @@ void WalletSerializer::saveTransactions(Common::IOutputStream& destination, Cryp
   }
 }
 
-void WalletSerializer::saveTransfers(Common::IOutputStream& destination, CryptoContext& cryptoContext) {
+void WalletSerializer::saveTransfers(common::IOutputStream& destination, CryptoContext& cryptoContext) {
   uint64_t count = m_transfers.size();
   serializeEncrypted(count, "transfers_count", cryptoContext, destination);
   cryptoContext.incIv();
@@ -474,7 +474,7 @@ void WalletSerializer::saveTransfers(Common::IOutputStream& destination, CryptoC
   }
 }
 
-void WalletSerializer::load(const crypto::chacha8_key &key, Common::IInputStream &source)
+void WalletSerializer::load(const crypto::chacha8_key &key, common::IInputStream &source)
 {
   cn::BinaryInputStreamSerializer s(source);
   s.beginObject("wallet");
@@ -497,7 +497,7 @@ void WalletSerializer::load(const crypto::chacha8_key &key, Common::IInputStream
   s.endObject();
 }
 
-void WalletSerializer::loadWallet(Common::IInputStream &source, const crypto::chacha8_key &key, uint32_t version)
+void WalletSerializer::loadWallet(common::IInputStream &source, const crypto::chacha8_key &key, uint32_t version)
 {
   cn::CryptoContext cryptoContext;
 
@@ -554,7 +554,7 @@ void WalletSerializer::loadWallet(Common::IInputStream &source, const crypto::ch
   }
 }
 
-void WalletSerializer::loadWalletV1(Common::IInputStream &source, const crypto::chacha8_key &key)
+void WalletSerializer::loadWalletV1(common::IInputStream &source, const crypto::chacha8_key &key)
 {
   cn::CryptoContext cryptoContext;
 
@@ -611,7 +611,7 @@ void WalletSerializer::loadWalletV1Details(cn::BinaryInputStreamSerializer& seri
   addWalletV1Details(txs, trs);
 }
 
-uint32_t WalletSerializer::loadVersion(Common::IInputStream& source) {
+uint32_t WalletSerializer::loadVersion(common::IInputStream& source) {
   cn::BinaryInputStreamSerializer s(source);
 
   uint32_t version = std::numeric_limits<uint32_t>::max();
@@ -620,7 +620,7 @@ uint32_t WalletSerializer::loadVersion(Common::IInputStream& source) {
   return version;
 }
 
-void WalletSerializer::loadIv(Common::IInputStream& source, crypto::chacha8_iv& iv) {
+void WalletSerializer::loadIv(common::IInputStream& source, crypto::chacha8_iv& iv) {
   cn::BinaryInputStreamSerializer s(source);
 
   s.binary(static_cast<void *>(&iv.data), sizeof(iv.data), "chacha8_iv");
@@ -631,17 +631,17 @@ void WalletSerializer::generateKey(const std::string& password, crypto::chacha8_
   crypto::generate_chacha8_key(context, password, key);
 }
 
-void WalletSerializer::loadKeys(Common::IInputStream& source, CryptoContext& cryptoContext) {
+void WalletSerializer::loadKeys(common::IInputStream& source, CryptoContext& cryptoContext) {
   loadPublicKey(source, cryptoContext);
   loadSecretKey(source, cryptoContext);
 }
 
-void WalletSerializer::loadPublicKey(Common::IInputStream& source, CryptoContext& cryptoContext) {
+void WalletSerializer::loadPublicKey(common::IInputStream& source, CryptoContext& cryptoContext) {
   deserializeEncrypted(m_viewPublicKey, "public_key", cryptoContext, source);
   cryptoContext.incIv();
 }
 
-void WalletSerializer::loadSecretKey(Common::IInputStream& source, CryptoContext& cryptoContext) {
+void WalletSerializer::loadSecretKey(common::IInputStream& source, CryptoContext& cryptoContext) {
   deserializeEncrypted(m_viewSecretKey, "secret_key", cryptoContext, source);
   cryptoContext.incIv();
 }
@@ -650,7 +650,7 @@ void WalletSerializer::checkKeys() {
   throwIfKeysMissmatch(m_viewSecretKey, m_viewPublicKey);
 }
 
-void WalletSerializer::loadFlags(bool& details, bool& cache, Common::IInputStream& source, CryptoContext& cryptoContext) {
+void WalletSerializer::loadFlags(bool& details, bool& cache, common::IInputStream& source, CryptoContext& cryptoContext) {
   deserializeEncrypted(details, "details", cryptoContext, source);
   cryptoContext.incIv();
 
@@ -658,7 +658,7 @@ void WalletSerializer::loadFlags(bool& details, bool& cache, Common::IInputStrea
   cryptoContext.incIv();
 }
 
-void WalletSerializer::loadWallets(Common::IInputStream& source, CryptoContext& cryptoContext) {
+void WalletSerializer::loadWallets(common::IInputStream& source, CryptoContext& cryptoContext) {
   auto& index = m_walletsContainer.get<RandomAccessIndex>();
 
   uint64_t count = 0;
@@ -726,7 +726,7 @@ void WalletSerializer::subscribeWallets() {
   }
 }
 
-void WalletSerializer::loadBalances(Common::IInputStream& source, CryptoContext& cryptoContext) {
+void WalletSerializer::loadBalances(common::IInputStream& source, CryptoContext& cryptoContext) {
   deserializeEncrypted(m_actualBalance, "actual_balance", cryptoContext, source);
   cryptoContext.incIv();
 
@@ -734,7 +734,7 @@ void WalletSerializer::loadBalances(Common::IInputStream& source, CryptoContext&
   cryptoContext.incIv();
 }
 
-void WalletSerializer::loadTransfersSynchronizer(Common::IInputStream& source, CryptoContext& cryptoContext) {
+void WalletSerializer::loadTransfersSynchronizer(common::IInputStream& source, CryptoContext& cryptoContext) {
   std::string deciphered;
   deserializeEncrypted(deciphered, "transfers_synchronizer", cryptoContext, source);
   cryptoContext.incIv();
@@ -745,7 +745,7 @@ void WalletSerializer::loadTransfersSynchronizer(Common::IInputStream& source, C
   m_synchronizer.load(stream);
 }
 
-void WalletSerializer::loadObsoleteSpentOutputs(Common::IInputStream& source, CryptoContext& cryptoContext) {
+void WalletSerializer::loadObsoleteSpentOutputs(common::IInputStream& source, CryptoContext& cryptoContext) {
   uint64_t count = 0;
   deserializeEncrypted(count, "spent_outputs_count", cryptoContext, source);
   cryptoContext.incIv();
@@ -757,7 +757,7 @@ void WalletSerializer::loadObsoleteSpentOutputs(Common::IInputStream& source, Cr
   }
 }
 
-void WalletSerializer::loadUnlockTransactionsJobs(Common::IInputStream& source, CryptoContext& cryptoContext) {
+void WalletSerializer::loadUnlockTransactionsJobs(common::IInputStream& source, CryptoContext& cryptoContext) {
   auto& index = m_unlockTransactions.get<TransactionHashIndex>();
   auto& walletsIndex = m_walletsContainer.get<RandomAccessIndex>();
   const uint64_t walletsSize = walletsIndex.size();
@@ -782,7 +782,7 @@ void WalletSerializer::loadUnlockTransactionsJobs(Common::IInputStream& source, 
   }
 }
 
-void WalletSerializer::loadObsoleteChange(Common::IInputStream& source, CryptoContext& cryptoContext) {
+void WalletSerializer::loadObsoleteChange(common::IInputStream& source, CryptoContext& cryptoContext) {
   uint64_t count = 0;
   deserializeEncrypted(count, "changes_count", cryptoContext, source);
   cryptoContext.incIv();
@@ -794,7 +794,7 @@ void WalletSerializer::loadObsoleteChange(Common::IInputStream& source, CryptoCo
   }
 }
 
-void WalletSerializer::loadUncommitedTransactions(Common::IInputStream& source, CryptoContext& cryptoContext) {
+void WalletSerializer::loadUncommitedTransactions(common::IInputStream& source, CryptoContext& cryptoContext) {
   deserializeEncrypted(uncommitedTransactions, "uncommited_transactions", cryptoContext, source);
 }
 
@@ -847,7 +847,7 @@ void WalletSerializer::updateTransfersSign() {
   }
 }
 
-void WalletSerializer::loadTransactions(Common::IInputStream& source, CryptoContext& cryptoContext) {
+void WalletSerializer::loadTransactions(common::IInputStream& source, CryptoContext& cryptoContext) {
   uint64_t count = 0;
   deserializeEncrypted(count, "transactions_count", cryptoContext, source);
   cryptoContext.incIv();
@@ -875,7 +875,7 @@ void WalletSerializer::loadTransactions(Common::IInputStream& source, CryptoCont
   }
 }
 
-void WalletSerializer::loadTransfers(Common::IInputStream& source, CryptoContext& cryptoContext, uint32_t version) {
+void WalletSerializer::loadTransfers(common::IInputStream& source, CryptoContext& cryptoContext, uint32_t version) {
   uint64_t count = 0;
   deserializeEncrypted(count, "transfers_count", cryptoContext, source);
   cryptoContext.incIv();

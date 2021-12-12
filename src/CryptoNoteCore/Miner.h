@@ -25,7 +25,7 @@
 namespace cn {
   class miner {
   public:
-    miner(const Currency& currency, IMinerHandler& handler, Logging::ILogger& log);
+    miner(const Currency& currency, IMinerHandler& handler, logging::ILogger& log);
     ~miner();
 
     bool init(const MinerConfig& config);
@@ -58,7 +58,7 @@ namespace cn {
     };
 
     const Currency& m_currency;
-    Logging::LoggerRef logger;
+    logging::LoggerRef logger;
 
     std::atomic<bool> m_stop;
     std::mutex m_template_lock;

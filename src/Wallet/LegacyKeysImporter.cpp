@@ -45,11 +45,11 @@ void loadKeysFromFile(const std::string& filename, const std::string& password, 
   keys_file_data keys_file_data;
   std::string buf;
 
-  if (!Common::loadFileToString(filename, buf)) {
+  if (!common::loadFileToString(filename, buf)) {
     throw std::system_error(make_error_code(cn::error::INTERNAL_WALLET_ERROR), "failed to load \"" + filename + '\"');
   }
 
-  if (!cn::fromBinaryArray(keys_file_data, Common::asBinaryArray(buf))) {
+  if (!cn::fromBinaryArray(keys_file_data, common::asBinaryArray(buf))) {
     throw std::system_error(make_error_code(cn::error::INTERNAL_WALLET_ERROR), "failed to deserialize \"" + filename + '\"');
   }
 

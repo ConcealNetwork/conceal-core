@@ -35,7 +35,7 @@
 
 #include "Rpc/JsonRpc.h"
 
-using namespace Logging;
+using namespace logging;
 using namespace cn;
 
 namespace Tools {
@@ -54,7 +54,7 @@ void wallet_rpc_server::init_options(boost::program_options::options_description
 //------------------------------------------------------------------------------------------------------------------------------
 wallet_rpc_server::wallet_rpc_server(
   System::Dispatcher& dispatcher,
-  Logging::ILogger& log,
+  logging::ILogger& log,
   cn::IWalletLegacy&w,
   cn::INode& n,
   cn::Currency& currency,
@@ -220,8 +220,8 @@ bool wallet_rpc_server::on_transfer(const wallet_rpc::COMMAND_RPC_TRANSFER::requ
 
     cn::WalletLegacyTransaction txInfo;
     m_wallet.getTransaction(tx, txInfo);
-    res.tx_hash = Common::podToHex(txInfo.hash);
-    res.tx_secret_key = Common::podToHex(transactionSK);
+    res.tx_hash = common::podToHex(txInfo.hash);
+    res.tx_secret_key = common::podToHex(transactionSK);
 
   } catch (const std::exception& e) {
     throw JsonRpc::JsonRpcError(WALLET_RPC_ERROR_CODE_GENERIC_TRANSFER_ERROR, e.what());
@@ -247,7 +247,7 @@ bool wallet_rpc_server::on_get_tx_proof(const wallet_rpc::COMMAND_RPC_GET_TX_PRO
 	if (!req.tx_key.empty()) {
 		crypto::Hash tx_key_hash;
 		size_t size;
-		if (!Common::fromHex(req.tx_key, &tx_key_hash, sizeof(tx_key_hash), size) || size != sizeof(tx_key_hash)) {
+		if (!common::fromHex(req.tx_key, &tx_key_hash, sizeof(tx_key_hash), size) || size != sizeof(tx_key_hash)) {
 			throw JsonRpc::JsonRpcError(WALLET_RPC_ERROR_CODE_UNKNOWN_ERROR, std::string("Failed to parse tx_key"));
 		}
 		tx_key2 = *(struct crypto::SecretKey *) &tx_key_hash;
@@ -319,8 +319,8 @@ bool wallet_rpc_server::on_optimize(const wallet_rpc::COMMAND_RPC_OPTIMIZE::requ
 
     cn::WalletLegacyTransaction txInfo;
     m_wallet.getTransaction(tx, txInfo);
-    res.tx_hash = Common::podToHex(txInfo.hash);
-    res.tx_secret_key = Common::podToHex(transactionSK);
+    res.tx_hash = common::podToHex(txInfo.hash);
+    res.tx_secret_key = common::podToHex(transactionSK);
 
   } catch (const std::exception& e) {
     throw JsonRpc::JsonRpcError(WALLET_RPC_ERROR_CODE_GENERIC_TRANSFER_ERROR, e.what());
@@ -382,7 +382,7 @@ bool wallet_rpc_server::on_send_fusion(const wallet_rpc::COMMAND_RPC_SEND_FUSION
 
     cn::WalletLegacyTransaction txInfo;
     m_wallet.getTransaction(tx, txInfo);
-    res.tx_hash = Common::podToHex(txInfo.hash);
+    res.tx_hash = common::podToHex(txInfo.hash);
   }
   catch (const std::exception& e)
   {
@@ -412,7 +412,7 @@ bool wallet_rpc_server::on_get_messages(const wallet_rpc::COMMAND_RPC_GET_MESSAG
 
     if (!tx.messages.empty()) {
       wallet_rpc::transaction_messages tx_messages;
-      tx_messages.tx_hash = Common::podToHex(tx.hash);
+      tx_messages.tx_hash = common::podToHex(tx.hash);
       tx_messages.tx_id = i;
       tx_messages.block_height = tx.blockHeight;
       tx_messages.timestamp = tx.timestamp;
@@ -437,7 +437,7 @@ bool wallet_rpc_server::on_get_payments(const wallet_rpc::COMMAND_RPC_GET_PAYMEN
   PaymentId expectedPaymentId;
   cn::BinaryArray payment_id_blob;
 
-  if (!Common::fromHex(req.payment_id, payment_id_blob)) {
+  if (!common::fromHex(req.payment_id, payment_id_blob)) {
     throw JsonRpc::JsonRpcError(WALLET_RPC_ERROR_CODE_WRONG_PAYMENT_ID, "Payment ID has invald format");
   }
 
@@ -450,7 +450,7 @@ bool wallet_rpc_server::on_get_payments(const wallet_rpc::COMMAND_RPC_GET_PAYMEN
   assert(payments.size() == 1);
   for (auto& transaction : payments[0].transactions) {
     wallet_rpc::payment_details rpc_payment;
-    rpc_payment.tx_hash = Common::podToHex(transaction.hash);
+    rpc_payment.tx_hash = common::podToHex(transaction.hash);
     rpc_payment.amount = transaction.totalAmount;
     rpc_payment.block_height = transaction.blockHeight;
     rpc_payment.unlock_time = transaction.unlockTime;
@@ -484,7 +484,7 @@ bool wallet_rpc_server::on_create_integrated(const wallet_rpc::COMMAND_RPC_CREAT
 
     cn::BinaryArray ba;
     cn::toBinaryArray(addr, ba);
-    std::string keys = Common::asString(ba);
+    std::string keys = common::asString(ba);
 
     /* create the integrated address the same way you make a public address */
     std::string integratedAddress = Tools::Base58::encode_addr (
@@ -521,7 +521,7 @@ bool wallet_rpc_server::on_get_transfers(const wallet_rpc::COMMAND_RPC_GET_TRANS
     wallet_rpc::Transfer transfer;
     transfer.time = txInfo.timestamp;
     transfer.output = txInfo.totalAmount < 0;
-    transfer.transactionHash = Common::podToHex(txInfo.hash);
+    transfer.transactionHash = common::podToHex(txInfo.hash);
     transfer.amount = std::abs(txInfo.totalAmount);
     transfer.fee = txInfo.fee;
     transfer.address = address;
@@ -534,7 +534,7 @@ bool wallet_rpc_server::on_get_transfers(const wallet_rpc::COMMAND_RPC_GET_TRANS
     std::for_each(txInfo.extra.begin(), txInfo.extra.end(), [&extraVec](const char el) { extraVec.push_back(el); });
 
     crypto::Hash paymentId;
-    transfer.paymentId = (getPaymentIdFromTxExtra(extraVec, paymentId) && paymentId != NULL_HASH ? Common::podToHex(paymentId) : "");
+    transfer.paymentId = (getPaymentIdFromTxExtra(extraVec, paymentId) && paymentId != NULL_HASH ? common::podToHex(paymentId) : "");
 
     res.transfers.push_back(transfer);
   }

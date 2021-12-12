@@ -24,7 +24,7 @@ namespace cn {
 
 class BlockchainExplorer : public IBlockchainExplorer, public INodeObserver {
 public:
-  BlockchainExplorer(INode& node, Logging::ILogger& logger);
+  BlockchainExplorer(INode& node, logging::ILogger& logger);
 
   BlockchainExplorer(const BlockchainExplorer&) = delete;
   BlockchainExplorer(BlockchainExplorer&&) = delete;
@@ -99,7 +99,7 @@ private:
   std::mutex mutex;
 
   INode& node;
-  Logging::LoggerRef logger;
+  logging::LoggerRef logger;
 
   AsyncContextCounter asyncContextCounter;
   PoolUpdateGuard poolUpdateGuard;

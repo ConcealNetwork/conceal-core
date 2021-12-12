@@ -29,11 +29,11 @@
 
 #undef ERROR
 
-using namespace Logging;
+using namespace logging;
 
 #include "CryptoNoteCore/CoreConfig.h"
 
-using namespace  Common;
+using namespace  common;
 
 namespace cn {
 
@@ -59,7 +59,7 @@ private:
   friend class core;
 };
 
-core::core(const Currency &currency, i_cryptonote_protocol *pprotocol, Logging::ILogger &logger, bool blockchainIndexesEnabled, bool blockchainAutosaveEnabled) : m_currency(currency),
+core::core(const Currency &currency, i_cryptonote_protocol *pprotocol, logging::ILogger &logger, bool blockchainIndexesEnabled, bool blockchainAutosaveEnabled) : m_currency(currency),
                                                                                                                                                                   logger(logger, "core"),
                                                                                                                                                                   m_mempool(currency, m_blockchain, m_timeProvider, logger),
                                                                                                                                                                   m_blockchain(currency, m_mempool, logger, blockchainIndexesEnabled, blockchainAutosaveEnabled),
@@ -260,7 +260,7 @@ bool core::get_stat_info(core_stat_info& st_inf) {
   st_inf.alternative_blocks = m_blockchain.getAlternativeBlocksCount();
   st_inf.blockchain_height = m_blockchain.getCurrentBlockchainHeight();
   st_inf.tx_pool_size = m_mempool.get_transactions_count();
-  st_inf.top_block_id_str = Common::podToHex(m_blockchain.getTailId());
+  st_inf.top_block_id_str = common::podToHex(m_blockchain.getTailId());
   return true;
 }
 
@@ -388,7 +388,7 @@ bool core::get_block_template(Block& b, const AccountPublicAddress& adr, difficu
       for(uint32_t offset = height - static_cast<uint32_t>(m_currency.timestampCheckWindow()); offset < height; ++offset) {
         timestamps.push_back(m_blockchain.getBlockTimestamp(offset));
       }
-      uint64_t median_ts = Common::medianValue(timestamps);
+      uint64_t median_ts = common::medianValue(timestamps);
       if (b.timestamp < median_ts) {
           b.timestamp = median_ts;
       }

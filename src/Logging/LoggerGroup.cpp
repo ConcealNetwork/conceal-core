@@ -7,7 +7,7 @@
 #include "LoggerGroup.h"
 #include <algorithm>
 
-namespace Logging {
+namespace logging {
 
 LoggerGroup::LoggerGroup(Level level) : CommonLogger(level) {
 }

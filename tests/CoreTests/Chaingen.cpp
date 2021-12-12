@@ -276,7 +276,7 @@ void fill_tx_sources_and_destinations(const std::vector<test_event_entry>& event
   }
 }
 
-bool construct_tx_to_key(Logging::ILogger& logger, const std::vector<test_event_entry>& events, cn::Transaction& tx, const Block& blk_head,
+bool construct_tx_to_key(logging::ILogger& logger, const std::vector<test_event_entry>& events, cn::Transaction& tx, const Block& blk_head,
                          const cn::AccountBase& from, const cn::AccountBase& to, uint64_t amount,
                          uint64_t fee, size_t nmix)
 {
@@ -287,7 +287,7 @@ bool construct_tx_to_key(Logging::ILogger& logger, const std::vector<test_event_
   return constructTransaction(from.getAccountKeys(), sources, destinations, std::vector<uint8_t>(), tx, 0, logger, txSK);
 }
 
-Transaction construct_tx_with_fee(Logging::ILogger& logger, std::vector<test_event_entry>& events, const Block& blk_head,
+Transaction construct_tx_with_fee(logging::ILogger& logger, std::vector<test_event_entry>& events, const Block& blk_head,
                                   const AccountBase& acc_from, const AccountBase& acc_to, uint64_t amount, uint64_t fee)
 {
   Transaction tx;

@@ -72,7 +72,7 @@ public:
   template <typename T>
   static bool decode(const BinaryArray& buf, T& value) {
     try {
-      Common::MemoryInputStream stream(buf.data(), buf.size());
+      common::MemoryInputStream stream(buf.data(), buf.size());
       KVBinaryInputStreamSerializer serializer(stream);
       serialize(value, serializer);
     } catch (std::exception&) {
@@ -87,7 +87,7 @@ public:
     BinaryArray result;
     KVBinaryOutputStreamSerializer serializer;
     serialize(const_cast<T&>(value), serializer);
-    Common::VectorOutputStream stream(result);
+    common::VectorOutputStream stream(result);
     serializer.dump(stream);
     return result;
   }

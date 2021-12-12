@@ -47,8 +47,8 @@ public:
     uint32_t transactionSoftLockTime
   );
 
-  void load(Common::IInputStream& source, uint8_t version);
-  void save(Common::IOutputStream& destination, WalletSaveLevel saveLevel);
+  void load(common::IInputStream& source, uint8_t version);
+  void save(common::IOutputStream& destination, WalletSaveLevel saveLevel);
 
   std::unordered_set<crypto::PublicKey>& addedKeys();
   std::unordered_set<crypto::PublicKey>& deletedKeys();

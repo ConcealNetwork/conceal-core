@@ -128,7 +128,7 @@ public:
 
   virtual void SetUp() override;
 protected:
-  Logging::ConsoleLogger logger;
+  logging::ConsoleLogger logger;
   Currency currency;
   TestBlockchainGenerator generator;
   INodeTrivialRefreshStub nodeStub;
@@ -142,7 +142,7 @@ protected:
 };
 
 void WalletServiceTest::SetUp() {
-  logger.setMaxLevel(Logging::DEBUGGING);
+  logger.setMaxLevel(logging::DEBUGGING);
 
   walletConfig.walletFile = "test";
   walletConfig.walletPassword = "test";
@@ -211,7 +211,7 @@ TEST_F(WalletServiceTest_createAddress, correctSecretKey) {
   std::unique_ptr<WalletService> service = createWalletService(wallet);
 
   std::string address;
-  std::error_code ec = service->createAddress(Common::podToHex(sec), address);
+  std::error_code ec = service->createAddress(common::podToHex(sec), address);
 
   ASSERT_FALSE(ec);
   ASSERT_EQ(wallet.address, address);
@@ -226,7 +226,7 @@ TEST_F(WalletServiceTest_createAddress, correctPublicKey) {
   std::unique_ptr<WalletService> service = createWalletService(wallet);
 
   std::string address;
-  std::error_code ec = service->createTrackingAddress(Common::podToHex(pub), address);
+  std::error_code ec = service->createTrackingAddress(common::podToHex(pub), address);
 
   ASSERT_FALSE(ec);
   ASSERT_EQ(wallet.address, address);
@@ -255,8 +255,8 @@ TEST_F(WalletServiceTest_getSpendKeys, returnsKeysCorrectly) {
   std::string secretSpendKey;
   auto ec = service->getSpendkeys("address", publicSpendKey, secretSpendKey);
   ASSERT_FALSE(ec);
-  ASSERT_EQ(Common::podToHex(wallet.keyPair.publicKey), publicSpendKey);
-  ASSERT_EQ(Common::podToHex(wallet.keyPair.secretKey), secretSpendKey);
+  ASSERT_EQ(common::podToHex(wallet.keyPair.publicKey), publicSpendKey);
+  ASSERT_EQ(common::podToHex(wallet.keyPair.secretKey), secretSpendKey);
 }
 
 class WalletServiceTest_getBalance : public WalletServiceTest {
@@ -337,7 +337,7 @@ protected:
 
     std::for_each(hashes.begin(), hashes.end(), [&result] (const std::string& str) {
       crypto::Hash hash;
-      Common::podFromHex(str, hash);
+      common::podFromHex(str, hash);
       result.push_back(hash);
     });
 
@@ -396,7 +396,7 @@ TEST_F(WalletServiceTest_getViewKey, returnsCorrectValue) {
 
   std::string viewSecretKey;
   ASSERT_FALSE(service->getViewKey(viewSecretKey));
-  ASSERT_EQ(Common::podToHex(wallet.keyPair.secretKey), viewSecretKey);
+  ASSERT_EQ(common::podToHex(wallet.keyPair.secretKey), viewSecretKey);
 }
 
 class WalletTransactionBuilder {
@@ -407,7 +407,7 @@ public:
   }
 
   WalletTransactionBuilder& extra(const std::string& extra) {
-    transaction.extra = Common::asString(Common::fromHex(extra));
+    transaction.extra = common::asString(common::fromHex(extra));
     return *this;
   }
 
@@ -545,7 +545,7 @@ TEST_F(WalletServiceTest_getTransactions, addressesFilter_emptyReturnsTransactio
   ASSERT_FALSE(ec);
 
   ASSERT_EQ(1, transactions.size());
-  ASSERT_EQ(Common::podToHex(testTransactions[0].transactions[0].transaction.hash), transactions[0].transactions[0].transactionHash);
+  ASSERT_EQ(common::podToHex(testTransactions[0].transactions[0].transaction.hash), transactions[0].transactions[0].transactionHash);
 }
 
 TEST_F(WalletServiceTest_getTransactions, addressesFilter_existentReturnsTransaction) {
@@ -560,7 +560,7 @@ TEST_F(WalletServiceTest_getTransactions, addressesFilter_existentReturnsTransac
   ASSERT_FALSE(ec);
 
   ASSERT_EQ(1, transactions.size());
-  ASSERT_EQ(Common::podToHex(testTransactions[0].transactions[0].transaction.hash), transactions[0].transactions[0].transactionHash);
+  ASSERT_EQ(common::podToHex(testTransactions[0].transactions[0].transaction.hash), transactions[0].transactions[0].transactionHash);
 }
 
 TEST_F(WalletServiceTest_getTransactions, addressesFilter_nonExistentReturnsNoTransactions) {
@@ -590,7 +590,7 @@ TEST_F(WalletServiceTest_getTransactions, addressesFilter_existentAndNonExistent
   ASSERT_FALSE(ec);
 
   ASSERT_EQ(1, transactions.size());
-  ASSERT_EQ(Common::podToHex(testTransactions[0].transactions[0].transaction.hash), transactions[0].transactions[0].transactionHash);
+  ASSERT_EQ(common::podToHex(testTransactions[0].transactions[0].transaction.hash), transactions[0].transactions[0].transactionHash);
 }
 
 TEST_F(WalletServiceTest_getTransactions, paymentIdFilter_existentReturnsTransaction) {
@@ -605,7 +605,7 @@ TEST_F(WalletServiceTest_getTransactions, paymentIdFilter_existentReturnsTransac
   ASSERT_FALSE(ec);
 
   ASSERT_EQ(1, transactions.size());
-  ASSERT_EQ(Common::podToHex(testTransactions[0].transactions[0].transaction.hash), transactions[0].transactions[0].transactionHash);
+  ASSERT_EQ(common::podToHex(testTransactions[0].transactions[0].transaction.hash), transactions[0].transactions[0].transactionHash);
   ASSERT_EQ(PAYMENT_ID, transactions[0].transactions[0].paymentId);
 }
 
@@ -696,17 +696,17 @@ TEST_F(WalletServiceTest_getTransaction, returnsCorrectFields) {
   auto service = createWalletService(wallet);
 
   TransactionRpcInfo transaction;
-  auto ec = service->getTransaction(Common::podToHex(crypto::Hash()), transaction);
+  auto ec = service->getTransaction(common::podToHex(crypto::Hash()), transaction);
 
   ASSERT_FALSE(ec);
   ASSERT_EQ(static_cast<uint8_t>(wallet.transaction.transaction.state), transaction.state);
   ASSERT_EQ(wallet.transaction.transaction.blockHeight, transaction.blockIndex);
-  ASSERT_EQ(Common::toHex(Common::asBinaryArray(wallet.transaction.transaction.extra)), transaction.extra);
+  ASSERT_EQ(common::toHex(common::asBinaryArray(wallet.transaction.transaction.extra)), transaction.extra);
   ASSERT_EQ(PAYMENT_ID, transaction.paymentId);
   ASSERT_EQ(wallet.transaction.transaction.fee, transaction.fee);
   ASSERT_EQ(wallet.transaction.transaction.isBase, transaction.isBase);
   ASSERT_EQ(wallet.transaction.transaction.timestamp, transaction.timestamp);
-  ASSERT_EQ(Common::podToHex(wallet.transaction.transaction.hash), transaction.transactionHash);
+  ASSERT_EQ(common::podToHex(wallet.transaction.transaction.hash), transaction.transactionHash);
   ASSERT_EQ(wallet.transaction.transaction.unlockTime, transaction.unlockTime);
 
   ASSERT_EQ(wallet.transaction.transfers.size(), transaction.transfers.size());
@@ -733,7 +733,7 @@ TEST_F(WalletServiceTest_getTransaction, transactionNotFound) {
   auto service = createWalletService(wallet);
 
   TransactionRpcInfo transaction;
-  auto ec = service->getTransaction(Common::podToHex(crypto::Hash()), transaction);
+  auto ec = service->getTransaction(common::podToHex(crypto::Hash()), transaction);
 
   ASSERT_EQ(make_error_code(error::OBJECT_NOT_FOUND), ec);
 }
@@ -784,7 +784,7 @@ bool isEquivalent(const SendTransaction::Request& request, const TransactionPara
 
   return std::make_tuple(request.sourceAddresses, orders, request.fee, request.anonymity, extra, request.unlockTime)
       ==
-      std::make_tuple(params.sourceAddresses, params.destinations, params.fee, params.mixIn, Common::toHex(Common::asBinaryArray(params.extra)), params.unlockTimestamp);
+      std::make_tuple(params.sourceAddresses, params.destinations, params.fee, params.mixIn, common::toHex(common::asBinaryArray(params.extra)), params.unlockTimestamp);
 }
 
 TEST_F(WalletServiceTest_sendTransaction, passesCorrectParameters) {
@@ -795,7 +795,7 @@ TEST_F(WalletServiceTest_sendTransaction, passesCorrectParameters) {
   auto ec = service->sendTransaction(request, hash);
 
   ASSERT_FALSE(ec);
-  ASSERT_EQ(Common::podToHex(wallet.hash), hash);
+  ASSERT_EQ(common::podToHex(wallet.hash), hash);
   ASSERT_TRUE(isEquivalent(request, wallet.params));
 }
 
@@ -863,7 +863,7 @@ bool isEquivalent(const CreateDelayedTransaction::Request& request, const Transa
 
   return std::make_tuple(request.addresses, orders, request.fee, request.anonymity, extra, request.unlockTime)
       ==
-      std::make_tuple(params.sourceAddresses, params.destinations, params.fee, params.mixIn, Common::toHex(Common::asBinaryArray(params.extra)), params.unlockTimestamp);
+      std::make_tuple(params.sourceAddresses, params.destinations, params.fee, params.mixIn, common::toHex(common::asBinaryArray(params.extra)), params.unlockTimestamp);
 }
 
 TEST_F(WalletServiceTest_createDelayedTransaction, passesCorrectParameters) {
@@ -874,7 +874,7 @@ TEST_F(WalletServiceTest_createDelayedTransaction, passesCorrectParameters) {
   auto ec = service->createDelayedTransaction(request, hash);
 
   ASSERT_FALSE(ec);
-  ASSERT_EQ(Common::podToHex(wallet.hash), hash);
+  ASSERT_EQ(common::podToHex(wallet.hash), hash);
   ASSERT_TRUE(isEquivalent(request, wallet.params));
 }
 
@@ -923,7 +923,7 @@ TEST_F(WalletServiceTest_getDelayedTransactionHashes, returnsCorrectResult) {
 
   ASSERT_FALSE(ec);
   ASSERT_EQ(1, hashes.size());
-  ASSERT_EQ(Common::podToHex(wallet.hash), hashes[0]);
+  ASSERT_EQ(common::podToHex(wallet.hash), hashes[0]);
 }
 
 class WalletServiceTest_getUnconfirmedTransactionHashes: public WalletServiceTest_getTransactions {
@@ -965,8 +965,8 @@ TEST_F(WalletServiceTest_getUnconfirmedTransactionHashes, returnsAllHashesWithou
 
   ASSERT_FALSE(ec);
   ASSERT_EQ(2, hashes.size());
-  ASSERT_EQ(hashes[0], Common::podToHex(transactions[0].transaction.hash));
-  ASSERT_EQ(hashes[1], Common::podToHex(transactions[1].transaction.hash));
+  ASSERT_EQ(hashes[0], common::podToHex(transactions[0].transaction.hash));
+  ASSERT_EQ(hashes[1], common::podToHex(transactions[1].transaction.hash));
 }
 
 TEST_F(WalletServiceTest_getUnconfirmedTransactionHashes, returnsOneTransactionWithAddressFilter) {
@@ -979,7 +979,7 @@ TEST_F(WalletServiceTest_getUnconfirmedTransactionHashes, returnsOneTransactionW
 
   ASSERT_FALSE(ec);
   ASSERT_EQ(1, hashes.size());
-  ASSERT_EQ(hashes[0], Common::podToHex(transactions[0].transaction.hash));
+  ASSERT_EQ(hashes[0], common::podToHex(transactions[0].transaction.hash));
 }
 
 TEST_F(WalletServiceTest_getUnconfirmedTransactionHashes, returnsTwoTransactionsWithAddressFilter) {
@@ -992,8 +992,8 @@ TEST_F(WalletServiceTest_getUnconfirmedTransactionHashes, returnsTwoTransactions
 
   ASSERT_FALSE(ec);
   ASSERT_EQ(2, hashes.size());
-  ASSERT_EQ(hashes[0], Common::podToHex(transactions[0].transaction.hash));
-  ASSERT_EQ(hashes[1], Common::podToHex(transactions[1].transaction.hash));
+  ASSERT_EQ(hashes[0], common::podToHex(transactions[0].transaction.hash));
+  ASSERT_EQ(hashes[1], common::podToHex(transactions[1].transaction.hash));
 }
 
 TEST_F(WalletServiceTest_getUnconfirmedTransactionHashes, wrongAddressFilter) {

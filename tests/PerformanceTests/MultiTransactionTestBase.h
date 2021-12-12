@@ -64,7 +64,7 @@ protected:
   cn::AccountBase m_miners[ring_size];
   cn::Transaction m_miner_txs[ring_size];
   uint64_t m_source_amount;
-  Logging::ConsoleLogger m_logger;
+  logging::ConsoleLogger m_logger;
 
   std::vector<cn::TransactionSourceEntry> m_sources;
   crypto::PublicKey m_public_keys[ring_size];

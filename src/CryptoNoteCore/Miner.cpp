@@ -26,12 +26,12 @@
 #include "CryptoNoteFormatUtils.h"
 #include "TransactionExtra.h"
 
-using namespace Logging;
+using namespace logging;
 
 namespace cn
 {
 
-  miner::miner(const Currency& currency, IMinerHandler& handler, Logging::ILogger& log) :
+  miner::miner(const Currency& currency, IMinerHandler& handler, logging::ILogger& log) :
     m_currency(currency),
     logger(log, "miner"),
     m_stop(true),
@@ -143,7 +143,7 @@ namespace cn
   bool miner::init(const MinerConfig& config) {
     if (!config.extraMessages.empty()) {
       std::string buff;
-      if (!Common::loadFileToString(config.extraMessages, buff)) {
+      if (!common::loadFileToString(config.extraMessages, buff)) {
         logger(ERROR, BRIGHT_RED) << "Failed to load file with extra messages: " << config.extraMessages; 
         return false; 
       }
@@ -154,7 +154,7 @@ namespace cn
         boost::algorithm::trim(extra_vec[i]);
         if(!extra_vec[i].size())
           continue;
-        BinaryArray ba = Common::asBinaryArray(Common::base64Decode(extra_vec[i]));
+        BinaryArray ba = common::asBinaryArray(common::base64Decode(extra_vec[i]));
         if(buff != "0")
           m_extra_messages[i] = ba;
       }
@@ -162,7 +162,7 @@ namespace cn
       m_config = boost::value_initialized<decltype(m_config)>();
 
       std::string filebuf;
-      if (Common::loadFileToString(m_config_folder_path + "/" + cn::parameters::MINER_CONFIG_FILE_NAME, filebuf)) {
+      if (common::loadFileToString(m_config_folder_path + "/" + cn::parameters::MINER_CONFIG_FILE_NAME, filebuf)) {
         loadFromJson(m_config, filebuf);
       }
 
@@ -389,7 +389,7 @@ namespace cn
           --m_config.current_extra_message_index;
         } else {
           //success update, lets update config
-          Common::saveStringToFile(m_config_folder_path + "/" + cn::parameters::MINER_CONFIG_FILE_NAME, storeToJson(m_config));
+          common::saveStringToFile(m_config_folder_path + "/" + cn::parameters::MINER_CONFIG_FILE_NAME, storeToJson(m_config));
         }
       }
 

@@ -11,9 +11,9 @@ namespace cn {
 template<>
 bool toBinaryArray(const BinaryArray& object, BinaryArray& binaryArray) {
   try {
-    Common::VectorOutputStream stream(binaryArray);
+    common::VectorOutputStream stream(binaryArray);
     BinaryOutputStreamSerializer serializer(stream);
-    std::string oldBlob = Common::asString(object);
+    std::string oldBlob = common::asString(object);
     serializer(oldBlob, "");
   } catch (std::exception&) {
     return false;

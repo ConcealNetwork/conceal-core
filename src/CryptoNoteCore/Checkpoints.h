@@ -14,7 +14,7 @@ namespace cn
   class Checkpoints
   {
   public:
-    Checkpoints(Logging::ILogger& log);
+    Checkpoints(logging::ILogger& log);
 
     bool add_checkpoint(uint32_t height, const std::string& hash_str);
     bool is_in_checkpoint_zone(uint32_t height) const;
@@ -28,6 +28,6 @@ namespace cn
     
   private:
     std::map<uint32_t, crypto::Hash> m_points;
-    Logging::LoggerRef logger;
+    logging::LoggerRef logger;
   };
 }

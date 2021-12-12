@@ -8,7 +8,7 @@
 
 #include <cstdint>
 
-namespace Common { namespace Console {
+namespace common { namespace Console {
 
 enum class Color : uint8_t {
   Default,

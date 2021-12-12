@@ -10,7 +10,7 @@
 #include <vector>
 #include "IOutputStream.h"
 
-namespace Common {
+namespace common {
 
 class VectorOutputStream : public IOutputStream {
 public:

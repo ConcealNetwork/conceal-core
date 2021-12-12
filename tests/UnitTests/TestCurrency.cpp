@@ -39,7 +39,7 @@ public:
     }
   }
 
-  Logging::ConsoleLogger m_logger;
+  logging::ConsoleLogger m_logger;
   CurrencyBuilder builder;
   Transaction transaction;
   Currency defaultCurrency;
@@ -233,7 +233,7 @@ public:
   }
 
 protected:
-  Logging::ConsoleLogger m_logger;
+  logging::ConsoleLogger m_logger;
   Currency m_currency;
 };
 }

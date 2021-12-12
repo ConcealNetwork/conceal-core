@@ -11,7 +11,7 @@
 #include "Serialization/BinaryOutputStreamSerializer.h"
 #include "Serialization/BinarySerializationTools.h"
 
-using namespace Common;
+using namespace common;
 using namespace cn;
 
 TEST(BinarySerializer, uint16) {

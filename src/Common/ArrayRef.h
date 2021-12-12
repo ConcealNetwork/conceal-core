@@ -9,7 +9,7 @@
 #include "ArrayView.h"
 #include <limits>
 
-namespace Common {
+namespace common {
 
 // 'ArrayRef' is a pair of pointer to object of parametrized type and size.
 // It is recommended to pass 'ArrayRef' to procedures by value.

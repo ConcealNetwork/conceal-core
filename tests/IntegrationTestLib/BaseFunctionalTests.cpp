@@ -42,7 +42,7 @@ const std::string DAEMON_FILENAME = "conceald.exe";
 const std::string DAEMON_FILENAME = "conceald";
 #endif
 
-using namespace Tests::Common;
+using namespace Tests::common;
 using namespace Tests;
 
 void BaseFunctionalTests::launchTestnet(size_t count, Topology t)
@@ -385,7 +385,7 @@ bool BaseFunctionalTests::prepareAndSubmitBlock(TestNode &node, cn::Block &&bloc
   }
 
   BinaryArray blockBlob = cn::toBinaryArray(blockTemplate);
-  return node.submitBlock(::Common::toHex(blockBlob.data(), blockBlob.size()));
+  return node.submitBlock(::common::toHex(blockBlob.data(), blockBlob.size()));
 }
 
 bool BaseFunctionalTests::mineBlock(std::unique_ptr<cn::IWalletLegacy> &wallet)

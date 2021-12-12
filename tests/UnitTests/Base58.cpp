@@ -454,7 +454,7 @@ TEST(getAccountAddressAsStr, works_correctly)
 {
   cn::AccountPublicAddress addr;
 
-  ASSERT_NO_THROW(cn::loadFromBinary(addr, Common::asBinaryArray(test_serialized_keys)));
+  ASSERT_NO_THROW(cn::loadFromBinary(addr, common::asBinaryArray(test_serialized_keys)));
   std::string addr_str = cn::getAccountAddressAsStr(TEST_PUBLIC_ADDRESS_BASE58_PREFIX, addr);
   ASSERT_EQ(addr_str, test_keys_addr_str);
 }
@@ -468,7 +468,7 @@ TEST(parseAccountAddressString, handles_valid_address)
 
   BinaryArray blob;
   ASSERT_NO_THROW(blob = cn::storeToBinary(addr));
-  ASSERT_EQ(Common::asString(blob), test_serialized_keys);
+  ASSERT_EQ(common::asString(blob), test_serialized_keys);
 }
 
 TEST(parseAccountAddressString, fails_on_invalid_address_format)
@@ -485,7 +485,7 @@ TEST(parseAccountAddressString, fails_on_invalid_address_prefix)
 {
   std::string addr_str = Base58::encode_addr(0, test_serialized_keys);
 
-  Logging::LoggerGroup logger;
+  logging::LoggerGroup logger;
   cn::Currency currency = cn::CurrencyBuilder(logger).currency();
 
   cn::AccountPublicAddress addr;

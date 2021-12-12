@@ -70,7 +70,7 @@ inline std::string get_protocol_state_string(CryptoNoteConnectionContext::state 
 
 namespace std {
 inline std::ostream& operator << (std::ostream& s, const cn::CryptoNoteConnectionContext& context) {
-  return s << "[" << Common::ipAddressToString(context.m_remote_ip) << ":" << 
+  return s << "[" << common::ipAddressToString(context.m_remote_ip) << ":" << 
     context.m_remote_port << (context.m_is_income ? " INC" : " OUT") << "] ";
 }
 }

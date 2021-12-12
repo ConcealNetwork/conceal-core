@@ -10,7 +10,7 @@
 #include <iostream>
 #include <sstream>
 
-namespace Common {
+namespace common {
 
 JsonValue::JsonValue() : type(NIL) {
 }

@@ -51,17 +51,17 @@ uint64_t getTransactionInputAmount(const TransactionInput& in) {
   return 0;
 }
 
-TransactionTypes::InputType getTransactionInputType(const TransactionInput& in) {
+transaction_types::InputType getTransactionInputType(const TransactionInput& in) {
   if (in.type() == typeid(KeyInput)) {
-    return TransactionTypes::InputType::Key;
+    return transaction_types::InputType::Key;
   }
   if (in.type() == typeid(MultisignatureInput)) {
-    return TransactionTypes::InputType::Multisignature;
+    return transaction_types::InputType::Multisignature;
   }
   if (in.type() == typeid(BaseInput)) {
-    return TransactionTypes::InputType::Generating;
+    return transaction_types::InputType::Generating;
   }
-  return TransactionTypes::InputType::Invalid;
+  return transaction_types::InputType::Invalid;
 }
 
 const TransactionInput& getInputChecked(const cn::TransactionPrefix& transaction, size_t index) {
@@ -71,7 +71,7 @@ const TransactionInput& getInputChecked(const cn::TransactionPrefix& transaction
   return transaction.inputs[index];
 }
 
-const TransactionInput& getInputChecked(const cn::TransactionPrefix& transaction, size_t index, TransactionTypes::InputType type) {
+const TransactionInput& getInputChecked(const cn::TransactionPrefix& transaction, size_t index, transaction_types::InputType type) {
   const auto& input = getInputChecked(transaction, index);
   if (getTransactionInputType(input) != type) {
     throw std::runtime_error("Unexpected transaction input type");
@@ -81,14 +81,14 @@ const TransactionInput& getInputChecked(const cn::TransactionPrefix& transaction
 
 // TransactionOutput helper functions
 
-TransactionTypes::OutputType getTransactionOutputType(const TransactionOutputTarget& out) {
+transaction_types::OutputType getTransactionOutputType(const TransactionOutputTarget& out) {
   if (out.type() == typeid(KeyOutput)) {
-    return TransactionTypes::OutputType::Key;
+    return transaction_types::OutputType::Key;
   }
   if (out.type() == typeid(MultisignatureOutput)) {
-    return TransactionTypes::OutputType::Multisignature;
+    return transaction_types::OutputType::Multisignature;
   }
-  return TransactionTypes::OutputType::Invalid;
+  return transaction_types::OutputType::Invalid;
 }
 
 const TransactionOutput& getOutputChecked(const cn::TransactionPrefix& transaction, size_t index) {
@@ -98,7 +98,7 @@ const TransactionOutput& getOutputChecked(const cn::TransactionPrefix& transacti
   return transaction.outputs[index];
 }
 
-const TransactionOutput& getOutputChecked(const cn::TransactionPrefix& transaction, size_t index, TransactionTypes::OutputType type) {
+const TransactionOutput& getOutputChecked(const cn::TransactionPrefix& transaction, size_t index, transaction_types::OutputType type) {
   const auto& output = getOutputChecked(transaction, index);
   if (getTransactionOutputType(output.target) != type) {
     throw std::runtime_error("Unexpected transaction output target type");

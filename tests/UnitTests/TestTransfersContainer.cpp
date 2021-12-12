@@ -74,9 +74,9 @@ namespace {
       size_t inputAmount = 0;
       for (const auto& t : outputs) {
         inputAmount += t.amount;
-        if (t.type == TransactionTypes::OutputType::Key) {
+        if (t.type == transaction_types::OutputType::Key) {
           builder.addInput(account, t);
-        } else if (t.type == TransactionTypes::OutputType::Multisignature) {
+        } else if (t.type == transaction_types::OutputType::Multisignature) {
           builder.addMultisignatureInput(t.amount, t.requiredSignatures, t.globalOutputIndex, t.term);
         }
       }
@@ -105,7 +105,7 @@ namespace {
       tx.getOutput(index, output, outAmount);
 
       TransactionOutputInformationIn outputInfo;
-      outputInfo.type = TransactionTypes::OutputType::Multisignature;
+      outputInfo.type = transaction_types::OutputType::Multisignature;
       outputInfo.amount = outAmount;
       outputInfo.globalOutputIndex = outputIndex;
       outputInfo.outputInTransaction = static_cast<uint32_t>(index);
@@ -134,7 +134,7 @@ namespace {
       return lockedTransfers;
     }
 
-    Logging::ConsoleLogger logger;
+    logging::ConsoleLogger logger;
     Currency currency;
     TransfersContainer container;
     AccountKeys account;

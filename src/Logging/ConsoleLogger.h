@@ -9,7 +9,7 @@
 #include <mutex>
 #include "CommonLogger.h"
 
-namespace Logging {
+namespace logging {
 
 class ConsoleLogger : public CommonLogger {
 public:

@@ -25,7 +25,7 @@ namespace
   }
 } // namespace
 
-DaemonCommandsHandler::DaemonCommandsHandler(cn::core &core, cn::NodeServer &srv, Logging::LoggerManager &log) : m_core(core), m_srv(srv), logger(log, "daemon"), m_logManager(log)
+DaemonCommandsHandler::DaemonCommandsHandler(cn::core &core, cn::NodeServer &srv, logging::LoggerManager &log) : m_core(core), m_srv(srv), logger(log, "daemon"), m_logManager(log)
 {
   m_consoleHandler.setHandler("exit", boost::bind(&DaemonCommandsHandler::exit, this, boost::arg<1>()), "Shutdown the daemon");
   m_consoleHandler.setHandler("help", boost::bind(&DaemonCommandsHandler::help, this, boost::arg<1>()), "Show this help");
@@ -132,13 +132,13 @@ bool DaemonCommandsHandler::print_bc(const std::vector<std::string> &args)
   uint32_t start_index = 0;
   uint32_t end_index = 0;
   uint32_t end_block_parametr = m_core.get_current_blockchain_height();
-  if (!Common::fromString(args[0], start_index))
+  if (!common::fromString(args[0], start_index))
   {
     std::cout << "wrong starter block index parameter" << ENDL;
     return false;
   }
 
-  if (args.size() > 1 && !Common::fromString(args[1], end_index))
+  if (args.size() > 1 && !common::fromString(args[1], end_index))
   {
     std::cout << "wrong end block index parameter" << ENDL;
     return false;
@@ -180,7 +180,7 @@ bool DaemonCommandsHandler::set_log(const std::vector<std::string> &args)
   }
 
   uint16_t l = 0;
-  if (!Common::fromString(args[0], l))
+  if (!common::fromString(args[0], l))
   {
     std::cout << "wrong number format, use: set_log <log_level_number_0-4>" << ENDL;
     return true;
@@ -188,13 +188,13 @@ bool DaemonCommandsHandler::set_log(const std::vector<std::string> &args)
 
   ++l;
 
-  if (l > Logging::TRACE)
+  if (l > logging::TRACE)
   {
     std::cout << "wrong number range, use: set_log <log_level_number_0-4>" << ENDL;
     return true;
   }
 
-  m_logManager.setMaxLevel(static_cast<Logging::Level>(l));
+  m_logManager.setMaxLevel(static_cast<logging::Level>(l));
   return true;
 }
 
@@ -376,13 +376,13 @@ bool DaemonCommandsHandler::print_tx(const std::vector<std::string> &args)
 //--------------------------------------------------------------------------------
 bool DaemonCommandsHandler::print_pool(const std::vector<std::string> &args)
 {
-  logger(Logging::INFO) << "Pool state: " << ENDL << m_core.print_pool(false);
+  logger(logging::INFO) << "Pool state: " << ENDL << m_core.print_pool(false);
   return true;
 }
 //--------------------------------------------------------------------------------
 bool DaemonCommandsHandler::print_pool_sh(const std::vector<std::string> &args)
 {
-  logger(Logging::INFO) << "Pool state: " << ENDL << m_core.print_pool(true);
+  logger(logging::INFO) << "Pool state: " << ENDL << m_core.print_pool(true);
   return true;
 }
 //--------------------------------------------------------------------------------
@@ -404,7 +404,7 @@ bool DaemonCommandsHandler::start_mining(const std::vector<std::string> &args)
   size_t threads_count = 1;
   if (args.size() > 1)
   {
-    bool ok = Common::fromString(args[1], threads_count);
+    bool ok = common::fromString(args[1], threads_count);
     threads_count = (ok && 0 < threads_count) ? threads_count : 1;
   }
 

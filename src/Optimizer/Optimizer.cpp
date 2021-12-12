@@ -32,8 +32,8 @@
 #include <System/Dispatcher.h>
 
 namespace po = boost::program_options;
-using Common::JsonValue;
-using namespace Logging;
+using common::JsonValue;
+using namespace logging;
 using namespace cn;
 using namespace PaymentService;
 
@@ -54,8 +54,8 @@ namespace {
   const command_line::arg_descriptor<uint64_t>    arg_threshold = {"threshold", "Only outputs lesser than the threshold value will be included into optimization. Default: 100 (0.000100 CCX)", DEFAULT_THRESHOLD, true};
   const command_line::arg_descriptor<uint16_t>    arg_anonimity = {"anonymity", "Privacy level. Higher values give more privacy but bigger transactions. Default: 0", 0, true};
   const command_line::arg_descriptor<bool>        arg_preview   = {"preview", "print on screen what it would be doing, but not really doing it", false, true};
-  Logging::ConsoleLogger log;
-  Logging::LoggerRef logger(log, "optimizer");
+  logging::ConsoleLogger log;
+  logging::LoggerRef logger(log, "optimizer");
   System::Dispatcher dispatcher;
 }
 

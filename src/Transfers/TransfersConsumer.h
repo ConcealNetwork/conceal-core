@@ -25,7 +25,7 @@ class INode;
 class TransfersConsumer: public IObservableImpl<IBlockchainConsumerObserver, IBlockchainConsumer> {
 public:
 
-  TransfersConsumer(const cn::Currency& currency, INode& node, Logging::ILogger& logger, const crypto::SecretKey& viewSecret);
+  TransfersConsumer(const cn::Currency& currency, INode& node, logging::ILogger& logger, const crypto::SecretKey& viewSecret);
 
   ITransfersSubscription& addSubscription(const AccountSubscription& subscription);
   // returns true if no subscribers left
@@ -79,7 +79,7 @@ private:
 
   INode& m_node;
   const cn::Currency& m_currency;
-  Logging::LoggerRef m_logger;
+  logging::LoggerRef m_logger;
 };
 
 }

@@ -30,9 +30,9 @@
 
 #undef ERROR
 
-using namespace Logging;
+using namespace logging;
 using namespace crypto;
-using namespace Common;
+using namespace common;
 
 
 
@@ -100,7 +100,7 @@ std::unordered_map<std::string, RpcServer::RpcHandler<RpcServer::HandlerFunction
   { "/json_rpc", { std::bind(&RpcServer::processJsonRpcRequest, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3), true } }
 };
 
-RpcServer::RpcServer(System::Dispatcher& dispatcher, Logging::ILogger& log, core& c, NodeServer& p2p, const ICryptoNoteProtocolQuery& protocolQuery) :
+RpcServer::RpcServer(System::Dispatcher& dispatcher, logging::ILogger& log, core& c, NodeServer& p2p, const ICryptoNoteProtocolQuery& protocolQuery) :
   HttpServer(dispatcher, log), logger(log, "RpcServer"), m_core(c), m_p2p(p2p), m_protocolQuery(protocolQuery) {
 }
 
@@ -255,7 +255,7 @@ bool RpcServer::on_getblockhash(const COMMAND_RPC_GETBLOCKHASH::request &req, CO
     };
   }
 
-  res = Common::podToHex(blockId);
+  res = common::podToHex(blockId);
   return true;
 }
 
@@ -290,7 +290,7 @@ bool RpcServer::fill_f_block_details_response(const crypto::Hash &hash, f_block_
   block.timestamp = block_header.timestamp;
   block.prev_hash = block_header.prev_hash;
   block.nonce = block_header.nonce;
-  block.hash = Common::podToHex(hash);
+  block.hash = common::podToHex(hash);
   block.orphan_status = is_orphaned;
   block.depth = m_core.get_current_blockchain_height() - block.height - 1;
   m_core.getBlockDifficulty(static_cast<uint32_t>(block.height), block.difficulty);
@@ -302,7 +302,7 @@ bool RpcServer::fill_f_block_details_response(const crypto::Hash &hash, f_block_
   {
     return false;
   }
-  block.sizeMedian = Common::medianValue(blocksSizes);
+  block.sizeMedian = common::medianValue(blocksSizes);
 
   size_t blockSize = 0;
   if (!m_core.getBlockSize(hash, blockSize))
@@ -371,7 +371,7 @@ bool RpcServer::fill_f_block_details_response(const crypto::Hash &hash, f_block_
 
   // Base transaction adding
   f_transaction_short_response base_transaction;
-  base_transaction.hash = Common::podToHex(getObjectHash(blk.baseTransaction));
+  base_transaction.hash = common::podToHex(getObjectHash(blk.baseTransaction));
   base_transaction.fee = 0;
   base_transaction.amount_out = get_outs_money_amount(blk.baseTransaction);
   base_transaction.size = getObjectBinarySize(blk.baseTransaction);
@@ -390,7 +390,7 @@ bool RpcServer::fill_f_block_details_response(const crypto::Hash &hash, f_block_
     get_inputs_money_amount(tx, amount_in);
     uint64_t amount_out = get_outs_money_amount(tx);
 
-    transaction_short.hash = Common::podToHex(getObjectHash(tx));
+    transaction_short.hash = common::podToHex(getObjectHash(tx));
     transaction_short.fee =
         amount_in < amount_out + parameters::MINIMUM_FEE //account for interest in output, it always has minimum fee
             ? parameters::MINIMUM_FEE
@@ -561,7 +561,7 @@ bool RpcServer::k_on_check_reserve_proof(const K_COMMAND_RPC_CHECK_RESERVE_PROOF
 	}
 
 	BinaryArray ba;
-	if (!Common::fromHex(sig_decoded, ba)) {
+	if (!common::fromHex(sig_decoded, ba)) {
 		throw JsonRpc::JsonRpcError{ CORE_RPC_ERROR_CODE_INTERNAL_ERROR, "Proof decoding error" };
 	}
 	reserve_proof proof_decoded;
@@ -702,7 +702,7 @@ bool RpcServer::setFeeAddress(const std::string& fee_address, const AccountPubli
 bool RpcServer::setViewKey(const std::string& view_key) {
   crypto::Hash private_view_key_hash;
   size_t size;
-  if (!Common::fromHex(view_key, &private_view_key_hash, sizeof(private_view_key_hash), size) || size != sizeof(private_view_key_hash)) {
+  if (!common::fromHex(view_key, &private_view_key_hash, sizeof(private_view_key_hash), size) || size != sizeof(private_view_key_hash)) {
     logger(INFO) << "<< rpcserver.cpp << " << "Could not parse private view key";
     return false;
   }
@@ -820,7 +820,7 @@ bool RpcServer::on_get_info(const COMMAND_RPC_GET_INFO::request& req, COMMAND_RP
   res.full_deposit_amount = m_core.fullDepositAmount();
   res.status = CORE_RPC_STATUS_OK;
   crypto::Hash last_block_hash = m_core.getBlockIdByHeight(m_core.get_current_blockchain_height() - 1);
-  res.top_block_hash = Common::podToHex(last_block_hash);
+  res.top_block_hash = common::podToHex(last_block_hash);
   res.version = PROJECT_VERSION;
 
   Block blk;
@@ -883,7 +883,7 @@ bool RpcServer::on_get_transactions(const COMMAND_RPC_GET_TRANSACTIONS::request&
   }
 
   for (const auto& miss_tx : missed_txs) {
-    res.missed_tx.push_back(Common::podToHex(miss_tx));
+    res.missed_tx.push_back(common::podToHex(miss_tx));
   }
 
   res.status = CORE_RPC_STATUS_OK;
@@ -1038,7 +1038,7 @@ bool RpcServer::f_on_blocks_list_json(const F_COMMAND_RPC_GET_BLOCKS_LIST::reque
     block_short.timestamp = blk.timestamp;
     block_short.height = i;
     m_core.getBlockDifficulty(static_cast<uint32_t>(block_short.height), block_short.difficulty);
-    block_short.hash = Common::podToHex(block_hash);
+    block_short.hash = common::podToHex(block_hash);
     block_short.tx_count = blk.transactionHashes.size() + 1;
 
     res.blocks.push_back(block_short);
@@ -1112,7 +1112,7 @@ bool RpcServer::f_on_transaction_json(const F_COMMAND_RPC_GET_TRANSACTION_DETAIL
       block_short.cumul_size = blokBlobSize + tx_cumulative_block_size - minerTxBlobSize;
       block_short.timestamp = blk.timestamp;
       block_short.height = blockHeight;
-      block_short.hash = Common::podToHex(blockHash);
+      block_short.hash = common::podToHex(blockHash);
       block_short.cumul_size = blokBlobSize + tx_cumulative_block_size - minerTxBlobSize;
       block_short.tx_count = blk.transactionHashes.size() + 1;
       res.block = block_short;
@@ -1123,7 +1123,7 @@ bool RpcServer::f_on_transaction_json(const F_COMMAND_RPC_GET_TRANSACTION_DETAIL
   get_inputs_money_amount(res.tx, amount_in);
   uint64_t amount_out = get_outs_money_amount(res.tx);
 
-  res.txDetails.hash = Common::podToHex(getObjectHash(res.tx));
+  res.txDetails.hash = common::podToHex(getObjectHash(res.tx));
   if (amount_in == 0)
     res.txDetails.fee = 0;
   else {
@@ -1143,7 +1143,7 @@ bool RpcServer::f_on_transaction_json(const F_COMMAND_RPC_GET_TRANSACTION_DETAIL
 
   crypto::Hash paymentId;
   if (cn::getPaymentIdFromTxExtra(res.tx.extra, paymentId)) {
-    res.txDetails.paymentId = Common::podToHex(paymentId);
+    res.txDetails.paymentId = common::podToHex(paymentId);
   } else {
     res.txDetails.paymentId = "";
   }
@@ -1173,7 +1173,7 @@ bool RpcServer::f_on_transactions_pool_json(const F_COMMAND_RPC_GET_POOL::reques
         uint64_t amount_in = getInputAmount(tx);
         uint64_t amount_out = getOutputAmount(tx);
 
-        transaction_short.hash = Common::podToHex(getObjectHash(tx));
+        transaction_short.hash = common::podToHex(getObjectHash(tx));
         transaction_short.fee =
 			amount_in < amount_out + parameters::MINIMUM_FEE //account for interest in output, it always has minimum fee
 			? parameters::MINIMUM_FEE
@@ -1259,7 +1259,7 @@ bool RpcServer::on_getblocktemplate(const COMMAND_RPC_GETBLOCKTEMPLATE::request&
 
 bool RpcServer::on_get_currency_id(const COMMAND_RPC_GET_CURRENCY_ID::request& /*req*/, COMMAND_RPC_GET_CURRENCY_ID::response& res) {
   Hash currencyId = m_core.currency().genesisBlockHash();
-  res.currency_id_blob = Common::podToHex(currencyId);
+  res.currency_id_blob = common::podToHex(currencyId);
   return true;
 }
 
@@ -1316,7 +1316,7 @@ bool RpcServer::on_alt_blocks_list_json(const COMMAND_RPC_GET_ALT_BLOCKS_LIST::r
       block_short_response block_short;
       block_short.timestamp = b.timestamp;
       block_short.height = block_height;
-      block_short.hash = Common::podToHex(block_hash);
+      block_short.hash = common::podToHex(block_hash);
       block_short.cumulative_size = blokBlobSize + tx_cumulative_block_size - minerTxBlobSize;
       block_short.transactions_count = b.transactionHashes.size() + 1;
       block_short.difficulty = blockDiff;
@@ -1333,13 +1333,13 @@ void RpcServer::fill_block_header_response(const Block& blk, bool orphan_status,
   responce.major_version = blk.majorVersion;
   responce.minor_version = blk.minorVersion;
   responce.timestamp = blk.timestamp;
-  responce.prev_hash = Common::podToHex(blk.previousBlockHash);
+  responce.prev_hash = common::podToHex(blk.previousBlockHash);
   responce.nonce = blk.nonce;
   responce.orphan_status = orphan_status;
   responce.height = height;
   responce.deposits = m_core.depositAmountAtHeight(height);
   responce.depth = m_core.get_current_blockchain_height() - height - 1;
-  responce.hash = Common::podToHex(hash);
+  responce.hash = common::podToHex(hash);
   m_core.getBlockDifficulty(static_cast<uint32_t>(height), responce.difficulty);
   responce.reward = get_block_reward(blk);
 }

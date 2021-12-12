@@ -21,7 +21,7 @@
 
 using namespace cn;
 using namespace crypto;
-using namespace Tests::Common;
+using namespace Tests::common;
 
 
 class IInterruptable {
@@ -42,7 +42,7 @@ public:
   }
 
   std::atomic<uint64_t> m_actualBalance;
-  Tests::Common::Semaphore m_sem;
+  Tests::common::Semaphore m_sem;
 };
 
 class TransactionConsumer : public IBlockchainConsumer {
@@ -133,7 +133,7 @@ public:
       m_transfers.push_back(transactionHash);
 
       auto key = object->getAddress().spendPublicKey;
-      std::string address = Common::toHex(&key, sizeof(key));
+      std::string address = common::toHex(&key, sizeof(key));
       LOG_DEBUG("Transfer to " + address);
     }
     m_cv.notify_all();
@@ -301,7 +301,7 @@ TEST_F(TransfersTest, base) {
 
   cn::AccountBase dstAcc;
   dstAcc.generate();
-  Logging::ConsoleLogger m_logger; 
+  logging::ConsoleLogger m_logger; 
   AccountKeys dstKeys = reinterpret_cast<const AccountKeys&>(dstAcc.getAccountKeys());
 
   BlockchainSynchronizer blockSync(*node2.get(), currency.genesisBlockHash());
@@ -319,7 +319,7 @@ TEST_F(TransfersTest, base) {
   ITransfersContainer& transferContainer = transferSub.getContainer();
   transferSub.addObserver(&transferObserver);
 
-  Tests::Common::TestWalletLegacy wallet1(m_dispatcher, m_currency, *node1);
+  Tests::common::TestWalletLegacy wallet1(m_dispatcher, m_currency, *node1);
   ASSERT_FALSE(static_cast<bool>(wallet1.init()));
   wallet1.wallet()->addObserver(&walletObserver);
   ASSERT_TRUE(mineBlocks(*nodeDaemons[0], wallet1.address(), 1));
@@ -359,16 +359,16 @@ std::unique_ptr<ITransaction> createTransferToMultisignature(
 
   auto tx = createTransaction();
 
-  std::vector<std::pair<TransactionTypes::InputKeyInfo, KeyPair>> inputs;
+  std::vector<std::pair<transaction_types::InputKeyInfo, KeyPair>> inputs;
 
   uint64_t foundMoney = 0;
 
   for (const auto& t : transfers) {
-    TransactionTypes::InputKeyInfo info;
+    transaction_types::InputKeyInfo info;
 
     info.amount = t.amount;
 
-    TransactionTypes::GlobalOutput globalOut;
+    transaction_types::GlobalOutput globalOut;
     globalOut.outputIndex = t.globalOutputIndex;
     globalOut.targetKey = t.outputKey;
     info.outputs.push_back(globalOut);
@@ -412,7 +412,7 @@ std::error_code submitTransaction(INode& node, ITransactionReader& tx) {
   fromBinaryArray(outTx, data);
 
 
-  LOG_DEBUG("Submitting transaction " + Common::toHex(tx.getTransactionHash().data, 32));
+  LOG_DEBUG("Submitting transaction " + common::toHex(tx.getTransactionHash().data, 32));
 
   std::promise<std::error_code> result;
   node.relayTransaction(outTx, [&result](std::error_code ec) { result.set_value(ec); });
@@ -470,7 +470,7 @@ TEST_F(MultisignatureTest, createMulitisignatureTransaction) {
 
   nodeDaemons[0]->makeINode(node1);
   nodeDaemons[1]->makeINode(node2);
-  Logging::ConsoleLogger m_logger; 
+  logging::ConsoleLogger m_logger; 
   BlockchainSynchronizer blockSync(*node2.get(), currency.genesisBlockHash());
   TransfersSyncronizer transferSync(currency, m_logger, blockSync, *node2.get());
   

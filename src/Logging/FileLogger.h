@@ -9,7 +9,7 @@
 #include <fstream>
 #include "StreamLogger.h"
 
-namespace Logging {
+namespace logging {
 
 class FileLogger : public StreamLogger {
 public:

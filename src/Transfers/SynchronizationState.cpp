@@ -12,7 +12,7 @@
 #include "Serialization/BinaryOutputStreamSerializer.h"
 #include "CryptoNoteCore/CryptoNoteSerialization.h"
 
-using namespace Common;
+using namespace common;
 
 namespace cn {
 

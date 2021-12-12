@@ -96,7 +96,7 @@ public:
   void setPoolChangesResult(bool result);
 
 private:
-  Logging::ConsoleLogger m_logger;
+  logging::ConsoleLogger m_logger;
   cn::Currency m_currency;
 
   uint32_t topHeight;

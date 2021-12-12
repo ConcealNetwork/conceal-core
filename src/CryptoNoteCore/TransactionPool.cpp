@@ -28,7 +28,7 @@
 #include "Blockchain.h"
 #include "TransactionExtra.h"
 
-using namespace Logging;
+using namespace logging;
 
 #undef ERROR
 
@@ -110,7 +110,7 @@ namespace cn
       const cn::Currency &currency,
       cn::ITransactionValidator &validator,
       cn::ITimeProvider &timeProvider,
-      Logging::ILogger &log) : m_currency(currency),
+      logging::ILogger &log) : m_currency(currency),
                                m_timeProvider(timeProvider),
                                m_txCheckInterval(60, timeProvider),
                                m_validator(validator),

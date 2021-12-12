@@ -8,7 +8,7 @@
 
 namespace Tests
 {
-namespace Common
+namespace common
 {
 
 using namespace cn;
@@ -151,5 +151,5 @@ void TestWalletLegacy::synchronizationProgressUpdated(uint32_t current, uint32_t
   });
 }
 
-} // namespace Common
+} // namespace common
 } // namespace Tests

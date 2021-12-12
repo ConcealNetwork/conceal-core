@@ -100,7 +100,7 @@ std::ostream& get_response_schema_as_json(std::ostream& ss, response_schema &rs)
 
     size_t i = 0;
     for (const connection_entry &ce : networkState.connections_list) {
-      ss << "      {\"peer_id\": \"" << ce.id << "\", \"ip\": \"" << Common::ipAddressToString(ce.adr.ip) << "\", \"port\": " << ce.adr.port << ", \"is_income\": " << ce.is_income << "}";
+      ss << "      {\"peer_id\": \"" << ce.id << "\", \"ip\": \"" << common::ipAddressToString(ce.adr.ip) << "\", \"port\": " << ce.adr.port << ", \"is_income\": " << ce.is_income << "}";
       if (networkState.connections_list.size() - 1 != i)
         ss << ",";
       ss << ENDL;
@@ -110,7 +110,7 @@ std::ostream& get_response_schema_as_json(std::ostream& ss, response_schema &rs)
     ss << "    \"local_peerlist_white\": [" << ENDL;
     i = 0;
     for (const PeerlistEntry &pe : networkState.local_peerlist_white) {
-      ss << "      {\"peer_id\": \"" << pe.id << "\", \"ip\": \"" << Common::ipAddressToString(pe.adr.ip) << "\", \"port\": " << pe.adr.port << ", \"last_seen\": " << networkState.local_time - pe.last_seen << "}";
+      ss << "      {\"peer_id\": \"" << pe.id << "\", \"ip\": \"" << common::ipAddressToString(pe.adr.ip) << "\", \"port\": " << pe.adr.port << ", \"last_seen\": " << networkState.local_time - pe.last_seen << "}";
       if (networkState.local_peerlist_white.size() - 1 != i)
         ss << ",";
       ss << ENDL;
@@ -121,7 +121,7 @@ std::ostream& get_response_schema_as_json(std::ostream& ss, response_schema &rs)
     ss << "    \"local_peerlist_gray\": [" << ENDL;
     i = 0;
     for (const PeerlistEntry &pe : networkState.local_peerlist_gray) {
-      ss << "      {\"peer_id\": \"" << pe.id << "\", \"ip\": \"" << Common::ipAddressToString(pe.adr.ip) << "\", \"port\": " << pe.adr.port << ", \"last_seen\": " << networkState.local_time - pe.last_seen << "}";
+      ss << "      {\"peer_id\": \"" << pe.id << "\", \"ip\": \"" << common::ipAddressToString(pe.adr.ip) << "\", \"port\": " << pe.adr.port << ", \"last_seen\": " << networkState.local_time - pe.last_seen << "}";
       if (networkState.local_peerlist_gray.size() - 1 != i)
         ss << ",";
       ss << ENDL;
@@ -163,12 +163,12 @@ bool print_COMMAND_REQUEST_NETWORK_STATE(const COMMAND_REQUEST_NETWORK_STATE::re
 
   std::cout << "Peer list white:" << ns.my_id << ENDL;
   for (const PeerlistEntry &pe : ns.local_peerlist_white) {
-    std::cout << pe.id << "\t" << pe.adr << "\t" << Common::timeIntervalToString(ns.local_time - pe.last_seen) << ENDL;
+    std::cout << pe.id << "\t" << pe.adr << "\t" << common::timeIntervalToString(ns.local_time - pe.last_seen) << ENDL;
   }
 
   std::cout << "Peer list gray:" << ns.my_id << ENDL;
   for (const PeerlistEntry &pe : ns.local_peerlist_gray) {
-    std::cout << pe.id << "\t" << pe.adr << "\t" << Common::timeIntervalToString(ns.local_time - pe.last_seen) << ENDL;
+    std::cout << pe.id << "\t" << pe.adr << "\t" << common::timeIntervalToString(ns.local_time - pe.last_seen) << ENDL;
   }
 
   return true;
@@ -215,7 +215,7 @@ bool handle_request_stat(po::variables_map& vm, PeerIdType peer_id) {
   }
 
   crypto::SecretKey prvk;
-  if (!Common::podFromHex(command_line::get_arg(vm, arg_priv_key), prvk)) {
+  if (!common::podFromHex(command_line::get_arg(vm, arg_priv_key), prvk)) {
     std::cout << "{" << ENDL << "  \"status\": \"ERROR: " << "wrong secret key set \"" << ENDL << "}";
     return false;
   }
@@ -255,7 +255,7 @@ bool handle_request_stat(po::variables_map& vm, PeerIdType peer_id) {
     pot.peer_id = peer_id;
     pot.time = time(NULL);
     crypto::PublicKey pubk;
-    Common::podFromHex(P2P_STAT_TRUSTED_PUB_KEY, pubk);
+    common::podFromHex(P2P_STAT_TRUSTED_PUB_KEY, pubk);
     crypto::Hash h = get_proof_of_trust_hash(pot);
     crypto::generate_signature(h, pubk, prvk, pot.sign);
 
@@ -315,8 +315,8 @@ bool generate_and_print_keys() {
   crypto::PublicKey pk;
   crypto::SecretKey sk;
   generate_keys(pk, sk);
-  std::cout << "PUBLIC KEY: " << Common::podToHex(pk) << ENDL
-            << "PRIVATE KEY: " << Common::podToHex(sk);
+  std::cout << "PUBLIC KEY: " << common::podToHex(pk) << ENDL
+            << "PRIVATE KEY: " << common::podToHex(sk);
   return true;
 }
 

@@ -31,7 +31,7 @@
 #include <iostream>
 
 using namespace crypto;
-using namespace Common;
+using namespace common;
 using namespace cn;
 
 namespace cn {
@@ -217,7 +217,7 @@ protected:
   uint32_t TRANSACTION_SOFTLOCK_TIME;
 
   System::Dispatcher dispatcher;
-  Logging::ConsoleLogger logger;
+  logging::ConsoleLogger logger;
   cn::Currency currency;
   TestBlockchainGenerator generator;
   INodeTrivialRefreshStub node;

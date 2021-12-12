@@ -138,7 +138,7 @@ public:
   BlockchainSynchronizer& m_sync;
 };
 
-WalletLegacy::WalletLegacy(const cn::Currency& currency, INode& node, Logging::ILogger& loggerGroup) :
+WalletLegacy::WalletLegacy(const cn::Currency& currency, INode& node, logging::ILogger& loggerGroup) :
   m_state(NOT_INITIALIZED),
   m_currency(currency),
   m_node(node),
@@ -276,7 +276,7 @@ void WalletLegacy::doLoad(std::istream& source) {
     m_transferDetails->getOutputs(allTransfers, ITransfersContainer::IncludeAll);
     std::cout << "Loaded " + std::to_string(allTransfers.size()) + " known transfer(s)\r\n";
     for (auto& o : allTransfers) {
-      if (o.type == TransactionTypes::OutputType::Key) {
+      if (o.type == transaction_types::OutputType::Key) {
         m_transfersSync.addPublicKeysSeen(m_account.getAccountKeys().address, o.transactionHash, o.outputKey);
       }
     }
@@ -1454,7 +1454,7 @@ std::string WalletLegacy::getReserveProof(const uint64_t &reserve, const std::st
 	memcpy(&p.signature, &signature, sizeof(signature));
 
 	BinaryArray ba = toBinaryArray(p);
-	std::string ret = Common::toHex(ba);
+	std::string ret = common::toHex(ba);
 
 	ret = "ReserveProofV1" + Tools::Base58::encode(ret);
 

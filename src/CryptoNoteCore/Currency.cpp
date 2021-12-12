@@ -23,8 +23,8 @@
 
 #undef ERROR
 
-using namespace Logging;
-using namespace Common;
+using namespace logging;
+using namespace common;
 
 namespace cn
 {
@@ -852,7 +852,7 @@ namespace cn
       strAmount.append(m_numberOfDecimalPlaces - fractionSize, '0');
     }
 
-    return Common::fromString(strAmount, amount);
+    return common::fromString(strAmount, amount);
   }
 
   /* ---------------------------------------------------------------------------------------------------- */
@@ -1296,7 +1296,7 @@ namespace cn
 
   /* ---------------------------------------------------------------------------------------------------- */
 
-  CurrencyBuilder::CurrencyBuilder(Logging::ILogger &log) : m_currency(log)
+  CurrencyBuilder::CurrencyBuilder(logging::ILogger &log) : m_currency(log)
   {
     maxBlockNumber(parameters::CRYPTONOTE_MAX_BLOCK_NUMBER);
     maxBlockBlobSize(parameters::CRYPTONOTE_MAX_BLOCK_BLOB_SIZE);

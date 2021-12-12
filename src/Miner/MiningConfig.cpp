@@ -106,7 +106,7 @@ void MiningConfig::parse(int argc, char** argv) {
   }
 
   logLevel = static_cast<uint8_t>(options["log-level"].as<int>());
-  if (logLevel > static_cast<uint8_t>(Logging::TRACE)) {
+  if (logLevel > static_cast<uint8_t>(logging::TRACE)) {
     throw std::runtime_error("--log-level value is too big");
   }
 

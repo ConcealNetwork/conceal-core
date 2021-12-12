@@ -21,7 +21,7 @@ class NodeServer;
 class DaemonCommandsHandler
 {
 public:
-  DaemonCommandsHandler(cn::core& core, cn::NodeServer& srv, Logging::LoggerManager& log);
+  DaemonCommandsHandler(cn::core& core, cn::NodeServer& srv, logging::LoggerManager& log);
 
   bool start_handling() {
     m_consoleHandler.start();
@@ -34,11 +34,11 @@ public:
 
 private:
 
-  Common::ConsoleHandler m_consoleHandler;
+  common::ConsoleHandler m_consoleHandler;
   cn::core& m_core;
   cn::NodeServer& m_srv;
-  Logging::LoggerRef logger;
-  Logging::LoggerManager& m_logManager;
+  logging::LoggerRef logger;
+  logging::LoggerManager& m_logManager;
 
   std::string get_commands_str();
   bool print_block_by_height(uint32_t height);

@@ -47,7 +47,7 @@ namespace cn
   class Blockchain : public cn::ITransactionValidator
   {
   public:
-    Blockchain(const Currency &currency, tx_memory_pool &tx_pool, Logging::ILogger &logger, bool blockchainIndexesEnabled, bool blockchainAutosaveEnabled);
+    Blockchain(const Currency &currency, tx_memory_pool &tx_pool, logging::ILogger &logger, bool blockchainIndexesEnabled, bool blockchainAutosaveEnabled);
 
     bool addObserver(IBlockchainStorageObserver *observer);
     bool removeObserver(IBlockchainStorageObserver *observer);
@@ -147,7 +147,7 @@ namespace cn
         {
           if (!(height < m_blocks.size()))
           {
-            logger(Logging::ERROR, Logging::BRIGHT_RED) << "Internal error: bl_id=" << Common::podToHex(bl_id)
+            logger(logging::ERROR, logging::BRIGHT_RED) << "Internal error: bl_id=" << common::podToHex(bl_id)
                                                         << " have index record with offset=" << height << ", bigger then m_blocks.size()=" << m_blocks.size();
             return false;
           }
@@ -311,7 +311,7 @@ namespace cn
 
     IntrusiveLinkedList<MessageQueue<BlockchainMessage>> m_messageQueueList;
 
-    Logging::LoggerRef logger;
+    logging::LoggerRef logger;
 
 
     bool switch_to_alternative_blockchain(std::list<blocks_ext_by_hash::iterator> &alt_chain, bool discard_disconnected_chain);
@@ -392,18 +392,18 @@ namespace cn
     {
       if (i >= amount_outs_vec.size())
       {
-        logger(Logging::INFO) << "Wrong index in transaction inputs: " << i << ", expected maximum " << amount_outs_vec.size() - 1;
+        logger(logging::INFO) << "Wrong index in transaction inputs: " << i << ", expected maximum " << amount_outs_vec.size() - 1;
         return false;
       }
 
       //auto tx_it = m_transactionMap.find(amount_outs_vec[i].first);
-      //if (!(tx_it != m_transactionMap.end())) { logger(ERROR, BRIGHT_RED) << "Wrong transaction id in output indexes: " << Common::podToHex(amount_outs_vec[i].first); return false; }
+      //if (!(tx_it != m_transactionMap.end())) { logger(ERROR, BRIGHT_RED) << "Wrong transaction id in output indexes: " << common::podToHex(amount_outs_vec[i].first); return false; }
 
       const TransactionEntry &tx = transactionByIndex(amount_outs_vec[i].first);
 
       if (!(amount_outs_vec[i].second < tx.tx.outputs.size()))
       {
-        logger(Logging::ERROR, Logging::BRIGHT_RED)
+        logger(logging::ERROR, logging::BRIGHT_RED)
             << "Wrong index in transaction outputs: "
             << amount_outs_vec[i].second << ", expected less then "
             << tx.tx.outputs.size();
@@ -412,7 +412,7 @@ namespace cn
 
       if (!vis.handle_output(tx.tx, tx.tx.outputs[amount_outs_vec[i].second], amount_outs_vec[i].second))
       {
-        logger(Logging::INFO) << "Failed to handle_output for output no = " << count << ", with absolute offset " << i;
+        logger(logging::INFO) << "Failed to handle_output for output no = " << count << ", with absolute offset " << i;
         return false;
       }
 

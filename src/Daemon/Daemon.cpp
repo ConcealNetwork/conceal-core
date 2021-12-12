@@ -34,9 +34,9 @@
 #include <crtdbg.h>
 #endif
 
-using Common::JsonValue;
+using common::JsonValue;
 using namespace cn;
-using namespace Logging;
+using namespace logging;
 
 namespace po = boost::program_options;
 
@@ -57,10 +57,10 @@ namespace
 bool command_line_preprocessor(const boost::program_options::variables_map& vm, LoggerRef& logger);
 
 void print_genesis_tx_hex() {
-  Logging::ConsoleLogger logger;
+  logging::ConsoleLogger logger;
   cn::Transaction tx = cn::CurrencyBuilder(logger).generateGenesisTransaction();
   cn::BinaryArray txb = cn::toBinaryArray(tx);
-  std::string tx_hex = Common::toHex(txb);
+  std::string tx_hex = common::toHex(txb);
 
   std::cout << "Insert this line into your coin configuration file as is: " << std::endl;
   std::cout << "const char GENESIS_COINBASE_TX_HEX[] = \"" << tx_hex << "\";" << std::endl;
@@ -72,7 +72,7 @@ void print_genesis_tx_hex() {
   // std::vector<cn::AccountPublicAddress> targets;
  //  auto genesis_block_reward_addresses = command_line::get_arg(vm, arg_genesis_block_reward_address);
 
-//   Logging::ConsoleLogger logger;
+//   logging::ConsoleLogger logger;
 //   cn::CurrencyBuilder currencyBuilder(logger);
 
  //  cn::Currency currency = currencyBuilder.currency();
@@ -95,7 +95,7 @@ void print_genesis_tx_hex() {
 
  //	  cn::Transaction tx = cn::CurrencyBuilder(logger).generateGenesisTransaction();
  //	  cn::BinaryArray txb = cn::toBinaryArray(tx);
- //	  std::string tx_hex = Common::toHex(txb);
+ //	  std::string tx_hex = common::toHex(txb);
 
 // 	  std::cout << "Insert this line into your coin configuration file as is: " << std::endl;
  //	  std::cout << "const char GENESIS_COINBASE_TX_HEX[] = \"" << tx_hex << "\";" << std::endl;
@@ -103,7 +103,7 @@ void print_genesis_tx_hex() {
 //   } else {
  //	cn::Transaction tx = cn::CurrencyBuilder(logger).generateGenesisTransaction(targets);
  //	cn::BinaryArray txb = cn::toBinaryArray(tx);
- //	std::string tx_hex = Common::toHex(txb);
+ //	std::string tx_hex = common::toHex(txb);
 
  //	std::cout << "Modify this line into your concealX configuration file as is:  " << std::endl;
  //	std::cout << "const char GENESIS_COINBASE_TX_HEX[] = \"" << tx_hex << "\";" << std::endl;
@@ -234,18 +234,18 @@ int main(int argc, char* argv[])
      return 1;
     }
 
-    auto modulePath = Common::NativePathToGeneric(argv[0]);
-    auto cfgLogFile = Common::NativePathToGeneric(command_line::get_arg(vm, arg_log_file));
+    auto modulePath = common::NativePathToGeneric(argv[0]);
+    auto cfgLogFile = common::NativePathToGeneric(command_line::get_arg(vm, arg_log_file));
 
     if (cfgLogFile.empty()) {
-      cfgLogFile = Common::ReplaceExtenstion(modulePath, ".log");
+      cfgLogFile = common::ReplaceExtenstion(modulePath, ".log");
     } else {
-      if (!Common::HasParentPath(cfgLogFile)) {
-        cfgLogFile = Common::CombinePath(Common::GetPathDirectory(modulePath), cfgLogFile);
+      if (!common::HasParentPath(cfgLogFile)) {
+        cfgLogFile = common::CombinePath(common::GetPathDirectory(modulePath), cfgLogFile);
       }
     }
 
-    Level cfgLogLevel = static_cast<Level>(static_cast<int>(Logging::ERROR) + command_line::get_arg(vm, arg_log_level));
+    Level cfgLogLevel = static_cast<Level>(static_cast<int>(logging::ERROR) + command_line::get_arg(vm, arg_log_level));
 
     // configure logging
     logManager.configure(buildLoggerConfiguration(cfgLogLevel, cfgLogFile));

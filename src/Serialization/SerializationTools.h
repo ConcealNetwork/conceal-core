@@ -15,7 +15,7 @@
 #include "KVBinaryInputStreamSerializer.h"
 #include "KVBinaryOutputStreamSerializer.h"
 
-namespace Common {
+namespace common {
 
 template <typename T>
 T getValueAs(const JsonValue& js) {
@@ -34,15 +34,15 @@ inline uint64_t getValueAs<uint64_t>(const JsonValue& js) { return static_cast<u
 namespace cn {
 
 template <typename T>
-Common::JsonValue storeToJsonValue(const T& v) {
+common::JsonValue storeToJsonValue(const T& v) {
   JsonOutputStreamSerializer s;
   serialize(const_cast<T&>(v), s);
   return s.getValue();
 }
 
 template <typename T>
-Common::JsonValue storeContainerToJsonValue(const T& cont) {
-  Common::JsonValue js(Common::JsonValue::ARRAY);
+common::JsonValue storeContainerToJsonValue(const T& cont) {
+  common::JsonValue js(common::JsonValue::ARRAY);
   for (const auto& item : cont) {
     js.pushBack(item);
   }
@@ -50,31 +50,31 @@ Common::JsonValue storeContainerToJsonValue(const T& cont) {
 }
 
 template <typename T>
-Common::JsonValue storeToJsonValue(const std::vector<T>& v) { return storeContainerToJsonValue(v); }
+common::JsonValue storeToJsonValue(const std::vector<T>& v) { return storeContainerToJsonValue(v); }
 
 template <typename T>
-Common::JsonValue storeToJsonValue(const std::list<T>& v) { return storeContainerToJsonValue(v); }
+common::JsonValue storeToJsonValue(const std::list<T>& v) { return storeContainerToJsonValue(v); }
 
 template <>
-inline Common::JsonValue storeToJsonValue(const std::string& v) { return Common::JsonValue(v); }
+inline common::JsonValue storeToJsonValue(const std::string& v) { return common::JsonValue(v); }
 
 template <typename T>
-void loadFromJsonValue(T& v, const Common::JsonValue& js) {
+void loadFromJsonValue(T& v, const common::JsonValue& js) {
   JsonInputValueSerializer s(js);
   serialize(v, s);
 }
 
 template <typename T>
-void loadFromJsonValue(std::vector<T>& v, const Common::JsonValue& js) {
+void loadFromJsonValue(std::vector<T>& v, const common::JsonValue& js) {
   for (size_t i = 0; i < js.size(); ++i) {
-    v.push_back(Common::getValueAs<T>(js[i]));
+    v.push_back(common::getValueAs<T>(js[i]));
   }
 }
 
 template <typename T>
-void loadFromJsonValue(std::list<T>& v, const Common::JsonValue& js) {
+void loadFromJsonValue(std::list<T>& v, const common::JsonValue& js) {
   for (size_t i = 0; i < js.size(); ++i) {
-    v.push_back(Common::getValueAs<T>(js[i]));
+    v.push_back(common::getValueAs<T>(js[i]));
   }
 }
 
@@ -89,7 +89,7 @@ bool loadFromJson(T& v, const std::string& buf) {
     if (buf.empty()) {
       return true;
     }
-    auto js = Common::JsonValue::fromString(buf);
+    auto js = common::JsonValue::fromString(buf);
     loadFromJsonValue(v, js);
   } catch (std::exception&) {
     return false;
@@ -103,7 +103,7 @@ std::string storeToBinaryKeyValue(const T& v) {
   serialize(const_cast<T&>(v), s);
   
   std::string result;
-  Common::StringOutputStream stream(result);
+  common::StringOutputStream stream(result);
   s.dump(stream);
   return result;
 }
@@ -111,7 +111,7 @@ std::string storeToBinaryKeyValue(const T& v) {
 template <typename T>
 bool loadFromBinaryKeyValue(T& v, const std::string& buf) {
   try {
-    Common::MemoryInputStream stream(buf.data(), buf.size());
+    common::MemoryInputStream stream(buf.data(), buf.size());
     KVBinaryInputStreamSerializer s(stream);
     serialize(v, s);
     return true;

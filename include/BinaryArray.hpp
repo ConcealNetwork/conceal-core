@@ -10,7 +10,7 @@
 
 using namespace cn;
 
-namespace Common {
+namespace common {
 
 template<class It>
 inline BinaryArray::iterator append(BinaryArray &ba, It be, It en) {
@@ -23,4 +23,4 @@ inline BinaryArray::iterator append(BinaryArray &ba, const BinaryArray &other) {
 	return ba.insert(ba.end(), other.begin(), other.end());
 }
 
-} // namespace Common
+} // namespace common

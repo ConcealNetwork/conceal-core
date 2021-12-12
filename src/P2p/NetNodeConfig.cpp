@@ -29,7 +29,7 @@ const command_line::arg_descriptor<std::vector<std::string> > arg_p2p_seed_node 
 const command_line::arg_descriptor<bool> arg_p2p_hide_my_port   =    {"hide-my-port", "Do not announce yourself as peerlist candidate", false, true};
 
 bool parsePeerFromString(NetworkAddress& pe, const std::string& node_addr) {
-  return Common::parseIpAddressAndPort(pe.ip, pe.port, node_addr);
+  return common::parseIpAddressAndPort(pe.ip, pe.port, node_addr);
 }
 
 bool parsePeersAndAddToContainer(const boost::program_options::variables_map& vm,

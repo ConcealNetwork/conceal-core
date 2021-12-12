@@ -11,10 +11,10 @@
 
 extern System::Dispatcher globalSystem;
 extern cn::Currency currency;
-extern Tests::Common::BaseFunctionalTestsConfig config;
+extern Tests::common::BaseFunctionalTestsConfig config;
 
 class TransfersTest :
-  public Tests::Common::BaseFunctionalTests,
+  public Tests::common::BaseFunctionalTests,
   public ::testing::Test {
 
 public:

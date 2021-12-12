@@ -62,7 +62,7 @@ void test_generator::addBlock(const cn::Block& blk, size_t tsxSize, uint64_t fee
   const size_t blockSize = tsxSize + getObjectBinarySize(blk.baseTransaction);
   int64_t emissionChange;
   uint64_t blockReward;
-  m_currency.getBlockReward(Common::medianValue(blockSizes), blockSize, alreadyGeneratedCoins, fee, m_blocksInfo.size(),
+  m_currency.getBlockReward(common::medianValue(blockSizes), blockSize, alreadyGeneratedCoins, fee, m_blocksInfo.size(),
     blockReward, emissionChange);
   m_blocksInfo[get_block_hash(blk)] = BlockInfo(blk.previousBlockHash, alreadyGeneratedCoins + emissionChange, blockSize);
 }
@@ -95,7 +95,7 @@ bool test_generator::constructBlock(cn::Block& blk, uint32_t height, const crypt
   blk.baseTransaction = boost::value_initialized<Transaction>();
   size_t targetBlockSize = txsSize + getObjectBinarySize(blk.baseTransaction);
   while (true) {
-    if (!m_currency.constructMinerTx(height, Common::medianValue(blockSizes), alreadyGeneratedCoins, targetBlockSize,
+    if (!m_currency.constructMinerTx(height, common::medianValue(blockSizes), alreadyGeneratedCoins, targetBlockSize,
       totalFee, minerAcc.getAccountKeys().address, blk.baseTransaction, BinaryArray(), 10)) {
       return false;
     }
@@ -182,7 +182,7 @@ bool test_generator::constructBlockManually(Block& blk, const Block& prevBlock, 
     blk.baseTransaction = boost::value_initialized<Transaction>();
     size_t currentBlockSize = txsSizes + getObjectBinarySize(blk.baseTransaction);
     // TODO: This will work, until size of constructed block is less then m_currency.blockGrantedFullRewardZone()
-    if (!m_currency.constructMinerTx(height, Common::medianValue(blockSizes), alreadyGeneratedCoins, currentBlockSize, 0,
+    if (!m_currency.constructMinerTx(height, common::medianValue(blockSizes), alreadyGeneratedCoins, currentBlockSize, 0,
       minerAcc.getAccountKeys().address, blk.baseTransaction, BinaryArray(), 1)) {
         return false;
     }
@@ -213,7 +213,7 @@ bool test_generator::constructMaxSizeBlock(cn::Block& blk, const cn::Block& blkP
   medianBlockCount = medianBlockCount == 0 ? m_currency.rewardBlocksWindow() : medianBlockCount;
   getLastNBlockSizes(blockSizes, get_block_hash(blkPrev), medianBlockCount);
 
-  size_t median = std::max(Common::medianValue(blockSizes), m_currency.blockGrantedFullRewardZone());
+  size_t median = std::max(common::medianValue(blockSizes), m_currency.blockGrantedFullRewardZone());
   uint64_t totalFee = 0;
   size_t txsSize = 0;
   std::vector<crypto::Hash> transactionHashes;
@@ -289,7 +289,7 @@ bool constructMinerTxBySize(const cn::Currency& currency, cn::Transaction& baseT
                             uint64_t alreadyGeneratedCoins, const cn::AccountPublicAddress& minerAddress,
                             std::vector<size_t>& blockSizes, size_t targetTxSize, size_t targetBlockSize,
                             uint64_t fee/* = 0*/) {
-  if (!currency.constructMinerTx(height, Common::medianValue(blockSizes), alreadyGeneratedCoins, targetBlockSize,
+  if (!currency.constructMinerTx(height, common::medianValue(blockSizes), alreadyGeneratedCoins, targetBlockSize,
       fee, minerAddress, baseTransaction, cn::BinaryArray(), 1)) {
     return false;
   }

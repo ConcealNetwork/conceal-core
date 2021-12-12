@@ -124,7 +124,7 @@ struct EncryptedWalletRecord {
                                                    boost::multi_index::member<cn::WalletTransaction, uint32_t, &cn::WalletTransaction::blockHeight>>>>
         WalletTransactions;
         
-    typedef Common::FileMappedVector<EncryptedWalletRecord> ContainerStorage;
+    typedef common::FileMappedVector<EncryptedWalletRecord> ContainerStorage;
     typedef std::pair<size_t, cn::WalletTransfer> TransactionTransferPair;
     typedef std::vector<TransactionTransferPair> WalletTransfers;
 

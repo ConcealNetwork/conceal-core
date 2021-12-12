@@ -21,7 +21,7 @@
 
 namespace cn
 {
-  inline bool serialize(uuid& v, Common::StringView name, ISerializer& s) {
+  inline bool serialize(uuid& v, common::StringView name, ISerializer& s) {
     return s.binary(&v, sizeof(v), name);
   }
 

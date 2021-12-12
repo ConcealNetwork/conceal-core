@@ -39,7 +39,7 @@ namespace cn {
 
 template <class T>
 std::ostream &print256(std::ostream &o, const T &v) {
-  return o << "<" << Common::podToHex(v) << ">";
+  return o << "<" << common::podToHex(v) << ">";
 }
 
 bool parse_hash256(const std::string& str_hash, crypto::Hash& hash);

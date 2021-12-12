@@ -228,7 +228,7 @@ public:
   }
 
 protected:
-  Logging::ConsoleLogger m_logger;
+  logging::ConsoleLogger m_logger;
   Currency m_currency;
   TestBlockchainGenerator generator;
 

@@ -13,9 +13,9 @@
 #include "WalletLegacyObserver.h"
 
 using namespace cn;
-using namespace Logging;
+using namespace logging;
 
-extern Tests::Common::BaseFunctionalTestsConfig baseCfg;
+extern Tests::common::BaseFunctionalTestsConfig baseCfg;
 // extern System::Dispatcher globalDispatcher;
 
 struct TotalWalletBalance {
@@ -34,7 +34,7 @@ struct TotalWalletBalance {
   }
 };
 
-class IntegrationTest : public Tests::Common::BaseFunctionalTests, public ::testing::Test {
+class IntegrationTest : public Tests::common::BaseFunctionalTests, public ::testing::Test {
 public:
 
   IntegrationTest() : 
@@ -59,7 +59,7 @@ public:
   }
 
   void makeWallets() {
-    Logging::ConsoleLogger m_logger;
+    logging::ConsoleLogger m_logger;
     for (auto& n: inodes) {
       
       std::unique_ptr<cn::IWalletLegacy> wallet(new cn::WalletLegacy(m_currency, *n, m_logger));
@@ -147,8 +147,8 @@ public:
   System::Dispatcher dispatcher;
   std::string walletPassword = "pass";
   cn::Currency currency;
-  Logging::ConsoleLogger log;
-  Logging::LoggerRef logger;
+  logging::ConsoleLogger log;
+  logging::LoggerRef logger;
 
   std::vector<std::unique_ptr<INode>> inodes;
   std::vector<std::unique_ptr<IWalletLegacy>> wallets;

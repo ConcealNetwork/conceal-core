@@ -39,7 +39,7 @@ class WalletLegacy :
   ITransfersObserver {
 
 public:
-  WalletLegacy(const cn::Currency& currency, INode& node, Logging::ILogger& loggerGroup);
+  WalletLegacy(const cn::Currency& currency, INode& node, logging::ILogger& loggerGroup);
   virtual ~WalletLegacy();
 
   virtual void addObserver(IWalletLegacyObserver* observer) override;
@@ -171,7 +171,7 @@ private:
   std::string m_password;
   const cn::Currency& m_currency;
   INode& m_node;
-  Logging::ILogger& m_loggerGroup;  
+  logging::ILogger& m_loggerGroup;  
   bool m_isStopping;
 
   std::atomic<uint64_t> m_lastNotifiedActualBalance;

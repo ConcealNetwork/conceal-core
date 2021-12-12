@@ -27,7 +27,7 @@
 #include "System/MemoryMappedFile.h"
 #include "Common/ScopeExit.h"
 
-namespace Common {
+namespace common {
 
 template<class T>
 struct EnableIfPod {

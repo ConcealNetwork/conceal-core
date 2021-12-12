@@ -22,7 +22,7 @@
 
 using namespace crypto;
 using namespace cn;
-using namespace Common;
+using namespace common;
 
 struct CallbackStatus {
   CallbackStatus() {}
@@ -61,7 +61,7 @@ protected:
 
   cn::Currency currency;
   TestBlockchainGenerator generator;
-  Logging::FileLogger logger;
+  logging::FileLogger logger;
 };
 
 void InProcessNodeTests::SetUp() {

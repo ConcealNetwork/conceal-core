@@ -8,7 +8,7 @@
 #include "CryptoNoteCore/CryptoNoteTools.h"
 #include "Common/StringTools.h"
 
-using namespace Common;
+using namespace common;
 using namespace crypto;
 using namespace cn;
 

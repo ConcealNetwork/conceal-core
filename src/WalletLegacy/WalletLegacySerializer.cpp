@@ -20,7 +20,7 @@
 #include "WalletLegacy/KeysStorage.h"
 #include "crypto/chacha8.h"
 
-using namespace Common;
+using namespace common;
 
 namespace {
 

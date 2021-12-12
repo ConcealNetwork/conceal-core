@@ -22,7 +22,7 @@
 #include "BlockchainExplorer/BlockchainExplorerDataBuilder.h"
 
 using namespace cn;
-using namespace Common;
+using namespace common;
 
 namespace {
 

@@ -79,7 +79,7 @@ namespace cn
     PeerIdType peerId;
     System::TcpConnection connection;
 
-    P2pConnectionContext(System::Dispatcher& dispatcher, Logging::ILogger& log, System::TcpConnection&& conn) :
+    P2pConnectionContext(System::Dispatcher& dispatcher, logging::ILogger& log, System::TcpConnection&& conn) :
       context(nullptr),
       peerId(0),
       connection(std::move(conn)),
@@ -105,7 +105,7 @@ namespace cn
     uint64_t writeDuration(TimePoint now) const;
 
   private:
-    Logging::LoggerRef logger;
+    logging::LoggerRef logger;
     TimePoint writeOperationStartTime;
     System::Event queueEvent;
     std::vector<P2pMessage> writeQueue;
@@ -119,7 +119,7 @@ namespace cn
 
     static void init_options(boost::program_options::options_description& desc);
 
-    NodeServer(System::Dispatcher& dispatcher, cn::CryptoNoteProtocolHandler& payload_handler, Logging::ILogger& log);
+    NodeServer(System::Dispatcher& dispatcher, cn::CryptoNoteProtocolHandler& payload_handler, logging::ILogger& log);
 
     bool run();
     bool init(const NetNodeConfig& config);
@@ -252,7 +252,7 @@ namespace cn
     System::Timer m_idleTimer;
     System::Timer m_timeoutTimer;
     System::TcpListener m_listener;
-    Logging::LoggerRef logger;
+    logging::LoggerRef logger;
     std::atomic<bool> m_stop;
 
     CryptoNoteProtocolHandler& m_payload_handler;

@@ -9,7 +9,7 @@
 #include <cassert>
 #include <string>
 
-namespace Common {
+namespace common {
 
 // 'StringView' is a pair of pointer to constant char and size.
 // It is recommended to pass 'StringView' to procedures by value.

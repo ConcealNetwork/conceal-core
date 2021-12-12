@@ -99,7 +99,7 @@ protected:
   Currency currency;
   TestBlockchainGenerator generator;
   INodeTrivialRefreshStub nodeStub;
-  Logging::FileLogger logger;
+  logging::FileLogger logger;
   dummyObserver observer;
   BlockchainExplorer blockchainExplorer;
 };

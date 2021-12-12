@@ -8,7 +8,7 @@
 
 #include <cstddef>
 
-namespace Common {
+namespace common {
 
 class IInputStream {
 public:

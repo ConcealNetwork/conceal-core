@@ -20,7 +20,7 @@
 #include "Common/StringTools.h"
 
 using namespace crypto;
-using namespace Common;
+using namespace common;
 
 namespace cn {
 

@@ -28,7 +28,7 @@
 
 namespace concolor
 {
-  using namespace Common::Console;
+  using namespace common::Console;
 
   inline std::basic_ostream<char, std::char_traits<char> >& bright_white(std::basic_ostream<char, std::char_traits<char> >& ostr)
   {
@@ -168,7 +168,7 @@ public:
 
 protected:
 
-  mutable Logging::ConsoleLogger m_logger;
+  mutable logging::ConsoleLogger m_logger;
   cn::Currency m_currency;
 
 private:
@@ -176,10 +176,10 @@ private:
 };
 
 
-bool construct_tx_to_key(Logging::ILogger& logger, const std::vector<test_event_entry>& events, cn::Transaction& tx,
+bool construct_tx_to_key(logging::ILogger& logger, const std::vector<test_event_entry>& events, cn::Transaction& tx,
                          const cn::Block& blk_head, const cn::AccountBase& from, const cn::AccountBase& to,
                          uint64_t amount, uint64_t fee, size_t nmix);
-cn::Transaction construct_tx_with_fee(Logging::ILogger& logger, std::vector<test_event_entry>& events, const cn::Block& blk_head,
+cn::Transaction construct_tx_with_fee(logging::ILogger& logger, std::vector<test_event_entry>& events, const cn::Block& blk_head,
                                             const cn::AccountBase& acc_from, const cn::AccountBase& acc_to,
                                             uint64_t amount, uint64_t fee);
 
@@ -398,7 +398,7 @@ inline bool do_replay_events(std::vector<test_event_entry>& events, t_test_class
   if (!r)
     return false;
 
-  Logging::ConsoleLogger logger;
+  logging::ConsoleLogger logger;
   cn::CoreConfig coreConfig;
   coreConfig.init(vm);
   cn::MinerConfig emptyMinerConfig;

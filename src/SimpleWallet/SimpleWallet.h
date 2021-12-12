@@ -36,7 +36,7 @@ namespace cn
   /************************************************************************/
   class simple_wallet : public cn::INodeObserver, public cn::IWalletLegacyObserver, public cn::INodeRpcProxyObserver {
   public:
-    simple_wallet(System::Dispatcher& dispatcher, const cn::Currency& currency, Logging::LoggerManager& log);
+    simple_wallet(System::Dispatcher& dispatcher, const cn::Currency& currency, logging::LoggerManager& log);
 
     bool init(const boost::program_options::variables_map& vm);
     bool deinit();
@@ -51,12 +51,12 @@ namespace cn
 
   private:
 
-    Logging::LoggerMessage success_msg_writer(bool color = false) {
-      return logger(Logging::INFO, color ? Logging::GREEN : Logging::DEFAULT);
+    logging::LoggerMessage success_msg_writer(bool color = false) {
+      return logger(logging::INFO, color ? logging::GREEN : logging::DEFAULT);
     }
 
-    Logging::LoggerMessage fail_msg_writer() const {
-      auto msg = logger(Logging::ERROR, Logging::BRIGHT_RED);
+    logging::LoggerMessage fail_msg_writer() const {
+      auto msg = logger(logging::ERROR, logging::BRIGHT_RED);
       msg << "Error: ";
       return msg;
     }
@@ -172,11 +172,11 @@ namespace cn
 
     std::unique_ptr<std::promise<std::error_code>> m_initResultPromise;
 
-    Common::ConsoleHandler m_consoleHandler;
+    common::ConsoleHandler m_consoleHandler;
     const cn::Currency& m_currency;
-    Logging::LoggerManager& logManager;
+    logging::LoggerManager& logManager;
     System::Dispatcher& m_dispatcher;
-    Logging::LoggerRef logger;
+    logging::LoggerRef logger;
 
     std::unique_ptr<cn::NodeRpcProxy> m_node;
     std::unique_ptr<cn::IWalletLegacy> m_wallet;

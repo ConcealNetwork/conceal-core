@@ -28,7 +28,7 @@ class INode;
 
 class TransfersSyncronizer : public ITransfersSynchronizer, public IBlockchainConsumerObserver {
 public:
-  TransfersSyncronizer(const cn::Currency& currency, Logging::ILogger& logger, IBlockchainSynchronizer& sync, INode& node);
+  TransfersSyncronizer(const cn::Currency& currency, logging::ILogger& logger, IBlockchainSynchronizer& sync, INode& node);
   virtual ~TransfersSyncronizer();
 
   void initTransactionPool(const std::unordered_set<crypto::Hash>& uncommitedTransactions);
@@ -49,7 +49,7 @@ public:
   virtual void load(std::istream& in) override;
 
 private:
-  Logging::LoggerRef m_logger;
+  logging::LoggerRef m_logger;
 
   // map { view public key -> consumer }
   typedef std::unordered_map<crypto::PublicKey, std::unique_ptr<TransfersConsumer>> ConsumersContainer;

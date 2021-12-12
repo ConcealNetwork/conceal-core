@@ -22,8 +22,8 @@
 
 
 using namespace crypto;
-using namespace Logging;
-using namespace Common;
+using namespace logging;
+using namespace common;
 
 std::unordered_set<crypto::Hash> transactions_hash_seen;
 std::unordered_set<crypto::PublicKey> public_keys_seen;
@@ -70,7 +70,7 @@ void findMyOutputs(
 
     auto outType = tx.getOutputType(size_t(idx));
 
-    if (outType == TransactionTypes::OutputType::Key) {
+    if (outType == transaction_types::OutputType::Key) {
 
       uint64_t amount;
       KeyOutput out;
@@ -78,7 +78,7 @@ void findMyOutputs(
       checkOutputKey(derivation, out.key, keyIndex, idx, spendKeys, outputs);
       ++keyIndex;
 
-    } else if (outType == TransactionTypes::OutputType::Multisignature) {
+    } else if (outType == transaction_types::OutputType::Multisignature) {
 
       uint64_t amount;
       MultisignatureOutput out;
@@ -106,7 +106,7 @@ std::vector<crypto::Hash> getBlockHashes(const cn::CompleteBlock* blocks, size_t
 
 namespace cn {
 
-TransfersConsumer::TransfersConsumer(const cn::Currency& currency, INode& node, Logging::ILogger& logger, const SecretKey& viewSecret) :
+TransfersConsumer::TransfersConsumer(const cn::Currency& currency, INode& node, logging::ILogger& logger, const SecretKey& viewSecret) :
   m_node(node), m_viewSecret(viewSecret), m_currency(currency), m_logger(logger, "TransfersConsumer") {
   updateSyncStart();
 }
@@ -387,7 +387,7 @@ std::error_code createTransfers(
 
     if (spending)
     {
-      //m_logger(WARNING, BRIGHT_YELLOW) << "Spending in tx " << Common::podToHex(tx.getTransactionHash());
+      //m_logger(WARNING, BRIGHT_YELLOW) << "Spending in tx " << common::podToHex(tx.getTransactionHash());
     }
   }
 
@@ -400,8 +400,8 @@ std::error_code createTransfers(
     auto outType = tx.getOutputType(size_t(idx));
 
     if (
-      outType != TransactionTypes::OutputType::Key &&
-      outType != TransactionTypes::OutputType::Multisignature) {
+      outType != transaction_types::OutputType::Key &&
+      outType != transaction_types::OutputType::Multisignature) {
       continue;
     }
 
@@ -413,7 +413,7 @@ std::error_code createTransfers(
     info.globalOutputIndex = (blockInfo.height == WALLET_UNCONFIRMED_TRANSACTION_HEIGHT) ?
       UNCONFIRMED_TRANSACTION_GLOBAL_OUTPUT_INDEX : globalIdxs[idx];
 
-    if (outType == TransactionTypes::OutputType::Key) {
+    if (outType == transaction_types::OutputType::Key) {
       uint64_t amount;
       KeyOutput out;
       tx.getOutput(idx, out, amount);
@@ -442,7 +442,7 @@ std::error_code createTransfers(
       info.amount = amount;
       info.outputKey = out.key;
 
-    } else if (outType == TransactionTypes::OutputType::Multisignature) {
+    } else if (outType == transaction_types::OutputType::Multisignature) {
       uint64_t amount;
       MultisignatureOutput out;
       tx.getOutput(idx, out, amount);
@@ -452,11 +452,11 @@ std::error_code createTransfers(
         if (it == transactions_hash_seen.end()) {
           std::unordered_set<crypto::PublicKey>::iterator key_it = public_keys_seen.find(key);
           if (key_it != public_keys_seen.end()) {
-			 // m_logger(ERROR, BRIGHT_RED) << "Failed to process transaction " << Common::podToHex(txHash) << ": duplicate multisignature output key is found";
+			 // m_logger(ERROR, BRIGHT_RED) << "Failed to process transaction " << common::podToHex(txHash) << ": duplicate multisignature output key is found";
             return std::error_code();
           }
           if (std::find(temp_keys.begin(), temp_keys.end(), key) != temp_keys.end()) {
-          //  m_logger(ERROR, BRIGHT_RED) << "Failed to process transaction " << Common::podToHex(txHash) << ": the same multisignature output key is present more than once";
+          //  m_logger(ERROR, BRIGHT_RED) << "Failed to process transaction " << common::podToHex(txHash) << ": the same multisignature output key is present more than once";
             return std::error_code();
           }
           temp_keys.push_back(key);
@@ -484,7 +484,7 @@ std::error_code TransfersConsumer::preprocessOutputs(const TransactionBlockInfo&
     findMyOutputs(tx, m_viewSecret, m_spendKeys, outputs);
   }
   catch (const std::exception& e) {
-    m_logger(ERROR, BRIGHT_RED) << "Failed to process transaction: " << e.what() << ", transaction hash " << Common::podToHex(tx.getTransactionHash());
+    m_logger(ERROR, BRIGHT_RED) << "Failed to process transaction: " << e.what() << ", transaction hash " << common::podToHex(tx.getTransactionHash());
     return std::error_code();
   }
 	
@@ -512,7 +512,7 @@ std::error_code TransfersConsumer::preprocessOutputs(const TransactionBlockInfo&
 		  }
 	  }
 	  catch (const std::exception& e) {
-	    m_logger(ERROR, BRIGHT_RED) << "Failed to process transaction: " << e.what() << ", transaction hash " << Common::podToHex(tx.getTransactionHash());
+	    m_logger(ERROR, BRIGHT_RED) << "Failed to process transaction: " << e.what() << ", transaction hash " << common::podToHex(tx.getTransactionHash());
 		  return std::error_code();
 	  }
     }

@@ -9,7 +9,7 @@
 #include <stdexcept>
 #include "Common/StringTools.h"
 
-using Common::JsonValue;
+using common::JsonValue;
 using namespace cn;
 
 namespace cn {
@@ -22,7 +22,7 @@ std::ostream& operator<<(std::ostream& out, const JsonOutputStreamSerializer& en
 namespace {
 
 template <typename T>
-void insertOrPush(JsonValue& js, Common::StringView name, const T& value) {
+void insertOrPush(JsonValue& js, common::StringView name, const T& value) {
   if (js.isArray()) {
     js.pushBack(JsonValue(value));
   } else {
@@ -43,7 +43,7 @@ ISerializer::SerializerType JsonOutputStreamSerializer::type() const {
   return ISerializer::OUTPUT;
 }
 
-bool JsonOutputStreamSerializer::beginObject(Common::StringView name) {
+bool JsonOutputStreamSerializer::beginObject(common::StringView name) {
   JsonValue& parent = *chain.back();
   JsonValue obj(JsonValue::OBJECT);
 
@@ -61,7 +61,7 @@ void JsonOutputStreamSerializer::endObject() {
   chain.pop_back();
 }
 
-bool JsonOutputStreamSerializer::beginArray(size_t& size, Common::StringView name) {
+bool JsonOutputStreamSerializer::beginArray(size_t& size, common::StringView name) {
   JsonValue val(JsonValue::ARRAY);
   JsonValue& res = chain.back()->insert(std::string(name), val);
   chain.push_back(&res);
@@ -73,61 +73,61 @@ void JsonOutputStreamSerializer::endArray() {
   chain.pop_back();
 }
 
-bool JsonOutputStreamSerializer::operator()(uint64_t& value, Common::StringView name) {
+bool JsonOutputStreamSerializer::operator()(uint64_t& value, common::StringView name) {
   int64_t v = static_cast<int64_t>(value);
   return operator()(v, name);
 }
 
-bool JsonOutputStreamSerializer::operator()(uint16_t& value, Common::StringView name) {
+bool JsonOutputStreamSerializer::operator()(uint16_t& value, common::StringView name) {
   uint64_t v = static_cast<uint64_t>(value);
   return operator()(v, name);
 }
 
-bool JsonOutputStreamSerializer::operator()(int16_t& value, Common::StringView name) {
+bool JsonOutputStreamSerializer::operator()(int16_t& value, common::StringView name) {
   int64_t v = static_cast<int64_t>(value);
   return operator()(v, name);
 }
 
-bool JsonOutputStreamSerializer::operator()(uint32_t& value, Common::StringView name) {
+bool JsonOutputStreamSerializer::operator()(uint32_t& value, common::StringView name) {
   uint64_t v = static_cast<uint64_t>(value);
   return operator()(v, name);
 }
 
-bool JsonOutputStreamSerializer::operator()(int32_t& value, Common::StringView name) {
+bool JsonOutputStreamSerializer::operator()(int32_t& value, common::StringView name) {
   int64_t v = static_cast<int64_t>(value);
   return operator()(v, name);
 }
 
-bool JsonOutputStreamSerializer::operator()(int64_t& value, Common::StringView name) {
+bool JsonOutputStreamSerializer::operator()(int64_t& value, common::StringView name) {
   insertOrPush(*chain.back(), name, value);
   return true;
 }
 
-bool JsonOutputStreamSerializer::operator()(double& value, Common::StringView name) {
+bool JsonOutputStreamSerializer::operator()(double& value, common::StringView name) {
   insertOrPush(*chain.back(), name, value);
   return true;
 }
 
-bool JsonOutputStreamSerializer::operator()(std::string& value, Common::StringView name) {
+bool JsonOutputStreamSerializer::operator()(std::string& value, common::StringView name) {
   insertOrPush(*chain.back(), name, value);
   return true;
 }
 
-bool JsonOutputStreamSerializer::operator()(uint8_t& value, Common::StringView name) {
+bool JsonOutputStreamSerializer::operator()(uint8_t& value, common::StringView name) {
   insertOrPush(*chain.back(), name, static_cast<int64_t>(value));
   return true;
 }
 
-bool JsonOutputStreamSerializer::operator()(bool& value, Common::StringView name) {
+bool JsonOutputStreamSerializer::operator()(bool& value, common::StringView name) {
   insertOrPush(*chain.back(), name, value);
   return true;
 }
 
-bool JsonOutputStreamSerializer::binary(void* value, size_t size, Common::StringView name) {
-  std::string hex = Common::toHex(value, size);
+bool JsonOutputStreamSerializer::binary(void* value, size_t size, common::StringView name) {
+  std::string hex = common::toHex(value, size);
   return (*this)(hex, name);
 }
 
-bool JsonOutputStreamSerializer::binary(std::string& value, Common::StringView name) {
+bool JsonOutputStreamSerializer::binary(std::string& value, common::StringView name) {
   return binary(const_cast<char*>(value.data()), value.size(), name);
 }

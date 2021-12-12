@@ -16,7 +16,7 @@
 #include "BlockingQueue.h"
 #include "ConsoleTools.h"
 
-namespace Common {
+namespace common {
 
 class AsyncConsoleReader {
 

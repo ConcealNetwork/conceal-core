@@ -50,7 +50,7 @@ public:
     cache.onTransactionUpdated(info, balance, newDeposits, spentDeposits, currency);
   }
 
-  Logging::ConsoleLogger m_logger;
+  logging::ConsoleLogger m_logger;
   Currency currency;
   std::string stringPaymentId = "deadbeefdeadbeefdeadbeefdeadbeefdeadbeefdeadbeefdeadbeefdeadbeef";
   WalletUserTransactionsCache cache;

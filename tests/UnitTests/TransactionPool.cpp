@@ -120,7 +120,7 @@ public:
   std::vector<crypto::PublicKey> m_public_keys;
   std::vector<const crypto::PublicKey*> m_public_key_ptrs;
 
-  Logging::LoggerGroup m_logger;
+  logging::LoggerGroup m_logger;
   const cn::Currency& m_currency;
   const size_t m_ringSize;
   AccountKeys m_realSenderKeys;
@@ -145,7 +145,7 @@ protected:
   }
 
 protected:
-  Logging::ConsoleLogger logger;
+  logging::ConsoleLogger logger;
   cn::Currency currency;
   boost::filesystem::path m_configDir;
 };
@@ -167,7 +167,7 @@ namespace
     Validator validator;
     TimeProvider timeProvider;
 
-    TestPool(const cn::Currency& currency, Logging::ILogger& logger) :
+    TestPool(const cn::Currency& currency, logging::ILogger& logger) :
       tx_memory_pool(currency, validator, timeProvider, logger) {}
   };
 
@@ -185,7 +185,7 @@ namespace
       txGenerator.construct(txGenerator.m_source_amount, fee, outputs, tx);
     }
 
-    Logging::ConsoleLogger m_logger;
+    logging::ConsoleLogger m_logger;
     cn::Currency m_currency;
     cn::RealTimeProvider m_time;
     TestTransactionGenerator txGenerator;

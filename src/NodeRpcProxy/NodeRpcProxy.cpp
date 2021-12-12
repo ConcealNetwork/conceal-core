@@ -33,7 +33,7 @@
 #endif
 
 using namespace crypto;
-using namespace Common;
+using namespace common;
 using namespace System;
 
 namespace cn {
@@ -588,7 +588,7 @@ std::error_code NodeRpcProxy::doGetTransaction(const crypto::Hash &transactionHa
   COMMAND_RPC_GET_TRANSACTIONS::request req = AUTO_VAL_INIT(req);
   COMMAND_RPC_GET_TRANSACTIONS::response resp = AUTO_VAL_INIT(resp);
 
-  req.txs_hashes.push_back(Common::podToHex(transactionHash));
+  req.txs_hashes.push_back(common::podToHex(transactionHash));
 
   std::error_code ec = jsonCommand("/gettransactions", req, resp);
   if (ec)
@@ -602,7 +602,7 @@ std::error_code NodeRpcProxy::doGetTransaction(const crypto::Hash &transactionHa
   }
 
   BinaryArray tx_blob;
-  if (!Common::fromHex(resp.txs_as_hex[0], tx_blob))
+  if (!common::fromHex(resp.txs_as_hex[0], tx_blob))
   {
     return make_error_code(error::INTERNAL_NODE_ERROR);
   }

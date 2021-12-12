@@ -24,8 +24,8 @@
 #include "CryptoNoteConfig.h"
 #include "parallel_hashmap/phmap_dump.h"
 
-using namespace Logging;
-using namespace Common;
+using namespace logging;
+using namespace common;
 
 namespace
 {
@@ -70,13 +70,13 @@ namespace cn
 {
 
   template <typename K, typename V, typename Hash>
-  bool serialize(google::sparse_hash_map<K, V, Hash> &value, Common::StringView name, cn::ISerializer &serializer)
+  bool serialize(google::sparse_hash_map<K, V, Hash> &value, common::StringView name, cn::ISerializer &serializer)
   {
     return serializeMap(value, name, serializer, [&value](size_t size) { value.resize(size); });
   }
 
   template <typename K, typename Hash>
-  bool serialize(google::sparse_hash_set<K, Hash> &value, Common::StringView name, cn::ISerializer &serializer)
+  bool serialize(google::sparse_hash_set<K, Hash> &value, common::StringView name, cn::ISerializer &serializer)
   {
     size_t size = value.size();
     if (!serializer.beginArray(size, name))
@@ -107,7 +107,7 @@ namespace cn
   }
 
   // custom serialization to speedup cache loading
-  bool serialize(std::vector<std::pair<Blockchain::TransactionIndex, uint16_t>> &value, Common::StringView name, cn::ISerializer &s)
+  bool serialize(std::vector<std::pair<Blockchain::TransactionIndex, uint16_t>> &value, common::StringView name, cn::ISerializer &s)
   {
     const size_t elementSize = sizeof(std::pair<Blockchain::TransactionIndex, uint16_t>);
     size_t size = value.size() * elementSize;
@@ -530,9 +530,9 @@ namespace cn
       }
 
       m_checkpoints.load_checkpoints();
-      logger(Logging::INFO) << "Loading checkpoints";
+      logger(logging::INFO) << "Loading checkpoints";
       m_checkpoints.load_checkpoints_from_dns();
-      logger(Logging::INFO) << "Loading DNS checkpoints";
+      logger(logging::INFO) << "Loading DNS checkpoints";
     }
     else
     {
@@ -614,7 +614,7 @@ namespace cn
 
     logger(INFO, BRIGHT_GREEN)
         << "Blockchain initialized. last block: " << m_blocks.size() - 1 << ", "
-        << Common::timeIntervalToString(timestamp_diff)
+        << common::timeIntervalToString(timestamp_diff)
         << " time ago, current difficulty: " << getDifficultyForNextBlock();
 
     return true;
@@ -1029,7 +1029,7 @@ namespace cn
       auto tx_hash = *main_ch_it;
       if (std::find(altChainTxHashes.begin(), altChainTxHashes.end(), tx_hash) == altChainTxHashes.end())
       {
-        logger(ERROR, BRIGHT_RED) << "Attempting to switch to an alternate chain, but it lacks transaction " << Common::podToHex(tx_hash) << " from main chain, rejected";
+        logger(ERROR, BRIGHT_RED) << "Attempting to switch to an alternate chain, but it lacks transaction " << common::podToHex(tx_hash) << " from main chain, rejected";
         mainChainTxHashes.clear();
         mainChainTxHashes.shrink_to_fit();
         altChainTxHashes.clear();
@@ -1292,7 +1292,7 @@ namespace cn
 
     std::vector<size_t> lastBlocksSizes;
     get_last_n_blocks_sizes(lastBlocksSizes, m_currency.rewardBlocksWindow());
-    size_t blocksSizeMedian = Common::medianValue(lastBlocksSizes);
+    size_t blocksSizeMedian = common::medianValue(lastBlocksSizes);
 
     if (!m_currency.getBlockReward(blocksSizeMedian, cumulativeBlockSize, alreadyGeneratedCoins, fee, height, reward, emissionChange))
     {
@@ -1390,7 +1390,7 @@ namespace cn
     auto block_height = get_block_height(b);
     if (block_height == 0)
     {
-      logger(ERROR, BRIGHT_RED) << "Block with id: " << Common::podToHex(id) << " (as alternative) have wrong miner transaction";
+      logger(ERROR, BRIGHT_RED) << "Block with id: " << common::podToHex(id) << " (as alternative) have wrong miner transaction";
 
       bvc.m_verification_failed = true;
       return false;
@@ -1531,7 +1531,7 @@ namespace cn
 
       if (!prevalidate_miner_transaction(b, bei.height))
       {
-        logger(INFO, BRIGHT_RED) << "Block with id: " << Common::podToHex(id) << " (as alternative) have wrong miner transaction.";
+        logger(INFO, BRIGHT_RED) << "Block with id: " << common::podToHex(id) << " (as alternative) have wrong miner transaction.";
 
         bvc.m_verification_failed = true;
         return false;
@@ -1877,7 +1877,7 @@ namespace cn
       }
     }
 
-    if (Common::saveStringToFile(file, ss.str()))
+    if (common::saveStringToFile(file, ss.str()))
     {
       logger(INFO, BRIGHT_WHITE) << "Current outputs index writen to file: " << file;
     }
@@ -2033,7 +2033,7 @@ namespace cn
 
         if (have_tx_keyimg_as_spent(in_to_key.keyImage))
         {
-          logger(DEBUGGING) << "Key image already spent in blockchain: " << Common::podToHex(in_to_key.keyImage);
+          logger(DEBUGGING) << "Key image already spent in blockchain: " << common::podToHex(in_to_key.keyImage);
           return false;
         }
 
@@ -2232,7 +2232,7 @@ namespace cn
       return true;
     }
 
-    uint64_t median_ts = Common::medianValue(timestamps);
+    uint64_t median_ts = common::medianValue(timestamps);
 
     if (b.timestamp < median_ts)
     {
@@ -2291,7 +2291,7 @@ namespace cn
     std::vector<size_t> sz;
     get_last_n_blocks_sizes(sz, m_currency.rewardBlocksWindow());
 
-    uint64_t median = Common::medianValue(sz);
+    uint64_t median = common::medianValue(sz);
     if (median <= m_currency.blockGrantedFullRewardZone())
     {
       median = m_currency.blockGrantedFullRewardZone();
@@ -2461,7 +2461,7 @@ namespace cn
     {
       if (!m_currency.checkProofOfWork(m_cn_context, blockData, currentDifficulty, proof_of_work))
       {
-        logger(INFO, BRIGHT_WHITE) << "Block " << blockHash << ", has too weak proof of work: " << Common::podToHex(proof_of_work) << ", expected difficulty: " << currentDifficulty << " MajorVersion: " << std::to_string(blockData.majorVersion);
+        logger(INFO, BRIGHT_WHITE) << "Block " << blockHash << ", has too weak proof of work: " << common::podToHex(proof_of_work) << ", expected difficulty: " << currentDifficulty << " MajorVersion: " << std::to_string(blockData.majorVersion);
         bvc.m_verification_failed = true;
         return false;
       }

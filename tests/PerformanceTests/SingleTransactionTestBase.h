@@ -30,7 +30,7 @@ public:
 
 protected:
 
-  Logging::LoggerGroup m_nullLog;
+  logging::LoggerGroup m_nullLog;
   cn::AccountBase m_bob;
   cn::Transaction m_tx;
   crypto::PublicKey m_tx_pub_key;

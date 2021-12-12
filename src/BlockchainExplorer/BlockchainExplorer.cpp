@@ -16,7 +16,7 @@
 #include "BlockchainExplorerErrors.h"
 #include "ITransaction.h"
 
-using namespace Logging;
+using namespace logging;
 using namespace crypto;
 
 namespace cn {
@@ -130,7 +130,7 @@ private:
   bool m_cancelled;
 };
 
-BlockchainExplorer::BlockchainExplorer(INode& node, Logging::ILogger& logger) :
+BlockchainExplorer::BlockchainExplorer(INode& node, logging::ILogger& logger) :
   synchronized(false),
   observersCounter(0),
   node(node),

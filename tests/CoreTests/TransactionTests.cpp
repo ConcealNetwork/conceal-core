@@ -17,7 +17,7 @@ using namespace cn;
 
 bool test_transaction_generation_and_ring_signature()
 {
-  Logging::ConsoleLogger logger;
+  logging::ConsoleLogger logger;
   cn::Currency currency = cn::CurrencyBuilder(logger).currency();
 
   AccountBase miner_acc1;
@@ -127,7 +127,7 @@ bool test_transaction_generation_and_ring_signature()
 
 bool test_block_creation()
 {
-  Logging::ConsoleLogger logger;
+  logging::ConsoleLogger logger;
 
   uint64_t vszs[] = {80,476,476,475,475,474,475,474,474,475,472,476,476,475,475,474,475,474,474,475,472,476,476,475,475,474,475,474,474,475,9391,476,476,475,475,474,475,8819,8301,475,472,4302,5316,14347,16620,19583,19403,19728,19442,19852,19015,19000,19016,19795,19749,18087,19787,19704,19750,19267,19006,19050,19445,19407,19522,19546,19788,19369,19486,19329,19370,18853,19600,19110,19320,19746,19474,19474,19743,19494,19755,19715,19769,19620,19368,19839,19532,23424,28287,30707};
   std::vector<uint64_t> szs(&vszs[0], &vszs[90]);
@@ -137,7 +137,7 @@ bool test_block_creation()
   bool r = currency.parseAccountAddressString("272xWzbWsP4cfNFfxY5ETN5moU8x81PKfWPwynrrqsNGDBQGLmD1kCkKCvPeDUXu5XfmZkCrQ53wsWmdfvHBGLNjGcRiDcK", adr);
   CHECK_AND_ASSERT_MES(r, false, "failed to import");
   Block b;
-  r = currency.constructMinerTx(90, Common::medianValue(szs), 3553616528562147, 33094, 10000000, adr, b.baseTransaction, BinaryArray(), 11);
+  r = currency.constructMinerTx(90, common::medianValue(szs), 3553616528562147, 33094, 10000000, adr, b.baseTransaction, BinaryArray(), 11);
   return r;
 }
 

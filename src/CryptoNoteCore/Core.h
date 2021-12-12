@@ -34,7 +34,7 @@ namespace cn {
 
   class core : public ICore, public IMinerHandler, public IBlockchainStorageObserver, public ITxPoolObserver {
    public:
-     core(const Currency &currency, i_cryptonote_protocol *pprotocol, Logging::ILogger &logger, bool blockchainIndexesEnabled = false, bool blockchainAutosaveEnabled = false);
+     core(const Currency &currency, i_cryptonote_protocol *pprotocol, logging::ILogger &logger, bool blockchainIndexesEnabled = false, bool blockchainAutosaveEnabled = false);
      ~core();
 
      bool on_idle() override;
@@ -178,7 +178,7 @@ namespace cn {
     std::vector<crypto::Hash> findIdsForShortBlocks(uint32_t startOffset, uint32_t startFullOffset);
 
     const Currency &m_currency;
-    Logging::LoggerRef logger;
+    logging::LoggerRef logger;
     cn::RealTimeProvider m_timeProvider;
     tx_memory_pool m_mempool;
     Blockchain m_blockchain;

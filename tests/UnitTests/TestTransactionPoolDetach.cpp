@@ -181,7 +181,7 @@ protected:
   std::vector<AccountKeys> m_accounts;
   std::vector<ITransfersSubscription*> m_subscriptions;
 
-  Logging::ConsoleLogger m_logger;
+  logging::ConsoleLogger m_logger;
   cn::Currency m_currency;
   TestBlockchainGenerator generator;
   INodeStubWithPoolTx m_node;
@@ -206,16 +206,16 @@ namespace {
 
     auto tx = createTransaction();
 
-    std::vector<std::pair<TransactionTypes::InputKeyInfo, KeyPair>> inputs;
+    std::vector<std::pair<transaction_types::InputKeyInfo, KeyPair>> inputs;
 
     uint64_t foundMoney = 0;
 
     for (const auto& t : transfers) {
-      TransactionTypes::InputKeyInfo info;
+      transaction_types::InputKeyInfo info;
 
       info.amount = t.amount;
 
-      TransactionTypes::GlobalOutput globalOut;
+      transaction_types::GlobalOutput globalOut;
       globalOut.outputIndex = t.globalOutputIndex;
       globalOut.targetKey = t.outputKey;
       info.outputs.push_back(globalOut);

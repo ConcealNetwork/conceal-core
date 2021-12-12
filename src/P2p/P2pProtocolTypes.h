@@ -58,7 +58,7 @@ namespace cn
   }
 
   inline std::ostream& operator << (std::ostream& s, const NetworkAddress& na) {
-    return s << Common::ipAddressToString(na.ip) << ":" << std::to_string(na.port);   
+    return s << common::ipAddressToString(na.ip) << ":" << std::to_string(na.port);   
   }
 
   inline uint32_t hostToNetwork(uint32_t n) {

@@ -45,7 +45,7 @@ public:
   }
 
 protected:  
-  Logging::ConsoleLogger logger;
+  logging::ConsoleLogger logger;
   cn::Currency currency;
   TestBlockchainGenerator generator;
   INodeTrivialRefreshStub nodeStub;
@@ -123,7 +123,7 @@ TEST_F(PaymentGateTest, DISABLED_sendTransaction) {
 
   crypto::Hash paymentId;
   std::iota(reinterpret_cast<char*>(&paymentId), reinterpret_cast<char*>(&paymentId) + sizeof(paymentId), 0);
-  std::string paymentIdStr = Common::podToHex(paymentId);
+  std::string paymentIdStr = common::podToHex(paymentId);
 
   uint64_t txId = 0;
 

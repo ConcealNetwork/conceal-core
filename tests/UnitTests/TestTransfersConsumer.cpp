@@ -71,7 +71,7 @@ protected:
     return getAccountKeysWithViewKey(m_accountKeys.address.viewPublicKey, m_accountKeys.viewSecretKey);
   }
 
-  Logging::ConsoleLogger m_logger;
+  logging::ConsoleLogger m_logger;
   cn::Currency m_currency;
   TestBlockchainGenerator m_generator;
   INodeTrivialRefreshStub m_node;
@@ -682,7 +682,7 @@ TEST_F(TransfersConsumerTest, onNewBlocks_checkTransactionOutputInformationMulti
   size_t txIndex = tx->addOutput(300, { m_accountKeys.address, generateAccountKeys().address}, 2);
 
   TransactionOutputInformation expectedOut;
-  expectedOut.type = TransactionTypes::OutputType::Multisignature;
+  expectedOut.type = transaction_types::OutputType::Multisignature;
   expectedOut.amount = 300;
   expectedOut.globalOutputIndex = index;
   expectedOut.outputInTransaction = static_cast<uint32_t>(txIndex);
@@ -841,7 +841,7 @@ TEST_F(TransfersConsumerTest, onPoolUpdated_addTransactionMultisignature) {
   MultisignatureOutput out;
   tx->getOutput(0, out, amount_);
 
-  ASSERT_EQ(TransactionTypes::OutputType::Multisignature, o.type);
+  ASSERT_EQ(transaction_types::OutputType::Multisignature, o.type);
   ASSERT_EQ(amount_, o.amount);
   ASSERT_EQ(out.requiredSignatureCount, o.requiredSignatures);
   ASSERT_EQ(UNCONFIRMED_TRANSACTION_GLOBAL_OUTPUT_INDEX, o.globalOutputIndex);
@@ -972,7 +972,7 @@ TEST_F(TransfersConsumerTest, onNewBlocks_getsDepositOutputCorrectly) {
   container.getOutputs(transfers, ITransfersContainer::IncludeAll);
 
   ASSERT_EQ(1, transfers.size());
-  EXPECT_EQ(TransactionTypes::OutputType::Multisignature, transfers[0].type);
+  EXPECT_EQ(transaction_types::OutputType::Multisignature, transfers[0].type);
   EXPECT_EQ(AMOUNT, transfers[0].amount);
   EXPECT_EQ(REQUIRED_SIGNATURES, transfers[0].requiredSignatures);
   EXPECT_EQ(TERM, transfers[0].term);

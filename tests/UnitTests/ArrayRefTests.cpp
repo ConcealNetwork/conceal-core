@@ -6,7 +6,7 @@
 #include <Common/ArrayRef.h>
 #include <gtest/gtest.h>
 
-using namespace Common;
+using namespace common;
 
 TEST(ArrayRefTests, representations) {
   ASSERT_NE(nullptr, ArrayRef<>::EMPTY.getData());

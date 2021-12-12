@@ -34,7 +34,7 @@ using cn::parameters::CRYPTONOTE_BLOCK_GRANTED_FULL_REWARD_ZONE;
     static const size_t median_block_size = CRYPTONOTE_BLOCK_GRANTED_FULL_REWARD_ZONE;
     static const size_t current_block_size = CRYPTONOTE_BLOCK_GRANTED_FULL_REWARD_ZONE;
 
-    Logging::ConsoleLogger m_logger;
+    logging::ConsoleLogger m_logger;
     bool m_block_not_too_big;
     uint64_t m_block_reward;
     Currency m_currency;
@@ -93,7 +93,7 @@ using cn::parameters::CRYPTONOTE_BLOCK_GRANTED_FULL_REWARD_ZONE;
 	static const uint64_t already_generated_coins = 0;
     static const uint32_t height = 1;
 
-    Logging::ConsoleLogger m_logger;
+    logging::ConsoleLogger m_logger;
     bool m_block_not_too_big;
     uint64_t m_block_reward;
     uint64_t m_standard_block_reward;
@@ -184,7 +184,7 @@ using cn::parameters::CRYPTONOTE_BLOCK_GRANTED_FULL_REWARD_ZONE;
 	static const uint64_t already_generated_coins = 0;
     static const uint32_t height = 1;
 
-    Logging::ConsoleLogger m_logger;
+    logging::ConsoleLogger m_logger;
     std::vector<size_t> m_last_block_sizes;
     uint64_t m_last_block_sizes_median;
     bool m_block_not_too_big;
@@ -207,7 +207,7 @@ using cn::parameters::CRYPTONOTE_BLOCK_GRANTED_FULL_REWARD_ZONE;
 
       m_last_block_sizes_median = 7 * CRYPTONOTE_BLOCK_GRANTED_FULL_REWARD_ZONE;
 
-      m_block_not_too_big = m_currency.getBlockReward(Common::medianValue(m_last_block_sizes), 0,
+      m_block_not_too_big = m_currency.getBlockReward(common::medianValue(m_last_block_sizes), 0,
         already_generated_coins, 0, height, m_standard_block_reward, emissionChange);
 
       ASSERT_TRUE(m_block_not_too_big);
@@ -217,7 +217,7 @@ using cn::parameters::CRYPTONOTE_BLOCK_GRANTED_FULL_REWARD_ZONE;
     void do_test(size_t current_block_size)
     {
       int64_t emissionChange;
-      m_block_not_too_big = m_currency.getBlockReward(Common::medianValue(m_last_block_sizes), current_block_size,
+      m_block_not_too_big = m_currency.getBlockReward(common::medianValue(m_last_block_sizes), current_block_size,
         already_generated_coins, 0, height, m_block_reward, emissionChange);
     }
   };

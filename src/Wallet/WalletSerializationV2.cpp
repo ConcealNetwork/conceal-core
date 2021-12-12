@@ -21,7 +21,7 @@
 #include "Serialization/BinaryInputStreamSerializer.h"
 #include "Serialization/BinaryOutputStreamSerializer.h"
 
-using namespace Common;
+using namespace common;
 using namespace crypto;
 
 namespace {
@@ -200,7 +200,7 @@ WalletSerializerV2::WalletSerializerV2(
 {
 }
 
-void WalletSerializerV2::load(Common::IInputStream& source, uint8_t version) {
+void WalletSerializerV2::load(common::IInputStream& source, uint8_t version) {
   cn::BinaryInputStreamSerializer s(source);
 
   uint8_t saveLevelValue;
@@ -224,7 +224,7 @@ void WalletSerializerV2::load(Common::IInputStream& source, uint8_t version) {
   s(m_extra, "extra");
 }
 
-void WalletSerializerV2::save(Common::IOutputStream& destination, WalletSaveLevel saveLevel) {
+void WalletSerializerV2::save(common::IOutputStream& destination, WalletSaveLevel saveLevel) {
   cn::BinaryOutputStreamSerializer s(destination);
 
   uint8_t saveLevelValue = static_cast<uint8_t>(saveLevel);

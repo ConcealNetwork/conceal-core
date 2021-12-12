@@ -39,7 +39,7 @@ public:
   P2pNode(
     const P2pNodeConfig& cfg,
     System::Dispatcher& dispatcher, 
-    Logging::ILogger& log, 
+    logging::ILogger& log, 
     const crypto::Hash& genesisHash, 
     PeerIdType peerId);
 
@@ -61,7 +61,7 @@ private:
   typedef std::unique_ptr<P2pContext> ContextPtr;
   typedef std::list<ContextPtr> ContextList;
 
-  Logging::LoggerRef logger;
+  logging::LoggerRef logger;
   bool m_stopRequested;
   const P2pNodeConfig m_cfg;
   const PeerIdType m_myPeerId;

@@ -61,7 +61,7 @@ namespace
     extraVec.reserve(extra.size());
     std::for_each(extra.begin(), extra.end(), [&extraVec](const char el) { extraVec.push_back(el); });
 
-    Logging::LoggerGroup nullLog;
+    logging::LoggerGroup nullLog;
     crypto::SecretKey txSK;
     bool r = constructTransaction(keys, sources, splittedDests, messages, ttl, extraVec, tx, unlockTimestamp, nullLog, txSK);
     transactionSK = txSK;
@@ -76,20 +76,20 @@ namespace
     return std::unique_ptr<WalletSendTransactionCompletedEvent>(new WalletSendTransactionCompletedEvent(transactionId, ec));
   }
 
-  std::vector<TransactionTypes::InputKeyInfo> convertSources(std::vector<TransactionSourceEntry> &&sources)
+  std::vector<transaction_types::InputKeyInfo> convertSources(std::vector<TransactionSourceEntry> &&sources)
   {
-    std::vector<TransactionTypes::InputKeyInfo> inputs;
+    std::vector<transaction_types::InputKeyInfo> inputs;
     inputs.reserve(sources.size());
 
     for (TransactionSourceEntry &source : sources)
     {
-      TransactionTypes::InputKeyInfo input;
+      transaction_types::InputKeyInfo input;
       input.amount = source.amount;
 
       input.outputs.reserve(source.outputs.size());
       for (const TransactionSourceEntry::OutputEntry &sourceOutput : source.outputs)
       {
-        TransactionTypes::GlobalOutput output;
+        transaction_types::GlobalOutput output;
         output.outputIndex = sourceOutput.first;
         output.targetKey = sourceOutput.second;
 
@@ -479,7 +479,7 @@ namespace cn
       std::unique_ptr<ITransaction> transaction = createTransaction();
 
       uint64_t totalAmount = std::abs(transactionInfo.totalAmount);
-      std::vector<TransactionTypes::InputKeyInfo> inputs = prepareKeyInputs(context->selectedTransfers, context->outs, context->mixIn);
+      std::vector<transaction_types::InputKeyInfo> inputs = prepareKeyInputs(context->selectedTransfers, context->outs, context->mixIn);
       std::vector<uint64_t> decomposedChange = splitAmount(context->foundMoney - totalAmount, context->dustPolicy.dustThreshold);
 
       auto depositIndex = transaction->addOutput(std::abs(transactionInfo.totalAmount) - transactionInfo.fee,
@@ -690,7 +690,7 @@ namespace cn
 
     for (const auto &td : selectedTransfers)
     {
-      assert(td.type == TransactionTypes::OutputType::Key);
+      assert(td.type == transaction_types::OutputType::Key);
 
       sources.resize(sources.size() + 1);
       TransactionSourceEntry &src = sources.back();
@@ -731,7 +731,7 @@ namespace cn
     }
   }
 
-  std::vector<TransactionTypes::InputKeyInfo> WalletTransactionSender::prepareKeyInputs(const std::vector<TransactionOutputInformation> &selectedTransfers,
+  std::vector<transaction_types::InputKeyInfo> WalletTransactionSender::prepareKeyInputs(const std::vector<TransactionOutputInformation> &selectedTransfers,
                                                                                         std::vector<COMMAND_RPC_GET_RANDOM_OUTPUTS_FOR_AMOUNTS::outs_for_amount> &outs,
                                                                                         uint64_t mixIn)
   {
@@ -748,7 +748,7 @@ namespace cn
 
     for (const auto &output : selectedTransfers)
     {
-      assert(output.type == TransactionTypes::OutputType::Multisignature);
+      assert(output.type == transaction_types::OutputType::Multisignature);
       assert(output.requiredSignatures == 1); //Other types are currently unsupported
 
       MultisignatureInput input;

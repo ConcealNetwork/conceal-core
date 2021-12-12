@@ -14,16 +14,16 @@ bool checkInputsKeyimagesDiff(const cn::TransactionPrefix& tx);
 // TransactionInput helper functions
 size_t getRequiredSignaturesCount(const TransactionInput& in);
 uint64_t getTransactionInputAmount(const TransactionInput& in);
-TransactionTypes::InputType getTransactionInputType(const TransactionInput& in);
+transaction_types::InputType getTransactionInputType(const TransactionInput& in);
 const TransactionInput& getInputChecked(const cn::TransactionPrefix& transaction, size_t index);
-const TransactionInput& getInputChecked(const cn::TransactionPrefix& transaction, size_t index, TransactionTypes::InputType type);
+const TransactionInput& getInputChecked(const cn::TransactionPrefix& transaction, size_t index, transaction_types::InputType type);
 
 bool isOutToKey(const crypto::PublicKey& spendPublicKey, const crypto::PublicKey& outKey, const crypto::KeyDerivation& derivation, size_t keyIndex);
 
 // TransactionOutput helper functions
-TransactionTypes::OutputType getTransactionOutputType(const TransactionOutputTarget& out);
+transaction_types::OutputType getTransactionOutputType(const TransactionOutputTarget& out);
 const TransactionOutput& getOutputChecked(const cn::TransactionPrefix& transaction, size_t index);
-const TransactionOutput& getOutputChecked(const cn::TransactionPrefix& transaction, size_t index, TransactionTypes::OutputType type);
+const TransactionOutput& getOutputChecked(const cn::TransactionPrefix& transaction, size_t index, transaction_types::OutputType type);
 
 bool findOutputsToAccount(const cn::TransactionPrefix& transaction, const AccountPublicAddress& addr,
         const crypto::SecretKey& viewSecretKey, std::vector<uint32_t>& out, uint64_t& amount);

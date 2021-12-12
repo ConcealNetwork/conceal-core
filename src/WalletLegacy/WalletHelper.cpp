@@ -42,12 +42,12 @@ std::error_code walletSaveWrapper(cn::IWalletLegacy& wallet, std::ofstream& file
 }
 
 void WalletHelper::prepareFileNames(const std::string& file_path, std::string& keys_file, std::string& wallet_file) {
-  if (Common::GetExtension(file_path) == ".wallet") {
-    keys_file = Common::RemoveExtension(file_path) + ".keys";
+  if (common::GetExtension(file_path) == ".wallet") {
+    keys_file = common::RemoveExtension(file_path) + ".keys";
     wallet_file = file_path;
-  } else if (Common::GetExtension(file_path) == ".keys") {
+  } else if (common::GetExtension(file_path) == ".keys") {
     keys_file = file_path;
-    wallet_file = Common::RemoveExtension(file_path) + ".wallet";
+    wallet_file = common::RemoveExtension(file_path) + ".wallet";
   } else {
     keys_file = file_path + ".keys";
     wallet_file = file_path + ".wallet";

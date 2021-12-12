@@ -30,7 +30,7 @@ class WalletGreen : public IWallet,
                     public IFusionManager
 {
 public:
-  WalletGreen(System::Dispatcher &dispatcher, const Currency &currency, INode &node, Logging::ILogger &logger, uint32_t transactionSoftLockTime = 1);
+  WalletGreen(System::Dispatcher &dispatcher, const Currency &currency, INode &node, logging::ILogger &logger, uint32_t transactionSoftLockTime = 1);
   virtual ~WalletGreen();
 
   /* Deposit related functions */
@@ -149,7 +149,7 @@ protected:
 
   struct InputInfo
   {
-    TransactionTypes::InputKeyInfo keyInfo;
+    transaction_types::InputKeyInfo keyInfo;
     WalletRecord *walletRecord = nullptr;
     KeyPair ephKeys;
   };
@@ -375,7 +375,7 @@ protected:
   System::Dispatcher &m_dispatcher;
   const Currency &m_currency;
   INode &m_node;
-  mutable Logging::LoggerRef m_logger;
+  mutable logging::LoggerRef m_logger;
   bool m_stopped;
   WalletDeposits m_deposits;
   WalletsContainer m_walletsContainer;
