@@ -30,7 +30,7 @@
 using namespace logging;
 using namespace cn;
 
-namespace Tools {
+namespace tools {
 
 const command_line::arg_descriptor<uint16_t> pool_rpc_server::arg_rpc_bind_port = { "rpc-bind-port", "Starts wallet as rpc server for wallet operations, sets bind port for server", 0, true };
 const command_line::arg_descriptor<std::string> pool_rpc_server::arg_rpc_bind_ip = { "rpc-bind-ip", "Specify ip to bind rpc server", "127.0.0.1" };
@@ -350,7 +350,7 @@ bool pool_rpc_server::on_create_integrated(const wallet_rpc::COMMAND_RPC_CREATE_
     std::string keys = common::asString(ba);
 
     /* create the integrated address the same way you make a public address */
-    std::string integratedAddress = Tools::Base58::encode_addr (
+    std::string integratedAddress = tools::Base58::encode_addr (
         cn::parameters::CRYPTONOTE_PUBLIC_ADDRESS_BASE58_PREFIX,
         payment_id_str + keys
     );

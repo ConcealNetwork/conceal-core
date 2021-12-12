@@ -185,7 +185,7 @@ namespace cn {
     bool is_transaction_ready_to_go(const Transaction& tx, TransactionCheckInfo& txd) const;
     void buildIndices();
 
-    Tools::ObserverManager<ITxPoolObserver> m_observerManager;
+    tools::ObserverManager<ITxPoolObserver> m_observerManager;
     const cn::Currency& m_currency;
     OnceInTimeInterval m_txCheckInterval;
     mutable std::recursive_mutex m_transactions_lock;

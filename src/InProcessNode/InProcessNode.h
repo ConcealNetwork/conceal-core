@@ -132,7 +132,7 @@ private:
   State state;
   cn::ICore& core;
   cn::ICryptoNoteProtocolQuery& protocol;
-  Tools::ObserverManager<INodeObserver> observerManager;
+  tools::ObserverManager<INodeObserver> observerManager;
 
   boost::asio::io_service ioService;
   std::unique_ptr<std::thread> workerThread;

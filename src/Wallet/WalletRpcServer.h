@@ -16,7 +16,7 @@
 
 #include <Logging/LoggerRef.h>
 
-namespace Tools
+namespace tools
 {
   /************************************************************************/
   /*                                                                      */

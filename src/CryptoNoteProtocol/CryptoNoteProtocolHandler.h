@@ -116,6 +116,6 @@ namespace cn
     uint32_t m_observedHeight;
 
     std::atomic<size_t> m_peersCount;
-    Tools::ObserverManager<ICryptoNoteProtocolObserver> m_observerManager;
+    tools::ObserverManager<ICryptoNoteProtocolObserver> m_observerManager;
   };
 }

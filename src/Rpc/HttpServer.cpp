@@ -49,7 +49,7 @@ void HttpServer::start(const std::string& address, uint16_t port, const std::str
   workingContextGroup.spawn(std::bind(&HttpServer::acceptLoop, this));
   
   		if (!user.empty() || !password.empty()) {
-			m_credentials = Tools::Base64::encode(user + ":" + password);
+			m_credentials = tools::Base64::encode(user + ":" + password);
 		}
 }
 

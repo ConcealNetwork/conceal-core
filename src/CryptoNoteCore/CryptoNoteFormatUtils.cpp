@@ -480,7 +480,7 @@ bool get_block_hashing_blob(const Block& b, BinaryArray& ba) {
 
   Hash treeRootHash = get_tx_tree_hash(b);
   ba.insert(ba.end(), treeRootHash.data, treeRootHash.data + 32);
-  auto transactionCount = asBinaryArray(Tools::get_varint_data(b.transactionHashes.size() + 1));
+  auto transactionCount = asBinaryArray(tools::get_varint_data(b.transactionHashes.size() + 1));
   ba.insert(ba.end(), transactionCount.begin(), transactionCount.end());
   return true;
 }

@@ -20,7 +20,7 @@
 #include <cstdint>
 #include <string>
 
-namespace Tools
+namespace tools
 {
   namespace Base64
   {

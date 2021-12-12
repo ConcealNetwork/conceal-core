@@ -17,7 +17,7 @@
 
 #include "Base64.h"
 
-namespace Tools
+namespace tools
 {
   namespace Base64
   {

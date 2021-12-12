@@ -247,7 +247,7 @@ namespace PaymentService
 
     void replaceWalletFiles(const std::string &path, const std::string &tempFilePath)
     {
-      Tools::replace_file(tempFilePath, path);
+      tools::replace_file(tempFilePath, path);
     }
 
     crypto::Hash parseHash(const std::string &hashString, logging::LoggerRef logger)
@@ -438,7 +438,7 @@ namespace PaymentService
   {
     boost::filesystem::path pathToWalletFile(filename);
     boost::filesystem::path directory = pathToWalletFile.parent_path();
-    if (!directory.empty() && !Tools::directoryExists(directory.string()))
+    if (!directory.empty() && !tools::directoryExists(directory.string()))
     {
       throw std::runtime_error("Directory does not exist: " + directory.string());
     }
@@ -1455,7 +1455,7 @@ namespace PaymentService
     logger(logging::INFO) << "keys:" + keys;
 
     /* Create the integrated address the same way you make a public address */
-    integrated_address = Tools::Base58::encode_addr(
+    integrated_address = tools::Base58::encode_addr(
         cn::parameters::CRYPTONOTE_PUBLIC_ADDRESS_BASE58_PREFIX,
         payment_id_str + keys);
 
@@ -1475,7 +1475,7 @@ namespace PaymentService
     /* Decode the address and extract the payment id */
     std::string decoded;
     uint64_t prefix;
-    if (Tools::Base58::decode_addr(integrated_address_str, prefix, decoded))
+    if (tools::Base58::decode_addr(integrated_address_str, prefix, decoded))
     {
       payment_id = decoded.substr(0, 64);
     }

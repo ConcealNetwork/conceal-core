@@ -585,7 +585,7 @@ namespace cn
   bool NodeServer::store_config()
   {
     try {
-      if (!Tools::create_directories_if_necessary(m_config_folder)) {
+      if (!tools::create_directories_if_necessary(m_config_folder)) {
         logger(INFO) <<  "Failed to create data directory: " << m_config_folder;
         return false;
       }
@@ -1146,7 +1146,7 @@ namespace cn
     rsp.connections_count = get_connections_count();
     rsp.incoming_connections_count = rsp.connections_count - get_outgoing_connections_count();
     rsp.version = PROJECT_VERSION_LONG;
-    rsp.os_version = Tools::get_os_version_string();
+    rsp.os_version = tools::get_os_version_string();
     m_payload_handler.get_stat_info(rsp.payload_info);
     return 1;
   }

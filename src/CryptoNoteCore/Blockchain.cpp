@@ -498,7 +498,7 @@ namespace cn
   bool Blockchain::init(const std::string &config_folder, bool load_existing)
   {
     std::lock_guard<decltype(m_blockchain_lock)> lk(m_blockchain_lock);
-    if (!config_folder.empty() && !Tools::create_directories_if_necessary(config_folder))
+    if (!config_folder.empty() && !tools::create_directories_if_necessary(config_folder))
     {
       logger(ERROR, BRIGHT_RED) << " Failed to create data directory: " << m_config_folder;
       return false;

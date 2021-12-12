@@ -1332,8 +1332,8 @@ bool WalletLegacy::getTxProof(crypto::Hash& txid, cn::AccountPublicAddress& addr
   }
 
   sig_str = std::string("ProofV1") +
-    Tools::Base58::encode(std::string((const char *)&rA, sizeof(crypto::PublicKey))) +
-    Tools::Base58::encode(std::string((const char *)&sig, sizeof(crypto::Signature)));
+    tools::Base58::encode(std::string((const char *)&rA, sizeof(crypto::PublicKey))) +
+    tools::Base58::encode(std::string((const char *)&sig, sizeof(crypto::Signature)));
 
   return true;
 }
@@ -1456,7 +1456,7 @@ std::string WalletLegacy::getReserveProof(const uint64_t &reserve, const std::st
 	BinaryArray ba = toBinaryArray(p);
 	std::string ret = common::toHex(ba);
 
-	ret = "ReserveProofV1" + Tools::Base58::encode(ret);
+	ret = "ReserveProofV1" + tools::Base58::encode(ret);
 
 	return ret;
 }

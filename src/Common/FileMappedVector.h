@@ -795,7 +795,7 @@ void FileMappedVector<T>::atomicUpdate0(uint64_t newCapacity, uint64_t newPrefix
     boost::filesystem::remove(bakPath);
   }
 
-  Tools::ScopeExit tmpFileDeleter([&tmpPath] {
+  tools::ScopeExit tmpFileDeleter([&tmpPath] {
     boost::system::error_code ignore;
     boost::filesystem::remove(tmpPath, ignore);
   });

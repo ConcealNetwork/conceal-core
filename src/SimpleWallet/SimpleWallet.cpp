@@ -192,7 +192,7 @@ struct TransferCommand {
             /* Extract the payment id */
             std::string decoded;
             uint64_t prefix;
-            if (Tools::Base58::decode_addr(arg, prefix, decoded)) {
+            if (tools::Base58::decode_addr(arg, prefix, decoded)) {
               paymentID = decoded.substr(0, paymentIDLen);
             }
 
@@ -773,7 +773,7 @@ bool simple_wallet::init(const boost::program_options::variables_map& vm) {
 
 
 
-  Tools::PasswordContainer pwd_container;
+  tools::PasswordContainer pwd_container;
   if (command_line::has_arg(vm, arg_password)) {
     pwd_container.password(command_line::get_arg(vm, arg_password));
   } else if (!pwd_container.read_password()) {
@@ -1004,7 +1004,7 @@ bool simple_wallet::new_wallet(const std::string &wallet_file, const std::string
     m_wallet->getAccountKeys(keys);
 
     std::string secretKeysData = std::string(reinterpret_cast<char*>(&keys.spendSecretKey), sizeof(keys.spendSecretKey)) + std::string(reinterpret_cast<char*>(&keys.viewSecretKey), sizeof(keys.viewSecretKey));
-    std::string guiKeys = Tools::Base58::encode_addr(cn::parameters::CRYPTONOTE_PUBLIC_ADDRESS_BASE58_PREFIX, secretKeysData);
+    std::string guiKeys = tools::Base58::encode_addr(cn::parameters::CRYPTONOTE_PUBLIC_ADDRESS_BASE58_PREFIX, secretKeysData);
 
     logger(INFO, BRIGHT_GREEN) << "ConcealWallet is an open-source, client-side, free wallet which allow you to send and receive CCX instantly on the blockchain. You are  in control of your funds & your keys. When you generate a new wallet, login, send, receive or deposit $CCX everything happens locally. Your seed is never transmitted, received or stored. That's why its imperative to write, print or save your seed somewhere safe. The backup of keys is your responsibility. If you lose your seed, your account can not be recovered. The Conceal Team doesn't take any responsibility for lost funds due to nonexistent/missing/lost private keys." << std::endl << std::endl;
 
@@ -1379,7 +1379,7 @@ bool simple_wallet::sign_message(const std::vector<std::string>& args)
   crypto::cn_fast_hash(args[0].data(), args[0].size(), message_hash);
   crypto::generate_signature(message_hash, keys.address.spendPublicKey, keys.spendSecretKey, sig);
   
-  success_msg_writer() << "Sig" << Tools::Base58::encode(std::string(reinterpret_cast<char*>(&sig)));
+  success_msg_writer() << "Sig" << tools::Base58::encode(std::string(reinterpret_cast<char*>(&sig)));
 
   return true;	
 }
@@ -1406,7 +1406,7 @@ bool simple_wallet::verify_signature(const std::vector<std::string>& args)
   
   std::string decodedSig;
   crypto::Signature sig;
-  Tools::Base58::decode(encodedSig.substr(prefix_size), decodedSig);
+  tools::Base58::decode(encodedSig.substr(prefix_size), decodedSig);
   memcpy(&sig, decodedSig.data(), sizeof(sig));
   
   uint64_t prefix;
@@ -1460,7 +1460,7 @@ bool simple_wallet::create_integrated(const std::vector<std::string>& args/* = s
   std::string keys = common::asString(ba);
 
   /* create the integrated address the same way you make a public address */
-  std::string integratedAddress = Tools::Base58::encode_addr (cn::parameters::CRYPTONOTE_PUBLIC_ADDRESS_BASE58_PREFIX,
+  std::string integratedAddress = tools::Base58::encode_addr (cn::parameters::CRYPTONOTE_PUBLIC_ADDRESS_BASE58_PREFIX,
                                                               paymentID + keys
   );
 
@@ -1477,7 +1477,7 @@ bool simple_wallet::export_keys(const std::vector<std::string>& args/* = std::ve
   m_wallet->getAccountKeys(keys);
 
   std::string secretKeysData = std::string(reinterpret_cast<char*>(&keys.spendSecretKey), sizeof(keys.spendSecretKey)) + std::string(reinterpret_cast<char*>(&keys.viewSecretKey), sizeof(keys.viewSecretKey));
-  std::string guiKeys = Tools::Base58::encode_addr(cn::parameters::CRYPTONOTE_PUBLIC_ADDRESS_BASE58_PREFIX, secretKeysData);
+  std::string guiKeys = tools::Base58::encode_addr(cn::parameters::CRYPTONOTE_PUBLIC_ADDRESS_BASE58_PREFIX, secretKeysData);
 
   logger(INFO, BRIGHT_GREEN) << std::endl << "ConcealWallet is an open-source, client-side, free wallet which allow you to send and receive CCX instantly on the blockchain. You are  in control of your funds & your keys. When you generate a new wallet, login, send, receive or deposit $CCX everything happens locally. Your seed is never transmitted, received or stored. That's why its imperative to write, print or save your seed somewhere safe. The backup of keys is your responsibility. If you lose your seed, your account can not be recovered. The Conceal Team doesn't take any responsibility for lost funds due to nonexistent/missing/lost private keys." << std::endl << std::endl;
 
@@ -1985,7 +1985,7 @@ int main(int argc, char* argv[]) {
   command_line::add_arg(desc_params, arg_command);
   command_line::add_arg(desc_params, arg_log_level);
   command_line::add_arg(desc_params, arg_testnet);
-  Tools::wallet_rpc_server::init_options(desc_params);
+  tools::wallet_rpc_server::init_options(desc_params);
 
   po::positional_options_description positional_options;
   positional_options.add(arg_command.name, -1);
@@ -2038,7 +2038,7 @@ int main(int argc, char* argv[]) {
   cn::Currency currency = cn::CurrencyBuilder(logManager).
     testnet(command_line::get_arg(vm, arg_testnet)).currency();
 
-  if (command_line::has_arg(vm, Tools::wallet_rpc_server::arg_rpc_bind_port)) {
+  if (command_line::has_arg(vm, tools::wallet_rpc_server::arg_rpc_bind_port)) {
     //runs wallet with rpc interface
     if (!command_line::has_arg(vm, arg_wallet_file)) {
       logger(ERROR, BRIGHT_RED) << "Wallet file not set.";
@@ -2098,14 +2098,14 @@ int main(int argc, char* argv[]) {
       return 1;
     }
 
-    Tools::wallet_rpc_server wrpc(dispatcher, logManager, *wallet, *node, currency, walletFileName);
+    tools::wallet_rpc_server wrpc(dispatcher, logManager, *wallet, *node, currency, walletFileName);
 
     if (!wrpc.init(vm)) {
       logger(ERROR, BRIGHT_RED) << "Failed to initialize wallet rpc server";
       return 1;
     }
 
-    Tools::SignalHandler::install([&wrpc, &wallet] {
+    tools::SignalHandler::install([&wrpc, &wallet] {
       wrpc.send_stop_signal();
     });
 
@@ -2134,7 +2134,7 @@ int main(int argc, char* argv[]) {
     if (!command.empty())
       wal.process_command(command);
 
-    Tools::SignalHandler::install([&wal] {
+    tools::SignalHandler::install([&wal] {
       wal.stop();
     });
 

@@ -190,7 +190,7 @@ private:
   std::unique_ptr<WalletTransactionSender> m_sender;
 
   WalletAsyncContextCounter m_asyncContextCounter;
-  Tools::ObserverManager<cn::IWalletLegacyObserver> m_observerManager;
+  tools::ObserverManager<cn::IWalletLegacyObserver> m_observerManager;
 
   std::unique_ptr<SyncStarter> m_onInitSyncStarter;
 };

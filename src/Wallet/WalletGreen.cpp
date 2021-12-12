@@ -939,7 +939,7 @@ namespace cn
     dst.reserve(src.size());
 
     dst.setAutoFlush(false);
-    Tools::ScopeExit exitHandler([&dst] {
+    tools::ScopeExit exitHandler([&dst] {
       dst.setAutoFlush(true);
       dst.flush();
     });
@@ -988,7 +988,7 @@ namespace cn
     try
     {
       bool storageCreated = false;
-      Tools::ScopeExit failExitHandler([path, &storageCreated] {
+      tools::ScopeExit failExitHandler([path, &storageCreated] {
         // Don't delete file if it has existed
         if (storageCreated)
         {
@@ -1041,7 +1041,7 @@ namespace cn
     try
     {
       bool storageCreated = false;
-      Tools::ScopeExit failExitHandler([path, &storageCreated] {
+      tools::ScopeExit failExitHandler([path, &storageCreated] {
         // Don't delete file if it has existed
         if (storageCreated)
         {
@@ -1112,7 +1112,7 @@ namespace cn
       bakPath = boost::filesystem::unique_path(path + ".%%%%-%%%%" + ".backup");
     }
 
-    Tools::ScopeExit tmpFileDeleter([&tmpPath] {
+    tools::ScopeExit tmpFileDeleter([&tmpPath] {
       boost::system::error_code ignore;
       boost::filesystem::remove(tmpPath, ignore);
     });
@@ -1640,7 +1640,7 @@ namespace cn
           m_containerStorage.setAutoFlush(false);
         }
 
-        Tools::ScopeExit exitHandler([this] {
+        tools::ScopeExit exitHandler([this] {
           if (!m_containerStorage.getAutoFlush())
           {
             m_containerStorage.setAutoFlush(true);
@@ -1954,7 +1954,7 @@ namespace cn
 
   size_t WalletGreen::transfer(const TransactionParameters &transactionParameters, crypto::SecretKey &transactionSK)
   {
-    Tools::ScopeExit releaseContext([this] {
+    tools::ScopeExit releaseContext([this] {
       m_dispatcher.yield();
     });
 
@@ -2074,7 +2074,7 @@ namespace cn
   size_t WalletGreen::makeTransaction(const TransactionParameters &sendingTransaction)
   {
     size_t id = WALLET_INVALID_TRANSACTION_ID;
-    Tools::ScopeExit releaseContext([this, &id] {
+    tools::ScopeExit releaseContext([this, &id] {
       m_dispatcher.yield();
 
       if (id != WALLET_INVALID_TRANSACTION_ID)
@@ -2164,7 +2164,7 @@ namespace cn
 
   void WalletGreen::rollbackUncommitedTransaction(size_t transactionId)
   {
-    Tools::ScopeExit releaseContext([this] {
+    tools::ScopeExit releaseContext([this] {
       m_dispatcher.yield();
     });
 
@@ -2801,7 +2801,7 @@ namespace cn
 
     uint64_t fee = transaction.getInputTotalAmount() < transaction.getOutputTotalAmount() ? cn::parameters::MINIMUM_FEE : transaction.getInputTotalAmount() - transaction.getOutputTotalAmount();
     size_t transactionId = insertOutgoingTransactionAndPushEvent(transaction.getTransactionHash(), fee, transaction.getExtra(), transaction.getUnlockTime());
-    Tools::ScopeExit rollbackTransactionInsertion([this, transactionId] {
+    tools::ScopeExit rollbackTransactionInsertion([this, transactionId] {
       updateTransactionStateAndPushEvent(transactionId, WalletTransactionState::FAILED);
     });
 
@@ -2809,7 +2809,7 @@ namespace cn
     pushBackOutgoingTransfers(transactionId, destinations);
 
     addUnconfirmedTransaction(transaction);
-    Tools::ScopeExit rollbackAddingUnconfirmedTransaction([this, &transaction] {
+    tools::ScopeExit rollbackAddingUnconfirmedTransaction([this, &transaction] {
       try
       {
         removeUnconfirmedTransaction(transaction.getTransactionHash());
@@ -3909,7 +3909,7 @@ namespace cn
   {
 
     size_t id = WALLET_INVALID_TRANSACTION_ID;
-    Tools::ScopeExit releaseContext([this, &id] {
+    tools::ScopeExit releaseContext([this, &id] {
       m_dispatcher.yield();
 
       if (id != WALLET_INVALID_TRANSACTION_ID)

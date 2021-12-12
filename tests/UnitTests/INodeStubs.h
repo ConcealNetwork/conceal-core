@@ -55,7 +55,7 @@ public:
 
   void updateObservers();
 
-  Tools::ObserverManager<cn::INodeObserver> observerManager;
+  tools::ObserverManager<cn::INodeObserver> observerManager;
 
 };
 

@@ -15,7 +15,7 @@
 #include "Serialization/BinarySerializationTools.h"
 #include "Common/Base58.cpp"
 
-using namespace Tools;
+using namespace tools;
 using namespace cn;
 
 #define MAKE_STR(arr) std::string(arr, sizeof(arr) - 1)

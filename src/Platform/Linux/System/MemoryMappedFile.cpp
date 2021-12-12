@@ -77,7 +77,7 @@ void MemoryMappedFile::create(const std::string& path, uint64_t size, bool overw
     }
   }
 
-  Tools::ScopeExit failExitHandler([this, &ec] {
+  tools::ScopeExit failExitHandler([this, &ec] {
     ec = std::error_code(errno, std::system_category());
     std::error_code ignore;
     close(ignore);
@@ -121,7 +121,7 @@ void MemoryMappedFile::open(const std::string& path, std::error_code& ec) {
     }
   }
 
-  Tools::ScopeExit failExitHandler([this, &ec] {
+  tools::ScopeExit failExitHandler([this, &ec] {
     ec = std::error_code(errno, std::system_category());
     std::error_code ignore;
     close(ignore);

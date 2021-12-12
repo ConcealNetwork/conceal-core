@@ -443,14 +443,14 @@ bool RpcServer::k_on_check_tx_proof(const K_COMMAND_RPC_CHECK_TX_PROOF::request&
 	}
 	crypto::PublicKey rA;
 	crypto::Signature sig;
-	const size_t rA_len = Tools::Base58::encode(std::string((const char *)&rA, sizeof(crypto::PublicKey))).size();
-	const size_t sig_len = Tools::Base58::encode(std::string((const char *)&sig, sizeof(crypto::Signature))).size();
+	const size_t rA_len = tools::Base58::encode(std::string((const char *)&rA, sizeof(crypto::PublicKey))).size();
+	const size_t sig_len = tools::Base58::encode(std::string((const char *)&sig, sizeof(crypto::Signature))).size();
 	std::string rA_decoded;
 	std::string sig_decoded;
-	if (!Tools::Base58::decode(req.signature.substr(header_len, rA_len), rA_decoded)) {
+	if (!tools::Base58::decode(req.signature.substr(header_len, rA_len), rA_decoded)) {
 		throw JsonRpc::JsonRpcError{ CORE_RPC_ERROR_CODE_WRONG_PARAM, "Signature decoding error" };
 	}
-	if (!Tools::Base58::decode(req.signature.substr(header_len + rA_len, sig_len), sig_decoded)) {
+	if (!tools::Base58::decode(req.signature.substr(header_len + rA_len, sig_len), sig_decoded)) {
 		throw JsonRpc::JsonRpcError{ CORE_RPC_ERROR_CODE_WRONG_PARAM, "Signature decoding error" };
 	}
 	if (sizeof(crypto::PublicKey) != rA_decoded.size() || sizeof(crypto::Signature) != sig_decoded.size()) {
@@ -556,7 +556,7 @@ bool RpcServer::k_on_check_reserve_proof(const K_COMMAND_RPC_CHECK_RESERVE_PROOF
 	}
 
 	std::string sig_decoded;
-	if (!Tools::Base58::decode(req.signature.substr(header_len), sig_decoded)) {
+	if (!tools::Base58::decode(req.signature.substr(header_len), sig_decoded)) {
 		throw JsonRpc::JsonRpcError{ CORE_RPC_ERROR_CODE_INTERNAL_ERROR, "Signature decoding error" };
 	}
 

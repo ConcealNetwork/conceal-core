@@ -96,7 +96,7 @@ void PaymentGateService::run() {
   this->dispatcher = &localDispatcher;
   this->stopEvent = &localStopEvent;
 
-  Tools::SignalHandler::install(std::bind(&stopSignalHandler, this));
+  tools::SignalHandler::install(std::bind(&stopSignalHandler, this));
 
   logging::LoggerRef log(logger, "run");
 
@@ -126,11 +126,11 @@ void PaymentGateService::stop() {
 
 void PaymentGateService::runInProcess(logging::LoggerRef& log) {
   if (!config.coreConfig.configFolderDefaulted) {
-    if (!Tools::directoryExists(config.coreConfig.configFolder)) {
+    if (!tools::directoryExists(config.coreConfig.configFolder)) {
       throw std::runtime_error("Directory does not exist: " + config.coreConfig.configFolder);
     }
   } else {
-    if (!Tools::create_directories_if_necessary(config.coreConfig.configFolder)) {
+    if (!tools::create_directories_if_necessary(config.coreConfig.configFolder)) {
       throw std::runtime_error("Can't create directory: " + config.coreConfig.configFolder);
     }
   }

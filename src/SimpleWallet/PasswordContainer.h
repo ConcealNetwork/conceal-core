@@ -8,7 +8,7 @@
 
 #include <string>
 
-namespace Tools
+namespace tools
 {
   class PasswordContainer
   {

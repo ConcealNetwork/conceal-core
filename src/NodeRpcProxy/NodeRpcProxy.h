@@ -121,8 +121,8 @@ private:
   std::thread m_workerThread;
   System::Dispatcher* m_dispatcher = nullptr;
   System::ContextGroup* m_context_group = nullptr;
-  Tools::ObserverManager<cn::INodeObserver> m_observerManager;
-  Tools::ObserverManager<cn::INodeRpcProxyObserver> m_rpcProxyObserverManager;
+  tools::ObserverManager<cn::INodeObserver> m_observerManager;
+  tools::ObserverManager<cn::INodeRpcProxyObserver> m_rpcProxyObserverManager;
 
   const std::string m_nodeHost;
   const unsigned short m_nodePort;
