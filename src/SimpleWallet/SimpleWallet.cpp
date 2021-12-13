@@ -916,7 +916,7 @@ std::string simple_wallet::generate_mnemonic(crypto::SecretKey &private_spend_ke
 }
 //----------------------------------------------------------------------------------------------------
 void simple_wallet::log_incorrect_words(std::vector<std::string> words) {
-  Language::Base *language = Language::Singleton<Language::English>::instance();
+  seed_language::Base *language = seed_language::Singleton<seed_language::English>::instance();
   const std::vector<std::string> &dictionary = language->get_word_list();
 
   for (auto i : words) {
