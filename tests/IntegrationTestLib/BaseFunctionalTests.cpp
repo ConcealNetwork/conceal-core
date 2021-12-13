@@ -485,14 +485,14 @@ namespace
 {
 struct PeerCountWaiter : cn::INodeObserver
 {
-  System::Dispatcher &m_dispatcher;
-  System::Event m_event;
-  System::Timer m_timer;
+  platform_system::Dispatcher &m_dispatcher;
+  platform_system::Event m_event;
+  platform_system::Timer m_timer;
   bool m_timedout = false;
   bool m_waiting = false;
   size_t m_expectedPeerCount;
 
-  PeerCountWaiter(System::Dispatcher &dispatcher) : m_dispatcher(dispatcher), m_event(m_dispatcher), m_timer(m_dispatcher)
+  PeerCountWaiter(platform_system::Dispatcher &dispatcher) : m_dispatcher(dispatcher), m_event(m_dispatcher), m_timer(m_dispatcher)
   {
   }
 
@@ -500,16 +500,16 @@ struct PeerCountWaiter : cn::INodeObserver
   {
     m_waiting = true;
     m_expectedPeerCount = expectedPeerCount;
-    System::ContextGroup cg(m_dispatcher);
+    platform_system::ContextGroup cg(m_dispatcher);
 
     cg.spawn([&] {
       try
       {
-        System::Timer(m_dispatcher).sleep(std::chrono::minutes(2));
+        platform_system::Timer(m_dispatcher).sleep(std::chrono::minutes(2));
         m_timedout = true;
         m_event.set();
       }
-      catch (System::InterruptedException &)
+      catch (platform_system::InterruptedException &)
       {
       }
     });
@@ -556,10 +556,10 @@ namespace
 {
 struct PoolUpdateWaiter : public INodeObserver
 {
-  System::Dispatcher &m_dispatcher;
-  System::Event &m_event;
+  platform_system::Dispatcher &m_dispatcher;
+  platform_system::Event &m_event;
 
-  PoolUpdateWaiter(System::Dispatcher &dispatcher, System::Event &event) : m_dispatcher(dispatcher), m_event(event)
+  PoolUpdateWaiter(platform_system::Dispatcher &dispatcher, platform_system::Event &event) : m_dispatcher(dispatcher), m_event(event)
   {
   }
 
@@ -573,7 +573,7 @@ struct PoolUpdateWaiter : public INodeObserver
 bool BaseFunctionalTests::waitForPoolSize(size_t nodeIndex, cn::INode &node, size_t expectedPoolSize,
                                           std::vector<std::unique_ptr<cn::ITransactionReader>> &txPool)
 {
-  System::Event event(m_dispatcher);
+  platform_system::Event event(m_dispatcher);
   PoolUpdateWaiter poolUpdateWaiter(m_dispatcher, event);
   node.addObserver(&poolUpdateWaiter);
 
@@ -634,7 +634,7 @@ bool BaseFunctionalTests::getNodeTransactionPool(size_t nodeIndex, cn::INode &no
       updateTailBlockId = false;
     }
 
-    System::Event poolReceivedEvent(m_dispatcher);
+    platform_system::Event poolReceivedEvent(m_dispatcher);
     std::error_code ec;
     bool isTailBlockActual;
     std::vector<std::unique_ptr<ITransactionReader>> addedTxs;

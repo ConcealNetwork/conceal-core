@@ -24,7 +24,7 @@ namespace common {
 class JsonValue;
 }
 
-namespace System {
+namespace platform_system {
 class TcpConnection;
 }
 
@@ -32,7 +32,7 @@ namespace cn {
 
 class JsonRpcServer : HttpServer {
 public:
-  JsonRpcServer(System::Dispatcher& sys, System::Event& stopEvent, logging::ILogger& loggerGroup);
+  JsonRpcServer(platform_system::Dispatcher& sys, platform_system::Event& stopEvent, logging::ILogger& loggerGroup);
   JsonRpcServer(const JsonRpcServer&) = delete;
 
   void start(const std::string& bindAddress, uint16_t bindPort, const std::string& user = "", const std::string& password = "");
@@ -51,8 +51,8 @@ private:
   // HttpServer
   virtual void processRequest(const cn::HttpRequest& request, cn::HttpResponse& response) override;
 
-  System::Dispatcher& system;
-  System::Event& stopEvent;
+  platform_system::Dispatcher& system;
+  platform_system::Event& stopEvent;
   logging::LoggerRef logger;
 };
 

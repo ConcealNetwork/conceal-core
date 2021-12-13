@@ -22,7 +22,7 @@ namespace common
 class TestWalletLegacy : private cn::IWalletLegacyObserver
 {
 public:
-  TestWalletLegacy(System::Dispatcher &dispatcher, const cn::Currency &currency, cn::INode &node);
+  TestWalletLegacy(platform_system::Dispatcher &dispatcher, const cn::Currency &currency, cn::INode &node);
   ~TestWalletLegacy();
 
   std::error_code init();
@@ -36,9 +36,9 @@ protected:
   virtual void synchronizationProgressUpdated(uint32_t current, uint32_t total) override;
 
 private:
-  System::Dispatcher &m_dispatcher;
-  System::Event m_synchronizationCompleted;
-  System::Event m_someTransactionUpdated;
+  platform_system::Dispatcher &m_dispatcher;
+  platform_system::Event m_synchronizationCompleted;
+  platform_system::Event m_someTransactionUpdated;
 
   cn::INode &m_node;
   const cn::Currency &m_currency;

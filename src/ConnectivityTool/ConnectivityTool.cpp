@@ -56,15 +56,15 @@ struct response_schema {
   boost::optional<COMMAND_REQUEST_NETWORK_STATE::response> ns_rsp;
 };
 
-void withTimeout(System::Dispatcher& dispatcher, unsigned timeout, std::function<void()> f) {
+void withTimeout(platform_system::Dispatcher& dispatcher, unsigned timeout, std::function<void()> f) {
   std::string result;
-  System::ContextGroup cg(dispatcher);
-  System::ContextGroupTimeout cgTimeout(dispatcher, cg, std::chrono::milliseconds(timeout));
+  platform_system::ContextGroup cg(dispatcher);
+  platform_system::ContextGroupTimeout cgTimeout(dispatcher, cg, std::chrono::milliseconds(timeout));
   
   cg.spawn([&] {
     try {
       f();
-    } catch (System::InterruptedException&) {
+    } catch (platform_system::InterruptedException&) {
       result = "Operation timeout";
     } catch (std::exception& e) {
       result = e.what();
@@ -181,7 +181,7 @@ bool handle_get_daemon_info(po::variables_map& vm) {
   }
 
   try {
-    System::Dispatcher dispatcher;
+    platform_system::Dispatcher dispatcher;
     HttpClient httpClient(dispatcher, command_line::get_arg(vm, arg_ip), command_line::get_arg(vm, arg_rpc_port));
 
     cn::COMMAND_RPC_GET_INFO::request req;
@@ -224,15 +224,15 @@ bool handle_request_stat(po::variables_map& vm, PeerIdType peer_id) {
   unsigned timeout = command_line::get_arg(vm, arg_timeout);
 
   try {
-    System::Dispatcher dispatcher;
-    System::TcpConnector connector(dispatcher);
-    System::Ipv4Resolver resolver(dispatcher);
+    platform_system::Dispatcher dispatcher;
+    platform_system::TcpConnector connector(dispatcher);
+    platform_system::Ipv4Resolver resolver(dispatcher);
 
     std::cout << "Connecting to " << command_line::get_arg(vm, arg_ip) << ":" << command_line::get_arg(vm, arg_port) << ENDL;
 
     auto addr = resolver.resolve(command_line::get_arg(vm, arg_ip));
 
-    System::TcpConnection connection;
+    platform_system::TcpConnection connection;
 
     withTimeout(dispatcher, timeout, [&] {
       connection = connector.connect(addr, command_line::get_arg(vm, arg_port));

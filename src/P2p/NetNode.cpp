@@ -192,7 +192,7 @@ namespace cn
     return ret;
   }
 
-  NodeServer::NodeServer(System::Dispatcher& dispatcher, cn::CryptoNoteProtocolHandler& payload_handler, logging::ILogger& log) :
+  NodeServer::NodeServer(platform_system::Dispatcher& dispatcher, cn::CryptoNoteProtocolHandler& payload_handler, logging::ILogger& log) :
     m_payload_handler(payload_handler),
     m_allow_local_ip(false),
     m_timedSyncTimer(m_dispatcher),
@@ -468,7 +468,7 @@ namespace cn
     try {
       uint32_t port = common::fromString<uint32_t>(addr.substr(pos + 1));
 
-      System::Ipv4Resolver resolver(m_dispatcher);
+      platform_system::Ipv4Resolver resolver(m_dispatcher);
       auto addr = resolver.resolve(host);
       nodes.push_back(NetworkAddress{hostToNetwork(addr.getValue()), port});
 
@@ -531,7 +531,7 @@ namespace cn
     logger(INFO) <<  "Binding on " << m_bind_ip << ":" << m_port;
     m_listeningPort = common::fromString<uint16_t>(m_port);
 
-    m_listener = System::TcpListener(m_dispatcher, System::Ipv4Address(m_bind_ip), static_cast<uint16_t>(m_listeningPort));
+    m_listener = platform_system::TcpListener(m_dispatcher, platform_system::Ipv4Address(m_bind_ip), static_cast<uint16_t>(m_listeningPort));
 
     logger(INFO, BRIGHT_GREEN) << "Net service bound on " << m_bind_ip << ":" << m_listeningPort;
 
@@ -766,22 +766,22 @@ namespace cn
             << (last_seen_stamp ? common::timeIntervalToString(time(NULL) - last_seen_stamp) : "never") << ")...";
 
     try {
-      System::TcpConnection connection;
+      platform_system::TcpConnection connection;
 
       try {
-        System::Context<System::TcpConnection> connectionContext(m_dispatcher, [&] {
-          System::TcpConnector connector(m_dispatcher);
-          return connector.connect(System::Ipv4Address(common::ipAddressToString(na.ip)), static_cast<uint16_t>(na.port));
+        platform_system::Context<platform_system::TcpConnection> connectionContext(m_dispatcher, [&] {
+          platform_system::TcpConnector connector(m_dispatcher);
+          return connector.connect(platform_system::Ipv4Address(common::ipAddressToString(na.ip)), static_cast<uint16_t>(na.port));
         });
 
-        System::Context<> timeoutContext(m_dispatcher, [&] {
-          System::Timer(m_dispatcher).sleep(std::chrono::milliseconds(m_config.m_net_config.connection_timeout));
+        platform_system::Context<> timeoutContext(m_dispatcher, [&] {
+          platform_system::Timer(m_dispatcher).sleep(std::chrono::milliseconds(m_config.m_net_config.connection_timeout));
           logger(DEBUGGING) << "Connection to " << na <<" timed out, interrupt it";
           safeInterrupt(connectionContext);
         });
 
         connection = std::move(connectionContext.get());
-      } catch (System::InterruptedException&) {
+      } catch (platform_system::InterruptedException&) {
         logger(DEBUGGING) << "Connection timed out";
         return false;
       }
@@ -796,14 +796,14 @@ namespace cn
 
 
       try {
-        System::Context<bool> handshakeContext(m_dispatcher, [&] {
+        platform_system::Context<bool> handshakeContext(m_dispatcher, [&] {
           cn::LevinProtocol proto(ctx.connection);
           return handshake(proto, ctx, just_take_peerlist);
         });
 
-        System::Context<> timeoutContext(m_dispatcher, [&] {
+        platform_system::Context<> timeoutContext(m_dispatcher, [&] {
           // Here we use connection_timeout * 3, one for this handshake, and two for back ping from peer.
-          System::Timer(m_dispatcher).sleep(std::chrono::milliseconds(m_config.m_net_config.connection_timeout * 3));
+          platform_system::Timer(m_dispatcher).sleep(std::chrono::milliseconds(m_config.m_net_config.connection_timeout * 3));
           logger(DEBUGGING) << "Handshake with " << na << " timed out, interrupt it";
           safeInterrupt(handshakeContext);
         });
@@ -812,7 +812,7 @@ namespace cn
           logger(DEBUGGING) << "Failed to HANDSHAKE with peer " << na;
           return false;
         }
-      } catch (System::InterruptedException&) {
+      } catch (platform_system::InterruptedException&) {
         logger(DEBUGGING) << "Handshake timed out";
         return false;
       }
@@ -835,7 +835,7 @@ namespace cn
       m_peerlist.append_with_peer_anchor(ape);
 
       if (m_stop) {
-        throw System::InterruptedException();
+        throw platform_system::InterruptedException();
       }
 
       auto iter = m_connections.emplace(ctx.m_connection_id, std::move(ctx)).first;
@@ -845,7 +845,7 @@ namespace cn
       m_workingContextGroup.spawn(std::bind(&NodeServer::connectionHandler, this, std::cref(connectionId), std::ref(connectionContext)));
 
       return true;
-    } catch (System::InterruptedException&) {
+    } catch (platform_system::InterruptedException&) {
       logger(DEBUGGING) << "Connection process interrupted";
       throw;
     } catch (const std::exception& e) {
@@ -1226,14 +1226,14 @@ namespace cn
     try {
       COMMAND_PING::request req;
       COMMAND_PING::response rsp;
-      System::Context<> pingContext(m_dispatcher, [&] {
-        System::TcpConnector connector(m_dispatcher);
-        auto connection = connector.connect(System::Ipv4Address(ip), static_cast<uint16_t>(port));
+      platform_system::Context<> pingContext(m_dispatcher, [&] {
+        platform_system::TcpConnector connector(m_dispatcher);
+        auto connection = connector.connect(platform_system::Ipv4Address(ip), static_cast<uint16_t>(port));
         LevinProtocol(connection).invoke(COMMAND_PING::ID, req, rsp);
       });
 
-      System::Context<> timeoutContext(m_dispatcher, [&] {
-        System::Timer(m_dispatcher).sleep(std::chrono::milliseconds(m_config.m_net_config.connection_timeout * 2));
+      platform_system::Context<> timeoutContext(m_dispatcher, [&] {
+        platform_system::Timer(m_dispatcher).sleep(std::chrono::milliseconds(m_config.m_net_config.connection_timeout * 2));
         logger(DEBUGGING) << context << "Back ping timed out" << ip << ":" << port;
         safeInterrupt(pingContext);
       });
@@ -1451,7 +1451,7 @@ namespace cn
         P2pConnectionContext& connection = iter->second;
 
         m_workingContextGroup.spawn(std::bind(&NodeServer::connectionHandler, this, std::cref(connectionId), std::ref(connection)));
-      } catch (System::InterruptedException&) {
+      } catch (platform_system::InterruptedException&) {
         logger(DEBUGGING) << "acceptLoop() is interrupted";
         break;
       } catch (const std::exception& e) {
@@ -1471,7 +1471,7 @@ namespace cn
         m_payload_handler.on_idle();
         m_idleTimer.sleep(std::chrono::seconds(1));
       }
-    } catch (System::InterruptedException&) {
+    } catch (platform_system::InterruptedException&) {
       logger(DEBUGGING) << "onIdle() is interrupted";
     } catch (std::exception& e) {
       logger(DEBUGGING) << "Exception in onIdle: " << e.what();
@@ -1494,7 +1494,7 @@ namespace cn
           }
         }
       }
-    } catch (System::InterruptedException&) {
+    } catch (platform_system::InterruptedException&) {
       logger(DEBUGGING) << "timeoutLoop() is interrupted";
     } catch (std::exception& e) {
       logger(DEBUGGING) << "Exception in timeoutLoop: " << e.what();
@@ -1507,7 +1507,7 @@ namespace cn
         m_timedSyncTimer.sleep(std::chrono::seconds(P2P_DEFAULT_HANDSHAKE_INTERVAL));
         timedSync();
       }
-    } catch (System::InterruptedException&) {
+    } catch (platform_system::InterruptedException&) {
       logger(DEBUGGING) << "timedSyncLoop() is interrupted";
     } catch (std::exception& e) {
       logger(DEBUGGING) << "Exception in timedSyncLoop: " << e.what();
@@ -1518,8 +1518,8 @@ namespace cn
 
   void NodeServer::connectionHandler(const boost::uuids::uuid& connectionId, P2pConnectionContext& ctx) {
     // This inner context is necessary in order to stop connection handler at any moment
-    System::Context<> context(m_dispatcher, [this, &connectionId, &ctx] {
-      System::Context<> writeContext(m_dispatcher, std::bind(&NodeServer::writeHandler, this, std::ref(ctx)));
+    platform_system::Context<> context(m_dispatcher, [this, &connectionId, &ctx] {
+      platform_system::Context<> writeContext(m_dispatcher, std::bind(&NodeServer::writeHandler, this, std::ref(ctx)));
 
       try {
         on_connection_new(ctx);
@@ -1558,7 +1558,7 @@ namespace cn
             break;
           }
         }
-      } catch (System::InterruptedException&) {
+      } catch (platform_system::InterruptedException&) {
         logger(DEBUGGING) << ctx << "connectionHandler() inner context is interrupted";
       } catch (std::exception& e) {
         logger(DEBUGGING) << ctx << "Exception in connectionHandler: " << e.what();
@@ -1576,7 +1576,7 @@ namespace cn
 
     try {
       context.get();
-    } catch (System::InterruptedException&) {
+    } catch (platform_system::InterruptedException&) {
       logger(DEBUGGING) << "connectionHandler() is interrupted";
     }
   }
@@ -1610,7 +1610,7 @@ namespace cn
           }
         }
       }
-    } catch (System::InterruptedException&) {
+    } catch (platform_system::InterruptedException&) {
       // connection stopped
       logger(DEBUGGING) << ctx << "writeHandler() is interrupted";
     } catch (std::exception& e) {

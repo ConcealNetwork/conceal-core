@@ -591,7 +591,7 @@ bool simple_wallet::exit(const std::vector<std::string> &args) {
   return true;
 }
 
-simple_wallet::simple_wallet(System::Dispatcher& dispatcher, const cn::Currency& currency, logging::LoggerManager& log) :
+simple_wallet::simple_wallet(platform_system::Dispatcher& dispatcher, const cn::Currency& currency, logging::LoggerManager& log) :
   m_dispatcher(dispatcher),
   m_daemon_port(0),
   m_currency(currency),
@@ -1917,7 +1917,7 @@ bool simple_wallet::run() {
   std::cout << std::endl;
 
   std::string addr_start = m_wallet->getAddress().substr(0, 6);
-  m_consoleHandler.start(false, "[wallet " + addr_start + "]: ", common::Console::Color::BrightYellow);
+  m_consoleHandler.start(false, "[wallet " + addr_start + "]: ", common::console::Color::BrightYellow);
   return true;
 }
 //----------------------------------------------------------------------------------------------------
@@ -1995,7 +1995,7 @@ int main(int argc, char* argv[]) {
 
   logging::LoggerManager logManager;
   logging::LoggerRef logger(logManager, "simplewallet");
-  System::Dispatcher dispatcher;
+  platform_system::Dispatcher dispatcher;
 
   po::variables_map vm;
 

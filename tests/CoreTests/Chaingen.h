@@ -28,7 +28,7 @@
 
 namespace concolor
 {
-  using namespace common::Console;
+  using namespace common::console;
 
   inline std::basic_ostream<char, std::char_traits<char> >& bright_white(std::basic_ostream<char, std::char_traits<char> >& ostr)
   {

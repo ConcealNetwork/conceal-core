@@ -26,7 +26,7 @@ namespace tools
   public:
 
     wallet_rpc_server(
-      System::Dispatcher& dispatcher,
+      platform_system::Dispatcher& dispatcher,
       logging::ILogger& log,
       cn::IWalletLegacy &w,
       cn::INode &n,
@@ -78,7 +78,7 @@ namespace tools
     cn::Currency& m_currency;
     const std::string m_walletFilename;
 
-    System::Dispatcher& m_dispatcher;
-    System::Event m_stopComplete;
+    platform_system::Dispatcher& m_dispatcher;
+    platform_system::Event m_stopComplete;
   };
 }

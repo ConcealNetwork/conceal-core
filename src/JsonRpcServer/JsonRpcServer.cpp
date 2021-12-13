@@ -26,7 +26,7 @@
 
 namespace cn {
 
-JsonRpcServer::JsonRpcServer(System::Dispatcher& sys, System::Event& stopEvent, logging::ILogger& loggerGroup) :
+JsonRpcServer::JsonRpcServer(platform_system::Dispatcher& sys, platform_system::Event& stopEvent, logging::ILogger& loggerGroup) :
   HttpServer(sys, loggerGroup), 
   system(sys),
   stopEvent(stopEvent),

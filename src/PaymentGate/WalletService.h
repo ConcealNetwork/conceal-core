@@ -38,14 +38,14 @@ struct WalletConfiguration
   std::string secretViewKey;
 };
 
-void generateNewWallet(const cn::Currency &currency, const WalletConfiguration &conf, logging::ILogger &logger, System::Dispatcher &dispatcher);
+void generateNewWallet(const cn::Currency &currency, const WalletConfiguration &conf, logging::ILogger &logger, platform_system::Dispatcher &dispatcher);
 
 struct TransactionsInBlockInfoFilter;
 
 class WalletService
 {
 public:
-  WalletService(const cn::Currency &currency, System::Dispatcher &sys, cn::INode &node, cn::IWallet &wallet, cn::IFusionManager &fusionManager, const WalletConfiguration &conf, logging::ILogger &logger);
+  WalletService(const cn::Currency &currency, platform_system::Dispatcher &sys, cn::INode &node, cn::IWallet &wallet, cn::IFusionManager &fusionManager, const WalletConfiguration &conf, logging::ILogger &logger);
   virtual ~WalletService();
 
   void init();
@@ -124,9 +124,9 @@ private:
   const WalletConfiguration &config;
   bool inited;
   logging::LoggerRef logger;
-  System::Dispatcher &dispatcher;
-  System::Event readyEvent;
-  System::ContextGroup refreshContext;
+  platform_system::Dispatcher &dispatcher;
+  platform_system::Event readyEvent;
+  platform_system::ContextGroup refreshContext;
 
   std::map<std::string, size_t> transactionIdIndex;
 };

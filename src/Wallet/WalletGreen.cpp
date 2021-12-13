@@ -69,7 +69,7 @@ namespace
     });
   }
 
-  void asyncRequestCompletion(System::Event &requestFinished)
+  void asyncRequestCompletion(platform_system::Event &requestFinished)
   {
     requestFinished.set();
   }
@@ -270,7 +270,7 @@ namespace
 namespace cn
 {
 
-  WalletGreen::WalletGreen(System::Dispatcher &dispatcher, const Currency &currency, INode &node, logging::ILogger &logger, uint32_t transactionSoftLockTime) : m_dispatcher(dispatcher),
+  WalletGreen::WalletGreen(platform_system::Dispatcher &dispatcher, const Currency &currency, INode &node, logging::ILogger &logger, uint32_t transactionSoftLockTime) : m_dispatcher(dispatcher),
                                                                                                                                                                 m_currency(currency),
                                                                                                                                                                 m_node(node),
                                                                                                                                                                 m_logger(logger, "WalletGreen"),
@@ -1958,7 +1958,7 @@ namespace cn
       m_dispatcher.yield();
     });
 
-    System::EventLock lk(m_readyEvent);
+    platform_system::EventLock lk(m_readyEvent);
 
     throwIfNotInitialized();
     throwIfTrackingMode();
@@ -2083,7 +2083,7 @@ namespace cn
       }
     });
 
-    System::EventLock lk(m_readyEvent);
+    platform_system::EventLock lk(m_readyEvent);
 
     throwIfNotInitialized();
     throwIfTrackingMode();
@@ -2124,7 +2124,7 @@ namespace cn
 
   void WalletGreen::commitTransaction(size_t transactionId)
   {
-    System::EventLock lk(m_readyEvent);
+    platform_system::EventLock lk(m_readyEvent);
 
     throwIfNotInitialized();
     throwIfStopped();
@@ -2142,7 +2142,7 @@ namespace cn
       throw std::system_error(make_error_code(error::TX_TRANSFER_IMPOSSIBLE));
     }
 
-    System::Event completion(m_dispatcher);
+    platform_system::Event completion(m_dispatcher);
     std::error_code ec;
 
     m_node.relayTransaction(m_uncommitedTransactions[transactionId], [&ec, &completion, this](std::error_code error) {
@@ -2168,7 +2168,7 @@ namespace cn
       m_dispatcher.yield();
     });
 
-    System::EventLock lk(m_readyEvent);
+    platform_system::EventLock lk(m_readyEvent);
 
     throwIfNotInitialized();
     throwIfStopped();
@@ -2757,7 +2757,7 @@ namespace cn
 
   void WalletGreen::sendTransaction(const cn::Transaction &cryptoNoteTransaction)
   {
-    System::Event completion(m_dispatcher);
+    platform_system::Event completion(m_dispatcher);
     std::error_code ec;
 
     throwIfStopped();
@@ -2861,7 +2861,7 @@ namespace cn
       amounts.push_back(out.out.amount);
     }
 
-    System::Event requestFinished(m_dispatcher);
+    platform_system::Event requestFinished(m_dispatcher);
     std::error_code mixinError;
 
     throwIfStopped();
@@ -3278,7 +3278,7 @@ namespace cn
   {
     assert(processedBlockCount > 0);
 
-    System::EventLock lk(m_readyEvent);
+    platform_system::EventLock lk(m_readyEvent);
 
     if (m_state == WalletState::NOT_INITIALIZED)
     {
@@ -3293,7 +3293,7 @@ namespace cn
 
   void WalletGreen::onSynchronizationCompleted()
   {
-    System::EventLock lk(m_readyEvent);
+    platform_system::EventLock lk(m_readyEvent);
 
     if (m_state == WalletState::NOT_INITIALIZED)
     {
@@ -3310,7 +3310,7 @@ namespace cn
 
   void WalletGreen::blocksAdded(const std::vector<crypto::Hash> &blockHashes)
   {
-    System::EventLock lk(m_readyEvent);
+    platform_system::EventLock lk(m_readyEvent);
 
     if (m_state == WalletState::NOT_INITIALIZED)
     {
@@ -3326,7 +3326,7 @@ namespace cn
 
   void WalletGreen::blocksRollback(uint32_t blockIndex)
   {
-    System::EventLock lk(m_readyEvent);
+    platform_system::EventLock lk(m_readyEvent);
 
     if (m_state == WalletState::NOT_INITIALIZED)
     {
@@ -3474,7 +3474,7 @@ namespace cn
       TransactionInformation transactionInfo,
       const std::vector<ContainerAmounts> &containerAmountsList)
   {
-    System::EventLock lk(m_readyEvent);
+    platform_system::EventLock lk(m_readyEvent);
 
     if (m_state == WalletState::NOT_INITIALIZED)
     {
@@ -3626,7 +3626,7 @@ namespace cn
 
   void WalletGreen::transactionDeleted(ITransfersSubscription *object, const Hash &transactionHash)
   {
-    System::EventLock lk(m_readyEvent);
+    platform_system::EventLock lk(m_readyEvent);
 
     if (m_state == WalletState::NOT_INITIALIZED)
     {
@@ -3697,7 +3697,7 @@ namespace cn
 
   void WalletGreen::addUnconfirmedTransaction(const ITransactionReader &transaction)
   {
-    System::RemoteContext<std::error_code> context(m_dispatcher, [this, &transaction] {
+    platform_system::RemoteContext<std::error_code> context(m_dispatcher, [this, &transaction] {
       return m_blockchainSynchronizer.addUnconfirmedTransaction(transaction).get();
     });
 
@@ -3710,7 +3710,7 @@ namespace cn
 
   void WalletGreen::removeUnconfirmedTransaction(const crypto::Hash &transactionHash)
   {
-    System::RemoteContext<void> context(m_dispatcher, [this, &transactionHash] {
+    platform_system::RemoteContext<void> context(m_dispatcher, [this, &transactionHash] {
       m_blockchainSynchronizer.removeUnconfirmedTransaction(transactionHash).get();
     });
 
@@ -3918,7 +3918,7 @@ namespace cn
       }
     });
 
-    System::EventLock lk(m_readyEvent);
+    platform_system::EventLock lk(m_readyEvent);
 
     throwIfNotInitialized();
     throwIfTrackingMode();
@@ -4139,7 +4139,7 @@ namespace cn
 
   IFusionManager::EstimateResult WalletGreen::estimate(uint64_t threshold, const std::vector<std::string> &sourceAddresses) const
   {
-    System::EventLock lk(m_readyEvent);
+    platform_system::EventLock lk(m_readyEvent);
 
     throwIfNotInitialized();
     throwIfStopped();
@@ -4535,7 +4535,7 @@ namespace cn
 
   size_t WalletGreen::getTxSize(const TransactionParameters &sendingTransaction)
   {
-    System::EventLock lk(m_readyEvent);
+    platform_system::EventLock lk(m_readyEvent);
 
     throwIfNotInitialized();
     throwIfTrackingMode();

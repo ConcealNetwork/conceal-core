@@ -17,29 +17,29 @@
 #include "MinerEvent.h"
 #include "MiningConfig.h"
 
-namespace System {
+namespace platform_system {
 class Dispatcher;
 }
 
-namespace Miner {
+namespace miner {
 
 class MinerManager {
 public:
-  MinerManager(System::Dispatcher& dispatcher, const cn::MiningConfig& config, logging::ILogger& logger);
+  MinerManager(platform_system::Dispatcher& dispatcher, const cn::MiningConfig& config, logging::ILogger& logger);
   ~MinerManager();
 
   void start();
 
 private:
-  System::Dispatcher& m_dispatcher;
+  platform_system::Dispatcher& m_dispatcher;
   logging::LoggerRef m_logger;
-  System::ContextGroup m_contextGroup;
+  platform_system::ContextGroup m_contextGroup;
   cn::MiningConfig m_config;
-  cn::Miner m_miner;
+  cn::miner m_miner;
   BlockchainMonitor m_blockchainMonitor;
 
-  System::Event m_eventOccurred;
-  System::Event m_httpEvent;
+  platform_system::Event m_eventOccurred;
+  platform_system::Event m_httpEvent;
   std::queue<MinerEvent> m_events;
 
   cn::Block m_minedBlock;
@@ -57,9 +57,9 @@ private:
   void stopBlockchainMonitoring();
 
   bool submitBlock(const cn::Block& minedBlock, const std::string& daemonHost, uint16_t daemonPort);
-  cn::BlockMiningParameters requestMiningParameters(System::Dispatcher& dispatcher, const std::string& daemonHost, uint16_t daemonPort, const std::string& miningAddress);
+  cn::BlockMiningParameters requestMiningParameters(platform_system::Dispatcher& dispatcher, const std::string& daemonHost, uint16_t daemonPort, const std::string& miningAddress);
 
   void adjustBlockTemplate(cn::Block& blockTemplate) const;
 };
 
-} //namespace Miner
+} //namespace miner

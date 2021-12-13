@@ -25,7 +25,7 @@ inline std::string shortAddress(const std::string &addr)
 class MultiVersionTest : Tests::common::BaseFunctionalTests
 {
 public:
-  MultiVersionTest(const cn::Currency &currency, System::Dispatcher &d, const Tests::common::BaseFunctionalTestsConfig &config, logging::ILogger &log) : BaseFunctionalTests(currency, d, config), m_config(config), m_nodeCount(config.daemons.size()), logger(log, "MultiVersion") {}
+  MultiVersionTest(const cn::Currency &currency, platform_system::Dispatcher &d, const Tests::common::BaseFunctionalTestsConfig &config, logging::ILogger &log) : BaseFunctionalTests(currency, d, config), m_config(config), m_nodeCount(config.daemons.size()), logger(log, "MultiVersion") {}
 
   void run()
   {
@@ -260,7 +260,7 @@ private:
   logging::LoggerRef logger;
 };
 
-void testMultiVersion(const cn::Currency &currency, System::Dispatcher &d, const Tests::common::BaseFunctionalTestsConfig &config)
+void testMultiVersion(const cn::Currency &currency, platform_system::Dispatcher &d, const Tests::common::BaseFunctionalTestsConfig &config)
 {
   logging::ConsoleLogger log;
   MultiVersionTest test(currency, d, config, log);

@@ -18,7 +18,7 @@ using namespace cn;
 namespace Tests {
   class RPCTestNode : public TestNode {
   public:
-    RPCTestNode(uint16_t port, System::Dispatcher& d);
+    RPCTestNode(uint16_t port, platform_system::Dispatcher& d);
 
     virtual bool startMining(size_t threadsCount, const std::string& address) override;
     virtual bool stopMining() override;
@@ -34,7 +34,7 @@ namespace Tests {
   private:
 
     uint16_t m_rpcPort;
-    System::Dispatcher& m_dispatcher;
+    platform_system::Dispatcher& m_dispatcher;
     cn::HttpClient m_httpClient;
   };
 }

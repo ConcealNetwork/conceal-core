@@ -24,7 +24,7 @@
 
 namespace cn {
 
-HttpClient::HttpClient(System::Dispatcher& dispatcher, const std::string& address, uint16_t port) :
+HttpClient::HttpClient(platform_system::Dispatcher& dispatcher, const std::string& address, uint16_t port) :
   m_dispatcher(dispatcher), m_address(address), m_port(port) {
 }
 
@@ -53,9 +53,9 @@ void HttpClient::request(const HttpRequest &req, HttpResponse &res) {
 
 void HttpClient::connect() {
   try {
-    auto ipAddr = System::Ipv4Resolver(m_dispatcher).resolve(m_address);
-    m_connection = System::TcpConnector(m_dispatcher).connect(ipAddr, m_port);
-    m_streamBuf.reset(new System::TcpStreambuf(m_connection));
+    auto ipAddr = platform_system::Ipv4Resolver(m_dispatcher).resolve(m_address);
+    m_connection = platform_system::TcpConnector(m_dispatcher).connect(ipAddr, m_port);
+    m_streamBuf.reset(new platform_system::TcpStreambuf(m_connection));
     m_connected = true;
   } catch (const std::exception& e) {
     throw ConnectException(e.what());
@@ -75,7 +75,7 @@ void HttpClient::disconnect() {
   }
 
   try {
-    m_connection = System::TcpConnection();
+    m_connection = platform_system::TcpConnection();
   } catch (std::exception&) {
     //Ignoring possible exception.
   }

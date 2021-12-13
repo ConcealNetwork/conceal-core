@@ -17,7 +17,7 @@ namespace cn {
 
 template<class MessageType> class MessageQueue {
 public:
-  MessageQueue(System::Dispatcher& dispatcher);
+  MessageQueue(platform_system::Dispatcher& dispatcher);
 
   const MessageType& front();
   void pop();
@@ -30,7 +30,7 @@ public:
 private:
   void wait();
   std::queue<MessageType> messageQueue;
-  System::Event event;
+  platform_system::Event event;
   bool stopped;
 
   typename IntrusiveLinkedList<MessageQueue<MessageType>>::hook hook;
@@ -55,13 +55,13 @@ private:
 };
 
 template<class MessageType>
-MessageQueue<MessageType>::MessageQueue(System::Dispatcher& dispatcher) : event(dispatcher), stopped(false) {}
+MessageQueue<MessageType>::MessageQueue(platform_system::Dispatcher& dispatcher) : event(dispatcher), stopped(false) {}
 
 template<class MessageType>
 void MessageQueue<MessageType>::wait() {
   if (messageQueue.empty()) {
     if (stopped) {
-      throw System::InterruptedException();
+      throw platform_system::InterruptedException();
     }
 
     event.clear();

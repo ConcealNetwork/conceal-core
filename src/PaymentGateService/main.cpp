@@ -295,7 +295,7 @@ int main(int argc, char** argv) {
     const auto& config = pg.getConfig();
 
     if (config.gateConfiguration.generateNewContainer) {
-      System::Dispatcher d;
+      platform_system::Dispatcher d;
       generateNewWallet(pg.getCurrency(), pg.getWalletConfig(), pg.getLogger(), d);
       return 0;
     }

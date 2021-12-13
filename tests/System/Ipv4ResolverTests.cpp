@@ -10,7 +10,7 @@
 #include <System/Ipv4Resolver.h>
 #include <gtest/gtest.h>
 
-using namespace System;
+using namespace platform_system;
 
 class Ipv4ResolverTests : public testing::Test {
 public:

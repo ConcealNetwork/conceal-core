@@ -6,7 +6,7 @@
 #include <System/ErrorMessage.h>
 #include <gtest/gtest.h>
 
-using namespace System;
+using namespace platform_system;
 
 TEST(ErrorMessageTests, testErrorMessage) {
   auto msg = errorMessage(100);

@@ -36,7 +36,7 @@ bool operator== (const DonationSettings& lhs, const DonationSettings& rhs) {
 } //namespace cn
 
 struct IWalletBaseStub : public cn::IWallet {
-  IWalletBaseStub(System::Dispatcher& dispatcher) : m_eventOccurred(dispatcher) {}
+  IWalletBaseStub(platform_system::Dispatcher& dispatcher) : m_eventOccurred(dispatcher) {}
   virtual ~IWalletBaseStub() {}
 
   virtual void initialize(const std::string& password) override { }
@@ -113,7 +113,7 @@ protected:
   }
 
   bool m_stopped = false;
-  System::Event m_eventOccurred;
+  platform_system::Event m_eventOccurred;
   std::queue<WalletEvent> m_events;
 };
 
@@ -133,7 +133,7 @@ protected:
   TestBlockchainGenerator generator;
   INodeTrivialRefreshStub nodeStub;
   WalletConfiguration walletConfig;
-  System::Dispatcher dispatcher;
+  platform_system::Dispatcher dispatcher;
   IWalletBaseStub walletBase;
 
   std::unique_ptr<WalletService> createWalletService(cn::IWallet& wallet);
@@ -166,7 +166,7 @@ class WalletServiceTest_createAddress : public WalletServiceTest {
 };
 
 struct WalletCreateAddressStub: public IWalletBaseStub {
-  WalletCreateAddressStub(System::Dispatcher& d) : IWalletBaseStub(d) {}
+  WalletCreateAddressStub(platform_system::Dispatcher& d) : IWalletBaseStub(d) {}
 
   virtual std::string createAddress() override { return address; }
   virtual std::string createAddress(const crypto::SecretKey& spendSecretKey) override { return address; }
@@ -236,7 +236,7 @@ class WalletServiceTest_getSpendKeys : public WalletServiceTest {
 };
 
 struct WalletgetSpendKeysStub: public IWalletBaseStub {
-  WalletgetSpendKeysStub(System::Dispatcher& d) : IWalletBaseStub(d) {
+  WalletgetSpendKeysStub(platform_system::Dispatcher& d) : IWalletBaseStub(d) {
     crypto::generate_keys(keyPair.publicKey, keyPair.secretKey);
   }
 
@@ -263,7 +263,7 @@ class WalletServiceTest_getBalance : public WalletServiceTest {
 };
 
 struct WalletGetBalanceStub: public IWalletBaseStub {
-  WalletGetBalanceStub(System::Dispatcher& d, bool byAddress) : IWalletBaseStub(d), byAddress(byAddress) {
+  WalletGetBalanceStub(platform_system::Dispatcher& d, bool byAddress) : IWalletBaseStub(d), byAddress(byAddress) {
   }
 
   virtual uint64_t getActualBalance() const override {
@@ -346,7 +346,7 @@ protected:
 };
 
 struct WalletGetBlockHashesStub: public IWalletBaseStub {
-  WalletGetBlockHashesStub(System::Dispatcher& d) : IWalletBaseStub(d) {
+  WalletGetBlockHashesStub(platform_system::Dispatcher& d) : IWalletBaseStub(d) {
   }
 
   virtual std::vector<crypto::Hash> getBlockHashes(uint32_t blockIndex, size_t count) const override {
@@ -379,7 +379,7 @@ class WalletServiceTest_getViewKey : public WalletServiceTest {
 };
 
 struct WalletGetViewKeyStub: public IWalletBaseStub {
-  WalletGetViewKeyStub(System::Dispatcher& d) : IWalletBaseStub(d) {
+  WalletGetViewKeyStub(platform_system::Dispatcher& d) : IWalletBaseStub(d) {
     crypto::generate_keys(keyPair.publicKey, keyPair.secretKey);
   }
 
@@ -521,7 +521,7 @@ void WalletServiceTest_getTransactions::SetUp() {
 
 class WalletGetTransactionsStub : public IWalletBaseStub {
 public:
-  WalletGetTransactionsStub(System::Dispatcher& d) : IWalletBaseStub(d) {}
+  WalletGetTransactionsStub(platform_system::Dispatcher& d) : IWalletBaseStub(d) {}
   virtual std::vector<TransactionsInBlockInfo> getTransactions(const crypto::Hash& blockHash, size_t count) const override {
     return transactions;
   }
@@ -659,7 +659,7 @@ class WalletServiceTest_getTransaction : public WalletServiceTest_getTransaction
 };
 
 struct WalletGetTransactionStub : public IWalletBaseStub {
-  WalletGetTransactionStub (System::Dispatcher& dispatcher) : IWalletBaseStub(dispatcher) {
+  WalletGetTransactionStub (platform_system::Dispatcher& dispatcher) : IWalletBaseStub(dispatcher) {
   }
 
   virtual WalletTransactionWithTransfers getTransaction(const crypto::Hash& transactionHash) const override {
@@ -720,7 +720,7 @@ TEST_F(WalletServiceTest_getTransaction, returnsCorrectFields) {
 }
 
 struct WalletGetTransactionThrowStub : public IWalletBaseStub {
-  WalletGetTransactionThrowStub (System::Dispatcher& dispatcher) : IWalletBaseStub(dispatcher) {
+  WalletGetTransactionThrowStub (platform_system::Dispatcher& dispatcher) : IWalletBaseStub(dispatcher) {
   }
 
   virtual WalletTransactionWithTransfers getTransaction(const crypto::Hash& transactionHash) const override {
@@ -753,7 +753,7 @@ void WalletServiceTest_sendTransaction::SetUp() {
 }
 
 struct WalletTransferStub : public IWalletBaseStub {
-  WalletTransferStub(System::Dispatcher& dispatcher, const crypto::Hash& hash) : IWalletBaseStub(dispatcher), hash(hash) {
+  WalletTransferStub(platform_system::Dispatcher& dispatcher, const crypto::Hash& hash) : IWalletBaseStub(dispatcher), hash(hash) {
   }
 
   virtual size_t transfer(const TransactionParameters& sendingTransaction) override {
@@ -832,7 +832,7 @@ void WalletServiceTest_createDelayedTransaction::SetUp() {
 }
 
 struct WalletMakeTransactionStub : public IWalletBaseStub {
-  WalletMakeTransactionStub(System::Dispatcher& dispatcher, const crypto::Hash& hash) : IWalletBaseStub(dispatcher), hash(hash) {
+  WalletMakeTransactionStub(platform_system::Dispatcher& dispatcher, const crypto::Hash& hash) : IWalletBaseStub(dispatcher), hash(hash) {
   }
 
   virtual size_t makeTransaction(const TransactionParameters& sendingTransaction) override {
@@ -900,7 +900,7 @@ class WalletServiceTest_getDelayedTransactionHashes: public WalletServiceTest {
 };
 
 struct WalletGetDelayedTransactionIdsStub : public IWalletBaseStub {
-  WalletGetDelayedTransactionIdsStub(System::Dispatcher& dispatcher, const crypto::Hash& hash) : IWalletBaseStub(dispatcher), hash(hash) {
+  WalletGetDelayedTransactionIdsStub(platform_system::Dispatcher& dispatcher, const crypto::Hash& hash) : IWalletBaseStub(dispatcher), hash(hash) {
   }
 
   virtual std::vector<size_t> getDelayedTransactionIds() const override {
@@ -945,7 +945,7 @@ void WalletServiceTest_getUnconfirmedTransactionHashes::SetUp() {
 }
 
 struct WalletGetUnconfirmedTransactionsStub : public IWalletBaseStub {
-  WalletGetUnconfirmedTransactionsStub(System::Dispatcher& dispatcher) : IWalletBaseStub(dispatcher) {
+  WalletGetUnconfirmedTransactionsStub(platform_system::Dispatcher& dispatcher) : IWalletBaseStub(dispatcher) {
   }
 
   virtual std::vector<WalletTransactionWithTransfers> getUnconfirmedTransactions() const override {

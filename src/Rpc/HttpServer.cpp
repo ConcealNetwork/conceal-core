@@ -39,13 +39,13 @@ namespace {
 
 namespace cn {
 
-HttpServer::HttpServer(System::Dispatcher& dispatcher, logging::ILogger& log)
+HttpServer::HttpServer(platform_system::Dispatcher& dispatcher, logging::ILogger& log)
   : m_dispatcher(dispatcher), workingContextGroup(dispatcher), logger(log, "HttpServer") {
 
 }
 
 void HttpServer::start(const std::string& address, uint16_t port, const std::string& user, const std::string& password) {
-  m_listener = System::TcpListener(m_dispatcher, System::Ipv4Address(address), port);
+  m_listener = platform_system::TcpListener(m_dispatcher, platform_system::Ipv4Address(address), port);
   workingContextGroup.spawn(std::bind(&HttpServer::acceptLoop, this));
   
   		if (!user.empty() || !password.empty()) {
@@ -60,14 +60,14 @@ void HttpServer::stop() {
 
 void HttpServer::acceptLoop() {
   try {
-    System::TcpConnection connection; 
+    platform_system::TcpConnection connection; 
     bool accepted = false;
 
     while (!accepted) {
       try {
         connection = m_listener.accept();
         accepted = true;
-      } catch (System::InterruptedException&) {
+      } catch (platform_system::InterruptedException&) {
         throw;
       } catch (std::exception&) {
         // try again
@@ -81,7 +81,7 @@ void HttpServer::acceptLoop() {
 	workingContextGroup.spawn(std::bind(&HttpServer::acceptLoop, this));
 
 	//auto addr = connection.getPeerAddressAndPort();
-	auto addr = std::pair<System::Ipv4Address, uint16_t>(static_cast<System::Ipv4Address>(0), 0);
+	auto addr = std::pair<platform_system::Ipv4Address, uint16_t>(static_cast<platform_system::Ipv4Address>(0), 0);
 	try {
 		addr = connection.getPeerAddressAndPort();
 	} catch (std::runtime_error&) {
@@ -90,7 +90,7 @@ void HttpServer::acceptLoop() {
 
     logger(DEBUGGING) << "Incoming connection from " << addr.first.toDottedDecimal() << ":" << addr.second;
 
-    System::TcpStreambuf streambuf(connection);
+    platform_system::TcpStreambuf streambuf(connection);
     std::iostream stream(&streambuf);
     HttpParser parser;
 
@@ -119,7 +119,7 @@ void HttpServer::acceptLoop() {
 
     logger(DEBUGGING) << "Closing connection from " << addr.first.toDottedDecimal() << ":" << addr.second << " total=" << m_connections.size();
 
-  } catch (System::InterruptedException&) {
+  } catch (platform_system::InterruptedException&) {
   } catch (std::exception& e) {
     logger(DEBUGGING) << "Connection error: " << e.what();
   }

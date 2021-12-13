@@ -40,8 +40,8 @@ private:
 
   void runWalletService(const cn::Currency& currency, cn::INode& node);
 
-  System::Dispatcher* dispatcher;
-  System::Event* stopEvent;
+  platform_system::Dispatcher* dispatcher;
+  platform_system::Event* stopEvent;
   PaymentService::ConfigurationManager config;
   PaymentService::WalletService* service;
   cn::CurrencyBuilder currencyBuilder;

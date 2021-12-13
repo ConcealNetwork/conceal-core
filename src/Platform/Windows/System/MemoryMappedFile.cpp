@@ -24,7 +24,7 @@
 
 #include "Common/ScopeExit.h"
 
-namespace System {
+namespace platform_system {
 
 MemoryMappedFile::MemoryMappedFile() :
   m_fileHandle(INVALID_HANDLE_VALUE),

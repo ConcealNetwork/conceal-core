@@ -56,7 +56,7 @@ namespace {
   const command_line::arg_descriptor<bool>        arg_preview   = {"preview", "print on screen what it would be doing, but not really doing it", false, true};
   logging::ConsoleLogger log;
   logging::LoggerRef logger(log, "optimizer");
-  System::Dispatcher dispatcher;
+  platform_system::Dispatcher dispatcher;
 }
 
 bool validAddress(po::variables_map& vm, const std::string& address) {

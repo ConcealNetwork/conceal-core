@@ -46,7 +46,7 @@ TEST_F(WalletLegacyTests, checkNetworkShutdown)
     network.getNode(1).stopDaemon();
     network.getNode(2).stopDaemon();
 
-    System::Timer(dispatcher).sleep(std::chrono::seconds(10));
+    platform_system::Timer(dispatcher).sleep(std::chrono::seconds(10));
 
     // check that sync progress was not updated
     ASSERT_EQ(syncProgress, observer.getSyncProgress());

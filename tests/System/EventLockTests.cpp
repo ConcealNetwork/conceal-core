@@ -9,7 +9,7 @@
 #include <System/EventLock.h>
 #include <gtest/gtest.h>
 
-using namespace System;
+using namespace platform_system;
 
 TEST(EventLockTests, eventLockIsLocking) {
   Dispatcher dispatcher;

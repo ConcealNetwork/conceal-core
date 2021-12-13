@@ -17,7 +17,7 @@
 #include <System/Ipv4Address.h>
 #include <stdexcept>
 
-namespace System {
+namespace platform_system {
 
 Ipv4Resolver::Ipv4Resolver() : dispatcher(nullptr) {
 }

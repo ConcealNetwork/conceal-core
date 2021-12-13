@@ -43,7 +43,7 @@ void relay_post_notify(IP2pEndpoint &p2p, typename t_parametr::request &arg, con
 
 } // namespace
 
-CryptoNoteProtocolHandler::CryptoNoteProtocolHandler(const Currency &currency, System::Dispatcher &dispatcher, ICore &rcore, IP2pEndpoint *p_net_layout, logging::ILogger &log) :
+CryptoNoteProtocolHandler::CryptoNoteProtocolHandler(const Currency &currency, platform_system::Dispatcher &dispatcher, ICore &rcore, IP2pEndpoint *p_net_layout, logging::ILogger &log) :
   m_currency(currency),
   m_p2p(p_net_layout),
   m_core(rcore),

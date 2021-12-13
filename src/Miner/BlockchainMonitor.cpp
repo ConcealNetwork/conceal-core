@@ -16,7 +16,7 @@
 #include "Rpc/JsonRpc.h"
 #include "Rpc/HttpClient.h"
 
-BlockchainMonitor::BlockchainMonitor(System::Dispatcher& dispatcher, const std::string& daemonHost, uint16_t daemonPort, size_t pollingInterval, logging::ILogger& logger):
+BlockchainMonitor::BlockchainMonitor(platform_system::Dispatcher& dispatcher, const std::string& daemonHost, uint16_t daemonPort, size_t pollingInterval, logging::ILogger& logger):
   m_dispatcher(dispatcher),
   m_daemonHost(daemonHost),
   m_daemonPort(daemonPort),
@@ -37,7 +37,7 @@ void BlockchainMonitor::waitBlockchainUpdate() {
 
   while(!m_stopped) {
     m_sleepingContext.spawn([this] () {
-      System::Timer timer(m_dispatcher);
+      platform_system::Timer timer(m_dispatcher);
       timer.sleep(std::chrono::seconds(m_pollingInterval));
     });
 
@@ -51,7 +51,7 @@ void BlockchainMonitor::waitBlockchainUpdate() {
 
   if (m_stopped) {
     m_logger(logging::DEBUGGING) << "Blockchain monitor has been stopped";
-    throw System::InterruptedException();
+    throw platform_system::InterruptedException();
   }
 }
 
@@ -72,7 +72,7 @@ crypto::Hash BlockchainMonitor::requestLastBlockHash() {
     cn::COMMAND_RPC_GET_LAST_BLOCK_HEADER::request request;
     cn::COMMAND_RPC_GET_LAST_BLOCK_HEADER::response response;
 
-    System::EventLock lk(m_httpEvent);
+    platform_system::EventLock lk(m_httpEvent);
     cn::JsonRpc::invokeJsonRpcCommand(client, "getlastblockheader", request, response);
 
     if (response.status != CORE_RPC_STATUS_OK) {

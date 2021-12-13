@@ -10,7 +10,7 @@
 #include <mutex>
 #include <thread>
 
-namespace System {
+namespace platform_system {
 
 namespace Detail {
 

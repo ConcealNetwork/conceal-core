@@ -90,8 +90,8 @@ const cn::Currency PaymentGateService::getCurrency() {
 
 void PaymentGateService::run() {
   
-  System::Dispatcher localDispatcher;
-  System::Event localStopEvent(localDispatcher);
+  platform_system::Dispatcher localDispatcher;
+  platform_system::Event localStopEvent(localDispatcher);
 
   this->dispatcher = &localDispatcher;
   this->stopEvent = &localStopEvent;
@@ -183,9 +183,9 @@ void PaymentGateService::runInProcess(logging::LoggerRef& log) {
 
   log(logging::INFO) << "Spawning p2p server";
 
-  System::Event p2pStarted(*dispatcher);
+  platform_system::Event p2pStarted(*dispatcher);
   
-  System::Context<> context(*dispatcher, [&]() {
+  platform_system::Context<> context(*dispatcher, [&]() {
     p2pStarted.set();
     p2pNode.run();
   });

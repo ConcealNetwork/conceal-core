@@ -28,7 +28,7 @@
 
 #include "Common/ScopeExit.h"
 
-namespace System {
+namespace platform_system {
 
 MemoryMappedFile::MemoryMappedFile() :
   m_file(-1),

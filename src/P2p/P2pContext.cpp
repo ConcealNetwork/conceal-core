@@ -13,7 +13,7 @@
 
 #include "LevinProtocol.h"
 
-using namespace System;
+using namespace platform_system;
 
 namespace cn {
 

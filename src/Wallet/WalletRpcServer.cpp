@@ -53,7 +53,7 @@ void wallet_rpc_server::init_options(boost::program_options::options_description
 }
 //------------------------------------------------------------------------------------------------------------------------------
 wallet_rpc_server::wallet_rpc_server(
-  System::Dispatcher& dispatcher,
+  platform_system::Dispatcher& dispatcher,
   logging::ILogger& log,
   cn::IWalletLegacy&w,
   cn::INode& n,

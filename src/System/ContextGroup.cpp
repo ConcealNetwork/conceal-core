@@ -7,7 +7,7 @@
 #include "ContextGroup.h"
 #include <cassert>
 
-namespace System {
+namespace platform_system {
 
 ContextGroup::ContextGroup(Dispatcher& dispatcher) : dispatcher(&dispatcher) {
   contextGroup.firstContext = nullptr;

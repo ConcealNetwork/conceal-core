@@ -34,7 +34,7 @@
 
 using namespace crypto;
 using namespace common;
-using namespace System;
+using namespace platform_system;
 
 namespace cn {
 

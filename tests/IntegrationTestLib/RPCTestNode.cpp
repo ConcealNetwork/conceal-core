@@ -20,11 +20,11 @@
 #include "NodeCallback.h"
 
 using namespace cn;
-using namespace System;
+using namespace platform_system;
 
 namespace Tests {
 
-RPCTestNode::RPCTestNode(uint16_t port, System::Dispatcher& d) : 
+RPCTestNode::RPCTestNode(uint16_t port, platform_system::Dispatcher& d) : 
   m_rpcPort(port), m_dispatcher(d), m_httpClient(d, "127.0.0.1", port) {
 }
 

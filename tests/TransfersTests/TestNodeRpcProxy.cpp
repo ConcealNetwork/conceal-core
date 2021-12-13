@@ -17,7 +17,7 @@ using namespace cn;
 using namespace crypto;
 using namespace Tests::common;
 
-extern System::Dispatcher globalSystem;
+extern platform_system::Dispatcher globalSystem;
 extern Tests::common::BaseFunctionalTestsConfig config;
 
 namespace {

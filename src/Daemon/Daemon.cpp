@@ -297,7 +297,7 @@ int main(int argc, char* argv[])
       }
     }
 
-    System::Dispatcher dispatcher;
+    platform_system::Dispatcher dispatcher;
 
     cn::CryptoNoteProtocolHandler cprotocol(currency, dispatcher, ccore, nullptr, logManager);
     cn::NodeServer p2psrv(dispatcher, cprotocol, logManager);

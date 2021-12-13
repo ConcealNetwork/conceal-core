@@ -25,10 +25,10 @@ struct BlockMiningParameters {
   difficulty_type difficulty;
 };
 
-class Miner {
+class miner {
 public:
-  Miner(System::Dispatcher& dispatcher, logging::ILogger& logger);
-  ~Miner();
+  miner(platform_system::Dispatcher& dispatcher, logging::ILogger& logger);
+  ~miner();
 
   Block mine(const BlockMiningParameters& blockMiningParameters, size_t threadCount);
 
@@ -36,13 +36,13 @@ public:
   void stop();
 
 private:
-  System::Dispatcher& m_dispatcher;
-  System::Event m_miningStopped;
+  platform_system::Dispatcher& m_dispatcher;
+  platform_system::Event m_miningStopped;
 
   enum class MiningState : uint8_t { MINING_STOPPED, BLOCK_FOUND, MINING_IN_PROGRESS};
   std::atomic<MiningState> m_state;
 
-  std::vector<std::unique_ptr<System::RemoteContext<void>>>  m_workers;
+  std::vector<std::unique_ptr<platform_system::RemoteContext<void>>>  m_workers;
 
   Block m_block;
 

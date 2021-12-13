@@ -38,7 +38,7 @@ public:
 
   P2pNode(
     const P2pNodeConfig& cfg,
-    System::Dispatcher& dispatcher, 
+    platform_system::Dispatcher& dispatcher, 
     logging::ILogger& log, 
     const crypto::Hash& genesisHash, 
     PeerIdType peerId);
@@ -68,13 +68,13 @@ private:
   const crypto::Hash m_genesisHash;
   const CORE_SYNC_DATA m_genesisPayload;
 
-  System::Dispatcher& m_dispatcher;
-  System::ContextGroup workingContextGroup;
-  System::TcpListener m_listener;
-  System::Timer m_connectorTimer;
+  platform_system::Dispatcher& m_dispatcher;
+  platform_system::ContextGroup workingContextGroup;
+  platform_system::TcpListener m_listener;
+  platform_system::Timer m_connectorTimer;
   PeerlistManager m_peerlist;
   ContextList m_contexts;
-  System::Event m_queueEvent;
+  platform_system::Event m_queueEvent;
   std::deque<std::unique_ptr<IP2pConnection>> m_connectionQueue;
 
   // IP2pNodeInternal

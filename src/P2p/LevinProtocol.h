@@ -12,7 +12,7 @@
 #include "Serialization/KVBinaryInputStreamSerializer.h"
 #include "Serialization/KVBinaryOutputStreamSerializer.h"
 
-namespace System {
+namespace platform_system {
 class TcpConnection;
 }
 
@@ -34,7 +34,7 @@ const int32_t LEVIN_PROTOCOL_RETCODE_SUCCESS = 1;
 class LevinProtocol {
 public:
 
-  LevinProtocol(System::TcpConnection& connection);
+  LevinProtocol(platform_system::TcpConnection& connection);
 
   template <typename Request, typename Response>
   bool invoke(uint32_t command, const Request& request, Response& response) {
@@ -96,7 +96,7 @@ private:
 
   bool readStrict(uint8_t* ptr, size_t size);
   void writeStrict(const uint8_t* ptr, size_t size);
-  System::TcpConnection& m_conn;
+  platform_system::TcpConnection& m_conn;
 };
 
 }

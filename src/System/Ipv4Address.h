@@ -9,7 +9,7 @@
 #include <cstdint>
 #include <string>
 
-namespace System {
+namespace platform_system {
 
 class Ipv4Address {
 public:

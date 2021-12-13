@@ -8,7 +8,7 @@
 
 #include <string>
 
-namespace System {
+namespace platform_system {
 std::string lastErrorMessage();
 std::string errorMessage(int);
 }

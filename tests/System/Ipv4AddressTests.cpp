@@ -6,7 +6,7 @@
 #include <System/Ipv4Address.h>
 #include <gtest/gtest.h>
 
-using namespace System;
+using namespace platform_system;
 
 TEST(Ipv4AddressTest, value) {
   Ipv4Address address1(0x00000000);

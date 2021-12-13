@@ -16,7 +16,7 @@ using namespace cn;
 using namespace logging;
 
 extern Tests::common::BaseFunctionalTestsConfig baseCfg;
-// extern System::Dispatcher globalDispatcher;
+// extern platform_system::Dispatcher globalDispatcher;
 
 struct TotalWalletBalance {
 
@@ -144,7 +144,7 @@ public:
     ASSERT_EQ(txInfo.totalAmount, amount);
   }
 
-  System::Dispatcher dispatcher;
+  platform_system::Dispatcher dispatcher;
   std::string walletPassword = "pass";
   cn::Currency currency;
   logging::ConsoleLogger log;

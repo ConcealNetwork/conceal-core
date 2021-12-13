@@ -12,7 +12,7 @@
 
 namespace logging {
 
-using common::Console::Color;
+using common::console::Color;
 
 ConsoleLogger::ConsoleLogger(Level level) : CommonLogger(level) {
 }
@@ -49,7 +49,7 @@ void ConsoleLogger::doLogString(const std::string& message) {
       color += message[charPos];
       if (readingText) {
         auto it = colorMapping.find(color);
-        common::Console::setTextColor(it == colorMapping.end() ? Color::Default : it->second);
+        common::console::setTextColor(it == colorMapping.end() ? Color::Default : it->second);
         changedColor = true;
         color.clear();
       }
@@ -61,7 +61,7 @@ void ConsoleLogger::doLogString(const std::string& message) {
   }
 
   if (changedColor) {
-    common::Console::setTextColor(Color::Default);
+    common::console::setTextColor(Color::Default);
   }
 }
 

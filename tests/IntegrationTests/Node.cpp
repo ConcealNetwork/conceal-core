@@ -211,7 +211,7 @@ TEST_F(NodeTest, generateBlockchain)
     std::string minerAddress = wallet.createAddress();
     daemon.startMining(1, minerAddress);
 
-    System::Timer timer(dispatcher);
+    platform_system::Timer timer(dispatcher);
 
     while (daemon.getLocalHeight() < 300)
     {
@@ -265,7 +265,7 @@ TEST_F(NodeTest, addMoreBlocks)
     std::string minerAddress = wallet.getAddress(0);
     daemon.startMining(1, minerAddress);
 
-    System::Timer timer(dispatcher);
+    platform_system::Timer timer(dispatcher);
 
     while (daemon.getLocalHeight() <= startHeight + 3)
     {

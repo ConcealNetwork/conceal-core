@@ -38,7 +38,7 @@ public:
 class HttpClient {
 public:
 
-  HttpClient(System::Dispatcher& dispatcher, const std::string& address, uint16_t port);
+  HttpClient(platform_system::Dispatcher& dispatcher, const std::string& address, uint16_t port);
   ~HttpClient();
   void request(const HttpRequest& req, HttpResponse& res);
   
@@ -52,9 +52,9 @@ private:
   const uint16_t m_port;
 
   bool m_connected = false;
-  System::Dispatcher& m_dispatcher;
-  System::TcpConnection m_connection;
-  std::unique_ptr<System::TcpStreambuf> m_streamBuf;
+  platform_system::Dispatcher& m_dispatcher;
+  platform_system::TcpConnection m_connection;
+  std::unique_ptr<platform_system::TcpStreambuf> m_streamBuf;
 };
 
 template <typename Request, typename Response>
