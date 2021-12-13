@@ -14,7 +14,7 @@
 #include "Serialization/JsonInputValueSerializer.h"
 #include "Serialization/JsonOutputStreamSerializer.h"
 
-namespace PaymentService {
+namespace payment_service {
 
 class WalletService;
 
@@ -93,4 +93,4 @@ private:
   std::error_code handleSendFusionTransaction(const SendFusionTransaction::Request& request, SendFusionTransaction::Response& response);
 };
 
-}//namespace PaymentService
+}//namespace payment_service

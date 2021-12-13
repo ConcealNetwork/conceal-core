@@ -35,7 +35,7 @@ namespace po = boost::program_options;
 using common::JsonValue;
 using namespace logging;
 using namespace cn;
-using namespace PaymentService;
+using namespace payment_service;
 
 #ifndef ENDL
 #define ENDL std::endl
@@ -60,8 +60,8 @@ namespace {
 }
 
 bool validAddress(po::variables_map& vm, const std::string& address) {
-  PaymentService::GetBalance::Request req;
-  PaymentService::GetBalance::Response res;
+  payment_service::GetBalance::Request req;
+  payment_service::GetBalance::Response res;
 
   req.address = address;
 
@@ -90,8 +90,8 @@ std::vector<std::string> getWalletsAddresses(po::variables_map& vm) {
       containerAddresses.push_back(command_line::get_arg(vm, arg_address));
     }
   } else {
-    PaymentService::GetAddresses::Request req;
-    PaymentService::GetAddresses::Response res;
+    payment_service::GetAddresses::Request req;
+    payment_service::GetAddresses::Response res;
 
     try {
       HttpClient httpClient(dispatcher, command_line::get_arg(vm, arg_ip), command_line::get_arg(vm, arg_rpc_port));
@@ -118,8 +118,8 @@ bool isWalletEligible(po::variables_map& vm, std::string address) {
     threshold = command_line::get_arg(vm, arg_threshold);
   }
 
-  PaymentService::EstimateFusion::Request req;
-  PaymentService::EstimateFusion::Response res;
+  payment_service::EstimateFusion::Request req;
+  payment_service::EstimateFusion::Response res;
 
   req.threshold = threshold;
   req.addresses.push_back(address);
@@ -158,8 +158,8 @@ bool optimizeWallet(po::variables_map& vm, std::string address) {
     anonymity = command_line::get_arg(vm, arg_anonimity);
   }
 
-  PaymentService::SendFusionTransaction::Request req;
-  PaymentService::SendFusionTransaction::Response res;
+  payment_service::SendFusionTransaction::Request req;
+  payment_service::SendFusionTransaction::Response res;
 
   req.threshold = threshold;
   req.anonymity = anonymity;
@@ -245,8 +245,8 @@ void processWallets(po::variables_map& vm, std::vector<std::string>& containerAd
 
 bool canConnect(po::variables_map& vm) {
 
-  PaymentService::GetStatus::Request req;
-  PaymentService::GetStatus::Response res;
+  payment_service::GetStatus::Request req;
+  payment_service::GetStatus::Response res;
 
   try {
     HttpClient httpClient(dispatcher, command_line::get_arg(vm, arg_ip), command_line::get_arg(vm, arg_rpc_port));

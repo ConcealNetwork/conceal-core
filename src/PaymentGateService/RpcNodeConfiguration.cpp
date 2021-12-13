@@ -7,7 +7,7 @@
 #include "RpcNodeConfiguration.h"
 #include "CryptoNoteConfig.h"
 
-namespace PaymentService {
+namespace payment_service {
 
 namespace po = boost::program_options;
 
@@ -32,4 +32,4 @@ void RpcNodeConfiguration::init(const boost::program_options::variables_map& opt
   }
 }
 
-} //namespace PaymentService
+} //namespace payment_service

@@ -30,7 +30,7 @@
 #include "Serialization/JsonInputValueSerializer.h"
 #include "Serialization/JsonOutputStreamSerializer.h"
 
-namespace PaymentService {
+namespace payment_service {
 
 PaymentServiceJsonRpcServer::PaymentServiceJsonRpcServer(platform_system::Dispatcher& sys, platform_system::Event& stopEvent, WalletService& service, logging::ILogger& loggerGroup) 
   : JsonRpcServer(sys, stopEvent, loggerGroup)

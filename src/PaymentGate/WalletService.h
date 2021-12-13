@@ -27,7 +27,7 @@ namespace cn
 class IFusionManager;
 }
 
-namespace PaymentService
+namespace payment_service
 {
 
 struct WalletConfiguration
@@ -131,4 +131,4 @@ private:
   std::map<std::string, size_t> transactionIdIndex;
 };
 
-} //namespace PaymentService
+} //namespace payment_service

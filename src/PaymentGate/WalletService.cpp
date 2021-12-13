@@ -56,7 +56,7 @@
 
 using namespace cn;
 
-namespace PaymentService
+namespace payment_service
 {
 
   namespace
@@ -293,9 +293,9 @@ namespace PaymentService
 
     //KD2
 
-    PaymentService::TransactionRpcInfo convertTransactionWithTransfersToTransactionRpcInfo(const cn::WalletTransactionWithTransfers &transactionWithTransfers)
+    payment_service::TransactionRpcInfo convertTransactionWithTransfersToTransactionRpcInfo(const cn::WalletTransactionWithTransfers &transactionWithTransfers)
     {
-      PaymentService::TransactionRpcInfo transactionInfo;
+      payment_service::TransactionRpcInfo transactionInfo;
       transactionInfo.state = static_cast<uint8_t>(transactionWithTransfers.transaction.state);
       transactionInfo.transactionHash = common::podToHex(transactionWithTransfers.transaction.hash);
       transactionInfo.blockIndex = transactionWithTransfers.transaction.blockHeight;
@@ -311,7 +311,7 @@ namespace PaymentService
 
       for (const cn::WalletTransfer &transfer : transactionWithTransfers.transfers)
       {
-        PaymentService::TransferRpcInfo rpcTransfer;
+        payment_service::TransferRpcInfo rpcTransfer;
         rpcTransfer.address = transfer.address;
         rpcTransfer.amount = transfer.amount;
         rpcTransfer.type = static_cast<uint8_t>(transfer.type);
@@ -320,19 +320,19 @@ namespace PaymentService
       return transactionInfo;
     }
 
-    std::vector<PaymentService::TransactionsInBlockRpcInfo> convertTransactionsInBlockInfoToTransactionsInBlockRpcInfo(
+    std::vector<payment_service::TransactionsInBlockRpcInfo> convertTransactionsInBlockInfoToTransactionsInBlockRpcInfo(
         const std::vector<cn::TransactionsInBlockInfo> &blocks, uint32_t &knownBlockCount)
     {
-      std::vector<PaymentService::TransactionsInBlockRpcInfo> rpcBlocks;
+      std::vector<payment_service::TransactionsInBlockRpcInfo> rpcBlocks;
       rpcBlocks.reserve(blocks.size());
       for (const auto &block : blocks)
       {
-        PaymentService::TransactionsInBlockRpcInfo rpcBlock;
+        payment_service::TransactionsInBlockRpcInfo rpcBlock;
         rpcBlock.blockHash = common::podToHex(block.blockHash);
 
         for (const cn::WalletTransactionWithTransfers &transactionWithTransfers : block.transactions)
         {
-          PaymentService::TransactionRpcInfo transactionInfo = convertTransactionWithTransfersToTransactionRpcInfo(transactionWithTransfers);
+          payment_service::TransactionRpcInfo transactionInfo = convertTransactionWithTransfersToTransactionRpcInfo(transactionWithTransfers);
           transactionInfo.confirmations = knownBlockCount - transactionInfo.blockIndex;
           rpcBlock.transactions.push_back(std::move(transactionInfo));
         }
@@ -343,15 +343,15 @@ namespace PaymentService
       return rpcBlocks;
     }
 
-    std::vector<PaymentService::TransactionHashesInBlockRpcInfo> convertTransactionsInBlockInfoToTransactionHashesInBlockRpcInfo(
+    std::vector<payment_service::TransactionHashesInBlockRpcInfo> convertTransactionsInBlockInfoToTransactionHashesInBlockRpcInfo(
         const std::vector<cn::TransactionsInBlockInfo> &blocks)
     {
 
-      std::vector<PaymentService::TransactionHashesInBlockRpcInfo> transactionHashes;
+      std::vector<payment_service::TransactionHashesInBlockRpcInfo> transactionHashes;
       transactionHashes.reserve(blocks.size());
       for (const cn::TransactionsInBlockInfo &block : blocks)
       {
-        PaymentService::TransactionHashesInBlockRpcInfo item;
+        payment_service::TransactionHashesInBlockRpcInfo item;
         item.blockHash = common::podToHex(block.blockHash);
 
         for (const cn::WalletTransactionWithTransfers &transaction : block.transactions)
@@ -377,7 +377,7 @@ namespace PaymentService
       }
     }
 
-    std::vector<std::string> collectDestinationAddresses(const std::vector<PaymentService::WalletRpcOrder> &orders)
+    std::vector<std::string> collectDestinationAddresses(const std::vector<payment_service::WalletRpcOrder> &orders)
     {
       std::vector<std::string> result;
 
@@ -390,9 +390,9 @@ namespace PaymentService
       return result;
     }
 
-    std::vector<PaymentService::WalletRpcMessage> collectMessages(const std::vector<PaymentService::WalletRpcOrder> &orders)
+    std::vector<payment_service::WalletRpcMessage> collectMessages(const std::vector<payment_service::WalletRpcOrder> &orders)
     {
-      std::vector<PaymentService::WalletRpcMessage> result;
+      std::vector<payment_service::WalletRpcMessage> result;
 
       result.reserve(orders.size());
       for (const auto &order : orders)
@@ -406,7 +406,7 @@ namespace PaymentService
       return result;
     }
 
-    std::vector<cn::WalletOrder> convertWalletRpcOrdersToWalletOrders(const std::vector<PaymentService::WalletRpcOrder> &orders)
+    std::vector<cn::WalletOrder> convertWalletRpcOrdersToWalletOrders(const std::vector<payment_service::WalletRpcOrder> &orders)
     {
       std::vector<cn::WalletOrder> result;
       result.reserve(orders.size());
@@ -419,7 +419,7 @@ namespace PaymentService
       return result;
     }
 
-    std::vector<cn::WalletMessage> convertWalletRpcMessagesToWalletMessages(const std::vector<PaymentService::WalletRpcMessage> &messages)
+    std::vector<cn::WalletMessage> convertWalletRpcMessagesToWalletMessages(const std::vector<payment_service::WalletRpcMessage> &messages)
     {
       std::vector<cn::WalletMessage> result;
       result.reserve(messages.size());
@@ -564,7 +564,7 @@ namespace PaymentService
     /* Save the container and exit */
     wallet->save(cn::WalletSaveLevel::SAVE_KEYS_ONLY);
     log(logging::INFO) << "Wallet is saved";
-  } // namespace PaymentService
+  } // namespace payment_service
 
   void importLegacyKeys(const std::string &legacyKeysFile, const WalletConfiguration &conf)
   {
@@ -1266,7 +1266,7 @@ namespace PaymentService
 
       for (const cn::WalletTransfer &transfer : transactionWithTransfers.transfers)
       {
-        PaymentService::TransferRpcInfo rpcTransfer;
+        payment_service::TransferRpcInfo rpcTransfer;
         rpcTransfer.address = transfer.address;
         rpcTransfer.amount = transfer.amount;
         rpcTransfer.type = static_cast<uint8_t>(transfer.type);
@@ -1340,7 +1340,7 @@ namespace PaymentService
 
       validateAddresses(request.sourceAddresses, currency, logger);
       validateAddresses(collectDestinationAddresses(request.transfers), currency, logger);
-      std::vector<PaymentService::WalletRpcMessage> messages = collectMessages(request.transfers);
+      std::vector<payment_service::WalletRpcMessage> messages = collectMessages(request.transfers);
       if (!request.changeAddress.empty())
       {
         validateAddresses({request.changeAddress}, currency, logger);
@@ -1392,7 +1392,7 @@ namespace PaymentService
 
       validateAddresses(request.addresses, currency, logger);
       validateAddresses(collectDestinationAddresses(request.transfers), currency, logger);
-      std::vector<PaymentService::WalletRpcMessage> messages = collectMessages(request.transfers);
+      std::vector<payment_service::WalletRpcMessage> messages = collectMessages(request.transfers);
       if (!request.changeAddress.empty())
       {
         validateAddresses({request.changeAddress}, currency, logger);
@@ -2093,4 +2093,4 @@ namespace PaymentService
       return convertTransactionsInBlockInfoToTransactionsInBlockRpcInfo(filteredTransactions, knownBlockCount);
     }
 
-  } //namespace PaymentService
+  } //namespace payment_service

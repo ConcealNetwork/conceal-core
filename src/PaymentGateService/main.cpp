@@ -316,7 +316,7 @@ int main(int argc, char** argv) {
       pg.run();
     }
 
-  } catch (PaymentService::ConfigurationError& ex) {
+  } catch (payment_service::ConfigurationError& ex) {
     std::cerr << "Configuration error: " << ex.what() << std::endl;
     return 1;
   } catch (std::exception& ex) {

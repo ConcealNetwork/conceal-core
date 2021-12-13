@@ -14,7 +14,7 @@
 
 namespace po = boost::program_options;
 
-namespace PaymentService {
+namespace payment_service {
 
 Configuration::Configuration() {
   generateNewContainer = false;
@@ -133,4 +133,4 @@ void Configuration::init(const boost::program_options::variables_map& options) {
   }
 }
 
-} //namespace PaymentService
+} //namespace payment_service

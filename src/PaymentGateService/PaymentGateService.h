@@ -24,8 +24,8 @@ public:
 
   bool init(int argc, char** argv);
 
-  const PaymentService::ConfigurationManager& getConfig() const { return config; }
-  PaymentService::WalletConfiguration getWalletConfig() const;
+  const payment_service::ConfigurationManager& getConfig() const { return config; }
+  payment_service::WalletConfiguration getWalletConfig() const;
   const cn::Currency getCurrency();
 
   void run();
@@ -42,8 +42,8 @@ private:
 
   platform_system::Dispatcher* dispatcher;
   platform_system::Event* stopEvent;
-  PaymentService::ConfigurationManager config;
-  PaymentService::WalletService* service;
+  payment_service::ConfigurationManager config;
+  payment_service::WalletService* service;
   cn::CurrencyBuilder currencyBuilder;
   
   logging::LoggerGroup logger;

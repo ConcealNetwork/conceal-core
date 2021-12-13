@@ -31,7 +31,7 @@
 #include <unistd.h>
 #endif
 
-using namespace PaymentService;
+using namespace payment_service;
 
 void changeDirectory(const std::string& path) {
   if (chdir(path.c_str())) {
@@ -208,7 +208,7 @@ void PaymentGateService::runRpcProxy(logging::LoggerRef& log) {
   cn::Currency currency = currencyBuilder.currency();
   
   std::unique_ptr<cn::INode> node(
-    PaymentService::NodeFactory::createNode(
+    payment_service::NodeFactory::createNode(
       config.remoteNodeConfig.daemonHost, 
       config.remoteNodeConfig.daemonPort));
 
@@ -216,15 +216,15 @@ void PaymentGateService::runRpcProxy(logging::LoggerRef& log) {
 }
 
 void PaymentGateService::runWalletService(const cn::Currency& currency, cn::INode& node) {
-  PaymentService::WalletConfiguration walletConfiguration{
+  payment_service::WalletConfiguration walletConfiguration{
     config.gateConfiguration.containerFile,
     config.gateConfiguration.containerPassword
   };
 
   std::unique_ptr<cn::WalletGreen> wallet(new cn::WalletGreen(*dispatcher, currency, node, logger));
 
-  service = new PaymentService::WalletService(currency, *dispatcher, node, *wallet, *wallet, walletConfiguration, logger);
-  std::unique_ptr<PaymentService::WalletService> serviceGuard(service);
+  service = new payment_service::WalletService(currency, *dispatcher, node, *wallet, *wallet, walletConfiguration, logger);
+  std::unique_ptr<payment_service::WalletService> serviceGuard(service);
   try {
     service->init();
   } catch (std::exception& e) {
@@ -240,7 +240,7 @@ void PaymentGateService::runWalletService(const cn::Currency& currency, cn::INod
       std::cout << "Address: " << address << std::endl;
     }
   } else {
-    PaymentService::PaymentServiceJsonRpcServer rpcServer(*dispatcher, *stopEvent, *service, logger);
+    payment_service::PaymentServiceJsonRpcServer rpcServer(*dispatcher, *stopEvent, *service, logger);
     rpcServer.start(config.gateConfiguration.bindAddress, config.gateConfiguration.bindPort,
       config.gateConfiguration.rpcUser, config.gateConfiguration.rpcPassword);
 
