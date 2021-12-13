@@ -21,7 +21,7 @@
 #include "Wallet/WalletErrors.h"
 
 using namespace cn;
-using namespace PaymentService;
+using namespace payment_service;
 
 namespace cn {
 

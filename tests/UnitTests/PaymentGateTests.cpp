@@ -16,7 +16,7 @@
 #include "INodeStubs.h"
 #include "TestBlockchainGenerator.h"
 
-using namespace PaymentService;
+using namespace payment_service;
 using namespace cn;
 
 class PaymentGateTest : public testing::Test {
