@@ -52,11 +52,11 @@
 namespace crypto
 {
   /*!
-   * \namespace crypto::ElectrumWords
+   * \namespace crypto::electrum_words
    * 
    * \brief Mnemonic seed word generation and wallet restoration helper functions.
    */
-  namespace ElectrumWords
+  namespace electrum_words
   {
 
     const int seed_length = 24;

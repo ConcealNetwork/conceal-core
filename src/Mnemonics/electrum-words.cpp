@@ -194,7 +194,7 @@ namespace
     }
     boost::crc_32_type result;
     result.process_bytes(trimmed_words.data(), trimmed_words.length());
-    return result.checksum() % crypto::ElectrumWords::seed_length;
+    return result.checksum() % crypto::electrum_words::seed_length;
   }
 
   /*!
@@ -229,11 +229,11 @@ namespace
 namespace crypto
 {
   /*!
-   * \namespace crypto::ElectrumWords
+   * \namespace crypto::electrum_words
    * 
    * \brief Mnemonic seed word generation and wallet restoration helper functions.
    */
-  namespace ElectrumWords
+  namespace electrum_words
   {
     /*!
      * \brief Converts seed words to bytes (secret key).

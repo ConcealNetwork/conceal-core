@@ -908,7 +908,7 @@ std::string simple_wallet::generate_mnemonic(crypto::SecretKey &private_spend_ke
 
   std::string mnemonic_str;
 
-  if (!crypto::ElectrumWords::bytes_to_words(private_spend_key, mnemonic_str, "English")) {
+  if (!crypto::electrum_words::bytes_to_words(private_spend_key, mnemonic_str, "English")) {
       logger(ERROR, BRIGHT_RED) << "Cant create the mnemonic for the private spend key!";
   }
 
@@ -944,7 +944,7 @@ bool simple_wallet::is_valid_mnemonic(std::string &mnemonic_phrase, crypto::Secr
   }
 
   for (int i = 0; i < num_of_languages; i++) {
-    if (crypto::ElectrumWords::words_to_bytes(mnemonic_phrase, private_spend_key, languages[i])) {
+    if (crypto::electrum_words::words_to_bytes(mnemonic_phrase, private_spend_key, languages[i])) {
       return true;
     }
   }
