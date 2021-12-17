@@ -21,7 +21,7 @@ namespace platform_system {
 class Dispatcher;
 }
 
-namespace miner {
+namespace Miner {
 
 class MinerManager {
 public:
@@ -35,7 +35,7 @@ private:
   logging::LoggerRef m_logger;
   platform_system::ContextGroup m_contextGroup;
   cn::MiningConfig m_config;
-  cn::miner m_miner;
+  cn::Miner m_miner;
   BlockchainMonitor m_blockchainMonitor;
 
   platform_system::Event m_eventOccurred;
@@ -62,4 +62,4 @@ private:
   void adjustBlockTemplate(cn::Block& blockTemplate) const;
 };
 
-} //namespace miner
+} //namespace Miner

@@ -29,7 +29,7 @@ int main(int argc, char** argv) {
     loggerGroup.addLogger(consoleLogger);
 
     platform_system::Dispatcher dispatcher;
-    miner::MinerManager app(dispatcher, config, loggerGroup);
+    Miner::MinerManager app(dispatcher, config, loggerGroup);
 
     app.start();
   } catch (std::exception& e) {

@@ -15,18 +15,18 @@
 
 namespace cn {
 
-miner::miner(platform_system::Dispatcher& dispatcher, logging::ILogger& logger) :
+Miner::Miner(platform_system::Dispatcher& dispatcher, logging::ILogger& logger) :
   m_dispatcher(dispatcher),
   m_miningStopped(dispatcher),
   m_state(MiningState::MINING_STOPPED),
   m_logger(logger, "miner") {
 }
 
-miner::~miner() {
+Miner::~Miner() {
   assert(m_state != MiningState::MINING_IN_PROGRESS);
 }
 
-Block miner::mine(const BlockMiningParameters& blockMiningParameters, size_t threadCount) {
+Block Miner::mine(const BlockMiningParameters& blockMiningParameters, size_t threadCount) {
   if (threadCount == 0) {
     throw std::runtime_error("miner requires at least one thread");
   }
@@ -50,7 +50,7 @@ Block miner::mine(const BlockMiningParameters& blockMiningParameters, size_t thr
   return m_block;
 }
 
-void miner::stop() {
+void Miner::stop() {
   MiningState state = MiningState::MINING_IN_PROGRESS;
 
   if (m_state.compare_exchange_weak(state, MiningState::MINING_STOPPED)) {
@@ -59,7 +59,7 @@ void miner::stop() {
   }
 }
 
-void miner::runWorkers(BlockMiningParameters blockMiningParameters, size_t threadCount) {
+void Miner::runWorkers(BlockMiningParameters blockMiningParameters, size_t threadCount) {
   assert(threadCount > 0);
 
   m_logger(logging::INFO) << "Starting mining for difficulty " << blockMiningParameters.difficulty;
@@ -69,7 +69,7 @@ void miner::runWorkers(BlockMiningParameters blockMiningParameters, size_t threa
 
     for (size_t i = 0; i < threadCount; ++i) {
       m_workers.emplace_back(std::unique_ptr<platform_system::RemoteContext<void>> (
-        new platform_system::RemoteContext<void>(m_dispatcher, std::bind(&miner::workerFunc, this, blockMiningParameters.blockTemplate, blockMiningParameters.difficulty, threadCount)))
+        new platform_system::RemoteContext<void>(m_dispatcher, std::bind(&Miner::workerFunc, this, blockMiningParameters.blockTemplate, blockMiningParameters.difficulty, threadCount)))
       );
 
       blockMiningParameters.blockTemplate.nonce++;
@@ -85,7 +85,7 @@ void miner::runWorkers(BlockMiningParameters blockMiningParameters, size_t threa
   m_miningStopped.set();
 }
 
-void miner::workerFunc(const Block& blockTemplate, difficulty_type difficulty, uint32_t nonceStep) {
+void Miner::workerFunc(const Block& blockTemplate, difficulty_type difficulty, uint32_t nonceStep) {
   try {
     Block block = blockTemplate;
     crypto::cn_context cryptoContext;
@@ -119,7 +119,7 @@ void miner::workerFunc(const Block& blockTemplate, difficulty_type difficulty, u
   }
 }
 
-bool miner::setStateBlockFound() {
+bool Miner::setStateBlockFound() {
   auto state = m_state.load();
 
   for (;;) {

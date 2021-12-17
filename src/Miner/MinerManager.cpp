@@ -21,7 +21,7 @@
 
 using namespace cn;
 
-namespace miner {
+namespace Miner {
 
 namespace {
 
@@ -245,4 +245,4 @@ void MinerManager::adjustBlockTemplate(cn::Block& blockTemplate) const {
   }
 }
 
-} //namespace miner
+} //namespace Miner

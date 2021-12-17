@@ -25,10 +25,10 @@ struct BlockMiningParameters {
   difficulty_type difficulty;
 };
 
-class miner {
+class Miner {
 public:
-  miner(platform_system::Dispatcher& dispatcher, logging::ILogger& logger);
-  ~miner();
+  Miner(platform_system::Dispatcher& dispatcher, logging::ILogger& logger);
+  ~Miner();
 
   Block mine(const BlockMiningParameters& blockMiningParameters, size_t threadCount);
 

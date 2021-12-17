@@ -124,7 +124,7 @@ namespace cn
       ++m_genesisBlock.nonce;
     }
 
-    //miner::find_nonce_for_given_block(bl, 1, 0);
+    //Miner::find_nonce_for_given_block(bl, 1, 0);
     return true;
   }
 

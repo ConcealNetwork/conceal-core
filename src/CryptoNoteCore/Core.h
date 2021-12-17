@@ -29,7 +29,7 @@
 namespace cn {
 
   struct core_stat_info;
-  class miner;
+  class Miner;
   class CoreConfig;
 
   class core : public ICore, public IMinerHandler, public IBlockchainStorageObserver, public ITxPoolObserver {
