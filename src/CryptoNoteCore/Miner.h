@@ -23,10 +23,10 @@
 #include "Serialization/ISerializer.h"
 
 namespace cn {
-  class Miner {
+  class miner {
   public:
-    Miner(const Currency& currency, IMinerHandler& handler, logging::ILogger& log);
-    ~Miner();
+    miner(const Currency& currency, IMinerHandler& handler, logging::ILogger& log);
+    ~miner();
 
     bool init(const MinerConfig& config);
     bool set_block_template(const Block& bl, const difficulty_type& diffic);
