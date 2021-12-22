@@ -16,10 +16,10 @@
 #include "BlockchainExplorerErrors.h"
 #include "ITransaction.h"
 
-using namespace Logging;
-using namespace Crypto;
+using namespace logging;
+using namespace crypto;
 
-namespace CryptoNote {
+namespace cn {
 
 class ContextCounterHolder
 {
@@ -130,7 +130,7 @@ private:
   bool m_cancelled;
 };
 
-BlockchainExplorer::BlockchainExplorer(INode& node, Logging::ILogger& logger) :
+BlockchainExplorer::BlockchainExplorer(INode& node, logging::ILogger& logger) :
   synchronized(false),
   observersCounter(0),
   node(node),
@@ -142,7 +142,7 @@ BlockchainExplorer::~BlockchainExplorer() {}
 
 bool BlockchainExplorer::addObserver(IBlockchainObserver* observer) {
   if (state.load() != INITIALIZED) {
-    throw std::system_error(make_error_code(CryptoNote::error::BlockchainExplorerErrorCodes::NOT_INITIALIZED));
+    throw std::system_error(make_error_code(cn::error::BlockchainExplorerErrorCodes::NOT_INITIALIZED));
   }
 
   observersCounter.fetch_add(1);
@@ -151,7 +151,7 @@ bool BlockchainExplorer::addObserver(IBlockchainObserver* observer) {
 
 bool BlockchainExplorer::removeObserver(IBlockchainObserver* observer) {
   if (state.load() != INITIALIZED) {
-    throw std::system_error(make_error_code(CryptoNote::error::BlockchainExplorerErrorCodes::NOT_INITIALIZED));
+    throw std::system_error(make_error_code(cn::error::BlockchainExplorerErrorCodes::NOT_INITIALIZED));
   }
 
   if (observersCounter.load() != 0) {
@@ -164,7 +164,7 @@ bool BlockchainExplorer::removeObserver(IBlockchainObserver* observer) {
 void BlockchainExplorer::init() {
   if (state.load() != NOT_INITIALIZED) {
     logger(ERROR) << "Init called on already initialized BlockchainExplorer.";
-    throw std::system_error(make_error_code(CryptoNote::error::BlockchainExplorerErrorCodes::ALREADY_INITIALIZED));
+    throw std::system_error(make_error_code(cn::error::BlockchainExplorerErrorCodes::ALREADY_INITIALIZED));
   }
 
   if (node.addObserver(this)) {
@@ -172,7 +172,7 @@ void BlockchainExplorer::init() {
   } else {
     logger(ERROR) << "Can't add observer to node.";
     state.store(NOT_INITIALIZED);
-    throw std::system_error(make_error_code(CryptoNote::error::BlockchainExplorerErrorCodes::INTERNAL_ERROR));
+    throw std::system_error(make_error_code(cn::error::BlockchainExplorerErrorCodes::INTERNAL_ERROR));
   }
 
   if (getBlockchainTop(knownBlockchainTop)) {
@@ -180,14 +180,14 @@ void BlockchainExplorer::init() {
   } else {
     logger(ERROR) << "Can't get blockchain top.";
     state.store(NOT_INITIALIZED);
-    throw std::system_error(make_error_code(CryptoNote::error::BlockchainExplorerErrorCodes::INTERNAL_ERROR));
+    throw std::system_error(make_error_code(cn::error::BlockchainExplorerErrorCodes::INTERNAL_ERROR));
   }
 }
 
 void BlockchainExplorer::shutdown() {
   if (state.load() != INITIALIZED) {
     logger(ERROR) << "Shutdown called on not initialized BlockchainExplorer.";
-    throw std::system_error(make_error_code(CryptoNote::error::BlockchainExplorerErrorCodes::NOT_INITIALIZED));
+    throw std::system_error(make_error_code(cn::error::BlockchainExplorerErrorCodes::NOT_INITIALIZED));
   }
 
   node.removeObserver(this);
@@ -197,7 +197,7 @@ void BlockchainExplorer::shutdown() {
 
 bool BlockchainExplorer::getBlocks(const std::vector<uint32_t>& blockHeights, std::vector<std::vector<BlockDetails>>& blocks) {
   if (state.load() != INITIALIZED) {
-    throw std::system_error(make_error_code(CryptoNote::error::BlockchainExplorerErrorCodes::NOT_INITIALIZED));
+    throw std::system_error(make_error_code(cn::error::BlockchainExplorerErrorCodes::NOT_INITIALIZED));
   }
 
   logger(DEBUGGING) << "Get blocks by height request came.";
@@ -228,7 +228,7 @@ bool BlockchainExplorer::getBlocks(const std::vector<uint32_t>& blockHeights, st
 
 bool BlockchainExplorer::getBlocks(const std::vector<Hash>& blockHashes, std::vector<BlockDetails>& blocks) {
   if (state.load() != INITIALIZED) {
-    throw std::system_error(make_error_code(CryptoNote::error::BlockchainExplorerErrorCodes::NOT_INITIALIZED));
+    throw std::system_error(make_error_code(cn::error::BlockchainExplorerErrorCodes::NOT_INITIALIZED));
   }
 
   logger(DEBUGGING) << "Get blocks by hash request came.";
@@ -260,7 +260,7 @@ bool BlockchainExplorer::getBlocks(const std::vector<Hash>& blockHashes, std::ve
 
 bool BlockchainExplorer::getBlocks(uint64_t timestampBegin, uint64_t timestampEnd, uint32_t blocksNumberLimit, std::vector<BlockDetails>& blocks, uint32_t& blocksNumberWithinTimestamps) {
   if (state.load() != INITIALIZED) {
-    throw std::system_error(make_error_code(CryptoNote::error::BlockchainExplorerErrorCodes::NOT_INITIALIZED));
+    throw std::system_error(make_error_code(cn::error::BlockchainExplorerErrorCodes::NOT_INITIALIZED));
   }
 
   logger(DEBUGGING) << "Get blocks by timestamp request came.";
@@ -296,7 +296,7 @@ bool BlockchainExplorer::getBlocks(uint64_t timestampBegin, uint64_t timestampEn
 
 bool BlockchainExplorer::getBlockchainTop(BlockDetails& topBlock) {
   if (state.load() != INITIALIZED) {
-    throw std::system_error(make_error_code(CryptoNote::error::BlockchainExplorerErrorCodes::NOT_INITIALIZED));
+    throw std::system_error(make_error_code(cn::error::BlockchainExplorerErrorCodes::NOT_INITIALIZED));
   }
 
   logger(DEBUGGING) << "Get blockchain top request came.";
@@ -308,7 +308,7 @@ bool BlockchainExplorer::getBlockchainTop(BlockDetails& topBlock) {
   std::vector<std::vector<BlockDetails>> blocks;
   if (!getBlocks(heights, blocks)) {
     logger(ERROR) << "Can't get blockchain top.";
-    throw std::system_error(make_error_code(CryptoNote::error::BlockchainExplorerErrorCodes::INTERNAL_ERROR));
+    throw std::system_error(make_error_code(cn::error::BlockchainExplorerErrorCodes::INTERNAL_ERROR));
   }
 
   assert(blocks.size() == heights.size() && blocks.size() == 1);
@@ -324,7 +324,7 @@ bool BlockchainExplorer::getBlockchainTop(BlockDetails& topBlock) {
 
   if (!gotMainchainBlock) {
     logger(ERROR) << "Can't get blockchain top: all blocks on height " << lastHeight << " are orphaned.";
-    throw std::system_error(make_error_code(CryptoNote::error::BlockchainExplorerErrorCodes::INTERNAL_ERROR));
+    throw std::system_error(make_error_code(cn::error::BlockchainExplorerErrorCodes::INTERNAL_ERROR));
   }
 
   return true;
@@ -332,7 +332,7 @@ bool BlockchainExplorer::getBlockchainTop(BlockDetails& topBlock) {
 
 bool BlockchainExplorer::getTransactions(const std::vector<Hash>& transactionHashes, std::vector<TransactionDetails>& transactions) {
   if (state.load() != INITIALIZED) {
-    throw std::system_error(make_error_code(CryptoNote::error::BlockchainExplorerErrorCodes::NOT_INITIALIZED));
+    throw std::system_error(make_error_code(cn::error::BlockchainExplorerErrorCodes::NOT_INITIALIZED));
   }
 
   logger(DEBUGGING) << "Get transactions by hash request came.";
@@ -363,7 +363,7 @@ bool BlockchainExplorer::getTransactions(const std::vector<Hash>& transactionHas
 
 bool BlockchainExplorer::getPoolTransactions(uint64_t timestampBegin, uint64_t timestampEnd, uint32_t transactionsNumberLimit, std::vector<TransactionDetails>& transactions, uint64_t& transactionsNumberWithinTimestamps) {
   if (state.load() != INITIALIZED) {
-    throw std::system_error(make_error_code(CryptoNote::error::BlockchainExplorerErrorCodes::NOT_INITIALIZED));
+    throw std::system_error(make_error_code(cn::error::BlockchainExplorerErrorCodes::NOT_INITIALIZED));
   }
 
   logger(DEBUGGING) << "Get transactions by timestamp request came.";
@@ -391,7 +391,7 @@ bool BlockchainExplorer::getPoolTransactions(uint64_t timestampBegin, uint64_t t
 
 bool BlockchainExplorer::getTransactionsByPaymentId(const Hash& paymentId, std::vector<TransactionDetails>& transactions) {
   if (state.load() != INITIALIZED) {
-    throw std::system_error(make_error_code(CryptoNote::error::BlockchainExplorerErrorCodes::NOT_INITIALIZED));
+    throw std::system_error(make_error_code(cn::error::BlockchainExplorerErrorCodes::NOT_INITIALIZED));
   }
 
   logger(DEBUGGING) << "Get transactions by payment id request came.";
@@ -416,7 +416,7 @@ bool BlockchainExplorer::getTransactionsByPaymentId(const Hash& paymentId, std::
 
 bool BlockchainExplorer::getPoolState(const std::vector<Hash>& knownPoolTransactionHashes, Hash knownBlockchainTopHash, bool& isBlockchainActual, std::vector<TransactionDetails>& newTransactions, std::vector<Hash>& removedTransactions) {
   if (state.load() != INITIALIZED) {
-    throw std::system_error(make_error_code(CryptoNote::error::BlockchainExplorerErrorCodes::NOT_INITIALIZED));
+    throw std::system_error(make_error_code(cn::error::BlockchainExplorerErrorCodes::NOT_INITIALIZED));
   }
 
   logger(DEBUGGING) << "Get pool state request came.";
@@ -457,7 +457,7 @@ bool BlockchainExplorer::getPoolState(const std::vector<Hash>& knownPoolTransact
 
 uint64_t BlockchainExplorer::getRewardBlocksWindow() {
   if (state.load() != INITIALIZED) {
-    throw std::system_error(make_error_code(CryptoNote::error::BlockchainExplorerErrorCodes::NOT_INITIALIZED));
+    throw std::system_error(make_error_code(cn::error::BlockchainExplorerErrorCodes::NOT_INITIALIZED));
   }
 
   return parameters::CRYPTONOTE_REWARD_BLOCKS_WINDOW;
@@ -465,7 +465,7 @@ uint64_t BlockchainExplorer::getRewardBlocksWindow() {
 
 uint64_t BlockchainExplorer::getFullRewardMaxBlockSize(uint8_t majorVersion) {
   if (state.load() != INITIALIZED) {
-    throw std::system_error(make_error_code(CryptoNote::error::BlockchainExplorerErrorCodes::NOT_INITIALIZED));
+    throw std::system_error(make_error_code(cn::error::BlockchainExplorerErrorCodes::NOT_INITIALIZED));
   }
 
   return parameters::CRYPTONOTE_BLOCK_GRANTED_FULL_REWARD_ZONE;
@@ -473,7 +473,7 @@ uint64_t BlockchainExplorer::getFullRewardMaxBlockSize(uint8_t majorVersion) {
 
 bool BlockchainExplorer::isSynchronized() {
   if (state.load() != INITIALIZED) {
-    throw std::system_error(make_error_code(CryptoNote::error::BlockchainExplorerErrorCodes::NOT_INITIALIZED));
+    throw std::system_error(make_error_code(cn::error::BlockchainExplorerErrorCodes::NOT_INITIALIZED));
   }
 
   logger(DEBUGGING) << "Synchronization status request came.";

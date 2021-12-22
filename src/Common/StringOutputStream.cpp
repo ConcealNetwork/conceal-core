@@ -6,7 +6,7 @@
 
 #include "StringOutputStream.h"
 
-namespace Common {
+namespace common {
 
 StringOutputStream::StringOutputStream(std::string& out) : out(out) {
 }

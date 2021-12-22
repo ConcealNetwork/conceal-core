@@ -16,14 +16,14 @@
 #include "INodeStubs.h"
 #include "TestBlockchainGenerator.h"
 
-using namespace PaymentService;
-using namespace CryptoNote;
+using namespace payment_service;
+using namespace cn;
 
 class PaymentGateTest : public testing::Test {
 public:
 
   PaymentGateTest() : 
-    currency(CryptoNote::CurrencyBuilder(logger).currency()), 
+    currency(cn::CurrencyBuilder(logger).currency()), 
     generator(currency),
     nodeStub(generator) 
   {}
@@ -33,7 +33,7 @@ public:
   }
 
   std::unique_ptr<WalletService> createWalletService(const WalletConfiguration& cfg) {
-    WalletGreen* walletGreen = new CryptoNote::WalletGreen(dispatcher, currency, nodeStub, logger);
+    WalletGreen* walletGreen = new cn::WalletGreen(dispatcher, currency, nodeStub, logger);
     wallet.reset(walletGreen);
     service->init();
     return service;
@@ -45,13 +45,13 @@ public:
   }
 
 protected:  
-  Logging::ConsoleLogger logger;
-  CryptoNote::Currency currency;
+  logging::ConsoleLogger logger;
+  cn::Currency currency;
   TestBlockchainGenerator generator;
   INodeTrivialRefreshStub nodeStub;
-  System::Dispatcher dispatcher;
+  platform_system::Dispatcher dispatcher;
 
-  std::unique_ptr<CryptoNote::IWallet> wallet;
+  std::unique_ptr<cn::IWallet> wallet;
 };
 
 
@@ -79,7 +79,7 @@ TEST_F(PaymentGateTest, addTransaction) {
 
   nodeStub.updateObservers();
 
-  System::Timer(dispatcher).sleep(std::chrono::seconds(2));
+  platform_system::Timer(dispatcher).sleep(std::chrono::seconds(2));
 
   uint64_t pending = 0, actual = 0;
 
@@ -109,7 +109,7 @@ TEST_F(PaymentGateTest, DISABLED_sendTransaction) {
 
   nodeStub.updateObservers();
 
-  System::Timer(dispatcher).sleep(std::chrono::seconds(5));
+  platform_system::Timer(dispatcher).sleep(std::chrono::seconds(5));
 
   auto cfg2 = createWalletConfiguration("pgwallet2.bin");
   generateWallet(cfg2);
@@ -121,9 +121,9 @@ TEST_F(PaymentGateTest, DISABLED_sendTransaction) {
   uint64_t TEST_AMOUNT = 0;
   currency.parseAmount("100000.0", TEST_AMOUNT);
 
-  Crypto::Hash paymentId;
+  crypto::Hash paymentId;
   std::iota(reinterpret_cast<char*>(&paymentId), reinterpret_cast<char*>(&paymentId) + sizeof(paymentId), 0);
-  std::string paymentIdStr = Common::podToHex(paymentId);
+  std::string paymentIdStr = common::podToHex(paymentId);
 
   uint64_t txId = 0;
 
@@ -146,7 +146,7 @@ TEST_F(PaymentGateTest, DISABLED_sendTransaction) {
 
   nodeStub.updateObservers();
 
-  System::Timer(dispatcher).sleep(std::chrono::seconds(5));
+  platform_system::Timer(dispatcher).sleep(std::chrono::seconds(5));
 
   TransactionRpcInfo txInfo;
   bool found = false;
@@ -233,7 +233,7 @@ TEST_F(PaymentGateTest, DISABLED_sendTransaction) {
   generator.generateEmptyBlocks(11);
   nodeStub.updateObservers();
 
-  System::Timer(dispatcher).sleep(std::chrono::seconds(5));
+  platform_system::Timer(dispatcher).sleep(std::chrono::seconds(5));
 
   ASSERT_TRUE(!service->getTransactionsCount(recvTxCount));
   ASSERT_EQ(3, recvTxCount);

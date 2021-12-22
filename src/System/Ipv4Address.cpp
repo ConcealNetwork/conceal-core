@@ -7,7 +7,7 @@
 #include "Ipv4Address.h"
 #include <stdexcept>
 
-namespace System {
+namespace platform_system {
 
 namespace {
 

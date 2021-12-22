@@ -17,7 +17,7 @@
 #include "MinerEvent.h"
 #include "MiningConfig.h"
 
-namespace System {
+namespace platform_system {
 class Dispatcher;
 }
 
@@ -25,24 +25,24 @@ namespace Miner {
 
 class MinerManager {
 public:
-  MinerManager(System::Dispatcher& dispatcher, const CryptoNote::MiningConfig& config, Logging::ILogger& logger);
+  MinerManager(platform_system::Dispatcher& dispatcher, const cn::MiningConfig& config, logging::ILogger& logger);
   ~MinerManager();
 
   void start();
 
 private:
-  System::Dispatcher& m_dispatcher;
-  Logging::LoggerRef m_logger;
-  System::ContextGroup m_contextGroup;
-  CryptoNote::MiningConfig m_config;
-  CryptoNote::Miner m_miner;
+  platform_system::Dispatcher& m_dispatcher;
+  logging::LoggerRef m_logger;
+  platform_system::ContextGroup m_contextGroup;
+  cn::MiningConfig m_config;
+  cn::Miner m_miner;
   BlockchainMonitor m_blockchainMonitor;
 
-  System::Event m_eventOccurred;
-  System::Event m_httpEvent;
+  platform_system::Event m_eventOccurred;
+  platform_system::Event m_httpEvent;
   std::queue<MinerEvent> m_events;
 
-  CryptoNote::Block m_minedBlock;
+  cn::Block m_minedBlock;
 
   uint64_t m_lastBlockTimestamp;
 
@@ -50,16 +50,16 @@ private:
   MinerEvent waitEvent();
   void pushEvent(MinerEvent&& event);
 
-  void startMining(const CryptoNote::BlockMiningParameters& params);
+  void startMining(const cn::BlockMiningParameters& params);
   void stopMining();
 
   void startBlockchainMonitoring();
   void stopBlockchainMonitoring();
 
-  bool submitBlock(const CryptoNote::Block& minedBlock, const std::string& daemonHost, uint16_t daemonPort);
-  CryptoNote::BlockMiningParameters requestMiningParameters(System::Dispatcher& dispatcher, const std::string& daemonHost, uint16_t daemonPort, const std::string& miningAddress);
+  bool submitBlock(const cn::Block& minedBlock, const std::string& daemonHost, uint16_t daemonPort);
+  cn::BlockMiningParameters requestMiningParameters(platform_system::Dispatcher& dispatcher, const std::string& daemonHost, uint16_t daemonPort, const std::string& miningAddress);
 
-  void adjustBlockTemplate(CryptoNote::Block& blockTemplate) const;
+  void adjustBlockTemplate(cn::Block& blockTemplate) const;
 };
 
 } //namespace Miner

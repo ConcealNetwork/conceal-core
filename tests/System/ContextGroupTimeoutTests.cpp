@@ -7,7 +7,7 @@
 #include <System/ContextGroupTimeout.h>
 #include <System/InterruptedException.h>
 
-using namespace System;
+using namespace platform_system;
 
 class ContextGroupTimeoutTest : public testing::Test {
 public:

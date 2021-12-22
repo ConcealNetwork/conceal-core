@@ -31,13 +31,13 @@
 
 #include <Logging/LoggerRef.h>
 
-namespace CryptoNote {
+namespace cn {
 
 class HttpServer {
 
 public:
 
-  HttpServer(System::Dispatcher& dispatcher, Logging::ILogger& log);
+  HttpServer(platform_system::Dispatcher& dispatcher, logging::ILogger& log);
 
   void start(const std::string& address, uint16_t port, const std::string& user = "", const std::string& password = "");
   void stop();
@@ -47,18 +47,18 @@ public:
 
 protected:
 
-  System::Dispatcher& m_dispatcher;
+  platform_system::Dispatcher& m_dispatcher;
 
 private:
 
   void acceptLoop();
-  void connectionHandler(System::TcpConnection&& conn);
+  void connectionHandler(platform_system::TcpConnection&& conn);
   bool authenticate(const HttpRequest& request) const;
 
-  System::ContextGroup workingContextGroup;
-  Logging::LoggerRef logger;
-  System::TcpListener m_listener;
-  std::unordered_set<System::TcpConnection*> m_connections;
+  platform_system::ContextGroup workingContextGroup;
+  logging::LoggerRef logger;
+  platform_system::TcpListener m_listener;
+  std::unordered_set<platform_system::TcpConnection*> m_connections;
   std::string m_credentials;
 };
 

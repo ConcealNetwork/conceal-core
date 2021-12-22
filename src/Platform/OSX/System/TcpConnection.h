@@ -10,7 +10,7 @@
 #include <cstdint>
 #include <utility>
 
-namespace System {
+namespace platform_system {
 
 class Dispatcher;
 class Ipv4Address;

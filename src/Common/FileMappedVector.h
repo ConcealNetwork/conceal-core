@@ -27,7 +27,7 @@
 #include "System/MemoryMappedFile.h"
 #include "Common/ScopeExit.h"
 
-namespace Common {
+namespace common {
 
 template<class T>
 struct EnableIfPod {
@@ -299,7 +299,7 @@ public:
 
 private:
   std::string m_path;
-  System::MemoryMappedFile m_file;
+  platform_system::MemoryMappedFile m_file;
   uint64_t m_prefixSize;
   uint64_t m_suffixSize;
   bool m_autoFlush;
@@ -795,7 +795,7 @@ void FileMappedVector<T>::atomicUpdate0(uint64_t newCapacity, uint64_t newPrefix
     boost::filesystem::remove(bakPath);
   }
 
-  Tools::ScopeExit tmpFileDeleter([&tmpPath] {
+  tools::ScopeExit tmpFileDeleter([&tmpPath] {
     boost::system::error_code ignore;
     boost::filesystem::remove(tmpPath, ignore);
   });

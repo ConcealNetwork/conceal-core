@@ -6,7 +6,7 @@
 
 #include "ILogger.h"
 
-namespace Logging {
+namespace logging {
 
 const std::string BLUE = "\x1F""BLUE\x1F";
 const std::string GREEN = "\x1F""GREEN\x1F";

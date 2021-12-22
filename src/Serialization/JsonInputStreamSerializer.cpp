@@ -9,12 +9,12 @@
 #include <ctype.h>
 #include <exception>
 
-namespace CryptoNote {
+namespace cn {
 
 namespace {
 
-Common::JsonValue getJsonValueFromStreamHelper(std::istream& stream) {
-  Common::JsonValue value;
+common::JsonValue getJsonValueFromStreamHelper(std::istream& stream) {
+  common::JsonValue value;
   stream >> value;
   return value;
 }
@@ -27,4 +27,4 @@ JsonInputStreamSerializer::JsonInputStreamSerializer(std::istream& stream) : Jso
 JsonInputStreamSerializer::~JsonInputStreamSerializer() {
 }
 
-} //namespace CryptoNote
+} //namespace cn

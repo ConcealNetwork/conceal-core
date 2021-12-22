@@ -23,16 +23,16 @@
 #include "Common/StringTools.h"
 #include "Common/DnsTools.h"
 
-using namespace Logging;
+using namespace logging;
 
-namespace CryptoNote {
+namespace cn {
 //---------------------------------------------------------------------------
-Checkpoints::Checkpoints(Logging::ILogger &log) : logger(log, "checkpoints") {}
+Checkpoints::Checkpoints(logging::ILogger &log) : logger(log, "checkpoints") {}
 //---------------------------------------------------------------------------
 bool Checkpoints::add_checkpoint(uint32_t height, const std::string &hash_str) {
-  Crypto::Hash h = NULL_HASH;
+  crypto::Hash h = NULL_HASH;
 
-  if (!Common::podFromHex(hash_str, h)) {
+  if (!common::podFromHex(hash_str, h)) {
     logger(ERROR) << "<< Checkpoints.cpp << " << "Incorrect hash in checkpoints";
     return false;
   }
@@ -50,7 +50,7 @@ bool Checkpoints::is_in_checkpoint_zone(uint32_t  height) const {
   return !m_points.empty() && (height <= (--m_points.end())->first);
 }
 //---------------------------------------------------------------------------
-bool Checkpoints::check_block(uint32_t  height, const Crypto::Hash &h, bool &is_a_checkpoint) const {
+bool Checkpoints::check_block(uint32_t  height, const crypto::Hash &h, bool &is_a_checkpoint) const {
   auto it = m_points.find(height);
   is_a_checkpoint = it != m_points.end();
   if (!is_a_checkpoint)
@@ -59,14 +59,14 @@ bool Checkpoints::check_block(uint32_t  height, const Crypto::Hash &h, bool &is_
   if (it->second == h) {    
     return true;
   } else {
-    logger(Logging::ERROR) << "<< Checkpoints.cpp << " << "Checkpoint failed for height " << height
+    logger(logging::ERROR) << "<< Checkpoints.cpp << " << "Checkpoint failed for height " << height
                            << ". Expected hash: " << it->second
                            << ", Fetched hash: " << h;
     return false;
   }
 }
 //---------------------------------------------------------------------------
-bool Checkpoints::check_block(uint32_t  height, const Crypto::Hash &h) const {
+bool Checkpoints::check_block(uint32_t  height, const crypto::Hash &h) const {
   bool ignored;
   return check_block(height, h, ignored);
 }
@@ -75,8 +75,8 @@ bool Checkpoints::is_alternative_block_allowed(uint32_t  blockchain_height, uint
   if (0 == block_height)
     return false;
 
-  if (block_height < blockchain_height - CryptoNote::parameters::CRYPTONOTE_MINED_MONEY_UNLOCK_WINDOW && !is_in_checkpoint_zone(block_height)) {
-    logger(Logging::DEBUGGING, Logging::WHITE)
+  if (block_height < blockchain_height - cn::parameters::CRYPTONOTE_MINED_MONEY_UNLOCK_WINDOW && !is_in_checkpoint_zone(block_height)) {
+    logger(logging::DEBUGGING, logging::WHITE)
       << "<< Checkpoints.cpp << " << "Reorganization depth too deep : " << (blockchain_height - block_height) << ". Block Rejected";
     return false;
   }
@@ -107,15 +107,15 @@ bool Checkpoints::load_checkpoints_from_dns()
   std::string domain("checkpoints.conceal.id");
   std::vector<std::string>records;
 
-  logger(Logging::DEBUGGING) << "<< Checkpoints.cpp << " << "Fetching DNS checkpoint records from " << domain;
+  logger(logging::DEBUGGING) << "<< Checkpoints.cpp << " << "Fetching DNS checkpoint records from " << domain;
 
-  if (!Common::fetch_dns_txt(domain, records)) {
-    logger(Logging::DEBUGGING) << "<< Checkpoints.cpp << " << "Failed to lookup DNS checkpoint records from " << domain;
+  if (!common::fetch_dns_txt(domain, records)) {
+    logger(logging::DEBUGGING) << "<< Checkpoints.cpp << " << "Failed to lookup DNS checkpoint records from " << domain;
   }
 
   for (const auto& record : records) {
     uint32_t height;
-    Crypto::Hash hash = NULL_HASH;
+    crypto::Hash hash = NULL_HASH;
     std::stringstream ss;
     size_t del = record.find_first_of(':');
     std::string height_str = record.substr(0, del), hash_str = record.substr(del + 1, 64);
@@ -123,8 +123,8 @@ bool Checkpoints::load_checkpoints_from_dns()
     ss >> height;
     char c;
     if (del == std::string::npos) continue;
-    if ((ss.fail() || ss.get(c)) || !Common::podFromHex(hash_str, hash)) {
-      logger(Logging::INFO) << "<< Checkpoints.cpp << " << "Failed to parse DNS checkpoint record: " << record;
+    if ((ss.fail() || ss.get(c)) || !common::podFromHex(hash_str, hash)) {
+      logger(logging::INFO) << "<< Checkpoints.cpp << " << "Failed to parse DNS checkpoint record: " << record;
       continue;
     }
 
@@ -141,7 +141,7 @@ bool Checkpoints::load_checkpoints_from_dns()
 
 bool Checkpoints::load_checkpoints()
 {
-  for (const auto& cp : CryptoNote::CHECKPOINTS) 
+  for (const auto& cp : cn::CHECKPOINTS) 
   {
     add_checkpoint(cp.height, cp.blockId);    
   }
@@ -151,7 +151,7 @@ bool Checkpoints::load_checkpoints()
 bool Checkpoints::load_checkpoints_from_file(const std::string& fileName) {
 	std::ifstream file(fileName);
 	if (!file) {
-		logger(Logging::ERROR, BRIGHT_RED) << "Could not load checkpoints file: " << fileName;
+		logger(logging::ERROR, BRIGHT_RED) << "Could not load checkpoints file: " << fileName;
 		return false;
 	}
 	std::string indexString;
@@ -169,7 +169,7 @@ bool Checkpoints::load_checkpoints_from_file(const std::string& fileName) {
 			return false;
 		}
 	}
-	logger(Logging::INFO) << "Loaded " << m_points.size() << " checkpoints from "	<< fileName;
+	logger(logging::INFO) << "Loaded " << m_points.size() << " checkpoints from "	<< fileName;
 	return true;
 }
 

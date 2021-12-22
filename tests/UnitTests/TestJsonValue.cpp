@@ -6,7 +6,7 @@
 #include "gtest/gtest.h"
 #include <Common/JsonValue.h>
 
-using Common::JsonValue;
+using common::JsonValue;
 
 namespace {
 
@@ -43,13 +43,13 @@ std::vector<std::string> badPatterns{
 TEST(JsonValue, testGoodPatterns) {
   for (const auto& p : goodPatterns) {
     std::cout << "Pattern: " << p << std::endl;
-    ASSERT_NO_THROW(Common::JsonValue::fromString(p));
+    ASSERT_NO_THROW(common::JsonValue::fromString(p));
   }
 }
 
 TEST(JsonValue, testBadPatterns) {
   for (const auto& p : badPatterns) {
-    ASSERT_ANY_THROW(Common::JsonValue::fromString(p));
+    ASSERT_ANY_THROW(common::JsonValue::fromString(p));
   }
 }
 

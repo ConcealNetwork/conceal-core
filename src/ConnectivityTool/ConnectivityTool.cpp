@@ -29,7 +29,7 @@
 #include "version.h"
 
 namespace po = boost::program_options;
-using namespace CryptoNote;
+using namespace cn;
 
 #ifndef ENDL
 #define ENDL std::endl
@@ -56,15 +56,15 @@ struct response_schema {
   boost::optional<COMMAND_REQUEST_NETWORK_STATE::response> ns_rsp;
 };
 
-void withTimeout(System::Dispatcher& dispatcher, unsigned timeout, std::function<void()> f) {
+void withTimeout(platform_system::Dispatcher& dispatcher, unsigned timeout, std::function<void()> f) {
   std::string result;
-  System::ContextGroup cg(dispatcher);
-  System::ContextGroupTimeout cgTimeout(dispatcher, cg, std::chrono::milliseconds(timeout));
+  platform_system::ContextGroup cg(dispatcher);
+  platform_system::ContextGroupTimeout cgTimeout(dispatcher, cg, std::chrono::milliseconds(timeout));
   
   cg.spawn([&] {
     try {
       f();
-    } catch (System::InterruptedException&) {
+    } catch (platform_system::InterruptedException&) {
       result = "Operation timeout";
     } catch (std::exception& e) {
       result = e.what();
@@ -100,7 +100,7 @@ std::ostream& get_response_schema_as_json(std::ostream& ss, response_schema &rs)
 
     size_t i = 0;
     for (const connection_entry &ce : networkState.connections_list) {
-      ss << "      {\"peer_id\": \"" << ce.id << "\", \"ip\": \"" << Common::ipAddressToString(ce.adr.ip) << "\", \"port\": " << ce.adr.port << ", \"is_income\": " << ce.is_income << "}";
+      ss << "      {\"peer_id\": \"" << ce.id << "\", \"ip\": \"" << common::ipAddressToString(ce.adr.ip) << "\", \"port\": " << ce.adr.port << ", \"is_income\": " << ce.is_income << "}";
       if (networkState.connections_list.size() - 1 != i)
         ss << ",";
       ss << ENDL;
@@ -110,7 +110,7 @@ std::ostream& get_response_schema_as_json(std::ostream& ss, response_schema &rs)
     ss << "    \"local_peerlist_white\": [" << ENDL;
     i = 0;
     for (const PeerlistEntry &pe : networkState.local_peerlist_white) {
-      ss << "      {\"peer_id\": \"" << pe.id << "\", \"ip\": \"" << Common::ipAddressToString(pe.adr.ip) << "\", \"port\": " << pe.adr.port << ", \"last_seen\": " << networkState.local_time - pe.last_seen << "}";
+      ss << "      {\"peer_id\": \"" << pe.id << "\", \"ip\": \"" << common::ipAddressToString(pe.adr.ip) << "\", \"port\": " << pe.adr.port << ", \"last_seen\": " << networkState.local_time - pe.last_seen << "}";
       if (networkState.local_peerlist_white.size() - 1 != i)
         ss << ",";
       ss << ENDL;
@@ -121,7 +121,7 @@ std::ostream& get_response_schema_as_json(std::ostream& ss, response_schema &rs)
     ss << "    \"local_peerlist_gray\": [" << ENDL;
     i = 0;
     for (const PeerlistEntry &pe : networkState.local_peerlist_gray) {
-      ss << "      {\"peer_id\": \"" << pe.id << "\", \"ip\": \"" << Common::ipAddressToString(pe.adr.ip) << "\", \"port\": " << pe.adr.port << ", \"last_seen\": " << networkState.local_time - pe.last_seen << "}";
+      ss << "      {\"peer_id\": \"" << pe.id << "\", \"ip\": \"" << common::ipAddressToString(pe.adr.ip) << "\", \"port\": " << pe.adr.port << ", \"last_seen\": " << networkState.local_time - pe.last_seen << "}";
       if (networkState.local_peerlist_gray.size() - 1 != i)
         ss << ",";
       ss << ENDL;
@@ -163,12 +163,12 @@ bool print_COMMAND_REQUEST_NETWORK_STATE(const COMMAND_REQUEST_NETWORK_STATE::re
 
   std::cout << "Peer list white:" << ns.my_id << ENDL;
   for (const PeerlistEntry &pe : ns.local_peerlist_white) {
-    std::cout << pe.id << "\t" << pe.adr << "\t" << Common::timeIntervalToString(ns.local_time - pe.last_seen) << ENDL;
+    std::cout << pe.id << "\t" << pe.adr << "\t" << common::timeIntervalToString(ns.local_time - pe.last_seen) << ENDL;
   }
 
   std::cout << "Peer list gray:" << ns.my_id << ENDL;
   for (const PeerlistEntry &pe : ns.local_peerlist_gray) {
-    std::cout << pe.id << "\t" << pe.adr << "\t" << Common::timeIntervalToString(ns.local_time - pe.last_seen) << ENDL;
+    std::cout << pe.id << "\t" << pe.adr << "\t" << common::timeIntervalToString(ns.local_time - pe.last_seen) << ENDL;
   }
 
   return true;
@@ -181,11 +181,11 @@ bool handle_get_daemon_info(po::variables_map& vm) {
   }
 
   try {
-    System::Dispatcher dispatcher;
+    platform_system::Dispatcher dispatcher;
     HttpClient httpClient(dispatcher, command_line::get_arg(vm, arg_ip), command_line::get_arg(vm, arg_rpc_port));
 
-    CryptoNote::COMMAND_RPC_GET_INFO::request req;
-    CryptoNote::COMMAND_RPC_GET_INFO::response res;
+    cn::COMMAND_RPC_GET_INFO::request req;
+    cn::COMMAND_RPC_GET_INFO::response res;
 
     invokeJsonCommand(httpClient, "/getinfo", req, res); // TODO: timeout
 
@@ -214,8 +214,8 @@ bool handle_request_stat(po::variables_map& vm, PeerIdType peer_id) {
     return false;
   }
 
-  Crypto::SecretKey prvk;
-  if (!Common::podFromHex(command_line::get_arg(vm, arg_priv_key), prvk)) {
+  crypto::SecretKey prvk;
+  if (!common::podFromHex(command_line::get_arg(vm, arg_priv_key), prvk)) {
     std::cout << "{" << ENDL << "  \"status\": \"ERROR: " << "wrong secret key set \"" << ENDL << "}";
     return false;
   }
@@ -224,15 +224,15 @@ bool handle_request_stat(po::variables_map& vm, PeerIdType peer_id) {
   unsigned timeout = command_line::get_arg(vm, arg_timeout);
 
   try {
-    System::Dispatcher dispatcher;
-    System::TcpConnector connector(dispatcher);
-    System::Ipv4Resolver resolver(dispatcher);
+    platform_system::Dispatcher dispatcher;
+    platform_system::TcpConnector connector(dispatcher);
+    platform_system::Ipv4Resolver resolver(dispatcher);
 
     std::cout << "Connecting to " << command_line::get_arg(vm, arg_ip) << ":" << command_line::get_arg(vm, arg_port) << ENDL;
 
     auto addr = resolver.resolve(command_line::get_arg(vm, arg_ip));
 
-    System::TcpConnection connection;
+    platform_system::TcpConnection connection;
 
     withTimeout(dispatcher, timeout, [&] {
       connection = connector.connect(addr, command_line::get_arg(vm, arg_port));
@@ -254,10 +254,10 @@ bool handle_request_stat(po::variables_map& vm, PeerIdType peer_id) {
     proof_of_trust pot;
     pot.peer_id = peer_id;
     pot.time = time(NULL);
-    Crypto::PublicKey pubk;
-    Common::podFromHex(P2P_STAT_TRUSTED_PUB_KEY, pubk);
-    Crypto::Hash h = get_proof_of_trust_hash(pot);
-    Crypto::generate_signature(h, pubk, prvk, pot.sign);
+    crypto::PublicKey pubk;
+    common::podFromHex(P2P_STAT_TRUSTED_PUB_KEY, pubk);
+    crypto::Hash h = get_proof_of_trust_hash(pot);
+    crypto::generate_signature(h, pubk, prvk, pot.sign);
 
     if (command_line::get_arg(vm, arg_request_stat_info)) {
       COMMAND_REQUEST_STAT_INFO::request req;
@@ -283,7 +283,7 @@ bool handle_request_stat(po::variables_map& vm, PeerIdType peer_id) {
     if (command_line::get_arg(vm, arg_request_net_state))  {
       ++pot.time;
       h = get_proof_of_trust_hash(pot);
-      Crypto::generate_signature(h, pubk, prvk, pot.sign);
+      crypto::generate_signature(h, pubk, prvk, pot.sign);
       COMMAND_REQUEST_NETWORK_STATE::request req{ pot };
       COMMAND_REQUEST_NETWORK_STATE::response res;
 
@@ -312,11 +312,11 @@ bool handle_request_stat(po::variables_map& vm, PeerIdType peer_id) {
 
 //---------------------------------------------------------------------------------------------------------------
 bool generate_and_print_keys() {
-  Crypto::PublicKey pk;
-  Crypto::SecretKey sk;
+  crypto::PublicKey pk;
+  crypto::SecretKey sk;
   generate_keys(pk, sk);
-  std::cout << "PUBLIC KEY: " << Common::podToHex(pk) << ENDL
-            << "PRIVATE KEY: " << Common::podToHex(sk);
+  std::cout << "PUBLIC KEY: " << common::podToHex(pk) << ENDL
+            << "PRIVATE KEY: " << common::podToHex(sk);
   return true;
 }
 

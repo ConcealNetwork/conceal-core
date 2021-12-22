@@ -6,7 +6,7 @@
 
 #include "StdInputStream.h"
 
-namespace Common {
+namespace common {
 
 StdInputStream::StdInputStream(std::istream& in) : in(in) {
 }

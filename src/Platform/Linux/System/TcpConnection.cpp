@@ -26,7 +26,7 @@
 #include <sys/epoll.h>
 #include <unistd.h>
 
-namespace System {
+namespace platform_system {
 
 TcpConnection::TcpConnection() : dispatcher(nullptr) {
 }

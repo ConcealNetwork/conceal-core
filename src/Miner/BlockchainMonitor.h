@@ -16,20 +16,20 @@
 
 class BlockchainMonitor {
 public:
-  BlockchainMonitor(System::Dispatcher& dispatcher, const std::string& daemonHost, uint16_t daemonPort, size_t pollingInterval, Logging::ILogger& logger);
+  BlockchainMonitor(platform_system::Dispatcher& dispatcher, const std::string& daemonHost, uint16_t daemonPort, size_t pollingInterval, logging::ILogger& logger);
 
   void waitBlockchainUpdate();
   void stop();
 private:
-  System::Dispatcher& m_dispatcher;
+  platform_system::Dispatcher& m_dispatcher;
   std::string m_daemonHost;
   uint16_t m_daemonPort;
   size_t m_pollingInterval;
   bool m_stopped;
-  System::Event m_httpEvent;
-  System::ContextGroup m_sleepingContext;
+  platform_system::Event m_httpEvent;
+  platform_system::ContextGroup m_sleepingContext;
 
-  Logging::LoggerRef m_logger;
+  logging::LoggerRef m_logger;
 
-  Crypto::Hash requestLastBlockHash();
+  crypto::Hash requestLastBlockHash();
 };

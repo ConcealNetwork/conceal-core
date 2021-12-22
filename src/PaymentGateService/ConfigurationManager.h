@@ -11,7 +11,7 @@
 #include "P2p/NetNodeConfig.h"
 #include "RpcNodeConfiguration.h"
 
-namespace PaymentService {
+namespace payment_service {
 
 class ConfigurationManager {
 public:
@@ -20,9 +20,9 @@ public:
 
   bool startInprocess;
   Configuration gateConfiguration;
-  CryptoNote::NetNodeConfig netNodeConfig;
-  CryptoNote::CoreConfig coreConfig;
+  cn::NetNodeConfig netNodeConfig;
+  cn::CoreConfig coreConfig;
   RpcNodeConfiguration remoteNodeConfig;
 };
 
-} //namespace PaymentService
+} //namespace payment_service

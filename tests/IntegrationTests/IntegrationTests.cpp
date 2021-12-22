@@ -12,11 +12,11 @@
 #include "WalletLegacy/WalletLegacy.h"
 #include "WalletLegacyObserver.h"
 
-using namespace CryptoNote;
-using namespace Logging;
+using namespace cn;
+using namespace logging;
 
-extern Tests::Common::BaseFunctionalTestsConfig baseCfg;
-// extern System::Dispatcher globalDispatcher;
+extern Tests::common::BaseFunctionalTestsConfig baseCfg;
+// extern platform_system::Dispatcher globalDispatcher;
 
 struct TotalWalletBalance {
 
@@ -34,11 +34,11 @@ struct TotalWalletBalance {
   }
 };
 
-class IntegrationTest : public Tests::Common::BaseFunctionalTests, public ::testing::Test {
+class IntegrationTest : public Tests::common::BaseFunctionalTests, public ::testing::Test {
 public:
 
   IntegrationTest() : 
-    currency(CryptoNote::CurrencyBuilder(log).testnet(true).currency()), 
+    currency(cn::CurrencyBuilder(log).testnet(true).currency()), 
     BaseFunctionalTests(currency, dispatcher, baseCfg),
     logger(log, "IntegrationTest") {
   }
@@ -59,10 +59,10 @@ public:
   }
 
   void makeWallets() {
-    Logging::ConsoleLogger m_logger;
+    logging::ConsoleLogger m_logger;
     for (auto& n: inodes) {
       
-      std::unique_ptr<CryptoNote::IWalletLegacy> wallet(new CryptoNote::WalletLegacy(m_currency, *n, m_logger));
+      std::unique_ptr<cn::IWalletLegacy> wallet(new cn::WalletLegacy(m_currency, *n, m_logger));
       std::unique_ptr<WalletLegacyObserver> observer(new WalletLegacyObserver());
 
       wallet->initAndGenerate(walletPassword);
@@ -112,18 +112,18 @@ public:
       << "Transferring from " << wallets[srcWallet]->getAddress().substr(0, 6) 
       << " to " << wallets[dstWallet]->getAddress().substr(0, 6) << " " << currency.formatAmount(amount);
 
-    CryptoNote::WalletLegacyTransfer tr;
+    cn::WalletLegacyTransfer tr;
     tr.address = wallets[dstWallet]->getAddress();
     tr.amount = amount;
     std::error_code result;
 
-    std::vector<CryptoNote::TransactionMessage> messages;
+    std::vector<cn::TransactionMessage> messages;
     std::string extraString;
-    fee = CryptoNote::parameters::MINIMUM_FEE_V2;
+    fee = cn::parameters::MINIMUM_FEE_V2;
     uint64_t mixIn = 0;
     uint64_t unlockTimestamp = 0;
     uint64_t ttl = 0;
-    Crypto::SecretKey transactionSK;
+    crypto::SecretKey transactionSK;
     auto txId = wallets[srcWallet]->sendTransaction(transactionSK, tr, fee, extraString, mixIn, unlockTimestamp, messages, ttl);
 
     logger(DEBUGGING) << "Transaction id = " << txId;
@@ -144,11 +144,11 @@ public:
     ASSERT_EQ(txInfo.totalAmount, amount);
   }
 
-  System::Dispatcher dispatcher;
+  platform_system::Dispatcher dispatcher;
   std::string walletPassword = "pass";
-  CryptoNote::Currency currency;
-  Logging::ConsoleLogger log;
-  Logging::LoggerRef logger;
+  cn::Currency currency;
+  logging::ConsoleLogger log;
+  logging::LoggerRef logger;
 
   std::vector<std::unique_ptr<INode>> inodes;
   std::vector<std::unique_ptr<IWalletLegacy>> wallets;
@@ -201,10 +201,10 @@ TEST_F(IntegrationTest, BlockPropagationSpeed) {
   makeINodes();
 
   {
-    std::unique_ptr<CryptoNote::INode>& localNode = inodes.front();
-    std::unique_ptr<CryptoNote::INode>& remoteNode = inodes.back();
+    std::unique_ptr<cn::INode>& localNode = inodes.front();
+    std::unique_ptr<cn::INode>& remoteNode = inodes.back();
 
-    std::unique_ptr<CryptoNote::IWalletLegacy> wallet;
+    std::unique_ptr<cn::IWalletLegacy> wallet;
     makeWallet(wallet, localNode);
 
     NodeObserver localObserver(*localNode);

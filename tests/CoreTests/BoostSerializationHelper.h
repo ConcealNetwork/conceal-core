@@ -12,7 +12,7 @@
 #include <boost/archive/binary_oarchive.hpp>
 #include <boost/archive/binary_iarchive.hpp>
 
-namespace Tools {
+namespace tools {
 
 template <class t_object>
 bool serialize_obj_to_file(t_object& obj, const std::string& file_path) {

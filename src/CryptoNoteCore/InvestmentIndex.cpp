@@ -15,7 +15,7 @@
 #include "CryptoNoteSerialization.h"
 #include "Serialization/SerializationOverloads.h"
 
-namespace CryptoNote {
+namespace cn {
 
 InvestmentIndex::InvestmentIndex() : blockCount(0) {
 }

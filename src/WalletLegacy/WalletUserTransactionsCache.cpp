@@ -17,9 +17,9 @@
 #include "Serialization/SerializationOverloads.h"
 #include <algorithm>
 
-using namespace Crypto;
+using namespace crypto;
 
-namespace CryptoNote {
+namespace cn {
 
 struct LegacyDeposit {
   TransactionId creatingTransactionId;
@@ -110,13 +110,13 @@ void convertLegacyDeposits(const std::vector<LegacyDepositInfo>& legacyDeposits,
 WalletUserTransactionsCache::WalletUserTransactionsCache(uint64_t mempoolTxLiveTime) : m_unconfirmedTransactions(mempoolTxLiveTime) {
 }
 
-bool WalletUserTransactionsCache::serialize(CryptoNote::ISerializer& s) {
+bool WalletUserTransactionsCache::serialize(cn::ISerializer& s) {
   s(m_transactions, "transactions");
   s(m_transfers, "transfers");
   s(m_unconfirmedTransactions, "unconfirmed");
   s(m_deposits, "deposits");
 
-  if (s.type() == CryptoNote::ISerializer::INPUT) {
+  if (s.type() == cn::ISerializer::INPUT) {
     updateUnconfirmedTransactions();
     deleteOutdatedTransactions();
     restoreTransactionOutputToDepositIndex();
@@ -126,7 +126,7 @@ bool WalletUserTransactionsCache::serialize(CryptoNote::ISerializer& s) {
   return true;
 }
 
-void WalletUserTransactionsCache::deserializeLegacyV1(CryptoNote::ISerializer& s) {
+void WalletUserTransactionsCache::deserializeLegacyV1(cn::ISerializer& s) {
   s(m_transactions, "transactions");
   s(m_transfers, "transfers");
   m_unconfirmedTransactions.deserializeV1(s);
@@ -246,7 +246,7 @@ TransactionId WalletUserTransactionsCache::addNewTransaction(uint64_t amount,
 }
 
 void WalletUserTransactionsCache::updateTransaction(
-  TransactionId transactionId, const CryptoNote::Transaction& tx, uint64_t amount, const std::vector<TransactionOutputInformation>& usedOutputs) {
+  TransactionId transactionId, const cn::Transaction& tx, uint64_t amount, const std::vector<TransactionOutputInformation>& usedOutputs) {
   // update extra field from created transaction
   auto& txInfo = m_transactions.at(transactionId);
   txInfo.extra.assign(tx.extra.begin(), tx.extra.end());
@@ -271,7 +271,7 @@ std::deque<std::unique_ptr<WalletLegacyEvent>> WalletUserTransactionsCache::onTr
                                                                                                  const Currency& currency) {
   std::deque<std::unique_ptr<WalletLegacyEvent>> events;
 
-  TransactionId id = CryptoNote::WALLET_LEGACY_INVALID_TRANSACTION_ID;
+  TransactionId id = cn::WALLET_LEGACY_INVALID_TRANSACTION_ID;
 
   if (!m_unconfirmedTransactions.findTransactionId(txInfo.transactionHash, id)) {
     id = findTransactionByHash(txInfo.transactionHash);
@@ -279,14 +279,14 @@ std::deque<std::unique_ptr<WalletLegacyEvent>> WalletUserTransactionsCache::onTr
     m_unconfirmedTransactions.erase(txInfo.transactionHash);
   }
 
-  if (id == CryptoNote::WALLET_LEGACY_INVALID_TRANSACTION_ID) {
+  if (id == cn::WALLET_LEGACY_INVALID_TRANSACTION_ID) {
 	WalletLegacyTransaction transaction;
 	
 	bool isCoinbase = txInfo.totalAmountIn == 0;
 	if (isCoinbase){
 		transaction.fee = 0;
 	} else {
-		transaction.fee = txInfo.totalAmountIn < txInfo.totalAmountOut ? CryptoNote::parameters::MINIMUM_FEE : txInfo.totalAmountIn - txInfo.totalAmountOut;
+		transaction.fee = txInfo.totalAmountIn < txInfo.totalAmountOut ? cn::parameters::MINIMUM_FEE : txInfo.totalAmountIn - txInfo.totalAmountOut;
 	}
     
     transaction.firstTransferId = WALLET_LEGACY_INVALID_TRANSFER_ID;
@@ -342,8 +342,8 @@ std::deque<std::unique_ptr<WalletLegacyEvent>> WalletUserTransactionsCache::onTr
   return events;
 }
 
-std::deque<std::unique_ptr<WalletLegacyEvent>> WalletUserTransactionsCache::onTransactionDeleted(const Crypto::Hash& transactionHash) {
-  TransactionId id = CryptoNote::WALLET_LEGACY_INVALID_TRANSACTION_ID;
+std::deque<std::unique_ptr<WalletLegacyEvent>> WalletUserTransactionsCache::onTransactionDeleted(const crypto::Hash& transactionHash) {
+  TransactionId id = cn::WALLET_LEGACY_INVALID_TRANSACTION_ID;
   if (m_unconfirmedTransactions.findTransactionId(transactionHash, id)) {
     m_unconfirmedTransactions.erase(transactionHash);
     // LOG_ERROR("Unconfirmed transaction is deleted: id = " << id << ", hash = " << transactionHash);
@@ -353,7 +353,7 @@ std::deque<std::unique_ptr<WalletLegacyEvent>> WalletUserTransactionsCache::onTr
   }
 
   std::deque<std::unique_ptr<WalletLegacyEvent>> events;
-  if (id != CryptoNote::WALLET_LEGACY_INVALID_TRANSACTION_ID) {
+  if (id != cn::WALLET_LEGACY_INVALID_TRANSACTION_ID) {
     WalletLegacyTransaction& tr = getTransaction(id);
     std::vector<uint8_t> extra(tr.extra.begin(), tr.extra.end());
     PaymentId paymentId;
@@ -507,7 +507,7 @@ TransactionId WalletUserTransactionsCache::findTransactionByHash(const Hash& has
   auto it = std::find_if(m_transactions.begin(), m_transactions.end(), [&hash](const WalletLegacyTransaction& tx) { return tx.hash == hash; });
 
   if (it == m_transactions.end())
-    return CryptoNote::WALLET_LEGACY_INVALID_TRANSACTION_ID;
+    return cn::WALLET_LEGACY_INVALID_TRANSACTION_ID;
 
   return std::distance(m_transactions.begin(), it);
 }
@@ -605,7 +605,7 @@ std::vector<DepositId> WalletUserTransactionsCache::createNewDeposits(Transactio
 
 DepositId WalletUserTransactionsCache::insertNewDeposit(const TransactionOutputInformation& depositOutput, TransactionId creatingTransactionId,
   const Currency& currency, uint32_t height) {
-  assert(depositOutput.type == TransactionTypes::OutputType::Multisignature);
+  assert(depositOutput.type == transaction_types::OutputType::Multisignature);
   assert(depositOutput.term != 0);
   assert(m_transactionOutputToDepositIndex.find(std::tie(depositOutput.transactionHash, depositOutput.outputInTransaction)) == m_transactionOutputToDepositIndex.end());
 
@@ -673,4 +673,4 @@ void WalletUserTransactionsCache::eraseCreatedDeposit(DepositId id) {
   m_unconfirmedTransactions.eraseCreatedDeposit(id);
 }
 
-} //namespace CryptoNote
+} //namespace cn

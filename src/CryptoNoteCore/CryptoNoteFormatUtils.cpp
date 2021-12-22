@@ -25,11 +25,11 @@
 
 #include "CryptoNoteConfig.h"
 
-using namespace Logging;
-using namespace Crypto;
-using namespace Common;
+using namespace logging;
+using namespace crypto;
+using namespace common;
 
-namespace CryptoNote {
+namespace cn {
 
 bool parseAndValidateTransactionFromBinaryArray(const BinaryArray& tx_blob, Transaction& tx, Hash& tx_hash, Hash& tx_prefix_hash) {
   if (!fromBinaryArray(tx, tx_blob)) {
@@ -83,8 +83,8 @@ bool constructTransaction(
   std::vector<uint8_t> extra,
   Transaction& tx,
   uint64_t unlock_time,
-  Logging::ILogger& log,
-  Crypto::SecretKey& transactionSK) {
+  logging::ILogger& log,
+  crypto::SecretKey& transactionSK) {
   LoggerRef logger(log, "construct_tx");
 
   tx.inputs.clear();
@@ -120,8 +120,8 @@ bool constructTransaction(
     //check that derived key is equal with real output key
     if (!(in_ephemeral.publicKey == src_entr.outputs[src_entr.realOutput].second)) {
       logger(ERROR) << "derived public key mismatch with output public key! " << ENDL << "derived_key:"
-        << Common::podToHex(in_ephemeral.publicKey) << ENDL << "real output_public_key:"
-        << Common::podToHex(src_entr.outputs[src_entr.realOutput].second);
+        << common::podToHex(in_ephemeral.publicKey) << ENDL << "real output_public_key:"
+        << common::podToHex(src_entr.outputs[src_entr.realOutput].second);
       return false;
     }
 
@@ -239,19 +239,19 @@ bool constructTransaction(
   return true;
 }
 
-bool generateDeterministicTransactionKeys(const Crypto::Hash &inputsHash, const Crypto::SecretKey &viewSecretKey, KeyPair &generatedKeys)
+bool generateDeterministicTransactionKeys(const crypto::Hash &inputsHash, const crypto::SecretKey &viewSecretKey, KeyPair &generatedKeys)
 {
   BinaryArray ba;
-  Common::append(ba, std::begin(viewSecretKey.data), std::end(viewSecretKey.data));
-  Common::append(ba, std::begin(inputsHash.data), std::end(inputsHash.data));
+  common::append(ba, std::begin(viewSecretKey.data), std::end(viewSecretKey.data));
+  common::append(ba, std::begin(inputsHash.data), std::end(inputsHash.data));
 
   hash_to_scalar(ba.data(), ba.size(), generatedKeys.secretKey);
-  return Crypto::secret_key_to_public_key(generatedKeys.secretKey, generatedKeys.publicKey);
+  return crypto::secret_key_to_public_key(generatedKeys.secretKey, generatedKeys.publicKey);
 }
 
 bool generateDeterministicTransactionKeys(const Transaction &tx, const SecretKey &viewSecretKey, KeyPair &generatedKeys)
 {
-  Crypto::Hash inputsHash = getObjectHash(tx.inputs);
+  crypto::Hash inputsHash = getObjectHash(tx.inputs);
   return generateDeterministicTransactionKeys(inputsHash, viewSecretKey, generatedKeys);
 }
 
@@ -375,7 +375,7 @@ bool check_inputs_overflow(const TransactionPrefix &tx) {
       amount = boost::get<MultisignatureInput>(in).amount;
       if (boost::get<MultisignatureInput>(in).term != 0) {
         uint64_t hi;
-        uint64_t lo = mul128(amount, CryptoNote::parameters::DEPOSIT_MAX_TOTAL_RATE, &hi);
+        uint64_t lo = mul128(amount, cn::parameters::DEPOSIT_MAX_TOTAL_RATE, &hi);
         uint64_t maxInterestHi;
         uint64_t maxInterestLo;
         div128_32(hi, lo, 100, &maxInterestHi, &maxInterestLo);
@@ -418,7 +418,7 @@ uint64_t get_outs_money_amount(const Transaction& tx) {
 }
 
 std::string short_hash_str(const Hash& h) {
-  std::string res = Common::podToHex(h);
+  std::string res = common::podToHex(h);
 
   if (res.size() == 64) {
     auto erased_pos = res.erase(8, 48);
@@ -480,7 +480,7 @@ bool get_block_hashing_blob(const Block& b, BinaryArray& ba) {
 
   Hash treeRootHash = get_tx_tree_hash(b);
   ba.insert(ba.end(), treeRootHash.data, treeRootHash.data + 32);
-  auto transactionCount = asBinaryArray(Tools::get_varint_data(b.transactionHashes.size() + 1));
+  auto transactionCount = asBinaryArray(tools::get_varint_data(b.transactionHashes.size() + 1));
   ba.insert(ba.end(), transactionCount.begin(), transactionCount.end());
   return true;
 }

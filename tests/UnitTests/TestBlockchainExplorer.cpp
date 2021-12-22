@@ -22,8 +22,8 @@
 
 #include "BlockchainExplorer/BlockchainExplorer.h"
 
-using namespace Crypto;
-using namespace CryptoNote;
+using namespace crypto;
+using namespace cn;
 
 namespace {
 Transaction createTx(ITransactionReader& tx) {
@@ -99,7 +99,7 @@ protected:
   Currency currency;
   TestBlockchainGenerator generator;
   INodeTrivialRefreshStub nodeStub;
-  Logging::FileLogger logger;
+  logging::FileLogger logger;
   dummyObserver observer;
   BlockchainExplorer blockchainExplorer;
 };

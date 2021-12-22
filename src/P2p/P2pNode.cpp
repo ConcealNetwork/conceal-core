@@ -28,11 +28,11 @@
 #include "P2pContextOwner.h"
 #include "P2pNetworks.h"
 
-using namespace Common;
-using namespace Logging;
-using namespace System;
+using namespace common;
+using namespace logging;
+using namespace platform_system;
 
-namespace CryptoNote {
+namespace cn {
 
 namespace {
 
@@ -66,7 +66,7 @@ private:
       return 0;
     }
 
-    size_t x = Crypto::rand<size_t>() % (maxIndex + 1);
+    size_t x = crypto::rand<size_t>() % (maxIndex + 1);
     return (x * x * x) / (maxIndex * maxIndex);
   }
 
@@ -83,15 +83,15 @@ NetworkAddress getRemoteAddress(const TcpConnection& connection) {
   return remoteAddress;
 }
 
-void doWithTimeoutAndThrow(System::Dispatcher& dispatcher, std::chrono::nanoseconds timeout, std::function<void()> f) {
+void doWithTimeoutAndThrow(platform_system::Dispatcher& dispatcher, std::chrono::nanoseconds timeout, std::function<void()> f) {
   std::string result;
-  System::ContextGroup cg(dispatcher);
-  System::ContextGroupTimeout cgTimeout(dispatcher, cg, timeout);
+  platform_system::ContextGroup cg(dispatcher);
+  platform_system::ContextGroupTimeout cgTimeout(dispatcher, cg, timeout);
 
   cg.spawn([&] {
     try {
       f();
-    } catch (System::InterruptedException&) {
+    } catch (platform_system::InterruptedException&) {
       result = "Operation timeout";
     } catch (std::exception& e) {
       result = e.what();
@@ -107,7 +107,7 @@ void doWithTimeoutAndThrow(System::Dispatcher& dispatcher, std::chrono::nanoseco
 
 }
 
-P2pNode::P2pNode(const P2pNodeConfig& cfg, Dispatcher& dispatcher, Logging::ILogger& log, const Crypto::Hash& genesisHash, PeerIdType peerId) :
+P2pNode::P2pNode(const P2pNodeConfig& cfg, Dispatcher& dispatcher, logging::ILogger& log, const crypto::Hash& genesisHash, PeerIdType peerId) :
   logger(log, "P2pNode:" + std::to_string(cfg.getBindPort())),
   m_stopRequested(false),
   m_cfg(cfg),
@@ -178,13 +178,13 @@ void P2pNode::serialize(ISerializer& s) {
 void P2pNode::save(std::ostream& os) {
   StdOutputStream stream(os);
   BinaryOutputStreamSerializer a(stream);
-  CryptoNote::serialize(*this, a);
+  cn::serialize(*this, a);
 }
 
 void P2pNode::load(std::istream& in) {
   StdInputStream stream(in);
   BinaryInputStreamSerializer a(stream);
-  CryptoNote::serialize(*this, a);
+  cn::serialize(*this, a);
 }
 
 void P2pNode::acceptLoop() {
@@ -287,7 +287,7 @@ bool P2pNode::makeNewConnectionFromPeerlist(const PeerlistManager::Peerlist& pee
     }
 
     logger(DEBUGGING) << "Selected peer: [" << peer.id << " " << peer.adr << "] last_seen: " <<
-      (peer.last_seen ? Common::timeIntervalToString(time(NULL) - peer.last_seen) : "never");
+      (peer.last_seen ? common::timeIntervalToString(time(NULL) - peer.last_seen) : "never");
 
     auto conn = tryToConnectPeer(peer.adr);
     if (conn.get()) {
@@ -357,7 +357,7 @@ P2pNode::ContextPtr P2pNode::tryToConnectPeer(const NetworkAddress& address) {
 
     doWithTimeoutAndThrow(m_dispatcher, m_cfg.getConnectTimeout(), [&] {
       tcpConnection = connector.connect(
-        Ipv4Address(Common::ipAddressToString(address.ip)),
+        Ipv4Address(common::ipAddressToString(address.ip)),
         static_cast<uint16_t>(address.port));
     });
 
@@ -398,10 +398,10 @@ bool P2pNode::fetchPeerList(ContextPtr connection) {
       return false;
     }
 
-    if (response.node_data.version < CryptoNote::P2P_MINIMUM_VERSION) {
+    if (response.node_data.version < cn::P2P_MINIMUM_VERSION) {
       logger(DEBUGGING) << *connection << "COMMAND_HANDSHAKE Failed, peer is wrong version: " << std::to_string(response.node_data.version);
       return false;
-    } else if ((response.node_data.version - CryptoNote::P2P_CURRENT_VERSION) >= CryptoNote::P2P_UPGRADE_WINDOW) {
+    } else if ((response.node_data.version - cn::P2P_CURRENT_VERSION) >= cn::P2P_UPGRADE_WINDOW) {
       logger(WARNING) << *connection << "COMMAND_HANDSHAKE Warning, your software may be out of date. Please upgrade to the latest version.";
     }
 
@@ -450,7 +450,7 @@ std::list<PeerlistEntry> P2pNode::getLocalPeerList() const {
 basic_node_data P2pNode::getNodeData() const {
   basic_node_data nodeData;
   nodeData.network_id = m_cfg.getNetworkId();
-  nodeData.version = CryptoNote::P2P_CURRENT_VERSION;
+  nodeData.version = cn::P2P_CURRENT_VERSION;
   nodeData.local_time = time(nullptr);
   nodeData.peer_id = m_myPeerId;
 
@@ -507,7 +507,7 @@ void P2pNode::tryPing(P2pContext& ctx) {
     TcpConnection connection;
 
     doWithTimeoutAndThrow(m_dispatcher, m_cfg.getConnectTimeout(), [&] {
-      connection = connector.connect(Ipv4Address(Common::ipAddressToString(peerAddress.ip)), static_cast<uint16_t>(peerAddress.port));
+      connection = connector.connect(Ipv4Address(common::ipAddressToString(peerAddress.ip)), static_cast<uint16_t>(peerAddress.port));
     });
 
     doWithTimeoutAndThrow(m_dispatcher, m_cfg.getHandshakeTimeout(), [&]  {
@@ -523,7 +523,7 @@ void P2pNode::tryPing(P2pContext& ctx) {
         entry.last_seen = time(nullptr);
         m_peerlist.append_with_peer_white(entry);
       } else {
-        logger(Logging::DEBUGGING) << ctx << "back ping invoke wrong response \"" << response.status << "\" from"
+        logger(logging::DEBUGGING) << ctx << "back ping invoke wrong response \"" << response.status << "\" from"
           << peerAddress << ", expected peerId=" << ctx.getPeerId() << ", got " << response.peer_id;
       }
     });
@@ -539,7 +539,7 @@ void P2pNode::handleNodeData(const basic_node_data& node, P2pContext& context) {
     throw std::runtime_error(msg.str());
   }
 
-  if (node.version < CryptoNote::P2P_MINIMUM_VERSION) { 
+  if (node.version < cn::P2P_MINIMUM_VERSION) { 
     std::ostringstream msg;
     msg << context << "COMMAND_HANDSHAKE Failed, peer is wrong version! (" << std::to_string(node.version) << ")";
     throw std::runtime_error(msg.str());

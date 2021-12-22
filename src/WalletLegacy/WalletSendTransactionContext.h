@@ -13,22 +13,22 @@
 #include "IWalletLegacy.h"
 #include "ITransfersContainer.h"
 
-namespace CryptoNote {
+namespace cn {
 
 struct TxDustPolicy
 {
   uint64_t dustThreshold;
   bool addToFee;
-  CryptoNote::AccountPublicAddress addrForDust;
+  cn::AccountPublicAddress addrForDust;
 
-  TxDustPolicy(uint64_t a_dust_threshold = 0, bool an_add_to_fee = false, CryptoNote::AccountPublicAddress an_addr_for_dust = CryptoNote::AccountPublicAddress())
+  TxDustPolicy(uint64_t a_dust_threshold = 0, bool an_add_to_fee = false, cn::AccountPublicAddress an_addr_for_dust = cn::AccountPublicAddress())
     : dustThreshold(a_dust_threshold), addToFee(an_add_to_fee), addrForDust(an_addr_for_dust) {}
 };
 
 struct SendTransactionContext
 {
   TransactionId transactionId;
-  std::vector<CryptoNote::COMMAND_RPC_GET_RANDOM_OUTPUTS_FOR_AMOUNTS::outs_for_amount> outs;
+  std::vector<cn::COMMAND_RPC_GET_RANDOM_OUTPUTS_FOR_AMOUNTS::outs_for_amount> outs;
   uint64_t foundMoney;
   std::vector<TransactionOutputInformation> selectedTransfers;
   TxDustPolicy dustPolicy;
@@ -38,4 +38,4 @@ struct SendTransactionContext
   uint32_t depositTerm;
 };
 
-} //namespace CryptoNote
+} //namespace cn

@@ -16,7 +16,7 @@
 #include "Serialization/SerializationOverloads.h"
 #include "CryptoNoteCore/CryptoNoteSerialization.h"
 
-namespace CryptoNote
+namespace cn
 {
 
 #define BC_COMMANDS_POOL_BASE 2000
@@ -38,7 +38,7 @@ namespace CryptoNote
 
   struct BlockFullInfo : public block_complete_entry
   {
-    Crypto::Hash block_id;
+    crypto::Hash block_id;
 
     void serialize(ISerializer& s) {
       KV_MEMBER(block_id);
@@ -48,7 +48,7 @@ namespace CryptoNote
   };
 
   struct TransactionPrefixInfo {
-    Crypto::Hash txHash;
+    crypto::Hash txHash;
     TransactionPrefix txPrefix;
 
     void serialize(ISerializer& s) {
@@ -58,7 +58,7 @@ namespace CryptoNote
   };
 
   struct BlockShortInfo {
-    Crypto::Hash blockId;
+    crypto::Hash blockId;
     std::string block;
     std::vector<TransactionPrefixInfo> txPrefixes;
 
@@ -115,8 +115,8 @@ namespace CryptoNote
   /************************************************************************/
   struct NOTIFY_REQUEST_GET_OBJECTS_request
   {
-    std::vector<Crypto::Hash> txs;
-    std::vector<Crypto::Hash> blocks;
+    std::vector<crypto::Hash> txs;
+    std::vector<crypto::Hash> blocks;
 
     void serialize(ISerializer& s) {
       serializeAsBinary(txs, "txs", s);
@@ -134,7 +134,7 @@ namespace CryptoNote
   {
     std::vector<std::string> txs;
     std::vector<block_complete_entry> blocks;
-    std::vector<Crypto::Hash> missed_ids;
+    std::vector<crypto::Hash> missed_ids;
     uint32_t current_blockchain_height;
 
     void serialize(ISerializer& s) {
@@ -158,7 +158,7 @@ namespace CryptoNote
 
     struct request
     {
-      std::vector<Crypto::Hash> block_ids; /*IDs of the first 10 blocks are sequential, next goes with pow(2,n) offset, like 2, 4, 8, 16, 32, 64 and so on, and the last one is always genesis block */
+      std::vector<crypto::Hash> block_ids; /*IDs of the first 10 blocks are sequential, next goes with pow(2,n) offset, like 2, 4, 8, 16, 32, 64 and so on, and the last one is always genesis block */
 
       void serialize(ISerializer& s) {
         serializeAsBinary(block_ids, "block_ids", s);
@@ -170,7 +170,7 @@ namespace CryptoNote
   {
     uint32_t start_height;
     uint32_t total_height;
-    std::vector<Crypto::Hash> m_block_ids;
+    std::vector<crypto::Hash> m_block_ids;
 
     void serialize(ISerializer& s) {
       KV_MEMBER(start_height)
@@ -189,7 +189,7 @@ namespace CryptoNote
   /*                                                                      */
   /************************************************************************/
   struct NOTIFY_REQUEST_TX_POOL_request {
-    std::vector<Crypto::Hash> txs;
+    std::vector<crypto::Hash> txs;
 
     void serialize(ISerializer& s) {
       serializeAsBinary(txs, "txs", s);
@@ -226,9 +226,9 @@ namespace CryptoNote
 
   struct NOTIFY_MISSING_TXS_request
   {
-    Crypto::Hash blockHash;
+    crypto::Hash blockHash;
     uint32_t current_blockchain_height;
-    std::vector<Crypto::Hash> missing_txs;
+    std::vector<crypto::Hash> missing_txs;
 
     void serialize(ISerializer &s)
     {
@@ -243,5 +243,5 @@ namespace CryptoNote
     const static int ID = BC_COMMANDS_POOL_BASE + 10;
     typedef NOTIFY_MISSING_TXS_request request;
   };
-} // namespace CryptoNote
+} // namespace cn
 

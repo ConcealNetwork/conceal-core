@@ -9,7 +9,7 @@
 #include <System/ContextGroup.h>
 #include <System/Timer.h>
 
-namespace System {
+namespace platform_system {
 
 class ContextGroupTimeout {
 public: 

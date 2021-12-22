@@ -13,15 +13,15 @@
 #include "../IntegrationTestLib/TestWalletLegacy.h"
 
 
-using namespace CryptoNote;
-using namespace Crypto;
-using namespace Tests::Common;
+using namespace cn;
+using namespace crypto;
+using namespace Tests::common;
 
-extern System::Dispatcher globalSystem;
-extern Tests::Common::BaseFunctionalTestsConfig config;
+extern platform_system::Dispatcher globalSystem;
+extern Tests::common::BaseFunctionalTestsConfig config;
 
 namespace {
-  class NodeRpcProxyTest : public Tests::Common::BaseFunctionalTests, public ::testing::Test {
+  class NodeRpcProxyTest : public Tests::common::BaseFunctionalTests, public ::testing::Test {
   public:
     NodeRpcProxyTest() :
       BaseFunctionalTests(m_currency, globalSystem, config),
@@ -29,8 +29,8 @@ namespace {
     }
 
   protected:
-    Logging::LoggerManager m_logManager;
-    CryptoNote::Currency m_currency;
+    logging::LoggerManager m_logManager;
+    cn::Currency m_currency;
   };
 
   class PoolChangedObserver : public INodeObserver {
@@ -58,10 +58,10 @@ namespace {
     const size_t NODE_0 = 0;
     const size_t NODE_1 = 1;
 
-    launchTestnet(2, Tests::Common::BaseFunctionalTests::Line);
+    launchTestnet(2, Tests::common::BaseFunctionalTests::Line);
 
-    std::unique_ptr<CryptoNote::INode> node0;
-    std::unique_ptr<CryptoNote::INode> node1;
+    std::unique_ptr<cn::INode> node0;
+    std::unique_ptr<cn::INode> node1;
 
     nodeDaemons[NODE_0]->makeINode(node0);
     nodeDaemons[NODE_1]->makeINode(node1);

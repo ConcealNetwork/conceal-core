@@ -20,12 +20,12 @@ namespace
   template <typename T>
   static bool print_as_json(const T &obj)
   {
-    std::cout << CryptoNote::storeToJson(obj) << ENDL;
+    std::cout << cn::storeToJson(obj) << ENDL;
     return true;
   }
 } // namespace
 
-DaemonCommandsHandler::DaemonCommandsHandler(CryptoNote::core &core, CryptoNote::NodeServer &srv, Logging::LoggerManager &log) : m_core(core), m_srv(srv), logger(log, "daemon"), m_logManager(log)
+DaemonCommandsHandler::DaemonCommandsHandler(cn::core &core, cn::NodeServer &srv, logging::LoggerManager &log) : m_core(core), m_srv(srv), logger(log, "daemon"), m_logManager(log)
 {
   m_consoleHandler.setHandler("exit", boost::bind(&DaemonCommandsHandler::exit, this, boost::arg<1>()), "Shutdown the daemon");
   m_consoleHandler.setHandler("help", boost::bind(&DaemonCommandsHandler::help, this, boost::arg<1>()), "Show this help");
@@ -50,7 +50,7 @@ DaemonCommandsHandler::DaemonCommandsHandler(CryptoNote::core &core, CryptoNote:
 std::string DaemonCommandsHandler::get_commands_str()
 {
   std::stringstream ss;
-  ss << CryptoNote::CRYPTONOTE_NAME << " v" << PROJECT_VERSION_LONG << ENDL;
+  ss << cn::CRYPTONOTE_NAME << " v" << PROJECT_VERSION_LONG << ENDL;
   ss << "Commands: " << ENDL;
   std::string usage = m_consoleHandler.getUsage();
   boost::replace_all(usage, "\n", "\n  ");
@@ -132,13 +132,13 @@ bool DaemonCommandsHandler::print_bc(const std::vector<std::string> &args)
   uint32_t start_index = 0;
   uint32_t end_index = 0;
   uint32_t end_block_parametr = m_core.get_current_blockchain_height();
-  if (!Common::fromString(args[0], start_index))
+  if (!common::fromString(args[0], start_index))
   {
     std::cout << "wrong starter block index parameter" << ENDL;
     return false;
   }
 
-  if (args.size() > 1 && !Common::fromString(args[1], end_index))
+  if (args.size() > 1 && !common::fromString(args[1], end_index))
   {
     std::cout << "wrong end block index parameter" << ENDL;
     return false;
@@ -180,7 +180,7 @@ bool DaemonCommandsHandler::set_log(const std::vector<std::string> &args)
   }
 
   uint16_t l = 0;
-  if (!Common::fromString(args[0], l))
+  if (!common::fromString(args[0], l))
   {
     std::cout << "wrong number format, use: set_log <log_level_number_0-4>" << ENDL;
     return true;
@@ -188,20 +188,20 @@ bool DaemonCommandsHandler::set_log(const std::vector<std::string> &args)
 
   ++l;
 
-  if (l > Logging::TRACE)
+  if (l > logging::TRACE)
   {
     std::cout << "wrong number range, use: set_log <log_level_number_0-4>" << ENDL;
     return true;
   }
 
-  m_logManager.setMaxLevel(static_cast<Logging::Level>(l));
+  m_logManager.setMaxLevel(static_cast<logging::Level>(l));
   return true;
 }
 
 //--------------------------------------------------------------------------------
 bool DaemonCommandsHandler::print_block_by_height(uint32_t height)
 {
-  std::list<CryptoNote::Block> blocks;
+  std::list<cn::Block> blocks;
   m_core.get_blocks(height, 1, blocks);
 
   if (1 == blocks.size())
@@ -212,7 +212,7 @@ bool DaemonCommandsHandler::print_block_by_height(uint32_t height)
   else
   {
     uint32_t current_height;
-    Crypto::Hash top_id;
+    crypto::Hash top_id;
     m_core.get_blockchain_top(current_height, top_id);
     std::cout << "block wasn't found. Current block chain height: " << current_height << ", requested: " << height << std::endl;
     return false;
@@ -245,16 +245,16 @@ bool DaemonCommandsHandler::rollbackchainto(uint32_t height)
 //--------------------------------------------------------------------------------
 bool DaemonCommandsHandler::print_block_by_hash(const std::string &arg)
 {
-  Crypto::Hash block_hash;
+  crypto::Hash block_hash;
   if (!parse_hash256(arg, block_hash))
   {
     return false;
   }
 
-  std::list<Crypto::Hash> block_ids;
+  std::list<crypto::Hash> block_ids;
   block_ids.push_back(block_hash);
-  std::list<CryptoNote::Block> blocks;
-  std::list<Crypto::Hash> missed_ids;
+  std::list<cn::Block> blocks;
+  std::list<crypto::Hash> missed_ids;
   m_core.get_blocks(block_ids, blocks, missed_ids);
 
   if (1 == blocks.size())
@@ -270,7 +270,7 @@ bool DaemonCommandsHandler::print_block_by_hash(const std::string &arg)
   return true;
 }
 //--------------------------------------------------------------------------------
-uint64_t DaemonCommandsHandler::calculatePercent(const CryptoNote::Currency &currency, uint64_t value, uint64_t total)
+uint64_t DaemonCommandsHandler::calculatePercent(const cn::Currency &currency, uint64_t value, uint64_t total)
 {
   return static_cast<uint64_t>(100.0 * currency.coin() * static_cast<double>(value) / static_cast<double>(total));
 }
@@ -291,7 +291,7 @@ bool DaemonCommandsHandler::print_stat(const std::vector<std::string> &args)
     }
     catch (boost::bad_lexical_cast &)
     {
-      Crypto::Hash block_hash;
+      crypto::Hash block_hash;
       if (!parse_hash256(args.front(), block_hash) || !m_core.getBlockHeight(block_hash, height))
       {
         return false;
@@ -350,16 +350,16 @@ bool DaemonCommandsHandler::print_tx(const std::vector<std::string> &args)
   }
 
   const std::string &str_hash = args.front();
-  Crypto::Hash tx_hash;
+  crypto::Hash tx_hash;
   if (!parse_hash256(str_hash, tx_hash))
   {
     return true;
   }
 
-  std::vector<Crypto::Hash> tx_ids;
+  std::vector<crypto::Hash> tx_ids;
   tx_ids.push_back(tx_hash);
-  std::list<CryptoNote::Transaction> txs;
-  std::list<Crypto::Hash> missed_ids;
+  std::list<cn::Transaction> txs;
+  std::list<crypto::Hash> missed_ids;
   m_core.getTransactions(tx_ids, txs, missed_ids, true);
 
   if (1 == txs.size())
@@ -376,13 +376,13 @@ bool DaemonCommandsHandler::print_tx(const std::vector<std::string> &args)
 //--------------------------------------------------------------------------------
 bool DaemonCommandsHandler::print_pool(const std::vector<std::string> &args)
 {
-  logger(Logging::INFO) << "Pool state: " << ENDL << m_core.print_pool(false);
+  logger(logging::INFO) << "Pool state: " << ENDL << m_core.print_pool(false);
   return true;
 }
 //--------------------------------------------------------------------------------
 bool DaemonCommandsHandler::print_pool_sh(const std::vector<std::string> &args)
 {
-  logger(Logging::INFO) << "Pool state: " << ENDL << m_core.print_pool(true);
+  logger(logging::INFO) << "Pool state: " << ENDL << m_core.print_pool(true);
   return true;
 }
 //--------------------------------------------------------------------------------
@@ -394,7 +394,7 @@ bool DaemonCommandsHandler::start_mining(const std::vector<std::string> &args)
     return true;
   }
 
-  CryptoNote::AccountPublicAddress adr;
+  cn::AccountPublicAddress adr;
   if (!m_core.currency().parseAccountAddressString(args.front(), adr))
   {
     std::cout << "target account address has wrong format" << std::endl;
@@ -404,7 +404,7 @@ bool DaemonCommandsHandler::start_mining(const std::vector<std::string> &args)
   size_t threads_count = 1;
   if (args.size() > 1)
   {
-    bool ok = Common::fromString(args[1], threads_count);
+    bool ok = common::fromString(args[1], threads_count);
     threads_count = (ok && 0 < threads_count) ? threads_count : 1;
   }
 

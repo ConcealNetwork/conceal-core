@@ -18,7 +18,7 @@
 
 #include "Logging/LoggerRef.h"
 
-namespace CryptoNote {
+namespace cn {
 
 struct BlockMiningParameters {
   Block blockTemplate;
@@ -27,7 +27,7 @@ struct BlockMiningParameters {
 
 class Miner {
 public:
-  Miner(System::Dispatcher& dispatcher, Logging::ILogger& logger);
+  Miner(platform_system::Dispatcher& dispatcher, logging::ILogger& logger);
   ~Miner();
 
   Block mine(const BlockMiningParameters& blockMiningParameters, size_t threadCount);
@@ -36,21 +36,21 @@ public:
   void stop();
 
 private:
-  System::Dispatcher& m_dispatcher;
-  System::Event m_miningStopped;
+  platform_system::Dispatcher& m_dispatcher;
+  platform_system::Event m_miningStopped;
 
   enum class MiningState : uint8_t { MINING_STOPPED, BLOCK_FOUND, MINING_IN_PROGRESS};
   std::atomic<MiningState> m_state;
 
-  std::vector<std::unique_ptr<System::RemoteContext<void>>>  m_workers;
+  std::vector<std::unique_ptr<platform_system::RemoteContext<void>>>  m_workers;
 
   Block m_block;
 
-  Logging::LoggerRef m_logger;
+  logging::LoggerRef m_logger;
 
   void runWorkers(BlockMiningParameters blockMiningParameters, size_t threadCount);
   void workerFunc(const Block& blockTemplate, difficulty_type difficulty, uint32_t nonceStep);
   bool setStateBlockFound();
 };
 
-} //namespace CryptoNote
+} //namespace cn

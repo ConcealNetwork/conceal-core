@@ -12,7 +12,7 @@
 
 #undef ERROR
 
-namespace Logging {
+namespace logging {
 
 enum Level {
   FATAL = 0,

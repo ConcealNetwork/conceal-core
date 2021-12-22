@@ -16,7 +16,7 @@
 
 #include "TransactionApiHelpers.h"
 
-using namespace CryptoNote;
+using namespace cn;
 
 
 namespace {
@@ -119,7 +119,7 @@ namespace {
       return finalTx;
     }
 
-    Logging::ConsoleLogger logger;
+    logging::ConsoleLogger logger;
     Currency currency;
     TransfersContainer container;
     AccountKeys account;

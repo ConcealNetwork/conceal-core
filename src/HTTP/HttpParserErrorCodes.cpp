@@ -6,10 +6,10 @@
 
 #include "HttpParserErrorCodes.h"
 
-namespace CryptoNote {
+namespace cn {
 namespace error {
 
 HttpParserErrorCategory HttpParserErrorCategory::INSTANCE;
 
 } //namespace error
-} //namespace CryptoNote
+} //namespace cn

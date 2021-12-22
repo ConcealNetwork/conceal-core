@@ -26,7 +26,7 @@
 #include "Serialization/ISerializer.h"
 #include "Serialization/SerializationTools.h"
 
-namespace CryptoNote {
+namespace cn {
 
 class HttpClient;
   
@@ -61,16 +61,16 @@ public:
   std::string message;
 };
 
-typedef boost::optional<Common::JsonValue> OptionalId;
+typedef boost::optional<common::JsonValue> OptionalId;
 
 class JsonRpcRequest {
 public:
   
-  JsonRpcRequest() : psReq(Common::JsonValue::OBJECT) {}
+  JsonRpcRequest() : psReq(common::JsonValue::OBJECT) {}
 
   bool parseRequest(const std::string& requestBody) {
     try {
-      psReq = Common::JsonValue::fromString(requestBody);
+      psReq = common::JsonValue::fromString(requestBody);
     } catch (std::exception&) {
       throw JsonRpcError(errParseError);
     }
@@ -91,7 +91,7 @@ public:
   template <typename T>
   bool loadParams(T& v) const {
     loadFromJsonValue(v, psReq.contains("params") ? 
-      psReq("params") : Common::JsonValue(Common::JsonValue::NIL));
+      psReq("params") : common::JsonValue(common::JsonValue::NIL));
     return true;
   }
 
@@ -121,7 +121,7 @@ public:
 
 private:
 
-  Common::JsonValue psReq;
+  common::JsonValue psReq;
   OptionalId id;
   std::string method;
 };
@@ -130,11 +130,11 @@ private:
 class JsonRpcResponse {
 public:
 
-  JsonRpcResponse() : psResp(Common::JsonValue::OBJECT) {}
+  JsonRpcResponse() : psResp(common::JsonValue::OBJECT) {}
 
   void parse(const std::string& responseBody) {
     try {
-      psResp = Common::JsonValue::fromString(responseBody);
+      psResp = common::JsonValue::fromString(responseBody);
     } catch (std::exception&) {
       throw JsonRpcError(errParseError);
     }
@@ -181,7 +181,7 @@ public:
   }
 
 private:
-  Common::JsonValue psResp;
+  common::JsonValue psResp;
 };
 
 
@@ -205,7 +205,7 @@ bool invokeMethod(const JsonRpcRequest& jsReq, JsonRpcResponse& jsRes, Handler h
   Request req;
   Response res;
 
-  if (!std::is_same<Request, CryptoNote::EMPTY_STRUCT>::value && !jsReq.loadParams(req)) {
+  if (!std::is_same<Request, cn::EMPTY_STRUCT>::value && !jsReq.loadParams(req)) {
     throw JsonRpcError(JsonRpc::errInvalidParams);
   }
 

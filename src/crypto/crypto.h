@@ -17,7 +17,7 @@
 #include "generic-ops.h"
 #include "hash.h"
 
-namespace Crypto {
+namespace crypto {
 
   extern "C" {
 #include "random.h"
@@ -96,7 +96,7 @@ namespace Crypto {
     return res;
   }
 
-  /* Random number engine based on Crypto::rand()
+  /* Random number engine based on crypto::rand()
    */
   template <typename T>
   class random_engine {

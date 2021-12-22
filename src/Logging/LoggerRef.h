@@ -9,7 +9,7 @@
 #include "ILogger.h"
 #include "LoggerMessage.h"
 
-namespace Logging {
+namespace logging {
 
 class LoggerRef {
 public:

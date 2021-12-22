@@ -6,7 +6,7 @@
 
 #pragma once
 
-namespace CryptoNote {
+namespace cn {
 
 class ICoreObserver {
 public:

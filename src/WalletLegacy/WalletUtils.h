@@ -13,15 +13,15 @@
 #include "IWalletLegacy.h"
 #include "Wallet/WalletErrors.h"
 
-namespace CryptoNote {
+namespace cn {
 
-inline void throwIf(bool expr, CryptoNote::error::WalletErrorCodes ec)
+inline void throwIf(bool expr, cn::error::WalletErrorCodes ec)
 {
   if (expr)
     throw std::system_error(make_error_code(ec));
 }
 
-inline std::ostream& operator <<(std::ostream& ostr, const Crypto::Hash& hash) {
+inline std::ostream& operator <<(std::ostream& ostr, const crypto::Hash& hash) {
   std::ios_base::fmtflags flags = ostr.setf(std::ios_base::hex, std::ios_base::basefield);
   char fill = ostr.fill('0');
 
@@ -34,4 +34,4 @@ inline std::ostream& operator <<(std::ostream& ostr, const Crypto::Hash& hash) {
   return ostr;
 }
 
-} //namespace CryptoNote
+} //namespace cn

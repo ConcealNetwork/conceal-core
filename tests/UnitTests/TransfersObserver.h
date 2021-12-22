@@ -9,7 +9,7 @@
 #include <vector>
 #include "ITransfersSynchronizer.h"
 
-namespace CryptoNote {
+namespace cn {
 
 class TransfersObserver : public ITransfersObserver {
 public:

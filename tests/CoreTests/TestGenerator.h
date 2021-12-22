@@ -13,7 +13,7 @@
 
 class TestGenerator {
 public:
-  TestGenerator(const test_generator& gen, const CryptoNote::AccountBase& miner, CryptoNote::Block last, const CryptoNote::Currency& currency, std::vector<test_event_entry>& eventsRef) :
+  TestGenerator(const test_generator& gen, const cn::AccountBase& miner, cn::Block last, const cn::Currency& currency, std::vector<test_event_entry>& eventsRef) :
     lastBlock(last),
       generator(gen),
       minerAccount(miner),
@@ -22,7 +22,7 @@ public:
   }
 
   TestGenerator(
-    const CryptoNote::Currency& currency, 
+    const cn::Currency& currency, 
     std::vector<test_event_entry>& eventsRef) :
       generator(currency),
       events(eventsRef) {
@@ -33,18 +33,18 @@ public:
 	height = 0;
   }
 
-  const CryptoNote::Currency& currency() const { return generator.currency(); }
+  const cn::Currency& currency() const { return generator.currency(); }
 
-  void makeNextBlock(const std::list<CryptoNote::Transaction>& txs = std::list<CryptoNote::Transaction>()) {
-    CryptoNote::Block block;
+  void makeNextBlock(const std::list<cn::Transaction>& txs = std::list<cn::Transaction>()) {
+    cn::Block block;
     generator.constructBlock(block, lastBlock, minerAccount, txs);
     events.push_back(block);
     lastBlock = block;
 	++height;
   }
 
-  void makeNextBlock(const CryptoNote::Transaction& tx) {
-    std::list<CryptoNote::Transaction> txs;
+  void makeNextBlock(const cn::Transaction& tx) {
+    std::list<cn::Transaction> txs;
     txs.push_back(tx);
     makeNextBlock(txs);
   }
@@ -53,9 +53,9 @@ public:
     generateBlocks(currency().minedMoneyUnlockWindow());
   }
 
-  void generateBlocks(size_t count, uint8_t majorVersion = CryptoNote::BLOCK_MAJOR_VERSION_1) {
+  void generateBlocks(size_t count, uint8_t majorVersion = cn::BLOCK_MAJOR_VERSION_1) {
     while (count--) {
-      CryptoNote::Block next;
+      cn::Block next;
       generator.constructBlockManually(next, lastBlock, minerAccount, test_generator::bf_major_ver, majorVersion);
       lastBlock = next;
 	  ++height;
@@ -63,10 +63,10 @@ public:
     }
   }
 
-  TransactionBuilder createTxBuilder(const CryptoNote::AccountBase& from, const CryptoNote::AccountBase& to, uint64_t amount, uint64_t fee) {
+  TransactionBuilder createTxBuilder(const cn::AccountBase& from, const cn::AccountBase& to, uint64_t amount, uint64_t fee) {
 
-    std::vector<CryptoNote::TransactionSourceEntry> sources;
-    std::vector<CryptoNote::TransactionDestinationEntry> destinations;
+    std::vector<cn::TransactionSourceEntry> sources;
+    std::vector<cn::TransactionDestinationEntry> destinations;
 
     fillTxSourcesAndDestinations(sources, destinations, from, to, amount, fee);
 
@@ -79,16 +79,16 @@ public:
   }
 
   void fillTxSourcesAndDestinations(
-    std::vector<CryptoNote::TransactionSourceEntry>& sources, 
-    std::vector<CryptoNote::TransactionDestinationEntry>& destinations,
-    const CryptoNote::AccountBase& from, const CryptoNote::AccountBase& to, uint64_t amount, uint64_t fee, size_t nmix = 0) {
+    std::vector<cn::TransactionSourceEntry>& sources, 
+    std::vector<cn::TransactionDestinationEntry>& destinations,
+    const cn::AccountBase& from, const cn::AccountBase& to, uint64_t amount, uint64_t fee, size_t nmix = 0) {
     fill_tx_sources_and_destinations(events, lastBlock, from, to, amount, fee, nmix, sources, destinations);
   }
 
   void constructTxToKey(
-    CryptoNote::Transaction& tx,
-    const CryptoNote::AccountBase& from,
-    const CryptoNote::AccountBase& to,
+    cn::Transaction& tx,
+    const cn::AccountBase& from,
+    const cn::AccountBase& to,
     uint64_t amount,
     uint64_t fee,
     size_t nmix = 0) {
@@ -113,11 +113,11 @@ public:
     addCallback("check_block_purged");
   }
 
-  Logging::LoggerGroup logger;
+  logging::LoggerGroup logger;
   test_generator generator;
-  CryptoNote::Block genesisBlock;
-  CryptoNote::Block lastBlock;
-  CryptoNote::AccountBase minerAccount;
+  cn::Block genesisBlock;
+  cn::Block lastBlock;
+  cn::AccountBase minerAccount;
   std::vector<test_event_entry>& events;
   
   uint32_t height;

@@ -12,11 +12,11 @@
 #include "Serialization/KVBinaryInputStreamSerializer.h"
 #include "Serialization/KVBinaryOutputStreamSerializer.h"
 
-namespace System {
+namespace platform_system {
 class TcpConnection;
 }
 
-namespace CryptoNote {
+namespace cn {
 
 enum class LevinError: int32_t {
   OK = 0,
@@ -34,7 +34,7 @@ const int32_t LEVIN_PROTOCOL_RETCODE_SUCCESS = 1;
 class LevinProtocol {
 public:
 
-  LevinProtocol(System::TcpConnection& connection);
+  LevinProtocol(platform_system::TcpConnection& connection);
 
   template <typename Request, typename Response>
   bool invoke(uint32_t command, const Request& request, Response& response) {
@@ -72,7 +72,7 @@ public:
   template <typename T>
   static bool decode(const BinaryArray& buf, T& value) {
     try {
-      Common::MemoryInputStream stream(buf.data(), buf.size());
+      common::MemoryInputStream stream(buf.data(), buf.size());
       KVBinaryInputStreamSerializer serializer(stream);
       serialize(value, serializer);
     } catch (std::exception&) {
@@ -87,7 +87,7 @@ public:
     BinaryArray result;
     KVBinaryOutputStreamSerializer serializer;
     serialize(const_cast<T&>(value), serializer);
-    Common::VectorOutputStream stream(result);
+    common::VectorOutputStream stream(result);
     serializer.dump(stream);
     return result;
   }
@@ -96,7 +96,7 @@ private:
 
   bool readStrict(uint8_t* ptr, size_t size);
   void writeStrict(const uint8_t* ptr, size_t size);
-  System::TcpConnection& m_conn;
+  platform_system::TcpConnection& m_conn;
 };
 
 }

@@ -14,32 +14,32 @@
 #include "Serialization/JsonInputValueSerializer.h"
 #include "Serialization/JsonOutputStreamSerializer.h"
 
-namespace PaymentService {
+namespace payment_service {
 
 class WalletService;
 
-class PaymentServiceJsonRpcServer : public CryptoNote::JsonRpcServer {
+class PaymentServiceJsonRpcServer : public cn::JsonRpcServer {
 public:
-  PaymentServiceJsonRpcServer(System::Dispatcher& sys, System::Event& stopEvent, WalletService& service, Logging::ILogger& loggerGroup);
+  PaymentServiceJsonRpcServer(platform_system::Dispatcher& sys, platform_system::Event& stopEvent, WalletService& service, logging::ILogger& loggerGroup);
   PaymentServiceJsonRpcServer(const PaymentServiceJsonRpcServer&) = delete;
 
 protected:
-  virtual void processJsonRpcRequest(const Common::JsonValue& req, Common::JsonValue& resp) override;
+  virtual void processJsonRpcRequest(const common::JsonValue& req, common::JsonValue& resp) override;
 
 private:
   WalletService& service;
-  Logging::LoggerRef logger;
+  logging::LoggerRef logger;
 
-  typedef std::function<void (const Common::JsonValue& jsonRpcParams, Common::JsonValue& jsonResponse)> HandlerFunction;
+  typedef std::function<void (const common::JsonValue& jsonRpcParams, common::JsonValue& jsonResponse)> HandlerFunction;
 
   template <typename RequestType, typename ResponseType, typename RequestHandler>
   HandlerFunction jsonHandler(RequestHandler handler) {
-    return [handler] (const Common::JsonValue& jsonRpcParams, Common::JsonValue& jsonResponse) mutable {
+    return [handler] (const common::JsonValue& jsonRpcParams, common::JsonValue& jsonResponse) mutable {
       RequestType request;
       ResponseType response;
 
       try {
-        CryptoNote::JsonInputValueSerializer inputSerializer(const_cast<Common::JsonValue&>(jsonRpcParams));
+        cn::JsonInputValueSerializer inputSerializer(const_cast<common::JsonValue&>(jsonRpcParams));
         serialize(request, inputSerializer);
       } catch (std::exception&) {
         makeGenericErrorReponse(jsonResponse, "Invalid Request", -32600);
@@ -52,7 +52,7 @@ private:
         return;
       }
 
-      CryptoNote::JsonOutputStreamSerializer outputSerializer;
+      cn::JsonOutputStreamSerializer outputSerializer;
       serialize(response, outputSerializer);
       fillJsonResponse(outputSerializer.getValue(), jsonResponse);
     };
@@ -93,4 +93,4 @@ private:
   std::error_code handleSendFusionTransaction(const SendFusionTransaction::Request& request, SendFusionTransaction::Response& response);
 };
 
-}//namespace PaymentService
+}//namespace payment_service

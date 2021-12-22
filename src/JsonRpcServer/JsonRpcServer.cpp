@@ -24,9 +24,9 @@
 #include "Serialization/JsonInputValueSerializer.h"
 #include "Serialization/JsonOutputStreamSerializer.h"
 
-namespace CryptoNote {
+namespace cn {
 
-JsonRpcServer::JsonRpcServer(System::Dispatcher& sys, System::Event& stopEvent, Logging::ILogger& loggerGroup) :
+JsonRpcServer::JsonRpcServer(platform_system::Dispatcher& sys, platform_system::Event& stopEvent, logging::ILogger& loggerGroup) :
   HttpServer(sys, loggerGroup), 
   system(sys),
   stopEvent(stopEvent),
@@ -40,21 +40,21 @@ void JsonRpcServer::start(const std::string& bindAddress, uint16_t bindPort, con
   HttpServer::stop();
 }
 
-void JsonRpcServer::processRequest(const CryptoNote::HttpRequest& req, CryptoNote::HttpResponse& resp) {
+void JsonRpcServer::processRequest(const cn::HttpRequest& req, cn::HttpResponse& resp) {
   try {
-    logger(Logging::TRACE) << "HTTP request came: \n" << req;
+    logger(logging::TRACE) << "HTTP request came: \n" << req;
 
     if (req.getUrl() == "/json_rpc") {
       std::istringstream jsonInputStream(req.getBody());
-      Common::JsonValue jsonRpcRequest;
-      Common::JsonValue jsonRpcResponse(Common::JsonValue::OBJECT);
+      common::JsonValue jsonRpcRequest;
+      common::JsonValue jsonRpcResponse(common::JsonValue::OBJECT);
 
       try {
         jsonInputStream >> jsonRpcRequest;
       } catch (std::runtime_error&) {
-        logger(Logging::DEBUGGING) << "Couldn't parse request: \"" << req.getBody() << "\"";
+        logger(logging::DEBUGGING) << "Couldn't parse request: \"" << req.getBody() << "\"";
         makeJsonParsingErrorResponse(jsonRpcResponse);
-        resp.setStatus(CryptoNote::HttpResponse::STATUS_200);
+        resp.setStatus(cn::HttpResponse::STATUS_200);
         resp.setBody(jsonRpcResponse.toString());
         return;
       }
@@ -64,22 +64,22 @@ void JsonRpcServer::processRequest(const CryptoNote::HttpRequest& req, CryptoNot
       std::ostringstream jsonOutputStream;
       jsonOutputStream << jsonRpcResponse;
 
-      resp.setStatus(CryptoNote::HttpResponse::STATUS_200);
+      resp.setStatus(cn::HttpResponse::STATUS_200);
       resp.setBody(jsonOutputStream.str());
 
     } else {
-      logger(Logging::WARNING) << "Requested url \"" << req.getUrl() << "\" is not found";
-      resp.setStatus(CryptoNote::HttpResponse::STATUS_404);
+      logger(logging::WARNING) << "Requested url \"" << req.getUrl() << "\" is not found";
+      resp.setStatus(cn::HttpResponse::STATUS_404);
       return;
     }
   } catch (std::exception& e) {
-    logger(Logging::WARNING) << "Error while processing http request: " << e.what();
-    resp.setStatus(CryptoNote::HttpResponse::STATUS_500);
+    logger(logging::WARNING) << "Error while processing http request: " << e.what();
+    resp.setStatus(cn::HttpResponse::STATUS_500);
   }
 }
 
-void JsonRpcServer::prepareJsonResponse(const Common::JsonValue& req, Common::JsonValue& resp) {
-  using Common::JsonValue;
+void JsonRpcServer::prepareJsonResponse(const common::JsonValue& req, common::JsonValue& resp) {
+  using common::JsonValue;
 
   if (req.contains("id")) {
     resp.insert("id", req("id"));
@@ -88,8 +88,8 @@ void JsonRpcServer::prepareJsonResponse(const Common::JsonValue& req, Common::Js
   resp.insert("jsonrpc", "2.0");
 }
 
-void JsonRpcServer::makeErrorResponse(const std::error_code& ec, Common::JsonValue& resp) {
-  using Common::JsonValue;
+void JsonRpcServer::makeErrorResponse(const std::error_code& ec, common::JsonValue& resp) {
+  using common::JsonValue;
 
   JsonValue error(JsonValue::OBJECT);
 
@@ -111,8 +111,8 @@ void JsonRpcServer::makeErrorResponse(const std::error_code& ec, Common::JsonVal
   resp.insert("error", error);
 }
 
-void JsonRpcServer::makeGenericErrorReponse(Common::JsonValue& resp, const char* what, int errorCode) {
-  using Common::JsonValue;
+void JsonRpcServer::makeGenericErrorReponse(common::JsonValue& resp, const char* what, int errorCode) {
+  using common::JsonValue;
 
   JsonValue error(JsonValue::OBJECT);
 
@@ -136,8 +136,8 @@ void JsonRpcServer::makeGenericErrorReponse(Common::JsonValue& resp, const char*
 
 }
 
-void JsonRpcServer::makeMethodNotFoundResponse(Common::JsonValue& resp) {
-  using Common::JsonValue;
+void JsonRpcServer::makeMethodNotFoundResponse(common::JsonValue& resp) {
+  using common::JsonValue;
 
   JsonValue error(JsonValue::OBJECT);
 
@@ -153,12 +153,12 @@ void JsonRpcServer::makeMethodNotFoundResponse(Common::JsonValue& resp) {
   resp.insert("error", error);
 }
 
-void JsonRpcServer::fillJsonResponse(const Common::JsonValue& v, Common::JsonValue& resp) {
+void JsonRpcServer::fillJsonResponse(const common::JsonValue& v, common::JsonValue& resp) {
   resp.insert("result", v);
 }
 
-void JsonRpcServer::makeJsonParsingErrorResponse(Common::JsonValue& resp) {
-  using Common::JsonValue;
+void JsonRpcServer::makeJsonParsingErrorResponse(common::JsonValue& resp) {
+  using common::JsonValue;
 
   resp = JsonValue(JsonValue::OBJECT);
   resp.insert("jsonrpc", "2.0");

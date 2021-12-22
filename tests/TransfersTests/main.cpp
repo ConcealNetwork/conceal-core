@@ -8,10 +8,10 @@
 
 #include <Logging/ConsoleLogger.h>
 
-Logging::ConsoleLogger logger;
-System::Dispatcher globalSystem;
-CryptoNote::Currency currency = CryptoNote::CurrencyBuilder(logger).testnet(true).currency();
-Tests::Common::BaseFunctionalTestsConfig config;
+logging::ConsoleLogger logger;
+platform_system::Dispatcher globalSystem;
+cn::Currency currency = cn::CurrencyBuilder(logger).testnet(true).currency();
+Tests::common::BaseFunctionalTestsConfig config;
 
 
 namespace po = boost::program_options;

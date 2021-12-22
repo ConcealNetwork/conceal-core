@@ -14,7 +14,7 @@
 
 #include "../IntegrationTestLib/ObservableValue.h"
 
-namespace CryptoNote {
+namespace cn {
 
 class WalletLegacyObserver: public IWalletLegacyObserver {
 public:
@@ -40,7 +40,7 @@ public:
     m_cv.notify_all();
   }
 
-  virtual void sendTransactionCompleted(CryptoNote::TransactionId transactionId, std::error_code result) override {
+  virtual void sendTransactionCompleted(cn::TransactionId transactionId, std::error_code result) override {
     std::unique_lock<std::mutex> lk(m_mutex);
     m_sendResults[transactionId] = result;
     m_cv.notify_all();
@@ -89,14 +89,14 @@ public:
     return m_actualBalance + m_pendingBalance;
   }
 
-  CryptoNote::TransactionId waitExternalTransaction() {
+  cn::TransactionId waitExternalTransaction() {
     std::unique_lock<std::mutex> lk(m_mutex);
 
     while (m_externalTransactions.empty()) {
       m_cv.wait(lk);
     }
 
-    CryptoNote::TransactionId txId = m_externalTransactions.front();
+    cn::TransactionId txId = m_externalTransactions.front();
     m_externalTransactions.pop_front();
     return txId;
   }
@@ -118,10 +118,10 @@ public:
     return m_actualBalance;
   }
 
-  std::error_code waitSendResult(CryptoNote::TransactionId txid) {
+  std::error_code waitSendResult(cn::TransactionId txid) {
     std::unique_lock<std::mutex> lk(m_mutex);
 
-    std::unordered_map<CryptoNote::TransactionId, std::error_code>::iterator it;
+    std::unordered_map<cn::TransactionId, std::error_code>::iterator it;
 
     while ((it = m_sendResults.find(txid)) == m_sendResults.end()) {
       m_cv.wait(lk);
@@ -158,8 +158,8 @@ private:
 
   std::vector<std::pair<uint32_t, uint32_t>> m_syncProgress;
 
-  std::unordered_map<CryptoNote::TransactionId, std::error_code> m_sendResults;
-  std::deque<CryptoNote::TransactionId> m_externalTransactions;
+  std::unordered_map<cn::TransactionId, std::error_code> m_sendResults;
+  std::deque<cn::TransactionId> m_externalTransactions;
 };
 
 }
