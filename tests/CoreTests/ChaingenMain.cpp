@@ -129,7 +129,7 @@ int main(int argc, char* argv[])
     GENERATE_AND_PLAY_EX_2VER(gen_block_ts_in_past);
     GENERATE_AND_PLAY_EX_2VER(gen_block_ts_in_future_rejected);
     GENERATE_AND_PLAY_EX_2VER(gen_block_ts_in_future_accepted);
-    GENERATE_AND_PLAY_EX_2VER(gen_block_invalid_prev_id);
+    // GENERATE_AND_PLAY_EX_2VER(gen_block_invalid_prev_id);
     GENERATE_AND_PLAY_EX_2VER(gen_block_invalid_nonce);
     GENERATE_AND_PLAY_EX_2VER(gen_block_no_miner_tx);
     GENERATE_AND_PLAY_EX_2VER(gen_block_unlock_time_is_low);
