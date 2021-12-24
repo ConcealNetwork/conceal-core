@@ -29,7 +29,7 @@
 namespace cn {
 
   struct core_stat_info;
-  class miner;
+  class Miner;
   class CoreConfig;
 
   class core : public ICore, public IMinerHandler, public IBlockchainStorageObserver, public ITxPoolObserver {
@@ -50,7 +50,7 @@ namespace cn {
      bool addObserver(ICoreObserver* observer) override;
      bool removeObserver(ICoreObserver* observer) override;
 
-     miner& get_miner() { return *m_miner; }
+     Miner& get_miner() { return *m_miner; }
      static void init_options(boost::program_options::options_description& desc);
      bool init(const CoreConfig& config, const MinerConfig& minerConfig, bool load_existing);
      bool set_genesis_block(const Block& b);
@@ -183,7 +183,7 @@ namespace cn {
     tx_memory_pool m_mempool;
     Blockchain m_blockchain;
     i_cryptonote_protocol *m_pprotocol;
-    std::unique_ptr<miner> m_miner;
+    std::unique_ptr<Miner> m_miner;
     std::string m_config_folder;
     cryptonote_protocol_stub m_protocol_stub;
     friend class tx_validate_inputs;

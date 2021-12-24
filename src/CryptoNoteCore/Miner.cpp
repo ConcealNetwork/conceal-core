@@ -31,7 +31,7 @@ using namespace logging;
 namespace cn
 {
 
-  miner::miner(const Currency& currency, IMinerHandler& handler, logging::ILogger& log) :
+  Miner::Miner(const Currency& currency, IMinerHandler& handler, logging::ILogger& log) :
     m_currency(currency),
     logger(log, "miner"),
     m_stop(true),
@@ -52,11 +52,11 @@ namespace cn
   {
   }
   //-----------------------------------------------------------------------------------------------------
-  miner::~miner() {
+  Miner::~Miner() {
     stop();
   }
   //-----------------------------------------------------------------------------------------------------
-  bool miner::set_block_template(const Block& bl, const difficulty_type& di) {
+  bool Miner::set_block_template(const Block& bl, const difficulty_type& di) {
     std::lock_guard<decltype(m_template_lock)> lk(m_template_lock);
 
     m_template = bl;
@@ -66,7 +66,7 @@ namespace cn
     return true;
   }
   //-----------------------------------------------------------------------------------------------------
-  bool miner::on_block_chain_update() {
+  bool Miner::on_block_chain_update() {
     if (!is_mining()) {
       return true;
     }
@@ -74,7 +74,7 @@ namespace cn
     return request_block_template();
   }
   //-----------------------------------------------------------------------------------------------------
-  bool miner::request_block_template() {
+  bool Miner::request_block_template() {
     Block bl = boost::value_initialized<Block>();
     difficulty_type di = 0;
     uint32_t height;
@@ -93,7 +93,7 @@ namespace cn
     return true;
   }
   //-----------------------------------------------------------------------------------------------------
-  bool miner::on_idle()
+  bool Miner::on_idle()
   {
     m_update_block_template_interval.call([&](){
       if(is_mining()) 
@@ -109,7 +109,7 @@ namespace cn
     return true;
   }
   //-----------------------------------------------------------------------------------------------------
-  void miner::do_print_hashrate(bool do_hr)
+  void Miner::do_print_hashrate(bool do_hr)
   {
     m_do_print_hashrate = do_hr;
   }
@@ -120,7 +120,7 @@ namespace cn
   }
 
   //-----------------------------------------------------------------------------------------------------
-  void miner::merge_hr()
+  void Miner::merge_hr()
   {
     if(m_last_hr_merge_time && is_mining()) {
       m_current_hash_rate = m_hashes * 1000 / (millisecondsSinceEpoch() - m_last_hr_merge_time + 1);
@@ -140,7 +140,7 @@ namespace cn
     m_hashes = 0;
   }
 
-  bool miner::init(const MinerConfig& config) {
+  bool Miner::init(const MinerConfig& config) {
     if (!config.extraMessages.empty()) {
       std::string buff;
       if (!common::loadFileToString(config.extraMessages, buff)) {
@@ -184,12 +184,12 @@ namespace cn
     return true;
   }
   //-----------------------------------------------------------------------------------------------------
-  bool miner::is_mining()
+  bool Miner::is_mining()
   {
     return !m_stop;
   }
   //-----------------------------------------------------------------------------------------------------
-  bool miner::start(const AccountPublicAddress& adr, size_t threads_count)
+  bool Miner::start(const AccountPublicAddress& adr, size_t threads_count)
   {   
     if (is_mining()) {
       logger(ERROR) << "Starting miner but it's already started";
@@ -214,7 +214,7 @@ namespace cn
     m_stop = false;
 
     for (uint32_t i = 0; i != threads_count; i++) {
-      m_threads.push_back(std::thread(std::bind(&miner::worker_thread, this, i)));
+      m_threads.push_back(std::thread(std::bind(&Miner::worker_thread, this, i)));
     }
 
     logger(INFO) << "Mining has started with " << threads_count << " threads, good luck!";
@@ -222,7 +222,7 @@ namespace cn
   }
   
   //-----------------------------------------------------------------------------------------------------
-  uint64_t miner::get_speed()
+  uint64_t Miner::get_speed()
   {
     if(is_mining())
       return m_current_hash_rate;
@@ -231,13 +231,13 @@ namespace cn
   }
   
   //-----------------------------------------------------------------------------------------------------
-  void miner::send_stop_signal() 
+  void Miner::send_stop_signal() 
   {
     m_stop = true;
   }
 
   //-----------------------------------------------------------------------------------------------------
-  bool miner::stop()
+  bool Miner::stop()
   {
     send_stop_signal();
     std::lock_guard<std::mutex> lk(m_threads_lock);
@@ -251,7 +251,7 @@ namespace cn
     return true;
   }
   //-----------------------------------------------------------------------------------------------------
-  bool miner::find_nonce_for_given_block(crypto::cn_context &context, Block& bl, const difficulty_type& diffic) {
+  bool Miner::find_nonce_for_given_block(crypto::cn_context &context, Block& bl, const difficulty_type& diffic) {
 
     unsigned nthreads = std::thread::hardware_concurrency();
 
@@ -309,14 +309,14 @@ namespace cn
     return false;
   }
   //-----------------------------------------------------------------------------------------------------
-  void miner::on_synchronized()
+  void Miner::on_synchronized()
   {
     if(m_do_mining) {
       start(m_mine_address, m_threads_total);
     }
   }
   //-----------------------------------------------------------------------------------------------------
-  void miner::pause()
+  void Miner::pause()
   {
     std::lock_guard<std::mutex> lk(m_miners_count_lock);
     ++m_pausers_count;
@@ -324,7 +324,7 @@ namespace cn
       logger(TRACE) << "MINING PAUSED";
   }
   //-----------------------------------------------------------------------------------------------------
-  void miner::resume()
+  void Miner::resume()
   {
     std::lock_guard<std::mutex> lk(m_miners_count_lock);
     --m_pausers_count;
@@ -337,7 +337,7 @@ namespace cn
       logger(TRACE) << "MINING RESUMED";
   }
   //-----------------------------------------------------------------------------------------------------
-  bool miner::worker_thread(uint32_t th_local_index)
+  bool Miner::worker_thread(uint32_t th_local_index)
   {
     logger(INFO) << "Miner thread was started ["<< th_local_index << "]";
     uint32_t nonce = m_starter_nonce + th_local_index;
