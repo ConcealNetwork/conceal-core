@@ -83,12 +83,6 @@ jobs:
           cd build/bin
           ./performance_tests.exe
 
-      - name: system_tests
-        shell: powershell
-        run: |
-          cd build/bin
-          ./system_tests.exe
-
   build-ubuntu18:
     name: Ubuntu 18.04
     runs-on: ubuntu-18.04
@@ -342,8 +336,3 @@ jobs:
         run: |
           cd build/bin
           ./performance_tests
-
-      - name: system_tests
-        run: |
-          cd build/bin
-          ./system_tests
