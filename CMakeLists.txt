@@ -118,7 +118,7 @@ if(NO_AES) # No AES
 	set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -DNO_AES")
 	set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DNO_AES")
 
-elseif(NOT ARM) # x86/64
+elseif(NOT ARM AND NOT MSVC) # x86/64
 	message(STATUS "AES support enabled")
 	set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -maes")
 	set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -maes")
