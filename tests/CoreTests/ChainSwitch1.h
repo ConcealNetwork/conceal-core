@@ -16,16 +16,16 @@ public:
 
   bool generate(std::vector<test_event_entry>& events) const;
 
-  bool check_split_not_switched(CryptoNote::core& c, size_t ev_index, const std::vector<test_event_entry>& events);
-  bool check_split_switched(CryptoNote::core& c, size_t ev_index, const std::vector<test_event_entry>& events);
+  bool check_split_not_switched(cn::core& c, size_t ev_index, const std::vector<test_event_entry>& events);
+  bool check_split_switched(cn::core& c, size_t ev_index, const std::vector<test_event_entry>& events);
 
 private:
-  std::list<CryptoNote::Block> m_chain_1;
+  std::list<cn::Block> m_chain_1;
 
-  CryptoNote::AccountBase m_recipient_account_1;
-  CryptoNote::AccountBase m_recipient_account_2;
-  CryptoNote::AccountBase m_recipient_account_3;
-  CryptoNote::AccountBase m_recipient_account_4;
+  cn::AccountBase m_recipient_account_1;
+  cn::AccountBase m_recipient_account_2;
+  cn::AccountBase m_recipient_account_3;
+  cn::AccountBase m_recipient_account_4;
 
-  std::vector<CryptoNote::Transaction> m_tx_pool;
+  std::vector<cn::Transaction> m_tx_pool;
 };

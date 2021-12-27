@@ -16,7 +16,7 @@
 
 int main(int argc, char** argv) {
   try {
-    CryptoNote::MiningConfig config;
+    cn::MiningConfig config;
     config.parse(argc, argv);
 
     if (config.help) {
@@ -24,11 +24,11 @@ int main(int argc, char** argv) {
       return 0;
     }
 
-    Logging::LoggerGroup loggerGroup;
-    Logging::ConsoleLogger consoleLogger(static_cast<Logging::Level>(config.logLevel));
+    logging::LoggerGroup loggerGroup;
+    logging::ConsoleLogger consoleLogger(static_cast<logging::Level>(config.logLevel));
     loggerGroup.addLogger(consoleLogger);
 
-    System::Dispatcher dispatcher;
+    platform_system::Dispatcher dispatcher;
     Miner::MinerManager app(dispatcher, config, loggerGroup);
 
     app.start();

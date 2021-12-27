@@ -9,8 +9,8 @@
 #include <string>
 #include <ostream>
 
-namespace CryptoNote {
+namespace cn {
 
 void importLegacyKeys(const std::string& legacyKeysFilename, const std::string& password, std::ostream& destination);
 
-} //namespace CryptoNote
+} //namespace cn

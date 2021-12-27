@@ -6,7 +6,7 @@
 #include <Common/StringView.h>
 #include <gtest/gtest.h>
 
-using namespace Common;
+using namespace common;
 
 TEST(StringViewTests, representations) {
   ASSERT_NE(nullptr, StringView::EMPTY.getData());

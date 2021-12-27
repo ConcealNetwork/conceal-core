@@ -10,14 +10,14 @@
 #include "P2p/PeerListManager.h"
 #include "P2p/PeerListManager.cpp"
 
-using namespace CryptoNote;
+using namespace cn;
 
 #define MAKE_IP( a1, a2, a3, a4 )	(a1|(a2<<8)|(a3<<16)|(a4<<24))
 
 
 TEST(peer_list, peer_list_general)
 {
-  CryptoNote::PeerlistManager plm;
+  cn::PeerlistManager plm;
   plm.init(false);
 #define ADD_GRAY_NODE(ip_, port_, id_, last_seen_) {  PeerlistEntry ple; ple.last_seen=last_seen_;ple.adr.ip = ip_; ple.adr.port = port_; ple.id = id_;plm.append_with_peer_gray(ple);}  
 #define ADD_WHITE_NODE(ip_, port_, id_, last_seen_) {  PeerlistEntry ple;ple.last_seen=last_seen_; ple.adr.ip = ip_; ple.adr.port = port_; ple.id = id_;plm.append_with_peer_white(ple);}  

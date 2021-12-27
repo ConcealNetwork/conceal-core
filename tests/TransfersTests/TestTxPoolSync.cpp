@@ -19,15 +19,15 @@
 #include "../IntegrationTestLib/TestWalletLegacy.h"
 
 
-using namespace CryptoNote;
-using namespace Tests::Common;
-using namespace Crypto;
+using namespace cn;
+using namespace Tests::common;
+using namespace crypto;
 
-extern System::Dispatcher globalSystem;
-extern Tests::Common::BaseFunctionalTestsConfig config;
+extern platform_system::Dispatcher globalSystem;
+extern Tests::common::BaseFunctionalTestsConfig config;
 
 namespace {
-  class NodeTxPoolSyncTest : public Tests::Common::BaseFunctionalTests, public ::testing::Test {
+  class NodeTxPoolSyncTest : public Tests::common::BaseFunctionalTests, public ::testing::Test {
   public:
     NodeTxPoolSyncTest() :
         BaseFunctionalTests(m_currency, globalSystem, config),
@@ -36,18 +36,18 @@ namespace {
     }
 
   protected:
-    Logging::LoggerManager m_logManager;
-    System::Dispatcher& m_dispatcher;
-    CryptoNote::Currency m_currency;
+    logging::LoggerManager m_logManager;
+    platform_system::Dispatcher& m_dispatcher;
+    cn::Currency m_currency;
   };
 
   TEST_F(NodeTxPoolSyncTest, TxPoolsAreRequestedRightAfterANodeIsConnectedToAnotherIfTheirBlockchainsAreSynchronized) {
-    //System::Timer timer(m_dispatcher);
+    //platform_system::Timer timer(m_dispatcher);
     //m_dispatcher.spawn([&m_dispatcher, &timer] {
     //  try {
     //    timer.sleep(std::chrono::minutes(5));
     //    m_dispatcher.
-    //  } catch (System::InterruptedException&) {
+    //  } catch (platform_system::InterruptedException&) {
     //  }
     //});
 
@@ -56,19 +56,19 @@ namespace {
     const size_t NODE_2 = 2;
     const size_t NODE_3 = 3;
 
-    launchTestnet(4, Tests::Common::BaseFunctionalTests::Line);
+    launchTestnet(4, Tests::common::BaseFunctionalTests::Line);
 
-    std::unique_ptr<CryptoNote::INode> node0;
-    std::unique_ptr<CryptoNote::INode> node1;
-    std::unique_ptr<CryptoNote::INode> node2;
-    std::unique_ptr<CryptoNote::INode> node3;
+    std::unique_ptr<cn::INode> node0;
+    std::unique_ptr<cn::INode> node1;
+    std::unique_ptr<cn::INode> node2;
+    std::unique_ptr<cn::INode> node3;
 
     nodeDaemons[NODE_0]->makeINode(node0);
     nodeDaemons[NODE_1]->makeINode(node1);
     nodeDaemons[NODE_2]->makeINode(node2);
     nodeDaemons[NODE_3]->makeINode(node3);
 
-    CryptoNote::AccountBase minerAccount;
+    cn::AccountBase minerAccount;
     minerAccount.generate();
 
     TestWalletLegacy wallet1(m_dispatcher, m_currency, *node1);
@@ -105,8 +105,8 @@ namespace {
     startNode(NODE_1);
     ASSERT_TRUE(waitDaemonReady(NODE_1));
 
-    std::vector<std::unique_ptr<CryptoNote::ITransactionReader>> poolTxs1;
-    std::vector<std::unique_ptr<CryptoNote::ITransactionReader>> poolTxs2;
+    std::vector<std::unique_ptr<cn::ITransactionReader>> poolTxs1;
+    std::vector<std::unique_ptr<cn::ITransactionReader>> poolTxs2;
     ASSERT_TRUE(waitForPoolSize(NODE_1, *node1, 2, poolTxs1));
     ASSERT_TRUE(waitForPoolSize(NODE_2, *node2, 2, poolTxs2));
 
@@ -132,12 +132,12 @@ namespace {
   }
 
   TEST_F(NodeTxPoolSyncTest, TxPoolsAreRequestedRightAfterInitialBlockchainsSynchronization) {
-    //System::Timer timer(m_dispatcher);
+    //platform_system::Timer timer(m_dispatcher);
     //m_dispatcher.spawn([&m_dispatcher, &timer] {
     //  try {
     //    timer.sleep(std::chrono::minutes(5));
     //    m_dispatcher.
-    //  } catch (System::InterruptedException&) {
+    //  } catch (platform_system::InterruptedException&) {
     //  }
     //});
 
@@ -146,19 +146,19 @@ namespace {
     const size_t NODE_2 = 2;
     const size_t NODE_3 = 3;
 
-    launchTestnet(4, Tests::Common::BaseFunctionalTests::Line);
+    launchTestnet(4, Tests::common::BaseFunctionalTests::Line);
 
-    std::unique_ptr<CryptoNote::INode> node0;
-    std::unique_ptr<CryptoNote::INode> node1;
-    std::unique_ptr<CryptoNote::INode> node2;
-    std::unique_ptr<CryptoNote::INode> node3;
+    std::unique_ptr<cn::INode> node0;
+    std::unique_ptr<cn::INode> node1;
+    std::unique_ptr<cn::INode> node2;
+    std::unique_ptr<cn::INode> node3;
 
     nodeDaemons[NODE_0]->makeINode(node0);
     nodeDaemons[NODE_1]->makeINode(node1);
     nodeDaemons[NODE_2]->makeINode(node2);
     nodeDaemons[NODE_3]->makeINode(node3);
 
-    CryptoNote::AccountBase minerAccount;
+    cn::AccountBase minerAccount;
     minerAccount.generate();
 
     TestWalletLegacy wallet1(m_dispatcher, m_currency, *node1);
@@ -200,8 +200,8 @@ namespace {
     startNode(NODE_1);
     ASSERT_TRUE(waitDaemonReady(NODE_1));
 
-    std::vector<std::unique_ptr<CryptoNote::ITransactionReader>> poolTxs1;
-    std::vector<std::unique_ptr<CryptoNote::ITransactionReader>> poolTxs2;
+    std::vector<std::unique_ptr<cn::ITransactionReader>> poolTxs1;
+    std::vector<std::unique_ptr<cn::ITransactionReader>> poolTxs2;
     ASSERT_TRUE(waitForPoolSize(NODE_1, *node1, 2, poolTxs1));
     ASSERT_TRUE(waitForPoolSize(NODE_2, *node2, 2, poolTxs2));
 
@@ -227,12 +227,12 @@ namespace {
   }
 
   TEST_F(NodeTxPoolSyncTest, TxPoolsAreRequestedRightAfterTimedBlockchainsSynchronization) {
-    //System::Timer timer(m_dispatcher);
+    //platform_system::Timer timer(m_dispatcher);
     //m_dispatcher.spawn([&m_dispatcher, &timer] {
     //  try {
     //    timer.sleep(std::chrono::minutes(5));
     //    m_dispatcher.
-    //  } catch (System::InterruptedException&) {
+    //  } catch (platform_system::InterruptedException&) {
     //  }
     //});
 
@@ -242,13 +242,13 @@ namespace {
     const size_t NODE_3 = 3;
     const size_t NODE_4 = 4;
 
-    launchTestnet(5, Tests::Common::BaseFunctionalTests::Line);
+    launchTestnet(5, Tests::common::BaseFunctionalTests::Line);
 
-    std::unique_ptr<CryptoNote::INode> node0;
-    std::unique_ptr<CryptoNote::INode> node1;
-    std::unique_ptr<CryptoNote::INode> node2;
-    std::unique_ptr<CryptoNote::INode> node3;
-    std::unique_ptr<CryptoNote::INode> node4;
+    std::unique_ptr<cn::INode> node0;
+    std::unique_ptr<cn::INode> node1;
+    std::unique_ptr<cn::INode> node2;
+    std::unique_ptr<cn::INode> node3;
+    std::unique_ptr<cn::INode> node4;
 
     nodeDaemons[NODE_0]->makeINode(node0);
     nodeDaemons[NODE_1]->makeINode(node1);
@@ -256,7 +256,7 @@ namespace {
     nodeDaemons[NODE_3]->makeINode(node3);
     nodeDaemons[NODE_4]->makeINode(node4);
 
-    CryptoNote::AccountBase minerAccount;
+    cn::AccountBase minerAccount;
     minerAccount.generate();
 
     TestWalletLegacy wallet1(m_dispatcher, m_currency, *node1);
@@ -292,9 +292,9 @@ namespace {
     ASSERT_TRUE(waitDaemonReady(NODE_2));
 
     // NODE_3 and NODE_4 are synchronized by timer
-    std::vector<std::unique_ptr<CryptoNote::ITransactionReader>> poolTxs2;
-    std::vector<std::unique_ptr<CryptoNote::ITransactionReader>> poolTxs3;
-    std::vector<std::unique_ptr<CryptoNote::ITransactionReader>> poolTxs4;
+    std::vector<std::unique_ptr<cn::ITransactionReader>> poolTxs2;
+    std::vector<std::unique_ptr<cn::ITransactionReader>> poolTxs3;
+    std::vector<std::unique_ptr<cn::ITransactionReader>> poolTxs4;
     ASSERT_TRUE(waitForPoolSize(NODE_2, *node2, 1, poolTxs2));
     ASSERT_TRUE(waitForPoolSize(NODE_3, *node3, 1, poolTxs3));
     ASSERT_TRUE(waitForPoolSize(NODE_4, *node4, 1, poolTxs4));
@@ -314,12 +314,12 @@ namespace {
     // If this condition isn't true, then test must be rewritten a bit
     ASSERT_GT(m_currency.difficultyLag() + m_currency.difficultyCut(), m_currency.minedMoneyUnlockWindow());
 
-    //System::Timer timer(m_dispatcher);
+    //platform_system::Timer timer(m_dispatcher);
     //m_dispatcher.spawn([&m_dispatcher, &timer] {
     //  try {
     //    timer.sleep(std::chrono::minutes(5));
     //    m_dispatcher.
-    //  } catch (System::InterruptedException&) {
+    //  } catch (platform_system::InterruptedException&) {
     //  }
     //});
 
@@ -328,12 +328,12 @@ namespace {
     const size_t NODE_2 = 2;
     const size_t NODE_3 = 3;
 
-    launchTestnet(4, Tests::Common::BaseFunctionalTests::Line);
+    launchTestnet(4, Tests::common::BaseFunctionalTests::Line);
 
-    std::unique_ptr<CryptoNote::INode> node0;
-    std::unique_ptr<CryptoNote::INode> node1;
-    std::unique_ptr<CryptoNote::INode> node2;
-    std::unique_ptr<CryptoNote::INode> node3;
+    std::unique_ptr<cn::INode> node0;
+    std::unique_ptr<cn::INode> node1;
+    std::unique_ptr<cn::INode> node2;
+    std::unique_ptr<cn::INode> node3;
 
     nodeDaemons[NODE_0]->makeINode(node0);
     nodeDaemons[NODE_1]->makeINode(node1);
@@ -391,7 +391,7 @@ namespace {
     wallet2.waitForSynchronizationToHeight(blockchainLenght);
 
     // This block template doesn't contain txHash2, as it is not created yet
-    CryptoNote::Block blockTemplate2;
+    cn::Block blockTemplate2;
     uint64_t difficulty2;
     ASSERT_TRUE(nodeDaemons[NODE_2]->getBlockTemplate(wallet1.wallet()->getAddress(), blockTemplate2, difficulty2));
     ASSERT_EQ(1, difficulty2);
@@ -405,7 +405,7 @@ namespace {
     ASSERT_TRUE(waitDaemonReady(NODE_1));
     ASSERT_TRUE(waitForPeerCount(*node2, 2));
 
-    std::vector<std::unique_ptr<CryptoNote::ITransactionReader>> poolTxs2;
+    std::vector<std::unique_ptr<cn::ITransactionReader>> poolTxs2;
     ASSERT_TRUE(waitForPoolSize(NODE_2, *node2, 2, poolTxs2));
 
     // Now NODE_1 and NODE_2 are synchronized, but both are on its own alternative chains
@@ -422,7 +422,7 @@ namespace {
     wallet1.waitForSynchronizationToHeight(blockchainLenght);
     wallet2.waitForSynchronizationToHeight(blockchainLenght);
 
-    std::vector<std::unique_ptr<CryptoNote::ITransactionReader>> poolTxs1;
+    std::vector<std::unique_ptr<cn::ITransactionReader>> poolTxs1;
     ASSERT_TRUE(waitForPoolSize(NODE_1, *node1, 2, poolTxs1));
     ASSERT_TRUE(waitForPoolSize(NODE_2, *node2, 2, poolTxs2));
 

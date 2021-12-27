@@ -12,7 +12,7 @@
 #include "Common/CommandLine.h"
 #include "Common/Util.h"
 
-namespace PaymentService {
+namespace payment_service {
 
 namespace po = boost::program_options;
 
@@ -21,7 +21,7 @@ ConfigurationManager::ConfigurationManager() {
 }
 
 bool ConfigurationManager::init(int argc, char** argv) {
-  po::options_description cmdGeneralOptions("Common Options");
+  po::options_description cmdGeneralOptions("common Options");
 
   cmdGeneralOptions.add_options()
       ("config,c", po::value<std::string>(), "configuration file");
@@ -36,15 +36,15 @@ bool ConfigurationManager::init(int argc, char** argv) {
       ("local", po::bool_switch(), "start with local node (remote is default)")
       ("testnet", po::bool_switch(), "testnet mode");
 
-  command_line::add_arg(cmdGeneralOptions, command_line::arg_data_dir, Tools::getDefaultDataDirectory());
-  command_line::add_arg(confGeneralOptions, command_line::arg_data_dir, Tools::getDefaultDataDirectory());
+  command_line::add_arg(cmdGeneralOptions, command_line::arg_data_dir, tools::getDefaultDataDirectory());
+  command_line::add_arg(confGeneralOptions, command_line::arg_data_dir, tools::getDefaultDataDirectory());
 
   Configuration::initOptions(cmdGeneralOptions);
   Configuration::initOptions(confGeneralOptions);
 
   po::options_description netNodeOptions("Local Node Options");
-  CryptoNote::NetNodeConfig::initOptions(netNodeOptions);
-  CryptoNote::CoreConfig::initOptions(netNodeOptions);
+  cn::NetNodeConfig::initOptions(netNodeOptions);
+  cn::CoreConfig::initOptions(netNodeOptions);
 
   po::options_description remoteNodeOptions("Daemon Options");
   RpcNodeConfiguration::initOptions(remoteNodeOptions);
@@ -100,4 +100,4 @@ bool ConfigurationManager::init(int argc, char** argv) {
   return true;
 }
 
-} //namespace PaymentService
+} //namespace payment_service

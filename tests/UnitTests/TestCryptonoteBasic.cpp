@@ -12,7 +12,7 @@
 #include <CryptoNoteCore/CryptoNoteFormatUtils.h>
 #include <CryptoNoteCore/TransactionApi.h>
 
-using namespace CryptoNote;
+using namespace cn;
 
 class CryptoNoteBasicTest : public testing::Test {
 public:
@@ -34,8 +34,8 @@ public:
 };
 
 TEST_F(CryptoNoteBasicTest, transactionWithDepositsSerializationAndDeserialization) {
-  Crypto::Hash ignore1;
-  Crypto::Hash ignore2;
+  crypto::Hash ignore1;
+  crypto::Hash ignore2;
   ASSERT_TRUE(parseAndValidateTransactionFromBinaryArray(transaction->getTransactionData(), unpacked, ignore1, ignore2));
   ASSERT_TRUE(transaction->getTransactionHash() == createTransaction(unpacked)->getTransactionHash());
 }

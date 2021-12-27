@@ -8,7 +8,7 @@
 #include <cerrno>
 #include <cstring>
 
-namespace System {
+namespace platform_system {
 
 std::string lastErrorMessage() {
   return errorMessage(errno);

@@ -10,7 +10,7 @@
 #include <vector>
 #include <string>
 
-namespace Common {
+namespace common {
 
 class IInputStream;
 class IOutputStream;

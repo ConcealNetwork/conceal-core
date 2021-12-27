@@ -20,7 +20,7 @@
 // #error You are trying to do a 32-bit build. This will all end in tears. I know it.
 // #endif
 
-namespace Crypto {
+namespace crypto {
 
 template<bool SOFT_AES>
 inline void aes_genkey(const __m128i* memory, __m128i& k0, __m128i& k1, __m128i& k2, __m128i& k3,

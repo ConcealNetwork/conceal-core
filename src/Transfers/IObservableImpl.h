@@ -8,7 +8,7 @@
 
 #include "Common/ObserverManager.h"
 
-namespace CryptoNote {
+namespace cn {
 
 template <typename Observer, typename Base>
 class IObservableImpl : public Base {
@@ -23,7 +23,7 @@ public:
   }
 
 protected:
-  Tools::ObserverManager<Observer> m_observerManager;
+  tools::ObserverManager<Observer> m_observerManager;
 };
 
 }

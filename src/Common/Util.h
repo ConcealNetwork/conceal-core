@@ -9,7 +9,7 @@
 #include <string>
 #include <system_error>
 
-namespace Tools
+namespace tools
 {
   std::string getDefaultDataDirectory();
   std::string get_os_version_string();

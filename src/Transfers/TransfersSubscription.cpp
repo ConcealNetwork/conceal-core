@@ -7,11 +7,11 @@
 #include "TransfersSubscription.h"
 #include "IWalletLegacy.h"
 
-using namespace Crypto;
+using namespace crypto;
 
-namespace CryptoNote {
+namespace cn {
 
-TransfersSubscription::TransfersSubscription(const CryptoNote::Currency& currency, const AccountSubscription& sub)
+TransfersSubscription::TransfersSubscription(const cn::Currency& currency, const AccountSubscription& sub)
   : subscription(sub), transfers(currency, sub.transactionSpendableAge) {}
 
 

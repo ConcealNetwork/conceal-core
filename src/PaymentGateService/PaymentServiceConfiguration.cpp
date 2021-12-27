@@ -14,7 +14,7 @@
 
 namespace po = boost::program_options;
 
-namespace PaymentService {
+namespace payment_service {
 
 Configuration::Configuration() {
   generateNewContainer = false;
@@ -24,7 +24,7 @@ Configuration::Configuration() {
   logFile = "payment_gate.log";
   testnet = false;
   printAddresses = false;
-  logLevel = Logging::INFO;
+  logLevel = logging::INFO;
   bindAddress = "";
   bindPort = 0;
   secretSpendKey = "";
@@ -76,8 +76,8 @@ void Configuration::init(const boost::program_options::variables_map& options) {
 
   if (options.count("log-level") != 0) {
     logLevel = options["log-level"].as<size_t>();
-    if (logLevel > Logging::TRACE) {
-      std::string error = "log-level option must be in " + std::to_string(Logging::FATAL) +  ".." + std::to_string(Logging::TRACE) + " interval";
+    if (logLevel > logging::TRACE) {
+      std::string error = "log-level option must be in " + std::to_string(logging::FATAL) +  ".." + std::to_string(logging::TRACE) + " interval";
       throw ConfigurationError(error.c_str());
     }
   }
@@ -133,4 +133,4 @@ void Configuration::init(const boost::program_options::variables_map& options) {
   }
 }
 
-} //namespace PaymentService
+} //namespace payment_service

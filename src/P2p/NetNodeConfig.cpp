@@ -14,7 +14,7 @@
 #include "crypto/crypto.h"
 #include "CryptoNoteConfig.h"
 
-namespace CryptoNote {
+namespace cn {
 namespace {
 
 const command_line::arg_descriptor<std::string> arg_p2p_bind_ip        = {"p2p-bind-ip", "Interface for p2p network protocol", "0.0.0.0"};
@@ -29,7 +29,7 @@ const command_line::arg_descriptor<std::vector<std::string> > arg_p2p_seed_node 
 const command_line::arg_descriptor<bool> arg_p2p_hide_my_port   =    {"hide-my-port", "Do not announce yourself as peerlist candidate", false, true};
 
 bool parsePeerFromString(NetworkAddress& pe, const std::string& node_addr) {
-  return Common::parseIpAddressAndPort(pe.ip, pe.port, node_addr);
+  return common::parseIpAddressAndPort(pe.ip, pe.port, node_addr);
 }
 
 bool parsePeersAndAddToContainer(const boost::program_options::variables_map& vm,
@@ -68,7 +68,7 @@ NetNodeConfig::NetNodeConfig() {
   externalPort = 0;
   allowLocalIp = false;
   hideMyPort = false;
-  configFolder = Tools::getDefaultDataDirectory();
+  configFolder = tools::getDefaultDataDirectory();
   testnet = false;
 }
 
@@ -90,17 +90,17 @@ bool NetNodeConfig::init(const boost::program_options::variables_map& vm)
     allowLocalIp = command_line::get_arg(vm, arg_p2p_allow_local_ip);
   }
 
-  if (vm.count(command_line::arg_data_dir.name) != 0 && (!vm[command_line::arg_data_dir.name].defaulted() || configFolder == Tools::getDefaultDataDirectory())) {
+  if (vm.count(command_line::arg_data_dir.name) != 0 && (!vm[command_line::arg_data_dir.name].defaulted() || configFolder == tools::getDefaultDataDirectory())) {
     configFolder = command_line::get_arg(vm, command_line::arg_data_dir);
   }
 
-  p2pStateFilename = CryptoNote::parameters::P2P_NET_DATA_FILENAME;
+  p2pStateFilename = cn::parameters::P2P_NET_DATA_FILENAME;
 
   if (command_line::has_arg(vm, arg_p2p_add_peer)) {
     std::vector<std::string> perrs = command_line::get_arg(vm, arg_p2p_add_peer);
     for(const std::string& pr_str: perrs) {
       PeerlistEntry pe = boost::value_initialized<PeerlistEntry>();
-      pe.id = Crypto::rand<uint64_t>();
+      pe.id = crypto::rand<uint64_t>();
       if (!parsePeerFromString(pe.adr, pr_str)) {
         return false;
       }

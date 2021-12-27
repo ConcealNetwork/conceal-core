@@ -9,7 +9,7 @@
 #include <cstddef>
 #include <cstdint>
 
-namespace CryptoNote {
+namespace cn {
 class ICryptoNoteProtocolObserver;
 
 class ICryptoNoteProtocolQuery {
@@ -22,4 +22,4 @@ public:
   virtual bool isSynchronized() const = 0;
 };
 
-} //namespace CryptoNote
+} //namespace cn

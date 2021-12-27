@@ -10,7 +10,7 @@
 #include <limits>
 #include <string.h>
 
-namespace Common {
+namespace common {
 
 // 'StringBuffer' is a string of fixed maximum size.
 template<size_t MAXIMUM_SIZE_VALUE> class StringBuffer {

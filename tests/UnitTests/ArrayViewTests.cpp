@@ -6,7 +6,7 @@
 #include <Common/ArrayView.h>
 #include <gtest/gtest.h>
 
-using namespace Common;
+using namespace common;
 
 TEST(ArrayViewTests, representations) {
   ASSERT_NE(nullptr, ArrayView<>::EMPTY.getData());

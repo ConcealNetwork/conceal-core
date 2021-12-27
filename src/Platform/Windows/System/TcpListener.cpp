@@ -18,7 +18,7 @@
 #include "TcpConnection.h"
 #include <stdexcept>
 
-namespace System {
+namespace platform_system {
 
 namespace {
 

@@ -8,7 +8,7 @@
 
 #include "IInputStream.h"
 
-namespace Common {
+namespace common {
 
   class MemoryInputStream : public IInputStream {
   public:

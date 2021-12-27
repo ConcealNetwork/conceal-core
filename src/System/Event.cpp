@@ -9,7 +9,7 @@
 #include <System/Dispatcher.h>
 #include <System/InterruptedException.h>
 
-namespace System {
+namespace platform_system {
 
 namespace {
 

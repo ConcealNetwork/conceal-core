@@ -13,13 +13,13 @@
 #include "crypto/hash.h"
 #include "Common/int-util.h"
 
-using namespace Crypto;
-using namespace Common;
+using namespace crypto;
+using namespace common;
 
-namespace CryptoNote {
+namespace cn {
 
   /************************************************************************/
-  /* CryptoNote helper functions                                          */
+  /* cn helper functions                                          */
   /************************************************************************/
   //-----------------------------------------------------------------------------------------------
   uint64_t getPenalizedAmount(uint64_t amount, size_t medianSize, size_t currentBlockSize) {
@@ -54,7 +54,7 @@ namespace CryptoNote {
     BinaryArray ba;
     bool r = toBinaryArray(adr, ba);
     assert(r);
-    return Tools::Base58::encode_addr(prefix, Common::asString(ba));
+    return tools::base_58::encode_addr(prefix, common::asString(ba));
   }
   //-----------------------------------------------------------------------
   bool is_coinbase(const Transaction& tx) {
@@ -73,23 +73,23 @@ namespace CryptoNote {
     std::string data;
 
     return
-      Tools::Base58::decode_addr(str, prefix, data) &&
+      tools::base_58::decode_addr(str, prefix, data) &&
       fromBinaryArray(adr, asBinaryArray(data)) &&
       // ::serialization::parse_binary(data, adr) &&
       check_key(adr.spendPublicKey) &&
       check_key(adr.viewPublicKey);
   }
   //-----------------------------------------------------------------------
-  bool operator ==(const CryptoNote::Transaction& a, const CryptoNote::Transaction& b) {
+  bool operator ==(const cn::Transaction& a, const cn::Transaction& b) {
     return getObjectHash(a) == getObjectHash(b);
   }
   //-----------------------------------------------------------------------
-  bool operator ==(const CryptoNote::Block& a, const CryptoNote::Block& b) {
-    return CryptoNote::get_block_hash(a) == CryptoNote::get_block_hash(b);
+  bool operator ==(const cn::Block& a, const cn::Block& b) {
+    return cn::get_block_hash(a) == cn::get_block_hash(b);
   }
 }
 
 //--------------------------------------------------------------------------------
-bool parse_hash256(const std::string& str_hash, Crypto::Hash& hash) {
-  return Common::podFromHex(str_hash, hash);
+bool parse_hash256(const std::string& str_hash, crypto::Hash& hash) {
+  return common::podFromHex(str_hash, hash);
 }

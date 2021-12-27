@@ -63,10 +63,10 @@
 #include <string>
 
 /*!
- * \namespace Language
+ * \namespace seed_language
  * \brief Mnemonic language related namespace.
  */
-namespace Language
+namespace seed_language
 {
   class Japanese: public Base
   {

@@ -14,15 +14,15 @@
 #include "Serialization/BinaryInputStreamSerializer.h"
 #include "CryptoNoteSerialization.h"
 
-namespace CryptoNote {
+namespace cn {
 
-void getBinaryArrayHash(const BinaryArray& binaryArray, Crypto::Hash& hash);
-Crypto::Hash getBinaryArrayHash(const BinaryArray& binaryArray);
+void getBinaryArrayHash(const BinaryArray& binaryArray, crypto::Hash& hash);
+crypto::Hash getBinaryArrayHash(const BinaryArray& binaryArray);
 
 template<class T>
 bool toBinaryArray(const T& object, BinaryArray& binaryArray) {
   try {
-    ::Common::VectorOutputStream stream(binaryArray);
+    ::common::VectorOutputStream stream(binaryArray);
     BinaryOutputStreamSerializer serializer(stream);
     serialize(const_cast<T&>(object), serializer);
   } catch (std::exception&) {
@@ -46,7 +46,7 @@ template<class T>
 bool fromBinaryArray(T& object, const BinaryArray& binaryArray) {
   bool result = false;
   try {
-    Common::MemoryInputStream stream(binaryArray.data(), binaryArray.size());
+    common::MemoryInputStream stream(binaryArray.data(), binaryArray.size());
     BinaryInputStreamSerializer serializer(stream);
     serialize(object, serializer);
     result = stream.endOfStream(); // check that all data was consumed
@@ -77,7 +77,7 @@ size_t getObjectBinarySize(const T& object) {
 }
 
 template<class T>
-bool getObjectHash(const T& object, Crypto::Hash& hash) {
+bool getObjectHash(const T& object, crypto::Hash& hash) {
   BinaryArray ba;
   if (!toBinaryArray(object, ba)) {
     hash = NULL_HASH;
@@ -89,7 +89,7 @@ bool getObjectHash(const T& object, Crypto::Hash& hash) {
 }
 
 template<class T>
-bool getObjectHash(const T& object, Crypto::Hash& hash, size_t& size) {
+bool getObjectHash(const T& object, crypto::Hash& hash, size_t& size) {
   BinaryArray ba;
   if (!toBinaryArray(object, ba)) {
     hash = NULL_HASH;
@@ -103,8 +103,8 @@ bool getObjectHash(const T& object, Crypto::Hash& hash, size_t& size) {
 }
 
 template<class T>
-Crypto::Hash getObjectHash(const T& object) {
-  Crypto::Hash hash;
+crypto::Hash getObjectHash(const T& object) {
+  crypto::Hash hash;
   getObjectHash(object, hash);
   return hash;
 }

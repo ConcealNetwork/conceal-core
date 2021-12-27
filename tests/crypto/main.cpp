@@ -15,18 +15,18 @@
 #include "../Io.h"
 
 using namespace std;
-typedef Crypto::Hash chash;
+typedef crypto::Hash chash;
 
-bool operator !=(const Crypto::EllipticCurveScalar &a, const Crypto::EllipticCurveScalar &b) {
-  return 0 != memcmp(&a, &b, sizeof(Crypto::EllipticCurveScalar));
+bool operator !=(const crypto::EllipticCurveScalar &a, const crypto::EllipticCurveScalar &b) {
+  return 0 != memcmp(&a, &b, sizeof(crypto::EllipticCurveScalar));
 }
 
-bool operator !=(const Crypto::EllipticCurvePoint &a, const Crypto::EllipticCurvePoint &b) {
-  return 0 != memcmp(&a, &b, sizeof(Crypto::EllipticCurvePoint));
+bool operator !=(const crypto::EllipticCurvePoint &a, const crypto::EllipticCurvePoint &b) {
+  return 0 != memcmp(&a, &b, sizeof(crypto::EllipticCurvePoint));
 }
 
-bool operator !=(const Crypto::KeyDerivation &a, const Crypto::KeyDerivation &b) {
-  return 0 != memcmp(&a, &b, sizeof(Crypto::KeyDerivation));
+bool operator !=(const crypto::KeyDerivation &a, const crypto::KeyDerivation &b) {
+  return 0 != memcmp(&a, &b, sizeof(crypto::KeyDerivation));
 }
 
 int main(int argc, char *argv[]) {
@@ -48,7 +48,7 @@ int main(int argc, char *argv[]) {
     }
     input.exceptions(ios_base::badbit | ios_base::failbit | ios_base::eofbit);
     if (cmd == "check_scalar") {
-      Crypto::EllipticCurveScalar scalar;
+      crypto::EllipticCurveScalar scalar;
       bool expected, actual;
       get(input, scalar, expected);
       actual = check_scalar(scalar);
@@ -56,7 +56,7 @@ int main(int argc, char *argv[]) {
         goto error;
       }
     } else if (cmd == "random_scalar") {
-      Crypto::EllipticCurveScalar expected, actual;
+      crypto::EllipticCurveScalar expected, actual;
       get(input, expected);
       random_scalar(actual);
       if (expected != actual) {
@@ -64,22 +64,22 @@ int main(int argc, char *argv[]) {
       }
     } else if (cmd == "hash_to_scalar") {
       vector<char> data;
-      Crypto::EllipticCurveScalar expected, actual;
+      crypto::EllipticCurveScalar expected, actual;
       get(input, data, expected);
       hash_to_scalar(data.data(), data.size(), actual);
       if (expected != actual) {
         goto error;
       }
     } else if (cmd == "generate_keys") {
-      Crypto::PublicKey expected1, actual1;
-      Crypto::SecretKey expected2, actual2;
+      crypto::PublicKey expected1, actual1;
+      crypto::SecretKey expected2, actual2;
       get(input, expected1, expected2);
       generate_keys(actual1, actual2);
       if (expected1 != actual1 || expected2 != actual2) {
         goto error;
       }
     } else if (cmd == "check_key") {
-      Crypto::PublicKey key;
+      crypto::PublicKey key;
       bool expected, actual;
       get(input, key, expected);
       actual = check_key(key);
@@ -87,9 +87,9 @@ int main(int argc, char *argv[]) {
         goto error;
       }
     } else if (cmd == "secret_key_to_public_key") {
-      Crypto::SecretKey sec;
+      crypto::SecretKey sec;
       bool expected1, actual1;
-      Crypto::PublicKey expected2, actual2;
+      crypto::PublicKey expected2, actual2;
       get(input, sec, expected1);
       if (expected1) {
         get(input, expected2);
@@ -99,10 +99,10 @@ int main(int argc, char *argv[]) {
         goto error;
       }
     } else if (cmd == "generate_key_derivation") {
-      Crypto::PublicKey key1;
-      Crypto::SecretKey key2;
+      crypto::PublicKey key1;
+      crypto::SecretKey key2;
       bool expected1, actual1;
-      Crypto::KeyDerivation expected2, actual2;
+      crypto::KeyDerivation expected2, actual2;
       get(input, key1, key2, expected1);
       if (expected1) {
         get(input, expected2);
@@ -112,11 +112,11 @@ int main(int argc, char *argv[]) {
         goto error;
       }
     } else if (cmd == "derive_public_key") {
-      Crypto::KeyDerivation derivation;
+      crypto::KeyDerivation derivation;
       size_t output_index;
-      Crypto::PublicKey base;
+      crypto::PublicKey base;
       bool expected1, actual1;
-      Crypto::PublicKey expected2, actual2;
+      crypto::PublicKey expected2, actual2;
       get(input, derivation, output_index, base, expected1);
       if (expected1) {
         get(input, expected2);
@@ -126,21 +126,21 @@ int main(int argc, char *argv[]) {
         goto error;
       }
     } else if (cmd == "derive_secret_key") {
-      Crypto::KeyDerivation derivation;
+      crypto::KeyDerivation derivation;
       size_t output_index;
-      Crypto::SecretKey base;
-      Crypto::SecretKey expected, actual;
+      crypto::SecretKey base;
+      crypto::SecretKey expected, actual;
       get(input, derivation, output_index, base, expected);
       derive_secret_key(derivation, output_index, base, actual);
       if (expected != actual) {
         goto error;
       }
     } else if (cmd == "underive_public_key") {
-      Crypto::KeyDerivation derivation;
+      crypto::KeyDerivation derivation;
       size_t output_index;
-      Crypto::PublicKey derived_key;
+      crypto::PublicKey derived_key;
       bool expected1, actual1;
-      Crypto::PublicKey expected2, actual2;
+      crypto::PublicKey expected2, actual2;
       get(input, derivation, output_index, derived_key, expected1);
       if (expected1) {
         get(input, expected2);
@@ -151,9 +151,9 @@ int main(int argc, char *argv[]) {
       }
     } else if (cmd == "generate_signature") {
       chash prefix_hash;
-      Crypto::PublicKey pub;
-      Crypto::SecretKey sec;
-      Crypto::Signature expected, actual;
+      crypto::PublicKey pub;
+      crypto::SecretKey sec;
+      crypto::Signature expected, actual;
       get(input, prefix_hash, pub, sec, expected);
       generate_signature(prefix_hash, pub, sec, actual);
       if (expected != actual) {
@@ -161,8 +161,8 @@ int main(int argc, char *argv[]) {
       }
     } else if (cmd == "check_signature") {
       chash prefix_hash;
-      Crypto::PublicKey pub;
-      Crypto::Signature sig;
+      crypto::PublicKey pub;
+      crypto::Signature sig;
       bool expected, actual;
       get(input, prefix_hash, pub, sig, expected);
       actual = check_signature(prefix_hash, pub, sig);
@@ -171,24 +171,24 @@ int main(int argc, char *argv[]) {
       }
     } else if (cmd == "hash_to_point") {
       chash h;
-      Crypto::EllipticCurvePoint expected, actual;
+      crypto::EllipticCurvePoint expected, actual;
       get(input, h, expected);
       hash_to_point(h, actual);
       if (expected != actual) {
         goto error;
       }
     } else if (cmd == "hash_to_ec") {
-      Crypto::PublicKey key;
-      Crypto::EllipticCurvePoint expected, actual;
+      crypto::PublicKey key;
+      crypto::EllipticCurvePoint expected, actual;
       get(input, key, expected);
       hash_to_ec(key, actual);
       if (expected != actual) {
         goto error;
       }
     } else if (cmd == "generate_key_image") {
-      Crypto::PublicKey pub;
-      Crypto::SecretKey sec;
-      Crypto::KeyImage expected, actual;
+      crypto::PublicKey pub;
+      crypto::SecretKey sec;
+      crypto::KeyImage expected, actual;
       get(input, pub, sec, expected);
       generate_key_image(pub, sec, actual);
       if (expected != actual) {
@@ -196,13 +196,13 @@ int main(int argc, char *argv[]) {
       }
     } else if (cmd == "generate_ring_signature") {
       chash prefix_hash;
-      Crypto::KeyImage image;
-      vector<Crypto::PublicKey> vpubs;
-      vector<const Crypto::PublicKey *> pubs;
+      crypto::KeyImage image;
+      vector<crypto::PublicKey> vpubs;
+      vector<const crypto::PublicKey *> pubs;
       size_t pubs_count;
-      Crypto::SecretKey sec;
+      crypto::SecretKey sec;
       size_t sec_index;
-      vector<Crypto::Signature> expected, actual;
+      vector<crypto::Signature> expected, actual;
       size_t i;
       get(input, prefix_hash, image, pubs_count);
       vpubs.resize(pubs_count);
@@ -213,7 +213,7 @@ int main(int argc, char *argv[]) {
       }
       get(input, sec, sec_index);
       expected.resize(pubs_count);
-      getvar(input, pubs_count * sizeof(Crypto::Signature), expected.data());
+      getvar(input, pubs_count * sizeof(crypto::Signature), expected.data());
       actual.resize(pubs_count);
       generate_ring_signature(prefix_hash, image, pubs.data(), pubs_count, sec, sec_index, actual.data());
       if (expected != actual) {
@@ -221,11 +221,11 @@ int main(int argc, char *argv[]) {
       }
     } else if (cmd == "check_ring_signature") {
       chash prefix_hash;
-      Crypto::KeyImage image;
-      vector<Crypto::PublicKey> vpubs;
-      vector<const Crypto::PublicKey *> pubs;
+      crypto::KeyImage image;
+      vector<crypto::PublicKey> vpubs;
+      vector<const crypto::PublicKey *> pubs;
       size_t pubs_count;
-      vector<Crypto::Signature> sigs;
+      vector<crypto::Signature> sigs;
       bool expected, actual;
       size_t i;
       get(input, prefix_hash, image, pubs_count);
@@ -236,7 +236,7 @@ int main(int argc, char *argv[]) {
         pubs[i] = &vpubs[i];
       }
       sigs.resize(pubs_count);
-      getvar(input, pubs_count * sizeof(Crypto::Signature), sigs.data());
+      getvar(input, pubs_count * sizeof(crypto::Signature), sigs.data());
       get(input, expected);
       actual = check_ring_signature(prefix_hash, image, pubs.data(), pubs_count, sigs.data());
       if (expected != actual) {

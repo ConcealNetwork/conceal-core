@@ -24,7 +24,7 @@
 #include "P2pProtocolDefinitions.h"
 #include "PeerListManager.h"
 
-namespace CryptoNote {
+namespace cn {
 
 class P2pContext;
 class P2pConnectionProxy;
@@ -38,9 +38,9 @@ public:
 
   P2pNode(
     const P2pNodeConfig& cfg,
-    System::Dispatcher& dispatcher, 
-    Logging::ILogger& log, 
-    const Crypto::Hash& genesisHash, 
+    platform_system::Dispatcher& dispatcher, 
+    logging::ILogger& log, 
+    const crypto::Hash& genesisHash, 
     PeerIdType peerId);
 
   ~P2pNode();
@@ -61,20 +61,20 @@ private:
   typedef std::unique_ptr<P2pContext> ContextPtr;
   typedef std::list<ContextPtr> ContextList;
 
-  Logging::LoggerRef logger;
+  logging::LoggerRef logger;
   bool m_stopRequested;
   const P2pNodeConfig m_cfg;
   const PeerIdType m_myPeerId;
-  const Crypto::Hash m_genesisHash;
+  const crypto::Hash m_genesisHash;
   const CORE_SYNC_DATA m_genesisPayload;
 
-  System::Dispatcher& m_dispatcher;
-  System::ContextGroup workingContextGroup;
-  System::TcpListener m_listener;
-  System::Timer m_connectorTimer;
+  platform_system::Dispatcher& m_dispatcher;
+  platform_system::ContextGroup workingContextGroup;
+  platform_system::TcpListener m_listener;
+  platform_system::Timer m_connectorTimer;
   PeerlistManager m_peerlist;
   ContextList m_contexts;
-  System::Event m_queueEvent;
+  platform_system::Event m_queueEvent;
   std::deque<std::unique_ptr<IP2pConnection>> m_connectionQueue;
 
   // IP2pNodeInternal

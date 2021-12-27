@@ -7,7 +7,7 @@
 #include "StringView.h"
 #include <limits>
 
-namespace Common {
+namespace common {
 
 const StringView::Size StringView::INVALID = std::numeric_limits<StringView::Size>::max();
 const StringView StringView::EMPTY(reinterpret_cast<Object*>(1), 0);

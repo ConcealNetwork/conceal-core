@@ -19,9 +19,9 @@
 
 #include "../IntegrationTestLib/TestWalletLegacy.h"
 
-using namespace CryptoNote;
-using namespace Crypto;
-using namespace Tests::Common;
+using namespace cn;
+using namespace crypto;
+using namespace Tests::common;
 
 
 class IInterruptable {
@@ -42,7 +42,7 @@ public:
   }
 
   std::atomic<uint64_t> m_actualBalance;
-  Tests::Common::Semaphore m_sem;
+  Tests::common::Semaphore m_sem;
 };
 
 class TransactionConsumer : public IBlockchainConsumer {
@@ -82,14 +82,14 @@ public:
     return true;
   }
 
-  std::error_code onPoolUpdated(const std::vector<std::unique_ptr<ITransactionReader>>& addedTransactions, const std::vector<Crypto::Hash>& deletedTransactions) override {
+  std::error_code onPoolUpdated(const std::vector<std::unique_ptr<ITransactionReader>>& addedTransactions, const std::vector<crypto::Hash>& deletedTransactions) override {
     //stub
     return std::error_code();
   }
 
-  const std::unordered_set<Crypto::Hash>& getKnownPoolTxIds() const override {
+  const std::unordered_set<crypto::Hash>& getKnownPoolTxIds() const override {
     //stub
-    static std::unordered_set<Crypto::Hash> empty;
+    static std::unordered_set<crypto::Hash> empty;
     return empty;
   }
 
@@ -97,7 +97,7 @@ public:
     throw std::runtime_error("Not implemented");
   }
 
-  void removeUnconfirmedTransaction(const Crypto::Hash& /*transactionHash*/) override {
+  void removeUnconfirmedTransaction(const crypto::Hash& /*transactionHash*/) override {
     throw std::runtime_error("Not implemented");
   }
 
@@ -133,7 +133,7 @@ public:
       m_transfers.push_back(transactionHash);
 
       auto key = object->getAddress().spendPublicKey;
-      std::string address = Common::toHex(&key, sizeof(key));
+      std::string address = common::toHex(&key, sizeof(key));
       LOG_DEBUG("Transfer to " + address);
     }
     m_cv.notify_all();
@@ -195,7 +195,7 @@ public:
     m_sync(sync) {}
 
   void generateAccounts(size_t count) {
-    CryptoNote::AccountBase acc;
+    cn::AccountBase acc;
 
     while (count--) {
       acc.generate();
@@ -293,15 +293,15 @@ TEST_F(TransfersTest, base) {
 
   launchTestnet(2);
 
-  std::unique_ptr<CryptoNote::INode> node1;
-  std::unique_ptr<CryptoNote::INode> node2;
+  std::unique_ptr<cn::INode> node1;
+  std::unique_ptr<cn::INode> node2;
 
   nodeDaemons[0]->makeINode(node1);
   nodeDaemons[1]->makeINode(node2);
 
-  CryptoNote::AccountBase dstAcc;
+  cn::AccountBase dstAcc;
   dstAcc.generate();
-  Logging::ConsoleLogger m_logger; 
+  logging::ConsoleLogger m_logger; 
   AccountKeys dstKeys = reinterpret_cast<const AccountKeys&>(dstAcc.getAccountKeys());
 
   BlockchainSynchronizer blockSync(*node2.get(), currency.genesisBlockHash());
@@ -319,7 +319,7 @@ TEST_F(TransfersTest, base) {
   ITransfersContainer& transferContainer = transferSub.getContainer();
   transferSub.addObserver(&transferObserver);
 
-  Tests::Common::TestWalletLegacy wallet1(m_dispatcher, m_currency, *node1);
+  Tests::common::TestWalletLegacy wallet1(m_dispatcher, m_currency, *node1);
   ASSERT_FALSE(static_cast<bool>(wallet1.init()));
   wallet1.wallet()->addObserver(&walletObserver);
   ASSERT_TRUE(mineBlocks(*nodeDaemons[0], wallet1.address(), 1));
@@ -359,16 +359,16 @@ std::unique_ptr<ITransaction> createTransferToMultisignature(
 
   auto tx = createTransaction();
 
-  std::vector<std::pair<TransactionTypes::InputKeyInfo, KeyPair>> inputs;
+  std::vector<std::pair<transaction_types::InputKeyInfo, KeyPair>> inputs;
 
   uint64_t foundMoney = 0;
 
   for (const auto& t : transfers) {
-    TransactionTypes::InputKeyInfo info;
+    transaction_types::InputKeyInfo info;
 
     info.amount = t.amount;
 
-    TransactionTypes::GlobalOutput globalOut;
+    transaction_types::GlobalOutput globalOut;
     globalOut.outputIndex = t.globalOutputIndex;
     globalOut.targetKey = t.outputKey;
     info.outputs.push_back(globalOut);
@@ -408,11 +408,11 @@ std::unique_ptr<ITransaction> createTransferToMultisignature(
 std::error_code submitTransaction(INode& node, ITransactionReader& tx) {
   auto data = tx.getTransactionData();
 
-  CryptoNote::Transaction outTx;
+  cn::Transaction outTx;
   fromBinaryArray(outTx, data);
 
 
-  LOG_DEBUG("Submitting transaction " + Common::toHex(tx.getTransactionHash().data, 32));
+  LOG_DEBUG("Submitting transaction " + common::toHex(tx.getTransactionHash().data, 32));
 
   std::promise<std::error_code> result;
   node.relayTransaction(outTx, [&result](std::error_code ec) { result.set_value(ec); });
@@ -465,12 +465,12 @@ std::unique_ptr<ITransaction> createTransferFromMultisignature(
 
 TEST_F(MultisignatureTest, createMulitisignatureTransaction) {
 
-  std::unique_ptr<CryptoNote::INode> node1;
-  std::unique_ptr<CryptoNote::INode> node2;
+  std::unique_ptr<cn::INode> node1;
+  std::unique_ptr<cn::INode> node2;
 
   nodeDaemons[0]->makeINode(node1);
   nodeDaemons[1]->makeINode(node2);
-  Logging::ConsoleLogger m_logger; 
+  logging::ConsoleLogger m_logger; 
   BlockchainSynchronizer blockSync(*node2.get(), currency.genesisBlockHash());
   TransfersSyncronizer transferSync(currency, m_logger, blockSync, *node2.get());
   

@@ -20,9 +20,9 @@
 #include <cstdint>
 #include <string>
 
-namespace Tools
+namespace tools
 {
-  namespace Base64
+  namespace base_64
   {
     std::string encode(const std::string& data);
   }

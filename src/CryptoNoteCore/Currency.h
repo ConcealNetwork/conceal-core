@@ -16,7 +16,7 @@
 #include "CryptoNoteBasic.h"
 #include "Difficulty.h"
 
-namespace CryptoNote
+namespace cn
 {
 
   class AccountBase;
@@ -104,8 +104,8 @@ namespace CryptoNote
       }
     };
     size_t difficultyBlocksCount() const { return m_difficultyWindow + m_difficultyLag; }
-    size_t difficultyBlocksCount2() const { return CryptoNote::parameters::DIFFICULTY_BLOCKS_COUNT; }    //LWMA3
-    size_t difficultyBlocksCount3() const { return CryptoNote::parameters::DIFFICULTY_BLOCKS_COUNT_V1; } //LWMA1
+    size_t difficultyBlocksCount2() const { return cn::parameters::DIFFICULTY_BLOCKS_COUNT; }    //LWMA3
+    size_t difficultyBlocksCount3() const { return cn::parameters::DIFFICULTY_BLOCKS_COUNT_V1; } //LWMA1
 
     uint64_t depositMinAmount() const { return m_depositMinAmount; }
     uint32_t depositMinTerm() const { return m_depositMinTerm; }
@@ -147,7 +147,7 @@ namespace CryptoNote
     bool isTestnet() const { return m_testnet; }
 
     const Block &genesisBlock() const { return m_genesisBlock; }
-    const Crypto::Hash &genesisBlockHash() const { return m_genesisBlockHash; }
+    const crypto::Hash &genesisBlockHash() const { return m_genesisBlockHash; }
 
     bool getBlockReward(size_t medianSize, size_t currentBlockSize, uint64_t alreadyGeneratedCoins, uint64_t fee, uint32_t height,
                         uint64_t &reward, int64_t &emissionChange) const;
@@ -184,12 +184,12 @@ namespace CryptoNote
     difficulty_type nextDifficultyLWMA3(std::vector<uint64_t> timestamps, std::vector<difficulty_type> cumulativeDifficulties) const;
     difficulty_type nextDifficultyLWMA1(std::vector<uint64_t> timestamps, std::vector<difficulty_type> cumulativeDifficulties, uint64_t height) const;
 
-    bool checkProofOfWork(Crypto::cn_context &context, const Block &block, difficulty_type currentDifficulty, Crypto::Hash &proofOfWork) const;
+    bool checkProofOfWork(crypto::cn_context &context, const Block &block, difficulty_type currentDifficulty, crypto::Hash &proofOfWork) const;
 
     size_t getApproximateMaximumInputCount(size_t transactionSize, size_t outputCount, size_t mixinCount) const;
 
   private:
-    Currency(Logging::ILogger &log) : logger(log, "currency")
+    Currency(logging::ILogger &log) : logger(log, "currency")
     {
     }
 
@@ -282,9 +282,9 @@ namespace CryptoNote
     std::string m_genesisCoinbaseTxHex;
 
     Block m_genesisBlock;
-    Crypto::Hash m_genesisBlockHash;
+    crypto::Hash m_genesisBlockHash;
 
-    Logging::LoggerRef logger;
+    logging::LoggerRef logger;
 
     friend class CurrencyBuilder;
   };
@@ -292,7 +292,7 @@ namespace CryptoNote
   class CurrencyBuilder : boost::noncopyable
   {
   public:
-    CurrencyBuilder(Logging::ILogger &log);
+    CurrencyBuilder(logging::ILogger &log);
 
     Currency currency()
     {
@@ -610,4 +610,4 @@ namespace CryptoNote
     Currency m_currency;
   };
 
-} // namespace CryptoNote
+} // namespace cn

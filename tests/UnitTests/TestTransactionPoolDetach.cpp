@@ -22,7 +22,7 @@
 #include <future>
 #include <algorithm>
 
-using namespace CryptoNote;
+using namespace cn;
 
 /*
 class TransfersObserver : public ITransfersObserver {
@@ -43,7 +43,7 @@ class INodeStubWithPoolTx : public INodeTrivialRefreshStub {
 public:
   INodeStubWithPoolTx(TestBlockchainGenerator& generator) : INodeTrivialRefreshStub(generator), detached(false) {}
 
-  void relayTransaction(const CryptoNote::Transaction& transaction, const Callback& callback) override {
+  void relayTransaction(const cn::Transaction& transaction, const Callback& callback) override {
     std::unique_lock<std::mutex> lk(mutex);
     relayedTxs.push_back(std::make_pair(this->getLastLocalBlockHeight(), transaction));
     lk.unlock();
@@ -58,10 +58,10 @@ public:
   }
 
 
-  void getPoolSymmetricDifference(std::vector<Crypto::Hash>&& known_pool_tx_ids, Crypto::Hash known_block_id, bool& is_bc_actual, std::vector<std::unique_ptr<CryptoNote::ITransactionReader>>& new_txs, std::vector<Crypto::Hash>& deleted_tx_ids, const Callback& callback) override
+  void getPoolSymmetricDifference(std::vector<crypto::Hash>&& known_pool_tx_ids, crypto::Hash known_block_id, bool& is_bc_actual, std::vector<std::unique_ptr<cn::ITransactionReader>>& new_txs, std::vector<crypto::Hash>& deleted_tx_ids, const Callback& callback) override
   {
     std::unique_lock<std::mutex> lk(mutex);
-    std::sort(relayedTxs.begin(), relayedTxs.end(), [](const std::pair<uint32_t, CryptoNote::Transaction>& val1, const std::pair<uint32_t, CryptoNote::Transaction>& val2)->bool {return val1.first < val2.first; });
+    std::sort(relayedTxs.begin(), relayedTxs.end(), [](const std::pair<uint32_t, cn::Transaction>& val1, const std::pair<uint32_t, cn::Transaction>& val2)->bool {return val1.first < val2.first; });
     is_bc_actual = true;
     
     if (detached) {
@@ -73,7 +73,7 @@ public:
       }
 
       for (; i < relayedTxs.size(); ++i) {
-        new_txs.push_back(CryptoNote::createTransactionPrefix(relayedTxs[i].second));
+        new_txs.push_back(cn::createTransactionPrefix(relayedTxs[i].second));
       }
     }
 
@@ -82,13 +82,13 @@ public:
   };
 
   
-  std::vector<std::pair<uint32_t, CryptoNote::Transaction>> relayedTxs;
+  std::vector<std::pair<uint32_t, cn::Transaction>> relayedTxs;
   uint32_t detachHeight;
   bool detached;
   std::mutex mutex;
 };
 
-class WalletSendObserver : public CryptoNote::IWalletLegacyObserver
+class WalletSendObserver : public cn::IWalletLegacyObserver
 {
 public:
   WalletSendObserver() {}
@@ -99,7 +99,7 @@ public:
     return true;
   }
 
-  virtual void sendTransactionCompleted(CryptoNote::TransactionId transactionId, std::error_code result) override {
+  virtual void sendTransactionCompleted(cn::TransactionId transactionId, std::error_code result) override {
     sendResult = result;
     sent.notify();
   }
@@ -112,7 +112,7 @@ class DetachTest : public ::testing::Test, public IBlockchainSynchronizerObserve
 public:
 
   DetachTest() :
-    m_currency(CryptoNote::CurrencyBuilder(m_logger).currency()),
+    m_currency(cn::CurrencyBuilder(m_logger).currency()),
     generator(m_currency),
     m_node(generator),
     m_sync(m_node, m_currency.genesisBlockHash()),
@@ -151,14 +151,14 @@ public:
 
   void generateMoneyForAccount(size_t idx) {
     generator.getBlockRewardForAddress(
-      reinterpret_cast<const CryptoNote::AccountPublicAddress&>(m_accounts[idx].address));
+      reinterpret_cast<const cn::AccountPublicAddress&>(m_accounts[idx].address));
   }
 
   std::error_code submitTransaction(ITransactionReader& tx) {
     auto data = tx.getTransactionData();
 
-    CryptoNote::BinaryArray txblob(data.data(), data.data() + data.size());
-    CryptoNote::Transaction outTx;
+    cn::BinaryArray txblob(data.data(), data.data() + data.size());
+    cn::Transaction outTx;
     fromBinaryArray(outTx, data);
     std::promise<std::error_code> result;
     std::future<std::error_code> future = result.get_future();
@@ -181,8 +181,8 @@ protected:
   std::vector<AccountKeys> m_accounts;
   std::vector<ITransfersSubscription*> m_subscriptions;
 
-  Logging::ConsoleLogger m_logger;
-  CryptoNote::Currency m_currency;
+  logging::ConsoleLogger m_logger;
+  cn::Currency m_currency;
   TestBlockchainGenerator generator;
   INodeStubWithPoolTx m_node;
   BlockchainSynchronizer m_sync;
@@ -206,16 +206,16 @@ namespace {
 
     auto tx = createTransaction();
 
-    std::vector<std::pair<TransactionTypes::InputKeyInfo, KeyPair>> inputs;
+    std::vector<std::pair<transaction_types::InputKeyInfo, KeyPair>> inputs;
 
     uint64_t foundMoney = 0;
 
     for (const auto& t : transfers) {
-      TransactionTypes::InputKeyInfo info;
+      transaction_types::InputKeyInfo info;
 
       info.amount = t.amount;
 
-      TransactionTypes::GlobalOutput globalOut;
+      transaction_types::GlobalOutput globalOut;
       globalOut.outputIndex = t.globalOutputIndex;
       globalOut.targetKey = t.outputKey;
       info.outputs.push_back(globalOut);
@@ -290,7 +290,7 @@ TEST_F(DetachTest, testBlockchainDetach) {
   ASSERT_EQ(0, tc2.balance(ITransfersContainer::IncludeAllUnlocked));
   ASSERT_EQ(1, tc2.transactionsCount());
 
-  std::vector<Crypto::Hash> unconfirmed;
+  std::vector<crypto::Hash> unconfirmed;
   tc2.getUnconfirmedTransactions(unconfirmed);  
   ASSERT_EQ(0, unconfirmed.size());
 
@@ -327,12 +327,12 @@ struct CompletionWalletObserver : public IWalletLegacyObserver {
 };
 
 
-struct WaitForExternalTransactionObserver : public CryptoNote::IWalletLegacyObserver {
+struct WaitForExternalTransactionObserver : public cn::IWalletLegacyObserver {
 public:
   WaitForExternalTransactionObserver() {}
-  std::promise<CryptoNote::TransactionId> promise;
+  std::promise<cn::TransactionId> promise;
 
-  virtual void externalTransactionCreated(CryptoNote::TransactionId transactionId) override {
+  virtual void externalTransactionCreated(cn::TransactionId transactionId) override {
     decltype(promise) detachedPromise = std::move(promise);
     detachedPromise.set_value(transactionId);
   }
@@ -387,7 +387,7 @@ TEST_F(DetachTest, testDetachWithWallet) {
   ASSERT_EQ(0, Alice.pendingBalance());
   ASSERT_NE(0, Alice.actualBalance());
 
-  CryptoNote::WalletLegacyTransfer tr;
+  cn::WalletLegacyTransfer tr;
 
   tr.amount = Alice.actualBalance() / 2;
   tr.address = Bob.getAddress();

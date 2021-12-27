@@ -16,7 +16,7 @@
 #include "BlockingQueue.h"
 #include "ConsoleTools.h"
 
-namespace Common {
+namespace common {
 
 class AsyncConsoleReader {
 
@@ -53,7 +53,7 @@ public:
   void requestStop();
   bool runCommand(const std::vector<std::string>& cmdAndArgs);
 
-  void start(bool startThread = true, const std::string& prompt = "", Console::Color promptColor = Console::Color::Default);
+  void start(bool startThread = true, const std::string& prompt = "", console::Color promptColor = console::Color::Default);
   void stop();
   void wait(); 
 
@@ -67,7 +67,7 @@ private:
 
   std::thread m_thread;
   std::string m_prompt;
-  Console::Color m_promptColor = Console::Color::Default;
+  console::Color m_promptColor = console::Color::Default;
   CommandHandlersMap m_handlers;
   AsyncConsoleReader m_consoleReader;
 };

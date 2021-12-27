@@ -12,7 +12,7 @@
 #include "CryptoNoteCore/CryptoNoteBasic.h"
 
 
-namespace CryptoNote {
+namespace cn {
   /************************************************************************/
   /*                                                                      */
   /************************************************************************/
@@ -26,29 +26,29 @@ namespace CryptoNote {
   };
 
   /************************************************************************/
-  /* CryptoNote helper functions                                          */
+  /* cn helper functions                                          */
   /************************************************************************/
   uint64_t getPenalizedAmount(uint64_t amount, size_t medianSize, size_t currentBlockSize);
   std::string getAccountAddressAsStr(uint64_t prefix, const AccountPublicAddress& adr);
   bool parseAccountAddressString(uint64_t& prefix, AccountPublicAddress& adr, const std::string& str);
   bool is_coinbase(const Transaction& tx);
 
-  bool operator ==(const CryptoNote::Transaction& a, const CryptoNote::Transaction& b);
-  bool operator ==(const CryptoNote::Block& a, const CryptoNote::Block& b);
+  bool operator ==(const cn::Transaction& a, const cn::Transaction& b);
+  bool operator ==(const cn::Block& a, const cn::Block& b);
 }
 
 template <class T>
 std::ostream &print256(std::ostream &o, const T &v) {
-  return o << "<" << Common::podToHex(v) << ">";
+  return o << "<" << common::podToHex(v) << ">";
 }
 
-bool parse_hash256(const std::string& str_hash, Crypto::Hash& hash);
+bool parse_hash256(const std::string& str_hash, crypto::Hash& hash);
 
-namespace Crypto {
-  inline std::ostream &operator <<(std::ostream &o, const Crypto::PublicKey &v) { return print256(o, v); }
-  inline std::ostream &operator <<(std::ostream &o, const Crypto::SecretKey &v) { return print256(o, v); }
-  inline std::ostream &operator <<(std::ostream &o, const Crypto::KeyDerivation &v) { return print256(o, v); }
-  inline std::ostream &operator <<(std::ostream &o, const Crypto::KeyImage &v) { return print256(o, v); }
-  inline std::ostream &operator <<(std::ostream &o, const Crypto::Signature &v) { return print256(o, v); }
-  inline std::ostream &operator <<(std::ostream &o, const Crypto::Hash &v) { return print256(o, v); }
+namespace crypto {
+  inline std::ostream &operator <<(std::ostream &o, const crypto::PublicKey &v) { return print256(o, v); }
+  inline std::ostream &operator <<(std::ostream &o, const crypto::SecretKey &v) { return print256(o, v); }
+  inline std::ostream &operator <<(std::ostream &o, const crypto::KeyDerivation &v) { return print256(o, v); }
+  inline std::ostream &operator <<(std::ostream &o, const crypto::KeyImage &v) { return print256(o, v); }
+  inline std::ostream &operator <<(std::ostream &o, const crypto::Signature &v) { return print256(o, v); }
+  inline std::ostream &operator <<(std::ostream &o, const crypto::Hash &v) { return print256(o, v); }
 }

@@ -10,32 +10,32 @@
 
 namespace {
 
-  const char *getStatusString(CryptoNote::HttpResponse::HTTP_STATUS status)
+  const char *getStatusString(cn::HttpResponse::HTTP_STATUS status)
   {
     switch (status)
     {
-    case CryptoNote::HttpResponse::STATUS_200:
+    case cn::HttpResponse::STATUS_200:
       return "200 OK";
-    case CryptoNote::HttpResponse::STATUS_401:
+    case cn::HttpResponse::STATUS_401:
       return "401 Unauthorized";
-    case CryptoNote::HttpResponse::STATUS_404:
+    case cn::HttpResponse::STATUS_404:
       return "404 Not Found";
-    case CryptoNote::HttpResponse::STATUS_500:
+    case cn::HttpResponse::STATUS_500:
       return "500 Internal Server Error";
     default:
       throw std::runtime_error("Unknown HTTP status code is given");
     }
   }
 
-  const char *getErrorBody(CryptoNote::HttpResponse::HTTP_STATUS status)
+  const char *getErrorBody(cn::HttpResponse::HTTP_STATUS status)
   {
     switch (status)
     {
-    case CryptoNote::HttpResponse::STATUS_401:
+    case cn::HttpResponse::STATUS_401:
       return "Authorization required\n";
-    case CryptoNote::HttpResponse::STATUS_404:
+    case cn::HttpResponse::STATUS_404:
       return "Requested url is not found\n";
-    case CryptoNote::HttpResponse::STATUS_500:
+    case cn::HttpResponse::STATUS_500:
       return "Internal server error is occurred\n";
     default:
       throw std::runtime_error("Error body for given status is not available");
@@ -44,11 +44,11 @@ namespace {
 
 } //namespace
 
-namespace CryptoNote {
+namespace cn {
 
 HttpResponse::HttpResponse() {
   status = STATUS_200;
-  headers["Server"] = "CryptoNote-based HTTP server";
+  headers["Server"] = "cn-based HTTP server";
 }
 
 void HttpResponse::setStatus(HTTP_STATUS s) {
@@ -87,4 +87,4 @@ std::ostream& HttpResponse::printHttpResponse(std::ostream& os) const {
   return os;
 }
 
-} //namespace CryptoNote
+} //namespace cn

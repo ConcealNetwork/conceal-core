@@ -9,9 +9,9 @@
 #include <cstdint>
 #include <string>
 
-namespace Tools
+namespace tools
 {
-  namespace Base58
+  namespace base_58
   {
     std::string encode(const std::string& data);
     bool decode(const std::string& enc, std::string& data);

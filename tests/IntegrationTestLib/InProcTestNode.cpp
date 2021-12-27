@@ -17,7 +17,7 @@
 #include "P2p/NetNode.h"
 #include "InProcessNode/InProcessNode.h"
 
-using namespace CryptoNote;
+using namespace cn;
 
 #undef ERROR
 
@@ -25,12 +25,12 @@ namespace Tests {
 
 namespace {
 bool parse_peer_from_string(NetworkAddress &pe, const std::string &node_addr) {
-  return ::Common::parseIpAddressAndPort(pe.ip, pe.port, node_addr);
+  return ::common::parseIpAddressAndPort(pe.ip, pe.port, node_addr);
 }
 }
 
 
-InProcTestNode::InProcTestNode(const TestNodeConfiguration& cfg, const CryptoNote::Currency& currency) : 
+InProcTestNode::InProcTestNode(const TestNodeConfiguration& cfg, const cn::Currency& currency) : 
   m_cfg(cfg), m_currency(currency) {
 
   std::promise<std::string> initPromise;
@@ -53,21 +53,21 @@ InProcTestNode::~InProcTestNode() {
 
 void InProcTestNode::workerThread(std::promise<std::string>& initPromise) {
 
-  System::Dispatcher dispatcher;
+  platform_system::Dispatcher dispatcher;
 
-  Logging::ConsoleLogger log;
+  logging::ConsoleLogger log;
 
-  Logging::LoggerRef logger(log, "InProcTestNode");
+  logging::LoggerRef logger(log, "InProcTestNode");
 
   try {
 
-    core.reset(new CryptoNote::core(m_currency, NULL, log, false, false));
-    protocol.reset(new CryptoNote::CryptoNoteProtocolHandler(m_currency, dispatcher, *core, NULL, log));
-    p2pNode.reset(new CryptoNote::NodeServer(dispatcher, *protocol, log));
+    core.reset(new cn::core(m_currency, NULL, log, false, false));
+    protocol.reset(new cn::CryptoNoteProtocolHandler(m_currency, dispatcher, *core, NULL, log));
+    p2pNode.reset(new cn::NodeServer(dispatcher, *protocol, log));
     protocol->set_p2p_endpoint(p2pNode.get());
     core->set_cryptonote_protocol(protocol.get());
 
-    CryptoNote::NetNodeConfig p2pConfig;
+    cn::NetNodeConfig p2pConfig;
 
     p2pConfig.setBindIp("127.0.0.1");
     p2pConfig.setBindPort(m_cfg.p2pPort);
@@ -89,8 +89,8 @@ void InProcTestNode::workerThread(std::promise<std::string>& initPromise) {
       throw std::runtime_error("Failed to init p2pNode");
     }
 
-    CryptoNote::MinerConfig emptyMiner;
-    CryptoNote::CoreConfig coreConfig;
+    cn::MinerConfig emptyMiner;
+    cn::CoreConfig coreConfig;
 
     coreConfig.configFolder = m_cfg.dataDir;
     
@@ -101,7 +101,7 @@ void InProcTestNode::workerThread(std::promise<std::string>& initPromise) {
     initPromise.set_value(std::string());
 
   } catch (std::exception& e) {
-    logger(Logging::ERROR) << "Failed to initialize: " << e.what();
+    logger(logging::ERROR) << "Failed to initialize: " << e.what();
     initPromise.set_value(e.what());
     return;
   }
@@ -109,7 +109,7 @@ void InProcTestNode::workerThread(std::promise<std::string>& initPromise) {
   try {
     p2pNode->run();
   } catch (std::exception& e) {
-    logger(Logging::ERROR) << "exception in p2p::run: " << e.what();
+    logger(logging::ERROR) << "exception in p2p::run: " << e.what();
   }
 
   core->deinit();
@@ -144,7 +144,7 @@ bool InProcTestNode::stopDaemon() {
   return true;
 }
 
-bool InProcTestNode::getBlockTemplate(const std::string &minerAddress, CryptoNote::Block &blockTemplate, uint64_t &difficulty) {
+bool InProcTestNode::getBlockTemplate(const std::string &minerAddress, cn::Block &blockTemplate, uint64_t &difficulty) {
   AccountPublicAddress addr;
   m_currency.parseAccountAddressString(minerAddress, addr);
   uint32_t height = 0;
@@ -153,18 +153,18 @@ bool InProcTestNode::getBlockTemplate(const std::string &minerAddress, CryptoNot
 
 bool InProcTestNode::submitBlock(const std::string& block) {
   block_verification_context bvc = boost::value_initialized<block_verification_context>();
-  core->handle_incoming_block_blob(Common::fromHex(block), bvc, true, true);
+  core->handle_incoming_block_blob(common::fromHex(block), bvc, true, true);
   return bvc.m_added_to_main_chain;
 }
 
-bool InProcTestNode::getTailBlockId(Crypto::Hash &tailBlockId) {
+bool InProcTestNode::getTailBlockId(crypto::Hash &tailBlockId) {
   tailBlockId = core->get_tail_id();
   return true;
 }
 
-bool InProcTestNode::makeINode(std::unique_ptr<CryptoNote::INode> &node) {
+bool InProcTestNode::makeINode(std::unique_ptr<cn::INode> &node) {
 
-  std::unique_ptr<InProcessNode> inprocNode(new CryptoNote::InProcessNode(*core, *protocol));
+  std::unique_ptr<InProcessNode> inprocNode(new cn::InProcessNode(*core, *protocol));
 
   std::promise<std::error_code> p;
   auto future = p.get_future();

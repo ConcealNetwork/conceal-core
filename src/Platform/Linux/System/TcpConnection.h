@@ -11,7 +11,7 @@
 #include <string>
 #include "Dispatcher.h"
 
-namespace System {
+namespace platform_system {
 
 class Ipv4Address;
 

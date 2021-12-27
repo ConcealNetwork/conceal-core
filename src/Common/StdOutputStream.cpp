@@ -6,7 +6,7 @@
 
 #include "StdOutputStream.h"
 
-namespace Common {
+namespace common {
 
 StdOutputStream::StdOutputStream(std::ostream& out) : out(out) {
 }

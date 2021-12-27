@@ -7,7 +7,7 @@
 #include "RpcNodeConfiguration.h"
 #include "CryptoNoteConfig.h"
 
-namespace PaymentService {
+namespace payment_service {
 
 namespace po = boost::program_options;
 
@@ -19,7 +19,7 @@ RpcNodeConfiguration::RpcNodeConfiguration() {
 void RpcNodeConfiguration::initOptions(boost::program_options::options_description& desc) {
   desc.add_options()
     ("daemon-address", po::value<std::string>()->default_value("127.0.0.1"), "daemon address")
-    ("daemon-port", po::value<uint16_t>()->default_value(CryptoNote::RPC_DEFAULT_PORT), "daemon port");
+    ("daemon-port", po::value<uint16_t>()->default_value(cn::RPC_DEFAULT_PORT), "daemon port");
 }
 
 void RpcNodeConfiguration::init(const boost::program_options::variables_map& options) {
@@ -32,4 +32,4 @@ void RpcNodeConfiguration::init(const boost::program_options::variables_map& opt
   }
 }
 
-} //namespace PaymentService
+} //namespace payment_service

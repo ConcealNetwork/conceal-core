@@ -27,9 +27,9 @@
 #include "BaseTests.h"
 
 using namespace Tests;
-using namespace CryptoNote;
+using namespace cn;
 
-namespace CryptoNote
+namespace cn
 {
 void serialize(BlockShortEntry &v, ISerializer &s)
 {
@@ -40,7 +40,7 @@ void serialize(BlockShortEntry &v, ISerializer &s)
     std::string blockBinary;
     if (s.binary(blockBinary, "block"))
     {
-      fromBinaryArray(v.block, Common::asBinaryArray(blockBinary));
+      fromBinaryArray(v.block, common::asBinaryArray(blockBinary));
       v.hasBlock = true;
     }
   }
@@ -48,7 +48,7 @@ void serialize(BlockShortEntry &v, ISerializer &s)
   {
     if (v.hasBlock)
     {
-      std::string blockBinary(Common::asString(toBinaryArray(v.block)));
+      std::string blockBinary(common::asString(toBinaryArray(v.block)));
       s.binary(blockBinary, "block");
     }
   }
@@ -74,12 +74,12 @@ bool operator==(const TransactionShortInfo &a, const TransactionShortInfo &b)
 {
   return a.txId == b.txId;
 }
-} // namespace CryptoNote
+} // namespace cn
 
 struct BlockchainInfo
 {
   std::list<BlockShortEntry> blocks;
-  std::unordered_map<Crypto::Hash, std::vector<uint32_t>> globalOutputs;
+  std::unordered_map<crypto::Hash, std::vector<uint32_t>> globalOutputs;
 
   bool operator==(const BlockchainInfo &other) const
   {
@@ -133,7 +133,7 @@ void NodeTest::startNetworkWithBlockchain(const std::string &sourcePath)
 
 void NodeTest::readBlockchainInfo(INode &node, BlockchainInfo &bc)
 {
-  std::vector<Crypto::Hash> history = {currency.genesisBlockHash()};
+  std::vector<crypto::Hash> history = {currency.genesisBlockHash()};
   uint64_t timestamp = 0;
   uint32_t startHeight = 0;
   size_t itemsAdded = 0;
@@ -146,7 +146,7 @@ void NodeTest::readBlockchainInfo(INode &node, BlockchainInfo &bc)
   {
     itemsAdded = 0;
     std::vector<BlockShortEntry> blocks;
-    node.queryBlocks(std::vector<Crypto::Hash>(history.rbegin(), history.rend()), timestamp, blocks, startHeight, cb.callback());
+    node.queryBlocks(std::vector<crypto::Hash>(history.rbegin(), history.rend()), timestamp, blocks, startHeight, cb.callback());
 
     ASSERT_TRUE(cb.get() == std::error_code());
 
@@ -203,7 +203,7 @@ TEST_F(NodeTest, generateBlockchain)
     ASSERT_TRUE(daemon.makeINode(mainNode));
 
     std::string password = "pass";
-    CryptoNote::WalletGreen wallet(dispatcher, currency, *mainNode, logger);
+    cn::WalletGreen wallet(dispatcher, currency, *mainNode, logger);
 
     std::string walletFile("wallet.bin", std::ios::binary | std::ios::trunc);
     wallet.initialize(walletFile, password);
@@ -211,7 +211,7 @@ TEST_F(NodeTest, generateBlockchain)
     std::string minerAddress = wallet.createAddress();
     daemon.startMining(1, minerAddress);
 
-    System::Timer timer(dispatcher);
+    platform_system::Timer timer(dispatcher);
 
     while (daemon.getLocalHeight() < 300)
     {
@@ -255,7 +255,7 @@ TEST_F(NodeTest, addMoreBlocks)
     auto startHeight = daemon.getLocalHeight();
 
     std::string password = "pass";
-    CryptoNote::WalletGreen wallet(dispatcher, currency, *mainNode, logger);
+    cn::WalletGreen wallet(dispatcher, currency, *mainNode, logger);
 
     {
       std::string walletFile("wallet.bin", std::ios::binary);
@@ -265,7 +265,7 @@ TEST_F(NodeTest, addMoreBlocks)
     std::string minerAddress = wallet.getAddress(0);
     daemon.startMining(1, minerAddress);
 
-    System::Timer timer(dispatcher);
+    platform_system::Timer timer(dispatcher);
 
     while (daemon.getLocalHeight() <= startHeight + 3)
     {
@@ -379,7 +379,7 @@ TEST_F(NodeTest, observerHeightNotifications)
     uint32_t newLocalHeight = 0;
 
     auto blockData = toBinaryArray(extraBlocks.blocks.begin()->block);
-    ASSERT_TRUE(daemon.submitBlock(Common::toHex(blockData.data(), blockData.size())));
+    ASSERT_TRUE(daemon.submitBlock(common::toHex(blockData.data(), blockData.size())));
 
     ASSERT_TRUE(observer.m_localHeight.waitFor(timeout, newLocalHeight));
     ASSERT_TRUE(observer.m_knownHeight.waitFor(timeout, newKnownHeight));

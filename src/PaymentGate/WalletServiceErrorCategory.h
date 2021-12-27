@@ -9,7 +9,7 @@
 #include <string>
 #include <system_error>
 
-namespace CryptoNote {
+namespace cn {
 namespace error {
 
 enum class WalletServiceErrorCode {
@@ -54,15 +54,15 @@ private:
 };
 
 } //namespace error
-} //namespace CryptoNote
+} //namespace cn
 
-inline std::error_code make_error_code(CryptoNote::error::WalletServiceErrorCode e) {
-  return std::error_code(static_cast<int>(e), CryptoNote::error::WalletServiceErrorCategory::INSTANCE);
+inline std::error_code make_error_code(cn::error::WalletServiceErrorCode e) {
+  return std::error_code(static_cast<int>(e), cn::error::WalletServiceErrorCategory::INSTANCE);
 }
 
 namespace std {
 
 template <>
-struct is_error_code_enum<CryptoNote::error::WalletServiceErrorCode>: public true_type {};
+struct is_error_code_enum<cn::error::WalletServiceErrorCode>: public true_type {};
 
 }

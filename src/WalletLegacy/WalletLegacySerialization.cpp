@@ -14,9 +14,9 @@
 #include "Serialization/ISerializer.h"
 #include "Serialization/SerializationOverloads.h"
 
-namespace CryptoNote {
+namespace cn {
 
-void serialize(UnconfirmedTransferDetails& utd, CryptoNote::ISerializer& serializer) {
+void serialize(UnconfirmedTransferDetails& utd, cn::ISerializer& serializer) {
   serializer(utd.tx, "transaction");
   serializer(utd.amount, "amount");
   serializer(utd.outsAmount, "outs_amount");
@@ -37,7 +37,7 @@ void serialize(UnconfirmedSpentDepositDetails& details, ISerializer& serializer)
   serializer(details.fee, "fee");
 }
 
-void serialize(WalletLegacyTransaction& txi, CryptoNote::ISerializer& serializer) {
+void serialize(WalletLegacyTransaction& txi, cn::ISerializer& serializer) {
   uint64_t trId = static_cast<uint64_t>(txi.firstTransferId);
   serializer(trId, "first_transfer_id");
   txi.firstTransferId = static_cast<size_t>(trId);
@@ -60,7 +60,7 @@ void serialize(WalletLegacyTransaction& txi, CryptoNote::ISerializer& serializer
   serializer(txi.hash, "hash");
   serializer(txi.isCoinbase, "is_coinbase");
 
-  CryptoNote::serializeBlockHeight(serializer, txi.blockHeight, "block_height");
+  cn::serializeBlockHeight(serializer, txi.blockHeight, "block_height");
 
   serializer(txi.timestamp, "timestamp");
   serializer(txi.unlockTime, "unlock_time");
@@ -78,12 +78,12 @@ void serialize(WalletLegacyTransaction& txi, CryptoNote::ISerializer& serializer
   txi.sentTime = 0;
 }
 
-void serialize(WalletLegacyTransfer& tr, CryptoNote::ISerializer& serializer) {
+void serialize(WalletLegacyTransfer& tr, cn::ISerializer& serializer) {
   serializer(tr.address, "address");
   serializer(tr.amount, "amount");
 }
 
-void serialize(Deposit& deposit, CryptoNote::ISerializer& serializer) {
+void serialize(Deposit& deposit, cn::ISerializer& serializer) {
   uint64_t creatingTxId = static_cast<uint64_t>(deposit.creatingTransactionId);
   serializer(creatingTxId, "creating_transaction_id");
   deposit.creatingTransactionId = static_cast<size_t>(creatingTxId);
@@ -98,9 +98,9 @@ void serialize(Deposit& deposit, CryptoNote::ISerializer& serializer) {
   serializer(deposit.locked, "locked");
 }
 
-void serialize(DepositInfo& depositInfo, CryptoNote::ISerializer& serializer) {
+void serialize(DepositInfo& depositInfo, cn::ISerializer& serializer) {
   serializer(depositInfo.deposit, "deposit");
   serializer(depositInfo.outputInTransaction, "output_in_transaction");
 }
 
-} //namespace CryptoNote
+} //namespace cn

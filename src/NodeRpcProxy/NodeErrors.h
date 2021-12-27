@@ -9,7 +9,7 @@
 #include <string>
 #include <system_error>
 
-namespace CryptoNote {
+namespace cn {
 namespace error {
 
 // custom error conditions enum type:
@@ -57,6 +57,6 @@ private:
 }
 }
  
-inline std::error_code make_error_code(CryptoNote::error::NodeErrorCodes e) {
-  return std::error_code(static_cast<int>(e), CryptoNote::error::NodeErrorCategory::INSTANCE);
+inline std::error_code make_error_code(cn::error::NodeErrorCodes e) {
+  return std::error_code(static_cast<int>(e), cn::error::NodeErrorCategory::INSTANCE);
 }

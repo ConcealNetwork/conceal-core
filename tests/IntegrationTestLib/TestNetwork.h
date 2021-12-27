@@ -9,11 +9,11 @@
 #include "Process.h"
 #include "TestNode.h"
 
-namespace System {
+namespace platform_system {
 class Dispatcher;
 }
 
-namespace CryptoNote {
+namespace cn {
 class Currency;
 }
 
@@ -55,7 +55,7 @@ class TestNetwork {
 
 public:
 
-  TestNetwork(System::Dispatcher& dispatcher, const CryptoNote::Currency& currency);
+  TestNetwork(platform_system::Dispatcher& dispatcher, const cn::Currency& currency);
 
   void addNodes(const std::vector<TestNodeConfiguration>& nodes);
   void addNode(const TestNodeConfiguration& cfg);
@@ -69,8 +69,8 @@ private:
   std::unique_ptr<TestNode> startDaemon(const TestNodeConfiguration& cfg);
 
   std::vector<std::pair<std::unique_ptr<TestNode>, TestNodeConfiguration>> nodes;
-  System::Dispatcher& m_dispatcher;
-  const CryptoNote::Currency& m_currency;
+  platform_system::Dispatcher& m_dispatcher;
+  const cn::Currency& m_currency;
   std::vector<Process> m_daemons;
 };
 

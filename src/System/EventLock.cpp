@@ -7,7 +7,7 @@
 #include "EventLock.h"
 #include <System/Event.h>
 
-namespace System {
+namespace platform_system {
 
 EventLock::EventLock(Event& event) : event(event) {
   while (!event.get()) {

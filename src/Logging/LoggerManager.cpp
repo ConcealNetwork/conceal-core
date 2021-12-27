@@ -9,9 +9,9 @@
 #include "ConsoleLogger.h"
 #include "FileLogger.h"
 
-namespace Logging {
+namespace logging {
 
-using Common::JsonValue;
+using common::JsonValue;
 
 LoggerManager::LoggerManager() {
 }
@@ -69,7 +69,7 @@ void LoggerManager::configure(const JsonValue& val) {
         }
 
         std::string type = loggerConfiguration("type").getString();
-        std::unique_ptr<Logging::CommonLogger> logger;
+        std::unique_ptr<logging::CommonLogger> logger;
 
         if (type == "console") {
           logger.reset(new ConsoleLogger(level));

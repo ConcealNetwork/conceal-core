@@ -11,7 +11,7 @@
 #include <System/Dispatcher.h>
 #include <System/Event.h>
 
-namespace System {
+namespace platform_system {
 
 RemoteEventLock::RemoteEventLock(Dispatcher& dispatcher, Event& event) : dispatcher(dispatcher), event(event) {
   std::mutex mutex;

@@ -13,9 +13,9 @@
 
 #include "LevinProtocol.h"
 
-using namespace System;
+using namespace platform_system;
 
-namespace CryptoNote {
+namespace cn {
 
 P2pContext::Message::Message(P2pMessage&& msg, Type messageType, uint32_t returnCode) :
   messageType(messageType), returnCode(returnCode) {

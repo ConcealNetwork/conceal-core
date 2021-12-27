@@ -15,7 +15,7 @@
 #include "TransactionApiHelpers.h"
 #include "TransfersObserver.h"
 
-using namespace CryptoNote;
+using namespace cn;
 
 namespace {
 
@@ -50,7 +50,7 @@ public:
     return tx;
   }
 
-  Logging::ConsoleLogger m_logger;
+  logging::ConsoleLogger m_logger;
   Currency currency;
   AccountKeys account;
   SynchronizationStart syncStart;

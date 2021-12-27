@@ -9,7 +9,7 @@
 #include <string>
 #include "IOutputStream.h"
 
-namespace Common {
+namespace common {
 
 class StringOutputStream : public IOutputStream {
 public:

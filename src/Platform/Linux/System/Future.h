@@ -8,7 +8,7 @@
 
 #include <future>
 
-namespace System {
+namespace platform_system {
 
 namespace Detail {
 

@@ -18,7 +18,7 @@
 #include <System/ErrorMessage.h>
 #include <System/InterruptedException.h>
 
-namespace System {
+namespace platform_system {
 
 Timer::Timer() : dispatcher(nullptr) {
 }

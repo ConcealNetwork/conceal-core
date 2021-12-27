@@ -8,7 +8,7 @@
 
 #include <System/Dispatcher.h>
 
-namespace System {
+namespace platform_system {
 
 class ContextGroup {
 public:

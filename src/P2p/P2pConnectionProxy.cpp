@@ -12,9 +12,9 @@
 
 #include <System/InterruptedException.h>
 
-using namespace System;
+using namespace platform_system;
 
-namespace CryptoNote {
+namespace cn {
 
 P2pConnectionProxy::P2pConnectionProxy(P2pContextOwner&& ctx, IP2pNodeInternal& node)
   : m_contextOwner(std::move(ctx)), m_context(m_contextOwner.get()), m_node(node) {}

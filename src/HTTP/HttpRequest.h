@@ -10,7 +10,7 @@
 #include <map>
 #include <string>
 
-namespace CryptoNote {
+namespace cn {
   class HttpRequest {
   public:
     typedef std::map<std::string, std::string> Headers;

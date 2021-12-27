@@ -5,11 +5,11 @@
 
 #include "ICryptoNoteProtocolQueryStub.h"
 
-bool ICryptoNoteProtocolQueryStub::addObserver(CryptoNote::ICryptoNoteProtocolObserver* observer) {
+bool ICryptoNoteProtocolQueryStub::addObserver(cn::ICryptoNoteProtocolObserver* observer) {
   return false;
 }
 
-bool ICryptoNoteProtocolQueryStub::removeObserver(CryptoNote::ICryptoNoteProtocolObserver* observer) {
+bool ICryptoNoteProtocolQueryStub::removeObserver(cn::ICryptoNoteProtocolObserver* observer) {
   return false;
 }
 

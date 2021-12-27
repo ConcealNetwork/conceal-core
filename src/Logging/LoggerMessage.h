@@ -9,7 +9,7 @@
 #include <iostream>
 #include "ILogger.h"
 
-namespace Logging {
+namespace logging {
 
 class LoggerMessage : public std::ostream, std::streambuf {
 public:

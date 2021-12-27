@@ -10,7 +10,7 @@
 #include <System/Dispatcher.h>
 #include <System/Timer.h>
 
-namespace System {
+namespace platform_system {
 
 template<typename T> class OperationTimeout {
 public:
