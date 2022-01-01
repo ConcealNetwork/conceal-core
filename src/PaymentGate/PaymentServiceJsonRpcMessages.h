@@ -15,8 +15,6 @@
 namespace payment_service
 {
 
-const uint32_t DEFAULT_ANONYMITY_LEVEL = 5;
-
 class RequestSerializationError : public std::exception
 {
 public:
@@ -501,7 +499,7 @@ struct SendTransaction
     std::vector<WalletRpcOrder> transfers;
     std::string changeAddress;
     uint64_t fee = 1000;
-    uint32_t anonymity = DEFAULT_ANONYMITY_LEVEL;
+    uint32_t anonymity = cn::parameters::MINIMUM_MIXIN;
     std::string extra;
     std::string paymentId;
     uint64_t unlockTime = 0;
@@ -526,7 +524,7 @@ struct CreateDelayedTransaction
     std::vector<WalletRpcOrder> transfers;
     std::string changeAddress;
     uint64_t fee = 1000;
-    uint32_t anonymity = DEFAULT_ANONYMITY_LEVEL;
+    uint32_t anonymity = cn::parameters::MINIMUM_MIXIN;
     std::string extra;
     std::string paymentId;
     uint64_t unlockTime = 0;
