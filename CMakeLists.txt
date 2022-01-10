@@ -1,8 +1,8 @@
 cmake_minimum_required(VERSION 3.0)
 
 include(CheckCXXCompilerFlag)
-set(VERSION "6.5.2")
-set(VERSION_BUILD_NO "Endovelicus")
+set(VERSION "6.6.0")
+set(VERSION_BUILD_NO "Ataegina")
 # Packaged from main commits
 set(COMMIT 72946d9)
 set(REFS " (HEAD -> master)")

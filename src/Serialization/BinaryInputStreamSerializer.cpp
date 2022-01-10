@@ -1,6 +1,7 @@
 // Copyright (c) 2011-2017 The Cryptonote developers
 // Copyright (c) 2017-2018 The Circle Foundation & Conceal Devs
 // Copyright (c) 2018-2021 Conceal Network & Conceal Devs
+//
 // Distributed under the MIT/X11 software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -39,7 +40,7 @@ void BinaryInputStreamSerializer::endObject() {
 bool BinaryInputStreamSerializer::beginArray(size_t& size, common::StringView name) {
   readVarintAs<uint64_t>(stream, size);
 
-  if (size > SIZE_MAX) {
+  if (size > 128*1024*1024) {
     throw std::runtime_error("array size is too big");
   }
 
@@ -93,7 +94,7 @@ bool BinaryInputStreamSerializer::operator()(std::string& value, common::StringV
   uint64_t size;
   readVarint(stream, size);
 
-  if (size > SIZE_MAX) {
+  if (size > 128*1024*1024) {
     throw std::runtime_error("string size is too big");
   } else if (size > 0) {
     std::vector<char> temp;
