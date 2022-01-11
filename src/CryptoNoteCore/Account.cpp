@@ -27,7 +27,7 @@ void AccountBase::generateViewFromSpend(crypto::SecretKey &spend, crypto::Secret
 void AccountBase::generate() {
   crypto::generate_keys(m_keys.address.spendPublicKey, m_keys.spendSecretKey);
   generateViewFromSpend(m_keys.spendSecretKey, m_keys.viewSecretKey, m_keys.address.viewPublicKey);
-  m_creation_timestamp = time(NULL);
+  m_creation_timestamp = time(nullptr);
 }
 //-----------------------------------------------------------------
 const AccountKeys &AccountBase::getAccountKeys() const {
