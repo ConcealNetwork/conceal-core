@@ -57,8 +57,8 @@ namespace std
   }
 } // namespace std
 
-#define CURRENT_BLOCKCACHE_STORAGE_ARCHIVE_VER 4
-#define CURRENT_BLOCKCHAININDICES_STORAGE_ARCHIVE_VER 1
+const uint8_t CURRENT_BLOCKCACHE_STORAGE_ARCHIVE_VER = 4;
+const uint8_t CURRENT_BLOCKCHAININDICES_STORAGE_ARCHIVE_VER = 1;
 
 namespace cn
 {
@@ -606,10 +606,10 @@ namespace cn
 
     update_next_comulative_size_limit();
 
-    uint64_t timestamp_diff = time(NULL) - m_blocks.back().bl.timestamp;
+    uint64_t timestamp_diff = time(nullptr) - m_blocks.back().bl.timestamp;
     if (!m_blocks.back().bl.timestamp)
     {
-      timestamp_diff = time(NULL) - 1341378000;
+      timestamp_diff = time(nullptr) - 1341378000;
     }
 
     logger(INFO, BRIGHT_GREEN)
@@ -680,7 +680,7 @@ namespace cn
           }
           else if (i.type() == typeid(MultisignatureInput))
           {
-            auto out = ::boost::get<MultisignatureInput>(i);
+            const auto out = ::boost::get<MultisignatureInput>(i);
             m_multisignatureOutputs[out.amount][out.outputIndex].isUsed = true;
           }
         }
@@ -879,7 +879,7 @@ namespace cn
       commulative_difficulties.push_back(m_blocks[offset].cumulative_difficulty);
     }
 
-    uint64_t block_index = m_blocks.size();
+    uint32_t block_index = m_blocks.size();
     uint8_t block_major_version = get_block_major_version_for_height(block_index + 1);
 
     if (block_major_version >= 8)
@@ -972,7 +972,7 @@ namespace cn
       popBlock(get_block_hash(m_blocks.back().bl));
     }
 
-    uint32_t height = static_cast<uint32_t>(rollback_height - 1);
+    auto height = static_cast<uint32_t>(rollback_height - 1);
 
     // return back original chain
     for (auto &bl : original_chain)
@@ -1020,7 +1020,7 @@ namespace cn
     }
     for (auto alt_ch_iter = alt_chain.begin(); alt_ch_iter != alt_chain.end(); alt_ch_iter++)
     {
-      auto ch_ent = *alt_ch_iter;
+      const auto ch_ent = *alt_ch_iter;
       Block b = ch_ent->second.bl;
       std::copy(b.transactionHashes.begin(), b.transactionHashes.end(), std::inserter(altChainTxHashes, altChainTxHashes.end()));
     }
@@ -2083,7 +2083,7 @@ namespace cn
     else
     {
       //interpret as time
-      uint64_t current_time = static_cast<uint64_t>(time(NULL));
+      uint64_t current_time = static_cast<uint64_t>(time(nullptr));
       if (current_time + m_currency.lockedTxAllowedDeltaSeconds() >= unlock_time)
         return true;
       else
@@ -2170,7 +2170,7 @@ namespace cn
   uint64_t Blockchain::get_adjusted_time()
   {
     //TODO: add collecting median time
-    return time(NULL);
+    return time(nullptr);
   }
 
   bool Blockchain::check_tx_outputs(const Transaction &tx) const
