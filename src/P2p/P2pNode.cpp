@@ -229,7 +229,9 @@ void P2pNode::connectPeers() {
   // if white peer list is empty, get peers from seeds
   if (m_peerlist.get_white_peers_count() == 0 && !m_cfg.getSeedNodes().empty()) {
     auto seedNodes = m_cfg.getSeedNodes();
-    std::random_shuffle(seedNodes.begin(), seedNodes.end());
+    std::random_device rd;
+    std::mt19937 g(rd());
+    std::shuffle(seedNodes.begin(), seedNodes.end(), g);
     for (const auto& seed : seedNodes) {
       auto conn = tryToConnectPeer(seed);
       if (conn != nullptr && fetchPeerList(std::move(conn))) {
