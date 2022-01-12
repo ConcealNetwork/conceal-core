@@ -867,7 +867,7 @@ namespace cn
 
     uint8_t BlockMajorVersion = getBlockMajorVersionForHeight(static_cast<uint32_t>(m_blocks.size()));
 
-    size_t offset = m_blocks.size() - std::min(m_blocks.size(), static_cast<uint64_t>(m_currency.difficultyBlocksCountByBlockVersion(BlockMajorVersion)));
+    size_t offset = m_blocks.size() - std::min(m_blocks.size(), m_currency.difficultyBlocksCountByBlockVersion(BlockMajorVersion));
     if (offset == 0)
     {
       ++offset;
@@ -963,7 +963,7 @@ namespace cn
     }
   }
 
-  bool Blockchain::rollback_blockchain_switching(std::list<Block> &original_chain, size_t rollback_height)
+  bool Blockchain::rollback_blockchain_switching(const std::list<Block> &original_chain, size_t rollback_height)
   {
     std::lock_guard<decltype(m_blockchain_lock)> lk(m_blockchain_lock);
     // remove failed subchain
@@ -975,7 +975,7 @@ namespace cn
     auto height = static_cast<uint32_t>(rollback_height - 1);
 
     // return back original chain
-    for (auto &bl : original_chain)
+    for (const auto &bl : original_chain)
     {
       block_verification_context bvc = boost::value_initialized<block_verification_context>();
       bool r = pushBlock(bl, get_block_hash(bl), bvc, ++height);
@@ -1012,7 +1012,9 @@ namespace cn
     }
 
     // Compare transactions in proposed alt chain vs current main chain and reject if some transaction is missing in the alt chain
-    std::vector<crypto::Hash> mainChainTxHashes, altChainTxHashes;
+    std::vector<crypto::Hash> mainChainTxHashes;
+    std::vector<crypto::Hash> altChainTxHashes;
+
     for (size_t i = m_blocks.size() - 1; i >= split_height; i--)
     {
       Block b = m_blocks[i].bl;
@@ -1041,7 +1043,7 @@ namespace cn
     // Check block major version matches
     for (auto alt_ch_iter2 = alt_chain.begin(); alt_ch_iter2 != alt_chain.end(); alt_ch_iter2++)
     {
-      auto ch_ent = *alt_ch_iter2;
+      const auto ch_ent = *alt_ch_iter2;
       Block b = ch_ent->second.bl;
       if (!checkBlockVersion(b, get_block_hash(ch_ent->second.bl)))
       {
@@ -1059,7 +1061,7 @@ namespace cn
       disconnected_chain.push_front(b);
     }
 
-    uint32_t height = static_cast<uint32_t>(split_height - 1);
+    auto height = static_cast<uint32_t>(split_height - 1);
 
     //connecting new alternative chain
     for (auto alt_ch_iter = alt_chain.begin(); alt_ch_iter != alt_chain.end(); alt_ch_iter++)
@@ -1091,7 +1093,7 @@ namespace cn
     if (!discard_disconnected_chain)
     {
       //pushing old chain as alternative chain
-      for (auto &old_ch_ent : disconnected_chain)
+      for (const auto &old_ch_ent : disconnected_chain)
       {
         block_verification_context bvc = boost::value_initialized<block_verification_context>();
         bool r = handle_alternative_block(old_ch_ent, get_block_hash(old_ch_ent), bvc, false);
@@ -1109,7 +1111,7 @@ namespace cn
     blocksFromCommonRoot.push_back(alt_chain.front()->second.bl.previousBlockHash);
 
     //removing all_chain entries from alternative chain
-    for (auto ch_ent : alt_chain)
+    for (const auto ch_ent : alt_chain)
     {
       blocksFromCommonRoot.push_back(get_block_hash(ch_ent->second.bl));
       m_orthanBlocksIndex.remove(ch_ent->second.bl);
@@ -1150,7 +1152,7 @@ namespace cn
     }
   }
 
-  difficulty_type Blockchain::get_next_difficulty_for_alternative_chain(const std::list<blocks_ext_by_hash::iterator> &alt_chain, BlockEntry &bei)
+  difficulty_type Blockchain::get_next_difficulty_for_alternative_chain(const std::list<blocks_ext_by_hash::iterator> &alt_chain, const BlockEntry &bei)
   {
     std::vector<uint64_t> timestamps;
     std::vector<difficulty_type> commulative_difficulties;
@@ -1182,7 +1184,7 @@ namespace cn
         return false;
       }
 
-      for (auto it : alt_chain)
+      for (const auto it : alt_chain)
       {
         timestamps.push_back(it->second.bl.timestamp);
         commulative_difficulties.push_back(it->second.cumulative_difficulty);
@@ -1206,7 +1208,7 @@ namespace cn
       }
     }
 
-    uint32_t block_index = m_blocks.size();
+    uint64_t block_index = m_blocks.size();
     uint8_t block_major_version = get_block_major_version_for_height(block_index + 1);
 
     if (block_major_version >= 8)
@@ -1491,7 +1493,7 @@ namespace cn
 
       BlockEntry bei = boost::value_initialized<BlockEntry>();
       bei.bl = b;
-      bei.height = static_cast<uint32_t>(alt_chain.size() ? it_prev->second.height + 1 : mainPrevHeight + 1);
+      bei.height = alt_chain.size() ? it_prev->second.height + 1 : mainPrevHeight + 1;
 
       bool is_a_checkpoint;
       if (!m_checkpoints.check_block(bei.height, id, is_a_checkpoint))
@@ -1675,12 +1677,12 @@ namespace cn
         logger(ERROR, BRIGHT_RED) << "Internal error: have missed missed_tx_id.size()=" << missed_tx_id.size() << ENDL << "for block id = " << get_block_hash(bl);
         return false;
       } //WTF???
-      rsp.blocks.push_back(block_complete_entry());
+      rsp.blocks.emplace_back(block_complete_entry());
       block_complete_entry &e = rsp.blocks.back();
       //pack block
       e.block = asString(toBinaryArray(bl));
       //pack transactions
-      for (Transaction &tx : txs)
+      for (const Transaction &tx : txs)
       {
         e.txs.push_back(asString(toBinaryArray(tx)));
       }
@@ -1701,7 +1703,7 @@ namespace cn
   bool Blockchain::getAlternativeBlocks(std::list<Block> &blocks)
   {
     std::lock_guard<decltype(m_blockchain_lock)> lk(m_blockchain_lock);
-    for (auto &alt_bl : m_alternative_chains)
+    for (const auto &alt_bl : m_alternative_chains)
     {
       blocks.push_back(alt_bl.second.bl);
     }
@@ -1715,7 +1717,7 @@ namespace cn
     return static_cast<uint32_t>(m_alternative_chains.size());
   }
 
-  bool Blockchain::add_out_to_get_random_outs(std::vector<std::pair<TransactionIndex, uint16_t>> &amount_outs, COMMAND_RPC_GET_RANDOM_OUTPUTS_FOR_AMOUNTS::outs_for_amount &result_outs, uint64_t amount, size_t i)
+  bool Blockchain::add_out_to_get_random_outs(std::vector<std::pair<TransactionIndex, uint16_t>> &amount_outs, COMMAND_RPC_GET_RANDOM_OUTPUTS_FOR_AMOUNTS::outs_for_amount &result_outs, size_t i)
   {
     std::lock_guard<decltype(m_blockchain_lock)> lk(m_blockchain_lock);
     const Transaction &tx = transactionByIndex(amount_outs[i].first).tx;
@@ -1735,7 +1737,7 @@ namespace cn
     if (!is_tx_spendtime_unlocked(tx.unlockTime))
       return false;
 
-    COMMAND_RPC_GET_RANDOM_OUTPUTS_FOR_AMOUNTS::out_entry &oen = *result_outs.outs.insert(result_outs.outs.end(), COMMAND_RPC_GET_RANDOM_OUTPUTS_FOR_AMOUNTS::out_entry());
+    COMMAND_RPC_GET_RANDOM_OUTPUTS_FOR_AMOUNTS::out_entry &oen = *result_outs.outs.emplace(result_outs.outs.end(), COMMAND_RPC_GET_RANDOM_OUTPUTS_FOR_AMOUNTS::out_entry());
     oen.global_amount_index = static_cast<uint32_t>(i);
     oen.out_key = boost::get<KeyOutput>(tx.outputs[amount_outs[i].second].target).key;
     return true;
@@ -1768,7 +1770,7 @@ namespace cn
 
     for (uint64_t amount : req.amounts)
     {
-      COMMAND_RPC_GET_RANDOM_OUTPUTS_FOR_AMOUNTS::outs_for_amount &result_outs = *res.outs.insert(res.outs.end(), COMMAND_RPC_GET_RANDOM_OUTPUTS_FOR_AMOUNTS::outs_for_amount());
+      COMMAND_RPC_GET_RANDOM_OUTPUTS_FOR_AMOUNTS::outs_for_amount &result_outs = *res.outs.emplace(res.outs.end(), COMMAND_RPC_GET_RANDOM_OUTPUTS_FOR_AMOUNTS::outs_for_amount());
       result_outs.amount = amount;
       auto it = m_outputs.find(amount);
       if (it == m_outputs.end())
@@ -1792,7 +1794,7 @@ namespace cn
         ShuffleGenerator<size_t, crypto::random_engine<size_t>> generator(up_index_limit);
         for (uint64_t j = 0; j < up_index_limit && result_outs.outs.size() < req.outs_count; ++j)
         {
-          add_out_to_get_random_outs(amount_outs, result_outs, amount, generator());
+          add_out_to_get_random_outs(amount_outs, result_outs, generator());
         }
       }
     }
@@ -1992,12 +1994,9 @@ namespace cn
   {
     for (const auto &in : tx.inputs)
     {
-      if (in.type() == typeid(KeyInput))
+      if (in.type() == typeid(KeyInput) && have_tx_keyimg_as_spent(boost::get<KeyInput>(in).keyImage))
       {
-        if (have_tx_keyimg_as_spent(boost::get<KeyInput>(in).keyImage))
-        {
-          return true;
-        }
+        return true;
       }
     }
 
@@ -2037,25 +2036,19 @@ namespace cn
           return false;
         }
 
-        if (!isInCheckpointZone(getCurrentBlockchainHeight()))
+        if (!isInCheckpointZone(getCurrentBlockchainHeight()) && !check_tx_input(in_to_key, tx_prefix_hash, tx.signatures[inputIndex], pmax_used_block_height))
         {
-          if (!check_tx_input(in_to_key, tx_prefix_hash, tx.signatures[inputIndex], pmax_used_block_height))
-          {
-            logger(INFO, BRIGHT_WHITE) << "Failed to check input in transaction " << transactionHash;
-            return false;
-          }
+          logger(INFO, BRIGHT_WHITE) << "Failed to check input in transaction " << transactionHash;
+          return false;
         }
 
         ++inputIndex;
       }
       else if (txin.type() == typeid(MultisignatureInput))
       {
-        if (!isInCheckpointZone(getCurrentBlockchainHeight()))
+        if (!isInCheckpointZone(getCurrentBlockchainHeight()) && !validateInput(::boost::get<MultisignatureInput>(txin), transactionHash, tx_prefix_hash, tx.signatures[inputIndex]))
         {
-          if (!validateInput(::boost::get<MultisignatureInput>(txin), transactionHash, tx_prefix_hash, tx.signatures[inputIndex]))
-          {
-            return false;
-          }
+          return false;
         }
 
         ++inputIndex;
@@ -2083,7 +2076,7 @@ namespace cn
     else
     {
       //interpret as time
-      uint64_t current_time = static_cast<uint64_t>(time(nullptr));
+      auto current_time = static_cast<uint64_t>(time(nullptr));
       if (current_time + m_currency.lockedTxAllowedDeltaSeconds() >= unlock_time)
         return true;
       else
@@ -2106,7 +2099,7 @@ namespace cn
       {
       }
 
-      bool handle_output(const Transaction &tx, const TransactionOutput &out, size_t transactionOutputIndex)
+      bool handle_output(const Transaction &tx, const TransactionOutput &out)
       {
         //check tx unlock time
         if (!m_bch.is_tx_spendtime_unlocked(tx.unlockTime))
@@ -2345,13 +2338,9 @@ namespace cn
           sendMessage(BlockchainMessage(NewBlockMessage(id)));
 
           /** Save the blockchain every 720 blocks if the option is enabled*/
-          if (m_blockchainAutosaveEnabled) {
-            if (height % 720 == 0)
-            {
-              storeCache();
-            }
+          if (m_blockchainAutosaveEnabled && height % 720 == 0) {
+            storeCache();
           }
-
         }
       }
     }
@@ -2412,13 +2401,10 @@ namespace cn
     // Disable merged mining
     uint32_t height = 0;
     TransactionExtraMergeMiningTag mmTag;
-    if (m_blockIndex.getBlockHeight(blockHash, height))
+    if (m_blockIndex.getBlockHeight(blockHash, height) && getMergeMiningTagFromExtra(blockData.baseTransaction.extra, mmTag) && height >= cn::parameters::UPGRADE_HEIGHT_V6)
     {
-      if (getMergeMiningTagFromExtra(blockData.baseTransaction.extra, mmTag) && height >= cn::parameters::UPGRADE_HEIGHT_V6)
-      {
-        logger(ERROR, BRIGHT_RED) << "Merge mining tag was found in extra of miner transaction";
-        return false;
-      }
+      logger(ERROR, BRIGHT_RED) << "Merge mining tag was found in extra of miner transaction";
+      return false;
     }
 
     if (blockData.previousBlockHash != getTailId())
@@ -2668,7 +2654,7 @@ namespace cn
       transactions[i] = m_blocks.back().transactions[1 + i].tx;
     }
 
-    uint32_t height = m_blocks.size(); //height of popped block should be same as number of blocks
+    uint64_t height = m_blocks.size(); //height of popped block should be same as number of blocks
     saveTransactions(transactions, height);
 
     popTransactions(m_blocks.back(), getObjectHash(m_blocks.back().bl.baseTransaction));
@@ -2713,8 +2699,8 @@ namespace cn
     {
       if (transaction.tx.inputs[i].type() == typeid(KeyInput))
       {
-        auto result = m_spent_keys.insert(std::make_pair(::boost::get<KeyInput>(transaction.tx.inputs[i]).keyImage, block.height));
-        if (!result.second)
+        auto is_result = m_spent_keys.insert(std::make_pair(::boost::get<KeyInput>(transaction.tx.inputs[i]).keyImage, block.height));
+        if (!is_result.second)
         {
           logger(ERROR, BRIGHT_RED) << "Double spending transaction was pushed to blockchain.";
 
@@ -3011,7 +2997,7 @@ namespace cn
     assert(startOffset < m_blocks.size());
 
     auto bound = std::lower_bound(m_blocks.begin() + startOffset, m_blocks.end(), timestamp - m_currency.blockFutureTimeLimit(),
-                                  [](const BlockEntry &b, uint64_t timestamp) { return b.bl.timestamp < timestamp; });
+                                  [](const BlockEntry &b, uint64_t l_timestamp) { return b.bl.timestamp < l_timestamp; });
 
     if (bound == m_blocks.end())
     {
@@ -3241,7 +3227,7 @@ namespace cn
 
   void Blockchain::sendMessage(const BlockchainMessage &message)
   {
-    for (IntrusiveLinkedList<MessageQueue<BlockchainMessage>>::iterator iter = m_messageQueueList.begin(); iter != m_messageQueueList.end(); ++iter)
+    for (auto iter = m_messageQueueList.begin(); iter != m_messageQueueList.end(); ++iter)
     {
       iter->push(message);
     }

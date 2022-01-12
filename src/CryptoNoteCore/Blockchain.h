@@ -33,7 +33,6 @@
 
 #include <Logging/LoggerRef.h>
 
-#undef ERROR
 using phmap::parallel_flat_hash_map;
 namespace cn
 {
@@ -56,10 +55,10 @@ namespace cn
     bool storeCache();
 
     // ITransactionValidator
-    virtual bool checkTransactionInputs(const cn::Transaction &tx, BlockInfo &maxUsedBlock) override;
-    virtual bool checkTransactionInputs(const cn::Transaction &tx, BlockInfo &maxUsedBlock, BlockInfo &lastFailed) override;
-    virtual bool haveSpentKeyImages(const cn::Transaction &tx) override;
-    virtual bool checkTransactionSize(size_t blobSize) override;
+    bool checkTransactionInputs(const cn::Transaction &tx, BlockInfo &maxUsedBlock) override;
+    bool checkTransactionInputs(const cn::Transaction &tx, BlockInfo &maxUsedBlock, BlockInfo &lastFailed) override;
+    bool haveSpentKeyImages(const cn::Transaction &tx) override;
+    bool checkTransactionSize(size_t blobSize) override;
 
     bool init() { return init(tools::getDefaultDataDirectory(), true); }
     bool init(const std::string &config_folder, bool load_existing);
@@ -126,7 +125,7 @@ namespace cn
     bool isInCheckpointZone(const uint32_t height);
 
     template <class visitor_t>
-    bool scanOutputKeysForIndexes(const KeyInput &tx_in_to_key, visitor_t &vis, uint32_t *pmax_related_block_height = NULL);
+    bool scanOutputKeysForIndexes(const KeyInput &tx_in_to_key, visitor_t &vis, uint32_t *pmax_related_block_height = nullptr);
 
     bool addMessageQueue(MessageQueue<BlockchainMessage> &messageQueue);
     bool removeMessageQueue(MessageQueue<BlockchainMessage> &messageQueue);
@@ -316,13 +315,13 @@ namespace cn
 
     bool switch_to_alternative_blockchain(std::list<blocks_ext_by_hash::iterator> &alt_chain, bool discard_disconnected_chain);
     bool handle_alternative_block(const Block &b, const crypto::Hash &id, block_verification_context &bvc, bool sendNewAlternativeBlockMessage = true);
-    difficulty_type get_next_difficulty_for_alternative_chain(const std::list<blocks_ext_by_hash::iterator> &alt_chain, BlockEntry &bei);
+    difficulty_type get_next_difficulty_for_alternative_chain(const std::list<blocks_ext_by_hash::iterator> &alt_chain, const BlockEntry &bei);
     void pushToDepositIndex(const BlockEntry &block, uint64_t interest);
     bool prevalidate_miner_transaction(const Block &b, uint32_t height);
     bool validate_miner_transaction(const Block &b, uint32_t height, size_t cumulativeBlockSize, uint64_t alreadyGeneratedCoins, uint64_t fee, uint64_t &reward, int64_t &emissionChange);
-    bool rollback_blockchain_switching(std::list<Block> &original_chain, size_t rollback_height);
+    bool rollback_blockchain_switching(const std::list<Block> &original_chain, size_t rollback_height);
     bool get_last_n_blocks_sizes(std::vector<size_t> &sz, size_t count);
-    bool add_out_to_get_random_outs(std::vector<std::pair<TransactionIndex, uint16_t>> &amount_outs, COMMAND_RPC_GET_RANDOM_OUTPUTS_FOR_AMOUNTS_outs_for_amount &result_outs, uint64_t amount, size_t i);
+    bool add_out_to_get_random_outs(std::vector<std::pair<TransactionIndex, uint16_t>> &amount_outs, COMMAND_RPC_GET_RANDOM_OUTPUTS_FOR_AMOUNTS_outs_for_amount &result_outs, size_t i);
     bool is_tx_spendtime_unlocked(uint64_t unlock_time);
     size_t find_end_of_allowed_index(const std::vector<std::pair<TransactionIndex, uint16_t>> &amount_outs);
     bool check_block_timestamp_main(const Block &b);
@@ -334,9 +333,9 @@ namespace cn
     std::vector<crypto::Hash> doBuildSparseChain(const crypto::Hash &startBlockId) const;
     bool getBlockCumulativeSize(const Block &block, size_t &cumulativeSize);
     bool update_next_comulative_size_limit();
-    bool check_tx_input(const KeyInput &txin, const crypto::Hash &tx_prefix_hash, const std::vector<crypto::Signature> &sig, uint32_t *pmax_related_block_height = NULL);
-    bool checkTransactionInputs(const Transaction &tx, const crypto::Hash &tx_prefix_hash, uint32_t *pmax_used_block_height = NULL);
-    bool checkTransactionInputs(const Transaction &tx, uint32_t *pmax_used_block_height = NULL);
+    bool check_tx_input(const KeyInput &txin, const crypto::Hash &tx_prefix_hash, const std::vector<crypto::Signature> &sig, uint32_t *pmax_related_block_height = nullptr);
+    bool checkTransactionInputs(const Transaction &tx, const crypto::Hash &tx_prefix_hash, uint32_t *pmax_used_block_height = nullptr);
+    bool checkTransactionInputs(const Transaction &tx, uint32_t *pmax_used_block_height = nullptr);
     bool check_tx_outputs(const Transaction &tx) const;
 
     const TransactionEntry &transactionByIndex(TransactionIndex index);
@@ -410,18 +409,15 @@ namespace cn
         return false;
       }
 
-      if (!vis.handle_output(tx.tx, tx.tx.outputs[amount_outs_vec[i].second], amount_outs_vec[i].second))
+      if (!vis.handle_output(tx.tx, tx.tx.outputs[amount_outs_vec[i].second]))
       {
         logger(logging::INFO) << "Failed to handle_output for output no = " << count << ", with absolute offset " << i;
         return false;
       }
 
-      if (count++ == absolute_offsets.size() - 1 && pmax_related_block_height)
+      if (count++ == absolute_offsets.size() - 1 && pmax_related_block_height && *pmax_related_block_height < amount_outs_vec[i].first.block)
       {
-        if (*pmax_related_block_height < amount_outs_vec[i].first.block)
-        {
-          *pmax_related_block_height = amount_outs_vec[i].first.block;
-        }
+        *pmax_related_block_height = amount_outs_vec[i].first.block;
       }
     }
 

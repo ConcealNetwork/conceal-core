@@ -917,9 +917,9 @@ bool core::scanOutputkeysForIndices(const KeyInput& txInToKey, std::list<std::pa
   {
     std::list<std::pair<crypto::Hash, size_t>>& m_resultsCollector;
     outputs_visitor(std::list<std::pair<crypto::Hash, size_t>>& resultsCollector):m_resultsCollector(resultsCollector){}
-    bool handle_output(const Transaction& tx, const TransactionOutput& out, size_t transactionOutputIndex)
+    bool handle_output(const Transaction& tx, const TransactionOutput& out)
     {
-      m_resultsCollector.push_back(std::make_pair(getObjectHash(tx), transactionOutputIndex));
+      getObjectHash(tx);
       return true;
     }
   };
