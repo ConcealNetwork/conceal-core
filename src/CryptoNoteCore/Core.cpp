@@ -915,6 +915,14 @@ bool core::scanOutputkeysForIndices(const KeyInput& txInToKey, std::list<std::pa
     outputs_visitor(std::list<std::pair<crypto::Hash, size_t>>& resultsCollector):m_resultsCollector(resultsCollector){}
     bool handle_output(const Transaction& tx, const TransactionOutput &out)
     {
+      if (out.target.type() != typeid(KeyOutput))
+      {
+        // make this pass through the logger function
+        //logger(ERROR, BRIGHT_RED) << "Output have wrong type id, which=" << out.target.which();
+        std::cout << "Output have wrong type id, which=" << out.target.which() << std::endl;
+        return false;
+      }
+
       getObjectHash(tx);
       return true;
     }
