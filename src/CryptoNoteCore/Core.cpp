@@ -20,6 +20,7 @@
 #include "../Logging/LoggerRef.h"
 #include "../Rpc/CoreRpcServerCommandsDefinitions.h"
 #include "CryptoNoteFormatUtils.h"
+#include "CryptoNoteCore/CoreConfig.h"
 
 #include "CryptoNoteTools.h"
 #include "CryptoNoteStatInfo.h"
@@ -27,27 +28,22 @@
 #include "TransactionExtra.h"
 #include "IBlock.h"
 
-#undef ERROR
-
 using namespace logging;
-
-#include "CryptoNoteCore/CoreConfig.h"
-
-using namespace  common;
+using namespace common;
 
 namespace cn {
 
 class BlockWithTransactions : public IBlock {
 public:
-  virtual const Block& getBlock() const override {
+  const Block& getBlock() const override {
     return block;
   }
 
-  virtual size_t getTransactionCount() const override {
+  size_t getTransactionCount() const override {
     return transactions.size();
   }
 
-  virtual const Transaction& getTransaction(size_t index) const override {
+  const Transaction& getTransaction(size_t index) const override {
     assert(index < transactions.size());
     return transactions[index];
   }
@@ -318,9 +314,8 @@ bool core::check_tx_semantic(const Transaction& tx, bool keeped_by_block, uint32
 bool core::check_tx_inputs_keyimages_diff(const Transaction& tx) {
   std::unordered_set<crypto::KeyImage> ki;
   for (const auto& in : tx.inputs) {
-    if (in.type() == typeid(KeyInput)) {
-      if (!ki.insert(boost::get<KeyInput>(in).keyImage).second)
-        return false;
+    if (in.type() == typeid(KeyInput) && !ki.insert(boost::get<KeyInput>(in).keyImage).second) {
+      return false;
     }
   }
   return true;
@@ -379,7 +374,7 @@ bool core::get_block_template(Block& b, const AccountPublicAddress& adr, difficu
 	}
 
     b.previousBlockHash = get_tail_id();
-    b.timestamp = time(NULL);
+    b.timestamp = time(nullptr);
 // k0x001
 // Don't generate a block template with invalid timestamp
 // Fix by Jagerman
@@ -632,6 +627,7 @@ bool core::parse_tx_from_blob(Transaction& tx, crypto::Hash& tx_hash, crypto::Ha
 }
 
 bool core::check_tx_syntax(const Transaction& tx) {
+  getObjectHash(tx);
   return true;
 }
 
@@ -691,7 +687,7 @@ uint64_t core::difficultyAtHeight(uint64_t height) {
 //  m_blockchain.get_all_known_block_ids(main, alt, invalid);
 //}
 
-std::string core::print_pool(bool short_format) {
+const std::string core::print_pool(bool short_format) {
   return m_mempool.print_pool(short_format);
 }
 
@@ -754,14 +750,14 @@ bool core::queryBlocks(const std::vector<crypto::Hash>& knownBlockIds, uint64_t 
   entries.reserve(blockIds.size());
 
   for (const auto& id : blockIds) {
-    entries.push_back(BlockFullInfo());
+    entries.emplace_back(BlockFullInfo());
     entries.back().block_id = id;
   }
 
   resCurrentHeight = currentHeight;
   resStartHeight = startOffset;
 
-  uint32_t blocksLeft = static_cast<uint32_t>(std::min(BLOCKS_IDS_SYNCHRONIZING_DEFAULT_COUNT - entries.size(), size_t(BLOCKS_SYNCHRONIZING_DEFAULT_COUNT)));
+  auto blocksLeft = static_cast<uint32_t>(std::min(BLOCKS_IDS_SYNCHRONIZING_DEFAULT_COUNT - entries.size(), size_t(BLOCKS_SYNCHRONIZING_DEFAULT_COUNT)));
 
   if (blocksLeft == 0) {
     return true;
@@ -845,11 +841,11 @@ bool core::queryBlocksLite(const std::vector<crypto::Hash>& knownBlockIds, uint6
   entries.reserve(blockIds.size());
 
   for (const auto& id : blockIds) {
-    entries.push_back(BlockShortInfo());
+    entries.emplace_back(BlockShortInfo());
     entries.back().blockId = id;
   }
 
-  uint32_t blocksLeft = static_cast<uint32_t>(std::min(BLOCKS_IDS_SYNCHRONIZING_DEFAULT_COUNT - entries.size(), size_t(BLOCKS_SYNCHRONIZING_DEFAULT_COUNT)));
+  auto blocksLeft = static_cast<uint32_t>(std::min(BLOCKS_IDS_SYNCHRONIZING_DEFAULT_COUNT - entries.size(), size_t(BLOCKS_SYNCHRONIZING_DEFAULT_COUNT)));
 
   if (blocksLeft == 0) {
     return true;
@@ -917,7 +913,7 @@ bool core::scanOutputkeysForIndices(const KeyInput& txInToKey, std::list<std::pa
   {
     std::list<std::pair<crypto::Hash, size_t>>& m_resultsCollector;
     outputs_visitor(std::list<std::pair<crypto::Hash, size_t>>& resultsCollector):m_resultsCollector(resultsCollector){}
-    bool handle_output(const Transaction& tx, const TransactionOutput& out)
+    bool handle_output(const Transaction& tx, const TransactionOutput &out)
     {
       getObjectHash(tx);
       return true;
@@ -998,7 +994,7 @@ bool core::getPoolTransactionsByTimestamp(uint64_t timestampBegin, uint64_t time
   std::list<crypto::Hash> missed_txs;
 
   getTransactions(poolTransactionHashes, txs, missed_txs, true);
-  if (missed_txs.size() > 0) {
+  if (!missed_txs.empty()) {
     return false;
   }
 

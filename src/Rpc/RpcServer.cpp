@@ -498,9 +498,6 @@ bool RpcServer::k_on_check_tx_proof(const K_COMMAND_RPC_CHECK_TX_PROOF::request&
       throw JsonRpc::JsonRpcError{ CORE_RPC_ERROR_CODE_INTERNAL_ERROR, "Failed to generate key derivation" };
     }
 
-    // get tx pub key
-		crypto::PublicKey txPubKey = getTransactionPublicKeyFromExtra(transaction.extra);
-
 		// look for outputs
 		uint64_t received(0);
 		size_t keyIndex(0);
@@ -1408,7 +1405,7 @@ bool RpcServer::on_get_block_header_by_height(const COMMAND_RPC_GET_BLOCK_HEADER
 
   crypto::Hash tmp_hash = m_core.getBlockIdByHeight(req.height);
   bool is_orphaned = block_hash != tmp_hash;
-  fill_block_header_response(blk, false, req.height, block_hash, res.block_header);
+  fill_block_header_response(blk, is_orphaned, req.height, block_hash, res.block_header);
   res.status = CORE_RPC_STATUS_OK;
   return true;
 }
