@@ -30,8 +30,6 @@
 
 using namespace logging;
 
-#undef ERROR
-
 namespace cn
 {
 
@@ -163,7 +161,7 @@ namespace cn
 
     if (ttl.ttl != 0 && !keptByBlock)
     {
-      uint64_t now = static_cast<uint64_t>(time(nullptr));
+      auto now = static_cast<uint64_t>(time(nullptr));
       if (ttl.ttl <= now)
       {
         logger(WARNING, BRIGHT_YELLOW) << "Transaction TTL has already expired: tx = " << id << ", ttl = " << ttl.ttl;
@@ -377,16 +375,6 @@ namespace cn
     deleted_tx_ids.assign(known_set.begin(), known_set.end());
   }
   //---------------------------------------------------------------------------------
-  bool tx_memory_pool::on_blockchain_inc(uint64_t new_block_height, const crypto::Hash &top_block_id)
-  {
-    return true;
-  }
-  //---------------------------------------------------------------------------------
-  bool tx_memory_pool::on_blockchain_dec(uint64_t new_block_height, const crypto::Hash &top_block_id)
-  {
-    return true;
-  }
-  //---------------------------------------------------------------------------------
   bool tx_memory_pool::have_tx(const crypto::Hash &id) const
   {
     std::lock_guard<std::recursive_mutex> lock(m_transactions_lock);
@@ -471,7 +459,7 @@ namespace cn
       {
         char ttlTimeStr[32];
         struct tm ttlTimeTm;
-        time_t timestamp = reinterpret_cast<time_t>(&ttlIt->second);
+        auto timestamp = reinterpret_cast<time_t>(&ttlIt->second);
 #ifdef _WIN32
         gmtime_s(&ttlTimeTm, &timestamp);
 #else
@@ -498,7 +486,7 @@ namespace cn
       uint64_t already_generated_coins,
       size_t &total_size,
       uint64_t &fee,
-      uint32_t &height)
+      const uint32_t &height)
   {
     std::lock_guard<std::recursive_mutex> lock(m_transactions_lock);
     total_size = 0;
@@ -507,6 +495,9 @@ namespace cn
     max_total_size = std::min(max_total_size, maxCumulativeSize);
 
     BlockTemplate blockTemplate;
+
+    if (already_generated_coins > cn::parameters::MONEY_SUPPLY)
+      return false;
 
     for (auto it = m_fee_index.rbegin(); it != m_fee_index.rend(); ++it)
     {
@@ -609,7 +600,7 @@ namespace cn
     return true;
   }
 
-#define CURRENT_MEMPOOL_ARCHIVE_VER 1
+const uint8_t CURRENT_MEMPOOL_ARCHIVE_VER = 1;
 
   void serialize(cn::tx_memory_pool::TransactionDetails &td, ISerializer &s)
   {
@@ -765,15 +756,12 @@ namespace cn
           m_spent_key_images.erase(it);
         }
       }
-      else if (in.type() == typeid(MultisignatureInput))
+      else if (in.type() == typeid(MultisignatureInput) && !keptByBlock)
       {
-        if (!keptByBlock)
-        {
-          const auto &msig = boost::get<MultisignatureInput>(in);
-          auto output = GlobalOutput(msig.amount, msig.outputIndex);
-          assert(m_spentOutputs.count(output));
-          m_spentOutputs.erase(output);
-        }
+        const auto &msig = boost::get<MultisignatureInput>(in);
+        auto output = GlobalOutput(msig.amount, msig.outputIndex);
+        assert(m_spentOutputs.count(output));
+        m_spentOutputs.erase(output);
       }
     }
 
@@ -790,7 +778,7 @@ namespace cn
       {
         const auto &txin = boost::get<KeyInput>(in);
         std::unordered_set<crypto::Hash> &kei_image_set = m_spent_key_images[txin.keyImage];
-        if (!(keptByBlock || kei_image_set.size() == 0))
+        if (!(keptByBlock || kei_image_set.empty()))
         {
           logger(ERROR, BRIGHT_RED)
               << "internal error: keptByBlock=" << keptByBlock
@@ -805,15 +793,12 @@ namespace cn
           return false;
         }
       }
-      else if (in.type() == typeid(MultisignatureInput))
+      else if (in.type() == typeid(MultisignatureInput) && !keptByBlock)
       {
-        if (!keptByBlock)
-        {
-          const auto &msig = boost::get<MultisignatureInput>(in);
-          auto r = m_spentOutputs.insert(GlobalOutput(msig.amount, msig.outputIndex));
-          (void)r;
-          assert(r.second);
-        }
+        const auto &msig = boost::get<MultisignatureInput>(in);
+        auto r = m_spentOutputs.insert(GlobalOutput(msig.amount, msig.outputIndex));
+        (void)r;
+        assert(r.second);
       }
     }
 
@@ -866,12 +851,9 @@ namespace cn
       std::vector<TransactionExtraField> txExtraFields;
       parseTransactionExtra(it->tx.extra, txExtraFields);
       TransactionExtraTTL ttl;
-      if (findTransactionExtraFieldByType(txExtraFields, ttl))
+      if (findTransactionExtraFieldByType(txExtraFields, ttl) && ttl.ttl != 0)
       {
-        if (ttl.ttl != 0)
-        {
-          m_ttlIndex.emplace(std::make_pair(it->id, ttl.ttl));
-        }
+        m_ttlIndex.emplace(std::make_pair(it->id, ttl.ttl));
       }
     }
   }

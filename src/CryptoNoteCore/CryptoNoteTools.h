@@ -25,7 +25,7 @@ bool toBinaryArray(const T& object, BinaryArray& binaryArray) {
     ::common::VectorOutputStream stream(binaryArray);
     BinaryOutputStreamSerializer serializer(stream);
     serialize(const_cast<T&>(object), serializer);
-  } catch (std::exception&) {
+  } catch (const std::exception&) {
     return false;
   }
 
@@ -50,7 +50,7 @@ bool fromBinaryArray(T& object, const BinaryArray& binaryArray) {
     BinaryInputStreamSerializer serializer(stream);
     serialize(object, serializer);
     result = stream.endOfStream(); // check that all data was consumed
-  } catch (std::exception&) {
+  } catch (const std::exception&) {
     return result;
   }
 

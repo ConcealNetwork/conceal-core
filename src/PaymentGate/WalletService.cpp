@@ -98,7 +98,8 @@ namespace payment_service
 
       crypto::Hash paymentId;
       bool r = common::podFromHex(paymentIdStr, paymentId);
-      assert(r);
+      if (!r)
+        assert(r);
 
       return paymentId;
     }
@@ -1138,7 +1139,6 @@ namespace payment_service
         spendingTransactionHash = common::podToHex(walletstx.hash);
       }
 
-      bool state = true;
       uint32_t knownBlockCount = node.getKnownBlockCount();
       if (knownBlockCount > unlockHeight)
       {
@@ -1445,8 +1445,8 @@ namespace payment_service
 
     /* Get the spend and view public keys from the address */
     const bool valid = cn::parseAccountAddressString(prefix,
-                                                             addr,
-                                                             address_str);
+                                                    addr,
+                                                    address_str);
 
     cn::BinaryArray ba;
     cn::toBinaryArray(addr, ba);
@@ -1458,6 +1458,11 @@ namespace payment_service
     integrated_address = tools::base_58::encode_addr(
         cn::parameters::CRYPTONOTE_PUBLIC_ADDRESS_BASE58_PREFIX,
         payment_id_str + keys);
+
+    if (!valid)
+    {
+      logger(logging::ERROR, logging::BRIGHT_RED) << "Could not parse address string!";
+    }
 
     return std::error_code();
   }

@@ -509,28 +509,6 @@ bool processServerAliasResponse(const std::string& s, std::string& address) {
 	return true;
 }
 
-
-
-bool splitUrlToHostAndUri(const std::string& aliasUrl, std::string& host, std::string& uri) {
-  size_t protoBegin = aliasUrl.find("http://");
-  if (protoBegin != 0 && protoBegin != std::string::npos) {
-    return false;
-  }
-
-  size_t hostBegin = protoBegin == std::string::npos ? 0 : 7; //strlen("http://")
-  size_t hostEnd = aliasUrl.find('/', hostBegin);
-
-  if (hostEnd == std::string::npos) {
-    uri = "/";
-    host = aliasUrl.substr(hostBegin);
-  } else {
-    uri = aliasUrl.substr(hostEnd);
-    host = aliasUrl.substr(hostBegin, hostEnd - hostBegin);
-  }
-
-  return true;
-}
-
 bool askAliasesTransfersConfirmation(const std::map<std::string, std::vector<WalletLegacyTransfer>>& aliases, const Currency& currency) {
   std::cout << "Would you like to send money to the following addresses?" << std::endl;
 

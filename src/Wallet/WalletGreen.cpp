@@ -409,6 +409,8 @@ namespace cn
 
     transactionHash = common::podToHex(transaction->getTransactionHash());
     size_t id = validateSaveAndSendTransaction(*transaction, {}, false, true);
+    if (id == WALLET_INVALID_TRANSACTION_ID)
+      throw std::system_error(make_error_code(cn::error::INVALID_TX_ID));
   }
 
   crypto::SecretKey WalletGreen::getTransactionDeterministicSecretKey(crypto::Hash &transactionHash) const
@@ -619,6 +621,8 @@ namespace cn
     /* Return the transaction hash */
     transactionHash = common::podToHex(transaction->getTransactionHash());
     size_t id = validateSaveAndSendTransaction(*transaction, {}, false, true);
+    if (id == WALLET_INVALID_TRANSACTION_ID)
+      throw std::system_error(make_error_code(cn::error::INVALID_TX_ID));
   }
 
   void WalletGreen::validateOrders(const std::vector<WalletOrder> &orders) const
@@ -2256,6 +2260,8 @@ namespace cn
         updated = true;
       }
     });
+    if (!r)
+      return false;
 
     assert(r);
 
@@ -2320,6 +2326,9 @@ namespace cn
         updated = true;
       }
     });
+
+    if (!r)
+      return false;
 
     assert(r);
 
@@ -3785,7 +3794,8 @@ namespace cn
       crypto::Hash hash = transfer.transactionHash;
       TransactionInformation info;
       bool ok = container->getTransactionInformation(hash, info, NULL, NULL);
-      assert(ok);
+      if (!ok)
+        assert(ok);
       heights.push_back(info.blockHeight);
     }
     uint64_t unlocked = calculateDepositsAmount(transfers, m_currency, heights);

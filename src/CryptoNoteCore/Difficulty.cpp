@@ -46,7 +46,11 @@ namespace cn {
   }
 
   bool check_hash(const crypto::Hash &hash, difficulty_type difficulty) {
-    uint64_t low, high, top, cur;
+    uint64_t low;
+    uint64_t high;
+    uint64_t top;
+    uint64_t cur;
+
     // First check the highest word, this will most likely fail for a random hash.
     mul(swap64le(((const uint64_t *) &hash)[3]), difficulty, top, high);
     if (high != 0) {

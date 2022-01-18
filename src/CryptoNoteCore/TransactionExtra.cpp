@@ -56,7 +56,7 @@ namespace cn
             return false;
           }
 
-          transactionExtraFields.push_back(TransactionExtraPadding{size});
+          transactionExtraFields.emplace_back(TransactionExtraPadding{size});
           break;
         }
 
@@ -64,7 +64,7 @@ namespace cn
         {
           TransactionExtraPublicKey extraPk;
           ar(extraPk.publicKey, "public_key");
-          transactionExtraFields.push_back(extraPk);
+          transactionExtraFields.emplace_back(extraPk);
           break;
         }
 
@@ -78,7 +78,7 @@ namespace cn
             read(iss, extraNonce.nonce.data(), extraNonce.nonce.size());
           }
 
-          transactionExtraFields.push_back(extraNonce);
+          transactionExtraFields.emplace_back(extraNonce);
           break;
         }
 
@@ -86,7 +86,7 @@ namespace cn
         {
           TransactionExtraMergeMiningTag mmTag;
           ar(mmTag, "mm_tag");
-          transactionExtraFields.push_back(mmTag);
+          transactionExtraFields.emplace_back(mmTag);
           break;
         }
 
@@ -94,7 +94,7 @@ namespace cn
         {
           tx_extra_message message;
           ar(message.data, "message");
-          transactionExtraFields.push_back(message);
+          transactionExtraFields.emplace_back(message);
           break;
         }
 
@@ -104,13 +104,13 @@ namespace cn
           readVarint(iss, size);
           TransactionExtraTTL ttl;
           readVarint(iss, ttl.ttl);
-          transactionExtraFields.push_back(ttl);
+          transactionExtraFields.emplace_back(ttl);
           break;
         }
         }
       }
     }
-    catch (std::exception &)
+    catch (const std::exception &)
     {
       return false;
     }
@@ -293,7 +293,7 @@ namespace cn
   {
     extra_nonce.clear();
     extra_nonce.push_back(TX_EXTRA_NONCE_PAYMENT_ID);
-    const uint8_t *payment_id_ptr = reinterpret_cast<const uint8_t *>(&payment_id);
+    const auto *payment_id_ptr = reinterpret_cast<const uint8_t *>(&payment_id);
     std::copy(payment_id_ptr, payment_id_ptr + sizeof(payment_id), std::back_inserter(extra_nonce));
   }
 
@@ -356,7 +356,7 @@ namespace cn
     return true;
   }
 
-#define TX_EXTRA_MESSAGE_CHECKSUM_SIZE 4
+const uint8_t TX_EXTRA_MESSAGE_CHECKSUM_SIZE = 4;
 
 #pragma pack(push, 1)
   struct message_key_data
@@ -384,7 +384,7 @@ namespace cn
       key_data.magic1 = 0x80;
       key_data.magic2 = 0;
       Hash h = cn_fast_hash(&key_data, sizeof(message_key_data));
-      uint64_t nonce = SWAP64LE(index);
+      auto nonce = SWAP64LE(index);
       chacha8(buf.get(), mlen, reinterpret_cast<uint8_t *>(&h), reinterpret_cast<uint8_t *>(&nonce), buf.get());
     }
     data.assign(buf.get(), mlen);
@@ -412,7 +412,7 @@ namespace cn
       key_data.magic1 = 0x80;
       key_data.magic2 = 0;
       Hash h = cn_fast_hash(&key_data, sizeof(message_key_data));
-      uint64_t nonce = SWAP64LE(index);
+      auto nonce = SWAP64LE(index);
       chacha8(data.data(), mlen, reinterpret_cast<uint8_t *>(&h), reinterpret_cast<uint8_t *>(&nonce), ptr.get());
       buf = ptr.get();
     }

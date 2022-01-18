@@ -720,7 +720,8 @@ void WalletSerializer::subscribeWallets() {
 
     auto& subscription = m_synchronizer.addSubscription(sub);
     bool r = index.modify(it, [&subscription] (WalletRecord& rec) { rec.container = &subscription.getContainer(); });
-    assert(r);
+    if (!r)
+      assert(r);
 
     subscription.addObserver(&m_transfersObserver);
   }

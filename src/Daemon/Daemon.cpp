@@ -184,7 +184,7 @@ int main(int argc, char* argv[])
    //command_line::add_arg(desc_cmd_sett, arg_genesis_block_reward_address);
 
    RpcServerConfig::initOptions(desc_cmd_sett);
-   CoreConfig::initOptions(desc_cmd_sett);
+   //CoreConfig::initOptions(desc_cmd_sett);
    NetNodeConfig::initOptions(desc_cmd_sett);
    MinerConfig::initOptions(desc_cmd_sett);
 

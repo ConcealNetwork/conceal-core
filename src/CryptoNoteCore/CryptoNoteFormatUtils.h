@@ -61,7 +61,7 @@ inline bool constructTransaction(
   const AccountKeys& sender_account_keys,
   const std::vector<TransactionSourceEntry>& sources,
   const std::vector<TransactionDestinationEntry>& destinations,
-  std::vector<uint8_t> extra, Transaction& tx, uint64_t unlock_time, logging::ILogger& log, crypto::SecretKey& transactionSK) {
+  const std::vector<uint8_t> extra, Transaction& tx, uint64_t unlock_time, logging::ILogger& log, crypto::SecretKey& transactionSK) {
 
   return constructTransaction(sender_account_keys, sources, destinations, std::vector<tx_message_entry>(), 0, extra, tx, unlock_time, log, transactionSK);
 }
@@ -81,7 +81,7 @@ bool get_block_longhash(crypto::cn_context &context, const Block& b, crypto::Has
 bool get_inputs_money_amount(const Transaction& tx, uint64_t& money);
 uint64_t get_outs_money_amount(const Transaction& tx);
 bool check_inputs_types_supported(const TransactionPrefix& tx);
-bool check_outs_valid(const TransactionPrefix& tx, std::string* error = 0);
+bool check_outs_valid(const TransactionPrefix& tx, std::string* error = nullptr);
 bool checkMultisignatureInputsDiff(const TransactionPrefix& tx);
 
 bool check_money_overflow(const TransactionPrefix& tx);

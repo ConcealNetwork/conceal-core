@@ -69,7 +69,7 @@ namespace cn {
           if (m_blockchain.back().bl.majorVersion >= m_targetVersion) {
             logger(logging::ERROR, logging::BRIGHT_RED) << "Internal error: block at height " << (m_blockchain.size() - 1) <<
               " has invalid version " << static_cast<int>(m_blockchain.back().bl.majorVersion) <<
-              ", expected " << static_cast<int>(m_targetVersion - 1) << " or less";
+              ", expected " << m_targetVersion - 1 << " or less";
             return false;
           }
         } else {
@@ -186,7 +186,6 @@ namespace cn {
       return voteCounter;
     }
 
-  private:
     uint32_t findVotingCompleteHeight(uint32_t probableUpgradeHeight) {
       assert(m_currency.upgradeHeight(m_targetVersion) == UNDEF_HEIGHT);
 

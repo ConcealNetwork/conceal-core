@@ -2098,7 +2098,7 @@ namespace cn
       outputs_visitor(std::vector<const crypto::PublicKey *> &results_collector, Blockchain &bch, ILogger &logger) : m_results_collector(results_collector), m_bch(bch), logger(logger, "outputs_visitor")
       {
       }
-
+ 
       bool handle_output(const Transaction &tx, const TransactionOutput &out)
       {
         //check tx unlock time

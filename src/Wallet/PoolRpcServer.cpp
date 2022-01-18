@@ -342,8 +342,13 @@ bool pool_rpc_server::on_create_integrated(const wallet_rpc::COMMAND_RPC_CREATE_
 
     /* get the spend and view public keys from the address */
     const bool valid = cn::parseAccountAddressString(prefix, 
-                                                            addr,
-                                                            address_str);
+                                                    addr,
+                                                    address_str);
+    if (!valid)
+    {
+      logger(ERROR, BRIGHT_RED) << "Could not parse address string!";
+      return false;
+    }
 
     cn::BinaryArray ba;
     cn::toBinaryArray(addr, ba);

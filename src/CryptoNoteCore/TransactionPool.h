@@ -91,14 +91,11 @@ namespace cn {
     //gets tx and remove it from pool
     bool take_tx(const crypto::Hash &id, Transaction &tx, size_t& blobSize, uint64_t& fee);
 
-    bool on_blockchain_inc(uint64_t new_block_height, const crypto::Hash& top_block_id);
-    bool on_blockchain_dec(uint64_t new_block_height, const crypto::Hash& top_block_id);
-
     void lock() const;
     void unlock() const;
     std::unique_lock<std::recursive_mutex> obtainGuard() const;
 
-    bool fill_block_template(Block &bl, size_t median_size, size_t maxCumulativeSize, uint64_t already_generated_coins, size_t &total_size, uint64_t &fee, uint32_t& height);
+    bool fill_block_template(Block &bl, size_t median_size, size_t maxCumulativeSize, uint64_t already_generated_coins, size_t &total_size, uint64_t &fee, const uint32_t& height);
 
     void get_transactions(std::list<Transaction>& txs) const;
     void get_difference(const std::vector<crypto::Hash>& known_tx_ids, std::vector<crypto::Hash>& new_tx_ids, std::vector<crypto::Hash>& deleted_tx_ids) const;
@@ -149,8 +146,10 @@ namespace cn {
         // price(lhs) > price(rhs) -->
         // lhs.fee / lhs.blobSize > rhs.fee / rhs.blobSize -->
         // lhs.fee * rhs.blobSize > rhs.fee * lhs.blobSize
-        uint64_t lhs_hi, lhs_lo = mul128(lhs.fee, rhs.blobSize, &lhs_hi);
-        uint64_t rhs_hi, rhs_lo = mul128(rhs.fee, lhs.blobSize, &rhs_hi);
+        uint64_t lhs_hi;
+        uint64_t lhs_lo = mul128(lhs.fee, rhs.blobSize, &lhs_hi);
+        uint64_t rhs_hi;
+        uint64_t rhs_lo = mul128(rhs.fee, lhs.blobSize, &rhs_hi);
 
         return
           // prefer more profitable transactions

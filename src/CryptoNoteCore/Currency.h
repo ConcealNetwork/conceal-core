@@ -198,7 +198,6 @@ namespace cn
     bool generateGenesisBlock();
     uint64_t baseRewardFunction(uint64_t alreadyGeneratedCoins, uint32_t height) const;
 
-  private:
     uint64_t m_maxBlockHeight;
     size_t m_maxBlockBlobSize;
     size_t m_maxTxSize;
@@ -303,7 +302,7 @@ namespace cn
       return m_currency;
     }
 
-    Transaction generateGenesisTransaction();
+    const Transaction generateGenesisTransaction();
     //Transaction generateGenesisTransaction(const std::vector<AccountPublicAddress>& targets);
 
     CurrencyBuilder &maxBlockNumber(uint64_t val)
@@ -514,27 +513,27 @@ namespace cn
       return *this;
     }
 
-    CurrencyBuilder &upgradeHeightV2(uint64_t val)
+    CurrencyBuilder &upgradeHeightV2(uint32_t val)
     {
       m_currency.m_upgradeHeightV2 = val;
       return *this;
     }
-    CurrencyBuilder &upgradeHeightV3(uint64_t val)
+    CurrencyBuilder &upgradeHeightV3(uint32_t val)
     {
       m_currency.m_upgradeHeightV3 = val;
       return *this;
     }
-    CurrencyBuilder &upgradeHeightV6(uint64_t val)
+    CurrencyBuilder &upgradeHeightV6(uint32_t val)
     {
       m_currency.m_upgradeHeightV6 = val;
       return *this;
     }
-    CurrencyBuilder &upgradeHeightV7(uint64_t val)
+    CurrencyBuilder &upgradeHeightV7(uint32_t val)
     {
       m_currency.m_upgradeHeightV7 = val;
       return *this;
     }
-    CurrencyBuilder &upgradeHeightV8(uint64_t val)
+    CurrencyBuilder &upgradeHeightV8(uint32_t val)
     {
       m_currency.m_upgradeHeightV8 = val;
       return *this;

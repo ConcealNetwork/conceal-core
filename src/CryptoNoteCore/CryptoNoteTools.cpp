@@ -15,7 +15,7 @@ bool toBinaryArray(const BinaryArray& object, BinaryArray& binaryArray) {
     BinaryOutputStreamSerializer serializer(stream);
     std::string oldBlob = common::asString(object);
     serializer(oldBlob, "");
-  } catch (std::exception&) {
+  } catch (const std::exception&) {
     return false;
   }
 
@@ -71,8 +71,8 @@ uint64_t getOutputAmount(const Transaction& transaction) {
 
 void decomposeAmount(uint64_t amount, uint64_t dustThreshold, std::vector<uint64_t>& decomposedAmounts) {
   decompose_amount_into_digits(amount, dustThreshold,
-    [&](uint64_t amount) {
-    decomposedAmounts.push_back(amount);
+    [&](uint64_t d_amount) {
+    decomposedAmounts.push_back(d_amount);
   },
     [&](uint64_t dust) {
     decomposedAmounts.push_back(dust);

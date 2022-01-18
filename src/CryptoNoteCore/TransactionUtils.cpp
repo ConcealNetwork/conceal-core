@@ -20,9 +20,8 @@ namespace cn {
 bool checkInputsKeyimagesDiff(const cn::TransactionPrefix& tx) {
   std::unordered_set<crypto::KeyImage> ki;
   for (const auto& in : tx.inputs) {
-    if (in.type() == typeid(KeyInput)) {
-      if (!ki.insert(boost::get<KeyInput>(in).keyImage).second)
-        return false;
+    if (in.type() == typeid(KeyInput) && !ki.insert(boost::get<KeyInput>(in).keyImage).second) {
+      return false;
     }
   }
   return true;

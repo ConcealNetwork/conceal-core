@@ -92,7 +92,7 @@ auto DepositIndex::size() const -> DepositHeight {
 auto DepositIndex::upperBound(DepositHeight height) const -> IndexType::const_iterator {
   return std::upper_bound(
       index.cbegin(), index.cend(), height,
-      [] (DepositHeight height, const DepositIndexEntry& left) { return height < left.height; });
+      [] (DepositHeight d_height, const DepositIndexEntry& left) { return d_height < left.height; });
 }
 
 size_t DepositIndex::popBlocks(DepositHeight from) {
@@ -100,7 +100,7 @@ size_t DepositIndex::popBlocks(DepositHeight from) {
     return 0;
   }
 
-  IndexType::iterator it = index.begin();
+  auto it = index.begin();
   std::advance(it, std::distance(index.cbegin(), upperBound(from)));
   if (it != index.begin()) {
     --it;

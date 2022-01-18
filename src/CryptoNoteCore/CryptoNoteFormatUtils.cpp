@@ -80,7 +80,7 @@ bool constructTransaction(
   const std::vector<TransactionDestinationEntry>& destinations,
   const std::vector<tx_message_entry>& messages,
   uint64_t ttl,
-  std::vector<uint8_t> extra,
+  const std::vector<uint8_t> extra,
   Transaction& tx,
   uint64_t unlock_time,
   logging::ILogger& log,
@@ -111,7 +111,7 @@ bool constructTransaction(
     summary_inputs_money += src_entr.amount;
 
     //KeyDerivation recv_derivation;
-    in_contexts.push_back(input_generation_context_data());
+    in_contexts.emplace_back(input_generation_context_data());
     KeyPair& in_ephemeral = in_contexts.back().in_ephemeral;
     KeyImage img;
     if (!generate_key_image_helper(sender_account_keys, src_entr.realTransactionPublicKey, src_entr.realOutputIndexInTransaction, in_ephemeral, img))
@@ -137,7 +137,7 @@ bool constructTransaction(
     }
 
     input_to_key.outputIndexes = absolute_output_offsets_to_relative(input_to_key.outputIndexes);
-    tx.inputs.push_back(input_to_key);
+    tx.inputs.emplace_back(input_to_key);
   }
 
   KeyPair txkey;
@@ -204,7 +204,7 @@ bool constructTransaction(
   for (size_t i = 0; i < messages.size(); i++) {
     const tx_message_entry &msg = messages[i];
     tx_extra_message tag;
-    if (!tag.encrypt(i, msg.message, msg.encrypt ? &msg.addr : NULL, txkey)) {
+    if (!tag.encrypt(i, msg.message, msg.encrypt ? &msg.addr : nullptr, txkey)) {
       return false;
     }
 
@@ -228,7 +228,7 @@ bool constructTransaction(
       keys_ptrs.push_back(&o.second);
     }
 
-    tx.signatures.push_back(std::vector<Signature>());
+    tx.signatures.emplace_back(std::vector<Signature>());
     std::vector<Signature>& sigs = tx.signatures.back();
     sigs.resize(src_entr.outputs.size());
     generate_ring_signature(tx_prefix_hash, boost::get<KeyInput>(tx.inputs[i]).keyImage, keys_ptrs,

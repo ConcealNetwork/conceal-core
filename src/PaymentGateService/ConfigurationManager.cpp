@@ -44,7 +44,6 @@ bool ConfigurationManager::init(int argc, char** argv) {
 
   po::options_description netNodeOptions("Local Node Options");
   cn::NetNodeConfig::initOptions(netNodeOptions);
-  cn::CoreConfig::initOptions(netNodeOptions);
 
   po::options_description remoteNodeOptions("Daemon Options");
   RpcNodeConfiguration::initOptions(remoteNodeOptions);

@@ -21,8 +21,6 @@
 #include "TransactionExtra.h"
 #include "UpgradeDetector.h"
 
-#undef ERROR
-
 using namespace logging;
 using namespace common;
 
@@ -285,7 +283,7 @@ namespace cn
     uint64_t cHi;
     uint64_t cLo;
     assert(std::numeric_limits<uint32_t>::max() / 100 > m_depositMaxTerm);
-    div128_32(bHi, bLo, static_cast<uint32_t>(100 * m_depositMaxTerm), &cHi, &cLo);
+    div128_32(bHi, bLo, 100 * m_depositMaxTerm, &cHi, &cLo);
     assert(cHi == 0);
 
     /* early deposit multiplier */
@@ -366,10 +364,10 @@ namespace cn
       if (amount4Humans > 2000000)
         qTier = static_cast<float>(1.15);
 
-      float mq = static_cast<float>(1.4473);
+      auto mq = static_cast<float>(1.4473);
       float termQuarters = term / 64800;
-      float m8 = 100.0 * pow(1.0 + (mq / 100.0), termQuarters) - 100.0;
-      float m5 = termQuarters * 0.5;
+      double m8 = 100.0 * pow(1.0 + (mq / 100.0), termQuarters) - 100.0;
+      double m5 = termQuarters * 0.5;
       float m7 = m8 * (1 + (m5 / 100));
       float rate = m7 * qTier;
       float interest = amount * (rate / 100);
@@ -382,8 +380,8 @@ namespace cn
     {
       uint64_t actualAmount = amount;
       float weeks = term / 5040;
-      float baseInterest = static_cast<float>(0.0696);
-      float interestPerWeek = static_cast<float>(0.0002);
+      auto baseInterest = static_cast<float>(0.0696);
+      auto interestPerWeek = static_cast<float>(0.0002);
       float interestRate = baseInterest + (weeks * interestPerWeek);
       float interest = actualAmount * ((weeks * interestRate) / 100);
       returnVal = static_cast<uint64_t>(interest);
@@ -400,7 +398,7 @@ namespace cn
     uint64_t returnVal = 0;
     uint64_t amount4Humans = amount / 1000000;
 
-    float baseInterest = static_cast<float>(0.029);
+    auto baseInterest = static_cast<float>(0.029);
 
     if (amount4Humans >= 10000 && amount4Humans < 20000)
       baseInterest = static_cast<float>(0.039);
@@ -415,7 +413,7 @@ namespace cn
     {
       months = 12;
     }
-    float ear = baseInterest + (months - 1) * 0.001;
+    double ear = baseInterest + (months - 1) * 0.001;
     float eir = (ear / 12) * months;
     returnVal = static_cast<uint64_t>(eir);
 
@@ -511,7 +509,7 @@ namespace cn
     if (amount_out > amount_in)
     {
       // interest shows up in the output of the W/D transactions and W/Ds always have min fee
-      if (tx.inputs.size() > 0 && tx.outputs.size() > 0 && amount_out > amount_in + parameters::MINIMUM_FEE)
+      if (tx.inputs.size() > 0 && !tx.outputs.empty() && amount_out > amount_in + parameters::MINIMUM_FEE)
       {
         fee = parameters::MINIMUM_FEE;
         logger(INFO) << "TRIGGERED: Currency.cpp getTransactionFee";
@@ -547,7 +545,7 @@ namespace cn
   size_t Currency::maxBlockCumulativeSize(uint64_t height) const
   {
     assert(height <= std::numeric_limits<uint64_t>::max() / m_maxBlockSizeGrowthSpeedNumerator);
-    size_t maxSize = static_cast<size_t>(m_maxBlockSizeInitial +
+    auto maxSize = static_cast<size_t>(m_maxBlockSizeInitial +
                                          (height * m_maxBlockSizeGrowthSpeedNumerator) / m_maxBlockSizeGrowthSpeedDenominator);
 
     assert(maxSize >= m_maxBlockSizeInitial);
@@ -566,12 +564,9 @@ namespace cn
 
     KeyPair txkey = generateKeyPair();
     addTransactionPublicKeyToExtra(tx.extra, txkey.publicKey);
-    if (!extraNonce.empty())
+    if (!extraNonce.empty() && !addExtraNonceToTransactionExtra(tx.extra, extraNonce))
     {
-      if (!addExtraNonceToTransactionExtra(tx.extra, extraNonce))
-      {
-        return false;
-      }
+      return false;
     }
 
     BaseInput in;
@@ -650,7 +645,7 @@ namespace cn
     tx.version = TRANSACTION_VERSION_1;
     // lock
     tx.unlockTime = height + m_minedMoneyUnlockWindow;
-    tx.inputs.push_back(in);
+    tx.inputs.emplace_back(in);
     return true;
   }
 
@@ -877,7 +872,9 @@ namespace cn
 
     sort(timestamps.begin(), timestamps.end());
 
-    size_t cutBegin, cutEnd;
+    size_t cutBegin;
+    size_t cutEnd;
+
     assert(2 * m_difficultyCut <= m_difficultyWindow - 2);
     if (length <= m_difficultyWindow - 2 * m_difficultyCut)
     {
@@ -900,7 +897,9 @@ namespace cn
     difficulty_type totalWork = cumulativeDifficulties[cutEnd - 1] - cumulativeDifficulties[cutBegin];
     assert(totalWork > 0);
 
-    uint64_t low, high;
+    uint64_t low;
+    uint64_t high;
+
     low = mul128(totalWork, m_difficultyTarget, &high);
     if (high != 0 || low + timeSpan - 1 < low)
     {
@@ -944,7 +943,9 @@ namespace cn
 
     sort(timestamps.begin(), timestamps.end());
 
-    size_t cutBegin, cutEnd;
+    size_t cutBegin;
+    size_t cutEnd;
+
     assert(2 * c_difficultyCut <= c_difficultyWindow - 2);
     if (length <= c_difficultyWindow - 2 * c_difficultyCut)
     {
@@ -967,7 +968,9 @@ namespace cn
     difficulty_type totalWork = cumulativeDifficulties[cutEnd - 1] - cumulativeDifficulties[cutBegin];
     assert(totalWork > 0);
 
-    uint64_t low, high;
+    uint64_t low;
+    uint64_t high;
+
     low = mul128(totalWork, m_difficultyTarget, &high);
     if (high != 0 || std::numeric_limits<uint64_t>::max() - low < (timeSpan - 1))
     {
@@ -1204,7 +1207,12 @@ namespace cn
       return difficulty_guess;
     }
 
-    uint64_t L(0), next_D, i, this_timestamp(0), previous_timestamp(0), avg_D;
+    uint64_t L(0);
+    uint64_t next_D;
+    uint64_t i;
+    uint64_t this_timestamp(0);
+    uint64_t previous_timestamp(0);
+    uint64_t avg_D;
 
     previous_timestamp = timestamps[0] - T;
     for (i = 1; i <= N; i++)
@@ -1377,7 +1385,7 @@ namespace cn
 
   /* ---------------------------------------------------------------------------------------------------- */
 
-  Transaction CurrencyBuilder::generateGenesisTransaction()
+  const Transaction CurrencyBuilder::generateGenesisTransaction()
   {
     cn::Transaction tx;
     cn::AccountPublicAddress ac = boost::value_initialized<cn::AccountPublicAddress>();

@@ -14,17 +14,17 @@
 
 #include <CryptoNote.h>
 
-#define TX_EXTRA_PADDING_MAX_COUNT          255
-#define TX_EXTRA_NONCE_MAX_COUNT            255
+const uint8_t TX_EXTRA_PADDING_MAX_COUNT =  255;
+const uint8_t TX_EXTRA_NONCE_MAX_COUNT   =  255;
 
-#define TX_EXTRA_TAG_PADDING                0x00
-#define TX_EXTRA_TAG_PUBKEY                 0x01
-#define TX_EXTRA_NONCE                      0x02
-#define TX_EXTRA_MERGE_MINING_TAG           0x03
-#define TX_EXTRA_MESSAGE_TAG                0x04
-#define TX_EXTRA_TTL                        0x05
+const uint8_t TX_EXTRA_TAG_PADDING       =  0x00;
+const uint8_t TX_EXTRA_TAG_PUBKEY        =  0x01;
+const uint8_t TX_EXTRA_NONCE             =  0x02;
+const uint8_t TX_EXTRA_MERGE_MINING_TAG  =  0x03;
+const uint8_t TX_EXTRA_MESSAGE_TAG       =  0x04;
+const uint8_t TX_EXTRA_TTL               =  0x05;
 
-#define TX_EXTRA_NONCE_PAYMENT_ID           0x00
+const uint8_t TX_EXTRA_NONCE_PAYMENT_ID  =  0x00;
 
 namespace cn {
 

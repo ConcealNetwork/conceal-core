@@ -1201,7 +1201,8 @@ std::vector<uint32_t> WalletLegacy::getTransactionHeights(const std::vector<Tran
 	  crypto::Hash hash = transfer.transactionHash;
 	  TransactionInformation info;
 	  bool ok = m_transferDetails->getTransactionInformation(hash, info, NULL, NULL);
-	  assert(ok);
+	  if (!ok)
+      assert(ok);
 	  heights.push_back(info.blockHeight);
   }
   return heights;

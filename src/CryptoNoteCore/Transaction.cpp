@@ -45,66 +45,65 @@ namespace cn {
     TransactionImpl(const cn::Transaction& tx);
   
     // ITransactionReader
-    virtual Hash getTransactionHash() const override;
-    virtual Hash getTransactionPrefixHash() const override;
-    virtual Hash getTransactionInputsHash() const override;
-    virtual PublicKey getTransactionPublicKey() const override;
-    virtual uint64_t getUnlockTime() const override;
-    virtual bool getPaymentId(Hash& hash) const override;
-    virtual bool getExtraNonce(BinaryArray& nonce) const override;
-    virtual BinaryArray getExtra() const override;
+    Hash getTransactionHash() const override;
+    Hash getTransactionPrefixHash() const override;
+    Hash getTransactionInputsHash() const override;
+    PublicKey getTransactionPublicKey() const override;
+    uint64_t getUnlockTime() const override;
+    bool getPaymentId(Hash& hash) const override;
+    bool getExtraNonce(BinaryArray& nonce) const override;
+    BinaryArray getExtra() const override;
 
     // inputs
-    virtual size_t getInputCount() const override;
-    virtual uint64_t getInputTotalAmount() const override;
-    virtual transaction_types::InputType getInputType(size_t index) const override;
-    virtual void getInput(size_t index, KeyInput& input) const override;
-    virtual void getInput(size_t index, MultisignatureInput& input) const override;
-    virtual std::vector<TransactionInput> getInputs() const override;
+    size_t getInputCount() const override;
+    uint64_t getInputTotalAmount() const override;
+    transaction_types::InputType getInputType(size_t index) const override;
+    void getInput(size_t index, KeyInput& input) const override;
+    void getInput(size_t index, MultisignatureInput& input) const override;
+    std::vector<TransactionInput> getInputs() const override;
 
     // outputs
-    virtual size_t getOutputCount() const override;
-    virtual uint64_t getOutputTotalAmount() const override;
-    virtual transaction_types::OutputType getOutputType(size_t index) const override;
-    virtual void getOutput(size_t index, KeyOutput& output, uint64_t& amount) const override;
-    virtual void getOutput(size_t index, MultisignatureOutput& output, uint64_t& amount) const override;
+    size_t getOutputCount() const override;
+    uint64_t getOutputTotalAmount() const override;
+    transaction_types::OutputType getOutputType(size_t index) const override;
+    void getOutput(size_t index, KeyOutput& output, uint64_t& amount) const override;
+    void getOutput(size_t index, MultisignatureOutput& output, uint64_t& amount) const override;
 
-    virtual size_t getRequiredSignaturesCount(size_t index) const override;
-    virtual bool findOutputsToAccount(const AccountPublicAddress& addr, const SecretKey& viewSecretKey, std::vector<uint32_t>& outs, uint64_t& outputAmount) const override;
+    size_t getRequiredSignaturesCount(size_t index) const override;
+    bool findOutputsToAccount(const AccountPublicAddress& addr, const SecretKey& viewSecretKey, std::vector<uint32_t>& outs, uint64_t& outputAmount) const override;
 
     // various checks
-    virtual bool validateInputs() const override;
-    virtual bool validateOutputs() const override;
-    virtual bool validateSignatures() const override;
+    bool validateInputs() const override;
+    bool validateOutputs() const override;
+    bool validateSignatures() const override;
 
     // get serialized transaction
-    virtual BinaryArray getTransactionData() const override;
+    BinaryArray getTransactionData() const override;
     TransactionPrefix getTransactionPrefix() const override;
     // ITransactionWriter
 
-    virtual void setUnlockTime(uint64_t unlockTime) override;
-    virtual void setPaymentId(const Hash& hash) override;
-    virtual void setExtraNonce(const BinaryArray& nonce) override;
-    virtual void appendExtra(const BinaryArray& extraData) override;
+    void setUnlockTime(uint64_t unlockTime) override;
+    void setPaymentId(const Hash& hash) override;
+    void setExtraNonce(const BinaryArray& nonce) override;
+    void appendExtra(const BinaryArray& extraData) override;
 
     // Inputs/Outputs 
-    virtual size_t addInput(const KeyInput& input) override;
-    virtual size_t addInput(const MultisignatureInput& input) override;
-    virtual size_t addInput(const AccountKeys& senderKeys, const transaction_types::InputKeyInfo& info, KeyPair& ephKeys) override;
+    size_t addInput(const KeyInput& input) override;
+    size_t addInput(const MultisignatureInput& input) override;
+    size_t addInput(const AccountKeys& senderKeys, const transaction_types::InputKeyInfo& info, KeyPair& ephKeys) override;
 
-    virtual size_t addOutput(uint64_t amount, const AccountPublicAddress& to) override;
-    virtual size_t addOutput(uint64_t amount, const std::vector<AccountPublicAddress>& to, uint32_t requiredSignatures, uint32_t term = 0) override;
-    virtual size_t addOutput(uint64_t amount, const KeyOutput& out) override;
-    virtual size_t addOutput(uint64_t amount, const MultisignatureOutput& out) override;
+    size_t addOutput(uint64_t amount, const AccountPublicAddress& to) override;
+    size_t addOutput(uint64_t amount, const std::vector<AccountPublicAddress>& to, uint8_t requiredSignatures, uint32_t term = 0) override;
+    size_t addOutput(uint64_t amount, const KeyOutput& out) override;
+    size_t addOutput(uint64_t amount, const MultisignatureOutput& out) override;
 
-    virtual void signInputKey(size_t input, const transaction_types::InputKeyInfo& info, const KeyPair& ephKeys) override;
-    virtual void signInputMultisignature(size_t input, const PublicKey& sourceTransactionKey, size_t outputIndex, const AccountKeys& accountKeys) override;
-    virtual void signInputMultisignature(size_t input, const KeyPair& ephemeralKeys) override;
-
+    void signInputKey(size_t input, const transaction_types::InputKeyInfo& info, const KeyPair& ephKeys) override;
+    void signInputMultisignature(size_t input, const PublicKey& sourceTransactionKey, size_t outputIndex, const AccountKeys& accountKeys) override;
+    void signInputMultisignature(size_t input, const KeyPair& ephemeralKeys) override;
 
     // secret key
-    virtual bool getTransactionSecretKey(SecretKey& key) const override;
-    virtual void setTransactionSecretKey(const SecretKey& key) override;
+    bool getTransactionSecretKey(SecretKey& key) const override;
+    void setTransactionSecretKey(const SecretKey& key) override;
 
   private:
 
@@ -266,7 +265,7 @@ namespace cn {
 
   size_t TransactionImpl::addInput(const MultisignatureInput& input) {
     checkIfSigning();
-    transaction.inputs.push_back(input);
+    transaction.inputs.emplace_back(input);
     transaction.version = TRANSACTION_VERSION_2;
     invalidateHash();
     return transaction.inputs.size() - 1;
@@ -284,7 +283,7 @@ namespace cn {
     return transaction.outputs.size() - 1;
   }
 
-  size_t TransactionImpl::addOutput(uint64_t amount, const std::vector<AccountPublicAddress>& to, uint32_t requiredSignatures, uint32_t term) {
+  size_t TransactionImpl::addOutput(uint64_t amount, const std::vector<AccountPublicAddress>& to, uint8_t requiredSignatures, uint32_t term) {
     checkIfSigning();
 
     const auto& txKey = txSecretKey();

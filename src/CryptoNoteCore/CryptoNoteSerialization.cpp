@@ -337,9 +337,9 @@ void serialize(AccountKeys& keys, ISerializer& s) {
 }
 
 void doSerialize(TransactionExtraMergeMiningTag& tag, ISerializer& serializer) {
-  uint64_t depth = static_cast<uint64_t>(tag.depth);
+  auto depth = static_cast<uint64_t>(tag.depth);
   serializer(depth, "depth");
-  tag.depth = static_cast<size_t>(depth);
+  tag.depth = depth;
   serializer(tag.merkleRoot, "merkle_root");
 }
 
