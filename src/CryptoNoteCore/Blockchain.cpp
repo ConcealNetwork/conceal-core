@@ -867,7 +867,7 @@ namespace cn
 
     uint8_t BlockMajorVersion = getBlockMajorVersionForHeight(static_cast<uint32_t>(m_blocks.size()));
 
-    size_t offset = m_blocks.size() - std::min(m_blocks.size(), m_currency.difficultyBlocksCountByBlockVersion(BlockMajorVersion));
+    size_t offset = m_blocks.size() - std::min(m_blocks.size(), m_currency.difficultyBlocksCountByBlockVersion(static_cast<uint8_t>(BlockMajorVersion)));
     if (offset == 0)
     {
       ++offset;
