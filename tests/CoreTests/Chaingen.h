@@ -386,7 +386,6 @@ template<class t_test_class>
 inline bool do_replay_events(std::vector<test_event_entry>& events, t_test_class& validator)
 {
   boost::program_options::options_description desc("Allowed options");
-  cn::CoreConfig::initOptions(desc);
   command_line::add_arg(desc, command_line::arg_data_dir);
   boost::program_options::variables_map vm;
   bool r = command_line::handle_error_helper(desc, [&]()
