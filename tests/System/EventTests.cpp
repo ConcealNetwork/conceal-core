@@ -9,7 +9,7 @@
 #include <System/InterruptedException.h>
 #include <gtest/gtest.h>
 
-using namespace System;
+using namespace platform_system;
 
 TEST(EventTests, newEventIsNotSet) {
   Dispatcher dispatcher;

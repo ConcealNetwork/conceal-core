@@ -22,7 +22,7 @@
 #include <System/InterruptedException.h>
 #include <System/Ipv4Address.h>
 
-namespace System {
+namespace platform_system {
 
 TcpListener::TcpListener() : dispatcher(nullptr) {
 }

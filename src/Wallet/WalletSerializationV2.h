@@ -24,14 +24,14 @@
 #include "Wallet/WalletIndices.h"
 #include "IWallet.h"
 
-namespace CryptoNote {
+namespace cn {
 
 class WalletSerializerV2 {
 public:
   WalletSerializerV2(
     ITransfersObserver& transfersObserver,
-    Crypto::PublicKey& viewPublicKey,
-    Crypto::SecretKey& viewSecretKey,
+    crypto::PublicKey& viewPublicKey,
+    crypto::SecretKey& viewSecretKey,
     uint64_t& actualBalance,
     uint64_t& pendingBalance,
     uint64_t& lockedDepositBalance,
@@ -47,33 +47,33 @@ public:
     uint32_t transactionSoftLockTime
   );
 
-  void load(Common::IInputStream& source, uint8_t version);
-  void save(Common::IOutputStream& destination, WalletSaveLevel saveLevel);
+  void load(common::IInputStream& source, uint8_t version);
+  void save(common::IOutputStream& destination, WalletSaveLevel saveLevel);
 
-  std::unordered_set<Crypto::PublicKey>& addedKeys();
-  std::unordered_set<Crypto::PublicKey>& deletedKeys();
+  std::unordered_set<crypto::PublicKey>& addedKeys();
+  std::unordered_set<crypto::PublicKey>& deletedKeys();
 
   static const uint8_t MIN_VERSION = 6;
   static const uint8_t SERIALIZATION_VERSION = 6;
 
 private:
-  void loadKeyListAndBanalces(CryptoNote::ISerializer& serializer, bool saveCache);
-  void saveKeyListAndBanalces(CryptoNote::ISerializer& serializer, bool saveCache);
+  void loadKeyListAndBanalces(cn::ISerializer& serializer, bool saveCache);
+  void saveKeyListAndBanalces(cn::ISerializer& serializer, bool saveCache);
     
-  void loadTransactions(CryptoNote::ISerializer& serializer);
-  void saveTransactions(CryptoNote::ISerializer& serializer);
+  void loadTransactions(cn::ISerializer& serializer);
+  void saveTransactions(cn::ISerializer& serializer);
 
-  void loadDeposits(CryptoNote::ISerializer& serializer);
-  void saveDeposits(CryptoNote::ISerializer& serializer);
+  void loadDeposits(cn::ISerializer& serializer);
+  void saveDeposits(cn::ISerializer& serializer);
 
-  void loadTransfers(CryptoNote::ISerializer& serializer);
-  void saveTransfers(CryptoNote::ISerializer& serializer);
+  void loadTransfers(cn::ISerializer& serializer);
+  void saveTransfers(cn::ISerializer& serializer);
 
-  void loadTransfersSynchronizer(CryptoNote::ISerializer& serializer);
-  void saveTransfersSynchronizer(CryptoNote::ISerializer& serializer);
+  void loadTransfersSynchronizer(cn::ISerializer& serializer);
+  void saveTransfersSynchronizer(cn::ISerializer& serializer);
 
-  void loadUnlockTransactionsJobs(CryptoNote::ISerializer& serializer);
-  void saveUnlockTransactionsJobs(CryptoNote::ISerializer& serializer);
+  void loadUnlockTransactionsJobs(cn::ISerializer& serializer);
+  void saveUnlockTransactionsJobs(cn::ISerializer& serializer);
 
   ITransfersObserver& m_transfersObserver;
   uint64_t& m_actualBalance;
@@ -90,8 +90,8 @@ private:
   std::string& m_extra;
   uint32_t m_transactionSoftLockTime;
 
-  std::unordered_set<Crypto::PublicKey> m_addedKeys;
-  std::unordered_set<Crypto::PublicKey> m_deletedKeys;
+  std::unordered_set<crypto::PublicKey> m_addedKeys;
+  std::unordered_set<crypto::PublicKey> m_deletedKeys;
 };
 
-} //namespace CryptoNote
+} //namespace cn

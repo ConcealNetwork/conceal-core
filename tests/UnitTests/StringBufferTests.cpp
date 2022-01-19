@@ -6,7 +6,7 @@
 #include <Common/StringBuffer.h>
 #include <gtest/gtest.h>
 
-using namespace Common;
+using namespace common;
 
 TEST(StringBufferTests, defaultConstructor) {
   const StringBuffer<16> buffer;

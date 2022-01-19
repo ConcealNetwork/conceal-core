@@ -15,7 +15,7 @@
 #include "CryptoNoteConfig.h"
 #include "Difficulty.h"
 
-namespace CryptoNote {
+namespace cn {
 
   using std::uint64_t;
   using std::vector;
@@ -45,7 +45,7 @@ namespace CryptoNote {
     return a + b < a || (c && a + b == (uint64_t) -1);
   }
 
-  bool check_hash(const Crypto::Hash &hash, difficulty_type difficulty) {
+  bool check_hash(const crypto::Hash &hash, difficulty_type difficulty) {
     uint64_t low, high, top, cur;
     // First check the highest word, this will most likely fail for a random hash.
     mul(swap64le(((const uint64_t *) &hash)[3]), difficulty, top, high);

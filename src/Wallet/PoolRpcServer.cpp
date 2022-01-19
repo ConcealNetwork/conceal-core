@@ -27,10 +27,10 @@
 #include "crypto/hash.h"
 #include "Rpc/JsonRpc.h"
 
-using namespace Logging;
-using namespace CryptoNote;
+using namespace logging;
+using namespace cn;
 
-namespace Tools {
+namespace tools {
 
 const command_line::arg_descriptor<uint16_t> pool_rpc_server::arg_rpc_bind_port = { "rpc-bind-port", "Starts wallet as rpc server for wallet operations, sets bind port for server", 0, true };
 const command_line::arg_descriptor<std::string> pool_rpc_server::arg_rpc_bind_ip = { "rpc-bind-ip", "Specify ip to bind rpc server", "127.0.0.1" };
@@ -45,11 +45,11 @@ void pool_rpc_server::init_options(boost::program_options::options_description& 
 }
 //------------------------------------------------------------------------------------------------------------------------------
 pool_rpc_server::pool_rpc_server(
-  System::Dispatcher& dispatcher,
-  Logging::ILogger& log,
-  CryptoNote::IWalletLegacy&w,
-  CryptoNote::INode& n,
-  CryptoNote::Currency& currency,
+  platform_system::Dispatcher& dispatcher,
+  logging::ILogger& log,
+  cn::IWalletLegacy&w,
+  cn::INode& n,
+  cn::Currency& currency,
   const std::string& walletFile)
   :
     HttpServer(dispatcher, log),
@@ -96,9 +96,9 @@ bool pool_rpc_server::init(const boost::program_options::variables_map& vm) {
   return true;
 }
 
-void pool_rpc_server::processRequest(const CryptoNote::HttpRequest& request, CryptoNote::HttpResponse& response) {
+void pool_rpc_server::processRequest(const cn::HttpRequest& request, cn::HttpResponse& response) {
 
-  using namespace CryptoNote::JsonRpc;
+  using namespace cn::JsonRpc;
 
   JsonRpcRequest jsonRequest;
   JsonRpcResponse jsonResponse;
@@ -147,14 +147,14 @@ bool pool_rpc_server::on_getbalance(const wallet_rpc::COMMAND_RPC_GET_BALANCE::r
 }
 //------------------------------------------------------------------------------------------------------------------------------
 bool pool_rpc_server::on_transfer(const wallet_rpc::COMMAND_RPC_TRANSFER::request& req, wallet_rpc::COMMAND_RPC_TRANSFER::response& res) {
-  std::vector<CryptoNote::WalletLegacyTransfer> transfers;
-  std::vector<CryptoNote::TransactionMessage> messages;
+  std::vector<cn::WalletLegacyTransfer> transfers;
+  std::vector<cn::TransactionMessage> messages;
   for (auto it = req.destinations.begin(); it != req.destinations.end(); it++) {
-    CryptoNote::WalletLegacyTransfer transfer;
+    cn::WalletLegacyTransfer transfer;
     transfer.address = it->address;
     transfer.amount = it->amount;
     transfers.push_back(transfer);
-    messages.emplace_back(CryptoNote::TransactionMessage{ "P01", it->address });
+    messages.emplace_back(cn::TransactionMessage{ "P01", it->address });
     
   }
 
@@ -162,22 +162,22 @@ bool pool_rpc_server::on_transfer(const wallet_rpc::COMMAND_RPC_TRANSFER::reques
   if (!req.payment_id.empty()) {
     std::string payment_id_str = req.payment_id;
 
-    Crypto::Hash payment_id;
-    if (!CryptoNote::parsePaymentId(payment_id_str, payment_id)) {
+    crypto::Hash payment_id;
+    if (!cn::parsePaymentId(payment_id_str, payment_id)) {
       throw JsonRpc::JsonRpcError(WALLET_RPC_ERROR_CODE_WRONG_PAYMENT_ID,
         "Payment id has invalid format: \"" + payment_id_str + "\", expected 64-character string");
     }
 
     BinaryArray extra_nonce;
-    CryptoNote::setPaymentIdToTransactionExtraNonce(extra_nonce, payment_id);
-    if (!CryptoNote::addExtraNonceToTransactionExtra(extra, extra_nonce)) {
+    cn::setPaymentIdToTransactionExtraNonce(extra_nonce, payment_id);
+    if (!cn::addExtraNonceToTransactionExtra(extra, extra_nonce)) {
       throw JsonRpc::JsonRpcError(WALLET_RPC_ERROR_CODE_WRONG_PAYMENT_ID,
         "Something went wrong with payment_id. Please check its format: \"" + payment_id_str + "\", expected 64-character string");
     }
   }
 
   for (auto& rpc_message : req.messages) {
-     messages.emplace_back(CryptoNote::TransactionMessage{ rpc_message.message, rpc_message.address });
+     messages.emplace_back(cn::TransactionMessage{ rpc_message.message, rpc_message.address });
   }
 
   uint64_t ttl = 0;
@@ -185,16 +185,16 @@ bool pool_rpc_server::on_transfer(const wallet_rpc::COMMAND_RPC_TRANSFER::reques
     ttl = static_cast<uint64_t>(time(nullptr)) + req.ttl;
   }
 
-  uint64_t actualFee = CryptoNote::parameters::MINIMUM_FEE_V2;
+  uint64_t actualFee = cn::parameters::MINIMUM_FEE_V2;
 
   std::string extraString;
   std::copy(extra.begin(), extra.end(), std::back_inserter(extraString));
   try {
-    CryptoNote::WalletHelper::SendCompleteResultObserver sent;
+    cn::WalletHelper::SendCompleteResultObserver sent;
     WalletHelper::IWalletRemoveObserverGuard removeGuard(m_wallet, sent);
 
-    Crypto::SecretKey transactionSK;
-    CryptoNote::TransactionId tx = m_wallet.sendTransaction(transactionSK, transfers, actualFee, extraString, req.mixin, req.unlock_time, messages, ttl);
+    crypto::SecretKey transactionSK;
+    cn::TransactionId tx = m_wallet.sendTransaction(transactionSK, transfers, actualFee, extraString, req.mixin, req.unlock_time, messages, ttl);
     if (tx == WALLET_LEGACY_INVALID_TRANSACTION_ID) {
       throw std::runtime_error("Couldn't send transaction");
     }
@@ -206,10 +206,10 @@ bool pool_rpc_server::on_transfer(const wallet_rpc::COMMAND_RPC_TRANSFER::reques
       throw std::system_error(sendError);
     }
 
-    CryptoNote::WalletLegacyTransaction txInfo;
+    cn::WalletLegacyTransaction txInfo;
     m_wallet.getTransaction(tx, txInfo);
-    res.tx_hash = Common::podToHex(txInfo.hash);
-    res.tx_secret_key = Common::podToHex(transactionSK);
+    res.tx_hash = common::podToHex(txInfo.hash);
+    res.tx_secret_key = common::podToHex(transactionSK);
 
   } catch (const std::exception& e) {
     throw JsonRpc::JsonRpcError(WALLET_RPC_ERROR_CODE_GENERIC_TRANSFER_ERROR, e.what());
@@ -218,20 +218,20 @@ bool pool_rpc_server::on_transfer(const wallet_rpc::COMMAND_RPC_TRANSFER::reques
 }
 //------------------------------------------------------------------------------------------------------------------------------
 bool pool_rpc_server::on_optimize(const wallet_rpc::COMMAND_RPC_OPTIMIZE::request& req, wallet_rpc::COMMAND_RPC_OPTIMIZE::response& res) {
-  std::vector<CryptoNote::WalletLegacyTransfer> transfers;
-  std::vector<CryptoNote::TransactionMessage> messages;
+  std::vector<cn::WalletLegacyTransfer> transfers;
+  std::vector<cn::TransactionMessage> messages;
   std::string extraString;
-  uint64_t fee = CryptoNote::parameters::MINIMUM_FEE_V2;
+  uint64_t fee = cn::parameters::MINIMUM_FEE_V2;
   uint64_t mixIn = 0;
   uint64_t unlockTimestamp = 0;
   uint64_t ttl = 0;
 
   try {
-    CryptoNote::WalletHelper::SendCompleteResultObserver sent;
+    cn::WalletHelper::SendCompleteResultObserver sent;
     WalletHelper::IWalletRemoveObserverGuard removeGuard(m_wallet, sent);
 
-    Crypto::SecretKey transactionSK;
-    CryptoNote::TransactionId tx = m_wallet.sendTransaction(transactionSK, transfers, fee, extraString, mixIn, unlockTimestamp, messages, ttl);
+    crypto::SecretKey transactionSK;
+    cn::TransactionId tx = m_wallet.sendTransaction(transactionSK, transfers, fee, extraString, mixIn, unlockTimestamp, messages, ttl);
     if (tx == WALLET_LEGACY_INVALID_TRANSACTION_ID) {
       throw std::runtime_error("Couldn't send transaction");
     }
@@ -243,10 +243,10 @@ bool pool_rpc_server::on_optimize(const wallet_rpc::COMMAND_RPC_OPTIMIZE::reques
       throw std::system_error(sendError);
     }
 
-    CryptoNote::WalletLegacyTransaction txInfo;
+    cn::WalletLegacyTransaction txInfo;
     m_wallet.getTransaction(tx, txInfo);
-    res.tx_hash = Common::podToHex(txInfo.hash);
-    res.tx_secret_key = Common::podToHex(transactionSK);
+    res.tx_hash = common::podToHex(txInfo.hash);
+    res.tx_secret_key = common::podToHex(transactionSK);
 
   } catch (const std::exception& e) {
     throw JsonRpc::JsonRpcError(WALLET_RPC_ERROR_CODE_GENERIC_TRANSFER_ERROR, e.what());
@@ -275,7 +275,7 @@ bool pool_rpc_server::on_get_messages(const wallet_rpc::COMMAND_RPC_GET_MESSAGES
 
     if (!tx.messages.empty()) {
       wallet_rpc::transaction_messages tx_messages;
-      tx_messages.tx_hash = Common::podToHex(tx.hash);
+      tx_messages.tx_hash = common::podToHex(tx.hash);
       tx_messages.tx_id = i;
       tx_messages.block_height = tx.blockHeight;
       tx_messages.timestamp = tx.timestamp;
@@ -298,9 +298,9 @@ bool pool_rpc_server::on_get_messages(const wallet_rpc::COMMAND_RPC_GET_MESSAGES
 //------------------------------------------------------------------------------------------------------------------------------
 bool pool_rpc_server::on_get_payments(const wallet_rpc::COMMAND_RPC_GET_PAYMENTS::request& req, wallet_rpc::COMMAND_RPC_GET_PAYMENTS::response& res) {
   PaymentId expectedPaymentId;
-  CryptoNote::BinaryArray payment_id_blob;
+  cn::BinaryArray payment_id_blob;
 
-  if (!Common::fromHex(req.payment_id, payment_id_blob)) {
+  if (!common::fromHex(req.payment_id, payment_id_blob)) {
     throw JsonRpc::JsonRpcError(WALLET_RPC_ERROR_CODE_WRONG_PAYMENT_ID, "Payment ID has invald format");
   }
 
@@ -313,7 +313,7 @@ bool pool_rpc_server::on_get_payments(const wallet_rpc::COMMAND_RPC_GET_PAYMENTS
   assert(payments.size() == 1);
   for (auto& transaction : payments[0].transactions) {
     wallet_rpc::payment_details rpc_payment;
-    rpc_payment.tx_hash = Common::podToHex(transaction.hash);
+    rpc_payment.tx_hash = common::podToHex(transaction.hash);
     rpc_payment.amount = transaction.totalAmount;
     rpc_payment.block_height = transaction.blockHeight;
     rpc_payment.unlock_time = transaction.unlockTime;
@@ -338,20 +338,20 @@ bool pool_rpc_server::on_create_integrated(const wallet_rpc::COMMAND_RPC_CREATE_
     std::string address_str = req.address;
 
     uint64_t prefix;
-    CryptoNote::AccountPublicAddress addr;
+    cn::AccountPublicAddress addr;
 
     /* get the spend and view public keys from the address */
-    const bool valid = CryptoNote::parseAccountAddressString(prefix, 
+    const bool valid = cn::parseAccountAddressString(prefix, 
                                                             addr,
                                                             address_str);
 
-    CryptoNote::BinaryArray ba;
-    CryptoNote::toBinaryArray(addr, ba);
-    std::string keys = Common::asString(ba);
+    cn::BinaryArray ba;
+    cn::toBinaryArray(addr, ba);
+    std::string keys = common::asString(ba);
 
     /* create the integrated address the same way you make a public address */
-    std::string integratedAddress = Tools::Base58::encode_addr (
-        CryptoNote::parameters::CRYPTONOTE_PUBLIC_ADDRESS_BASE58_PREFIX,
+    std::string integratedAddress = tools::base_58::encode_addr (
+        cn::parameters::CRYPTONOTE_PUBLIC_ADDRESS_BASE58_PREFIX,
         payment_id_str + keys
     );
 
@@ -384,7 +384,7 @@ bool pool_rpc_server::on_get_transfers(const wallet_rpc::COMMAND_RPC_GET_TRANSFE
     wallet_rpc::Transfer transfer;
     transfer.time = txInfo.timestamp;
     transfer.output = txInfo.totalAmount < 0;
-    transfer.transactionHash = Common::podToHex(txInfo.hash);
+    transfer.transactionHash = common::podToHex(txInfo.hash);
     transfer.amount = std::abs(txInfo.totalAmount);
     transfer.fee = txInfo.fee;
     transfer.address = address;
@@ -396,8 +396,8 @@ bool pool_rpc_server::on_get_transfers(const wallet_rpc::COMMAND_RPC_GET_TRANSFE
     extraVec.reserve(txInfo.extra.size());
     std::for_each(txInfo.extra.begin(), txInfo.extra.end(), [&extraVec](const char el) { extraVec.push_back(el); });
 
-    Crypto::Hash paymentId;
-    transfer.paymentId = (getPaymentIdFromTxExtra(extraVec, paymentId) && paymentId != NULL_HASH ? Common::podToHex(paymentId) : "");
+    crypto::Hash paymentId;
+    transfer.paymentId = (getPaymentIdFromTxExtra(extraVec, paymentId) && paymentId != NULL_HASH ? common::podToHex(paymentId) : "");
 
     res.transfers.push_back(transfer);
   }

@@ -29,7 +29,7 @@
 /*!
  * \file language_base.h
  * 
- * \brief Language Base class for Polymorphism.
+ * \brief seed_language Base class for Polymorphism.
  */
 
 #ifndef LANGUAGE_BASE_H
@@ -41,10 +41,10 @@
 //#include "misc_log_ex.h"
 
 /*!
- * \namespace Language
+ * \namespace seed_language
  * \brief Mnemonic language related namespace.
  */
-namespace Language
+namespace seed_language
 {
   /*!
    * \brief Returns a string made of (at most) the first count characters in s.

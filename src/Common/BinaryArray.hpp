@@ -8,9 +8,9 @@
 #include <vector>
 #include <CryptoNote.h>
 
-using namespace CryptoNote;
+using namespace cn;
 
-namespace Common
+namespace common
 {
 
     template <class It>
@@ -27,4 +27,4 @@ namespace Common
         return ba.insert(ba.end(), other.begin(), other.end());
     }
 
-} // namespace Common
+} // namespace common

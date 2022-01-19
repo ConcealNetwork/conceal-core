@@ -7,7 +7,7 @@
 #include "StringInputStream.h"
 #include <string.h>
 
-namespace Common {
+namespace common {
 
 StringInputStream::StringInputStream(const std::string& in) : in(in), offset(0) {
 }

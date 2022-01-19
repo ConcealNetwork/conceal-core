@@ -14,7 +14,7 @@
 #include <System/InterruptedException.h>
 #include "Dispatcher.h"
 
-namespace System {
+namespace platform_system {
 
 namespace {
 

@@ -7,7 +7,7 @@
 #include "TcpStream.h"
 #include <System/TcpConnection.h>
 
-namespace System {
+namespace platform_system {
 
 TcpStreambuf::TcpStreambuf(TcpConnection& connection) : connection(connection) {
   setg(&readBuf.front(), &readBuf.front(), &readBuf.front());

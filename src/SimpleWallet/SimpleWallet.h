@@ -29,14 +29,14 @@
 #include <System/Ipv4Address.h>
 
 std::string remote_fee_address;
-namespace CryptoNote
+namespace cn
 {
   /************************************************************************/
   /*                                                                      */
   /************************************************************************/
-  class simple_wallet : public CryptoNote::INodeObserver, public CryptoNote::IWalletLegacyObserver, public CryptoNote::INodeRpcProxyObserver {
+  class simple_wallet : public cn::INodeObserver, public cn::IWalletLegacyObserver, public cn::INodeRpcProxyObserver {
   public:
-    simple_wallet(System::Dispatcher& dispatcher, const CryptoNote::Currency& currency, Logging::LoggerManager& log);
+    simple_wallet(platform_system::Dispatcher& dispatcher, const cn::Currency& currency, logging::LoggerManager& log);
 
     bool init(const boost::program_options::variables_map& vm);
     bool deinit();
@@ -47,16 +47,16 @@ namespace CryptoNote
     std::string get_commands_str();
     std::string getFeeAddress();
 
-    const CryptoNote::Currency& currency() const { return m_currency; }
+    const cn::Currency& currency() const { return m_currency; }
 
   private:
 
-    Logging::LoggerMessage success_msg_writer(bool color = false) {
-      return logger(Logging::INFO, color ? Logging::GREEN : Logging::DEFAULT);
+    logging::LoggerMessage success_msg_writer(bool color = false) {
+      return logger(logging::INFO, color ? logging::GREEN : logging::DEFAULT);
     }
 
-    Logging::LoggerMessage fail_msg_writer() const {
-      auto msg = logger(Logging::ERROR, Logging::BRIGHT_RED);
+    logging::LoggerMessage fail_msg_writer() const {
+      auto msg = logger(logging::ERROR, logging::BRIGHT_RED);
       msg << "Error: ";
       return msg;
     }
@@ -66,7 +66,7 @@ namespace CryptoNote
     bool run_console_handler();
 
     bool new_wallet(const std::string &wallet_file, const std::string& password);
-    bool new_wallet(Crypto::SecretKey &secret_key, Crypto::SecretKey &view_key, const std::string &wallet_file, const std::string& password);
+    bool new_wallet(crypto::SecretKey &secret_key, crypto::SecretKey &view_key, const std::string &wallet_file, const std::string& password);
     bool open_wallet(const std::string &wallet_file, const std::string& password);
     bool close_wallet();
 
@@ -99,14 +99,14 @@ namespace CryptoNote
     std::string resolveAlias(const std::string& aliasUrl);
     void printConnectionError() const;
 
-    std::string generate_mnemonic(Crypto::SecretKey &);
+    std::string generate_mnemonic(crypto::SecretKey &);
     void log_incorrect_words(std::vector<std::string>);
-    bool is_valid_mnemonic(std::string &, Crypto::SecretKey &);
+    bool is_valid_mnemonic(std::string &, crypto::SecretKey &);
 
 
     //---------------- IWalletLegacyObserver -------------------------
     virtual void initCompleted(std::error_code result) override;
-    virtual void externalTransactionCreated(CryptoNote::TransactionId transactionId) override;
+    virtual void externalTransactionCreated(cn::TransactionId transactionId) override;
     virtual void synchronizationCompleted(std::error_code result) override;
     virtual void synchronizationProgressUpdated(uint32_t current, uint32_t total) override;
     //----------------------------------------------------------
@@ -120,7 +120,7 @@ namespace CryptoNote
     class refresh_progress_reporter_t
     {
     public:
-      refresh_progress_reporter_t(CryptoNote::simple_wallet& simple_wallet)
+      refresh_progress_reporter_t(cn::simple_wallet& simple_wallet)
         : m_simple_wallet(simple_wallet)
         , m_blockchain_height(0)
         , m_blockchain_height_update_time()
@@ -152,7 +152,7 @@ namespace CryptoNote
       }
 
     private:
-      CryptoNote::simple_wallet& m_simple_wallet;
+      cn::simple_wallet& m_simple_wallet;
       uint64_t m_blockchain_height;
       std::chrono::system_clock::time_point m_blockchain_height_update_time;
       std::chrono::system_clock::time_point m_print_time;
@@ -172,14 +172,14 @@ namespace CryptoNote
 
     std::unique_ptr<std::promise<std::error_code>> m_initResultPromise;
 
-    Common::ConsoleHandler m_consoleHandler;
-    const CryptoNote::Currency& m_currency;
-    Logging::LoggerManager& logManager;
-    System::Dispatcher& m_dispatcher;
-    Logging::LoggerRef logger;
+    common::ConsoleHandler m_consoleHandler;
+    const cn::Currency& m_currency;
+    logging::LoggerManager& logManager;
+    platform_system::Dispatcher& m_dispatcher;
+    logging::LoggerRef logger;
 
-    std::unique_ptr<CryptoNote::NodeRpcProxy> m_node;
-    std::unique_ptr<CryptoNote::IWalletLegacy> m_wallet;
+    std::unique_ptr<cn::NodeRpcProxy> m_node;
+    std::unique_ptr<cn::IWalletLegacy> m_wallet;
     refresh_progress_reporter_t m_refresh_progress_reporter;
 
     bool m_walletSynchronized;

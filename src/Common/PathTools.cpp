@@ -33,7 +33,7 @@ std::string::size_type findExtensionPosition(const std::string& filename) {
 
 } // anonymous namespace
 
-namespace Common {
+namespace common {
 
 std::string NativePathToGeneric(const std::string& nativePath) {
   if (GENERIC_PATH_SEPARATOR == NATIVE_PATH_SEPARATOR) {

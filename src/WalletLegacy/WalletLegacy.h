@@ -29,7 +29,7 @@
 #include "Transfers/BlockchainSynchronizer.h"
 #include "Transfers/TransfersSynchronizer.h"
 
-namespace CryptoNote {
+namespace cn {
 
 class SyncStarter;
 
@@ -39,7 +39,7 @@ class WalletLegacy :
   ITransfersObserver {
 
 public:
-  WalletLegacy(const CryptoNote::Currency& currency, INode& node, Logging::ILogger& loggerGroup);
+  WalletLegacy(const cn::Currency& currency, INode& node, logging::ILogger& loggerGroup);
   virtual ~WalletLegacy();
 
   virtual void addObserver(IWalletLegacyObserver* observer) override;
@@ -72,35 +72,35 @@ public:
   virtual std::vector<TransactionOutputInformation> getUnspentOutputs() override;
   virtual bool isTrackingWallet();
   virtual TransactionId findTransactionByTransferId(TransferId transferId) override;
-  virtual bool getTxProof(Crypto::Hash& txid, CryptoNote::AccountPublicAddress& address, Crypto::SecretKey& tx_key, std::string& sig_str) override;
+  virtual bool getTxProof(crypto::Hash& txid, cn::AccountPublicAddress& address, crypto::SecretKey& tx_key, std::string& sig_str) override;
   virtual std::string getReserveProof(const uint64_t &reserve, const std::string &message) override;
-  virtual Crypto::SecretKey getTxKey(Crypto::Hash& txid) override;
-  virtual bool get_tx_key(Crypto::Hash& txid, Crypto::SecretKey& txSecretKey) override;
+  virtual crypto::SecretKey getTxKey(crypto::Hash& txid) override;
+  virtual bool get_tx_key(crypto::Hash& txid, crypto::SecretKey& txSecretKey) override;
   virtual bool getTransaction(TransactionId transactionId, WalletLegacyTransaction& transaction) override;
   virtual bool getTransfer(TransferId transferId, WalletLegacyTransfer& transfer) override;
   virtual bool getDeposit(DepositId depositId, Deposit& deposit) override;
   virtual std::vector<Payments> getTransactionsByPaymentIds(const std::vector<PaymentId>& paymentIds) const override;
 
-  virtual TransactionId sendTransaction(Crypto::SecretKey& transactionSK,
+  virtual TransactionId sendTransaction(crypto::SecretKey& transactionSK,
                                         const WalletLegacyTransfer& transfer,
                                         uint64_t fee,
                                         const std::string& extra = "",
-                                        uint64_t mixIn = 5,
+                                        uint64_t mixIn = parameters::MINIMUM_MIXIN,
                                         uint64_t unlockTimestamp = 0,
                                         const std::vector<TransactionMessage>& messages = std::vector<TransactionMessage>(),
                                         uint64_t ttl = 0) override;
-  virtual TransactionId sendTransaction(Crypto::SecretKey& transactionSK,
+  virtual TransactionId sendTransaction(crypto::SecretKey& transactionSK,
                                         std::vector<WalletLegacyTransfer>& transfers,
                                         uint64_t fee,
                                         const std::string& extra = "",
-                                        uint64_t mixIn = 5,
+                                        uint64_t mixIn = parameters::MINIMUM_MIXIN,
                                         uint64_t unlockTimestamp = 0,
                                         const std::vector<TransactionMessage>& messages = std::vector<TransactionMessage>(),
                                         uint64_t ttl = 0) override;
   virtual size_t estimateFusion(const uint64_t& threshold);
   virtual std::list<TransactionOutputInformation> selectFusionTransfersToSend(uint64_t threshold, size_t minInputCount, size_t maxInputCount);
   virtual TransactionId sendFusionTransaction(const std::list<TransactionOutputInformation>& fusionInputs, uint64_t fee, const std::string& extra = "", uint64_t mixIn = 0, uint64_t unlockTimestamp = 0);
-  virtual TransactionId deposit(uint32_t term, uint64_t amount, uint64_t fee, uint64_t mixIn = 5) override;
+  virtual TransactionId deposit(uint32_t term, uint64_t amount, uint64_t fee, uint64_t mixIn = parameters::MINIMUM_MIXIN) override;
   virtual TransactionId withdrawDeposits(const std::vector<DepositId>& depositIds, uint64_t fee) override;
   virtual std::error_code cancelTransaction(size_t transactionId) override;
 
@@ -113,8 +113,8 @@ private:
   virtual void synchronizationCompleted(std::error_code result) override;
 
   // ITransfersObserver
-  virtual void onTransactionUpdated(ITransfersSubscription* object, const Crypto::Hash& transactionHash) override;
-  virtual void onTransactionDeleted(ITransfersSubscription* object, const Crypto::Hash& transactionHash) override;
+  virtual void onTransactionUpdated(ITransfersSubscription* object, const crypto::Hash& transactionHash) override;
+  virtual void onTransactionDeleted(ITransfersSubscription* object, const crypto::Hash& transactionHash) override;
   virtual void onTransfersUnlocked(ITransfersSubscription* object, const std::vector<TransactionOutputInformation>& unlockedTransfers) override;
   virtual void onTransfersLocked(ITransfersSubscription* object, const std::vector<TransactionOutputInformation>& lockedTransfers) override;
 
@@ -167,11 +167,11 @@ private:
 
   WalletState m_state;
   std::mutex m_cacheMutex;
-  CryptoNote::AccountBase m_account;
+  cn::AccountBase m_account;
   std::string m_password;
-  const CryptoNote::Currency& m_currency;
+  const cn::Currency& m_currency;
   INode& m_node;
-  Logging::ILogger& m_loggerGroup;  
+  logging::ILogger& m_loggerGroup;  
   bool m_isStopping;
 
   std::atomic<uint64_t> m_lastNotifiedActualBalance;
@@ -190,9 +190,9 @@ private:
   std::unique_ptr<WalletTransactionSender> m_sender;
 
   WalletAsyncContextCounter m_asyncContextCounter;
-  Tools::ObserverManager<CryptoNote::IWalletLegacyObserver> m_observerManager;
+  tools::ObserverManager<cn::IWalletLegacyObserver> m_observerManager;
 
   std::unique_ptr<SyncStarter> m_onInitSyncStarter;
 };
 
-} //namespace CryptoNote
+} //namespace cn

@@ -11,7 +11,7 @@
 #include "WalletLegacyObserver.h"
 
 using namespace Tests;
-using namespace CryptoNote;
+using namespace cn;
 
 class WalletLegacyTests : public BaseTest
 {
@@ -28,7 +28,7 @@ TEST_F(WalletLegacyTests, checkNetworkShutdown)
   auto &daemon = network.getNode(0);
 
   {
-    Logging::ConsoleLogger m_logger;
+    logging::ConsoleLogger m_logger;
     auto node = daemon.makeINode();
     WalletLegacy wallet(currency, *node, m_logger);
     wallet.initAndGenerate("pass");
@@ -46,7 +46,7 @@ TEST_F(WalletLegacyTests, checkNetworkShutdown)
     network.getNode(1).stopDaemon();
     network.getNode(2).stopDaemon();
 
-    System::Timer(dispatcher).sleep(std::chrono::seconds(10));
+    platform_system::Timer(dispatcher).sleep(std::chrono::seconds(10));
 
     // check that sync progress was not updated
     ASSERT_EQ(syncProgress, observer.getSyncProgress());

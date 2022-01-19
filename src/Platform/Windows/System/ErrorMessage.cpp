@@ -9,7 +9,7 @@
 #include <cstddef>
 #include <windows.h>
 
-namespace System {
+namespace platform_system {
 
 std::string lastErrorMessage() {
   return errorMessage(GetLastError());

@@ -14,7 +14,7 @@
 #include <System/Timer.h>
 #include <gtest/gtest.h>
 
-using namespace System;
+using namespace platform_system;
 
 class TcpConnectorTests : public testing::Test {
 public:

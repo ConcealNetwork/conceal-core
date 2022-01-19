@@ -6,7 +6,7 @@
 
 #include "LoggerRef.h"
 
-namespace Logging {
+namespace logging {
 
 LoggerRef::LoggerRef(ILogger& logger, const std::string& category) : logger(&logger), category(category) {
 }

@@ -6,7 +6,7 @@
 
 #include "WalletAsyncContextCounter.h"
 
-namespace CryptoNote {
+namespace cn {
 
 void WalletAsyncContextCounter::addAsyncContext() {
   std::unique_lock<std::mutex> lock(m_mutex);
@@ -26,4 +26,4 @@ void WalletAsyncContextCounter::waitAsyncContextsFinish() {
     m_cv.wait(lock);
 }
 
-} //namespace CryptoNote
+} //namespace cn

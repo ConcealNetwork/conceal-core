@@ -12,7 +12,7 @@
 #include <type_traits>
 #include <utility>
 
-namespace Tools {
+namespace tools {
 
     template<typename OutputIt, typename T>
     typename std::enable_if<std::is_integral<T>::value && std::is_unsigned<T>::value, void>::type

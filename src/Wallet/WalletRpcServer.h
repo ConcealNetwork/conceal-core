@@ -16,21 +16,21 @@
 
 #include <Logging/LoggerRef.h>
 
-namespace Tools
+namespace tools
 {
   /************************************************************************/
   /*                                                                      */
   /************************************************************************/
-  class wallet_rpc_server : CryptoNote::HttpServer
+  class wallet_rpc_server : cn::HttpServer
   {
   public:
 
     wallet_rpc_server(
-      System::Dispatcher& dispatcher,
-      Logging::ILogger& log,
-      CryptoNote::IWalletLegacy &w,
-      CryptoNote::INode &n,
-      CryptoNote::Currency& currency,
+      platform_system::Dispatcher& dispatcher,
+      logging::ILogger& log,
+      cn::IWalletLegacy &w,
+      cn::INode &n,
+      cn::Currency& currency,
       const std::string& walletFilename);
 
 
@@ -47,7 +47,7 @@ namespace Tools
 
   private:
 
-    virtual void processRequest(const CryptoNote::HttpRequest& request, CryptoNote::HttpResponse& response) override;
+    virtual void processRequest(const cn::HttpRequest& request, cn::HttpResponse& response) override;
 
     //json_rpc
     bool on_getbalance(const wallet_rpc::COMMAND_RPC_GET_BALANCE::request& req, wallet_rpc::COMMAND_RPC_GET_BALANCE::response& res);
@@ -68,17 +68,17 @@ namespace Tools
 
     bool handle_command_line(const boost::program_options::variables_map& vm);
 
-    Logging::LoggerRef logger;
-    CryptoNote::IWalletLegacy& m_wallet;
-    CryptoNote::INode& m_node;
+    logging::LoggerRef logger;
+    cn::IWalletLegacy& m_wallet;
+    cn::INode& m_node;
     uint16_t m_port;
     std::string m_bind_ip;
     std::string m_rpcUser;
     std::string m_rpcPassword;
-    CryptoNote::Currency& m_currency;
+    cn::Currency& m_currency;
     const std::string m_walletFilename;
 
-    System::Dispatcher& m_dispatcher;
-    System::Event m_stopComplete;
+    platform_system::Dispatcher& m_dispatcher;
+    platform_system::Event m_stopComplete;
   };
 }

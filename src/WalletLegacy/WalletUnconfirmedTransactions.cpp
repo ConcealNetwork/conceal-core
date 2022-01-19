@@ -11,9 +11,9 @@
 #include "Serialization/ISerializer.h"
 #include "Serialization/SerializationOverloads.h"
 
-using namespace Crypto;
+using namespace crypto;
 
-namespace CryptoNote {
+namespace cn {
 
 inline TransactionOutputId getOutputId(const TransactionOutputInformation& out) {
   return std::make_pair(out.transactionPublicKey, out.outputInTransaction);
@@ -50,7 +50,7 @@ bool WalletUnconfirmedTransactions::findTransactionId(const Hash& hash, Transact
   return findUnconfirmedTransactionId(hash, id) || findUnconfirmedDepositSpendingTransactionId(hash, id);
 }
 
-bool WalletUnconfirmedTransactions::findUnconfirmedTransactionId(const Crypto::Hash& hash, TransactionId& id) {
+bool WalletUnconfirmedTransactions::findUnconfirmedTransactionId(const crypto::Hash& hash, TransactionId& id) {
   auto it = m_unconfirmedTxs.find(hash);
   if (it == m_unconfirmedTxs.end()) {
     return false;
@@ -60,7 +60,7 @@ bool WalletUnconfirmedTransactions::findUnconfirmedTransactionId(const Crypto::H
   return true;
 }
 
-bool WalletUnconfirmedTransactions::findUnconfirmedDepositSpendingTransactionId(const Crypto::Hash& hash, TransactionId& id) {
+bool WalletUnconfirmedTransactions::findUnconfirmedDepositSpendingTransactionId(const crypto::Hash& hash, TransactionId& id) {
   auto it = m_spentDeposits.find(hash);
   if (it == m_spentDeposits.end()) {
     return false;
@@ -74,7 +74,7 @@ void WalletUnconfirmedTransactions::erase(const Hash& hash) {
   eraseUnconfirmedTransaction(hash) || eraseDepositSpendingTransaction(hash);
 }
 
-bool WalletUnconfirmedTransactions::eraseUnconfirmedTransaction(const Crypto::Hash& hash) {
+bool WalletUnconfirmedTransactions::eraseUnconfirmedTransaction(const crypto::Hash& hash) {
   auto it = m_unconfirmedTxs.find(hash);
   if (it == m_unconfirmedTxs.end()) {
     return false;
@@ -86,7 +86,7 @@ bool WalletUnconfirmedTransactions::eraseUnconfirmedTransaction(const Crypto::Ha
   return true;
 }
 
-bool WalletUnconfirmedTransactions::eraseDepositSpendingTransaction(const Crypto::Hash& hash) {
+bool WalletUnconfirmedTransactions::eraseDepositSpendingTransaction(const crypto::Hash& hash) {
   auto it = m_spentDeposits.find(hash);
   if (it == m_spentDeposits.end()) {
     return false;
@@ -230,4 +230,4 @@ std::vector<TransactionId> WalletUnconfirmedTransactions::deleteOutdatedTransact
   return deletedTransactions;
 }
 
-} /* namespace CryptoNote */
+} /* namespace cn */

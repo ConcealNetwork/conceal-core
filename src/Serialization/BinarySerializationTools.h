@@ -14,12 +14,12 @@
 
 #include <fstream>
 
-namespace CryptoNote {
+namespace cn {
 
 template <typename T>
 BinaryArray storeToBinary(const T& obj) {
   BinaryArray result;
-  Common::VectorOutputStream stream(result);
+  common::VectorOutputStream stream(result);
   BinaryOutputStreamSerializer ba(stream);
   serialize(const_cast<T&>(obj), ba);
   return result;
@@ -27,7 +27,7 @@ BinaryArray storeToBinary(const T& obj) {
 
 template <typename T>
 void loadFromBinary(T& obj, const BinaryArray& blob) {
-  Common::MemoryInputStream stream(blob.data(), blob.size());
+  common::MemoryInputStream stream(blob.data(), blob.size());
   BinaryInputStreamSerializer ba(stream);
   serialize(obj, ba);
 }
@@ -41,9 +41,9 @@ bool storeToBinaryFile(const T& obj, const std::string& filename) {
       return false;
     }
 
-    Common::StdOutputStream stream(dataFile);
+    common::StdOutputStream stream(dataFile);
     BinaryOutputStreamSerializer out(stream);
-    CryptoNote::serialize(const_cast<T&>(obj), out);
+    cn::serialize(const_cast<T&>(obj), out);
       
     if (dataFile.fail()) {
       return false;
@@ -66,7 +66,7 @@ bool loadFromBinaryFile(T& obj, const std::string& filename) {
       return false;
     }
 
-    Common::StdInputStream stream(dataFile);
+    common::StdInputStream stream(dataFile);
     BinaryInputStreamSerializer in(stream);
     serialize(obj, in);
     return !dataFile.fail();

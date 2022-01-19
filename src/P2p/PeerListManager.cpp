@@ -13,11 +13,11 @@
 
 #include "Serialization/SerializationOverloads.h"
 
-using namespace CryptoNote;
+using namespace cn;
 
-namespace CryptoNote {
+namespace cn {
   template <typename T, typename Indexes>
-  bool serialize(boost::multi_index_container<T, Indexes>& value, Common::StringView name, ISerializer& s) {
+  bool serialize(boost::multi_index_container<T, Indexes>& value, common::StringView name, ISerializer& s) {
     if (s.type() == ISerializer::INPUT) {
       readSequence<T>(std::inserter(value, value.end()), name, s);
     } else {
@@ -90,8 +90,8 @@ void PeerlistManager::Peerlist::trim() {
 }
 
 PeerlistManager::PeerlistManager() : 
-  m_whitePeerlist(m_peers_white, CryptoNote::P2P_LOCAL_WHITE_PEERLIST_LIMIT),
-  m_grayPeerlist(m_peers_gray, CryptoNote::P2P_LOCAL_GRAY_PEERLIST_LIMIT) {}
+  m_whitePeerlist(m_peers_white, cn::P2P_LOCAL_WHITE_PEERLIST_LIMIT),
+  m_grayPeerlist(m_peers_gray, cn::P2P_LOCAL_GRAY_PEERLIST_LIMIT) {}
 
 //--------------------------------------------------------------------------------------------------
 bool PeerlistManager::init(bool allow_local_ip)
@@ -136,7 +136,7 @@ bool PeerlistManager::get_gray_peer_by_index(PeerlistEntry& p, size_t i) const {
 
 bool PeerlistManager::is_ip_allowed(uint32_t ip) const
 {
-  System::Ipv4Address addr(networkToHost(ip));
+  platform_system::Ipv4Address addr(networkToHost(ip));
 
   //never allow loopback ip
   if (addr.isLoopback()) {

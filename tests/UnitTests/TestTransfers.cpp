@@ -20,7 +20,7 @@
 
 #include <Logging/ConsoleLogger.h>
 
-using namespace CryptoNote;
+using namespace cn;
 
 class TransfersObserver : public ITransfersObserver {
 public:
@@ -38,7 +38,7 @@ class TransfersApi : public ::testing::Test, public IBlockchainSynchronizerObser
 public:
 
   TransfersApi() :
-    m_currency(CryptoNote::CurrencyBuilder(m_logger).currency()),
+    m_currency(cn::CurrencyBuilder(m_logger).currency()),
     generator(m_currency),
     m_node(generator),
     m_sync(m_node, m_currency.genesisBlockHash()),
@@ -53,10 +53,10 @@ public:
 
   void addPaymentAccounts(size_t count) {
     KeyPair p1;
-    Crypto::generate_keys(p1.publicKey, p1.secretKey);
+    crypto::generate_keys(p1.publicKey, p1.secretKey);
     auto viewKeys = p1;
     while (count--) {
-      Crypto::generate_keys(p1.publicKey, p1.secretKey);
+      crypto::generate_keys(p1.publicKey, p1.secretKey);
       m_accounts.push_back(accountKeysFromKeypairs(viewKeys, p1));
     }
   }
@@ -110,13 +110,13 @@ public:
 
   void generateMoneyForAccount(size_t idx) {
     generator.getBlockRewardForAddress(
-      reinterpret_cast<const CryptoNote::AccountPublicAddress&>(m_accounts[idx].address));
+      reinterpret_cast<const cn::AccountPublicAddress&>(m_accounts[idx].address));
   }
 
   std::error_code submitTransaction(ITransactionReader& tx) {
     auto data = tx.getTransactionData();
     Transaction outTx;
-    CryptoNote::fromBinaryArray(outTx, data);
+    cn::fromBinaryArray(outTx, data);
 
     std::promise<std::error_code> result;
     m_node.relayTransaction(outTx, [&result](std::error_code ec) {
@@ -132,8 +132,8 @@ protected:
   std::vector<AccountKeys> m_accounts;
   std::vector<ITransfersSubscription*> m_subscriptions;
 
-  Logging::ConsoleLogger m_logger;
-  CryptoNote::Currency m_currency;
+  logging::ConsoleLogger m_logger;
+  cn::Currency m_currency;
   TestBlockchainGenerator generator;
   INodeTrivialRefreshStub m_node;
   BlockchainSynchronizer m_sync;
@@ -209,16 +209,16 @@ namespace {
 
   auto tx = createTransaction();
 
-  std::vector<std::pair<TransactionTypes::InputKeyInfo, KeyPair>> inputs;
+  std::vector<std::pair<transaction_types::InputKeyInfo, KeyPair>> inputs;
 
   uint64_t foundMoney = 0;
 
   for (const auto& t : transfers) {
-    TransactionTypes::InputKeyInfo info;
+    transaction_types::InputKeyInfo info;
 
     info.amount = t.amount;
 
-    TransactionTypes::GlobalOutput globalOut;
+    transaction_types::GlobalOutput globalOut;
     globalOut.outputIndex = t.globalOutputIndex;
     globalOut.targetKey = t.outputKey;
     info.outputs.push_back(globalOut);

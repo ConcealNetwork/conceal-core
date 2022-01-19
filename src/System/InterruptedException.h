@@ -8,7 +8,7 @@
 
 #include <exception>
 
-namespace System {
+namespace platform_system {
 
 class InterruptedException : public std::exception {
   public:

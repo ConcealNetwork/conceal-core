@@ -10,7 +10,7 @@ namespace Tests {
 
 class NodeCallback {
 public:
-  CryptoNote::INode::Callback callback() {
+  cn::INode::Callback callback() {
     prom = std::promise<std::error_code>(); // reset std::promise
     result = prom.get_future();
     return [this](std::error_code ec) {

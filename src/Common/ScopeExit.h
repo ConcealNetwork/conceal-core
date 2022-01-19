@@ -8,7 +8,7 @@
 
 #include <functional>
 
-namespace Tools {
+namespace tools {
 
 class ScopeExit {
 public:

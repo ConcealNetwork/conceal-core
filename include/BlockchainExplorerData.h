@@ -14,7 +14,7 @@
 
 #include <boost/variant.hpp>
 
-namespace CryptoNote {
+namespace cn {
 
 enum class TransactionRemoveReason : uint8_t 
 { 
@@ -23,11 +23,11 @@ enum class TransactionRemoveReason : uint8_t
 };
 
 struct TransactionOutputToKeyDetails {
-  Crypto::PublicKey txOutKey;
+  crypto::PublicKey txOutKey;
 };
 
 struct TransactionOutputMultisignatureDetails {
-  std::vector<Crypto::PublicKey> keys;
+  std::vector<crypto::PublicKey> keys;
   uint32_t requiredSignatures;
 };
 
@@ -41,7 +41,7 @@ struct TransactionOutputDetails {
 };
 
 struct TransactionOutputReferenceDetails {
-  Crypto::Hash transactionHash;
+  crypto::Hash transactionHash;
   size_t number;
 };
 
@@ -51,7 +51,7 @@ struct TransactionInputGenerateDetails {
 
 struct TransactionInputToKeyDetails {
   std::vector<uint32_t> outputIndexes;
-  Crypto::KeyImage keyImage;
+  crypto::KeyImage keyImage;
   uint64_t mixin;
   TransactionOutputReferenceDetails output;
 };
@@ -72,13 +72,13 @@ struct TransactionInputDetails {
 
 struct TransactionExtraDetails {
   std::vector<size_t> padding;
-  std::vector<Crypto::PublicKey> publicKey; 
+  std::vector<crypto::PublicKey> publicKey; 
   std::vector<std::string> nonce;
   std::vector<uint8_t> raw;
 };
 
 struct TransactionDetails {
-  Crypto::Hash hash;
+  crypto::Hash hash;
   uint64_t size;
   uint64_t fee;
   uint64_t totalInputsAmount;
@@ -86,12 +86,12 @@ struct TransactionDetails {
   uint64_t mixin;
   uint64_t unlockTime;
   uint64_t timestamp;
-  Crypto::Hash paymentId;
+  crypto::Hash paymentId;
   bool inBlockchain;
-  Crypto::Hash blockHash;
+  crypto::Hash blockHash;
   uint32_t blockHeight;
   TransactionExtraDetails extra;
-  std::vector<std::vector<Crypto::Signature>> signatures;
+  std::vector<std::vector<crypto::Signature>> signatures;
   std::vector<TransactionInputDetails> inputs;
   std::vector<TransactionOutputDetails> outputs;
 };
@@ -100,11 +100,11 @@ struct BlockDetails {
   uint8_t majorVersion;
   uint8_t minorVersion;
   uint64_t timestamp;
-  Crypto::Hash prevBlockHash;
+  crypto::Hash prevBlockHash;
   uint32_t nonce;
   bool isOrphaned;
   uint32_t height;
-  Crypto::Hash hash;
+  crypto::Hash hash;
   uint64_t difficulty;
   uint64_t reward;
   uint64_t baseReward;

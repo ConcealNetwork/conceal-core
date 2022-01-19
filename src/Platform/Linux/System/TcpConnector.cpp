@@ -19,7 +19,7 @@
 #include "ErrorMessage.h"
 #include "TcpConnection.h"
 
-namespace System {
+namespace platform_system {
 
 namespace {
 

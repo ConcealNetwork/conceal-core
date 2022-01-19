@@ -23,7 +23,7 @@
 #define CN_FAST_SCRATCHPAD              2097152
 #define CN_FAST_ITERATIONS              524288
 
-namespace Crypto {
+namespace crypto {
 
   extern "C" {
 #include "hash-ops.h"

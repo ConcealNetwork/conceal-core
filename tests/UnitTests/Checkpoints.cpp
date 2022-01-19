@@ -8,11 +8,11 @@
 #include "CryptoNoteCore/Checkpoints.h"
 #include <Logging/LoggerGroup.h>
 
-using namespace CryptoNote;
+using namespace cn;
 
 TEST(checkpoints_is_alternative_block_allowed, handles_empty_checkpoins)
 {
-  Logging::LoggerGroup logger;
+  logging::LoggerGroup logger;
   Checkpoints cp(logger);
 
   ASSERT_FALSE(cp.is_alternative_block_allowed(0, 0));
@@ -24,7 +24,7 @@ TEST(checkpoints_is_alternative_block_allowed, handles_empty_checkpoins)
 
 TEST(checkpoints_is_alternative_block_allowed, handles_one_checkpoint)
 {
-  Logging::LoggerGroup logger;
+  logging::LoggerGroup logger;
   Checkpoints cp(logger);
   cp.add_checkpoint(5, "0000000000000000000000000000000000000000000000000000000000000000");
 
@@ -63,7 +63,7 @@ TEST(checkpoints_is_alternative_block_allowed, handles_one_checkpoint)
 
 TEST(checkpoints_is_alternative_block_allowed, handles_two_and_more_checkpoints)
 {
-  Logging::LoggerGroup logger;
+  logging::LoggerGroup logger;
   Checkpoints cp(logger);
   cp.add_checkpoint(5, "0000000000000000000000000000000000000000000000000000000000000000");
   cp.add_checkpoint(9, "0000000000000000000000000000000000000000000000000000000000000000");

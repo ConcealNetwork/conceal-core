@@ -10,7 +10,7 @@
 #include <cstdint>
 #include <streambuf>
 
-namespace System {
+namespace platform_system {
 
 class TcpConnection;
 

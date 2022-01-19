@@ -17,8 +17,8 @@ public:
 
   bool test()
   {
-    Crypto::KeyDerivation recv_derivation;
-    Crypto::generate_key_derivation(m_tx_pub_key, m_bob.getAccountKeys().viewSecretKey, recv_derivation);
+    crypto::KeyDerivation recv_derivation;
+    crypto::generate_key_derivation(m_tx_pub_key, m_bob.getAccountKeys().viewSecretKey, recv_derivation);
     return true;
   }
 };

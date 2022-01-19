@@ -8,7 +8,7 @@
 
 #include <chrono>
 
-namespace System {
+namespace platform_system {
 
 class Dispatcher;
 

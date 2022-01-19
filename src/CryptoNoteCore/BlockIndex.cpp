@@ -11,15 +11,15 @@
 #include "CryptoNoteSerialization.h"
 #include "Serialization/SerializationOverloads.h"
 
-namespace CryptoNote {
-  Crypto::Hash BlockIndex::getBlockId(uint32_t height) const {
+namespace cn {
+  crypto::Hash BlockIndex::getBlockId(uint32_t height) const {
     assert(height < m_container.size());
 
     return m_container[static_cast<size_t>(height)];
   }
 
-  std::vector<Crypto::Hash> BlockIndex::getBlockIds(uint32_t startBlockIndex, uint32_t maxCount) const {
-    std::vector<Crypto::Hash> result;
+  std::vector<crypto::Hash> BlockIndex::getBlockIds(uint32_t startBlockIndex, uint32_t maxCount) const {
+    std::vector<crypto::Hash> result;
     if (startBlockIndex >= m_container.size()) {
       return result;
     }
@@ -33,7 +33,7 @@ namespace CryptoNote {
     return result;
   }
 
-  bool BlockIndex::findSupplement(const std::vector<Crypto::Hash>& ids, uint32_t& offset) const {
+  bool BlockIndex::findSupplement(const std::vector<crypto::Hash>& ids, uint32_t& offset) const {
     for (const auto& id : ids) {
       if (getBlockHeight(id, offset)) {
         return true;
@@ -43,12 +43,12 @@ namespace CryptoNote {
     return false;
   }
 
-  std::vector<Crypto::Hash> BlockIndex::buildSparseChain(const Crypto::Hash &startBlockId) const
+  std::vector<crypto::Hash> BlockIndex::buildSparseChain(const crypto::Hash &startBlockId) const
   {
     assert(m_index.count(startBlockId) > 0);
 
     uint32_t startBlockHeight;
-    std::vector<Crypto::Hash> result;
+    std::vector<crypto::Hash> result;
     if (getBlockHeight(startBlockId, startBlockHeight))
     {
       size_t sparseChainEnd = static_cast<size_t>(startBlockHeight + 1);
@@ -66,16 +66,16 @@ namespace CryptoNote {
     return result;
   }
 
-  Crypto::Hash BlockIndex::getTailId() const {
+  crypto::Hash BlockIndex::getTailId() const {
     assert(!m_container.empty());
     return m_container.back();
   }
 
   void BlockIndex::serialize(ISerializer& s) {
     if (s.type() == ISerializer::INPUT) {
-      readSequence<Crypto::Hash>(std::back_inserter(m_container), "index", s);
+      readSequence<crypto::Hash>(std::back_inserter(m_container), "index", s);
     } else {
-      writeSequence<Crypto::Hash>(m_container.begin(), m_container.end(), "index", s);
+      writeSequence<crypto::Hash>(m_container.begin(), m_container.end(), "index", s);
     }
   }
 }

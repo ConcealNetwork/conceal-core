@@ -9,7 +9,7 @@
 #include <vector>
 #include "CommonLogger.h"
 
-namespace Logging {
+namespace logging {
 
 class LoggerGroup : public CommonLogger {
 public:

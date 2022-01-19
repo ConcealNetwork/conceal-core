@@ -31,7 +31,7 @@
 #include <unistd.h>
 #endif
 
-using namespace PaymentService;
+using namespace payment_service;
 
 void changeDirectory(const std::string& path) {
   if (chdir(path.c_str())) {
@@ -48,19 +48,19 @@ bool PaymentGateService::init(int argc, char** argv) {
     return false;
   }
 
-  logger.setMaxLevel(static_cast<Logging::Level>(config.gateConfiguration.logLevel));
+  logger.setMaxLevel(static_cast<logging::Level>(config.gateConfiguration.logLevel));
   logger.addLogger(consoleLogger);
 
-  Logging::LoggerRef log(logger, "main");
+  logging::LoggerRef log(logger, "main");
 
   if (config.gateConfiguration.testnet) {
-    log(Logging::INFO) << "Starting in testnet mode";
+    log(logging::INFO) << "Starting in testnet mode";
     currencyBuilder.testnet(true);
   }
 
   if (!config.gateConfiguration.serverRoot.empty()) {
     changeDirectory(config.gateConfiguration.serverRoot);
-    log(Logging::INFO) << "Current working directory now is " << config.gateConfiguration.serverRoot;
+    log(logging::INFO) << "Current working directory now is " << config.gateConfiguration.serverRoot;
   }
 
   fileStream.open(config.gateConfiguration.logFile, std::ofstream::app);
@@ -84,21 +84,21 @@ WalletConfiguration PaymentGateService::getWalletConfig() const {
   };
 }
 
-const CryptoNote::Currency PaymentGateService::getCurrency() {
+const cn::Currency PaymentGateService::getCurrency() {
   return currencyBuilder.currency();
 }
 
 void PaymentGateService::run() {
   
-  System::Dispatcher localDispatcher;
-  System::Event localStopEvent(localDispatcher);
+  platform_system::Dispatcher localDispatcher;
+  platform_system::Event localStopEvent(localDispatcher);
 
   this->dispatcher = &localDispatcher;
   this->stopEvent = &localStopEvent;
 
-  Tools::SignalHandler::install(std::bind(&stopSignalHandler, this));
+  tools::SignalHandler::install(std::bind(&stopSignalHandler, this));
 
-  Logging::LoggerRef log(logger, "run");
+  logging::LoggerRef log(logger, "run");
 
   if (config.startInprocess) {
     runInProcess(log);
@@ -111,9 +111,9 @@ void PaymentGateService::run() {
 }
 
 void PaymentGateService::stop() {
-  Logging::LoggerRef log(logger, "stop");
+  logging::LoggerRef log(logger, "stop");
 
-  log(Logging::INFO) << "Stop signal caught";
+  log(logging::INFO) << "Stop signal caught";
 
   if (dispatcher != nullptr) {
     dispatcher->remoteSpawn([&]() {
@@ -124,48 +124,48 @@ void PaymentGateService::stop() {
   }
 }
 
-void PaymentGateService::runInProcess(Logging::LoggerRef& log) {
+void PaymentGateService::runInProcess(logging::LoggerRef& log) {
   if (!config.coreConfig.configFolderDefaulted) {
-    if (!Tools::directoryExists(config.coreConfig.configFolder)) {
+    if (!tools::directoryExists(config.coreConfig.configFolder)) {
       throw std::runtime_error("Directory does not exist: " + config.coreConfig.configFolder);
     }
   } else {
-    if (!Tools::create_directories_if_necessary(config.coreConfig.configFolder)) {
+    if (!tools::create_directories_if_necessary(config.coreConfig.configFolder)) {
       throw std::runtime_error("Can't create directory: " + config.coreConfig.configFolder);
     }
   }
 
-  log(Logging::INFO) << "Starting Payment Gate with local node";
+  log(logging::INFO) << "Starting Payment Gate with local node";
 
-  CryptoNote::Currency currency = currencyBuilder.currency();
-  CryptoNote::core core(currency, NULL, logger, false, false);
+  cn::Currency currency = currencyBuilder.currency();
+  cn::core core(currency, NULL, logger, false, false);
 
-  CryptoNote::CryptoNoteProtocolHandler protocol(currency, *dispatcher, core, NULL, logger);
-  CryptoNote::NodeServer p2pNode(*dispatcher, protocol, logger);
-  CryptoNote::RpcServer rpcServer(*dispatcher, logger, core, p2pNode, protocol);
+  cn::CryptoNoteProtocolHandler protocol(currency, *dispatcher, core, NULL, logger);
+  cn::NodeServer p2pNode(*dispatcher, protocol, logger);
+  cn::RpcServer rpcServer(*dispatcher, logger, core, p2pNode, protocol);
 
   protocol.set_p2p_endpoint(&p2pNode);
   core.set_cryptonote_protocol(&protocol);
 
-  log(Logging::INFO) << "initializing p2pNode";
+  log(logging::INFO) << "initializing p2pNode";
   if (!p2pNode.init(config.netNodeConfig)) {
     throw std::runtime_error("Failed to init p2pNode");
   }
 
-  log(Logging::INFO) << "initializing core";
-  CryptoNote::MinerConfig emptyMiner;
+  log(logging::INFO) << "initializing core";
+  cn::MinerConfig emptyMiner;
   core.init(config.coreConfig, emptyMiner, true);
 
   std::promise<std::error_code> initPromise;
   auto initFuture = initPromise.get_future();
 
-  std::unique_ptr<CryptoNote::INode> node(new CryptoNote::InProcessNode(core, protocol));
+  std::unique_ptr<cn::INode> node(new cn::InProcessNode(core, protocol));
 
   node->init([&initPromise, &log](std::error_code ec) {
     if (ec) {
-      log(Logging::WARNING, Logging::YELLOW) << "Failed to init node: " << ec.message();
+      log(logging::WARNING, logging::YELLOW) << "Failed to init node: " << ec.message();
     } else {
-      log(Logging::INFO) << "node is inited successfully";
+      log(logging::INFO) << "node is inited successfully";
     }
 
     initPromise.set_value(ec);
@@ -176,16 +176,16 @@ void PaymentGateService::runInProcess(Logging::LoggerRef& log) {
     throw std::system_error(ec);
   }
 
-  log(Logging::INFO) << "Starting core rpc server on "
+  log(logging::INFO) << "Starting core rpc server on "
     << config.remoteNodeConfig.daemonHost << ":" << config.remoteNodeConfig.daemonPort;
   rpcServer.start(config.remoteNodeConfig.daemonHost, config.remoteNodeConfig.daemonPort);
-  log(Logging::INFO) << "Core rpc server started ok";
+  log(logging::INFO) << "Core rpc server started ok";
 
-  log(Logging::INFO) << "Spawning p2p server";
+  log(logging::INFO) << "Spawning p2p server";
 
-  System::Event p2pStarted(*dispatcher);
+  platform_system::Event p2pStarted(*dispatcher);
   
-  System::Context<> context(*dispatcher, [&]() {
+  platform_system::Context<> context(*dispatcher, [&]() {
     p2pStarted.set();
     p2pNode.run();
   });
@@ -194,7 +194,7 @@ void PaymentGateService::runInProcess(Logging::LoggerRef& log) {
 
   runWalletService(currency, *node);
 
-  log(Logging::INFO) << "Stopping core rpc server...";
+  log(logging::INFO) << "Stopping core rpc server...";
   rpcServer.stop();
   p2pNode.sendStopSignal();
   context.get();
@@ -203,32 +203,32 @@ void PaymentGateService::runInProcess(Logging::LoggerRef& log) {
   p2pNode.deinit(); 
 }
 
-void PaymentGateService::runRpcProxy(Logging::LoggerRef& log) {
-  log(Logging::INFO) << "Starting Payment Gate with remote node";
-  CryptoNote::Currency currency = currencyBuilder.currency();
+void PaymentGateService::runRpcProxy(logging::LoggerRef& log) {
+  log(logging::INFO) << "Starting Payment Gate with remote node";
+  cn::Currency currency = currencyBuilder.currency();
   
-  std::unique_ptr<CryptoNote::INode> node(
-    PaymentService::NodeFactory::createNode(
+  std::unique_ptr<cn::INode> node(
+    payment_service::NodeFactory::createNode(
       config.remoteNodeConfig.daemonHost, 
       config.remoteNodeConfig.daemonPort));
 
   runWalletService(currency, *node);
 }
 
-void PaymentGateService::runWalletService(const CryptoNote::Currency& currency, CryptoNote::INode& node) {
-  PaymentService::WalletConfiguration walletConfiguration{
+void PaymentGateService::runWalletService(const cn::Currency& currency, cn::INode& node) {
+  payment_service::WalletConfiguration walletConfiguration{
     config.gateConfiguration.containerFile,
     config.gateConfiguration.containerPassword
   };
 
-  std::unique_ptr<CryptoNote::WalletGreen> wallet(new CryptoNote::WalletGreen(*dispatcher, currency, node, logger));
+  std::unique_ptr<cn::WalletGreen> wallet(new cn::WalletGreen(*dispatcher, currency, node, logger));
 
-  service = new PaymentService::WalletService(currency, *dispatcher, node, *wallet, *wallet, walletConfiguration, logger);
-  std::unique_ptr<PaymentService::WalletService> serviceGuard(service);
+  service = new payment_service::WalletService(currency, *dispatcher, node, *wallet, *wallet, walletConfiguration, logger);
+  std::unique_ptr<payment_service::WalletService> serviceGuard(service);
   try {
     service->init();
   } catch (std::exception& e) {
-    Logging::LoggerRef(logger, "run")(Logging::ERROR, Logging::BRIGHT_RED) << "Failed to init walletService reason: " << e.what();
+    logging::LoggerRef(logger, "run")(logging::ERROR, logging::BRIGHT_RED) << "Failed to init walletService reason: " << e.what();
     return;
   }
 
@@ -240,14 +240,14 @@ void PaymentGateService::runWalletService(const CryptoNote::Currency& currency, 
       std::cout << "Address: " << address << std::endl;
     }
   } else {
-    PaymentService::PaymentServiceJsonRpcServer rpcServer(*dispatcher, *stopEvent, *service, logger);
+    payment_service::PaymentServiceJsonRpcServer rpcServer(*dispatcher, *stopEvent, *service, logger);
     rpcServer.start(config.gateConfiguration.bindAddress, config.gateConfiguration.bindPort,
       config.gateConfiguration.rpcUser, config.gateConfiguration.rpcPassword);
 
     try {
       service->saveWallet();
     } catch (std::exception& ex) {
-      Logging::LoggerRef(logger, "saveWallet")(Logging::WARNING, Logging::YELLOW) << "Couldn't save container: " << ex.what();
+      logging::LoggerRef(logger, "saveWallet")(logging::WARNING, logging::YELLOW) << "Couldn't save container: " << ex.what();
     }
   }
 }

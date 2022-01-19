@@ -20,7 +20,7 @@ static void ge_p2_0(ge_p2 *);
 static void ge_p3_dbl(ge_p1p1 *, const ge_p3 *);
 static void fe_divpowm1(fe, const fe, const fe);
 
-/* Common functions */
+/* common functions */
 
 static uint64_t load_3(const unsigned char *in) {
   uint64_t result;

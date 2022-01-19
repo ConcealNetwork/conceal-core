@@ -8,7 +8,7 @@
 
 #include <time.h>
 
-namespace CryptoNote {
+namespace cn {
 
   struct ITimeProvider {
     virtual time_t now() = 0;

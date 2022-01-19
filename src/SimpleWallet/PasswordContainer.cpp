@@ -18,7 +18,7 @@
 #include <unistd.h>
 #endif
 
-namespace Tools
+namespace tools
 {
   namespace
   {

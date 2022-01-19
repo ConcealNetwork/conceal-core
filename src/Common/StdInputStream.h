@@ -9,7 +9,7 @@
 #include <istream>
 #include "IInputStream.h"
 
-namespace Common {
+namespace common {
 
 class StdInputStream : public IInputStream {
 public:
