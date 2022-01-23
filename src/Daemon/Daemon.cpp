@@ -61,55 +61,15 @@ void print_genesis_tx_hex() {
   cn::Transaction tx = cn::CurrencyBuilder(logger).generateGenesisTransaction();
   cn::BinaryArray txb = cn::toBinaryArray(tx);
   std::string tx_hex = common::toHex(txb);
+  LoggerManager gen_m;
+  LoggerRef gen_log(gen_m, "[Genesis]");
 
-  std::cout << "Insert this line into your coin configuration file as is: " << std::endl;
-  std::cout << "const char GENESIS_COINBASE_TX_HEX[] = \"" << tx_hex << "\";" << std::endl;
+  /* Someone who knows what to do with this will find it helpful,
+     if not, it't not our job to teach. */
+  gen_log(INFO) << "Random genesis hex: " << tx_hex;
 
   return;
 }
-
-// void print_genesis_tx_hex(const po::variables_map& vm) {
-  // std::vector<cn::AccountPublicAddress> targets;
- //  auto genesis_block_reward_addresses = command_line::get_arg(vm, arg_genesis_block_reward_address);
-
-//   logging::ConsoleLogger logger;
-//   cn::CurrencyBuilder currencyBuilder(logger);
-
- //  cn::Currency currency = currencyBuilder.currency();
-
- //  for (const auto& address_string : genesis_block_reward_addresses) {
- //     cn::AccountPublicAddress address;
-   //  if (!currency.parseAccountAddressString(address_string, address)) {
-   //    std::cout << "Failed to parse address: " << address_string << std::endl;
-   //    return;
-  //   }
- //	//Print GENESIS_BLOCK_REWARD Mined Address
- //	std::cout << "Your SDN Pre-mined Address String is:  " << address_string << std::endl;
- //    targets.emplace_back(std::move(address));
-//   }
-
- //  if (targets.empty()) {
- //    if (cn::parameters::GENESIS_BLOCK_REWARD > 0) {
- //      std::cout << "Error: genesis block reward addresses are not defined" << std::endl;
- //    } else {
-
- //	  cn::Transaction tx = cn::CurrencyBuilder(logger).generateGenesisTransaction();
- //	  cn::BinaryArray txb = cn::toBinaryArray(tx);
- //	  std::string tx_hex = common::toHex(txb);
-
-// 	  std::cout << "Insert this line into your coin configuration file as is: " << std::endl;
- //	  std::cout << "const char GENESIS_COINBASE_TX_HEX[] = \"" << tx_hex << "\";" << std::endl;
- //	}
-//   } else {
- //	cn::Transaction tx = cn::CurrencyBuilder(logger).generateGenesisTransaction(targets);
- //	cn::BinaryArray txb = cn::toBinaryArray(tx);
- //	std::string tx_hex = common::toHex(txb);
-
- //	std::cout << "Modify this line into your concealX configuration file as is:  " << std::endl;
- //	std::cout << "const char GENESIS_COINBASE_TX_HEX[] = \"" << tx_hex << "\";" << std::endl;
-//   }
-//   return;
-// }
 
 JsonValue buildLoggerConfiguration(Level level, const std::string& logfile) {
   JsonValue loggerConfiguration(JsonValue::OBJECT);
@@ -166,72 +126,75 @@ int main(int argc, char* argv[])
     po::options_description desc_cmd_only("Command line options");
     po::options_description desc_cmd_sett("Command line options and settings options");
 
-   desc_cmd_sett.add_options()("enable-blockchain-indexes,i", po::bool_switch()->default_value(false), "Enable blockchain indexes");
-   desc_cmd_sett.add_options()("enable-autosave,a", po::bool_switch()->default_value(false), "Enable blockchain autosave every 720 blocks");
+    desc_cmd_sett.add_options()("enable-blockchain-indexes,i", po::bool_switch()->default_value(false), "Enable blockchain indexes");
+    desc_cmd_sett.add_options()("enable-autosave,a", po::bool_switch()->default_value(false), "Enable blockchain autosave every 720 blocks");
 
-   command_line::add_arg(desc_cmd_only, command_line::arg_help);
-   command_line::add_arg(desc_cmd_only, command_line::arg_version);
-   command_line::add_arg(desc_cmd_only, arg_os_version);
-   command_line::add_arg(desc_cmd_only, command_line::arg_data_dir, tools::getDefaultDataDirectory());
-   command_line::add_arg(desc_cmd_only, arg_config_file);
-   command_line::add_arg(desc_cmd_sett, arg_set_fee_address);
-   command_line::add_arg(desc_cmd_sett, arg_log_file);
-   command_line::add_arg(desc_cmd_sett, arg_log_level);
-   command_line::add_arg(desc_cmd_sett, arg_console);
-   command_line::add_arg(desc_cmd_sett, arg_set_view_key);
-   command_line::add_arg(desc_cmd_sett, arg_testnet_on);
-   command_line::add_arg(desc_cmd_sett, arg_print_genesis_tx);
-   //command_line::add_arg(desc_cmd_sett, arg_genesis_block_reward_address);
+    command_line::add_arg(desc_cmd_only, command_line::arg_help);
+    command_line::add_arg(desc_cmd_only, command_line::arg_version);
+    command_line::add_arg(desc_cmd_only, arg_os_version);
+    command_line::add_arg(desc_cmd_only, command_line::arg_data_dir, tools::getDefaultDataDirectory());
+    command_line::add_arg(desc_cmd_only, arg_config_file);
+    command_line::add_arg(desc_cmd_sett, arg_set_fee_address);
+    command_line::add_arg(desc_cmd_sett, arg_log_file);
+    command_line::add_arg(desc_cmd_sett, arg_log_level);
+    command_line::add_arg(desc_cmd_sett, arg_console);
+    command_line::add_arg(desc_cmd_sett, arg_set_view_key);
+    command_line::add_arg(desc_cmd_sett, arg_testnet_on);
+    command_line::add_arg(desc_cmd_sett, arg_print_genesis_tx);
+    //command_line::add_arg(desc_cmd_sett, arg_genesis_block_reward_address);
 
-   RpcServerConfig::initOptions(desc_cmd_sett);
-   //CoreConfig::initOptions(desc_cmd_sett);
-   NetNodeConfig::initOptions(desc_cmd_sett);
-   MinerConfig::initOptions(desc_cmd_sett);
+    RpcServerConfig::initOptions(desc_cmd_sett);
+    //CoreConfig::initOptions(desc_cmd_sett);
+    NetNodeConfig::initOptions(desc_cmd_sett);
+    MinerConfig::initOptions(desc_cmd_sett);
 
-   po::options_description desc_options("Allowed options");
-   desc_options.add(desc_cmd_only).add(desc_cmd_sett);
+    po::options_description desc_options("Allowed options");
+    desc_options.add(desc_cmd_only).add(desc_cmd_sett);
 
-   po::variables_map vm;
-   bool r = command_line::handle_error_helper(desc_options, [&]() {
-     po::store(po::parse_command_line(argc, argv, desc_options), vm);
+    po::variables_map vm;
+    bool r = command_line::handle_error_helper(desc_options, [&]() {
+      po::store(po::parse_command_line(argc, argv, desc_options), vm);
 
-     if (command_line::get_arg(vm, command_line::arg_help))
-     {
-       std::cout << cn::CRYPTONOTE_NAME << " v" << PROJECT_VERSION_LONG << ENDL << ENDL;
-       std::cout << desc_options << std::endl;
-       return false;
-     }
+      if (command_line::get_arg(vm, command_line::arg_help))
+      {
+        LoggerManager options_m;
+        LoggerRef options_log(options_m, "[Options]");
 
-     if (command_line::get_arg(vm, arg_print_genesis_tx))
-     {
-       //print_genesis_tx_hex(vm);
-       print_genesis_tx_hex();
-       return false;
-     }
+        options_log(INFO, BRIGHT_YELLOW) << cn::CRYPTONOTE_NAME << " v" << PROJECT_VERSION << " (" << PROJECT_VERSION_BUILD_NO << ")\n\n";
+        options_log(INFO) << desc_options;
 
-     std::string data_dir = command_line::get_arg(vm, command_line::arg_data_dir);
-     std::string config = command_line::get_arg(vm, arg_config_file);
+        return false;
+      }
 
-     boost::filesystem::path data_dir_path(data_dir);
-     boost::filesystem::path config_path(config);
-     if (!config_path.has_parent_path())
-     {
-       config_path = data_dir_path / config_path;
-     }
+      if (command_line::get_arg(vm, arg_print_genesis_tx))
+      {
+        print_genesis_tx_hex();
+        return false;
+      }
 
-     boost::system::error_code ec;
-     if (boost::filesystem::exists(config_path, ec))
-     {
-       po::store(po::parse_config_file<char>(config_path.string<std::string>().c_str(), desc_cmd_sett), vm);
-     }
+      std::string data_dir = command_line::get_arg(vm, command_line::arg_data_dir);
+      std::string config = command_line::get_arg(vm, arg_config_file);
 
-     po::notify(vm);
-     return true;
-   });
+      boost::filesystem::path data_dir_path(data_dir);
+      boost::filesystem::path config_path(config);
+      if (!config_path.has_parent_path())
+      {
+        config_path = data_dir_path / config_path;
+      }
 
-   if (!r)
-   {
-     return 1;
+      boost::system::error_code ec;
+      if (boost::filesystem::exists(config_path, ec))
+      {
+        po::store(po::parse_config_file<char>(config_path.string<std::string>().c_str(), desc_cmd_sett), vm);
+      }
+
+      po::notify(vm);
+      return true;
+    });
+
+    if (!r)
+    {
+      return 1;
     }
 
     auto modulePath = common::NativePathToGeneric(argv[0]);
@@ -245,7 +208,7 @@ int main(int argc, char* argv[])
       }
     }
 
-    Level cfgLogLevel = static_cast<Level>(static_cast<int>(logging::ERROR) + command_line::get_arg(vm, arg_log_level));
+    auto cfgLogLevel = static_cast<Level>(static_cast<int>(logging::ERROR) + command_line::get_arg(vm, arg_log_level));
 
     // configure logging
     logManager.configure(buildLoggerConfiguration(cfgLogLevel, cfgLogFile));
@@ -269,8 +232,8 @@ int main(int argc, char* argv[])
 
     try {
       currencyBuilder.currency();
-    } catch (std::exception&) {
-      std::cout << "GENESIS_COINBASE_TX_HEX constant has an incorrect value. Please launch: " << cn::CRYPTONOTE_NAME << "d --" << arg_print_genesis_tx.name;
+    } catch (const std::exception&) {
+      std::cerr << "GENESIS_COINBASE_TX_HEX constant has an incorrect value. Please launch: " << cn::CRYPTONOTE_NAME << "d --" << arg_print_genesis_tx.name;
       return 1;
     }
 
@@ -381,8 +344,8 @@ int main(int argc, char* argv[])
     logger(INFO) << "Deinitializing p2p...";
     p2psrv.deinit();
 
-    ccore.set_cryptonote_protocol(NULL);
-    cprotocol.set_p2p_endpoint(NULL);
+    ccore.set_cryptonote_protocol(nullptr);
+    cprotocol.set_p2p_endpoint(nullptr);
 
   } catch (const std::exception& e) {
     logger(ERROR, BRIGHT_RED) << "Exception: " << e.what();
@@ -397,12 +360,12 @@ bool command_line_preprocessor(const boost::program_options::variables_map &vm, 
   bool exit = false;
 
   if (command_line::get_arg(vm, command_line::arg_version)) {
-    std::cout << cn::CRYPTONOTE_NAME << " v" << PROJECT_VERSION_LONG << ENDL;
+    logger(INFO) << cn::CRYPTONOTE_NAME << " v" << PROJECT_VERSION_LONG;
     exit = true;
   }
 
   if (command_line::get_arg(vm, arg_os_version)) {
-    std::cout << "OS: " << tools::get_os_version_string() << ENDL;
+    logger(INFO) << "OS: " << tools::get_os_version_string();
     exit = true;
   }
 
