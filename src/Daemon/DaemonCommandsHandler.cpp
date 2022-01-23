@@ -125,7 +125,7 @@ bool DaemonCommandsHandler::show_hr(const std::vector<std::string> &args)
 
   if (!m_core.get_miner().is_mining())
   {
-    std::cout << "Mining is not started. You need to start mining before you can see hash rate." << ENDL;
+    logger(logging::INFO) << "Mining is not started. You need to start mining before you can see hash rate.";
   }
   else
   {
@@ -153,7 +153,7 @@ bool DaemonCommandsHandler::print_bc_outs(const std::vector<std::string> &args)
   // TODO implement this command
   if (args.size() != 1)
   {
-    std::cout << "need file path as parameter" << ENDL;
+    logger(logging::ERROR) << "need file path as parameter";
     return true;
   }
 
@@ -179,7 +179,7 @@ bool DaemonCommandsHandler::print_bc(const std::vector<std::string> &args)
 {
   if (!args.size())
   {
-    std::cout << "need block index parameter" << ENDL;
+    logger(logging::ERROR) << "Usage: \"print_bc <block_from> [<block_to>]\"";
     return false;
   }
 
@@ -188,13 +188,13 @@ bool DaemonCommandsHandler::print_bc(const std::vector<std::string> &args)
   uint32_t end_block_parametr = m_core.get_current_blockchain_height();
   if (!common::fromString(args[0], start_index))
   {
-    std::cout << "wrong starter block index parameter" << ENDL;
+    logger(logging::ERROR) << "wrong starter block index parameter";
     return false;
   }
 
   if (args.size() > 1 && !common::fromString(args[1], end_index))
   {
-    std::cout << "wrong end block index parameter" << ENDL;
+    logger(logging::ERROR) << "wrong end block index parameter";
     return false;
   }
 
@@ -205,17 +205,18 @@ bool DaemonCommandsHandler::print_bc(const std::vector<std::string> &args)
 
   if (end_index > end_block_parametr)
   {
-    std::cout << "end block index parameter shouldn't be greater than " << end_block_parametr << ENDL;
+    logger(logging::ERROR) << "end block index parameter shouldn't be greater than " << end_block_parametr;
     return false;
   }
 
   if (end_index <= start_index)
   {
-    std::cout << "end block index should be greater than starter block index" << ENDL;
+    logger(logging::ERROR) << "end block index should be greater than starter block index";
     return false;
   }
 
   m_core.print_blockchain(start_index, end_index);
+
   return true;
 }
 //--------------------------------------------------------------------------------
@@ -237,14 +238,14 @@ bool DaemonCommandsHandler::set_log(const std::vector<std::string> &args)
 {
   if (args.size() != 1)
   {
-    std::cout << "use: set_log <log_level_number_0-5>" << ENDL;
+    logger(logging::ERROR) << "Usage: \"set_log <0-5>\" 0-5 being log level.";
     return true;
   }
 
   uint16_t l = 0;
   if (!common::fromString(args[0], l))
   {
-    std::cout << "wrong number format, use: set_log <log_level_number_0-4>" << ENDL;
+    logger(logging::ERROR) << "wrong number format, use: set_log <log_level_number_0-4>";
     return true;
   }
 
@@ -252,11 +253,12 @@ bool DaemonCommandsHandler::set_log(const std::vector<std::string> &args)
 
   if (l > logging::TRACE)
   {
-    std::cout << "wrong number range, use: set_log <log_level_number_0-4>" << ENDL;
+    logger(logging::ERROR) << "wrong number range, use: set_log <log_level_number_0-4>";
     return true;
   }
 
   m_logManager.setMaxLevel(static_cast<logging::Level>(l));
+
   return true;
 }
 
@@ -268,7 +270,7 @@ bool DaemonCommandsHandler::print_block_by_height(uint32_t height)
 
   if (1 == blocks.size())
   {
-    std::cout << "block_id: " << get_block_hash(blocks.front()) << ENDL;
+    logger(logging::INFO) << "block_id: " << get_block_hash(blocks.front());
     print_as_json(blocks.front());
   }
   else
@@ -276,7 +278,10 @@ bool DaemonCommandsHandler::print_block_by_height(uint32_t height)
     uint32_t current_height;
     crypto::Hash top_id;
     m_core.get_blockchain_top(current_height, top_id);
-    std::cout << "block wasn't found. Current block chain height: " << current_height << ", requested: " << height << std::endl;
+
+    logger(logging::ERROR) << "block wasn't found. Current block chain height: "
+      << current_height << ", requested: " << height;
+
     return false;
   }
 
@@ -288,7 +293,7 @@ bool DaemonCommandsHandler::rollback_chain(const std::vector<std::string> &args)
 {
   if (args.empty())
   {
-    std::cout << "expected: rollback_chain <block_height>" << std::endl;
+    logger(logging::ERROR) << "Usage: \"rollback_chain <block_height>\"";
     return true;
   }
 
@@ -325,7 +330,7 @@ bool DaemonCommandsHandler::print_block_by_hash(const std::string &arg)
   }
   else
   {
-    std::cout << "block wasn't found: " << arg << std::endl;
+    logger(logging::ERROR) << "block wasn't found: " << arg;
     return false;
   }
 
@@ -334,7 +339,8 @@ bool DaemonCommandsHandler::print_block_by_hash(const std::string &arg)
 //--------------------------------------------------------------------------------
 uint64_t DaemonCommandsHandler::calculatePercent(const cn::Currency &currency, uint64_t value, uint64_t total)
 {
-  return static_cast<uint64_t>(100.0 * currency.coin() * static_cast<double>(value) / static_cast<double>(total));
+  double to_calc = (double)currency.coin() * static_cast<double>(value) / static_cast<double>(total);
+  return static_cast<uint64_t>(100.0 * to_calc);
 }
 //--------------------------------------------------------------------------------
 bool DaemonCommandsHandler::print_stat(const std::vector<std::string> &args)
@@ -371,12 +377,17 @@ bool DaemonCommandsHandler::print_stat(const std::vector<std::string> &args)
   uint64_t amountOfActiveCoins = totalCoinsInNetwork - totalCoinsOnDeposits;
 
   const auto &currency = m_core.currency();
-  std::cout << "Block Height: " << height << std::endl;
-  std::cout << "Block Difficulty: " << m_core.difficultyAtHeight(height) << std::endl;
-  std::cout << "Coins Minted (Total Supply):  " << currency.formatAmount(totalCoinsInNetwork) << std::endl;
-  std::cout << "Deposits (Locked Coins): " << currency.formatAmount(totalCoinsOnDeposits) << " (" << currency.formatAmount(calculatePercent(currency, totalCoinsOnDeposits, totalCoinsInNetwork)) << "%)" << std::endl;
-  std::cout << "Active Coins (Circulation Supply):  " << currency.formatAmount(amountOfActiveCoins) << " (" << currency.formatAmount(calculatePercent(currency, amountOfActiveCoins, totalCoinsInNetwork)) << "%)" << std::endl;
-  std::cout << "Rewards (Paid Interest): " << currency.formatAmount(m_core.depositInterestAtHeight(height)) << std::endl;
+
+  std::string print_status = "\n";
+  
+  print_status += "Block Height: " + std::to_string(height) + "\n";
+  print_status += "Block Difficulty: " + std::to_string(m_core.difficultyAtHeight(height)) + "\n";
+  print_status += "Coins Minted (Total Supply):  " + currency.formatAmount(totalCoinsInNetwork) + "\n";
+  print_status += "Deposits (Locked Coins): " + currency.formatAmount(totalCoinsOnDeposits) + " (" + currency.formatAmount(calculatePercent(currency, totalCoinsOnDeposits, totalCoinsInNetwork)) + "%)\n";
+  print_status += "Active Coins (Circulation Supply):  " + currency.formatAmount(amountOfActiveCoins) + " (" + currency.formatAmount(calculatePercent(currency, amountOfActiveCoins, totalCoinsInNetwork)) + "%)\n";
+  print_status += "Rewards (Paid Interest): " + currency.formatAmount(m_core.depositInterestAtHeight(height)) + "\n";
+
+  logger(logging::INFO) << print_status;
 
   return true;
 }
