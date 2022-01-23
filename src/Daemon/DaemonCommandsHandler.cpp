@@ -1,6 +1,6 @@
 // Copyright (c) 2011-2017 The Cryptonote developers
 // Copyright (c) 2017-2018 The Circle Foundation & Conceal Devs
-// Copyright (c) 2018-2021 Conceal Network & Conceal Devs
+// Copyright (c) 2018-2022 Conceal Network & Conceal Devs
 //
 // Distributed under the MIT/X11 software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
@@ -20,7 +20,11 @@ namespace
   template <typename T>
   static bool print_as_json(const T &obj)
   {
-    std::cout << cn::storeToJson(obj) << ENDL;
+    logging::LoggerManager json_m;
+    logging::LoggerRef json_log(json_m, "[JSON]");
+
+    json_log() << " " << cn::storeToJson(obj);
+
     return true;
   }
 } // namespace
@@ -47,7 +51,7 @@ DaemonCommandsHandler::DaemonCommandsHandler(cn::core &core, cn::NodeServer &srv
 }
 
 //--------------------------------------------------------------------------------
-std::string DaemonCommandsHandler::get_commands_str()
+const std::string DaemonCommandsHandler::get_commands_str()
 {
   std::stringstream ss;
   ss << cn::CRYPTONOTE_NAME << " v" << PROJECT_VERSION_LONG << ENDL;
@@ -62,31 +66,63 @@ std::string DaemonCommandsHandler::get_commands_str()
 //--------------------------------------------------------------------------------
 bool DaemonCommandsHandler::exit(const std::vector<std::string> &args)
 {
+  if (!args.empty())
+  {
+    logger(logging::ERROR) << "Usage: \"exit\"";
+    return true;
+  }
+  
   m_consoleHandler.requestStop();
   m_srv.sendStopSignal();
+
   return true;
 }
 
 //--------------------------------------------------------------------------------
 bool DaemonCommandsHandler::help(const std::vector<std::string> &args)
 {
-  std::cout << get_commands_str() << ENDL;
+  if (!args.empty())
+  {
+    logger(logging::ERROR) << "Usage: \"help\"";
+    return true;
+  }
+
+  logger(logging::INFO) << get_commands_str();
   return true;
 }
 //--------------------------------------------------------------------------------
 bool DaemonCommandsHandler::save(const std::vector<std::string> &args)
 {
+  if (!args.empty())
+  {
+    logger(logging::ERROR) << "Usage: \"save\"";
+    return true;
+  }
+
   return m_core.saveBlockchain();
 }
 //--------------------------------------------------------------------------------
 bool DaemonCommandsHandler::print_pl(const std::vector<std::string> &args)
 {
+  if (!args.empty())
+  {
+    logger(logging::ERROR) << "Usage: \"print_pl\"";
+    return true;
+  }
+
   m_srv.log_peerlist();
+
   return true;
 }
 //--------------------------------------------------------------------------------
 bool DaemonCommandsHandler::show_hr(const std::vector<std::string> &args)
 {
+  if (!args.empty())
+  {
+    logger(logging::ERROR) << "Usage: \"show_hr\"";
+    return true;
+  }
+
   if (!m_core.get_miner().is_mining())
   {
     std::cout << "Mining is not started. You need to start mining before you can see hash rate." << ENDL;
@@ -95,29 +131,47 @@ bool DaemonCommandsHandler::show_hr(const std::vector<std::string> &args)
   {
     m_core.get_miner().do_print_hashrate(true);
   }
+
   return true;
 }
 //--------------------------------------------------------------------------------
 bool DaemonCommandsHandler::hide_hr(const std::vector<std::string> &args)
 {
+  if (!args.empty())
+  {
+    logger(logging::ERROR) << "Usage: \"hide_hr\"";
+    return true;
+  }
+
   m_core.get_miner().do_print_hashrate(false);
+
   return true;
 }
 //--------------------------------------------------------------------------------
 bool DaemonCommandsHandler::print_bc_outs(const std::vector<std::string> &args)
 {
+  // TODO implement this command
   if (args.size() != 1)
   {
     std::cout << "need file path as parameter" << ENDL;
     return true;
   }
+
   m_core.print_blockchain_outs(args[0]);
+
   return true;
 }
 //--------------------------------------------------------------------------------
 bool DaemonCommandsHandler::print_cn(const std::vector<std::string> &args)
 {
+  if (!args.empty())
+  {
+    logger(logging::ERROR) << "Usage: \"print_cn\"";
+    return true;
+  }
+
   m_srv.get_payload_object().log_connections();
+
   return true;
 }
 //--------------------------------------------------------------------------------
@@ -167,7 +221,15 @@ bool DaemonCommandsHandler::print_bc(const std::vector<std::string> &args)
 //--------------------------------------------------------------------------------
 bool DaemonCommandsHandler::print_bci(const std::vector<std::string> &args)
 {
+  // TODO implement this command
+  if (!args.empty())
+  {
+    logger(logging::ERROR) << "Usage: \"print_bci\"";
+    return true;
+  }
+
   m_core.print_blockchain_index();
+
   return true;
 }
 
@@ -376,13 +438,27 @@ bool DaemonCommandsHandler::print_tx(const std::vector<std::string> &args)
 //--------------------------------------------------------------------------------
 bool DaemonCommandsHandler::print_pool(const std::vector<std::string> &args)
 {
+  if (!args.empty())
+  {
+    logger(logging::ERROR) << "Usage: \"print_pool\"";
+    return true;
+  }
+
   logger(logging::INFO) << "Pool state: " << ENDL << m_core.print_pool(false);
+
   return true;
 }
 //--------------------------------------------------------------------------------
 bool DaemonCommandsHandler::print_pool_sh(const std::vector<std::string> &args)
 {
+  if (!args.empty())
+  {
+    logger(logging::ERROR) << "Usage: \"print_pool_sh\"";
+    return true;
+  }
+
   logger(logging::INFO) << "Pool state: " << ENDL << m_core.print_pool(true);
+
   return true;
 }
 //--------------------------------------------------------------------------------
@@ -415,7 +491,14 @@ bool DaemonCommandsHandler::start_mining(const std::vector<std::string> &args)
 //--------------------------------------------------------------------------------
 bool DaemonCommandsHandler::stop_mining(const std::vector<std::string> &args)
 {
+  if (!args.empty())
+  {
+    logger(logging::ERROR) << "Usage: \"stop_mining\"";
+    return true;
+  }
+
   m_core.get_miner().stop();
+
   return true;
 }
 
