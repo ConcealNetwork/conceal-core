@@ -45,6 +45,7 @@ namespace cn
 
     bool process_command(const std::vector<std::string> &args);
     std::string get_commands_str();
+    std::string get_ext_commands_str();
     std::string getFeeAddress();
 
     const cn::Currency& currency() const { return m_currency; }
@@ -71,6 +72,7 @@ namespace cn
     bool close_wallet();
 
     bool help(const std::vector<std::string> &args = std::vector<std::string>());
+    bool extended_help(const std::vector<std::string> &args);
     bool exit(const std::vector<std::string> &args);
     bool start_mining(const std::vector<std::string> &args);
     bool show_dust(const std::vector<std::string> &args);
@@ -95,6 +97,9 @@ namespace cn
     bool reset(const std::vector<std::string> &args);
     bool set_log(const std::vector<std::string> &args);
     bool save_keys_to_file(const std::vector<std::string> &args);
+
+    std::string simple_menu();
+    std::string extended_menu();
 
     std::string resolveAlias(const std::string& aliasUrl);
     void printConnectionError() const;
