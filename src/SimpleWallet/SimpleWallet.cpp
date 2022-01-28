@@ -651,7 +651,7 @@ std::string simple_wallet::simple_menu()
   menu_item += "\"balance\"                     - Shows wallet balance.\n";
   menu_item += "\"bc_height\"                   - Shows current blockchain height.\n";
   menu_item += "\"exit\"                        - Safely exits the wallet application.\n";
-  menu_item += "\"export_keys\"                 - Displays backup keys unless set to true\n";
+  menu_item += "\"export_keys\"                 - Displays backup keys.\n";
   menu_item += "\"help\" | \"ext_help\"           - Shows this help dialog or extended help dialog.\n";
   menu_item += "\"list_transfers\"              - Show all known transfers, optionally from a certain height. | <block_height>\n";
   menu_item += "\"reset\"                       - Reset cached blockchain data and starts synchronizing from block 0.\n";
