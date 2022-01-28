@@ -44,8 +44,7 @@ namespace cn
     void stop();
 
     bool process_command(const std::vector<std::string> &args);
-    std::string get_commands_str();
-    std::string get_ext_commands_str();
+    std::string get_commands_str(bool do_ext);
     std::string getFeeAddress();
 
     const cn::Currency& currency() const { return m_currency; }
@@ -74,9 +73,7 @@ namespace cn
     bool help(const std::vector<std::string> &args = std::vector<std::string>());
     bool extended_help(const std::vector<std::string> &args);
     bool exit(const std::vector<std::string> &args);
-    bool start_mining(const std::vector<std::string> &args);
     bool show_dust(const std::vector<std::string> &args);
-    bool stop_mining(const std::vector<std::string> &args);
     bool show_balance(const std::vector<std::string> &args = std::vector<std::string>());
     bool sign_message(const std::vector<std::string> &args);
     bool verify_signature(const std::vector<std::string> &args);

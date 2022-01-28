@@ -571,20 +571,14 @@ bool processServerFeeAddressResponse(const std::string& response, std::string& f
     return true;
 }
 
-std::string simple_wallet::get_commands_str() {
+std::string simple_wallet::get_commands_str(bool do_ext) {
   std::stringstream ss;
   ss << "";
-  std::string usage = simple_menu();// = m_consoleHandler.getUsage();
-  boost::replace_all(usage, "\n", "\n  ");
-  usage.insert(0, "  ");
-  ss << usage << ENDL;
-  return ss.str();
-}
-
-std::string simple_wallet::get_ext_commands_str() {
-  std::stringstream ss;
-  ss << "";
-  std::string usage = extended_menu();// = m_consoleHandler.getUsage();
+  std::string usage;
+  if (do_ext)
+    usage = extended_menu();
+  else
+    usage = simple_menu();
   boost::replace_all(usage, "\n", "\n  ");
   usage.insert(0, "  ");
   ss << usage << ENDL;
@@ -592,12 +586,12 @@ std::string simple_wallet::get_ext_commands_str() {
 }
 
 bool simple_wallet::help(const std::vector<std::string> &args/* = std::vector<std::string>()*/) {
-  success_msg_writer() << get_commands_str();
+  success_msg_writer() << get_commands_str(false);
   return true;
 }
 
 bool simple_wallet::extended_help(const std::vector<std::string> &args/* = std::vector<std::string>()*/) {
-  success_msg_writer() << get_ext_commands_str();
+  success_msg_writer() << get_commands_str(true);
   return true;
 }
 
@@ -1180,75 +1174,6 @@ bool simple_wallet::reset(const std::vector<std::string> &args) {
   }
 
   std::cout << std::endl;
-
-  return true;
-}
-
-bool simple_wallet::start_mining(const std::vector<std::string>& args) {
-  COMMAND_RPC_START_MINING::request req;
-  req.miner_address = m_wallet->getAddress();
-
-  bool ok = true;
-  size_t max_mining_threads_count = (std::max)(std::thread::hardware_concurrency(), static_cast<unsigned>(2));
-  if (0 == args.size()) {
-    req.threads_count = 1;
-  } else if (1 == args.size()) {
-    uint16_t num = 1;
-    ok = common::fromString(args[0], num);
-    ok = ok && (1 <= num && num <= max_mining_threads_count);
-    req.threads_count = num;
-  } else {
-    ok = false;
-  }
-
-  if (!ok) {
-    fail_msg_writer() << "invalid arguments. Please use start_mining [<number_of_threads>], " <<
-      "<number_of_threads> should be from 1 to " << max_mining_threads_count;
-    return true;
-  }
-
-
-  COMMAND_RPC_START_MINING::response res;
-
-  try {
-    HttpClient httpClient(m_dispatcher, m_daemon_host, m_daemon_port);
-
-    invokeJsonCommand(httpClient, "/start_mining", req, res);
-
-    std::string err = interpret_rpc_response(true, res.status);
-    if (err.empty())
-      success_msg_writer() << "Mining started in daemon";
-    else
-      fail_msg_writer() << "mining has NOT been started: " << err;
-
-  } catch (const ConnectException&) {
-    printConnectionError();
-  } catch (const std::exception& e) {
-    fail_msg_writer() << "Failed to invoke rpc method: " << e.what();
-  }
-
-  return true;
-}
-//----------------------------------------------------------------------------------------------------
-bool simple_wallet::stop_mining(const std::vector<std::string>& args)
-{
-  COMMAND_RPC_STOP_MINING::request req;
-  COMMAND_RPC_STOP_MINING::response res;
-
-  try {
-    HttpClient httpClient(m_dispatcher, m_daemon_host, m_daemon_port);
-
-    invokeJsonCommand(httpClient, "/stop_mining", req, res);
-    std::string err = interpret_rpc_response(true, res.status);
-    if (err.empty())
-      success_msg_writer() << "Mining stopped in daemon";
-    else
-      fail_msg_writer() << "mining has NOT been stopped: " << err;
-  } catch (const ConnectException&) {
-    printConnectionError();
-  } catch (const std::exception& e) {
-    fail_msg_writer() << "Failed to invoke rpc method: " << e.what();
-  }
 
   return true;
 }
@@ -2071,7 +1996,7 @@ int main(int argc, char* argv[]) {
 
       std::cout << "Conceal Wallet v" << PROJECT_VERSION_LONG << std::endl;
       std::cout << "Usage: concealwallet [--wallet-file=<file>|--generate-new-wallet=<file>] [--daemon-address=<host>:<port>] [<COMMAND>]";
-      std::cout << desc_all << '\n' << tmp_wallet.get_commands_str();
+      std::cout << desc_all << '\n' << tmp_wallet.get_commands_str(false);
       return false;
     } else if (command_line::get_arg(vm, command_line::arg_version))  {
       std::cout << "Conceal Wallet v" << PROJECT_VERSION_LONG << std::endl;
