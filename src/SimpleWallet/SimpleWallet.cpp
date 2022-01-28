@@ -650,13 +650,13 @@ std::string simple_wallet::simple_menu()
   menu_item += "\"address\"                     - Shows wallet address.\n";
   menu_item += "\"balance\"                     - Shows wallet balance.\n";
   menu_item += "\"bc_height\"                   - Shows current blockchain height.\n";
-  menu_item += "\"exit\"                        - Safley exits the wallet application.\n";
+  menu_item += "\"exit\"                        - Safely exits the wallet application.\n";
   menu_item += "\"export_keys\"                 - Displays backup keys unless set to true\n";
   menu_item += "\"help\" | \"ext_help\"           - Shows this help dialog or extended help dialog.\n";
   menu_item += "\"list_transfers\"              - Show all known transfers, optionally from a certain height. | <block_height>\n";
   menu_item += "\"reset\"                       - Reset cached blockchain data and starts synchronizing from block 0.\n";
   menu_item += "\"transfer <address> <amount>\" - Transfers <amount> to <address>. | [-p<payment_id>] [<amount_2>]...[<amount_N>] [<address_2>]...[<address_n>]\n";
-  menu_item += "\"save\"                        - Save wallet syncronized blockchain data.\n";
+  menu_item += "\"save\"                        - Save wallet synchronized blockchain data.\n";
   menu_item += "\"save_keys\"                   - Saves wallet private keys to \"<wallet_name>_conceal_backup.txt\".\n";
   return menu_item;
 }
