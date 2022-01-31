@@ -977,7 +977,7 @@ bool RpcServer::remotenode_check_incoming_tx(const BinaryArray& tx_blob) {
 	}
 
 	if (amount != 0) {
-		logger(INFO) << "<< rpcserver.cpp << " << "Node received relayed transaction fee: " << m_core.currency().formatAmount(amount) << " KRB";
+		logger(INFO) << "<< rpcserver.cpp << " << "Node received relayed transaction fee: " << m_core.currency().formatAmount(amount) << " CCX";
 		return true;
 	}
 	return false;
