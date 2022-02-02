@@ -2,6 +2,7 @@
 
 # Conceal Core (CLI)
 
+[![GitHub release (latest by date)](https://img.shields.io/github/v/release/ConcealNetwork/conceal-core)](https://github.com/ConcealNetwork/conceal-core/releases/latest)
 [![Ubuntu 20.04](https://github.com/ConcealNetwork/conceal-core/actions/workflows/ubuntu20.yml/badge.svg)](https://github.com/ConcealNetwork/conceal-core/actions/workflows/ubuntu20.yml)
 [![Ubuntu 18.04](https://github.com/ConcealNetwork/conceal-core/actions/workflows/ubuntu18.yml/badge.svg)](https://github.com/ConcealNetwork/conceal-core/actions/workflows/ubuntu18.yml)
 [![Windows](https://github.com/ConcealNetwork/conceal-core/actions/workflows/windows.yml/badge.svg)](https://github.com/ConcealNetwork/conceal-core/actions/workflows/windows.yml)
