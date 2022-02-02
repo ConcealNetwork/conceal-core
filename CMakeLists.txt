@@ -1,10 +1,10 @@
 cmake_minimum_required(VERSION 3.0)
 
 include(CheckCXXCompilerFlag)
-set(VERSION "6.6.0")
+set(VERSION "6.6.1")
 set(VERSION_BUILD_NO "Ataegina")
 # Packaged from main commits
-set(COMMIT 72946d9)
+set(COMMIT 1db6e66)
 set(REFS " (HEAD -> master)")
 
 set(CMAKE_CXX_STANDARD 11)
