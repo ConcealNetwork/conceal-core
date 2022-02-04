@@ -77,7 +77,7 @@ void addPortMapping(logging::LoggerRef& logger, uint32_t port) {
       std::ostringstream portString;
       portString << port;
       if (UPNP_AddPortMapping(urls.controlURL, igdData.first.servicetype, portString.str().c_str(),
-        portString.str().c_str(), lanAddress, cn::CRYPTONOTE_NAME, "TCP", 0, "0") != 0) {
+        portString.str().c_str(), lanAddress, "Conceal", "TCP", 0, "0") != 0) {
         logger(ERROR) << "UPNP_AddPortMapping failed.";
       } else {
         logger(INFO, BRIGHT_GREEN) << "Added IGD port mapping.";

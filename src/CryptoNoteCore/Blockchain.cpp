@@ -514,7 +514,7 @@ namespace cn
 
     if (load_existing && !m_blocks.empty())
     {
-      logger(INFO, BRIGHT_WHITE) << "Loading blockchain";
+      logger(INFO) << "Loading blockchain";
       BlockCacheSerializer loader(*this, get_block_hash(m_blocks.back().bl), logger.getLogger());
       loader.load(appendPath(config_folder, m_currency.blocksCacheFileName()));
 

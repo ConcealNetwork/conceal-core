@@ -41,7 +41,7 @@ private:
   logging::LoggerRef logger;
   logging::LoggerManager& m_logManager;
 
-  std::string get_commands_str();
+  const std::string get_commands_str();
   bool print_block_by_height(uint32_t height);
   bool print_block_by_hash(const std::string& arg);
   uint64_t calculatePercent(const cn::Currency& currency, uint64_t value, uint64_t total);
