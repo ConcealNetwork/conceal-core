@@ -888,4 +888,14 @@ namespace cn
     std::lock_guard<std::recursive_mutex> lock(m_transactions_lock);
     return m_timestampIndex.find(timestampBegin, timestampEnd, transactionsNumberLimit, hashes, transactionsNumberWithinTimestamps);
   }
+  
+  std::list<cn::tx_memory_pool::TransactionDetails> tx_memory_pool::getMemoryPool() const {
+    std::lock_guard<std::recursive_mutex> lock(m_transactions_lock);
+    std::list<tx_memory_pool::TransactionDetails> txs;
+    for (const auto& txd : m_fee_index) {
+      txs.push_back(txd);
+    }
+    return txs;
+  }
+
 } // namespace cn

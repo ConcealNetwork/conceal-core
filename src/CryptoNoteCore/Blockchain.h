@@ -73,6 +73,7 @@ namespace cn
     bool getBlocks(uint32_t start_offset, uint32_t count, std::list<Block> &blocks, std::list<Transaction> &txs);
     bool getBlocks(uint32_t start_offset, uint32_t count, std::list<Block> &blocks);
     bool getAlternativeBlocks(std::list<Block> &blocks);
+    bool getTransactionsWithOutputGlobalIndexes(const std::vector<crypto::Hash>& txs_ids, std::list<crypto::Hash>& missed_txs, std::vector<std::pair<Transaction, std::vector<uint32_t>>>& txs);
     uint32_t getAlternativeBlocksCount();
     crypto::Hash getBlockIdByHeight(uint32_t height);
     bool getBlockByHash(const crypto::Hash &h, Block &blk);

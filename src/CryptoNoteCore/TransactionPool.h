@@ -141,6 +141,8 @@ namespace cn {
       time_t receiveTime;
     };
 
+    std::list<cn::tx_memory_pool::TransactionDetails> getMemoryPool() const;
+
   private:
 
     struct TransactionPriorityComparator {

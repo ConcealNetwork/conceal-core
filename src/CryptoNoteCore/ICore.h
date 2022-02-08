@@ -90,6 +90,7 @@ public:
   virtual bool getBlockByHash(const crypto::Hash &h, Block &blk) = 0;
   virtual bool getBlockHeight(const crypto::Hash& blockId, uint32_t& blockHeight) = 0;
   virtual void getTransactions(const std::vector<crypto::Hash>& txs_ids, std::list<Transaction>& txs, std::list<crypto::Hash>& missed_txs, bool checkTxPool = false) = 0;
+  virtual bool getTransactionsWithOutputGlobalIndexes(const std::vector<crypto::Hash>& txs_ids, std::list<crypto::Hash>& missed_txs, std::vector<std::pair<Transaction, std::vector<uint32_t>>>& txs) = 0;
   virtual bool getBackwardBlocksSizes(uint32_t fromHeight, std::vector<size_t>& sizes, size_t count) = 0;
   virtual bool getBlockSize(const crypto::Hash& hash, size_t& size) = 0;
   virtual bool getAlreadyGeneratedCoins(const crypto::Hash& hash, uint64_t& generatedCoins) = 0;
