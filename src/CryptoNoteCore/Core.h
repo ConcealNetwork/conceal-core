@@ -106,6 +106,7 @@ namespace cn {
     virtual crypto::Hash getBlockIdByHeight(uint32_t height) override;
     virtual bool getTransaction(const crypto::Hash &id, Transaction &tx, bool checkTxPool = false) override;
     void getTransactions(const std::vector<crypto::Hash> &txs_ids, std::list<Transaction> &txs, std::list<crypto::Hash> &missed_txs, bool checkTxPool = false) override;
+    virtual bool getTransactionsWithOutputGlobalIndexes(const std::vector<crypto::Hash>& txs_ids, std::list<crypto::Hash>& missed_txs, std::vector<std::pair<Transaction, std::vector<uint32_t>>>& txs) override;
     virtual bool getBlockByHash(const crypto::Hash &h, Block &blk) override;
     virtual bool getBlockHeight(const crypto::Hash &blockId, uint32_t &blockHeight) override;
     //void get_all_known_block_ids(std::list<crypto::Hash> &main, std::list<crypto::Hash> &alt, std::list<crypto::Hash> &invalid);
@@ -137,6 +138,7 @@ namespace cn {
     void print_blockchain(uint32_t start_index, uint32_t end_index);
     void print_blockchain_index();
     std::string print_pool(bool short_format);
+    std::list<cn::tx_memory_pool::TransactionDetails> getMemoryPool() const;
     void print_blockchain_outs(const std::string &file);
     virtual bool getPoolChanges(const crypto::Hash &tailBlockId, const std::vector<crypto::Hash> &knownTxsIds,
                                 std::vector<Transaction> &addedTxs, std::vector<crypto::Hash> &deletedTxsIds) override;
