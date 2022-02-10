@@ -122,6 +122,10 @@ void core::getTransactions(const std::vector<crypto::Hash>& txs_ids, std::list<T
   m_blockchain.getTransactions(txs_ids, txs, missed_txs, checkTxPool);
 }
 
+bool core::getTransactionsWithOutputGlobalIndexes(const std::vector<crypto::Hash>& txs_ids, std::list<crypto::Hash>& missed_txs, std::vector<std::pair<Transaction, std::vector<uint32_t>>>& txs) {
+  return m_blockchain.getTransactionsWithOutputGlobalIndexes(txs_ids, missed_txs, txs);
+}
+
 bool core::getTransaction(const crypto::Hash &id, Transaction &tx, bool checkTxPool)
 {
   std::vector<crypto::Hash> txs_ids;
@@ -646,6 +650,10 @@ std::vector<Transaction> core::getPoolTransactions() {
   }
 
   return result;
+}
+
+std::list<cn::tx_memory_pool::TransactionDetails> core::getMemoryPool() const {
+  return m_mempool.getMemoryPool();
 }
 
 std::vector<crypto::Hash> core::buildSparseChain() {
