@@ -248,7 +248,7 @@ bool DaemonCommandsHandler::print_bci(const std::vector<std::string> &args)
   }
   logger(logging::DEBUGGING) << "Attempting: print_bci";
 
-  m_core.print_blockchain_index();
+  m_core.print_blockchain_index(false);
 
   logger(logging::DEBUGGING) << "Finished: print_bci";
   return true;

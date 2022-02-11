@@ -200,7 +200,7 @@ namespace cn
 
     //debug functions
     void print_blockchain(uint64_t start_index, uint64_t end_index);
-    void print_blockchain_index();
+    void print_blockchain_index(bool print_all);
     void print_blockchain_outs(const std::string &file);
 
     struct TransactionIndex

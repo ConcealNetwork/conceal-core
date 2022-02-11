@@ -1867,18 +1867,24 @@ namespace cn
     logger(INFO, BRIGHT_WHITE) << "Blockchain printed with log level 1";
   }
 
-  void Blockchain::print_blockchain_index()
+  void Blockchain::print_blockchain_index(bool print_all)
   {
     std::stringstream ss;
     std::lock_guard<decltype(m_blockchain_lock)> lk(m_blockchain_lock);
 
-    std::vector<crypto::Hash> blockIds = m_blockIndex.getBlockIds(0, std::numeric_limits<uint32_t>::max());
-    logger(INFO, BRIGHT_WHITE) << "Current blockchain index:";
-
-    size_t height = 0;
-    for (auto i = blockIds.begin(); i != blockIds.end(); ++i, ++height)
+    if (print_all == false)
     {
-      logger(INFO, BRIGHT_WHITE) << "id\t\t" << *i << " height" << height;
+      std::string id = common::podToHex(m_blockIndex.getBlockId(getCurrentBlockchainHeight()));
+      logger(INFO, BRIGHT_WHITE) << "id\t\t" << id << " height" << getCurrentBlockchainHeight();
+    }
+    else
+    {
+      std::vector<crypto::Hash> blockIds = m_blockIndex.getBlockIds(0, std::numeric_limits<uint32_t>::max());
+      logger(INFO, BRIGHT_WHITE) << "Current blockchain index:";
+      size_t height = 0;
+
+      for (auto i = blockIds.begin(); i != blockIds.end(); ++i, ++height)
+        logger(INFO, BRIGHT_WHITE) << "id\t\t" << *i << " height" << height;
     }
   }
 
