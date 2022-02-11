@@ -2,7 +2,8 @@
 // Copyright (c) 2017-2018 The Circle Foundation & Conceal Devs
 // Copyright (c) 2018-2019 The TurtleCoin developers
 // Copyright (c) 2016-2020 The Karbo developers
-// Copyright (c) 2018-2021 Conceal Network & Conceal Devs
+// Copyright (c) 2018-2022 Conceal Network & Conceal Devs
+//
 // Distributed under the MIT/X11 software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -119,6 +120,10 @@ bool core::get_blocks(uint32_t start_offset, uint32_t count, std::list<Block>& b
 }
 void core::getTransactions(const std::vector<crypto::Hash>& txs_ids, std::list<Transaction>& txs, std::list<crypto::Hash>& missed_txs, bool checkTxPool) {
   m_blockchain.getTransactions(txs_ids, txs, missed_txs, checkTxPool);
+}
+
+bool core::getTransactionsWithOutputGlobalIndexes(const std::vector<crypto::Hash>& txs_ids, std::list<crypto::Hash>& missed_txs, std::vector<std::pair<Transaction, std::vector<uint32_t>>>& txs) {
+  return m_blockchain.getTransactionsWithOutputGlobalIndexes(txs_ids, missed_txs, txs);
 }
 
 bool core::getTransaction(const crypto::Hash &id, Transaction &tx, bool checkTxPool)
@@ -645,6 +650,10 @@ std::vector<Transaction> core::getPoolTransactions() {
   }
 
   return result;
+}
+
+std::list<cn::tx_memory_pool::TransactionDetails> core::getMemoryPool() const {
+  return m_mempool.getMemoryPool();
 }
 
 std::vector<crypto::Hash> core::buildSparseChain() {

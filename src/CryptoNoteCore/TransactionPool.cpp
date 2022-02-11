@@ -1,6 +1,7 @@
 // Copyright (c) 2011-2017 The Cryptonote developers
 // Copyright (c) 2017-2018 The Circle Foundation & Conceal Devs
-// Copyright (c) 2018-2021 Conceal Network & Conceal Devs
+// Copyright (c) 2018-2022 Conceal Network & Conceal Devs
+//
 // Distributed under the MIT/X11 software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -887,4 +888,14 @@ namespace cn
     std::lock_guard<std::recursive_mutex> lock(m_transactions_lock);
     return m_timestampIndex.find(timestampBegin, timestampEnd, transactionsNumberLimit, hashes, transactionsNumberWithinTimestamps);
   }
+  
+  std::list<cn::tx_memory_pool::TransactionDetails> tx_memory_pool::getMemoryPool() const {
+    std::lock_guard<std::recursive_mutex> lock(m_transactions_lock);
+    std::list<tx_memory_pool::TransactionDetails> txs;
+    for (const auto& txd : m_fee_index) {
+      txs.push_back(txd);
+    }
+    return txs;
+  }
+
 } // namespace cn

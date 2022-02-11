@@ -1,7 +1,8 @@
 // Copyright (c) 2011-2017 The Cryptonote developers
 // Copyright (c) 2017-2018 The Circle Foundation & Conceal Devs
 // Copyright (c) 2018-2020 Karbo developers
-// Copyright (c) 2018-2021 Conceal Network & Conceal Devs
+// Copyright (c) 2018-2022 Conceal Network & Conceal Devs
+//
 // Distributed under the MIT/X11 software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -1693,6 +1694,27 @@ namespace cn
     for (const auto &tx : txs)
     {
       rsp.txs.push_back(asString(toBinaryArray(tx)));
+    }
+
+    return true;
+  }
+
+  bool Blockchain::getTransactionsWithOutputGlobalIndexes(const std::vector<crypto::Hash>& txs_ids, std::list<crypto::Hash>& missed_txs, std::vector<std::pair<Transaction, std::vector<uint32_t>>>& txs) {
+    std::lock_guard<decltype(m_blockchain_lock)> lk(m_blockchain_lock);
+
+    for (const auto& tx_id : txs_ids) {
+      auto it = m_transactionMap.find(tx_id);
+      if (it == m_transactionMap.end()) {
+        missed_txs.push_back(tx_id);
+      }
+      else {
+        const TransactionEntry& tx = transactionByIndex(it->second);
+        if (!(tx.m_global_output_indexes.size())) { 
+          logger(ERROR, BRIGHT_RED) << "Internal error: global indexes for transaction " << tx_id << " is empty"; 
+          return false;
+        }
+        txs.push_back(std::make_pair(tx.tx, tx.m_global_output_indexes));
+      }
     }
 
     return true;

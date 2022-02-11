@@ -1,6 +1,7 @@
 // Copyright (c) 2011-2017 The Cryptonote developers
 // Copyright (c) 2017-2018 The Circle Foundation & Conceal Devs
-// Copyright (c) 2018-2021 Conceal Network & Conceal Devs
+// Copyright (c) 2018-2022 Conceal Network & Conceal Devs
+//
 // Distributed under the MIT/X11 software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -571,10 +572,14 @@ bool processServerFeeAddressResponse(const std::string& response, std::string& f
     return true;
 }
 
-std::string simple_wallet::get_commands_str() {
+std::string simple_wallet::get_commands_str(bool do_ext) {
   std::stringstream ss;
-  ss << "Commands: " << ENDL;
-  std::string usage = m_consoleHandler.getUsage();
+  ss << "";
+  std::string usage;
+  if (do_ext)
+    usage = extended_menu();
+  else
+    usage = simple_menu();
   boost::replace_all(usage, "\n", "\n  ");
   usage.insert(0, "  ");
   ss << usage << ENDL;
@@ -582,7 +587,12 @@ std::string simple_wallet::get_commands_str() {
 }
 
 bool simple_wallet::help(const std::vector<std::string> &args/* = std::vector<std::string>()*/) {
-  success_msg_writer() << get_commands_str();
+  success_msg_writer() << get_commands_str(false);
+  return true;
+}
+
+bool simple_wallet::extended_help(const std::vector<std::string> &args/* = std::vector<std::string>()*/) {
+  success_msg_writer() << get_commands_str(true);
   return true;
 }
 
@@ -622,9 +632,47 @@ simple_wallet::simple_wallet(platform_system::Dispatcher& dispatcher, const cn::
   m_consoleHandler.setHandler("save", boost::bind(&simple_wallet::save, this, boost::arg<1>()), "Save wallet synchronized data");
   m_consoleHandler.setHandler("reset", boost::bind(&simple_wallet::reset, this, boost::arg<1>()), "Discard cache data and start synchronizing from the start");
   m_consoleHandler.setHandler("help", boost::bind(&simple_wallet::help, this, boost::arg<1>()), "Show this help");
+  m_consoleHandler.setHandler("ext_help", boost::bind(&simple_wallet::extended_help, this, boost::arg<1>()), "Show this help");
   m_consoleHandler.setHandler("exit", boost::bind(&simple_wallet::exit, this, boost::arg<1>()), "Close wallet");  
   m_consoleHandler.setHandler("get_reserve_proof", boost::bind(&simple_wallet::get_reserve_proof, this, boost::arg<1>()), "all|<amount> [<message>] - Generate a signature proving that you own at least <amount>, optionally with a challenge string <message>. ");
-  m_consoleHandler.setHandler("save_keys", boost::bind(&simple_wallet::save_keys_to_file, this, boost::arg<1>()), "Save wallet private keys to \"conceal_keys_backup.txt\"");
+  m_consoleHandler.setHandler("save_keys", boost::bind(&simple_wallet::save_keys_to_file, this, boost::arg<1>()), "Saves wallet private keys to \"<wallet_name>_conceal_backup.txt\"");
+}
+
+std::string simple_wallet::simple_menu()
+{
+  std::string menu_item = "\t\tConceal Wallet Menu\n\n";
+  menu_item += "[ ] = Optional arg\n";
+  menu_item += "\"address\"                     - Shows wallet address.\n";
+  menu_item += "\"balance\"                     - Shows wallet balance.\n";
+  menu_item += "\"bc_height\"                   - Shows current blockchain height.\n";
+  menu_item += "\"exit\"                        - Safely exits the wallet application.\n";
+  menu_item += "\"export_keys\"                 - Displays backup keys.\n";
+  menu_item += "\"help\" | \"ext_help\"           - Shows this help dialog or extended help dialog.\n";
+  menu_item += "\"list_transfers\"              - Show all known transfers, optionally from a certain height. | <block_height>\n";
+  menu_item += "\"reset\"                       - Reset cached blockchain data and starts synchronizing from block 0.\n";
+  menu_item += "\"transfer <address> <amount>\" - Transfers <amount> to <address>. | [-p<payment_id>] [<amount_2>]...[<amount_N>] [<address_2>]...[<address_n>]\n";
+  menu_item += "\"save\"                        - Save wallet synchronized blockchain data.\n";
+  menu_item += "\"save_keys\"                   - Saves wallet private keys to \"<wallet_name>_conceal_backup.txt\".\n";
+  return menu_item;
+}
+
+std::string simple_wallet::extended_menu()
+{
+  std::string menu_item = "\t\tConceal Wallet Extended Menu\n\n";
+  menu_item += "[ ] = Optional arg\n";
+  menu_item += "\"create_integrated <payment_id>\"                   - Create an integrated address with a payment ID.\n";
+  menu_item += "\"get_tx_proof <txid> <address>\"                    - Generate a signature to prove payment | [<txkey>]\n";
+  menu_item += "\"get_reserve_proof <amount>\"                       - Generate a signature proving that you own at least <amount> | [<message>]\n";
+  menu_item += "\"incoming_transfers\"                               - Show incoming transfers.\n";
+  menu_item += "\"optimize\"                                         - Combine many available outputs into a few by sending a transaction to self.\n";
+  menu_item += "\"optimize_all\"                                     - Optimize your wallet several times so you can send large transactions.\n";
+  menu_item += "\"outputs\"                                          - Show the number of unlocked outputs available for a transaction.\n";
+  menu_item += "\"payments <payment_id>\"                            - Show payments from payment ID. | [<payment_id_2> ... <payment_id_N>]\n";
+  menu_item += "\"set_log <level>\"                                  - Change current log level, default = 3, <level> is a number 0-4.\n";
+  menu_item += "\"sign_message <message>\"                           - Sign a message with your wallet keys.\n";
+  menu_item += "\"show_dust\"                                        - Show the number of unmixable dust outputs.\n";
+  menu_item += "\"verify_signature <message> <address> <signature>\" - Verify a signed message.\n";
+  return menu_item;
 }
 
 /* This function shows the number of outputs in the wallet
@@ -1127,75 +1175,6 @@ bool simple_wallet::reset(const std::vector<std::string> &args) {
   }
 
   std::cout << std::endl;
-
-  return true;
-}
-
-bool simple_wallet::start_mining(const std::vector<std::string>& args) {
-  COMMAND_RPC_START_MINING::request req;
-  req.miner_address = m_wallet->getAddress();
-
-  bool ok = true;
-  size_t max_mining_threads_count = (std::max)(std::thread::hardware_concurrency(), static_cast<unsigned>(2));
-  if (0 == args.size()) {
-    req.threads_count = 1;
-  } else if (1 == args.size()) {
-    uint16_t num = 1;
-    ok = common::fromString(args[0], num);
-    ok = ok && (1 <= num && num <= max_mining_threads_count);
-    req.threads_count = num;
-  } else {
-    ok = false;
-  }
-
-  if (!ok) {
-    fail_msg_writer() << "invalid arguments. Please use start_mining [<number_of_threads>], " <<
-      "<number_of_threads> should be from 1 to " << max_mining_threads_count;
-    return true;
-  }
-
-
-  COMMAND_RPC_START_MINING::response res;
-
-  try {
-    HttpClient httpClient(m_dispatcher, m_daemon_host, m_daemon_port);
-
-    invokeJsonCommand(httpClient, "/start_mining", req, res);
-
-    std::string err = interpret_rpc_response(true, res.status);
-    if (err.empty())
-      success_msg_writer() << "Mining started in daemon";
-    else
-      fail_msg_writer() << "mining has NOT been started: " << err;
-
-  } catch (const ConnectException&) {
-    printConnectionError();
-  } catch (const std::exception& e) {
-    fail_msg_writer() << "Failed to invoke rpc method: " << e.what();
-  }
-
-  return true;
-}
-//----------------------------------------------------------------------------------------------------
-bool simple_wallet::stop_mining(const std::vector<std::string>& args)
-{
-  COMMAND_RPC_STOP_MINING::request req;
-  COMMAND_RPC_STOP_MINING::response res;
-
-  try {
-    HttpClient httpClient(m_dispatcher, m_daemon_host, m_daemon_port);
-
-    invokeJsonCommand(httpClient, "/stop_mining", req, res);
-    std::string err = interpret_rpc_response(true, res.status);
-    if (err.empty())
-      success_msg_writer() << "Mining stopped in daemon";
-    else
-      fail_msg_writer() << "mining has NOT been stopped: " << err;
-  } catch (const ConnectException&) {
-    printConnectionError();
-  } catch (const std::exception& e) {
-    fail_msg_writer() << "Failed to invoke rpc method: " << e.what();
-  }
 
   return true;
 }
@@ -1940,7 +1919,16 @@ void simple_wallet::printConnectionError() const {
 
 bool simple_wallet::save_keys_to_file(const std::vector<std::string>& args)
 {
-  std::ofstream backup_file("conceal_keys_backup.txt");
+  if (!args.empty())
+  {
+    logger(ERROR) <<  "Usage: \"export_keys\"";
+    return true;
+  }
+
+  /* remove ".wallet" from the end of the string */
+  std::string formatted_wal_str = m_wallet_file.erase(m_wallet_file.size() - 7);
+  std::ofstream backup_file(formatted_wal_str + "_conceal_backup.txt");
+
   AccountKeys keys;
   m_wallet->getAccountKeys(keys);
 
@@ -1961,7 +1949,8 @@ bool simple_wallet::save_keys_to_file(const std::vector<std::string>& args)
 
   backup_file << priv_key;
 
-  logger(INFO, BRIGHT_GREEN) << "Wallet keys have been saved to the current folder where \"concealwallet\" is located.";
+  logger(INFO, BRIGHT_GREEN) << "Wallet keys have been saved to the current folder where \"concealwallet\" is located as \""
+    << formatted_wal_str << "_conceal_backup.txt\".";
 
   return true;
 }
@@ -2008,7 +1997,7 @@ int main(int argc, char* argv[]) {
 
       std::cout << "Conceal Wallet v" << PROJECT_VERSION_LONG << std::endl;
       std::cout << "Usage: concealwallet [--wallet-file=<file>|--generate-new-wallet=<file>] [--daemon-address=<host>:<port>] [<COMMAND>]";
-      std::cout << desc_all << '\n' << tmp_wallet.get_commands_str();
+      std::cout << desc_all << '\n' << tmp_wallet.get_commands_str(false);
       return false;
     } else if (command_line::get_arg(vm, command_line::arg_version))  {
       std::cout << "Conceal Wallet v" << PROJECT_VERSION_LONG << std::endl;
