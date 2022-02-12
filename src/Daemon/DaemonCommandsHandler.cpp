@@ -39,7 +39,6 @@ DaemonCommandsHandler::DaemonCommandsHandler(cn::core &core, cn::NodeServer &srv
   m_consoleHandler.setHandler("rollback_chain", boost::bind(&DaemonCommandsHandler::rollback_chain, this, boost::arg<1>()), "Rollback chain to specific height, rollback_chain <height>");
   m_consoleHandler.setHandler("print_cn", boost::bind(&DaemonCommandsHandler::print_cn, this, boost::arg<1>()), "Print connections");
   m_consoleHandler.setHandler("print_bci", boost::bind(&DaemonCommandsHandler::print_bci, this, boost::arg<1>()), "Print blockchain current height");
-  m_consoleHandler.setHandler("print_bc_outs", boost::bind(&DaemonCommandsHandler::print_bc_outs, this, boost::arg<1>()), "Save blockchain outs to file, save_outs <file_name>");
   m_consoleHandler.setHandler("print_bc", boost::bind(&DaemonCommandsHandler::print_bc, this, boost::arg<1>()), "Print blockchain info in a given blocks range, print_bc <begin_height> [<end_height>]");
   m_consoleHandler.setHandler("print_block", boost::bind(&DaemonCommandsHandler::print_block, this, boost::arg<1>()), "Print block, print_block <block_hash> | <block_height>");
   m_consoleHandler.setHandler("print_stat", boost::bind(&DaemonCommandsHandler::print_stat, this, boost::arg<1>()), "Print statistics, print_stat <nothing=last> | <block_hash> | <block_height>");
@@ -160,21 +159,6 @@ bool DaemonCommandsHandler::hide_hr(const std::vector<std::string> &args)
   m_core.get_miner().do_print_hashrate(false);
 
   logger(logging::DEBUGGING) << "Finished: hide_hr";
-  return true;
-}
-
-bool DaemonCommandsHandler::print_bc_outs(const std::vector<std::string> &args)
-{
-  if (args.size() != 1)
-  {
-    logger(logging::ERROR) << "Usage: \"print_bc_outs <file_name>\"";
-    return true;
-  }
-  logger(logging::DEBUGGING) << "Attempting: print_bc_outs";
-
-  m_core.print_blockchain_outs(args[0]);
-
-  logger(logging::DEBUGGING) << "Finished: print_bc_outs";
   return true;
 }
 

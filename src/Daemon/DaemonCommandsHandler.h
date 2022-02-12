@@ -53,7 +53,6 @@ private:
   bool hide_hr(const std::vector<std::string>& args);
   bool rollbackchainto(uint32_t height);  
   bool rollback_chain(const std::vector<std::string>& args);  
-  bool print_bc_outs(const std::vector<std::string>& args);
   bool print_cn(const std::vector<std::string>& args);
   bool print_bc(const std::vector<std::string>& args);
   bool print_bci(const std::vector<std::string>& args);
