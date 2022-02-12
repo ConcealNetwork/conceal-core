@@ -39,11 +39,12 @@ bool Checkpoints::add_checkpoint(uint32_t height, const std::string &hash_str) {
   }
 
   if (!(0 == m_points.count(height))) {
-    logger(ERROR) << "<< Checkpoints.cpp << " << "Incorrect hash in checkpoints";
+    logger(DEBUGGING) << "Checkpoint already exists for height " << height;
     return false;
   }
-
+  
   m_points[height] = h;
+
   return true;
 }
 //---------------------------------------------------------------------------
@@ -133,7 +134,7 @@ bool Checkpoints::load_checkpoints_from_dns()
       logger(DEBUGGING) << "<< Checkpoints.cpp << " << "Checkpoint already exists for height: " << height << ". Ignoring DNS checkpoint.";
     } else {
       add_checkpoint(height, hash_str);
-	    logger(INFO) << "<< Checkpoints.cpp << " << "Added DNS checkpoint: " << height_str << ":" << hash_str;
+	  logger(DEBUGGING) << "<< Checkpoints.cpp << " << "Added DNS checkpoint: " << height_str << ":" << hash_str;
     }
   }
 
