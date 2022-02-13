@@ -43,7 +43,7 @@ namespace po = boost::program_options;
 
 namespace
 {
-  const command_line::arg_descriptor<std::string> arg_config_file = {"config-file", "Specify configuration file", "Conceal.conf"};
+  const command_line::arg_descriptor<std::string> arg_config_file = {"config-file", "Specify configuration file", "conceal.conf"};
   const command_line::arg_descriptor<bool>        arg_os_version  = {"os-version", ""};
   const command_line::arg_descriptor<std::string> arg_log_file    = {"log-file", "", ""};
   const command_line::arg_descriptor<std::string> arg_set_fee_address = { "fee-address", "Set a fee address for remote nodes", "" };
@@ -87,7 +87,7 @@ JsonValue buildLoggerConfiguration(Level level, const std::string& logfile) {
   JsonValue& consoleLogger = cfgLoggers.pushBack(JsonValue::OBJECT);
   consoleLogger.insert("type", "console");
   consoleLogger.insert("level", static_cast<int64_t>(TRACE));
-  consoleLogger.insert("pattern", "");
+  consoleLogger.insert("pattern", "%T %L ");
 
   return loggerConfiguration;
 }
@@ -137,6 +137,7 @@ int main(int argc, char* argv[])
       if (command_line::get_arg(vm, command_line::arg_help))
       {
         logger(INFO, BRIGHT_YELLOW) << CCX_RELEASE_VERSION << "\n\n";
+        logger(DEBUGGING) << BUILD_COMMIT_ID;
         logger(INFO) << desc_options;
 
         return false;
@@ -154,18 +155,24 @@ int main(int argc, char* argv[])
       boost::filesystem::path data_dir_path(data_dir);
       boost::filesystem::path config_path(config);
       if (!config_path.has_parent_path())
+      {
         config_path = data_dir_path / config_path;
+      }
 
       boost::system::error_code ec;
       if (boost::filesystem::exists(config_path, ec))
+      {
         po::store(po::parse_config_file<char>(config_path.string<std::string>().c_str(), desc_cmd_sett), vm);
+      }
 
       po::notify(vm);
       return true;
     });
 
     if (!r)
+    {
       return 1;
+    }
 
     auto modulePath = common::NativePathToGeneric(argv[0]);
     auto cfgLogFile = common::NativePathToGeneric(command_line::get_arg(vm, arg_log_file));
@@ -186,6 +193,7 @@ int main(int argc, char* argv[])
     logManager.configure(buildLoggerConfiguration(cfgLogLevel, cfgLogFile));
 
     logger(INFO, BRIGHT_YELLOW) << CCX_RELEASE_VERSION;
+    logger(DEBUGGING) << BUILD_COMMIT_ID;
 
     if (command_line_preprocessor(vm, logger))
       return 0;
@@ -355,7 +363,7 @@ bool command_line_preprocessor(const boost::program_options::variables_map &vm, 
 
   if (command_line::get_arg(vm, command_line::arg_version))
   {
-    logger(INFO) << CCX_RELEASE_VERSION;
+    logger(INFO) << CCX_RELEASE_VERSION << " " << << BUILD_COMMIT_ID;
     exit = true;
   }
 

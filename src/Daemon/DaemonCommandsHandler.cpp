@@ -25,7 +25,7 @@ namespace
     logging::LoggerManager lm;
     logging::LoggerRef json_log(lm, "[JSON]");
 
-    json_log() << " " << cn::storeToJson(obj);
+    json_log(logging::INFO) << " " << cn::storeToJson(obj);
     return true;
   }
 } // namespace
@@ -250,7 +250,7 @@ bool DaemonCommandsHandler::set_log(const std::vector<std::string> &args)
   uint16_t l = 0;
   if (!common::fromString(args[0], l))
   {
-    logger(logging::ERROR) << "Incorrect number format, use: set_log <log_level_number_0-4>";
+    logger(logging::ERROR) << "Incorrect number format, use: set_log <0-4> (0-4 being log level)";
     return true;
   }
 
@@ -258,7 +258,7 @@ bool DaemonCommandsHandler::set_log(const std::vector<std::string> &args)
 
   if (l > logging::TRACE)
   {
-    logger(logging::ERROR) << "Incorrect number range, use: set_log <log_level_number_0-4>";
+    logger(logging::ERROR) << "Incorrect number range, use: set_log <0-4> (0-4 being log level)";
     return true;
   }
 
