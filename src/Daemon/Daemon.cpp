@@ -363,7 +363,7 @@ bool command_line_preprocessor(const boost::program_options::variables_map &vm, 
 
   if (command_line::get_arg(vm, command_line::arg_version))
   {
-    logger(INFO) << CCX_RELEASE_VERSION << " " << << BUILD_COMMIT_ID;
+    logger(INFO) << CCX_RELEASE_VERSION << " " << BUILD_COMMIT_ID;
     exit = true;
   }
 
