@@ -529,11 +529,6 @@ namespace cn
       {
         loadBlockchainIndices();
       }
-
-      m_checkpoints.load_checkpoints();
-      logger(logging::INFO) << "Loading checkpoints";
-      m_checkpoints.load_checkpoints_from_dns();
-      logger(logging::INFO) << "Loading DNS checkpoints";
     }
     else
     {
