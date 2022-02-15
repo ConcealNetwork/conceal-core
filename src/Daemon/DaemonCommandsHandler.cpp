@@ -22,10 +22,7 @@ namespace
   template <typename T>
   static bool print_as_json(const T &obj)
   {
-    logging::LoggerManager lm;
-    logging::LoggerRef json_log(lm, "[JSON]");
-
-    json_log(logging::INFO) << " " << cn::storeToJson(obj);
+    std::cout << cn::storeToJson(obj) << ENDL;
     return true;
   }
 } // namespace
