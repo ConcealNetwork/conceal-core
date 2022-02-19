@@ -550,6 +550,40 @@ bool askAliasesTransfersConfirmation(const std::map<std::string, std::vector<Wal
   return answer == "y" || answer == "Y";
 }
 
+void printListDepositsItem(LoggerRef& logger, const WalletLegacyTransaction& txInfo,
+  IWalletLegacy& wallet, const Currency& currency) {
+
+  std::string rowColor = txInfo.totalAmount < 0 ? MAGENTA : GREEN;
+
+  logger(INFO, rowColor)
+    << "  " << std::setw(HASH_MAX_WIDTH) << common::podToHex(txInfo.hash)
+    << "  " << std::setw(TOTAL_AMOUNT_MAX_WIDTH) << currency.formatAmount(txInfo.totalAmount)
+    << "  " << std::setw(FEE_MAX_WIDTH) << currency.formatAmount(txInfo.fee)
+    << "  " << std::setw(BLOCK_MAX_WIDTH) << txInfo.blockHeight
+    << "  " << std::setw(UNLOCK_TIME_MAX_WIDTH) << txInfo.unlockTime;
+
+  if (txInfo.totalAmount < 0) {
+    if (txInfo.depositCount > 0) {
+      logger(INFO, rowColor) << "deposits:";
+      for (DepositId id = txInfo.firstDepositId; id < txInfo.firstDepositId + txInfo.depositCount; ++id) {
+        Deposit d;
+        wallet.getDeposit(id, d);
+        std::string is_locked = !d.locked ? "Unlocked" : "Locked";
+
+        logger(INFO, rowColor)
+          << "ID: " << id << "\n"
+          << "Amount: " << currency.formatAmount(d.amount)
+          << "Interest: " << currency.formatAmount(d.interest)
+          << "Term: " << d.term
+          << "Unlock Height: " << d.unlockHeight
+          << "Locked: " << is_locked;
+      }
+    }
+  }
+
+  logger(INFO, rowColor) << " "; //just to make logger print one endline
+}
+
 }
 
 bool processServerFeeAddressResponse(const std::string& response, std::string& fee_address) {
@@ -636,6 +670,7 @@ simple_wallet::simple_wallet(platform_system::Dispatcher& dispatcher, const cn::
   m_consoleHandler.setHandler("exit", boost::bind(&simple_wallet::exit, this, boost::arg<1>()), "Close wallet");  
   m_consoleHandler.setHandler("get_reserve_proof", boost::bind(&simple_wallet::get_reserve_proof, this, boost::arg<1>()), "all|<amount> [<message>] - Generate a signature proving that you own at least <amount>, optionally with a challenge string <message>. ");
   m_consoleHandler.setHandler("save_keys", boost::bind(&simple_wallet::save_keys_to_file, this, boost::arg<1>()), "Saves wallet private keys to \"<wallet_name>_conceal_backup.txt\"");
+  m_consoleHandler.setHandler("list_deposits", boost::bind(&simple_wallet::list_deposits, this, boost::arg<1>()), "Show all known deposits from this wallet");
 }
 
 std::string simple_wallet::simple_menu()
@@ -648,6 +683,7 @@ std::string simple_wallet::simple_menu()
   menu_item += "\"exit\"                        - Safely exits the wallet application.\n";
   menu_item += "\"export_keys\"                 - Displays backup keys.\n";
   menu_item += "\"help\" | \"ext_help\"           - Shows this help dialog or extended help dialog.\n";
+  menu_item += "\"list_deposits\"               - Show all known deposits, optionally from a certain height. | <block_height>\n";
   menu_item += "\"list_transfers\"              - Show all known transfers, optionally from a certain height. | <block_height>\n";
   menu_item += "\"reset\"                       - Reset cached blockchain data and starts synchronizing from block 0.\n";
   menu_item += "\"transfer <address> <amount>\" - Transfers <amount> to <address>. | [-p<payment_id>] [<amount_2>]...[<amount_N>] [<address_2>]...[<address_n>]\n";
@@ -1951,6 +1987,58 @@ bool simple_wallet::save_keys_to_file(const std::vector<std::string>& args)
 
   logger(INFO, BRIGHT_GREEN) << "Wallet keys have been saved to the current folder where \"concealwallet\" is located as \""
     << formatted_wal_str << "_conceal_backup.txt\".";
+
+  return true;
+}
+
+bool simple_wallet::list_deposits(const std::vector<std::string> &args)
+{
+  bool haveDeposits = false;
+  bool haveBlockHeight = false;
+  std::string blockHeightString = ""; 
+  uint32_t blockHeight = 0;
+  WalletLegacyTransaction txInfo;
+
+
+  /* get block height from arguments */
+  if (args.empty()) 
+  {
+    haveBlockHeight = false;
+  }
+  else
+  {
+    blockHeightString = args[0];
+    haveBlockHeight = true;
+    blockHeight = atoi(blockHeightString.c_str());
+  }
+
+  size_t depositsCount = m_wallet->getDepositCount();
+
+  for (size_t id = 0; id < depositsCount; ++id) 
+  {
+    m_wallet->getTransaction(id, txInfo);
+    if (txInfo.state != WalletLegacyTransactionState::Active || txInfo.blockHeight == WALLET_LEGACY_UNCONFIRMED_TRANSACTION_HEIGHT) {
+      continue;
+    }
+
+    if (!haveDeposits) {
+      printListTransfersHeader(logger);
+      haveDeposits = true;
+    }
+
+    if (haveBlockHeight == false) {
+      printListDepositsItem(logger, txInfo, *m_wallet, m_currency);
+    }
+    else
+    {
+      if (txInfo.blockHeight >= blockHeight)
+        printListDepositsItem(logger, txInfo, *m_wallet, m_currency);
+    }
+  }
+
+  if (!haveDeposits) {
+    success_msg_writer() << "No deposits";
+  }
 
   return true;
 }
