@@ -671,6 +671,7 @@ simple_wallet::simple_wallet(platform_system::Dispatcher& dispatcher, const cn::
   m_consoleHandler.setHandler("get_reserve_proof", boost::bind(&simple_wallet::get_reserve_proof, this, boost::arg<1>()), "all|<amount> [<message>] - Generate a signature proving that you own at least <amount>, optionally with a challenge string <message>. ");
   m_consoleHandler.setHandler("save_keys", boost::bind(&simple_wallet::save_keys_to_file, this, boost::arg<1>()), "Saves wallet private keys to \"<wallet_name>_conceal_backup.txt\"");
   m_consoleHandler.setHandler("list_deposits", boost::bind(&simple_wallet::list_deposits, this, boost::arg<1>()), "Show all known deposits from this wallet");
+  m_consoleHandler.setHandler("deposit", boost::bind(&simple_wallet::deposit, this, boost::arg<1>()), "deposit <months> <amount> - Create a deposit");
 }
 
 std::string simple_wallet::simple_menu()
@@ -680,6 +681,7 @@ std::string simple_wallet::simple_menu()
   menu_item += "\"address\"                     - Shows wallet address.\n";
   menu_item += "\"balance\"                     - Shows wallet balance.\n";
   menu_item += "\"bc_height\"                   - Shows current blockchain height.\n";
+  menu_item += "\"deposit <months> <amount>\"   - Create a deposit to the blockchain.\n";
   menu_item += "\"exit\"                        - Safely exits the wallet application.\n";
   menu_item += "\"export_keys\"                 - Displays backup keys.\n";
   menu_item += "\"help\" | \"ext_help\"           - Shows this help dialog or extended help dialog.\n";
@@ -2038,6 +2040,113 @@ bool simple_wallet::list_deposits(const std::vector<std::string> &args)
 
   if (!haveDeposits) {
     success_msg_writer() << "No deposits";
+  }
+
+  return true;
+}
+
+bool simple_wallet::deposit(const std::vector<std::string> &args)
+{
+  if (args.size() != 2)
+  {
+    logger(ERROR) << "Usage: deposit <months> <amount>";
+    return true;
+  }
+
+  try
+  {
+    /**
+     * Change arg to uint64_t using boost then
+     * multiply by min_term so user can type in months
+    **/
+    uint64_t deposit_term = boost::lexical_cast<uint64_t>(args[0]) * 21900;
+
+    /* Now validate the deposit term and the amount */
+    if (deposit_term < cn::parameters::DEPOSIT_MIN_TERM_V3)
+    {
+      logger(ERROR, BRIGHT_RED) << "Deposit term is too small, min=21900, given=" << deposit_term;
+      return true;
+    }
+
+    if (deposit_term > cn::parameters::DEPOSIT_MAX_TERM_V3)
+    {
+      logger(ERROR, BRIGHT_RED) << "Deposit term is too big, min=" << cn::parameters::DEPOSIT_MAX_TERM_V3
+        << ", given=" << deposit_term;
+      return true;
+    }
+
+    uint64_t deposit_amount = boost::lexical_cast<uint64_t>(args[1]);
+    bool ok = m_currency.parseAmount(args[1], deposit_amount);
+
+    if (!ok || 0 == deposit_amount)
+    {
+      logger(ERROR, BRIGHT_RED) << "amount is wrong: " << deposit_amount <<
+        ", expected number from 1 to " << m_currency.formatAmount(cn::parameters::MONEY_SUPPLY);
+      return true;
+    }
+
+    if (deposit_amount < cn::parameters::DEPOSIT_MIN_AMOUNT)
+    {
+      logger(ERROR, BRIGHT_RED) << "Deposit amount is too small, min=" << cn::parameters::DEPOSIT_MIN_AMOUNT
+        << ", given=" << m_currency.formatAmount(deposit_amount);
+      return true;
+    }
+
+    if (!confirm_deposit(deposit_term, deposit_amount))
+    {
+      logger(ERROR) << "Deposit is not being created."
+      return true;
+    }
+
+    /* Use defaults for fee + mix in */
+    uint64_t deposit_fee = cn::parameters::MINIMUM_FEE_V2;
+    uint64_t deposit_mix_in = cn::parameters::MINIMUM_MIXIN;
+
+    cn::WalletHelper::SendCompleteResultObserver sent;
+    WalletHelper::IWalletRemoveObserverGuard removeGuard(*m_wallet, sent);
+
+    cn::TransactionId tx = m_wallet->deposit(deposit_term, deposit_amount, deposit_fee, deposit_mix_in);
+
+    if (tx == WALLET_LEGACY_INVALID_DEPOSIT_ID)
+    {
+      fail_msg_writer() << "Can't deposit money";
+      return true;
+    }
+
+    std::error_code sendError = sent.wait(tx);
+    removeGuard.removeObserver();
+
+    if (sendError)
+    {
+      fail_msg_writer() << sendError.message();
+      return true;
+    }
+
+    cn::Deposit d_info;
+    m_wallet->getDeposit(tx, d_info);
+    success_msg_writer(true) << "Money successfully sent, transaction hash: " << common::podToHex(d_info.transactionHash);
+
+    try
+    {
+      cn::WalletHelper::storeWallet(*m_wallet, m_wallet_file);
+    }
+    catch (const std::exception& e)
+    {
+      fail_msg_writer() << e.what();
+      return true;
+    }
+  }
+  catch (const std::system_error& e)
+  {
+    fail_msg_writer() << e.what();
+  }
+  catch (const std::exception& e)
+  {
+    fail_msg_writer() << e.what();
+  }
+  catch (...)
+  {
+    fail_msg_writer() << "unknown error";
   }
 
   return true;
