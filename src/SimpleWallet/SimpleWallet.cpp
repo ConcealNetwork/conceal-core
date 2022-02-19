@@ -672,6 +672,7 @@ simple_wallet::simple_wallet(platform_system::Dispatcher& dispatcher, const cn::
   m_consoleHandler.setHandler("save_keys", boost::bind(&simple_wallet::save_keys_to_file, this, boost::arg<1>()), "Saves wallet private keys to \"<wallet_name>_conceal_backup.txt\"");
   m_consoleHandler.setHandler("list_deposits", boost::bind(&simple_wallet::list_deposits, this, boost::arg<1>()), "Show all known deposits from this wallet");
   m_consoleHandler.setHandler("deposit", boost::bind(&simple_wallet::deposit, this, boost::arg<1>()), "deposit <months> <amount> - Create a deposit");
+  m_consoleHandler.setHandler("withdraw", boost::bind(&simple_wallet::withdraw, this, boost::arg<1>()), "withdraw <id> - Withdraw a deposit");
 }
 
 std::string simple_wallet::simple_menu()
@@ -691,6 +692,7 @@ std::string simple_wallet::simple_menu()
   menu_item += "\"transfer <address> <amount>\" - Transfers <amount> to <address>. | [-p<payment_id>] [<amount_2>]...[<amount_N>] [<address_2>]...[<address_n>]\n";
   menu_item += "\"save\"                        - Save wallet synchronized blockchain data.\n";
   menu_item += "\"save_keys\"                   - Saves wallet private keys to \"<wallet_name>_conceal_backup.txt\".\n";
+  menu_item += "\"withdraw <id>\"               - Withdraw a deposit from the blockchain.\n";
   return menu_item;
 }
 
@@ -2150,6 +2152,65 @@ bool simple_wallet::deposit(const std::vector<std::string> &args)
   }
 
   return true;
+}
+
+bool simple_wallet::withdraw(const std::vector<std::string> &args)
+{
+  if (args.size() != 1)
+  {
+    logger(ERROR) << "Usage: withdraw <id>";
+    return true;
+  }
+
+  try
+  {
+    if (m_wallet->getDepositCount() == 0)
+    {
+      logger(ERROR) << "No deposits have been made in this wallet.";
+      return true;
+    }
+
+    uint64_t deposit_id = boost::lexical_cast<uint64_t>(args[0]);
+    uint64_t deposit_fee = cn::parameters::MINIMUM_FEE_V2;
+    
+    cn::WalletHelper::SendCompleteResultObserver sent;
+    WalletHelper::IWalletRemoveObserverGuard removeGuard(*m_wallet, sent);
+
+    cn::TransactionId tx = m_wallet->withdrawDeposit(deposit_id, deposit_fee);
+  
+    if (tx == WALLET_LEGACY_INVALID_DEPOSIT_ID)
+    {
+      fail_msg_writer() << "Can't withdraw money";
+      return true;
+    }
+
+    std::error_code sendError = sent.wait(tx);
+    removeGuard.removeObserver();
+
+    if (sendError)
+    {
+      fail_msg_writer() << sendError.message();
+      return true;
+    }
+
+    cn::Deposit d_info;
+    m_wallet->getDeposit(tx, d_info);
+    success_msg_writer(true) << "Money has successfully been withdrawn\n\ttransaction hash: " << common::podToHex(d_info.transactionHash);
+
+    try
+    {
+      cn::WalletHelper::storeWallet(*m_wallet, m_wallet_file);
+    }
+    catch (const std::exception& e)
+    {
+      fail_msg_writer() << e.what();
+      return true;
+    }
+  }
+  catch (std::exception &e)
+  {
+    fail_msg_writer() << "failed to withdraw deposit: " << e.what();
+  }
 }
 
 int main(int argc, char* argv[]) {

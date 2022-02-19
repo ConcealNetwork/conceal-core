@@ -97,6 +97,7 @@ namespace cn
     bool save_keys_to_file(const std::vector<std::string> &args);
 
     bool deposit(const std::vector<std::string> &args);
+    bool withdraw(const std::vector<std::string> &args);
     bool list_deposits(const std::vector<std::string> &args);
 
     std::string simple_menu();
