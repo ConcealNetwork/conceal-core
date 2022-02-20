@@ -70,43 +70,6 @@ namespace cn
 namespace cn
 {
 
-  template <typename K, typename V, typename Hash>
-  bool serialize(google::sparse_hash_map<K, V, Hash> &value, common::StringView name, cn::ISerializer &serializer)
-  {
-    return serializeMap(value, name, serializer, [&value](size_t size) { value.resize(size); });
-  }
-
-  template <typename K, typename Hash>
-  bool serialize(google::sparse_hash_set<K, Hash> &value, common::StringView name, cn::ISerializer &serializer)
-  {
-    size_t size = value.size();
-    if (!serializer.beginArray(size, name))
-    {
-      return false;
-    }
-
-    if (serializer.type() == ISerializer::OUTPUT)
-    {
-      for (auto &key : value)
-      {
-        serializer(const_cast<K &>(key), "");
-      }
-    }
-    else
-    {
-      value.resize(size);
-      while (size--)
-      {
-        K key;
-        serializer(key, "");
-        value.insert(key);
-      }
-    }
-
-    serializer.endArray();
-    return true;
-  }
-
   // custom serialization to speedup cache loading
   bool serialize(std::vector<std::pair<Blockchain::TransactionIndex, uint16_t>> &value, common::StringView name, cn::ISerializer &s)
   {
