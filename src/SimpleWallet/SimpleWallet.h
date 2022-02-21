@@ -99,6 +99,7 @@ namespace cn
     bool deposit(const std::vector<std::string> &args);
     bool withdraw(const std::vector<std::string> &args);
     bool list_deposits(const std::vector<std::string> &args);
+    bool confirm_deposit(uint64_t term, uint64_t amount);
 
     std::string simple_menu();
     std::string extended_menu();

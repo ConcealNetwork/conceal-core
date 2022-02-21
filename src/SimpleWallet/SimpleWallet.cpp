@@ -2213,6 +2213,38 @@ bool simple_wallet::withdraw(const std::vector<std::string> &args)
   }
 }
 
+bool simple_wallet::confirm_deposit(uint64_t term, uint64_t amount)
+{
+  uint64_t intrest = m_currency.calculateInterestV3(amount, term);
+
+  logger(INFO) << "Confirm deposit details:\n"
+    << "\tAmount: " << amount << "\n"
+    << "\tMonths: " << term / 21900 << "\n"
+    << "\tIntrest: " << intrest << "\n"
+    << "Create deposit? (y/n) ";
+
+  char c;
+  do {
+    std::string answer;
+    std::getline(std::cin, answer);
+    c = answer[0];
+
+    if (!(c == 'Y' || c == 'y' || c == 'N' || c == 'n'))
+    {
+      logger(ERROR) << "Unknown command: " << c;
+    }
+    else
+    {
+      break;
+    }
+  } while (true);
+
+  if (c == 'N' || c == 'n')
+    return false;
+
+  return true;
+}
+
 int main(int argc, char* argv[]) {
 #ifdef _WIN32
   _CrtSetDbgFlag(_CRTDBG_ALLOC_MEM_DF | _CRTDBG_LEAK_CHECK_DF);
