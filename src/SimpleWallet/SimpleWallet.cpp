@@ -2096,7 +2096,7 @@ bool simple_wallet::deposit(const std::vector<std::string> &args)
 
     if (!confirm_deposit(deposit_term, deposit_amount))
     {
-      logger(ERROR) << "Deposit is not being created."
+      logger(ERROR) << "Deposit is not being created.";
       return true;
     }
 
