@@ -41,7 +41,7 @@ private:
   logging::LoggerRef logger;
   logging::LoggerManager& m_logManager;
 
-  std::string get_commands_str();
+  const std::string get_commands_str();
   bool print_block_by_height(uint32_t height);
   bool print_block_by_hash(const std::string& arg);
   uint64_t calculatePercent(const cn::Currency& currency, uint64_t value, uint64_t total);
@@ -53,7 +53,6 @@ private:
   bool hide_hr(const std::vector<std::string>& args);
   bool rollbackchainto(uint32_t height);  
   bool rollback_chain(const std::vector<std::string>& args);  
-  bool print_bc_outs(const std::vector<std::string>& args);
   bool print_cn(const std::vector<std::string>& args);
   bool print_bc(const std::vector<std::string>& args);
   bool print_bci(const std::vector<std::string>& args);

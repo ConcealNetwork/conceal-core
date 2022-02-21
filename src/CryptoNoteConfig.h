@@ -132,7 +132,7 @@ namespace cn
 	const uint64_t MAX_BLOCK_REWARD_V1 = (UINT64_C(6) * parameters::COIN);
 	const uint64_t REWARD_INCREASE_INTERVAL = (UINT64_C(21900));			   // aprox. 1 month (+ 0.25 CCX increment per month)
 
-	const char CRYPTONOTE_NAME[] = "conceal";
+	const char BLOCKCHAIN_DIR[] = "conceal";
 	const char GENESIS_COINBASE_TX_HEX[] = "010a01ff0001c096b102029b2e4c0281c0b02e7c53291a94d1d0cbff8883f8024f5142ee494ffbbd08807121017d6775185749e95ac2d70cae3f29e0e46f430ab648abbe9fdc61d8e7437c60f8";
 	const uint32_t GENESIS_NONCE = 10000;
 	const uint64_t GENESIS_TIMESTAMP = 1527078920;
