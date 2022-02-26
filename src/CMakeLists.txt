@@ -1,4 +1,4 @@
-add_definitions(-DSTATICLIB)
+add_definitions(-DMINIUPNP_STATICLIB)
 include_directories(${CMAKE_SOURCE_DIR}/external/parallel_hashmap)
 
 file(GLOB_RECURSE BlockchainExplorer BlockchainExplorer/*)
