@@ -27,7 +27,7 @@ add_executable(SystemTests ${SystemTests})
 add_executable(DifficultyTests Difficulty/Difficulty.cpp)
 
 target_link_libraries(CoreTests TestGenerator CryptoNoteCore Serialization System Logging Common crypto BlockchainExplorer ${Boost_LIBRARIES})
-target_link_libraries(IntegrationTests IntegrationTestLibrary Wallet NodeRpcProxy InProcessNode P2P Rpc Http Transfers Serialization System CryptoNoteCore Logging Common crypto BlockchainExplorer gtest upnpc-static ${Boost_LIBRARIES})
+target_link_libraries(IntegrationTests IntegrationTestLibrary Wallet NodeRpcProxy InProcessNode P2P Rpc Http Transfers Serialization System CryptoNoteCore Logging Common crypto BlockchainExplorer gtest libminiupnpc-static ${Boost_LIBRARIES})
 target_link_libraries(NodeRpcProxyTests NodeRpcProxy CryptoNoteCore Rpc Http Serialization System Logging Common crypto ${Boost_LIBRARIES})
 target_link_libraries(PerformanceTests CryptoNoteCore Serialization Logging Common crypto ${Boost_LIBRARIES})
 target_link_libraries(SystemTests System gtest_main)
