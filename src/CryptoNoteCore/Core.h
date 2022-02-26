@@ -136,7 +136,7 @@ namespace cn {
     //Blockchain& get_blockchain_storage(){return m_blockchain;}
     //debug functions
     void print_blockchain(uint32_t start_index, uint32_t end_index);
-    void print_blockchain_index();
+    void print_blockchain_index(bool print_all);
     std::string print_pool(bool short_format);
     std::list<cn::tx_memory_pool::TransactionDetails> getMemoryPool() const;
     void print_blockchain_outs(const std::string &file);
