@@ -49,38 +49,38 @@ jobs:
       - name: Prepare release
         shell: powershell
         run: |
-          mkdir build/bin
-          mv build/src/Release/conceald.exe build/bin
-          mv build/src/Release/concealwallet.exe build/bin
-          mv build/src/Release/optimizer.exe build/bin
-          mv build/src/Release/walletd.exe build/bin
-          mv build/tests/Release/*_tests.exe build/bin
+          mkdir build/conceal
+          mv build/src/Release/conceald.exe build/conceal
+          mv build/src/Release/concealwallet.exe build/conceal
+          mv build/src/Release/optimizer.exe build/conceal
+          mv build/src/Release/walletd.exe build/conceal
+          mv build/tests/Release/*_tests.exe build/conceal
 
       - name: Upload To GH Artifacts
         uses: actions/upload-artifact@v2
         with:
           name: ${{ steps.setup.outputs.release_name }}
-          path: build/bin
+          path: build/conceal
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: core_tests
         shell: powershell
         run: |
-          cd build/bin
+          cd build/conceal
           ./core_tests.exe --generate_and_play_test_data
 
       - name: difficulty_tests
         shell: powershell
         run: |
-          cp tests/Difficulty/data.txt build/bin
-          cd build/bin
+          cp tests/Difficulty/data.txt build/conceal
+          cd build/conceal
           ./difficulty_tests.exe data.txt
 
       - name: performance_tests
         shell: powershell
         run: |
-          cd build/bin
+          cd build/conceal
           ./performance_tests.exe
 
   build-ubuntu18:
@@ -112,40 +112,40 @@ jobs:
 
       - name: Prepare release
         run: |
-          mkdir build/bin
-          mv build/src/conceald build/bin
-          mv build/src/concealwallet build/bin
-          mv build/src/optimizer build/bin
-          mv build/src/walletd build/bin
-          mv build/tests/*_tests build/bin
+          mkdir build/conceal
+          mv build/src/conceald build/conceal
+          mv build/src/concealwallet build/conceal
+          mv build/src/optimizer build/conceal
+          mv build/src/walletd build/conceal
+          mv build/tests/*_tests build/conceal
 
       - name: Upload To GH Artifacts
         uses: actions/upload-artifact@v2
         with:
           name: ${{ steps.setup.outputs.release_name }}
-          path: build/bin
+          path: build/conceal
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: core_tests
         run: |
-          cd build/bin
+          cd build/conceal
           ./core_tests --generate_and_play_test_data
 
       - name: difficulty_tests
         run: |
-          cp tests/Difficulty/data.txt build/bin
-          cd build/bin
+          cp tests/Difficulty/data.txt build/conceal
+          cd build/conceal
           ./difficulty_tests data.txt
 
       - name: performance_tests
         run: |
-          cd build/bin
+          cd build/conceal
           ./performance_tests
 
       - name: system_tests
         run: |
-          cd build/bin
+          cd build/conceal
           ./system_tests
 
   build-ubuntu20:
@@ -177,40 +177,40 @@ jobs:
 
       - name: Prepare release
         run: |
-          mkdir build/bin
-          mv build/src/conceald build/bin
-          mv build/src/concealwallet build/bin
-          mv build/src/optimizer build/bin
-          mv build/src/walletd build/bin
-          mv build/tests/*_tests build/bin
+          mkdir build/conceal
+          mv build/src/conceald build/conceal
+          mv build/src/concealwallet build/conceal
+          mv build/src/optimizer build/conceal
+          mv build/src/walletd build/conceal
+          mv build/tests/*_tests build/conceal
 
       - name: Upload To GH Artifacts
         uses: actions/upload-artifact@v2
         with:
           name: ${{ steps.setup.outputs.release_name }}
-          path: build/bin
+          path: build/conceal
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: core_tests
         run: |
-          cd build/bin
+          cd build/conceal
           ./core_tests --generate_and_play_test_data
 
       - name: difficulty_tests
         run: |
-          cp tests/Difficulty/data.txt build/bin
-          cd build/bin
+          cp tests/Difficulty/data.txt build/conceal
+          cd build/conceal
           ./difficulty_tests data.txt
 
       - name: performance_tests
         run: |
-          cd build/bin
+          cd build/conceal
           ./performance_tests
 
       - name: system_tests
         run: |
-          cd build/bin
+          cd build/conceal
           ./system_tests
 
   build-ubuntu20-clang:
@@ -242,40 +242,40 @@ jobs:
 
       - name: Prepare release
         run: |
-          mkdir build/bin
-          mv build/src/conceald build/bin
-          mv build/src/concealwallet build/bin
-          mv build/src/optimizer build/bin
-          mv build/src/walletd build/bin
-          mv build/tests/*_tests build/bin
+          mkdir build/conceal
+          mv build/src/conceald build/conceal
+          mv build/src/concealwallet build/conceal
+          mv build/src/optimizer build/conceal
+          mv build/src/walletd build/conceal
+          mv build/tests/*_tests build/conceal
 
       - name: Upload To GH Artifacts
         uses: actions/upload-artifact@v2
         with:
           name: ${{ steps.setup.outputs.release_name }}
-          path: build/bin
+          path: build/conceal
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: core_tests
         run: |
-          cd build/bin
+          cd build/conceal
           ./core_tests --generate_and_play_test_data
 
       - name: difficulty_tests
         run: |
-          cp tests/Difficulty/data.txt build/bin
-          cd build/bin
+          cp tests/Difficulty/data.txt build/conceal
+          cd build/conceal
           ./difficulty_tests data.txt
 
       - name: performance_tests
         run: |
-          cd build/bin
+          cd build/conceal
           ./performance_tests
 
       - name: system_tests
         run: |
-          cd build/bin
+          cd build/conceal
           ./system_tests
 
   build-macos11:
@@ -306,33 +306,33 @@ jobs:
 
       - name: Prepare release
         run: |
-          mkdir build/bin
-          mv build/src/conceald build/bin
-          mv build/src/concealwallet build/bin
-          mv build/src/optimizer build/bin
-          mv build/src/walletd build/bin
-          mv build/tests/*_tests build/bin
+          mkdir build/conceal
+          mv build/src/conceald build/conceal
+          mv build/src/concealwallet build/conceal
+          mv build/src/optimizer build/conceal
+          mv build/src/walletd build/conceal
+          mv build/tests/*_tests build/conceal
 
       - name: Upload To GH Artifacts
         uses: actions/upload-artifact@v2
         with:
           name: ${{ steps.setup.outputs.release_name }}
-          path: build/bin
+          path: build/conceal
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: core_tests
         run: |
-          cd build/bin
+          cd build/conceal
           ./core_tests --generate_and_play_test_data
 
       - name: difficulty_tests
         run: |
-          cp tests/Difficulty/data.txt build/bin
-          cd build/bin
+          cp tests/Difficulty/data.txt build/conceal
+          cd build/conceal
           ./difficulty_tests data.txt
 
       - name: performance_tests
         run: |
-          cd build/bin
+          cd build/conceal
           ./performance_tests
