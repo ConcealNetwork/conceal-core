@@ -2215,29 +2215,24 @@ bool simple_wallet::withdraw(const std::vector<std::string> &args)
 
 bool simple_wallet::confirm_deposit(uint64_t term, uint64_t amount)
 {
-  uint64_t intrest = m_currency.calculateInterestV3(amount, term);
+  uint64_t interest = m_currency.calculateInterestV3(amount, term);
 
   logger(INFO) << "Confirm deposit details:\n"
-    << "\tAmount: " << amount << "\n"
+    << "\tAmount: " << m_currency.formatAmount(amount) << "\n"
     << "\tMonths: " << term / 21900 << "\n"
-    << "\tIntrest: " << intrest << "\n"
+    << "\tInterest: " << m_currency.formatAmount(interest) << "\n"
     << "Create deposit? (y/n) ";
 
   char c;
-  do {
-    std::string answer;
-    std::getline(std::cin, answer);
-    c = answer[0];
+  std::string answer;
+  std::getline(std::cin, answer);
+  c = answer[0];
 
-    if (!(c == 'Y' || c == 'y' || c == 'N' || c == 'n'))
-    {
-      logger(ERROR) << "Unknown command: " << c;
-    }
-    else
-    {
-      break;
-    }
-  } while (true);
+  if (!(c == 'Y' || c == 'y' || c == 'N' || c == 'n'))
+  {
+    logger(ERROR) << "Unknown command: " << c;
+    return false;
+  }
 
   if (c == 'N' || c == 'n')
     return false;
