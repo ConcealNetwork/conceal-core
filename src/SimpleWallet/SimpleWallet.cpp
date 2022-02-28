@@ -2236,7 +2236,6 @@ bool simple_wallet::confirm_deposit(uint64_t term, uint64_t amount)
       return false;
     else
       logger(ERROR) << "Bad input, please enter either Y or N.";
-    }
   }
 
   return false;
