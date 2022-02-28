@@ -2220,24 +2220,26 @@ bool simple_wallet::confirm_deposit(uint64_t term, uint64_t amount)
   logger(INFO) << "Confirm deposit details:\n"
     << "\tAmount: " << m_currency.formatAmount(amount) << "\n"
     << "\tMonths: " << term / 21900 << "\n"
-    << "\tInterest: " << m_currency.formatAmount(interest) << "\n"
-    << "Create deposit? (y/n) ";
+    << "\tInterest: " << m_currency.formatAmount(interest) << "\n";
 
-  char c;
-  std::string answer;
-  std::getline(std::cin, answer);
-  c = answer[0];
-
-  if (!(c == 'Y' || c == 'y' || c == 'N' || c == 'n'))
+  while (true)
   {
-    logger(ERROR) << "Unknown command: " << c;
-    return false;
+    logger(INFO) << "Is this correct? (Y/N): ";
+
+    char c;
+    std::cin >> c;
+    c = std::tolower(c);
+
+    if (c == 'y')
+      return true;
+    else if (c == 'n')
+      return false;
+    else
+      logger(ERROR) << "Bad input, please enter either Y or N.";
+    }
   }
 
-  if (c == 'N' || c == 'n')
-    return false;
-
-  return true;
+  return false;
 }
 
 int main(int argc, char* argv[]) {
