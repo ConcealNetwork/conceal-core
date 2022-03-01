@@ -2128,7 +2128,7 @@ bool simple_wallet::deposit(const std::vector<std::string> &args)
 
     cn::WalletLegacyTransaction d_info;
     m_wallet->getTransaction(tx, d_info);
-    success_msg_writer(true) << "Money successfully sent, transaction hash: " << common::podToHex(d_info.transactionHash)
+    success_msg_writer(true) << "Money successfully sent, transaction hash: " << common::podToHex(d_info.hash)
       << "\n\tID: " << d_info.firstDepositId;
 
     try
