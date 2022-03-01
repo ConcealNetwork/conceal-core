@@ -2100,6 +2100,8 @@ bool simple_wallet::deposit(const std::vector<std::string> &args)
       return true;
     }
 
+    logger(INFO) << "Creating deposit...";
+
     /* Use defaults for fee + mix in */
     uint64_t deposit_fee = cn::parameters::MINIMUM_FEE_V2;
     uint64_t deposit_mix_in = cn::parameters::MINIMUM_MIXIN;
@@ -2124,9 +2126,10 @@ bool simple_wallet::deposit(const std::vector<std::string> &args)
       return true;
     }
 
-    cn::Deposit d_info;
-    m_wallet->getDeposit(tx, d_info);
-    success_msg_writer(true) << "Money successfully sent, transaction hash: " << common::podToHex(d_info.transactionHash);
+    cn::WalletLegacyTransaction d_info;
+    m_wallet->getTransaction(tx, d_info);
+    success_msg_writer(true) << "Money successfully sent, transaction hash: " << common::podToHex(d_info.transactionHash)
+      << "\n\tID: " << d_info.firstDepositId;
 
     try
     {
@@ -2211,6 +2214,8 @@ bool simple_wallet::withdraw(const std::vector<std::string> &args)
   {
     fail_msg_writer() << "failed to withdraw deposit: " << e.what();
   }
+
+  return true;
 }
 
 bool simple_wallet::confirm_deposit(uint64_t term, uint64_t amount)
