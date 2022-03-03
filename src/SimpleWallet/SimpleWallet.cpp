@@ -2196,9 +2196,9 @@ bool simple_wallet::withdraw(const std::vector<std::string> &args)
       return true;
     }
 
-    cn::Deposit d_info;
-    m_wallet->getDeposit(tx, d_info);
-    success_msg_writer(true) << "Money has successfully been withdrawn\n\ttransaction hash: " << common::podToHex(d_info.transactionHash);
+    cn::WalletLegacyTransaction d_info;
+    m_wallet->getTransaction(tx, d_info);
+    success_msg_writer(true) << "Money successfully sent, transaction hash: " << common::podToHex(d_info.hash);
 
     try
     {
@@ -2227,26 +2227,23 @@ bool simple_wallet::confirm_deposit(uint64_t term, uint64_t amount)
     << "\tMonths: " << term / 21900 << "\n"
     << "\tInterest: " << m_currency.formatAmount(interest) << "\n";
 
-  while (true)
+  logger(INFO) << "Is this correct? (Y/N): \n";
+
+  char c;
+  std::cin >> c;
+  c = std::tolower(c);
+
+  if (c == 'y')
   {
-    logger(INFO) << "Is this correct? (Y/N): ";
-
-    char c;
-    std::cin >> c;
-    c = std::tolower(c);
-
-    if (c == 'y')
-    {
-      return true;
-    }
-    else if (c == 'n')
-    {
-      return false;
-    }
-    else
-    {
-      logger(ERROR) << "Bad input, please enter either Y or N.";
-    }
+    return true;
+  }
+  else if (c == 'n')
+  {
+    return false;
+  }
+  else
+  {
+    logger(ERROR) << "Bad input, please enter either Y or N.";
   }
 
   return false;
