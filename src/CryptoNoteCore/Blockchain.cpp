@@ -1869,17 +1869,21 @@ namespace cn
 
     if (print_all == false)
     {
-      std::string id = common::podToHex(m_blockIndex.getBlockId(getCurrentBlockchainHeight()));
-      logger(INFO, BRIGHT_WHITE) << "id\t\t" << id << " height" << getCurrentBlockchainHeight();
+      uint32_t height = getCurrentBlockchainHeight() - 1;
+      std::string id = common::podToHex(m_blockIndex.getBlockId(height));
+      logger(INFO) << "Current blockchain index:";
+      logger(INFO) << "id: " << id << " height: " << height;
     }
     else
     {
       std::vector<crypto::Hash> blockIds = m_blockIndex.getBlockIds(0, std::numeric_limits<uint32_t>::max());
-      logger(INFO, BRIGHT_WHITE) << "Current blockchain index:";
+      logger(INFO) << "Blockchain indexes:";
       size_t height = 0;
 
       for (auto i = blockIds.begin(); i != blockIds.end(); ++i, ++height)
-        logger(INFO, BRIGHT_WHITE) << "id\t\t" << *i << " height" << height;
+      {
+        logger(INFO) << "id: " << *i << " height: " << height;
+      }
     }
   }
 
