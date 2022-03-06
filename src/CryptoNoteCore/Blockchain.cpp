@@ -1858,8 +1858,8 @@ namespace cn
          << "\nid\t\t" << get_block_hash(m_blocks[i].bl)
          << "\ndifficulty\t\t" << blockDifficulty(i) << ", nonce " << m_blocks[i].bl.nonce << ", tx_count " << m_blocks[i].bl.transactionHashes.size() << ENDL;
     }
-    logger(DEBUGGING) << "Current blockchain:" << ENDL << ss.str();
-    logger(INFO, BRIGHT_WHITE) << "Blockchain printed with log level 1";
+    logger(INFO) << "Blockchain:\n"
+                 << ss.str();
   }
 
   void Blockchain::print_blockchain_index(bool print_all)
