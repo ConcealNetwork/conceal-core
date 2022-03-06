@@ -18,8 +18,8 @@
 #include <boost/utility/value_init.hpp>
 #include <boost/format.hpp>
 
-#include <miniupnpc/miniupnpc.h>
-#include <miniupnpc/upnpcommands.h>
+#include <miniupnpc/include/miniupnpc.h>
+#include <miniupnpc/include/upnpcommands.h>
 
 #include <System/Context.h>
 #include <System/ContextGroupTimeout.h>
@@ -66,7 +66,7 @@ void addPortMapping(logging::LoggerRef& logger, uint32_t port) {
   // Add UPnP port mapping
   logger(INFO) <<  "Attempting to add IGD port mapping.";
   int result;
-  UPNPDev* deviceList = upnpDiscover(1000, NULL, NULL, 0, 0, &result);
+  UPNPDev *deviceList = upnpDiscover(1000, NULL, NULL, 0, 0, 2, &result);
   UPNPUrls urls;
   IGDdatas igdData;
   char lanAddress[64];
@@ -85,7 +85,7 @@ void addPortMapping(logging::LoggerRef& logger, uint32_t port) {
     } else if (result == 2) {
       logger(INFO) <<  "IGD was found but reported as not connected.";
     } else if (result == 3) {
-      logger(INFO) <<  "UPnP device was found but not recoginzed as IGD.";
+      logger(INFO) <<  "UPnP device was found but not recognized as IGD.";
     } else {
       logger(ERROR) << "UPNP_GetValidIGD returned an unknown result code.";
     }
