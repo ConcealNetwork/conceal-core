@@ -415,6 +415,18 @@ void printListTransfersHeader(LoggerRef& logger) {
   logger(INFO) << std::string(header.size(), '-');
 }
 
+void printListDepositsHeader(LoggerRef& logger) {
+  std::string header = makeCenteredString(4, "ID") + "  ";
+  header += makeCenteredString(TOTAL_AMOUNT_MAX_WIDTH, "Amount") + "  ";
+  header += makeCenteredString(TOTAL_AMOUNT_MAX_WIDTH, "Interest") + "  ";
+  header += makeCenteredString(4, "Term") + "  ";
+  header += makeCenteredString(8, "Status");
+  header += makeCenteredString(UNLOCK_TIME_MAX_WIDTH, "Unlock Height");
+
+  logger(INFO) << header;
+  logger(INFO) << std::string(header.size(), '-');
+}
+
 void printListTransfersItem(LoggerRef& logger, const WalletLegacyTransaction& txInfo, IWalletLegacy& wallet, const Currency& currency) {
   std::vector<uint8_t> extraVec = common::asBinaryArray(txInfo.extra);
 
@@ -551,59 +563,55 @@ bool askAliasesTransfersConfirmation(const std::map<std::string, std::vector<Wal
 }
 
 void printListDepositsItem(LoggerRef& logger, const WalletLegacyTransaction& txInfo,
-  IWalletLegacy& wallet, const Currency& currency) {
+  IWalletLegacy& wallet, const Currency& currency, Deposit deposit)
+{
+  std::string is_locked_clr = !deposit.locked ? BRIGHT_RED : BRIGHT_GREEN;
 
-  std::string rowColor = txInfo.totalAmount < 0 ? MAGENTA : GREEN;
+  if (txInfo.depositCount > 0)
+  {
+    logger(INFO) << "Deposits:";
 
-  logger(INFO, rowColor)
-    << "  " << std::setw(HASH_MAX_WIDTH) << common::podToHex(txInfo.hash)
-    << "  " << std::setw(TOTAL_AMOUNT_MAX_WIDTH) << currency.formatAmount(txInfo.totalAmount)
-    << "  " << std::setw(FEE_MAX_WIDTH) << currency.formatAmount(txInfo.fee)
-    << "  " << std::setw(BLOCK_MAX_WIDTH) << txInfo.blockHeight
-    << "  " << std::setw(UNLOCK_TIME_MAX_WIDTH) << txInfo.unlockTime;
+    for (DepositId id = txInfo.firstDepositId; id < txInfo.firstDepositId + txInfo.depositCount; ++id)
+    {
+      wallet.getDeposit(id, deposit);
+      std::string is_locked_str = !deposit.locked ? "Unlocked" : "Locked";
 
-  if (txInfo.totalAmount < 0) {
-    if (txInfo.depositCount > 0) {
-      logger(INFO, rowColor) << "deposits:";
-      for (DepositId id = txInfo.firstDepositId; id < txInfo.firstDepositId + txInfo.depositCount; ++id) {
-        Deposit d;
-        wallet.getDeposit(id, d);
-        std::string is_locked = !d.locked ? "Unlocked" : "Locked";
-
-        logger(INFO, rowColor)
-          << "ID: " << id << "\n"
-          << "Amount: " << currency.formatAmount(d.amount)
-          << "Interest: " << currency.formatAmount(d.interest)
-          << "Term: " << d.term
-          << "Unlock Height: " << d.unlockHeight
-          << "Locked: " << is_locked;
-      }
+      logger(INFO, is_locked_clr)
+        << "ID: " << id << "\n"
+        << "Amount: " << currency.formatAmount(deposit.amount)
+        << "Interest: " << currency.formatAmount(deposit.interest)
+        << "Term: " << deposit.term
+        << "Status: " << is_locked_str
+        << "Unlock Height: " << deposit.unlockHeight;
     }
   }
 
-  logger(INFO, rowColor) << " "; //just to make logger print one endline
+  logger(INFO) << " "; //just to make logger print one endline
 }
 
 }
 
-bool processServerFeeAddressResponse(const std::string& response, std::string& fee_address) {
-    try {
-        std::stringstream stream(response);
-        JsonValue json;
-        stream >> json;
+bool processServerFeeAddressResponse(const std::string& response, std::string& fee_address)
+{
+  try
+  {
+    std::stringstream stream(response);
+    JsonValue json;
+    stream >> json;
 
-        auto rootIt = json.getObject().find("fee_address");
-        if (rootIt == json.getObject().end()) {
-            return false;
-        }
-
-        fee_address = rootIt->second.getString();
-    }
-    catch (std::exception&) {
-        return false;
+    auto rootIt = json.getObject().find("fee_address");
+    if (rootIt == json.getObject().end()) {
+      return false;
     }
 
-    return true;
+    fee_address = rootIt->second.getString();
+  }
+  catch (std::exception&)
+  {
+    return false;
+  }
+
+  return true;
 }
 
 std::string simple_wallet::get_commands_str(bool do_ext) {
@@ -2002,6 +2010,7 @@ bool simple_wallet::list_deposits(const std::vector<std::string> &args)
   std::string blockHeightString = ""; 
   uint32_t blockHeight = 0;
   WalletLegacyTransaction txInfo;
+  Deposit deposit;
 
 
   /* get block height from arguments */
@@ -2021,26 +2030,32 @@ bool simple_wallet::list_deposits(const std::vector<std::string> &args)
   for (size_t id = 0; id < depositsCount; ++id) 
   {
     m_wallet->getTransaction(id, txInfo);
-    if (txInfo.state != WalletLegacyTransactionState::Active || txInfo.blockHeight == WALLET_LEGACY_UNCONFIRMED_TRANSACTION_HEIGHT) {
+    if (txInfo.state != WalletLegacyTransactionState::Active || txInfo.blockHeight == WALLET_LEGACY_UNCONFIRMED_TRANSACTION_HEIGHT)
+    {
       continue;
     }
 
-    if (!haveDeposits) {
-      printListTransfersHeader(logger);
+    if (!haveDeposits)
+    {
+      printListDepositsHeader(logger);
       haveDeposits = true;
     }
 
-    if (haveBlockHeight == false) {
-      printListDepositsItem(logger, txInfo, *m_wallet, m_currency);
+    if (haveBlockHeight == false)
+    {
+      printListDepositsItem(logger, txInfo, *m_wallet, m_currency, deposit);
     }
     else
     {
       if (txInfo.blockHeight >= blockHeight)
-        printListDepositsItem(logger, txInfo, *m_wallet, m_currency);
+      {
+        printListDepositsItem(logger, txInfo, *m_wallet, m_currency, deposit);
+      }
     }
   }
 
-  if (!haveDeposits) {
+  if (!haveDeposits)
+  {
     success_msg_writer() << "No deposits";
   }
 
