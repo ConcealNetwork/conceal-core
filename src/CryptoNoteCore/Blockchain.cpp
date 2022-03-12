@@ -1102,7 +1102,7 @@ namespace cn
     blocksFromCommonRoot.push_back(b.previousBlockHash);
 
     //removing all_chain entries from alternative chain
-    for (const auto ch_ent : alt_chain)
+    for (const auto &ch_ent : alt_chain)
     {
       const Block &bl = m_alternative_chains[ch_ent].bl;
       blocksFromCommonRoot.push_back(get_block_hash(bl));
@@ -1176,11 +1176,11 @@ namespace cn
         return false;
       }
 
-      for (auto it : alt_chain)
+      for (const auto &it : alt_chain)
       {
-        const BlockEntry &bei = m_alternative_chains[it];
-        timestamps.push_back(bei.bl.timestamp);
-        commulative_difficulties.push_back(bei.cumulative_difficulty);
+        const BlockEntry &blockEntry = m_alternative_chains[it];
+        timestamps.push_back(blockEntry.bl.timestamp);
+        commulative_difficulties.push_back(blockEntry.cumulative_difficulty);
       }
     }
     else
@@ -1191,9 +1191,9 @@ namespace cn
       size_t max_i = timestamps.size() - 1;
       BOOST_REVERSE_FOREACH(auto it, alt_chain)
       {
-        const BlockEntry &bei = m_alternative_chains[it];
-        timestamps[max_i - count] = bei.bl.timestamp;
-        commulative_difficulties[max_i - count] = bei.cumulative_difficulty;
+        const BlockEntry &blockEntry = m_alternative_chains[it];
+        timestamps[max_i - count] = blockEntry.bl.timestamp;
+        commulative_difficulties[max_i - count] = blockEntry.cumulative_difficulty;
         count++;
         if (count >= m_currency.difficultyBlocksCountByBlockVersion(BlockMajorVersion))
         {
@@ -1202,7 +1202,7 @@ namespace cn
       }
     }
 
-    uint32_t block_index = m_blocks.size();
+    uint64_t block_index = m_blocks.size();
     uint8_t block_major_version = get_block_major_version_for_height(block_index + 1);
 
     if (block_major_version >= 8)
