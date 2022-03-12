@@ -1466,7 +1466,7 @@ namespace cn
       }
       else
       {
-        if (!(mainPrev))
+        if (!mainPrev)
         {
           logger(ERROR, BRIGHT_RED) << "internal error: broken imperative condition it_main_prev != m_blocks_index.end()";
           return false;
@@ -1488,7 +1488,7 @@ namespace cn
 
       BlockEntry bei = boost::value_initialized<BlockEntry>();
       bei.bl = b;
-      bei.height = static_cast<uint32_t>(alt_chain.size() ? it_prev->second.height + 1 : mainPrevHeight + 1);
+      bei.height = alt_chain.size() ? it_prev->second.height + 1 : mainPrevHeight + 1;
 
       bool is_a_checkpoint;
       if (!m_checkpoints.check_block(bei.height, id, is_a_checkpoint))
@@ -1510,7 +1510,7 @@ namespace cn
       // Always check PoW for alternative blocks
       m_is_in_checkpoint_zone = false;
       difficulty_type current_diff = get_next_difficulty_for_alternative_chain(alt_chain, bei);
-      if (!(current_diff))
+      if (!current_diff)
       {
         logger(ERROR, BRIGHT_RED) << "!!!!!!! DIFFICULTY OVERHEAD !!!!!!!";
         return false;
