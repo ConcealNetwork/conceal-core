@@ -999,7 +999,7 @@ namespace cn
       return false;
     }
 
-    size_t split_height = m_alternative_chains[alt_chain.front()].height;
+    uint32_t split_height = m_alternative_chains[alt_chain.front()].height;
 
     if (!(m_blocks.size() > split_height))
     {
@@ -1008,21 +1008,20 @@ namespace cn
     }
 
     // Compare transactions in proposed alt chain vs current main chain and reject if some transaction is missing in the alt chain
-    std::vector<crypto::Hash> mainChainTxHashes, altChainTxHashes;
+    std::vector<crypto::Hash> mainChainTxHashes;
+    std::vector<crypto::Hash> altChainTxHashes;
     for (size_t i = m_blocks.size() - 1; i >= split_height; i--)
     {
-      Block b = m_blocks[i].bl;
+      const Block &b = m_blocks[i].bl;
       std::copy(b.transactionHashes.begin(), b.transactionHashes.end(), std::inserter(mainChainTxHashes, mainChainTxHashes.end()));
     }
-    for (auto alt_ch_iter = alt_chain.begin(); alt_ch_iter != alt_chain.end(); alt_ch_iter++)
+    for (const auto &hash : alt_chain)
     {
-      auto ch_ent = *alt_ch_iter;
-      const Block &b = m_alternative_chains[ch_ent].bl;
+      const Block &b = m_alternative_chains[hash].bl;
       std::copy(b.transactionHashes.begin(), b.transactionHashes.end(), std::inserter(altChainTxHashes, altChainTxHashes.end()));
     }
-    for (auto main_ch_it = mainChainTxHashes.begin(); main_ch_it != mainChainTxHashes.end(); main_ch_it++)
+    for (const auto &tx_hash : mainChainTxHashes)
     {
-      auto tx_hash = *main_ch_it;
       if (std::find(altChainTxHashes.begin(), altChainTxHashes.end(), tx_hash) == altChainTxHashes.end())
       {
         logger(ERROR, BRIGHT_RED) << "Attempting to switch to an alternate chain, but it lacks transaction " << common::podToHex(tx_hash) << " from main chain, rejected";
@@ -1035,10 +1034,9 @@ namespace cn
     }
 
     // Check block major version matches
-    for (auto alt_ch_iter2 = alt_chain.begin(); alt_ch_iter2 != alt_chain.end(); alt_ch_iter2++)
+    for (const auto &hash : alt_chain)
     {
-      auto ch_ent = *alt_ch_iter2;
-      const Block& b = m_alternative_chains[ch_ent].bl;
+      const Block &b = m_alternative_chains[hash].bl;
       if (!checkBlockVersion(b, get_block_hash(b)))
       {
         return false;
@@ -1051,11 +1049,10 @@ namespace cn
     {
       Block b = m_blocks[i].bl;
       popBlock(get_block_hash(b));
-      //if (!(r)) { logger(ERROR, BRIGHT_RED) << "failed to remove block on chain switching"; return false; }
       disconnected_chain.push_front(b);
     }
 
-    uint32_t height = static_cast<uint32_t>(split_height - 1);
+    uint32_t height = split_height - 1;
 
     //connecting new alternative chain
     for (auto alt_ch_iter = alt_chain.begin(); alt_ch_iter != alt_chain.end(); alt_ch_iter++)
@@ -1068,17 +1065,14 @@ namespace cn
       {
         logger(INFO, BRIGHT_WHITE) << "Failed to switch to alternative blockchain";
         rollback_blockchain_switching(disconnected_chain, split_height);
-        //add_block_as_invalid(ch_ent->second, get_block_hash(ch_ent->second.bl));
         logger(INFO, BRIGHT_WHITE) << "The block was inserted as invalid while connecting new alternative chain,  block_id: " << get_block_hash(b);
         m_orthanBlocksIndex.remove(b);
         m_alternative_chains.erase(ch_ent);
 
         for (auto alt_ch_to_orph_iter = ++alt_ch_iter; alt_ch_to_orph_iter != alt_chain.end(); alt_ch_to_orph_iter++)
         {
-          //block_verification_context bvc = boost::value_initialized<block_verification_context>();
-          //add_block_as_invalid((*alt_ch_iter)->second, (*alt_ch_iter)->first);
-          const Block& b = m_alternative_chains[*alt_ch_to_orph_iter].bl;
-          m_orthanBlocksIndex.remove(b);
+          const Block& bl = m_alternative_chains[*alt_ch_to_orph_iter].bl;
+          m_orthanBlocksIndex.remove(bl);
           m_alternative_chains.erase(*alt_ch_to_orph_iter);
         }
 
@@ -1089,13 +1083,13 @@ namespace cn
     if (!discard_disconnected_chain)
     {
       //pushing old chain as alternative chain
-      for (auto &old_ch_ent : disconnected_chain)
+      for (const auto &old_ch_ent : disconnected_chain)
       {
         block_verification_context bvc = boost::value_initialized<block_verification_context>();
         bool r = handle_alternative_block(old_ch_ent, get_block_hash(old_ch_ent), bvc, false);
         if (!r)
         {
-          logger(ERROR, BRIGHT_RED) << ("Failed to push ex-main chain blocks to alternative chain ");
+          logger(ERROR, BRIGHT_RED) << "Failed to push ex-main chain blocks to alternative chain ";
           rollback_blockchain_switching(disconnected_chain, split_height);
           return false;
         }
@@ -1108,11 +1102,11 @@ namespace cn
     blocksFromCommonRoot.push_back(b.previousBlockHash);
 
     //removing all_chain entries from alternative chain
-    for (auto ch_ent : alt_chain)
+    for (const auto ch_ent : alt_chain)
     {
-      const Block &b = m_alternative_chains[ch_ent].bl;
-      blocksFromCommonRoot.push_back(get_block_hash(b));
-      m_orthanBlocksIndex.remove(b);
+      const Block &bl = m_alternative_chains[ch_ent].bl;
+      blocksFromCommonRoot.push_back(get_block_hash(bl));
+      m_orthanBlocksIndex.remove(bl);
       m_alternative_chains.erase(ch_ent);
     }
 
