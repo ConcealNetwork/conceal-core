@@ -989,7 +989,7 @@ namespace cn
     return true;
   }
 
-  bool Blockchain::switch_to_alternative_blockchain(std::list<blocks_ext_by_hash::iterator> &alt_chain, bool discard_disconnected_chain)
+  bool Blockchain::switch_to_alternative_blockchain(const std::list<crypto::Hash> &alt_chain, bool discard_disconnected_chain)
   {
     std::lock_guard<decltype(m_blockchain_lock)> lk(m_blockchain_lock);
 
@@ -999,7 +999,7 @@ namespace cn
       return false;
     }
 
-    size_t split_height = alt_chain.front()->second.height;
+    size_t split_height = m_alternative_chains[alt_chain.front()].height;
 
     if (!(m_blocks.size() > split_height))
     {
@@ -1017,7 +1017,7 @@ namespace cn
     for (auto alt_ch_iter = alt_chain.begin(); alt_ch_iter != alt_chain.end(); alt_ch_iter++)
     {
       auto ch_ent = *alt_ch_iter;
-      Block b = ch_ent->second.bl;
+      const Block &b = m_alternative_chains[ch_ent].bl;
       std::copy(b.transactionHashes.begin(), b.transactionHashes.end(), std::inserter(altChainTxHashes, altChainTxHashes.end()));
     }
     for (auto main_ch_it = mainChainTxHashes.begin(); main_ch_it != mainChainTxHashes.end(); main_ch_it++)
@@ -1038,8 +1038,8 @@ namespace cn
     for (auto alt_ch_iter2 = alt_chain.begin(); alt_ch_iter2 != alt_chain.end(); alt_ch_iter2++)
     {
       auto ch_ent = *alt_ch_iter2;
-      Block b = ch_ent->second.bl;
-      if (!checkBlockVersion(b, get_block_hash(ch_ent->second.bl)))
+      const Block& b = m_alternative_chains[ch_ent].bl;
+      if (!checkBlockVersion(b, get_block_hash(b)))
       {
         return false;
       }
@@ -1062,21 +1062,23 @@ namespace cn
     {
       auto ch_ent = *alt_ch_iter;
       block_verification_context bvc = boost::value_initialized<block_verification_context>();
-      bool r = pushBlock(ch_ent->second.bl, get_block_hash(ch_ent->second.bl), bvc, ++height);
+      const Block &b = m_alternative_chains[ch_ent].bl;
+      bool r = pushBlock(b, get_block_hash(b), bvc, ++height);
       if (!r || !bvc.m_added_to_main_chain)
       {
         logger(INFO, BRIGHT_WHITE) << "Failed to switch to alternative blockchain";
         rollback_blockchain_switching(disconnected_chain, split_height);
         //add_block_as_invalid(ch_ent->second, get_block_hash(ch_ent->second.bl));
-        logger(INFO, BRIGHT_WHITE) << "The block was inserted as invalid while connecting new alternative chain,  block_id: " << get_block_hash(ch_ent->second.bl);
-        m_orthanBlocksIndex.remove(ch_ent->second.bl);
+        logger(INFO, BRIGHT_WHITE) << "The block was inserted as invalid while connecting new alternative chain,  block_id: " << get_block_hash(b);
+        m_orthanBlocksIndex.remove(b);
         m_alternative_chains.erase(ch_ent);
 
         for (auto alt_ch_to_orph_iter = ++alt_ch_iter; alt_ch_to_orph_iter != alt_chain.end(); alt_ch_to_orph_iter++)
         {
           //block_verification_context bvc = boost::value_initialized<block_verification_context>();
           //add_block_as_invalid((*alt_ch_iter)->second, (*alt_ch_iter)->first);
-          m_orthanBlocksIndex.remove((*alt_ch_to_orph_iter)->second.bl);
+          const Block& b = m_alternative_chains[*alt_ch_to_orph_iter].bl;
+          m_orthanBlocksIndex.remove(b);
           m_alternative_chains.erase(*alt_ch_to_orph_iter);
         }
 
@@ -1102,13 +1104,15 @@ namespace cn
 
     std::vector<crypto::Hash> blocksFromCommonRoot;
     blocksFromCommonRoot.reserve(alt_chain.size() + 1);
-    blocksFromCommonRoot.push_back(alt_chain.front()->second.bl.previousBlockHash);
+    const Block &b = m_alternative_chains[alt_chain.front()].bl;
+    blocksFromCommonRoot.push_back(b.previousBlockHash);
 
     //removing all_chain entries from alternative chain
     for (auto ch_ent : alt_chain)
     {
-      blocksFromCommonRoot.push_back(get_block_hash(ch_ent->second.bl));
-      m_orthanBlocksIndex.remove(ch_ent->second.bl);
+      const Block &b = m_alternative_chains[ch_ent].bl;
+      blocksFromCommonRoot.push_back(get_block_hash(b));
+      m_orthanBlocksIndex.remove(b);
       m_alternative_chains.erase(ch_ent);
     }
 
@@ -1146,7 +1150,7 @@ namespace cn
     }
   }
 
-  difficulty_type Blockchain::get_next_difficulty_for_alternative_chain(const std::list<blocks_ext_by_hash::iterator> &alt_chain, BlockEntry &bei)
+  difficulty_type Blockchain::get_next_difficulty_for_alternative_chain(const std::list<crypto::Hash> &alt_chain, const BlockEntry &bei)
   {
     std::vector<uint64_t> timestamps;
     std::vector<difficulty_type> commulative_difficulties;
@@ -1155,7 +1159,7 @@ namespace cn
     if (alt_chain.size() < m_currency.difficultyBlocksCountByBlockVersion(BlockMajorVersion))
     {
       std::lock_guard<decltype(m_blockchain_lock)> lk(m_blockchain_lock);
-      size_t main_chain_stop_offset = alt_chain.size() ? alt_chain.front()->second.height : bei.height;
+      size_t main_chain_stop_offset = alt_chain.size() ? m_alternative_chains[alt_chain.front()].height : bei.height;
       size_t main_chain_count = m_currency.difficultyBlocksCountByBlockVersion(BlockMajorVersion) - std::min(m_currency.difficultyBlocksCountByBlockVersion(BlockMajorVersion), alt_chain.size());
       main_chain_count = std::min(main_chain_count, main_chain_stop_offset);
       size_t main_chain_start_offset = main_chain_stop_offset - main_chain_count;
@@ -1180,8 +1184,9 @@ namespace cn
 
       for (auto it : alt_chain)
       {
-        timestamps.push_back(it->second.bl.timestamp);
-        commulative_difficulties.push_back(it->second.cumulative_difficulty);
+        const BlockEntry &bei = m_alternative_chains[it];
+        timestamps.push_back(bei.bl.timestamp);
+        commulative_difficulties.push_back(bei.cumulative_difficulty);
       }
     }
     else
@@ -1192,8 +1197,9 @@ namespace cn
       size_t max_i = timestamps.size() - 1;
       BOOST_REVERSE_FOREACH(auto it, alt_chain)
       {
-        timestamps[max_i - count] = it->second.bl.timestamp;
-        commulative_difficulties[max_i - count] = it->second.cumulative_difficulty;
+        const BlockEntry &bei = m_alternative_chains[it];
+        timestamps[max_i - count] = bei.bl.timestamp;
+        commulative_difficulties[max_i - count] = bei.cumulative_difficulty;
         count++;
         if (count >= m_currency.difficultyBlocksCountByBlockVersion(BlockMajorVersion))
         {
@@ -1435,33 +1441,34 @@ namespace cn
 
       //build alternative subchain, front -> mainchain, back -> alternative head
       blocks_ext_by_hash::iterator alt_it = it_prev; //m_alternative_chains.find()
-      std::list<blocks_ext_by_hash::iterator> alt_chain;
+      std::list<crypto::Hash> alt_chain;
       std::vector<uint64_t> timestamps;
       while (alt_it != m_alternative_chains.end())
       {
-        alt_chain.push_front(alt_it);
+        alt_chain.push_front(alt_it->first);
         timestamps.push_back(alt_it->second.bl.timestamp);
         alt_it = m_alternative_chains.find(alt_it->second.bl.previousBlockHash);
       }
 
       if (alt_chain.size())
       {
+        const BlockEntry& bei = m_alternative_chains[alt_chain.front()];
         //make sure that it has right connection to main chain
-        if (!(m_blocks.size() > alt_chain.front()->second.height))
+        if (!(m_blocks.size() > bei.height))
         {
           logger(ERROR, BRIGHT_RED) << "main blockchain wrong height";
           return false;
         }
 
         crypto::Hash h = NULL_HASH;
-        get_block_hash(m_blocks[alt_chain.front()->second.height - 1].bl, h);
-        if (!(h == alt_chain.front()->second.bl.previousBlockHash))
+        get_block_hash(m_blocks[bei.height - 1].bl, h);
+        if (!(h == bei.bl.previousBlockHash))
         {
           logger(ERROR, BRIGHT_RED) << "alternative chain have wrong connection to main chain";
           return false;
         }
 
-        complete_timestamps_vector(alt_chain.front()->second.height - 1, timestamps);
+        complete_timestamps_vector(bei.height - 1, timestamps);
       }
       else
       {
@@ -1554,12 +1561,12 @@ namespace cn
 
       m_orthanBlocksIndex.add(bei.bl);
 
-      alt_chain.push_back(i_res.first);
+      alt_chain.push_back(i_res.first->first);
 
       if (is_a_checkpoint)
       {
         //do reorganize!
-        logger(INFO, BRIGHT_GREEN) << "###### REORGANIZE on height: " << alt_chain.front()->second.height << " of " << m_blocks.size() - 1 << ", checkpoint is found in alternative chain on height " << bei.height;
+        logger(INFO, BRIGHT_GREEN) << "###### REORGANIZE on height: " << m_alternative_chains[alt_chain.front()].height << " of " << m_blocks.size() - 1 << ", checkpoint is found in alternative chain on height " << bei.height;
 
         bool r = switch_to_alternative_blockchain(alt_chain, true);
         if (r)
@@ -1576,7 +1583,7 @@ namespace cn
       else if (m_blocks.back().cumulative_difficulty < bei.cumulative_difficulty) //check if difficulty bigger then in main chain
       {
         //do reorganize!
-        logger(INFO, BRIGHT_GREEN) << "###### REORGANIZE on height: " << alt_chain.front()->second.height << " of " << m_blocks.size() - 1 << " with cum_difficulty " << m_blocks.back().cumulative_difficulty
+        logger(INFO, BRIGHT_GREEN) << "###### REORGANIZE on height: " << m_alternative_chains[alt_chain.front()].height << " of " << m_blocks.size() - 1 << " with cum_difficulty " << m_blocks.back().cumulative_difficulty
                                    << ENDL << " alternative blockchain size: " << alt_chain.size() << " with cum_difficulty " << bei.cumulative_difficulty;
 
         bool r = switch_to_alternative_blockchain(alt_chain, false);
