@@ -837,7 +837,7 @@ namespace priv {
 
         using allocator_type = Alloc;
         using key_type = Key;
-        using size_type = std::make_signed<size_t>::type;
+        using size_type = std::size_t ;
         using difference_type = ptrdiff_t;
 
         // True if this is a multiset or multimap.
@@ -1435,7 +1435,7 @@ namespace priv {
         // Destroys a range of n values, starting at index i.
         void value_destroy_n(const size_type i, const size_type n,
                              allocator_type *alloc) {
-            for (int j = 0; j < n; ++j) {
+            for (size_type j = 0; j < n; ++j) {
                 value_destroy(i + j, alloc);
             }
         }
@@ -1609,10 +1609,10 @@ namespace priv {
 
         static node_type *EmptyNode() {
 #ifdef _MSC_VER
-            static EmptyNodeType* empty_node = new EmptyNodeType;
+            static EmptyNodeType empty_node;
             // This assert fails on some other construction methods.
-            assert(empty_node->parent == empty_node);
-            return empty_node;
+            assert(empty_node.parent == &empty_node);
+            return &empty_node;
 #else
             static constexpr EmptyNodeType empty_node(
                 const_cast<EmptyNodeType *>(&empty_node));
@@ -2138,7 +2138,7 @@ namespace priv {
         set_count((field_type)(count() + 1));
 
         if (!leaf() && count() > i + 1) {
-            for (int j = count(); j > i + 1; --j) {
+            for (int j = count(); j > (int)(i + 1); --j) {
                 set_child(j, child(j - 1));
             }
             clear_child(i + 1);
@@ -2755,7 +2755,7 @@ namespace priv {
             return {0, _begin};
         }
 
-        if (count == size_) {
+        if (count == (difference_type)size_) {
             clear();
             return {count, this->end()};
         }
