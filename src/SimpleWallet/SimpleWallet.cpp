@@ -421,7 +421,6 @@ void printListDepositsHeader(LoggerRef& logger) {
   header += makeCenteredString(TOTAL_AMOUNT_MAX_WIDTH, "Interest") + "  ";
   header += makeCenteredString(4, "Term") + "  ";
   header += makeCenteredString(8, "Status");
-  header += makeCenteredString(UNLOCK_TIME_MAX_WIDTH, "Unlock Height");
 
   logger(INFO) << header;
   logger(INFO) << std::string(header.size(), '-');
@@ -576,11 +575,11 @@ void printListDepositsItem(LoggerRef& logger, const WalletLegacyTransaction& txI
       wallet.getDeposit(id, deposit);
       std::string is_locked_str = !deposit.locked ? "Unlocked" : "Locked";
 
+      logger(INFO, BRIGHT_YELLOW) << "\t--- Deposit Info ---";
       logger(INFO, is_locked_clr)
         << "ID: " << id << "\n"
         << "Amount: " << currency.formatAmount(deposit.amount)
         << "Interest: " << currency.formatAmount(deposit.interest)
-        << "Term: " << deposit.term
         << "Status: " << is_locked_str
         << "Unlock Height: " << deposit.unlockHeight;
     }
@@ -2037,7 +2036,7 @@ bool simple_wallet::list_deposits(const std::vector<std::string> &args)
 
     if (!haveDeposits)
     {
-      printListDepositsHeader(logger);
+      //printListDepositsHeader(logger);
       haveDeposits = true;
     }
 
