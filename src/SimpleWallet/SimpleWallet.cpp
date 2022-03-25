@@ -416,14 +416,14 @@ void printListTransfersHeader(LoggerRef& logger) {
 }
 
 void printListDepositsHeader(LoggerRef& logger) {
-  std::string header = makeCenteredString(4, "ID") + "  ";
-  header += makeCenteredString(TOTAL_AMOUNT_MAX_WIDTH, "Amount") + "  ";
-  header += makeCenteredString(TOTAL_AMOUNT_MAX_WIDTH, "Interest") + "  ";
-  header += makeCenteredString(4, "Term") + "  ";
+  std::string header = makeCenteredString(8, "ID") + " | ";
+  header += makeCenteredString(20, "Amount") + " | ";
+  header += makeCenteredString(20, "Interest") + " | ";
+  header += makeCenteredString(16, "Unlocked Height") + " | ";
   header += makeCenteredString(8, "Status");
 
   logger(INFO) << header;
-  logger(INFO) << std::string(header.size(), '-');
+  logger(INFO) << std::string(header.size(), '=');
 }
 
 void printListTransfersItem(LoggerRef& logger, const WalletLegacyTransaction& txInfo, IWalletLegacy& wallet, const Currency& currency) {
@@ -564,24 +564,20 @@ bool askAliasesTransfersConfirmation(const std::map<std::string, std::vector<Wal
 void printListDepositsItem(LoggerRef& logger, const WalletLegacyTransaction& txInfo,
   IWalletLegacy& wallet, const Currency& currency, Deposit deposit)
 {
-  std::string is_locked_clr = !deposit.locked ? BRIGHT_RED : BRIGHT_GREEN;
-
-  if (txInfo.depositCount > 0)
+  for (DepositId id = 0; id < wallet.getDepositCount(); ++id)
   {
-    logger(INFO) << "Deposits:";
-
-    for (DepositId id = txInfo.firstDepositId; id < txInfo.firstDepositId + txInfo.depositCount; ++id)
+    if (id != cn::WALLET_LEGACY_INVALID_DEPOSIT_ID)
     {
       wallet.getDeposit(id, deposit);
-      std::string is_locked_str = !deposit.locked ? "Unlocked" : "Locked";
 
-      logger(INFO, BRIGHT_YELLOW) << "\t--- Deposit Info ---";
-      logger(INFO, is_locked_clr)
-        << "ID: " << id << "\n"
-        << "Amount: " << currency.formatAmount(deposit.amount)
-        << "Interest: " << currency.formatAmount(deposit.interest)
-        << "Status: " << is_locked_str
-        << "Unlock Height: " << deposit.unlockHeight;
+      std::string is_locked_clr = !deposit.locked ? BRIGHT_GREEN : BRIGHT_RED;
+      std::string is_locked_str = !deposit.locked ? "Unlocked" : "Locked";
+      
+      logger(INFO, is_locked_clr) << std::left << std::setw(8) << makeCenteredString(8, std::to_string(id))
+        << " | " << std::setw(20) << makeCenteredString(20, currency.formatAmount(deposit.amount))
+        << " | " << std::setw(20) << makeCenteredString(20, currency.formatAmount(deposit.interest))
+        << " | " << std::setw(16) << makeCenteredString(16, std::to_string(deposit.height + deposit.term))
+        << " | " << std::setw(8) << makeCenteredString(8, is_locked_str);
     }
   }
 
@@ -2004,59 +2000,18 @@ bool simple_wallet::save_keys_to_file(const std::vector<std::string>& args)
 
 bool simple_wallet::list_deposits(const std::vector<std::string> &args)
 {
-  bool haveDeposits = false;
-  bool haveBlockHeight = false;
-  std::string blockHeightString = ""; 
-  uint32_t blockHeight = 0;
+  bool haveDeposits = m_wallet->getDepositCount() > 0;
   WalletLegacyTransaction txInfo;
   Deposit deposit;
-
-
-  /* get block height from arguments */
-  if (args.empty()) 
-  {
-    haveBlockHeight = false;
-  }
-  else
-  {
-    blockHeightString = args[0];
-    haveBlockHeight = true;
-    blockHeight = atoi(blockHeightString.c_str());
-  }
-
-  size_t depositsCount = m_wallet->getDepositCount();
-
-  for (size_t id = 0; id < depositsCount; ++id) 
-  {
-    m_wallet->getTransaction(id, txInfo);
-    if (txInfo.state != WalletLegacyTransactionState::Active || txInfo.blockHeight == WALLET_LEGACY_UNCONFIRMED_TRANSACTION_HEIGHT)
-    {
-      continue;
-    }
-
-    if (!haveDeposits)
-    {
-      //printListDepositsHeader(logger);
-      haveDeposits = true;
-    }
-
-    if (haveBlockHeight == false)
-    {
-      printListDepositsItem(logger, txInfo, *m_wallet, m_currency, deposit);
-    }
-    else
-    {
-      if (txInfo.blockHeight >= blockHeight)
-      {
-        printListDepositsItem(logger, txInfo, *m_wallet, m_currency, deposit);
-      }
-    }
-  }
 
   if (!haveDeposits)
   {
     success_msg_writer() << "No deposits";
+    return true;
   }
+
+  printListDepositsHeader(logger);
+  printListDepositsItem(logger, txInfo, *m_wallet, m_currency, deposit);
 
   return true;
 }
