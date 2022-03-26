@@ -10,8 +10,6 @@
 
 #include <atomic>
 
-#include "google/sparse_hash_set"
-#include "google/sparse_hash_map"
 #include <parallel_hashmap/phmap.h>
 
 #include "Common/ObserverManager.h"
