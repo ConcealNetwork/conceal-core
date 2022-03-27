@@ -420,7 +420,7 @@ void printListDepositsHeader(LoggerRef& logger) {
   header += makeCenteredString(20, "Amount") + " | ";
   header += makeCenteredString(20, "Interest") + " | ";
   header += makeCenteredString(16, "Unlocked Height") + " | ";
-  header += makeCenteredString(8, "Status");
+  header += makeCenteredString(10, "State");
 
   logger(INFO) << header;
   logger(INFO) << std::string(header.size(), '=');
@@ -566,19 +566,27 @@ void printListDepositsItem(LoggerRef& logger, const WalletLegacyTransaction& txI
 {
   for (DepositId id = 0; id < wallet.getDepositCount(); ++id)
   {
-    if (id != cn::WALLET_LEGACY_INVALID_DEPOSIT_ID)
-    {
-      wallet.getDeposit(id, deposit);
+    bool r = wallet.getDeposit(id, deposit);
 
-      std::string is_locked_clr = !deposit.locked ? BRIGHT_GREEN : BRIGHT_RED;
-      std::string is_locked_str = !deposit.locked ? "Unlocked" : "Locked";
-      
-      logger(INFO, is_locked_clr) << std::left << std::setw(8) << makeCenteredString(8, std::to_string(id))
-        << " | " << std::setw(20) << makeCenteredString(20, currency.formatAmount(deposit.amount))
-        << " | " << std::setw(20) << makeCenteredString(20, currency.formatAmount(deposit.interest))
-        << " | " << std::setw(16) << makeCenteredString(16, std::to_string(deposit.height + deposit.term))
-        << " | " << std::setw(8) << makeCenteredString(8, is_locked_str);
-    }
+    if (!r)
+      logger(ERROR) << "Couldn't get deposit information for: " << id;
+
+    std::string is_locked_clr = !deposit.locked ? BRIGHT_GREEN : BRIGHT_RED;
+    
+    /* follow gui logic */
+    std::string state = "";
+    if (deposit.locked)
+      state = "Locked";
+    else if (deposit.spendingTransactionId  == cn::WALLET_LEGACY_INVALID_TRANSACTION_ID)
+      state = "Unlocked";
+    else
+      state = "Spent";
+
+    logger(INFO, is_locked_clr) << std::left << std::setw(8) << makeCenteredString(8, std::to_string(id))
+      << " | " << std::setw(20) << makeCenteredString(20, currency.formatAmount(deposit.amount))
+      << " | " << std::setw(20) << makeCenteredString(20, currency.formatAmount(deposit.interest))
+      << " | " << std::setw(16) << makeCenteredString(16, std::to_string(deposit.unlockHeight))
+      << " | " << std::setw(10) << makeCenteredString(10, state);
   }
 
   logger(INFO) << " "; //just to make logger print one endline
