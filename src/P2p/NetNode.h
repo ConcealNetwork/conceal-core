@@ -132,7 +132,7 @@ namespace cn
     void serialize(ISerializer& s);
 
     // debug functions
-    bool log_peerlist();
+    bool log_peerlist() const;
     bool log_connections();
     virtual uint64_t get_connections_count() override;
     size_t get_outgoing_connections_count();

@@ -118,13 +118,20 @@ namespace cn
     const command_line::arg_descriptor<std::vector<std::string> > arg_p2p_seed_node   = {"seed-node", "Connect to a node to retrieve peer addresses, and disconnect"};
     const command_line::arg_descriptor<bool> arg_p2p_hide_my_port   =    {"hide-my-port", "Do not announce yourself as peerlist candidate", false, true};
 
-    std::string print_peerlist_to_string(const std::list<PeerlistEntry>& pl) {
+    std::string print_peerlist_to_string(const std::list<PeerlistEntry> &pl)
+    {
       time_t now_time = 0;
       time(&now_time);
       std::stringstream ss;
-      ss << std::setfill('0') << std::setw(8) << std::hex << std::noshowbase;
-      for (const auto& pe : pl) {
-        ss << pe.id << "\t" << pe.adr << " \tlast_seen: " << common::timeIntervalToString(now_time - pe.last_seen) << std::endl;
+      ss << std::left
+         << std::setw(20) << "Peer id"
+         << std::setw(25) << "Remote host"
+         << std::setw(16) << "Last seen" << std::endl;
+      for (const auto &pe : pl)
+      {
+        ss << std::setw(20) << std::hex << pe.id
+           << std::setw(25) << common::ipAddressToString(pe.adr.ip) + ":" + std::to_string(pe.adr.port)
+           << std::setw(16) << common::timeIntervalToString(now_time - pe.last_seen) << std::endl;
       }
       return ss.str();
     }
@@ -1346,12 +1353,16 @@ namespace cn
   }
   //-----------------------------------------------------------------------------------
 
-  bool NodeServer::log_peerlist()
+  bool NodeServer::log_peerlist() const
   {
     std::list<PeerlistEntry> pl_wite;
     std::list<PeerlistEntry> pl_gray;
     m_peerlist.get_peerlist_full(pl_gray, pl_wite);
-    logger(INFO) <<  ENDL << "Peerlist white:" << ENDL << print_peerlist_to_string(pl_wite) << ENDL << "Peerlist gray:" << ENDL << print_peerlist_to_string(pl_gray) ;
+    logger(INFO) << std::endl
+                 << "Peerlist white:\n"
+                 << print_peerlist_to_string(pl_wite) << std::endl
+                 << "Peerlist gray:\n"
+                 << print_peerlist_to_string(pl_gray);
     return true;
   }
   //-----------------------------------------------------------------------------------
