@@ -1996,8 +1996,8 @@ int main(int argc, char* argv[]) {
       cn::simple_wallet tmp_wallet(dispatcher, tmp_currency, logManager);
 
       std::cout << CCX_WALLET_RELEASE_VERSION << std::endl;
-      std::cout << "Usage: concealwallet [--wallet-file=<file>|--generate-new-wallet=<file>] [--daemon-address=<host>:<port>] [<COMMAND>]";
-      std::cout << desc_all << '\n' << tmp_wallet.get_commands_str(false);
+      std::cout << desc_all << std::endl
+                << tmp_wallet.get_commands_str(false);
       return false;
     } else if (command_line::get_arg(vm, command_line::arg_version))  {
       std::cout << CCX_WALLET_RELEASE_VERSION << std::endl;

@@ -291,7 +291,7 @@ int main(int argc, char** argv) {
       return 0; //help message requested or so
     }
 
-    logging::LoggerRef(pg.getLogger(), "main")(logging::INFO) << "PaymentService " << " v" << PROJECT_VERSION_LONG;
+    logging::LoggerRef(pg.getLogger(), "main")(logging::INFO) << CCX_PAYMENT_SERVICE_RELEASE_VERSION;
 
     const auto& config = pg.getConfig();
 

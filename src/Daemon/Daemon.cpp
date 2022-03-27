@@ -57,8 +57,6 @@ namespace
   const command_line::arg_descriptor<bool>        arg_print_genesis_tx = { "print-genesis-tx", "Prints genesis' block tx hex to insert it to config and exits" };
 }
 
-bool command_line_preprocessor(const boost::program_options::variables_map& vm, LoggerRef& logger);
-
 void print_genesis_tx_hex() {
   logging::ConsoleLogger logger;
   cn::Transaction tx = cn::CurrencyBuilder(logger).generateGenesisTransaction();
@@ -136,16 +134,25 @@ int main(int argc, char* argv[])
     bool r = command_line::handle_error_helper(desc_options, [&]() {
       po::store(po::parse_command_line(argc, argv, desc_options), vm);
 
+      // logger is not configured yet, std::cout is fine here
       if (command_line::get_arg(vm, command_line::arg_help))
       {
-        logger(INFO, BRIGHT_YELLOW) << CCX_RELEASE_VERSION << "\n\n";
-        logger(DEBUGGING) << BUILD_COMMIT_ID;
-        logger(INFO) << desc_options;
-
+        std::cout << CCX_RELEASE_VERSION << std::endl
+                  << std::endl;
+        std::cout << desc_options;
         return false;
       }
-
-      if (command_line::get_arg(vm, arg_print_genesis_tx))
+      else if (command_line::get_arg(vm, command_line::arg_version))
+      {
+        std::cout << CCX_RELEASE_VERSION << std::endl;
+        return false;
+      }
+      else if (command_line::get_arg(vm, arg_os_version))
+      {
+        std::cout << "OS " << tools::get_os_version_string() << std::endl;
+        return false;
+      }
+      else if (command_line::get_arg(vm, arg_print_genesis_tx))
       {
         print_genesis_tx_hex();
         return false;
@@ -195,10 +202,6 @@ int main(int argc, char* argv[])
     logManager.configure(buildLoggerConfiguration(cfgLogLevel, cfgLogFile));
 
     logger(INFO, BRIGHT_YELLOW) << CCX_RELEASE_VERSION;
-    logger(DEBUGGING) << BUILD_COMMIT_ID;
-
-    if (command_line_preprocessor(vm, logger))
-      return 0;
 
     logger(INFO) << "Module folder: " << argv[0];
 
@@ -368,26 +371,4 @@ int main(int argc, char* argv[])
 
   logger(INFO) << "Node stopped.";
   return 0;
-}
-
-bool command_line_preprocessor(const boost::program_options::variables_map &vm, LoggerRef &logger)
-{
-  bool exit = false;
-
-  if (command_line::get_arg(vm, command_line::arg_version))
-  {
-    logger(INFO) << CCX_RELEASE_VERSION << " " << BUILD_COMMIT_ID;
-    exit = true;
-  }
-
-  if (command_line::get_arg(vm, arg_os_version))
-  {
-    logger(INFO) << "OS: " << tools::get_os_version_string();
-    exit = true;
-  }
-
-  if (exit)
-    return true;
-
-  return false;
 }
