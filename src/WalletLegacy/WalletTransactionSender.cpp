@@ -548,9 +548,9 @@ namespace cn
       deposit.term = context->depositTerm;
       deposit.creatingTransactionId = context->transactionId;
       deposit.spendingTransactionId = WALLET_LEGACY_INVALID_TRANSACTION_ID;
-      uint32_t height = transactionInfo.blockHeight;
+      deposit.height = transactionInfo.blockHeight;
       deposit.unlockHeight = transactionInfo.blockHeight + context->depositTerm;
-      deposit.interest = m_currency.calculateInterest(deposit.amount, deposit.term, height);
+      deposit.interest = m_currency.calculateInterest(deposit.amount, deposit.term, deposit.height);
       deposit.locked = true;
       DepositId depositId = m_transactionsCache.insertDeposit(deposit, depositIndex, transaction->getTransactionHash());
       transactionInfo.firstDepositId = depositId;
