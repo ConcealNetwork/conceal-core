@@ -47,6 +47,8 @@ void serialize(LegacyDeposit& deposit, ISerializer& serializer) {
   serializer(deposit.term, "term");
   serializer(deposit.amount, "amount");
   serializer(deposit.interest, "interest");
+  serializer(deposit.height, "height");
+  serializer(deposit.unlockedHeight, "unlockedHeight");
 }
 
 void serialize(LegacyDepositInfo& depositInfo, ISerializer& serializer) {
@@ -101,6 +103,8 @@ void convertLegacyDeposits(const std::vector<LegacyDepositInfo>& legacyDeposits,
     info.deposit.term = legacyDepositInfo.deposit.term;
     info.deposit.locked = true;
     info.outputInTransaction = legacyDepositInfo.outputInTransaction;
+    info.deposit.height = legacyDepositInfo.deposit.height;
+    info.deposit.unlockHeight = legacyDepositInfo.deposit.unlockHeight;
 
     deposits.push_back(std::move(info));
   }
