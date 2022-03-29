@@ -1098,6 +1098,7 @@ namespace cn
         m_unlockTransactionsJob,
         m_transactions,
         m_transfers,
+        m_deposits,
         m_transactionSoftLockTime,
         m_uncommitedTransactions);
 

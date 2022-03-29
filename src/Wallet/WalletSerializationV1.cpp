@@ -104,6 +104,37 @@ struct WalletTransferDto {
   uint32_t version;
 };
 
+struct WalletDepositDto {
+  WalletDepositDto() {
+  }
+
+  WalletDepositDto(const cn::Deposit& wd) {
+    creatingTransactionId = wd.creatingTransactionId;
+    spendingTransactionId = wd.spendingTransactionId;
+    term = wd.term;
+    amount = wd.amount;
+    interest = wd.interest;
+    height = wd.height;
+    unlockHeight = wd.unlockHeight;
+    locked = wd.locked;
+    transactionHash = wd.transactionHash;
+    outputInTransaction = wd.outputInTransaction;
+    address = wd.address;
+  }
+
+  size_t creatingTransactionId;
+  size_t spendingTransactionId;
+  uint32_t term;
+  uint64_t amount;
+  uint64_t interest;
+  uint64_t height;
+  uint64_t unlockHeight;
+  bool locked;
+  uint32_t outputInTransaction;
+  crypto::Hash transactionHash;
+  std::string address;
+};
+
 void serialize(WalletRecordDto& value, cn::ISerializer& serializer) {
   serializer(value.spendPublicKey, "spend_public_key");
   serializer(value.spendSecretKey, "spend_secret_key");
@@ -155,6 +186,20 @@ void serialize(WalletTransferDto& value, cn::ISerializer& serializer) {
   if (value.version > 2) {
     serializer(value.type, "type");
   }
+}
+
+void serialize(WalletDepositDto& value, cn::ISerializer& serializer) {
+  serializer(value.height, "height");
+  serializer(value.transactionHash, "transactionHash");
+  serializer(value.outputInTransaction, "outputInTransaction");
+  serializer(value.creatingTransactionId, "creatingTransactionId");
+  serializer(value.spendingTransactionId, "spendingTransactionId");
+  serializer(value.amount, "amount");
+  serializer(value.term, "term");
+  serializer(value.interest, "interest");
+  serializer(value.unlockHeight, "unlockHeight");
+  serializer(value.locked, "locked");
+  serializer(value.address, "address");
 }
 
 template <typename Object>
@@ -282,6 +327,7 @@ WalletSerializer::WalletSerializer(
   UnlockTransactionJobs& unlockTransactions,
   WalletTransactions& transactions,
   WalletTransfers& transfers,
+  WalletDeposits& deposits,
   uint32_t transactionSoftLockTime,
   UncommitedTransactions& uncommitedTransactions
 ) :
@@ -295,6 +341,7 @@ WalletSerializer::WalletSerializer(
   m_unlockTransactions(unlockTransactions),
   m_transactions(transactions),
   m_transfers(transfers),
+  m_deposits(deposits),
   m_transactionSoftLockTime(transactionSoftLockTime),
   uncommitedTransactions(uncommitedTransactions)
 { }
@@ -315,6 +362,7 @@ void WalletSerializer::save(const std::string& password, common::IOutputStream& 
   if (saveDetails) {
     saveTransactions(destination, cryptoContext);
     saveTransfers(destination, cryptoContext);
+    saveDeposits(destination, cryptoContext);
   }
 
   if (saveCache) {
@@ -519,6 +567,7 @@ void WalletSerializer::loadWallet(common::IInputStream &source, const crypto::ch
   if (details) {
     loadTransactions(source, cryptoContext);
     loadTransfers(source, cryptoContext, version);
+    loadDeposits(source, cryptoContext);
   }
 
   if (version < 5) {
@@ -903,6 +952,48 @@ void WalletSerializer::loadTransfers(common::IInputStream& source, CryptoContext
     }
 
     m_transfers.push_back(std::make_pair(txId, tr));
+  }
+}
+
+void WalletSerializer::saveDeposits(common::IOutputStream& source, CryptoContext& cryptoContext) {
+  uint64_t count = m_deposits.size();
+
+  serializeEncrypted(count, "depositCount", cryptoContext, source);
+  cryptoContext.incIv();
+
+  for (const auto& tx: m_deposits) {
+    WalletDepositDto dto(tx);
+    serializeEncrypted(dto, "deposit", cryptoContext, source);
+    cryptoContext.incIv();
+  }
+}
+
+void WalletSerializer::loadDeposits(common::IInputStream& source, CryptoContext& cryptoContext) {
+  uint64_t count = 0;
+  deserializeEncrypted(count, "depositCount", cryptoContext, source);
+  cryptoContext.incIv();
+
+  m_deposits.reserve(count);
+
+  for (uint64_t i = 0; i < count; ++i) {
+    WalletDepositDto dto;
+    deserializeEncrypted(dto, "deposit", cryptoContext, source);
+    cryptoContext.incIv();
+
+    Deposit dp;
+    dp.creatingTransactionId = dto.creatingTransactionId;
+    dp.spendingTransactionId = dto.spendingTransactionId;
+    dp.term = dto.term;
+    dp.amount = dto.amount;
+    dp.interest = dto.interest;
+    dp.height = dto.height;
+    dp.unlockHeight = dto.unlockHeight;
+    dp.locked = dto.locked;
+    dp.transactionHash = dto.transactionHash;
+    dp.outputInTransaction = dto.outputInTransaction;
+    dp.address = dto.address;
+
+    m_deposits.get<RandomAccessIndex>().emplace_back(std::move(dp));
   }
 }
 
