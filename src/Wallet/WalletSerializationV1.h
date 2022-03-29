@@ -70,6 +70,8 @@ private:
   void saveTransactions(common::IOutputStream &destination, CryptoContext &cryptoContext);
   void saveTransfers(common::IOutputStream &destination, CryptoContext &cryptoContext);
 
+  void saveDeposits(common::IOutputStream& source, CryptoContext& cryptoContext);
+
   uint32_t loadVersion(common::IInputStream &source);
   void loadIv(common::IInputStream &source, crypto::chacha8_iv &iv);
   void generateKey(const std::string &password, crypto::chacha8_key &key);
@@ -90,7 +92,6 @@ private:
   void loadTransfers(common::IInputStream &source, CryptoContext &cryptoContext, uint32_t version);
 
   void loadDeposits(common::IInputStream &source, CryptoContext &cryptoContext);
-  void saveDeposits(common::IOutputStream& source, CryptoContext& cryptoContext);
 
   void loadWalletV1Keys(cn::BinaryInputStreamSerializer &serializer);
   void loadWalletV1Details(cn::BinaryInputStreamSerializer &serializer);
