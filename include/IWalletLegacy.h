@@ -156,6 +156,8 @@ public:
   virtual TransactionId withdrawDeposit(const DepositId& depositId, uint64_t fee) = 0;
   virtual TransactionId withdrawDeposits(const std::vector<DepositId>& depositIds, uint64_t fee) = 0;
   virtual std::error_code cancelTransaction(size_t transferId) = 0;
+  virtual Deposit get_deposit(DepositId depositId) = 0;
+
 
 };
 

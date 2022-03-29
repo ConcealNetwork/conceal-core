@@ -419,10 +419,10 @@ void printListDepositsHeader(LoggerRef& logger) {
   std::string header = makeCenteredString(8, "ID") + " | ";
   header += makeCenteredString(20, "Amount") + " | ";
   header += makeCenteredString(20, "Interest") + " | ";
-  header += makeCenteredString(16, "Unlocked Height") + " | ";
+  header += makeCenteredString(16, "Unlock Height") + " | ";
   header += makeCenteredString(10, "State");
 
-  logger(INFO) << header;
+  logger(INFO) << "\n" << header;
   logger(INFO) << std::string(header.size(), '=');
 }
 
@@ -561,31 +561,65 @@ bool askAliasesTransfersConfirmation(const std::map<std::string, std::vector<Wal
   return answer == "y" || answer == "Y";
 }
 
-void printListDepositsItem(LoggerRef& logger, const WalletLegacyTransaction& txInfo,
-  IWalletLegacy& wallet, const Currency& currency, Deposit deposit)
+void printListDepositsItem(LoggerRef& logger, IWalletLegacy& wallet, const Currency& currency)
 {
+  /* go through deposits ids for the amount of deposits in wallet */
   for (DepositId id = 0; id < wallet.getDepositCount(); ++id)
   {
+    /* get deposit info from id and store it to deposit */
+    Deposit deposit = wallet.get_deposit(id);
+
+    /* error check */
     bool r = wallet.getDeposit(id, deposit);
 
     if (!r)
       logger(ERROR) << "Couldn't get deposit information for: " << id;
 
-    std::string is_locked_clr = !deposit.locked ? BRIGHT_GREEN : BRIGHT_RED;
-    
-    /* follow gui logic */
+    /**
+     * -follows gui logic-
+     * if deposit is locked, display red & locked text
+     * if deposit is unlocked, display green & unlocked text
+     * if deposit has been spent, display grey & spent text
+    **/
     std::string state = "";
-    if (deposit.locked)
-      state = "Locked";
-    else if (deposit.spendingTransactionId  == cn::WALLET_LEGACY_INVALID_TRANSACTION_ID)
-      state = "Unlocked";
-    else
-      state = "Spent";
+    std::string is_locked_clr;
 
+    if (deposit.locked)
+    {
+      state = "Locked";
+      is_locked_clr = BRIGHT_RED;
+    }
+    else if (deposit.spendingTransactionId == cn::WALLET_LEGACY_INVALID_TRANSACTION_ID)
+    {
+      state = "Unlocked";
+      is_locked_clr = BRIGHT_GREEN;
+    }
+    else
+    {
+      state = "Spent";
+      is_locked_clr = WHITE;
+    }
+
+    /**
+     * If the block hasn't been processed yet since the user made
+     * a the deposit, deposit.unlockHeight can spit out a random
+     * value as the block hasn't matured yet. Here we see if the
+     * unlock height is heigher than the highest possible block, if
+     * it exceeds we know this deposit hasn't been processed yet.
+    **/
+    bool bad_unlock = deposit.unlockHeight > cn::parameters::CRYPTONOTE_MAX_BLOCK_NUMBER;
+    std::string unlock_str = "";
+
+    if (bad_unlock)
+      unlock_str = "Please wait.";
+    else
+      unlock_str = std::to_string(deposit.unlockHeight);
+
+    /* now print this deposits information */
     logger(INFO, is_locked_clr) << std::left << std::setw(8) << makeCenteredString(8, std::to_string(id))
       << " | " << std::setw(20) << makeCenteredString(20, currency.formatAmount(deposit.amount))
       << " | " << std::setw(20) << makeCenteredString(20, currency.formatAmount(deposit.interest))
-      << " | " << std::setw(16) << makeCenteredString(16, std::to_string(deposit.unlockHeight))
+      << " | " << std::setw(16) << makeCenteredString(16, unlock_str)
       << " | " << std::setw(10) << makeCenteredString(10, state);
   }
 
@@ -684,6 +718,7 @@ simple_wallet::simple_wallet(platform_system::Dispatcher& dispatcher, const cn::
   m_consoleHandler.setHandler("list_deposits", boost::bind(&simple_wallet::list_deposits, this, boost::arg<1>()), "Show all known deposits from this wallet");
   m_consoleHandler.setHandler("deposit", boost::bind(&simple_wallet::deposit, this, boost::arg<1>()), "deposit <months> <amount> - Create a deposit");
   m_consoleHandler.setHandler("withdraw", boost::bind(&simple_wallet::withdraw, this, boost::arg<1>()), "withdraw <id> - Withdraw a deposit");
+  m_consoleHandler.setHandler("deposit_info", boost::bind(&simple_wallet::deposit_info, this, boost::arg<1>()), "deposit_info <id> - Get infomation for deposit <id>");
 }
 
 std::string simple_wallet::simple_menu()
@@ -694,6 +729,7 @@ std::string simple_wallet::simple_menu()
   menu_item += "\"balance\"                     - Shows wallet balance.\n";
   menu_item += "\"bc_height\"                   - Shows current blockchain height.\n";
   menu_item += "\"deposit <months> <amount>\"   - Create a deposit to the blockchain.\n";
+  menu_item += "\"deposit_info <id>\"           - Display full information for deposit <id>.\n";
   menu_item += "\"exit\"                        - Safely exits the wallet application.\n";
   menu_item += "\"export_keys\"                 - Displays backup keys.\n";
   menu_item += "\"help\" | \"ext_help\"           - Shows this help dialog or extended help dialog.\n";
@@ -1946,8 +1982,8 @@ bool simple_wallet::run() {
 
   std::cout << std::endl;
 
-  std::string addr_start = m_wallet->getAddress().substr(0, 6);
-  m_consoleHandler.start(false, "[wallet " + addr_start + "]: ", common::console::Color::BrightYellow);
+  std::string addr_start = m_wallet->getAddress().substr(0, 10);
+  m_consoleHandler.start(false, "[" + addr_start + "]: ", common::console::Color::BrightYellow);
   return true;
 }
 //----------------------------------------------------------------------------------------------------
@@ -2009,8 +2045,6 @@ bool simple_wallet::save_keys_to_file(const std::vector<std::string>& args)
 bool simple_wallet::list_deposits(const std::vector<std::string> &args)
 {
   bool haveDeposits = m_wallet->getDepositCount() > 0;
-  WalletLegacyTransaction txInfo;
-  Deposit deposit;
 
   if (!haveDeposits)
   {
@@ -2019,7 +2053,15 @@ bool simple_wallet::list_deposits(const std::vector<std::string> &args)
   }
 
   printListDepositsHeader(logger);
-  printListDepositsItem(logger, txInfo, *m_wallet, m_currency, deposit);
+  //printListDepositsItem(logger, *m_wallet, m_currency);
+
+  /* go through deposits ids for the amount of deposits in wallet */
+  for (DepositId id = 0; id < m_wallet->getDepositCount(); ++id)
+  {
+    /* get deposit info from id and store it to deposit */
+    Deposit deposit = m_wallet->get_deposit(id);
+    logger(INFO) << m_dhelper.get_deposit_info(deposit, id, m_currency);
+  }
 
   return true;
 }
@@ -2191,6 +2233,21 @@ bool simple_wallet::withdraw(const std::vector<std::string> &args)
   {
     fail_msg_writer() << "failed to withdraw deposit: " << e.what();
   }
+
+  return true;
+}
+
+bool simple_wallet::deposit_info(const std::vector<std::string> &args)
+{
+  if (args.size() != 1)
+  {
+    logger(ERROR) << "Usage: withdraw <id>";
+    return true;
+  }
+  uint64_t deposit_id = boost::lexical_cast<uint64_t>(args[0]);
+  cn::Deposit deposit = m_wallet->get_deposit(deposit_id);
+
+  logger(INFO) << m_dhelper.get_full_deposit_info(deposit, deposit_id, m_currency);
 
   return true;
 }

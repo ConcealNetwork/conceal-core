@@ -28,6 +28,8 @@ struct LegacyDeposit {
   uint32_t term;
   uint64_t amount;
   uint64_t interest;
+  uint64_t height;
+  uint64_t unlockedHeight;
 };
 
 struct LegacyDepositInfo {
@@ -622,7 +624,7 @@ DepositId WalletUserTransactionsCache::insertNewDeposit(const TransactionOutputI
   deposit.interest = currency.calculateInterest(deposit.amount, deposit.term, height);
   deposit.locked = true;
   deposit.height = height;
-  deposit.unlockHeight = deposit.height + deposit.term;
+  deposit.unlockHeight = height + depositOutput.term;
 
   return insertDeposit(deposit, depositOutput.outputInTransaction, depositOutput.transactionHash);
 }

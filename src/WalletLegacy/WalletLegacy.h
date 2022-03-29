@@ -108,6 +108,8 @@ public:
 
   virtual void getAccountKeys(AccountKeys& keys) override;
 
+  virtual Deposit get_deposit(DepositId depositId);
+
 private:
 
   // IBlockchainSynchronizerObserver

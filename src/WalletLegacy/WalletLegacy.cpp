@@ -1496,6 +1496,11 @@ bool WalletLegacy::checkWalletPassword(std::istream& source, const std::string& 
   return serializer.deserialize(source, password);
 }
 
+Deposit WalletLegacy::get_deposit(DepositId depositId)
+{
+  return m_transactionsCache.getDeposit(depositId);
+}
+
 
 //KK
 
