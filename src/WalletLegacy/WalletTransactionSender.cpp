@@ -277,6 +277,7 @@ namespace cn
       uint64_t term,
       uint64_t amount,
       uint64_t fee,
+      uint64_t height,
       uint64_t mixIn)
   {
 
@@ -296,6 +297,7 @@ namespace cn
     context->transactionId = transactionId;
     context->mixIn = mixIn;
     context->depositTerm = static_cast<uint32_t>(term);
+    context->height = height;
 
     if (context->mixIn != 0)
     {
@@ -548,10 +550,10 @@ namespace cn
       deposit.term = context->depositTerm;
       deposit.creatingTransactionId = context->transactionId;
       deposit.spendingTransactionId = WALLET_LEGACY_INVALID_TRANSACTION_ID;
-      deposit.height = transactionInfo.blockHeight;
+      deposit.height = context->height;
       deposit.interest = m_currency.calculateInterest(deposit.amount, deposit.term, deposit.height);
       deposit.locked = true;
-      deposit.unlockHeight = transactionInfo.blockHeight + context->depositTerm;
+      deposit.unlockHeight = context->height + context->depositTerm;
       DepositId depositId = m_transactionsCache.insertDeposit(deposit, depositIndex, transaction->getTransactionHash());
       transactionInfo.firstDepositId = depositId;
       transactionInfo.depositCount = 1;

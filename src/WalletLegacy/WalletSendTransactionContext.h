@@ -37,6 +37,7 @@ struct SendTransactionContext
   std::vector<tx_message_entry> messages;
   uint64_t ttl;
   uint32_t depositTerm;
+  uint64_t height;
 };
 
 } //namespace cn
