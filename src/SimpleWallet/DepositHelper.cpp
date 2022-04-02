@@ -78,6 +78,10 @@ namespace cn
 
     bool bad_unlock2 = unlock_str == "0";
     if (bad_unlock2)
+      unlock_str = std::to_string(deposit_height(deposit) + deposit_term(deposit));
+    
+    bool bad_unlock3 = unlock_str == "0";
+    if (bad_unlock3)
       unlock_str = "ERROR";
 
     std::stringstream full_info;

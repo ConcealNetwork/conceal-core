@@ -2124,11 +2124,12 @@ bool simple_wallet::deposit(const std::vector<std::string> &args)
     /* Use defaults for fee + mix in */
     uint64_t deposit_fee = cn::parameters::MINIMUM_FEE_V2;
     uint64_t deposit_mix_in = cn::parameters::MINIMUM_MIXIN;
+    uint64_t bc_height = m_node->getLastLocalBlockHeight();
 
     cn::WalletHelper::SendCompleteResultObserver sent;
     WalletHelper::IWalletRemoveObserverGuard removeGuard(*m_wallet, sent);
 
-    cn::TransactionId tx = m_wallet->deposit(deposit_term, deposit_amount, deposit_fee, deposit_mix_in);
+    cn::TransactionId tx = m_wallet->deposit(deposit_term, deposit_amount, deposit_fee, deposit_mix_in, bc_height);
 
     if (tx == WALLET_LEGACY_INVALID_DEPOSIT_ID)
     {

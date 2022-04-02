@@ -776,7 +776,7 @@ TransactionId WalletLegacy::sendFusionTransaction(const std::list<TransactionOut
   return txId;
 }
 
-TransactionId WalletLegacy::deposit(uint32_t term, uint64_t amount, uint64_t fee, uint64_t mixIn) {
+TransactionId WalletLegacy::deposit(uint32_t term, uint64_t amount, uint64_t fee, uint64_t height, uint64_t mixIn) {
   throwIfNotInitialised();
 
   TransactionId txId = 0;
@@ -787,7 +787,7 @@ TransactionId WalletLegacy::deposit(uint32_t term, uint64_t amount, uint64_t fee
 
   {
     std::unique_lock<std::mutex> lock(m_cacheMutex);
-    request = m_sender->makeDepositRequest(txId, events, term, amount, fee, mixIn, m_node.getLastLocalBlockHeight());
+    request = m_sender->makeDepositRequest(txId, events, term, amount, fee, mixIn, height);
 
     if (request != nullptr) {
       pushBalanceUpdatedEvents(events);

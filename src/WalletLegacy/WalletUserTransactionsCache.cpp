@@ -123,6 +123,10 @@ bool WalletUserTransactionsCache::serialize(cn::ISerializer& s) {
   s(m_unconfirmedTransactions, "unconfirmed");
   s(m_deposits, "deposits");
 
+  std::vector<LegacyDepositInfo> legacyDeposits;
+  convertLegacyDeposits(legacyDeposits, m_deposits);
+  restoreTransactionOutputToDepositIndex();
+
   if (s.type() == cn::ISerializer::INPUT) {
     updateUnconfirmedTransactions();
     deleteOutdatedTransactions();

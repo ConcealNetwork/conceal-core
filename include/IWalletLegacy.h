@@ -152,7 +152,7 @@ public:
   virtual size_t estimateFusion(const uint64_t& threshold) = 0;
   virtual std::list<TransactionOutputInformation> selectFusionTransfersToSend(uint64_t threshold, size_t minInputCount, size_t maxInputCount) = 0;
   virtual TransactionId sendFusionTransaction(const std::list<TransactionOutputInformation>& fusionInputs, uint64_t fee, const std::string& extra = "", uint64_t mixIn = 0, uint64_t unlockTimestamp = 0) = 0;
-  virtual TransactionId deposit(uint32_t term, uint64_t amount, uint64_t fee, uint64_t mixIn = 0) = 0;
+  virtual TransactionId deposit(uint32_t term, uint64_t amount, uint64_t fee, uint64_t height, uint64_t mixIn = 0) = 0;
   virtual TransactionId withdrawDeposit(const DepositId& depositId, uint64_t fee) = 0;
   virtual TransactionId withdrawDeposits(const std::vector<DepositId>& depositIds, uint64_t fee) = 0;
   virtual std::error_code cancelTransaction(size_t transferId) = 0;
