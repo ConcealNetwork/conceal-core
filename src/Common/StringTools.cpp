@@ -339,5 +339,14 @@ std::string timeIntervalToString(uint64_t intervalInSeconds) {
     ".s" + std::to_string(seconds);
 }
 
+std::string makeCenteredString(size_t width, const std::string& text) {
+  if (text.size() >= width) {
+    return text;
+  }
+
+  size_t offset = (width - text.size() + 1) / 2;
+  return std::string(offset, ' ') + text + std::string(width - text.size() - offset, ' ');
+}
+
 
 }

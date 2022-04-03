@@ -387,15 +387,6 @@ std::string tryToOpenWalletOrLoadKeysOrThrow(LoggerRef& logger, std::unique_ptr<
   }
 }
 
-std::string makeCenteredString(size_t width, const std::string& text) {
-  if (text.size() >= width) {
-    return text;
-  }
-
-  size_t offset = (width - text.size() + 1) / 2;
-  return std::string(offset, ' ') + text + std::string(width - text.size() - offset, ' ');
-}
-
 const size_t TIMESTAMP_MAX_WIDTH = 32;
 const size_t HASH_MAX_WIDTH = 64;
 const size_t TOTAL_AMOUNT_MAX_WIDTH = 20;
@@ -404,23 +395,23 @@ const size_t BLOCK_MAX_WIDTH = 7;
 const size_t UNLOCK_TIME_MAX_WIDTH = 11;
 
 void printListTransfersHeader(LoggerRef& logger) {
-  std::string header = makeCenteredString(TIMESTAMP_MAX_WIDTH, "timestamp (UTC)") + "  ";
-  header += makeCenteredString(HASH_MAX_WIDTH, "hash") + "  ";
-  header += makeCenteredString(TOTAL_AMOUNT_MAX_WIDTH, "total amount") + "  ";
-  header += makeCenteredString(FEE_MAX_WIDTH, "fee") + "  ";
-  header += makeCenteredString(BLOCK_MAX_WIDTH, "block") + "  ";
-  header += makeCenteredString(UNLOCK_TIME_MAX_WIDTH, "unlock time");
+  std::string header = common::makeCenteredString(TIMESTAMP_MAX_WIDTH, "timestamp (UTC)") + "  ";
+  header += common::makeCenteredString(HASH_MAX_WIDTH, "hash") + "  ";
+  header += common::makeCenteredString(TOTAL_AMOUNT_MAX_WIDTH, "total amount") + "  ";
+  header += common::makeCenteredString(FEE_MAX_WIDTH, "fee") + "  ";
+  header += common::makeCenteredString(BLOCK_MAX_WIDTH, "block") + "  ";
+  header += common::makeCenteredString(UNLOCK_TIME_MAX_WIDTH, "unlock time");
 
   logger(INFO) << header;
   logger(INFO) << std::string(header.size(), '-');
 }
 
 void printListDepositsHeader(LoggerRef& logger) {
-  std::string header = makeCenteredString(8, "ID") + " | ";
-  header += makeCenteredString(20, "Amount") + " | ";
-  header += makeCenteredString(20, "Interest") + " | ";
-  header += makeCenteredString(16, "Unlock Height") + " | ";
-  header += makeCenteredString(10, "State");
+  std::string header = common::makeCenteredString(8, "ID") + " | ";
+  header += common::makeCenteredString(20, "Amount") + " | ";
+  header += common::makeCenteredString(20, "Interest") + " | ";
+  header += common::makeCenteredString(16, "Unlock Height") + " | ";
+  header += common::makeCenteredString(10, "State");
 
   logger(INFO) << "\n" << header;
   logger(INFO) << std::string(header.size(), '=');
@@ -616,11 +607,11 @@ void printListDepositsItem(LoggerRef& logger, IWalletLegacy& wallet, const Curre
       unlock_str = std::to_string(deposit.unlockHeight);
 
     /* now print this deposits information */
-    logger(INFO, is_locked_clr) << std::left << std::setw(8) << makeCenteredString(8, std::to_string(id))
-      << " | " << std::setw(20) << makeCenteredString(20, currency.formatAmount(deposit.amount))
-      << " | " << std::setw(20) << makeCenteredString(20, currency.formatAmount(deposit.interest))
-      << " | " << std::setw(16) << makeCenteredString(16, unlock_str)
-      << " | " << std::setw(10) << makeCenteredString(10, state);
+    logger(INFO, is_locked_clr) << std::left << std::setw(8) << common::makeCenteredString(8, std::to_string(id))
+      << " | " << std::setw(20) << common::makeCenteredString(20, currency.formatAmount(deposit.amount))
+      << " | " << std::setw(20) << common::makeCenteredString(20, currency.formatAmount(deposit.interest))
+      << " | " << std::setw(16) << common::makeCenteredString(16, unlock_str)
+      << " | " << std::setw(10) << common::makeCenteredString(10, state);
   }
 
   logger(INFO) << " "; //just to make logger print one endline
