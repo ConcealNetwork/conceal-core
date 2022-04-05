@@ -41,7 +41,6 @@ public:
       UnlockTransactionJobs &unlockTransactions,
       WalletTransactions &transactions,
       WalletTransfers &transfers,
-      WalletDeposits& deposits,
       uint32_t transactionSoftLockTime,
       UncommitedTransactions &uncommitedTransactions);
 
@@ -70,8 +69,6 @@ private:
   void saveTransactions(common::IOutputStream &destination, CryptoContext &cryptoContext);
   void saveTransfers(common::IOutputStream &destination, CryptoContext &cryptoContext);
 
-  void saveDeposits(common::IOutputStream& source, CryptoContext& cryptoContext);
-
   uint32_t loadVersion(common::IInputStream &source);
   void loadIv(common::IInputStream &source, crypto::chacha8_iv &iv);
   void generateKey(const std::string &password, crypto::chacha8_key &key);
@@ -91,8 +88,6 @@ private:
   void loadTransactions(common::IInputStream &source, CryptoContext &cryptoContext);
   void loadTransfers(common::IInputStream &source, CryptoContext &cryptoContext, uint32_t version);
 
-  void loadDeposits(common::IInputStream &source, CryptoContext &cryptoContext);
-
   void loadWalletV1Keys(cn::BinaryInputStreamSerializer &serializer);
   void loadWalletV1Details(cn::BinaryInputStreamSerializer &serializer);
   void addWalletV1Details(const std::vector<WalletLegacyTransaction> &txs, const std::vector<WalletLegacyTransfer> &trs);
@@ -111,7 +106,6 @@ private:
   UnlockTransactionJobs &m_unlockTransactions;
   WalletTransactions &m_transactions;
   WalletTransfers &m_transfers;
-  WalletDeposits& m_deposits;
   uint32_t m_transactionSoftLockTime;
   UncommitedTransactions &uncommitedTransactions;
 };

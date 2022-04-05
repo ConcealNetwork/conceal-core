@@ -97,8 +97,6 @@ void serialize(Deposit& deposit, cn::ISerializer& serializer) {
   serializer(deposit.amount, "amount");
   serializer(deposit.interest, "interest");
   serializer(deposit.locked, "locked");
-  serializer(deposit.height, "height");
-  serializer(deposit.unlockHeight, "unlockHeight");
 }
 
 void serialize(DepositInfo& depositInfo, cn::ISerializer& serializer) {
