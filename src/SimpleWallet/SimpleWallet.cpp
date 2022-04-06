@@ -552,71 +552,6 @@ bool askAliasesTransfersConfirmation(const std::map<std::string, std::vector<Wal
   return answer == "y" || answer == "Y";
 }
 
-void printListDepositsItem(LoggerRef& logger, IWalletLegacy& wallet, const Currency& currency)
-{
-  /* go through deposits ids for the amount of deposits in wallet */
-  for (DepositId id = 0; id < wallet.getDepositCount(); ++id)
-  {
-    /* get deposit info from id and store it to deposit */
-    Deposit deposit = wallet.get_deposit(id);
-
-    /* error check */
-    bool r = wallet.getDeposit(id, deposit);
-
-    if (!r)
-      logger(ERROR) << "Couldn't get deposit information for: " << id;
-
-    /**
-     * -follows gui logic-
-     * if deposit is locked, display red & locked text
-     * if deposit is unlocked, display green & unlocked text
-     * if deposit has been spent, display grey & spent text
-    **/
-    std::string state = "";
-    std::string is_locked_clr;
-
-    if (deposit.locked)
-    {
-      state = "Locked";
-      is_locked_clr = BRIGHT_RED;
-    }
-    else if (deposit.spendingTransactionId == cn::WALLET_LEGACY_INVALID_TRANSACTION_ID)
-    {
-      state = "Unlocked";
-      is_locked_clr = BRIGHT_GREEN;
-    }
-    else
-    {
-      state = "Spent";
-      is_locked_clr = WHITE;
-    }
-
-    /**
-     * If the block hasn't been processed yet since the user made
-     * a the deposit, deposit.unlockHeight can spit out a random
-     * value as the block hasn't matured yet. Here we see if the
-     * unlock height is heigher than the highest possible block, if
-     * it exceeds we know this deposit hasn't been processed yet.
-    **/
-    bool bad_unlock = deposit.unlockHeight > cn::parameters::CRYPTONOTE_MAX_BLOCK_NUMBER;
-    std::string unlock_str = "";
-
-    if (bad_unlock)
-      unlock_str = "Please wait.";
-    else
-      unlock_str = std::to_string(deposit.unlockHeight);
-
-    /* now print this deposits information */
-    logger(INFO, is_locked_clr) << std::left << std::setw(8) << common::makeCenteredString(8, std::to_string(id))
-      << " | " << std::setw(20) << common::makeCenteredString(20, currency.formatAmount(deposit.amount))
-      << " | " << std::setw(20) << common::makeCenteredString(20, currency.formatAmount(deposit.interest))
-      << " | " << std::setw(16) << common::makeCenteredString(16, unlock_str)
-      << " | " << std::setw(10) << common::makeCenteredString(10, state);
-  }
-
-  logger(INFO) << " "; //just to make logger print one endline
-}
-
 }
 
 bool processServerFeeAddressResponse(const std::string& response, std::string& fee_address)
@@ -717,7 +652,7 @@ std::string simple_wallet::simple_menu()
   std::string menu_item = "\t\tConceal Wallet Menu\n\n";
   menu_item += "[ ] = Optional arg\n";
   menu_item += "\"address\"                     - Shows wallet address.\n";
-  menu_item += "\"balance\"                     - Shows wallet balance.\n";
+  menu_item += "\"balance\"                     - Shows wallet main and deposit balance.\n";
   menu_item += "\"bc_height\"                   - Shows current blockchain height.\n";
   menu_item += "\"deposit <months> <amount>\"   - Create a deposit to the blockchain.\n";
   menu_item += "\"deposit_info <id>\"           - Display full information for deposit <id>.\n";
@@ -1414,8 +1349,26 @@ void simple_wallet::synchronizationProgressUpdated(uint32_t current, uint32_t to
 }
 
 bool simple_wallet::show_balance(const std::vector<std::string>& args/* = std::vector<std::string>()*/) {
-  success_msg_writer() << "available balance: " << m_currency.formatAmount(m_wallet->actualBalance()) <<
-    ", locked amount: " << m_currency.formatAmount(m_wallet->pendingBalance());
+  std::string header = common::makeCenteredString(14, "  ") + " | ";
+  header += common::makeCenteredString(20, "Available") + " | ";
+  header += common::makeCenteredString(20, "Locked");
+
+  logger(INFO) << "\n" << header;
+  logger(INFO) << std::string(header.size(), '=');
+
+  std::stringstream wal_funds;
+  wal_funds << std::left <<
+    std::setw(14)  << common::makeCenteredString(14, "Wallet Funds") << " | " <<
+    std::setw(20) << common::makeCenteredString(20, m_currency.formatAmount(m_wallet->actualBalance())) << " | " <<
+    std::setw(20) << common::makeCenteredString(20, m_currency.formatAmount(m_wallet->pendingBalance()));
+
+  std::stringstream dep_funds;
+  dep_funds << std::left <<
+    std::setw(14)  << common::makeCenteredString(14, "Deposit Funds") << " | " <<
+    std::setw(20) << common::makeCenteredString(20, m_currency.formatAmount(m_wallet->actualDepositBalance())) << " | " <<
+    std::setw(20) << common::makeCenteredString(20, m_currency.formatAmount(m_wallet->pendingDepositBalance()));
+
+  logger(INFO) << wal_funds.str() << "\n" << dep_funds.str();
 
   return true;
 }
@@ -2044,7 +1997,6 @@ bool simple_wallet::list_deposits(const std::vector<std::string> &args)
   }
 
   printListDepositsHeader(logger);
-  //printListDepositsItem(logger, *m_wallet, m_currency);
 
   /* go through deposits ids for the amount of deposits in wallet */
   for (DepositId id = 0; id < m_wallet->getDepositCount(); ++id)
