@@ -544,13 +544,17 @@ namespace cn
       }
 
       transactionInfo.hash = transaction->getTransactionHash();
+      
+      uint64_t t_height = context->height;
+      if (t_height == 0)
+        t_height = transactionInfo.blockHeight;
 
       Deposit deposit;
       deposit.amount = std::abs(transactionInfo.totalAmount) - transactionInfo.fee;
       deposit.term = context->depositTerm;
       deposit.creatingTransactionId = context->transactionId;
       deposit.spendingTransactionId = WALLET_LEGACY_INVALID_TRANSACTION_ID;
-      deposit.height = context->height;
+      deposit.height = t_height;
       deposit.interest = m_currency.calculateInterest(deposit.amount, deposit.term, deposit.height);
       deposit.locked = true;
       deposit.unlockHeight = context->height + context->depositTerm;
