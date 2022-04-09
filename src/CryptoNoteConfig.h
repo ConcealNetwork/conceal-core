@@ -113,6 +113,20 @@ namespace cn
 		const size_t UPGRADE_VOTING_WINDOW = EXPECTED_NUMBER_OF_BLOCKS_PER_DAY;
 		const size_t UPGRADE_WINDOW = EXPECTED_NUMBER_OF_BLOCKS_PER_DAY;
 
+
+		const uint64_t TESTNET_UPGRADE_HEIGHT = 1;
+		const uint64_t TESTNET_UPGRADE_HEIGHT_V2 = 1;
+		const uint64_t TESTNET_UPGRADE_HEIGHT_V3 = 12;	  /* Cryptonight-Fast */
+		const uint64_t TESTNET_UPGRADE_HEIGHT_V4 = 24;	  /* MixIn 2 */
+		const uint64_t TESTNET_UPGRADE_HEIGHT_V5 = 36;	  /* Deposits 2.0, Investments 1.0 */
+		const uint64_t TESTNET_UPGRADE_HEIGHT_V6 = 48;	  /* LWMA3 */
+		const uint64_t TESTNET_UPGRADE_HEIGHT_V7 = 60;	  /* Cryptoight Conceal */
+		const uint64_t TESTNET_UPGRADE_HEIGHT_V8 = 72;	  /* LWMA1, CN-GPU, Halving */
+
+		const uint32_t TESTNET_DEPOSIT_MIN_TERM_V3 = 30;		/* testnet deposits 1 month -> 1 hour */
+		const uint32_t TESTNET_DEPOSIT_MAX_TERM_V3 = 12 * 30;	/* testnet deposits 1 year -> 12 hour */
+		const uint32_t TESTNET_DEPOSIT_HEIGHT_V3 = 60;		
+
 		static_assert(0 < UPGRADE_VOTING_THRESHOLD && UPGRADE_VOTING_THRESHOLD <= 100, "Bad UPGRADE_VOTING_THRESHOLD");
 		static_assert(UPGRADE_VOTING_WINDOW > 1, "Bad UPGRADE_VOTING_WINDOW");
 
@@ -156,6 +170,9 @@ namespace cn
 	const int P2P_DEFAULT_PORT = 15000;
 	const int RPC_DEFAULT_PORT = 16000;
 
+	const int TESTNET_P2P_DEFAULT_PORT = 15500;
+	const int TESTNET_RPC_DEFAULT_PORT = 16600;
+
 	/* P2P Network Configuration Section - This defines our current P2P network version
 	and the minimum version for communication between nodes */
 	const uint8_t P2P_VERSION_1 = 1;
@@ -188,6 +205,11 @@ namespace cn
 		"185.58.227.32:15000", // UK
 		"185.35.64.209:15000",	 // France 
 		"94.177.245.107:15000"	 // Germany
+	};
+
+	const std::initializer_list<const char *> TESTNET_SEED_NODES = {
+		"161.97.145.65:15500",
+		"161.97.145.65:15501"
 	};
 
 	struct CheckpointData
@@ -295,6 +317,17 @@ namespace cn
 			{880000, "a861367503fec46c12f8ae957438a389c4de7b3c267cfdb21a7be29337885e10"},
 			{890000, "092b29ab3369d0227239f0604d57ab91a3e1794ca3abe0c75fd5e69acb611a66"}
 			};
+
+    const std::initializer_list<CheckpointData> TESTNET_CHECKPOINTS = {
+        {0, "850ac16022f4dddab624fad3f9049dba80592c8ea51a5dff19fefeb386e536b1"},
+        {5000, "e232d411f2264e185bba87cad56053bd35596d629faf9d6e6cddc410d3fdf3de"},
+        {10000, "ad40d09ed6194709da7aabc893a71a7d28745386b765ff29cbab34fc1df83696"},
+        {15000, "a5874d60032c365150acaf528e06b403471560a7bee1faea2b8ac3d09b4e06c5"},
+        {20000, "41b738d741339a9609eceade3c5adffd54b89a5c70274d7edeade1ebdfd483a7"},
+        {25000, "bdde29c10211c911947e1e0d602309e95fb915372f3317690c7860ef451a78e7"},
+        {30000, "2bfd5dcd511b836755e413db911301a7e0bbb324c43fe38c4e2ec696996cb557"},
+        {35000, "dc0f5be53085ffe347c92ff551a4e8757759ef30bdd4589a636d976c580ce4c3"}
+    };
 
 } // namespace cn
 

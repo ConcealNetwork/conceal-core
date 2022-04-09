@@ -459,8 +459,10 @@ namespace cn
     return static_cast<uint32_t>(m_blocks.size());
   }
 
-  bool Blockchain::init(const std::string &config_folder, bool load_existing)
+  bool Blockchain::init(const std::string &config_folder, bool load_existing, bool testnet)
   {
+    m_testnet = testnet;
+    m_checkpoints.set_testnet(testnet);
     std::lock_guard<decltype(m_blockchain_lock)> lk(m_blockchain_lock);
     if (!config_folder.empty() && !tools::create_directories_if_necessary(config_folder))
     {

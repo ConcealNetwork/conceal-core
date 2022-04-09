@@ -286,7 +286,7 @@ std::string get_nix_version_display_string()
   }
 #endif
 
-  std::string getDefaultDataDirectory()
+  std::string getDefaultDataDirectory(bool testnet)
   {
     //namespace fs = boost::filesystem;
     // Windows < Vista: C:\Documents and Settings\Username\Application Data\BLOCKCHAIN_DIR
@@ -299,8 +299,8 @@ std::string get_nix_version_display_string()
     config_folder = get_special_folder_path(CSIDL_APPDATA, true) + "/" + cn::BLOCKCHAIN_DIR;
 #else
     std::string pathRet;
-    char* pszHome = getenv("HOME");
-    if (pszHome == NULL || strlen(pszHome) == 0)
+    const char* pszHome = getenv("HOME");
+    if (pszHome == nullptr || strlen(pszHome) == 0)
       pathRet = "/";
     else
       pathRet = pszHome;
@@ -314,7 +314,7 @@ std::string get_nix_version_display_string()
 #endif
 #endif
 
-    return config_folder;
+    return config_folder + (testnet ? "/testnet" : "");
   }
 
   bool create_directories_if_necessary(const std::string& path)

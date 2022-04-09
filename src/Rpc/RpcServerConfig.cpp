@@ -33,9 +33,20 @@ namespace cn {
     command_line::add_arg(desc, arg_rpc_bind_port);
   }
 
-  void RpcServerConfig::init(const boost::program_options::variables_map& vm)  {
+  void RpcServerConfig::init(const boost::program_options::variables_map &vm)
+  {
+    bool testnet = vm[command_line::arg_testnet_on.name].as<bool>();
     bindIp = command_line::get_arg(vm, arg_rpc_bind_ip);
     bindPort = command_line::get_arg(vm, arg_rpc_bind_port);
+    uint16_t argPort = command_line::get_arg(vm, arg_rpc_bind_port);
+    bindPort = argPort;
+    if (testnet)
+    {
+      bindPort = TESTNET_RPC_DEFAULT_PORT;
+      if (!vm[arg_rpc_bind_port.name].defaulted())
+      {
+        bindPort = argPort;
+      }
+    }
   }
-
 }
