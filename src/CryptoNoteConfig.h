@@ -169,9 +169,11 @@ namespace cn
 
 	const int P2P_DEFAULT_PORT = 15000;
 	const int RPC_DEFAULT_PORT = 16000;
+    const int PAYMENT_GATE_DEFAULT_PORT = 8070;
 
 	const int TESTNET_P2P_DEFAULT_PORT = 15500;
 	const int TESTNET_RPC_DEFAULT_PORT = 16600;
+    const int TESTNET_PAYMENT_GATE_DEFAULT_PORT = 8770;
 
 	/* P2P Network Configuration Section - This defines our current P2P network version
 	and the minimum version for communication between nodes */
