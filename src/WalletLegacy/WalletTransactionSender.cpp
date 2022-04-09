@@ -557,7 +557,7 @@ namespace cn
       deposit.height = t_height;
       deposit.interest = m_currency.calculateInterest(deposit.amount, deposit.term, deposit.height);
       deposit.locked = true;
-      deposit.unlockHeight = context->height + context->depositTerm;
+      deposit.unlockHeight = t_height + context->depositTerm;
       DepositId depositId = m_transactionsCache.insertDeposit(deposit, depositIndex, transaction->getTransactionHash());
       transactionInfo.firstDepositId = depositId;
       transactionInfo.depositCount = 1;
