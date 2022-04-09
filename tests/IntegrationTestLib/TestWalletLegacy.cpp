@@ -22,7 +22,7 @@ TestWalletLegacy::TestWalletLegacy(platform_system::Dispatcher &dispatcher, cons
                                                                                                             m_someTransactionUpdated(dispatcher),
                                                                                                             m_currency(currency),
                                                                                                             m_node(node),
-                                                                                                            m_wallet(new cn::WalletLegacy(currency, node, m_logger)),
+                                                                                                            m_wallet(new cn::WalletLegacy(currency, node, m_logger, true)),
                                                                                                             m_currentHeight(0)
 {
   m_wallet->addObserver(this);

@@ -433,7 +433,7 @@ bool BaseFunctionalTests::makeWallet(std::unique_ptr<cn::IWalletLegacy> &wallet,
 {
   if (!node)
     return false;
-  wallet = std::unique_ptr<cn::IWalletLegacy>(new cn::WalletLegacy(m_currency, *node, m_logger));
+  wallet = std::unique_ptr<cn::IWalletLegacy>(new cn::WalletLegacy(m_currency, *node, m_logger, true));
   wallet->initAndGenerate(password);
   return true;
 }
