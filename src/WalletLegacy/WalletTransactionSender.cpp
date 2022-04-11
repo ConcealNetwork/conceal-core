@@ -545,9 +545,7 @@ namespace cn
 
       transactionInfo.hash = transaction->getTransactionHash();
       
-      uint64_t t_height = context->height;
-      if (t_height == 0)
-        t_height = transactionInfo.blockHeight;
+      uint64_t t_height = transactionInfo.blockHeight;
 
       Deposit deposit;
       deposit.amount = std::abs(transactionInfo.totalAmount) - transactionInfo.fee;
