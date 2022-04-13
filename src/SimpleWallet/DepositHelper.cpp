@@ -53,12 +53,12 @@ namespace cn
     return deposit.unlockHeight;
   }
 
-  uint64_t deposit_helper::deposit_height(cn::Deposit deposit)
+  uint64_t deposit_helper::deposit_height(cn::WalletLegacyTransaction txInfo)
   {
-    return deposit.height;
+    return txInfo.blockHeight;
   }
 
-  std::string deposit_helper::get_deposit_info(cn::Deposit deposit, cn::DepositId did, const Currency& currency)
+  std::string deposit_helper::get_deposit_info(cn::Deposit deposit, cn::DepositId did, const Currency& currency, cn::WalletLegacyTransaction txInfo)
   {
     std::string unlock_str = "";
 
@@ -70,7 +70,7 @@ namespace cn
 
     bool bad_unlock2 = unlock_str == "0";
     if (bad_unlock2)
-      unlock_str = std::to_string(deposit_height(deposit) + deposit_term(deposit));
+      unlock_str = std::to_string(deposit_height(txInfo) + deposit_term(deposit));
     
     bool bad_unlock3 = unlock_str == "0";
     if (bad_unlock3)
@@ -90,7 +90,7 @@ namespace cn
     return as_str;
   }
 
-  std::string deposit_helper::get_full_deposit_info(cn::Deposit deposit, cn::DepositId did, const Currency& currency)
+  std::string deposit_helper::get_full_deposit_info(cn::Deposit deposit, cn::DepositId did, const Currency& currency, cn::WalletLegacyTransaction txInfo)
   {
     std::string unlock_str = "";
 
@@ -102,7 +102,7 @@ namespace cn
 
     bool bad_unlock2 = unlock_str == "0";
     if (bad_unlock2)
-      unlock_str = std::to_string(deposit_height(deposit) + deposit_term(deposit));
+      unlock_str = std::to_string(deposit_height(txInfo) + deposit_term(deposit));
     
     bool bad_unlock3 = unlock_str == "0";
     if (bad_unlock3)
@@ -114,7 +114,7 @@ namespace cn
       "ID:            "  << std::to_string(did) << "\n" <<
       "Amount:        " << deposit_amount(deposit, currency) << "\n" <<
       "Interest:      " << deposit_interest(deposit, currency) << "\n" <<
-      "Height:        " << deposit_height(deposit) << "\n" <<
+      "Height:        " << deposit_height(txInfo) << "\n" <<
       "Unlock Height: " << unlock_str << "\n" <<
       "Status:        " << deposit_status(deposit) << "\n";
 

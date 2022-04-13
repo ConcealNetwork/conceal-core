@@ -1348,14 +1348,8 @@ void simple_wallet::synchronizationProgressUpdated(uint32_t current, uint32_t to
   }
 }
 
-bool simple_wallet::show_balance(const std::vector<std::string>& args/* = std::vector<std::string>()*/) {
-  std::string header = common::makeCenteredString(14, "  ") + " | ";
-  header += common::makeCenteredString(20, "Available") + " | ";
-  header += common::makeCenteredString(20, "Locked");
-
-  logger(INFO) << "\n" << header;
-  logger(INFO) << std::string(header.size(), '=');
-
+bool simple_wallet::show_balance(const std::vector<std::string>& args/* = std::vector<std::string>()*/)
+{
   std::stringstream wal_funds;
   wal_funds << std::left <<
     std::setw(14)  << common::makeCenteredString(14, "Wallet Funds") << " | " <<
@@ -2003,7 +1997,10 @@ bool simple_wallet::list_deposits(const std::vector<std::string> &args)
   {
     /* get deposit info from id and store it to deposit */
     Deposit deposit = m_wallet->get_deposit(id);
-    logger(INFO) << m_dhelper.get_deposit_info(deposit, id, m_currency);
+    cn::WalletLegacyTransaction txInfo;
+    m_wallet->getTransaction(id, txInfo);
+
+    logger(INFO) << m_dhelper.get_deposit_info(deposit, id, m_currency, txInfo);
   }
 
   return true;

@@ -57,25 +57,27 @@ namespace cn
     uint64_t deposit_unlock_height(cn::Deposit deposit);
 
     /**
-     * @param deposit - obtain information from deposit
+     * @param txInfo - obtain height from transaction
      * @return - returns deposit height
     **/
-    uint64_t deposit_height(cn::Deposit deposit);
+    uint64_t deposit_height(cn::WalletLegacyTransaction txInfo);
 
     /**
      * @param deposit - obtain information from deposit
      * @param did - id to search deposit
      * @param currency - used to supply amount and interest
+     * @param txInfo - obtain height from transaction
      * @return - returns deposit info string in single row style
     **/
-    std::string get_deposit_info(cn::Deposit deposit, cn::DepositId did, const Currency& currency);
+    std::string get_deposit_info(cn::Deposit deposit, cn::DepositId did, const Currency& currency, cn::WalletLegacyTransaction txInfo);
 
     /**
      * @param deposit - obtain information from deposit
      * @param did - id to search deposit
      * @param currency - used to supply amount and interest
+     * @param txInfo - obtain height from transaction
      * @return - returns full deposit info string
     **/
-    std::string get_full_deposit_info(cn::Deposit deposit, cn::DepositId did, const Currency& currency);
+    std::string get_full_deposit_info(cn::Deposit deposit, cn::DepositId did, const Currency& currency, cn::WalletLegacyTransaction txInfo);
   };
 }
