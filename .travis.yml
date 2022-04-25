@@ -1,6 +1,10 @@
 dist: focal
 language: cpp
 
+branches:
+  only:
+    - master
+    - travis
 
 addons:
   apt:
