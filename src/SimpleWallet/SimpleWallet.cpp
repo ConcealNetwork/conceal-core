@@ -1998,7 +1998,7 @@ bool simple_wallet::list_deposits(const std::vector<std::string> &args)
     /* get deposit info from id and store it to deposit */
     Deposit deposit = m_wallet->get_deposit(id);
     cn::WalletLegacyTransaction txInfo;
-    m_wallet->getDeposit(id, txInfo);
+    m_wallet->getTransaction(deposit.creatingTransactionId, txInfo);
 
     logger(INFO) << m_dhelper.get_deposit_info(deposit, id, m_currency, txInfo);
   }
