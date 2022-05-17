@@ -272,7 +272,7 @@ class cn_slow_hash
 		{
 			if(lpad.as_void() != nullptr)
 				boost::alignment::aligned_free(lpad.as_void());
-			if(lpad.as_void() != nullptr)
+			if(spad.as_void() != nullptr)
 				boost::alignment::aligned_free(spad.as_void());
 		}
 

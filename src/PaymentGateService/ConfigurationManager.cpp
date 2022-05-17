@@ -12,6 +12,7 @@
 
 #include "Common/CommandLine.h"
 #include "Common/Util.h"
+#include "version.h"
 
 namespace payment_service {
 
@@ -22,7 +23,7 @@ ConfigurationManager::ConfigurationManager() {
 }
 
 bool ConfigurationManager::init(int argc, char** argv) {
-  po::options_description cmdGeneralOptions("common Options");
+  po::options_description cmdGeneralOptions("Common Options");
 
   cmdGeneralOptions.add_options()
       ("config,c", po::value<std::string>(), "configuration file");
@@ -37,6 +38,7 @@ bool ConfigurationManager::init(int argc, char** argv) {
       ("local", po::bool_switch(), "start with local node (remote is default)")
       ("testnet", po::bool_switch(), "testnet mode");
 
+  command_line::add_arg(cmdGeneralOptions, command_line::arg_version);
   command_line::add_arg(cmdGeneralOptions, command_line::arg_data_dir, tools::getDefaultDataDirectory());
   command_line::add_arg(confGeneralOptions, command_line::arg_data_dir, tools::getDefaultDataDirectory());
 
@@ -61,7 +63,14 @@ bool ConfigurationManager::init(int argc, char** argv) {
   po::notify(cmdOptions);
 
   if (cmdOptions.count("help")) {
+    std::cout << CCX_PAYMENT_SERVICE_RELEASE_VERSION << std::endl;
     std::cout << cmdOptionsDesc << std::endl;
+    return false;
+  }
+
+  if (get_arg(cmdOptions, command_line::arg_version))
+  {
+    std::cout << CCX_PAYMENT_SERVICE_RELEASE_VERSION << std::endl;
     return false;
   }
 

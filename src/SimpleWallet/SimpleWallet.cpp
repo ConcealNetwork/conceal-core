@@ -1995,12 +1995,12 @@ int main(int argc, char* argv[]) {
       cn::Currency tmp_currency = cn::CurrencyBuilder(logManager).currency();
       cn::simple_wallet tmp_wallet(dispatcher, tmp_currency, logManager);
 
-      std::cout << "Conceal Wallet v" << PROJECT_VERSION_LONG << std::endl;
-      std::cout << "Usage: concealwallet [--wallet-file=<file>|--generate-new-wallet=<file>] [--daemon-address=<host>:<port>] [<COMMAND>]";
-      std::cout << desc_all << '\n' << tmp_wallet.get_commands_str(false);
+      std::cout << CCX_WALLET_RELEASE_VERSION << std::endl;
+      std::cout << desc_all << std::endl
+                << tmp_wallet.get_commands_str(false);
       return false;
     } else if (command_line::get_arg(vm, command_line::arg_version))  {
-      std::cout << "Conceal Wallet v" << PROJECT_VERSION_LONG << std::endl;
+      std::cout << CCX_WALLET_RELEASE_VERSION << std::endl;
       return false;
     }
 
@@ -2022,7 +2022,7 @@ int main(int argc, char* argv[]) {
 
   logManager.configure(buildLoggerConfiguration(logLevel, common::ReplaceExtenstion(argv[0], ".log")));
 
-  logger(INFO, BRIGHT_GREEN) << "Conceal Wallet v" << PROJECT_VERSION_LONG;
+  logger(INFO, BRIGHT_YELLOW) << CCX_WALLET_RELEASE_VERSION;
 
   cn::Currency currency = cn::CurrencyBuilder(logManager).
     testnet(command_line::get_arg(vm, arg_testnet)).currency();

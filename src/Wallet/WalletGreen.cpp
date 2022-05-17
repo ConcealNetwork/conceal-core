@@ -508,7 +508,6 @@ namespace cn
     uint64_t neededMoney = amount + fee;
     std::vector<OutputToTransfer> selectedTransfers;
     uint64_t foundMoney = selectTransfers(neededMoney,
-                                          0 == 0,
                                           m_currency.defaultDustThreshold(),
                                           std::move(wallets),
                                           selectedTransfers);
@@ -600,8 +599,9 @@ namespace cn
     /* Get additional inputs for the mixin */
     typedef cn::COMMAND_RPC_GET_RANDOM_OUTPUTS_FOR_AMOUNTS::outs_for_amount outs_for_amount;
     std::vector<outs_for_amount> mixinResult;
+    requestMixinOuts(selectedTransfers, cn::parameters::MINIMUM_MIXIN, mixinResult);
     std::vector<InputInfo> keysInfo;
-    prepareInputs(selectedTransfers, mixinResult, 4, keysInfo);
+    prepareInputs(selectedTransfers, mixinResult, cn::parameters::MINIMUM_MIXIN, keysInfo);
 
     /* Add the inputs to the transaction */
     std::vector<KeyPair> ephKeys;
@@ -1986,7 +1986,7 @@ namespace cn
     preparedTransaction.neededMoney = countNeededMoney(preparedTransaction.destinations, fee);
 
     std::vector<OutputToTransfer> selectedTransfers;
-    uint64_t foundMoney = selectTransfers(preparedTransaction.neededMoney, mixIn == 0, m_currency.defaultDustThreshold(), std::move(wallets), selectedTransfers);
+    uint64_t foundMoney = selectTransfers(preparedTransaction.neededMoney, m_currency.defaultDustThreshold(), std::move(wallets), selectedTransfers);
 
     if (foundMoney < preparedTransaction.neededMoney)
     {
@@ -2884,7 +2884,6 @@ namespace cn
 
   uint64_t WalletGreen::selectTransfers(
       uint64_t neededMoney,
-      bool dust,
       uint64_t dustThreshold,
       std::vector<WalletOuts> &&wallets,
       std::vector<OutputToTransfer> &selectedTransfers)

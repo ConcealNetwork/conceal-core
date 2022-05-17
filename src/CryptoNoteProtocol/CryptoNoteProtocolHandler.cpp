@@ -134,32 +134,30 @@ void CryptoNoteProtocolHandler::log_connections()
 {
   std::stringstream ss;
 
-  ss << std::setw(25) << std::left << "Remote Host"
-     << std::setw(20) << "Peer id"
-     << std::setw(25) << "Recv/Sent (inactive,sec)"
-     << std::setw(25) << "State"
-     << std::setw(20) << "Lifetime(seconds)" << ENDL;
+  ss << std::setw(30) << std::left << "Remote Host"
+     << std::setw(20) << std::left << "Peer id"
+     << std::setw(25) << std::left << "State"
+     << std::setw(20) << std::left << "Lifetime(seconds)" << std::endl;
 
-  m_p2p->for_each_connection([&](const CryptoNoteConnectionContext &cntxt, PeerIdType peer_id) {
-    ss << std::setw(25) << std::left << std::string(cntxt.m_is_income ? "[INC]" : "[OUT]") + common::ipAddressToString(cntxt.m_remote_ip) + ":" + std::to_string(cntxt.m_remote_port)
-       << std::setw(20) << std::hex << peer_id
-       // << std::setw(25) << std::to_string(cntxt.m_recv_cnt) + "(" + std::to_string(time(NULL) - cntxt.m_last_recv) + ")" + "/" + std::to_string(cntxt.m_send_cnt) + "(" + std::to_string(time(NULL) - cntxt.m_last_send) + ")"
-       << std::setw(25) << get_protocol_state_string(cntxt.m_state)
-       << std::setw(20) << std::to_string(time(NULL) - cntxt.m_started) << ENDL;
-  });
-  logger(INFO) << "Connections: " << ENDL << ss.str();
+  m_p2p->for_each_connection([&ss](const CryptoNoteConnectionContext &cntxt, PeerIdType peer_id)
+                             { ss << std::setw(30) << std::left << std::string(cntxt.m_is_income ? "[INC]" : "[OUT]") + common::ipAddressToString(cntxt.m_remote_ip) + ":" + std::to_string(cntxt.m_remote_port)
+                                  << std::setw(20) << std::left << std::hex << peer_id
+                                  << std::setw(25) << std::left << get_protocol_state_string(cntxt.m_state)
+                                  << std::setw(20) << std::left << std::to_string(time(nullptr) - cntxt.m_started) << std::endl; });
+  logger(INFO) << "Connections: \n"
+               << ss.str();
 }
 
 /* Get a list of daemons connected to this node */
 std::vector<std::string> CryptoNoteProtocolHandler::all_connections()
 {
   std::vector<std::string> connections;
-  std::string ipAddress;
   connections.clear();
-  m_p2p->for_each_connection([&](const CryptoNoteConnectionContext &cntxt, PeerIdType peer_id) {
-    ipAddress = common::ipAddressToString(cntxt.m_remote_ip);
-    connections.push_back(ipAddress);
-  });
+  m_p2p->for_each_connection([&connections](const CryptoNoteConnectionContext &cntxt, [[maybe_unused]] PeerIdType peer_id)
+                             {
+                               std::string ipAddress = common::ipAddressToString(cntxt.m_remote_ip);
+                               connections.push_back(ipAddress);
+                             });
   return connections;
 }
 

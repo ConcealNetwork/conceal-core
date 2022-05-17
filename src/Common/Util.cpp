@@ -289,14 +289,14 @@ std::string get_nix_version_display_string()
   std::string getDefaultDataDirectory()
   {
     //namespace fs = boost::filesystem;
-    // Windows < Vista: C:\Documents and Settings\Username\Application Data\CRYPTONOTE_NAME
-    // Windows >= Vista: C:\Users\Username\AppData\Roaming\CRYPTONOTE_NAME
-    // Mac: ~/Library/Application Support/CRYPTONOTE_NAME
-    // Unix: ~/.CRYPTONOTE_NAME
+    // Windows < Vista: C:\Documents and Settings\Username\Application Data\BLOCKCHAIN_DIR
+    // Windows >= Vista: C:\Users\Username\AppData\Roaming\BLOCKCHAIN_DIR
+    // Mac: ~/Library/Application Support/BLOCKCHAIN_DIR
+    // Unix: ~/.BLOCKCHAIN_DIR
     std::string config_folder;
 #ifdef _WIN32
     // Windows
-    config_folder = get_special_folder_path(CSIDL_APPDATA, true) + "/" + cn::CRYPTONOTE_NAME;
+    config_folder = get_special_folder_path(CSIDL_APPDATA, true) + "/" + cn::BLOCKCHAIN_DIR;
 #else
     std::string pathRet;
     char* pszHome = getenv("HOME");
@@ -307,10 +307,10 @@ std::string get_nix_version_display_string()
 #ifdef MAC_OSX
     // Mac
     pathRet /= "Library/Application Support";
-    config_folder =  (pathRet + "/" + cn::CRYPTONOTE_NAME);
+    config_folder =  (pathRet + "/" + cn::BLOCKCHAIN_DIR);
 #else
     // Unix
-    config_folder = (pathRet + "/." + cn::CRYPTONOTE_NAME);
+    config_folder = (pathRet + "/." + cn::BLOCKCHAIN_DIR);
 #endif
 #endif
 
