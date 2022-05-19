@@ -110,8 +110,8 @@ public:
     for (size_t i = 0; i < outputs; ++i) {
       destinations.push_back(TransactionDestinationEntry(amountPerOut, rv_acc.getAccountKeys().address));
     }
-
-    constructTransaction(m_realSenderKeys, m_sources, destinations, std::vector<uint8_t>(), tx, 0, m_logger);
+    crypto::SecretKey txSK;
+    constructTransaction(m_realSenderKeys, m_sources, destinations, std::vector<uint8_t>(), tx, 0, m_logger, txSK);
   }
 
   std::vector<AccountBase> m_miners;
@@ -291,8 +291,8 @@ TEST_F(tx_pool, fillblock_same_fee)
   size_t totalSize = 0;
   uint64_t txFee = 0;
   uint64_t median = 5000;
-
-  ASSERT_TRUE(pool.fill_block_template(bl, median, textMaxCumulativeSize, 0, totalSize, txFee));
+  uint32_t height;
+  ASSERT_TRUE(pool.fill_block_template(bl, median, textMaxCumulativeSize, 0, totalSize, txFee, height));
   ASSERT_TRUE(totalSize * 100 < median * 125);
 
   // now, check that the block is opimally filled
@@ -351,8 +351,8 @@ TEST_F(tx_pool, fillblock_same_size)
   size_t totalSize = 0;
   uint64_t txFee = 0;
   uint64_t median = 5000;
-
-  ASSERT_TRUE(pool.fill_block_template(bl, median, textMaxCumulativeSize, 0, totalSize, txFee));
+  uint32_t height;
+  ASSERT_TRUE(pool.fill_block_template(bl, median, textMaxCumulativeSize, 0, totalSize, txFee, height));
   ASSERT_TRUE(totalSize * 100 < median * 125);
 
   // check that fill_block_template prefers transactions with double fee
@@ -763,7 +763,8 @@ public:
     Block block;
     size_t totalSize;
     uint64_t totalFee;
-    ASSERT_TRUE(pool->fill_block_template(block, currency.blockGrantedFullRewardZone(), std::numeric_limits<size_t>::max(), 0, totalSize, totalFee));
+    uint32_t height;
+    ASSERT_TRUE(pool->fill_block_template(block, currency.blockGrantedFullRewardZone(), std::numeric_limits<size_t>::max(), 0, totalSize, totalFee, height));
 
     size_t fusionTxCount = 0;
     size_t ordinaryTxCount = 0;

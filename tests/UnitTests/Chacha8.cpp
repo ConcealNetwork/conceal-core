@@ -7,7 +7,7 @@
 
 #include "gtest/gtest.h"
 
-#include "crypto/chacha.h"
+#include "crypto/chacha8.h"
 
 namespace
 {
@@ -65,10 +65,10 @@ namespace
     std::string buf;
     buf.resize(test->text_length);
 
-    crypto::chacha8(test->plain_text, test->text_length, *reinterpret_cast<const crypto::chacha_key*>(test->key), *reinterpret_cast<const crypto::chacha_iv*>(test->iv), &buf[0]);
+    crypto::chacha8(test->plain_text, test->text_length, *reinterpret_cast<const crypto::chacha8_key*>(test->key), *reinterpret_cast<const crypto::chacha8_iv*>(test->iv), &buf[0]);
     ASSERT_EQ(buf, std::string(reinterpret_cast<const char*>(test->cipher_text), test->text_length));
 
-    crypto::chacha8(test->cipher_text, test->text_length, *reinterpret_cast<const crypto::chacha_key*>(test->key), *reinterpret_cast<const crypto::chacha_iv*>(test->iv), &buf[0]);
+    crypto::chacha8(test->cipher_text, test->text_length, *reinterpret_cast<const crypto::chacha8_key*>(test->key), *reinterpret_cast<const crypto::chacha8_iv*>(test->iv), &buf[0]);
     ASSERT_EQ(buf, std::string(reinterpret_cast<const char*>(test->plain_text), test->text_length));
   }
 }
