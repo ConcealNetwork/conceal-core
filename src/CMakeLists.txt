@@ -1,4 +1,4 @@
-add_definitions(-DSTATICLIB)
+add_definitions(-DMINIUPNP_STATICLIB)
 include_directories(${CMAKE_SOURCE_DIR}/external/parallel_hashmap)
 
 file(GLOB_RECURSE BlockchainExplorer BlockchainExplorer/*)
@@ -59,9 +59,9 @@ if (MSVC)
   target_link_libraries(System ws2_32)
 endif ()
 
-target_link_libraries(Daemon CryptoNoteCore P2P Rpc System Http Logging Common crypto upnpc-static BlockchainExplorer ${Boost_LIBRARIES} Serialization)
+target_link_libraries(Daemon CryptoNoteCore P2P Rpc System Http Logging Common crypto libminiupnpc-static BlockchainExplorer ${Boost_LIBRARIES} Serialization)
 target_link_libraries(SimpleWallet Wallet NodeRpcProxy Transfers Rpc Http CryptoNoteCore System Logging Common crypto ${Boost_LIBRARIES} Serialization)
-target_link_libraries(PaymentGateService PaymentGate JsonRpcServer Wallet NodeRpcProxy Transfers CryptoNoteCore crypto P2P Rpc Http System Logging Common InProcessNode upnpc-static BlockchainExplorer ${Boost_LIBRARIES} Serialization)
+target_link_libraries(PaymentGateService PaymentGate JsonRpcServer Wallet NodeRpcProxy Transfers CryptoNoteCore crypto P2P Rpc Http System Logging Common InProcessNode libminiupnpc-static BlockchainExplorer ${Boost_LIBRARIES} Serialization)
 target_link_libraries(Optimizer PaymentGate Rpc Http CryptoNoteCore Logging Serialization crypto System Common ${Boost_LIBRARIES})
 
 if (${CMAKE_SYSTEM_NAME} STREQUAL "Linux" OR APPLE AND NOT ANDROID)
