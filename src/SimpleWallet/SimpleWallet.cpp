@@ -1350,19 +1350,23 @@ void simple_wallet::synchronizationProgressUpdated(uint32_t current, uint32_t to
 
 bool simple_wallet::show_balance(const std::vector<std::string>& args/* = std::vector<std::string>()*/)
 {
-  std::stringstream wal_funds;
-  wal_funds << std::left <<
-    std::setw(14)  << common::makeCenteredString(14, "Wallet Funds") << " | " <<
-    std::setw(20) << common::makeCenteredString(20, m_currency.formatAmount(m_wallet->actualBalance())) << " | " <<
-    std::setw(20) << common::makeCenteredString(20, m_currency.formatAmount(m_wallet->pendingBalance()));
+  uint64_t full_balance = m_wallet->actualBalance() + m_wallet->pendingBalance() + m_wallet->actualDepositBalance() + m_wallet->pendingDepositBalance();
+  std::string full_balance_text = "Total Balance: " + m_currency.formatAmount(full_balance) + "\n";
 
-  std::stringstream dep_funds;
-  dep_funds << std::left <<
-    std::setw(14)  << common::makeCenteredString(14, "Deposit Funds") << " | " <<
-    std::setw(20) << common::makeCenteredString(20, m_currency.formatAmount(m_wallet->actualDepositBalance())) << " | " <<
-    std::setw(20) << common::makeCenteredString(20, m_currency.formatAmount(m_wallet->pendingDepositBalance()));
+  uint64_t non_deposit_unlocked_balance = m_wallet->actualBalance();
+  std::string non_deposit_unlocked_balance_text = "Available: " + m_currency.formatAmount(non_deposit_unlocked_balance) + "\n";
 
-  logger(INFO) << wal_funds.str() << "\n" << dep_funds.str();
+  uint64_t non_deposit_locked_balance = m_wallet->pendingBalance();
+  std::string non_deposit_locked_balance_text = "Locked: " + m_currency.formatAmount(non_deposit_locked_balance) + "\n";
+
+  uint64_t deposit_unlocked_balance = m_wallet->actualDepositBalance();
+  std::string deposit_locked_balance_text = "Unlocked Balance: " + m_currency.formatAmount(deposit_unlocked_balance) + "\n";
+
+  uint64_t deposit_locked_balance = m_wallet->pendingDepositBalance();
+  std::string deposit_unlocked_balance_text = "Locked Deposits: " + m_currency.formatAmount(deposit_locked_balance) + "\n";
+
+  logger(INFO) << full_balance_text << non_deposit_unlocked_balance_text << non_deposit_locked_balance_text
+    << deposit_unlocked_balance_text << deposit_locked_balance_text;
 
   return true;
 }
@@ -1759,22 +1763,32 @@ bool simple_wallet::optimize_all_outputs(const std::vector<std::string>& args) {
 
 //----------------------------------------------------------------------------------------------------
 
-std::string simple_wallet::resolveAlias(const std::string& aliasUrl) {
+std::string simple_wallet::resolveAlias(const std::string& aliasUrl)
+{
   std::string host;
-	std::string uri;
-	std::vector<std::string>records;
-	std::string address;
+  std::string uri;
+  std::vector<std::string>records;
+  std::string address;
 
-	if (!common::fetch_dns_txt(aliasUrl, records)) {
-		throw std::runtime_error("Failed to lookup DNS record");
-	}
+  if (!splitUrlToHostAndUri(aliasUrl, host, uri))
+  {
+    throw std::runtime_error("Failed to split URL to Host and URI");
+  }
 
-	for (const auto& record : records) {
-		if (processServerAliasResponse(record, address)) {
-			return address;
-		}
-	}
-	throw std::runtime_error("Failed to parse server response");
+  if (!common::fetch_dns_txt(aliasUrl, records))
+  {
+    throw std::runtime_error("Failed to lookup DNS record");
+  }
+
+  for (const auto& record : records)
+  {
+    if (processServerAliasResponse(record, address))
+    {
+      return address;
+    }
+  }
+
+  throw std::runtime_error("Failed to parse server response");
 }
 //----------------------------------------------------------------------------------------------------
 
