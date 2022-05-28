@@ -254,7 +254,7 @@ namespace {
 
 
 TEST_F(DetachTest, testBlockchainDetach) {
-  uint64_t sendAmount = 70000000000000;
+  uint64_t sendAmount = 7000000000000;
   auto fee = m_currency.minimumFee();
 
   addMinerAccount();
