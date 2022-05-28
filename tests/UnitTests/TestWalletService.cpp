@@ -782,8 +782,8 @@ protected:
 void WalletServiceTest_sendTransaction::SetUp() {
   request.sourceAddresses.insert(request.sourceAddresses.end(), {RANDOM_ADDRESS1, RANDOM_ADDRESS2});
   request.transfers.push_back(WalletRpcOrder {RANDOM_ADDRESS3, 11111});
-  request.fee = 2021;
-  request.anonymity = 4;
+  request.fee = 1000;
+  request.anonymity = 5;
   request.unlockTime = 848309;
 }
 
