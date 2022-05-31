@@ -27,7 +27,7 @@ struct LegacyDeposit {
   TransactionId spendingTransactionId;
   uint32_t term;
   uint64_t amount;
-  uint64_t interest
+  uint64_t interest;
 };
 
 struct LegacyDepositInfo {
