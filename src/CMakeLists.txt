@@ -23,7 +23,7 @@ file(GLOB_RECURSE JsonRpcServer JsonRpcServer/*)
 file(GLOB_RECURSE PaymentGate PaymentGate/*)
 file(GLOB_RECURSE PaymentGateService PaymentGateService/*)
 
-if(MSVC)
+if(MSVC OR MINGW)
   file(GLOB_RECURSE System System/* Platform/Windows/System/*)
 elseif(APPLE)
   file(GLOB_RECURSE System System/* Platform/OSX/System/*)
@@ -56,6 +56,12 @@ add_executable(PaymentGateService ${PaymentGateService})
 add_executable(Optimizer ${Optimizer})
 
 if (MSVC)
+  target_link_libraries(System ws2_32)
+endif ()
+
+if (MINGW)
+  target_link_libraries(Common dnsapi)
+  target_link_libraries(P2P bcrypt)
   target_link_libraries(System ws2_32)
 endif ()
 
