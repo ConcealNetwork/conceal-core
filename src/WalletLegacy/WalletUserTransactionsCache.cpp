@@ -27,9 +27,7 @@ struct LegacyDeposit {
   TransactionId spendingTransactionId;
   uint32_t term;
   uint64_t amount;
-  uint64_t interest;
-  uint64_t height;
-  uint64_t unlockedHeight;
+  uint64_t interest
 };
 
 struct LegacyDepositInfo {
@@ -49,8 +47,6 @@ void serialize(LegacyDeposit& deposit, ISerializer& serializer) {
   serializer(deposit.term, "term");
   serializer(deposit.amount, "amount");
   serializer(deposit.interest, "interest");
-  serializer(deposit.height, "height");
-  serializer(deposit.unlockedHeight, "unlockedHeight");
 }
 
 void serialize(LegacyDepositInfo& depositInfo, ISerializer& serializer) {
@@ -105,8 +101,6 @@ void convertLegacyDeposits(const std::vector<LegacyDepositInfo>& legacyDeposits,
     info.deposit.term = legacyDepositInfo.deposit.term;
     info.deposit.locked = true;
     info.outputInTransaction = legacyDepositInfo.outputInTransaction;
-    info.deposit.height = legacyDepositInfo.deposit.height;
-    info.deposit.unlockHeight = legacyDepositInfo.deposit.unlockHeight;
 
     deposits.push_back(std::move(info));
   }
@@ -122,10 +116,6 @@ bool WalletUserTransactionsCache::serialize(cn::ISerializer& s) {
   s(m_transfers, "transfers");
   s(m_unconfirmedTransactions, "unconfirmed");
   s(m_deposits, "deposits");
-
-  std::vector<LegacyDepositInfo> legacyDeposits;
-  convertLegacyDeposits(legacyDeposits, m_deposits);
-  restoreTransactionOutputToDepositIndex();
 
   if (s.type() == cn::ISerializer::INPUT) {
     updateUnconfirmedTransactions();
@@ -628,8 +618,6 @@ DepositId WalletUserTransactionsCache::insertNewDeposit(const TransactionOutputI
   deposit.spendingTransactionId = WALLET_LEGACY_INVALID_TRANSACTION_ID;
   deposit.interest = currency.calculateInterest(deposit.amount, deposit.term, height);
   deposit.locked = true;
-  deposit.height = height;
-  deposit.unlockHeight = height + depositOutput.term;
 
   return insertDeposit(deposit, depositOutput.outputInTransaction, depositOutput.transactionHash);
 }
