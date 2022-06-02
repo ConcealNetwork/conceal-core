@@ -277,7 +277,6 @@ namespace cn
       uint64_t term,
       uint64_t amount,
       uint64_t fee,
-      uint64_t height,
       uint64_t mixIn)
   {
 
@@ -297,7 +296,6 @@ namespace cn
     context->transactionId = transactionId;
     context->mixIn = mixIn;
     context->depositTerm = static_cast<uint32_t>(term);
-    context->height = height;
 
     if (context->mixIn != 0)
     {

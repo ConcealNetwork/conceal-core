@@ -46,7 +46,6 @@ public:
                                                     uint64_t term,
                                                     uint64_t amount,
                                                     uint64_t fee,
-                                                    uint64_t height,
                                                     uint64_t mixIn = 0);
 
   std::unique_ptr<WalletRequest> makeWithdrawDepositRequest(TransactionId& transactionId,
