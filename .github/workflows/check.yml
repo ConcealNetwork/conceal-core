@@ -83,6 +83,84 @@ jobs:
           cd build/conceal
           ./performance_tests.exe
 
+  build-mingw:
+    name: MinGW
+    runs-on: windows-2019
+    steps:
+      - uses: msys2/setup-msys2@v2
+        with:
+          update: true
+          install: >-
+            git
+            base-devel
+            mingw-w64-x86_64-toolchain
+            mingw-w64-x86_64-boost
+            mingw-w64-x86_64-cmake
+
+      - uses: actions/checkout@master
+
+      - name: Prepare version
+        shell: powershell
+        id: setup
+        run: |
+          $os="mingw"
+          $ccx_version="${{ github.sha }}".SubString(0,7)
+          $release_name="ccx-cli-$os-dev-$ccx_version"
+          echo "::set-output name=release_name::${release_name}"
+
+      - name: Build
+        shell: msys2 {0}
+        id: build
+        run: |
+          ls
+          mkdir build
+          cd build
+          cmake .. -DCMAKE_BUILD_TYPE=Release -DBUILD_TESTS=ON -DSTATIC=ON
+          cmake --build . --config Release
+
+      - name: Prepare release
+        shell: msys2 {0}
+        run: |
+          mkdir build/conceal
+          mv build/src/conceald.exe build/conceal
+          mv build/src/concealwallet.exe build/conceal
+          mv build/src/optimizer.exe build/conceal
+          mv build/src/walletd.exe build/conceal
+          cp build/tests/*_tests.exe build/conceal
+
+      - name: Upload To GH Artifacts
+        uses: actions/upload-artifact@v2
+        with:
+          name: ${{ steps.setup.outputs.release_name }}
+          path: build/conceal
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: core_tests
+        shell: powershell
+        run: |
+          cd build/conceal
+          ./core_tests.exe --generate_and_play_test_data
+
+      - name: difficulty_tests
+        shell: powershell
+        run: |
+          cp tests/Difficulty/data.txt build/conceal
+          cd build/conceal
+          ./difficulty_tests.exe data.txt
+
+      - name: performance_tests
+        shell: powershell
+        run: |
+          cd build/conceal
+          ./performance_tests.exe
+      
+      - name: unit_tests
+        shell: powershell
+        run: |
+          cd build/tests
+          ctest -R UnitTests --output-on-failure
+
   build-ubuntu18:
     name: Ubuntu 18.04
     runs-on: ubuntu-18.04
