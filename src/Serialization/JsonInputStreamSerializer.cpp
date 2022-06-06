@@ -25,7 +25,4 @@ common::JsonValue getJsonValueFromStreamHelper(std::istream& stream) {
 JsonInputStreamSerializer::JsonInputStreamSerializer(std::istream& stream) : JsonInputValueSerializer(getJsonValueFromStreamHelper(stream)) {
 }
 
-JsonInputStreamSerializer::~JsonInputStreamSerializer() {
-}
-
 } //namespace cn
