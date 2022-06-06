@@ -13,7 +13,7 @@ jobs:
     name: Windows
     runs-on: windows-2019
     env:
-      BOOST_ROOT: C:/tools/boost/x86_64
+      BOOST_ROOT: C:/local/boost_1_72_0
     steps:
       - uses: actions/checkout@master
 
