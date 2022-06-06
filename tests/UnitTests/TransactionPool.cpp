@@ -103,7 +103,7 @@ public:
   }
 
   void construct(uint64_t amount, uint64_t fee, size_t outputs, Transaction& tx) {
-
+    
     std::vector<TransactionDestinationEntry> destinations;
     uint64_t amountPerOut = (amount - fee) / outputs;
 
@@ -197,7 +197,7 @@ namespace
     bl.majorVersion = majorVersion;
     bl.minorVersion = 0;
     bl.nonce = 0;
-    bl.timestamp = time(0);
+    bl.timestamp = time(nullptr);
     bl.previousBlockHash = NULL_HASH;
   }
 
@@ -325,7 +325,7 @@ TEST_F(tx_pool, fillblock_same_size)
 
 
   // generate transactions
-  for (int i = 0; i <= totalTransactions; ++i) {
+  for (size_t i = 0; i <= totalTransactions; ++i) {
 
     TestTransactionGenerator txGenerator(currency, 1);
     txGenerator.createSources();
