@@ -15,7 +15,7 @@ namespace cn
   class Checkpoints
   {
   public:
-    Checkpoints(logging::ILogger& log);
+    explicit Checkpoints(logging::ILogger& log);
 
     bool add_checkpoint(uint32_t height, const std::string& hash_str);
     bool is_in_checkpoint_zone(uint32_t height) const;
@@ -26,8 +26,10 @@ namespace cn
     bool check_block(uint32_t height, const crypto::Hash& h, bool& is_a_checkpoint) const;
     bool is_alternative_block_allowed(uint32_t blockchain_height, uint32_t block_height) const;
     std::vector<uint32_t> getCheckpointHeights() const;
+    void set_testnet(bool testnet);
     
   private:
+    bool m_testnet = false;
     std::map<uint32_t, crypto::Hash> m_points;
     logging::LoggerRef logger;
   };

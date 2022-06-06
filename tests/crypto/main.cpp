@@ -66,7 +66,7 @@ int main(int argc, char *argv[]) {
       vector<char> data;
       crypto::EllipticCurveScalar expected, actual;
       get(input, data, expected);
-      hash_to_scalar(data.data(), data.size(), actual);
+      crypto::hash_to_scalar(data.data(), data.size(), actual);
       if (expected != actual) {
         goto error;
       }

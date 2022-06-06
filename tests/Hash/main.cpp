@@ -10,6 +10,7 @@
 #include <string>
 
 #include "crypto/hash.h"
+#include "crypto/keccak.c"
 #include "../Io.h"
 
 using namespace std;
@@ -38,9 +39,7 @@ extern "C" typedef void hash_f(const void *, size_t, char *);
 struct hash_func {
   const string name;
   hash_f &f;
-} hashes[] = {{"fast", crypto::cn_fast_hash}, {"slow", slow_hash}, {"tree", hash_tree},
-  {"extra-blake", crypto::hash_extra_blake}, {"extra-groestl", crypto::hash_extra_groestl},
-  {"extra-jh", crypto::hash_extra_jh}, {"extra-skein", crypto::hash_extra_skein}};
+} hashes[] = {{"fast", crypto::cn_fast_hash}, {"slow", slow_hash}, {"tree", hash_tree}};
 
 int main(int argc, char *argv[]) {
   hash_f *f;

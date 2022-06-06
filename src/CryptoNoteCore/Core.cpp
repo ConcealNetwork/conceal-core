@@ -160,8 +160,8 @@ bool core::init(const CoreConfig& config, const MinerConfig& minerConfig, bool l
     logger(ERROR, BRIGHT_RED) << "Failed to initialize memory pool";
     return false;
   }
-
-  r = m_blockchain.init(m_config_folder, load_existing);
+  
+  r = m_blockchain.init(m_config_folder, load_existing, config.testnet);
   if (!(r)) {
     logger(ERROR, BRIGHT_RED) << "Failed to initialize blockchain storage";
     return false;

@@ -509,7 +509,7 @@ namespace cn
 
     BlockTemplate blockTemplate;
 
-    for (auto it = m_fee_index.rbegin(); it != m_fee_index.rend(); ++it)
+    for (auto it = m_fee_index.begin(); it != m_fee_index.end(); ++it)
     {
       const auto &txd = *it;
 

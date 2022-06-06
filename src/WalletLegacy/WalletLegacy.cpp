@@ -139,7 +139,7 @@ public:
   BlockchainSynchronizer& m_sync;
 };
 
-WalletLegacy::WalletLegacy(const cn::Currency& currency, INode& node, logging::ILogger& loggerGroup) :
+WalletLegacy::WalletLegacy(const cn::Currency& currency, INode& node, logging::ILogger& loggerGroup, bool testnet) :
   m_state(NOT_INITIALIZED),
   m_currency(currency),
   m_node(node),
@@ -156,7 +156,8 @@ WalletLegacy::WalletLegacy(const cn::Currency& currency, INode& node, logging::I
   m_transferDetails(nullptr),
   m_transactionsCache(m_currency.mempoolTxLiveTime()),
   m_sender(nullptr),
-  m_onInitSyncStarter(new SyncStarter(m_blockchainSync))
+  m_onInitSyncStarter(new SyncStarter(m_blockchainSync)),
+  m_testnet(testnet)
 {
   addObserver(m_onInitSyncStarter.get());
 }
@@ -247,7 +248,7 @@ void WalletLegacy::initSync() {
   m_transferDetails = &subObject.getContainer();
   subObject.addObserver(this);
 
-  m_sender.reset(new WalletTransactionSender(m_currency, m_transactionsCache, m_account.getAccountKeys(), *m_transferDetails, m_node));
+  m_sender.reset(new WalletTransactionSender(m_currency, m_transactionsCache, m_account.getAccountKeys(), *m_transferDetails, m_node, m_testnet));
   m_state = INITIALIZED;
 
   m_blockchainSync.addObserver(this);

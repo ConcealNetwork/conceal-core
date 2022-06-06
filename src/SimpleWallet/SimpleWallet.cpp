@@ -716,9 +716,9 @@ bool simple_wallet::init(const boost::program_options::variables_map& vm) {
   }
 
   if (m_daemon_host.empty())
+  {
     m_daemon_host = "localhost";
-  if (!m_daemon_port)
-    m_daemon_port = RPC_DEFAULT_PORT;
+  }
 
   if (!m_daemon_address.empty()) 
   {
@@ -924,7 +924,7 @@ if (key_import) {
       logger(WARNING, BRIGHT_RED) << "Couldn't write wallet address file: " + walletAddressFile;
     }
   } else {
-    m_wallet.reset(new WalletLegacy(m_currency, *m_node, logManager));
+    m_wallet.reset(new WalletLegacy(m_currency, *m_node, logManager, m_testnet));
 
     try {
       m_wallet_file = tryToOpenWalletOrLoadKeysOrThrow(logger, m_wallet, m_wallet_file_arg, pwd_container.password());
@@ -1017,17 +1017,26 @@ bool simple_wallet::deinit() {
 }
 //----------------------------------------------------------------------------------------------------
 void simple_wallet::handle_command_line(const boost::program_options::variables_map& vm) {
+  m_testnet = vm[arg_testnet.name].as<bool>();
   m_wallet_file_arg = command_line::get_arg(vm, arg_wallet_file);
   m_generate_new = command_line::get_arg(vm, arg_generate_new_wallet);
   m_daemon_address = command_line::get_arg(vm, arg_daemon_address);
   m_daemon_host = command_line::get_arg(vm, arg_daemon_host);
   m_daemon_port = command_line::get_arg(vm, arg_daemon_port);
+  if (m_daemon_port == 0)
+  {
+    m_daemon_port = RPC_DEFAULT_PORT;
+  }
+  if (m_testnet && vm[arg_daemon_port.name].defaulted())
+  {
+    m_daemon_port = TESTNET_RPC_DEFAULT_PORT;
+  }
 }
 //----------------------------------------------------------------------------------------------------
 bool simple_wallet::new_wallet(const std::string &wallet_file, const std::string& password) {
   m_wallet_file = wallet_file;
 
-  m_wallet.reset(new WalletLegacy(m_currency, *m_node, logManager));
+  m_wallet.reset(new WalletLegacy(m_currency, *m_node, logManager, m_testnet));
   m_node->addObserver(static_cast<INodeObserver*>(this));
   m_wallet->addObserver(this);
   try {
@@ -1081,7 +1090,7 @@ bool simple_wallet::new_wallet(const std::string &wallet_file, const std::string
 bool simple_wallet::new_wallet(crypto::SecretKey &secret_key, crypto::SecretKey &view_key, const std::string &wallet_file, const std::string& password) {
                 m_wallet_file = wallet_file;
 
-                m_wallet.reset(new WalletLegacy(m_currency, *m_node.get(), logManager));
+                m_wallet.reset(new WalletLegacy(m_currency, *m_node.get(), logManager, m_testnet));
                 m_node->addObserver(static_cast<INodeObserver*>(this));
                 m_wallet->addObserver(this);
                 try {
@@ -2023,9 +2032,13 @@ int main(int argc, char* argv[]) {
   logManager.configure(buildLoggerConfiguration(logLevel, common::ReplaceExtenstion(argv[0], ".log")));
 
   logger(INFO, BRIGHT_YELLOW) << CCX_WALLET_RELEASE_VERSION;
-
+  bool testnet = command_line::get_arg(vm, arg_testnet);
+  if (testnet)
+  {
+    logger(INFO, MAGENTA) << "/!\\ Starting in testnet mode /!\\";
+  }
   cn::Currency currency = cn::CurrencyBuilder(logManager).
-    testnet(command_line::get_arg(vm, arg_testnet)).currency();
+    testnet(testnet).currency();
 
   if (command_line::has_arg(vm, tools::wallet_rpc_server::arg_rpc_bind_port)) {
     //runs wallet with rpc interface
@@ -2072,7 +2085,7 @@ int main(int argc, char* argv[]) {
       return 1;
     }
 
-    std::unique_ptr<IWalletLegacy> wallet(new WalletLegacy(currency, *node.get(), logManager));
+    std::unique_ptr<IWalletLegacy> wallet(new WalletLegacy(currency, *node.get(), logManager, testnet));
 
     std::string walletFileName;
     try  {

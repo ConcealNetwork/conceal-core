@@ -116,7 +116,7 @@ public:
     generator(m_currency),
     m_node(generator),
     m_sync(m_node, m_currency.genesisBlockHash()),
-    m_transfersSync(m_currency, m_sync, m_node) {
+    m_transfersSync(m_currency, m_logger, m_sync, m_node) {
   }
 
   void addAccounts(size_t count) {
@@ -254,7 +254,7 @@ namespace {
 
 
 TEST_F(DetachTest, testBlockchainDetach) {
-  uint64_t sendAmount = 70000000000000;
+  uint64_t sendAmount = 7000000000000;
   auto fee = m_currency.minimumFee();
 
   addMinerAccount();
@@ -343,8 +343,8 @@ TEST_F(DetachTest, testDetachWithWallet) {
   auto fee = m_currency.minimumFee();
 
   generator.generateEmptyBlocks(5);
-  WalletLegacy Alice(m_currency, m_node);
-  WalletLegacy Bob(m_currency, m_node);
+  WalletLegacy Alice(m_currency, m_node, m_logger, true);
+  WalletLegacy Bob(m_currency, m_node, m_logger, true);
 
   CompletionWalletObserver AliceCompleted, BobCompleted;
   AliceCompleted.syncCompleted = std::promise<std::error_code>();
@@ -394,7 +394,8 @@ TEST_F(DetachTest, testDetachWithWallet) {
 
   WalletSendObserver wso;
   Alice.addObserver(&wso);
-  Alice.sendTransaction(tr, fee);
+  crypto::SecretKey transactionSK;
+  Alice.sendTransaction(transactionSK, tr, fee);
   std::error_code sendError;
   wso.waitForSendEnd(sendError);
   Alice.removeObserver(&wso);

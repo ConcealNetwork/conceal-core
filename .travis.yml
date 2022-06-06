@@ -1,28 +1,22 @@
-sudo: true
+dist: focal
 language: cpp
 
-matrix:
-  include:
+branches:
+  only:
+    - master
+    - travis
 
-  # Ubuntu, g++-6
-  - os: linux
-    dist: xenial
-    compiler: gcc
-    addons:
-        apt:
-          update: true
-          sources:
-            - ubuntu-toolchain-r-test
-          packages:
-            - libboost-all-dev
-            - g++-6
-    env:
-    - MATRIX_EVAL="CC=gcc-6 && CXX=g++-6"
-    - LABEL="linux"
-    - _DEPLOY="true"
+addons:
+  apt:
+    update: true
+    sources:
+      - ubuntu-toolchain-r-test
+    packages:
+      - libboost-all-dev
+      - g++
 
 script:
   - mkdir build
   - cd build
   - cmake -DCMAKE_BUILD_TYPE=Release -DSTATIC=true ..
-  - make
+  - make -j2

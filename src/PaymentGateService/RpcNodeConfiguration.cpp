@@ -31,6 +31,16 @@ void RpcNodeConfiguration::init(const boost::program_options::variables_map& opt
   if (options.count("daemon-port") != 0 && (!options["daemon-port"].defaulted() || daemonPort == 0)) {
     daemonPort = options["daemon-port"].as<uint16_t>();
   }
+
+  bool testnet = options["testnet"].as<bool>();
+  if (testnet)
+  {
+    daemonPort = cn::TESTNET_RPC_DEFAULT_PORT;
+    if (!options["daemon-port"].defaulted())
+    {
+      daemonPort = options["daemon-port"].as<uint16_t>();
+    }
+  }
 }
 
 } //namespace payment_service

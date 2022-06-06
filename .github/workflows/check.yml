@@ -13,7 +13,7 @@ jobs:
     name: Windows
     runs-on: windows-2019
     env:
-      BOOST_ROOT: C:/tools/boost/x86_64
+      BOOST_ROOT: C:/local/boost_1_72_0
     steps:
       - uses: actions/checkout@master
 
@@ -54,7 +54,7 @@ jobs:
           mv build/src/Release/concealwallet.exe build/conceal
           mv build/src/Release/optimizer.exe build/conceal
           mv build/src/Release/walletd.exe build/conceal
-          mv build/tests/Release/*_tests.exe build/conceal
+          cp build/tests/Release/*_tests.exe build/conceal
 
       - name: Upload To GH Artifacts
         uses: actions/upload-artifact@v2
@@ -82,6 +82,12 @@ jobs:
         run: |
           cd build/conceal
           ./performance_tests.exe
+      
+      - name: unit_tests
+        shell: powershell
+        run: |
+          cd build/tests
+          ctest -R UnitTests --output-on-failure
 
   build-mingw:
     name: MinGW
@@ -195,7 +201,7 @@ jobs:
           mv build/src/concealwallet build/conceal
           mv build/src/optimizer build/conceal
           mv build/src/walletd build/conceal
-          mv build/tests/*_tests build/conceal
+          cp build/tests/*_tests build/conceal
 
       - name: Upload To GH Artifacts
         uses: actions/upload-artifact@v2
@@ -225,6 +231,11 @@ jobs:
         run: |
           cd build/conceal
           ./system_tests
+      
+      - name: unit_tests
+        run: |
+          cd build/tests
+          ctest -R UnitTests --output-on-failure
 
   build-ubuntu20:
     name: Ubuntu 20.04
@@ -260,7 +271,7 @@ jobs:
           mv build/src/concealwallet build/conceal
           mv build/src/optimizer build/conceal
           mv build/src/walletd build/conceal
-          mv build/tests/*_tests build/conceal
+          cp build/tests/*_tests build/conceal
 
       - name: Upload To GH Artifacts
         uses: actions/upload-artifact@v2
@@ -290,6 +301,11 @@ jobs:
         run: |
           cd build/conceal
           ./system_tests
+
+      - name: unit_tests
+        run: |
+          cd build/tests
+          ctest -R UnitTests --output-on-failure
 
   build-ubuntu20-clang:
     name: Ubuntu 20.04 clang
@@ -325,7 +341,7 @@ jobs:
           mv build/src/concealwallet build/conceal
           mv build/src/optimizer build/conceal
           mv build/src/walletd build/conceal
-          mv build/tests/*_tests build/conceal
+          cp build/tests/*_tests build/conceal
 
       - name: Upload To GH Artifacts
         uses: actions/upload-artifact@v2
@@ -355,6 +371,11 @@ jobs:
         run: |
           cd build/conceal
           ./system_tests
+
+      - name: unit_tests
+        run: |
+          cd build/tests
+          ctest -R UnitTests --output-on-failure
 
   build-macos11:
     name: macOS
@@ -389,7 +410,7 @@ jobs:
           mv build/src/concealwallet build/conceal
           mv build/src/optimizer build/conceal
           mv build/src/walletd build/conceal
-          mv build/tests/*_tests build/conceal
+          cp build/tests/*_tests build/conceal
 
       - name: Upload To GH Artifacts
         uses: actions/upload-artifact@v2
@@ -414,3 +435,8 @@ jobs:
         run: |
           cd build/conceal
           ./performance_tests
+
+      - name: unit_tests
+        run: |
+          cd build/tests
+          ctest -R UnitTests --output-on-failure

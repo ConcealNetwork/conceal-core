@@ -18,8 +18,8 @@ namespace cn {
 //deserialization
 class JsonInputStreamSerializer : public JsonInputValueSerializer {
 public:
-  JsonInputStreamSerializer(std::istream& stream);
-  virtual ~JsonInputStreamSerializer();
+  explicit JsonInputStreamSerializer(std::istream& stream);
+  ~JsonInputStreamSerializer() override = default;
 };
 
 }

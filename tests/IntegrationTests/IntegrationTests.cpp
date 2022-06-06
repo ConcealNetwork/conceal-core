@@ -5,6 +5,7 @@
 
 #include "gtest/gtest.h"
 #include <Logging/LoggerRef.h>
+#include <thread>
 
 #include "../IntegrationTestLib/BaseFunctionalTests.h"
 #include "../IntegrationTestLib/NodeObserver.h"
@@ -62,7 +63,7 @@ public:
     logging::ConsoleLogger m_logger;
     for (auto& n: inodes) {
       
-      std::unique_ptr<cn::IWalletLegacy> wallet(new cn::WalletLegacy(m_currency, *n, m_logger));
+      std::unique_ptr<cn::IWalletLegacy> wallet(new cn::WalletLegacy(m_currency, *n, m_logger, true));
       std::unique_ptr<WalletLegacyObserver> observer(new WalletLegacyObserver());
 
       wallet->initAndGenerate(walletPassword);
