@@ -5,6 +5,7 @@
 
 #include "gtest/gtest.h"
 #include <Logging/LoggerRef.h>
+#include <thread>
 
 #include "../IntegrationTestLib/BaseFunctionalTests.h"
 #include "../IntegrationTestLib/NodeObserver.h"

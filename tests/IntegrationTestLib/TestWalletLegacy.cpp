@@ -6,6 +6,7 @@
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #include "TestWalletLegacy.h"
+#include <thread>
 
 namespace Tests
 {

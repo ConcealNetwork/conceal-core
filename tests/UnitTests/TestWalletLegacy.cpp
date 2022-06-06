@@ -8,6 +8,7 @@
 #include <future>
 #include <chrono>
 #include <array>
+#include <thread>
 
 #include "EventWaiter.h"
 #include "INode.h"
