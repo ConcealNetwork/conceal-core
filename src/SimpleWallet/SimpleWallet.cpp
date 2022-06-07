@@ -659,7 +659,7 @@ std::string simple_wallet::simple_menu()
   menu_item += "\"deposit_info <id>\"           - Display full information for deposit <id>.\n";
   menu_item += "\"exit\"                        - Safely exits the wallet application.\n";
   menu_item += "\"export_keys\"                 - Displays backup keys.\n";
-  menu_item += "\"list_deposits\"               - Show all known deposits, optionally from a certain height. | <block_height>\n";
+  menu_item += "\"list_deposits\"               - Show all known deposits.\n";
   menu_item += "\"list_transfers\"              - Show all known transfers, optionally from a certain height. | <block_height>\n";
   menu_item += "\"reset\"                       - Reset cached blockchain data and starts synchronizing from block 0.\n";
   menu_item += "\"transfer <address> <amount>\" - Transfers <amount> to <address>. | [-p<payment_id>] [<amount_2>]...[<amount_N>] [<address_2>]...[<address_n>]\n";
