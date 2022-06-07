@@ -650,7 +650,8 @@ simple_wallet::simple_wallet(platform_system::Dispatcher& dispatcher, const cn::
 std::string simple_wallet::simple_menu()
 {
   std::string menu_item = "\t\tConceal Wallet Menu\n\n";
-  menu_item += "[ ] = Optional arg\n";
+  menu_item += "[ ] = Optional arg\n\n";
+  menu_item += "\"help\" | \"ext_help\"           - Shows this help dialog or extended help dialog.\n\n";
   menu_item += "\"address\"                     - Shows wallet address.\n";
   menu_item += "\"balance\"                     - Shows wallet main and deposit balance.\n";
   menu_item += "\"bc_height\"                   - Shows current blockchain height.\n";
@@ -658,7 +659,6 @@ std::string simple_wallet::simple_menu()
   menu_item += "\"deposit_info <id>\"           - Display full information for deposit <id>.\n";
   menu_item += "\"exit\"                        - Safely exits the wallet application.\n";
   menu_item += "\"export_keys\"                 - Displays backup keys.\n";
-  menu_item += "\"help\" | \"ext_help\"           - Shows this help dialog or extended help dialog.\n";
   menu_item += "\"list_deposits\"               - Show all known deposits, optionally from a certain height. | <block_height>\n";
   menu_item += "\"list_transfers\"              - Show all known transfers, optionally from a certain height. | <block_height>\n";
   menu_item += "\"reset\"                       - Reset cached blockchain data and starts synchronizing from block 0.\n";
