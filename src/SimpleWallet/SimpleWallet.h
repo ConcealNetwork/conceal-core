@@ -102,11 +102,6 @@ namespace cn
     std::string resolveAlias(const std::string& aliasUrl);
     void printConnectionError() const;
 
-    std::string generate_mnemonic(crypto::SecretKey &);
-    void log_incorrect_words(std::vector<std::string>);
-    bool is_valid_mnemonic(std::string &, crypto::SecretKey &);
-
-
     //---------------- IWalletLegacyObserver -------------------------
     virtual void initCompleted(std::error_code result) override;
     virtual void externalTransactionCreated(cn::TransactionId transactionId) override;
