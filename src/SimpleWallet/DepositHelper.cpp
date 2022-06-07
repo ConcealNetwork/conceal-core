@@ -61,19 +61,16 @@ namespace cn
   std::string deposit_helper::get_deposit_info(cn::Deposit deposit, cn::DepositId did, const Currency& currency, cn::WalletLegacyTransaction txInfo)
   {
     std::string unlock_str = "";
+    uint64_t actual_unlock_height = deposit_height(txInfo) + deposit_term(deposit);
 
-    bool bad_unlock = deposit.unlockHeight > cn::parameters::CRYPTONOTE_MAX_BLOCK_NUMBER;
+    bool bad_unlock = actual_unlock_height > cn::parameters::CRYPTONOTE_MAX_BLOCK_NUMBER;
     if (bad_unlock)
       unlock_str = "Please wait.";
     else
-      unlock_str = std::to_string(deposit_unlock_height(deposit));
+      unlock_str = std::to_string(actual_unlock_height);
 
     bool bad_unlock2 = unlock_str == "0";
     if (bad_unlock2)
-      unlock_str = std::to_string(deposit_height(txInfo) + deposit_term(deposit));
-    
-    bool bad_unlock3 = unlock_str == "0";
-    if (bad_unlock3)
       unlock_str = "ERROR";
 
     std::stringstream full_info;
@@ -93,19 +90,16 @@ namespace cn
   std::string deposit_helper::get_full_deposit_info(cn::Deposit deposit, cn::DepositId did, const Currency& currency, cn::WalletLegacyTransaction txInfo)
   {
     std::string unlock_str = "";
+    uint64_t actual_unlock_height = deposit_height(txInfo) + deposit_term(deposit);
 
-    bool bad_unlock = deposit_unlock_height(deposit) > cn::parameters::CRYPTONOTE_MAX_BLOCK_NUMBER;
+    bool bad_unlock = actual_unlock_height > cn::parameters::CRYPTONOTE_MAX_BLOCK_NUMBER;
     if (bad_unlock)
       unlock_str = "Please wait.";
     else
-      unlock_str = std::to_string(deposit_unlock_height(deposit));
+      unlock_str = std::to_string(actual_unlock_height);
 
     bool bad_unlock2 = unlock_str == "0";
     if (bad_unlock2)
-      unlock_str = std::to_string(deposit_height(txInfo) + deposit_term(deposit));
-    
-    bool bad_unlock3 = unlock_str == "0";
-    if (bad_unlock3)
       unlock_str = "ERROR";
 
     std::stringstream full_info;
