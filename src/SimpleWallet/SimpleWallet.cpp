@@ -2202,7 +2202,12 @@ bool simple_wallet::deposit_info(const std::vector<std::string> &args)
   }
 
   uint64_t deposit_id = boost::lexical_cast<uint64_t>(args[0]);
-  cn::Deposit deposit = m_wallet->get_deposit(deposit_id);
+  cn::Deposit deposit;
+  if (!m_wallet->getDeposit(deposit_id, deposit))
+  {
+    logger(ERROR, BRIGHT_RED) << "Error: Invalid deposit id: " << deposit_id;
+    return false;
+  }
   cn::WalletLegacyTransaction txInfo;
   m_wallet->getTransaction(deposit.creatingTransactionId, txInfo);
 
