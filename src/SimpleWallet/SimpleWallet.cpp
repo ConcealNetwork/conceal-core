@@ -147,9 +147,10 @@ struct TransferCommand {
   std::map<std::string, std::vector<WalletLegacyTransfer>> aliases;
   std::vector<std::string> messages;
   uint64_t ttl;
+  std::string m_remote_address;
 
-  TransferCommand(const cn::Currency& currency) :
-    m_currency(currency), fake_outs_count(0), fee(currency.minimumFeeV2()), ttl(0) {
+  TransferCommand(const cn::Currency& currency, std::string remote_fee_address) :
+    m_currency(currency), m_remote_address(remote_fee_address), fake_outs_count(0), fee(currency.minimumFeeV2()), ttl(0) {
   }
 
 /* This parses arguments from the transfer command */
@@ -245,8 +246,8 @@ struct TransferCommand {
           }
 
           /* Remote node transactions fees are 10000 X */
-          if (!remote_fee_address.empty()) {
-            destination.address = remote_fee_address;                     
+          if (!m_remote_address.empty()) {
+            destination.address = m_remote_address;                   
             destination.amount = 10000;
             dsts.push_back(destination);
           }
@@ -727,22 +728,23 @@ bool simple_wallet::init(const boost::program_options::variables_map& vm) {
       fail_msg_writer() << "failed to parse daemon address: " << m_daemon_address;
       return false;
     }
-    remote_fee_address = getFeeAddress();
+    m_remote_node_address = getFeeAddress();
     logger(INFO, BRIGHT_WHITE) << "Connected to remote node: " << m_daemon_host;
-    if (!remote_fee_address.empty()) 
+    if (!m_remote_node_address.empty()) 
     {
-      logger(INFO, BRIGHT_WHITE) << "Fee address: " << remote_fee_address;
+      logger(INFO, BRIGHT_WHITE) << "Fee address: " << m_remote_node_address;
     }    
   } 
   else 
   {
-    if (!m_daemon_host.empty()) 
-      remote_fee_address = getFeeAddress();
-		m_daemon_address = std::string("http://") + m_daemon_host + ":" + std::to_string(m_daemon_port);
+    if (!m_daemon_host.empty()) {
+      m_remote_node_address = getFeeAddress();
+    }
+    m_daemon_address = std::string("http://") + m_daemon_host + ":" + std::to_string(m_daemon_port);
     logger(INFO, BRIGHT_WHITE) << "Connected to remote node: " << m_daemon_host;
-    if (!remote_fee_address.empty()) 
+    if (!m_remote_node_address.empty()) 
     {
-      logger(INFO, BRIGHT_WHITE) << "Fee address: " << remote_fee_address;
+      logger(INFO, BRIGHT_WHITE) << "Fee address: " << m_remote_node_address;
     }   
   }
 
@@ -1784,7 +1786,7 @@ std::string simple_wallet::getFeeAddress() {
 
 bool simple_wallet::transfer(const std::vector<std::string> &args) {
   try {
-    TransferCommand cmd(m_currency);
+    TransferCommand cmd(m_currency, m_remote_node_address);
 
     if (!cmd.parseArguments(logger, args))
       return true;

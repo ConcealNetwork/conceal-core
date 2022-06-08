@@ -29,7 +29,6 @@
 #include <System/Dispatcher.h>
 #include <System/Ipv4Address.h>
 
-std::string remote_fee_address;
 namespace cn
 {
   /************************************************************************/
@@ -49,6 +48,8 @@ namespace cn
     std::string getFeeAddress();
 
     const cn::Currency& currency() const { return m_currency; }
+
+    std::string m_remote_node_address;
 
   private:
 
