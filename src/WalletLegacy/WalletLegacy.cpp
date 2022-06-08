@@ -269,8 +269,10 @@ void WalletLegacy::doLoad(std::istream& source) {
         std::stringstream stream(cache);
         m_transfersSync.load(stream);
       }
-    } catch (const std::exception&) {
+    } catch (const std::exception& e) {
+      // TODO Make this pass through file log at some point
       // ignore cache loading errors
+      std::cout << "Exception during loading cache: " << e.what() << std::endl;
     }
 	// Read all output keys cache
     std::vector<TransactionOutputInformation> allTransfers;
