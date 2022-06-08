@@ -541,6 +541,7 @@ WalletLegacyTransfer& WalletUserTransactionsCache::getTransfer(TransferId transf
 void WalletUserTransactionsCache::reset() {
   m_transactions.clear();
   m_transfers.clear();
+  m_deposits.clear();
   m_unconfirmedTransactions.reset();
 }
 

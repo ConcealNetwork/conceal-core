@@ -151,6 +151,16 @@ namespace
     return amount;
   }
 
+  void countDepositTotalSumAndInterestSum(const DepositId &depositId, WalletUserTransactionsCache &depositsCache,
+                                           uint64_t &totalSum, uint64_t &interestsSum)
+  {
+    totalSum = 0;
+    interestsSum = 0;
+    Deposit &deposit = depositsCache.getDeposit(depositId);
+    totalSum += deposit.amount + deposit.interest;
+    interestsSum += deposit.interest;
+  }
+
   void countDepositsTotalSumAndInterestSum(const std::vector<DepositId> &depositIds, WalletUserTransactionsCache &depositsCache,
                                            uint64_t &totalSum, uint64_t &interestsSum)
   {
@@ -298,6 +308,27 @@ namespace cn
 
   std::unique_ptr<WalletRequest> WalletTransactionSender::makeWithdrawDepositRequest(TransactionId &transactionId,
                                                                                      std::deque<std::unique_ptr<WalletLegacyEvent>> &events,
+                                                                                     const DepositId &depositId,
+                                                                                     uint64_t fee)
+  {
+
+    std::shared_ptr<SendTransactionContext> context = std::make_shared<SendTransactionContext>();
+    context->dustPolicy.dustThreshold = m_currency.defaultDustThreshold();
+
+    context->foundMoney = selectDepositTransfers(depositId, context->selectedTransfers);
+    throwIf(context->foundMoney < fee, error::WRONG_AMOUNT);
+
+    transactionId = m_transactionsCache.addNewTransaction(context->foundMoney, fee, std::string(), {}, 0, {});
+    context->transactionId = transactionId;
+    context->mixIn = 0;
+
+    setSpendingTransactionToDeposit(transactionId, depositId);
+
+    return doSendDepositWithdrawTransaction(std::move(context), events, depositId);
+  }
+
+  std::unique_ptr<WalletRequest> WalletTransactionSender::makeWithdrawDepositsRequest(TransactionId &transactionId,
+                                                                                     std::deque<std::unique_ptr<WalletLegacyEvent>> &events,
                                                                                      const std::vector<DepositId> &depositIds,
                                                                                      uint64_t fee)
   {
@@ -305,7 +336,7 @@ namespace cn
     std::shared_ptr<SendTransactionContext> context = std::make_shared<SendTransactionContext>();
     context->dustPolicy.dustThreshold = m_currency.defaultDustThreshold();
 
-    context->foundMoney = selectDepositTransfers(depositIds, context->selectedTransfers);
+    context->foundMoney = selectDepositsTransfers(depositIds, context->selectedTransfers);
     throwIf(context->foundMoney < fee, error::WRONG_AMOUNT);
 
     transactionId = m_transactionsCache.addNewTransaction(context->foundMoney, fee, std::string(), {}, 0, {});
@@ -314,7 +345,7 @@ namespace cn
 
     setSpendingTransactionToDeposits(transactionId, depositIds);
 
-    return doSendDepositWithdrawTransaction(std::move(context), events, depositIds);
+    return doSendDepositsWithdrawTransaction(std::move(context), events, depositIds);
   }
 
   std::shared_ptr<WalletRequest> WalletTransactionSender::makeSendFusionRequest(TransactionId &transactionId, std::deque<std::unique_ptr<WalletLegacyEvent>> &events,
@@ -511,15 +542,18 @@ namespace cn
       }
 
       transactionInfo.hash = transaction->getTransactionHash();
+      
+      uint64_t t_height = transactionInfo.blockHeight;
 
       Deposit deposit;
       deposit.amount = std::abs(transactionInfo.totalAmount) - transactionInfo.fee;
       deposit.term = context->depositTerm;
       deposit.creatingTransactionId = context->transactionId;
       deposit.spendingTransactionId = WALLET_LEGACY_INVALID_TRANSACTION_ID;
-      uint32_t height = transactionInfo.blockHeight;
-      deposit.interest = m_currency.calculateInterest(deposit.amount, deposit.term, height);
+      deposit.height = t_height;
+      deposit.interest = m_currency.calculateInterest(deposit.amount, deposit.term, deposit.height);
       deposit.locked = true;
+      deposit.unlockHeight = t_height + context->depositTerm;
       DepositId depositId = m_transactionsCache.insertDeposit(deposit, depositIndex, transaction->getTransactionHash());
       transactionInfo.firstDepositId = depositId;
       transactionInfo.depositCount = 1;
@@ -532,7 +566,7 @@ namespace cn
 
       std::vector<DepositId> deposits{depositId};
 
-      return std::unique_ptr<WalletRequest>(new WalletRelayDepositTransactionRequest(lowlevelTransaction, std::bind(&WalletTransactionSender::relayDepositTransactionCallback, this, context,
+      return std::unique_ptr<WalletRequest>(new WalletRelayDepositTransactionRequest(lowlevelTransaction, std::bind(&WalletTransactionSender::relayDepositsTransactionCallback, this, context,
                                                                                                                     deposits, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3)));
     }
     catch (std::system_error &ec)
@@ -548,6 +582,71 @@ namespace cn
   }
 
   std::unique_ptr<WalletRequest> WalletTransactionSender::doSendDepositWithdrawTransaction(std::shared_ptr<SendTransactionContext> &&context,
+                                                                                           std::deque<std::unique_ptr<WalletLegacyEvent>> &events, const DepositId &depositId)
+  {
+    if (m_isStoping)
+    {
+      events.push_back(makeCompleteEvent(m_transactionsCache, context->transactionId, make_error_code(error::TX_CANCELLED)));
+      return std::unique_ptr<WalletRequest>();
+    }
+
+    try
+    {
+      WalletLegacyTransaction &transactionInfo = m_transactionsCache.getTransaction(context->transactionId);
+
+      std::unique_ptr<ITransaction> transaction = createTransaction();
+      std::vector<MultisignatureInput> inputs = prepareMultisignatureInputs(context->selectedTransfers);
+
+      std::vector<uint64_t> outputAmounts = splitAmount(context->foundMoney - transactionInfo.fee, context->dustPolicy.dustThreshold);
+
+      for (const auto &input : inputs)
+      {
+        transaction->addInput(input);
+      }
+
+      for (auto amount : outputAmounts)
+      {
+        transaction->addOutput(amount, m_keys.address);
+      }
+
+      transaction->setUnlockTime(transactionInfo.unlockTime);
+
+      assert(inputs.size() == context->selectedTransfers.size());
+      for (size_t i = 0; i < inputs.size(); ++i)
+      {
+        transaction->signInputMultisignature(i, context->selectedTransfers[i].transactionPublicKey, context->selectedTransfers[i].outputInTransaction, m_keys);
+      }
+
+      transactionInfo.hash = transaction->getTransactionHash();
+
+      Transaction lowlevelTransaction = convertTransaction(*transaction, static_cast<size_t>(m_upperTransactionSizeLimit));
+
+      uint64_t interestsSum;
+      uint64_t totalSum;
+      countDepositTotalSumAndInterestSum(depositId, m_transactionsCache, totalSum, interestsSum);
+
+      UnconfirmedSpentDepositDetails unconfirmed;
+      unconfirmed.depositsSum = totalSum;
+      unconfirmed.fee = transactionInfo.fee;
+      unconfirmed.transactionId = context->transactionId;
+      m_transactionsCache.addDepositSpendingTransaction(transaction->getTransactionHash(), unconfirmed);
+
+      return std::unique_ptr<WalletRelayDepositTransactionRequest>(new WalletRelayDepositTransactionRequest(lowlevelTransaction,
+                                                                                                            std::bind(&WalletTransactionSender::relayDepositTransactionCallback, this, context, depositId, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3)));
+    }
+    catch (std::system_error &ec)
+    {
+      events.push_back(makeCompleteEvent(m_transactionsCache, context->transactionId, ec.code()));
+    }
+    catch (std::exception &)
+    {
+      events.push_back(makeCompleteEvent(m_transactionsCache, context->transactionId, make_error_code(error::INTERNAL_WALLET_ERROR)));
+    }
+
+    return std::unique_ptr<WalletRequest>();
+  }
+
+  std::unique_ptr<WalletRequest> WalletTransactionSender::doSendDepositsWithdrawTransaction(std::shared_ptr<SendTransactionContext> &&context,
                                                                                            std::deque<std::unique_ptr<WalletLegacyEvent>> &events, const std::vector<DepositId> &depositIds)
   {
     if (m_isStoping)
@@ -598,7 +697,7 @@ namespace cn
       m_transactionsCache.addDepositSpendingTransaction(transaction->getTransactionHash(), unconfirmed);
 
       return std::unique_ptr<WalletRelayDepositTransactionRequest>(new WalletRelayDepositTransactionRequest(lowlevelTransaction,
-                                                                                                            std::bind(&WalletTransactionSender::relayDepositTransactionCallback, this, context, depositIds, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3)));
+                                                                                                            std::bind(&WalletTransactionSender::relayDepositsTransactionCallback, this, context, depositIds, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3)));
     }
     catch (std::system_error &ec)
     {
@@ -624,6 +723,21 @@ namespace cn
   }
 
   void WalletTransactionSender::relayDepositTransactionCallback(std::shared_ptr<SendTransactionContext> context,
+                                                                DepositId deposit,
+                                                                std::deque<std::unique_ptr<WalletLegacyEvent>> &events,
+                                                                std::unique_ptr<WalletRequest> &nextRequest,
+                                                                std::error_code ec)
+  {
+    if (m_isStoping)
+    {
+      return;
+    }
+
+    events.push_back(makeCompleteEvent(m_transactionsCache, context->transactionId, ec));
+    events.push_back(std::unique_ptr<WalletDepositUpdatedEvent>(new WalletDepositUpdatedEvent(deposit)));
+  }
+
+  void WalletTransactionSender::relayDepositsTransactionCallback(std::shared_ptr<SendTransactionContext> context,
                                                                 std::vector<DepositId> deposits,
                                                                 std::deque<std::unique_ptr<WalletLegacyEvent>> &events,
                                                                 std::unique_ptr<WalletRequest> &nextRequest,
@@ -902,7 +1016,32 @@ namespace cn
     return foundMoney;
   }
 
-  uint64_t WalletTransactionSender::selectDepositTransfers(const std::vector<DepositId> &depositIds, std::vector<TransactionOutputInformation> &selectedTransfers)
+  uint64_t WalletTransactionSender::selectDepositTransfers(const DepositId &depositId, std::vector<TransactionOutputInformation> &selectedTransfers)
+  {
+    uint64_t foundMoney = 0;
+    
+    Hash transactionHash;
+    uint32_t outputInTransaction;
+    throwIf(m_transactionsCache.getDepositInTransactionInfo(depositId, transactionHash, outputInTransaction) == false, error::DEPOSIT_DOESNOT_EXIST);
+    
+    {
+      TransactionOutputInformation transfer;
+      ITransfersContainer::TransferState state;
+      throwIf(m_transferDetails.getTransfer(transactionHash, outputInTransaction, transfer, state) == false, error::DEPOSIT_DOESNOT_EXIST);
+      throwIf(state != ITransfersContainer::TransferState::TransferAvailable, error::DEPOSIT_LOCKED);
+      selectedTransfers.push_back(std::move(transfer));
+    }
+
+    Deposit deposit;
+    bool r = m_transactionsCache.getDeposit(depositId, deposit);
+    assert(r);
+
+    foundMoney += deposit.amount + deposit.interest;
+
+    return foundMoney;
+  }
+
+  uint64_t WalletTransactionSender::selectDepositsTransfers(const std::vector<DepositId> &depositIds, std::vector<TransactionOutputInformation> &selectedTransfers)
   {
     uint64_t foundMoney = 0;
 
@@ -928,6 +1067,12 @@ namespace cn
     }
 
     return foundMoney;
+  }
+
+  void WalletTransactionSender::setSpendingTransactionToDeposit(TransactionId transactionId, const DepositId &depositId)
+  {
+    Deposit &deposit = m_transactionsCache.getDeposit(depositId);
+    deposit.spendingTransactionId = transactionId;
   }
 
   void WalletTransactionSender::setSpendingTransactionToDeposits(TransactionId transactionId, const std::vector<DepositId> &depositIds)

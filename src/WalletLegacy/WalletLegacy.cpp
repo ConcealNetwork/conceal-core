@@ -806,6 +806,34 @@ TransactionId WalletLegacy::deposit(uint32_t term, uint64_t amount, uint64_t fee
   return txId;
 }
 
+TransactionId WalletLegacy::withdrawDeposit(const DepositId& depositId, uint64_t fee) {
+  throwIfNotInitialised();
+
+  TransactionId txId = 0;
+  std::unique_ptr<WalletRequest> request;
+  std::deque<std::unique_ptr<WalletLegacyEvent>> events;
+
+  fee = cn::parameters::MINIMUM_FEE;
+
+  {
+    std::unique_lock<std::mutex> lock(m_cacheMutex);
+    request = m_sender->makeWithdrawDepositRequest(txId, events, depositId, fee);
+
+    if (request != nullptr) {
+      pushBalanceUpdatedEvents(events);
+    }
+  }
+
+  notifyClients(events);
+
+  if (request != nullptr) {
+    m_asyncContextCounter.addAsyncContext();
+    request->perform(m_node, std::bind(&WalletLegacy::sendTransactionCallback, this, std::placeholders::_1, std::placeholders::_2));
+  }
+
+  return txId;
+}
+
 TransactionId WalletLegacy::withdrawDeposits(const std::vector<DepositId>& depositIds, uint64_t fee) {
   throwIfNotInitialised();
 
@@ -817,7 +845,7 @@ TransactionId WalletLegacy::withdrawDeposits(const std::vector<DepositId>& depos
 
   {
     std::unique_lock<std::mutex> lock(m_cacheMutex);
-    request = m_sender->makeWithdrawDepositRequest(txId, events, depositIds, fee);
+    request = m_sender->makeWithdrawDepositsRequest(txId, events, depositIds, fee);
 
     if (request != nullptr) {
       pushBalanceUpdatedEvents(events);
@@ -1468,6 +1496,11 @@ bool WalletLegacy::checkWalletPassword(std::istream& source, const std::string& 
   std::unique_lock<std::mutex> lock(m_cacheMutex);
   WalletLegacySerializer serializer(m_account, m_transactionsCache);
   return serializer.deserialize(source, password);
+}
+
+Deposit WalletLegacy::get_deposit(DepositId depositId)
+{
+  return m_transactionsCache.getDeposit(depositId);
 }
 
 

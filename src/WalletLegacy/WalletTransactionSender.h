@@ -50,9 +50,14 @@ public:
 
   std::unique_ptr<WalletRequest> makeWithdrawDepositRequest(TransactionId& transactionId,
                                                             std::deque<std::unique_ptr<WalletLegacyEvent>>& events,
+                                                            const DepositId& depositId,
+                                                            uint64_t fee);
+
+  std::unique_ptr<WalletRequest> makeWithdrawDepositsRequest(TransactionId& transactionId,
+                                                            std::deque<std::unique_ptr<WalletLegacyEvent>>& events,
                                                             const std::vector<DepositId>& depositIds,
                                                             uint64_t fee);
-                                                            
+
 std::shared_ptr<WalletRequest> makeSendFusionRequest(TransactionId& transactionId, std::deque<std::unique_ptr<WalletLegacyEvent>>& events,
                                                      const std::vector<WalletLegacyTransfer>& transfers, const std::list<TransactionOutputInformation>& fusionInputs,
                                                      uint64_t fee, const std::string& extra = "", uint64_t mixIn = 0, uint64_t unlockTimestamp = 0);
@@ -62,6 +67,9 @@ private:
   std::unique_ptr<WalletRequest> doSendTransaction(std::shared_ptr<SendTransactionContext>&& context, std::deque<std::unique_ptr<WalletLegacyEvent>>& events, crypto::SecretKey& transactionSK);
   std::unique_ptr<WalletRequest> doSendMultisigTransaction(std::shared_ptr<SendTransactionContext>&& context, std::deque<std::unique_ptr<WalletLegacyEvent>>& events);
   std::unique_ptr<WalletRequest> doSendDepositWithdrawTransaction(std::shared_ptr<SendTransactionContext>&& context,
+                                                                  std::deque<std::unique_ptr<WalletLegacyEvent>>& events,
+                                                                  const DepositId& depositId);
+  std::unique_ptr<WalletRequest> doSendDepositsWithdrawTransaction(std::shared_ptr<SendTransactionContext>&& context,
                                                                   std::deque<std::unique_ptr<WalletLegacyEvent>>& events,
                                                                   const std::vector<DepositId>& depositIds);
 
@@ -90,6 +98,11 @@ private:
                                 std::unique_ptr<WalletRequest>& nextRequest,
                                 std::error_code ec);
   void relayDepositTransactionCallback(std::shared_ptr<SendTransactionContext> context,
+                                       DepositId deposit,
+                                       std::deque<std::unique_ptr<WalletLegacyEvent>>& events,
+                                       std::unique_ptr<WalletRequest>& nextRequest,
+                                       std::error_code ec);
+  void relayDepositsTransactionCallback(std::shared_ptr<SendTransactionContext> context,
                                        std::vector<DepositId> deposits,
                                        std::deque<std::unique_ptr<WalletLegacyEvent>>& events,
                                        std::unique_ptr<WalletRequest>& nextRequest,
@@ -101,8 +114,10 @@ private:
 
   uint64_t selectNTransfersToSend(std::vector<TransactionOutputInformation>& selectedTransfers);
   uint64_t selectTransfersToSend(uint64_t neededMoney, bool addDust, uint64_t dust, std::vector<TransactionOutputInformation>& selectedTransfers);
-  uint64_t selectDepositTransfers(const std::vector<DepositId>& depositIds, std::vector<TransactionOutputInformation>& selectedTransfers);
+  uint64_t selectDepositTransfers(const DepositId& depositId, std::vector<TransactionOutputInformation>& selectedTransfers);
+  uint64_t selectDepositsTransfers(const std::vector<DepositId>& depositIds, std::vector<TransactionOutputInformation>& selectedTransfers);
 
+  void setSpendingTransactionToDeposit(TransactionId transactionId, const DepositId& depositId);
   void setSpendingTransactionToDeposits(TransactionId transactionId, const std::vector<DepositId>& depositIds);
 
   const Currency& m_currency;
