@@ -17,7 +17,7 @@ namespace mnemonics
 
     bool HasValidChecksum(const std::vector<std::string> words);
 
-    std::string GetChecksumWord(const std::vector<std::string> words)
+    std::string GetChecksumWord(const std::vector<std::string> words);
 
     std::vector<int> GetWordIndexes(const std::vector<std::string> words);
 }
