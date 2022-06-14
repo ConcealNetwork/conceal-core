@@ -11,14 +11,13 @@
 namespace mnemonics
 {
     crypto::SecretKey MnemonicToPrivateKey(const std::string words);
-
     crypto::SecretKey MnemonicToPrivateKey(const std::vector<std::string> words);
 
     std::string PrivateKeyToMnemonic(const crypto::SecretKey privateKey);
 
     bool HasValidChecksum(const std::vector<std::string> words);
 
-    std::string GetChecksumWord(const std::vector<std::string> words);
+    std::string GetChecksumWord(const std::vector<std::string> words)
 
     std::vector<int> GetWordIndexes(const std::vector<std::string> words);
 }
