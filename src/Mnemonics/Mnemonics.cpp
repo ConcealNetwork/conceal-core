@@ -13,7 +13,7 @@
 
 namespace mnemonics
 {
-    crypto::SecretKey MnemonicToPrivateKey(const std::string words)
+    crypto::SecretKey mnemonicToPrivateKey(const std::string &words)
     {
         std::vector<std::string> wordsList;
 
@@ -25,12 +25,12 @@ namespace mnemonics
             wordsList.push_back(word);
         }
 
-        return MnemonicToPrivateKey(wordsList);
+        return mnemonicToPrivateKey(wordsList);
     }
 
     /* Note - if the returned string is not empty, it is an error message, and
        the returned secret key is not initialized. */
-    crypto::SecretKey MnemonicToPrivateKey(const std::vector<std::string> words)
+    crypto::SecretKey mnemonicToPrivateKey(const std::vector<std::string> &words)
     {
         const size_t len = words.size();
 
@@ -58,12 +58,12 @@ namespace mnemonics
         }
 
         /* The checksum must be correct */
-        if (!HasValidChecksum(words))
+        if (!hasValidChecksum(words))
         {
             return crypto::SecretKey();
         }
 
-        auto wordIndexes = GetWordIndexes(words);
+        auto wordIndexes = getWordIndexes(words);
 
         std::vector<uint8_t> data;
 
@@ -78,10 +78,8 @@ namespace mnemonics
             const size_t wlLen = WordList::English.size();
 
             /* no idea what this does lol */
-            const uint32_t val = static_cast<uint32_t>(
-                w1 + wlLen * (((wlLen - w1) + w2) % wlLen) + wlLen 
-                           * wlLen * (((wlLen - w2) + w3) % wlLen)
-            );
+            const auto val = static_cast<uint32_t>(
+                w1 + wlLen * (((wlLen - w1) + w2) % wlLen) + wlLen * wlLen * (((wlLen - w2) + w3) % wlLen));
 
             /* Don't know what this is testing either */
             if (!(val % wlLen == w1))
@@ -99,7 +97,7 @@ namespace mnemonics
             }
         }
 
-        crypto::SecretKey key;
+        auto key = crypto::SecretKey();
 
         /* Copy the data to the secret key */
         std::copy(data.begin(), data.end(), key.data);
@@ -107,7 +105,7 @@ namespace mnemonics
         return key;
     }
 
-    std::string PrivateKeyToMnemonic(const crypto::SecretKey privateKey)
+    std::string privateKeyToMnemonic(const crypto::SecretKey &privateKey)
     {
         std::vector<std::string> words;
 
@@ -120,18 +118,18 @@ namespace mnemonics
                done the offset */
             const uint32_t val = ptr[0];
 
-            uint32_t wlLen = WordList::English.size();
+            size_t wlLen = WordList::English.size();
 
             const uint32_t w1 = val % wlLen;
             const uint32_t w2 = ((val / wlLen) + w1) % wlLen;
             const uint32_t w3 = (((val / wlLen) / wlLen) + w2) % wlLen;
 
-            words.push_back(WordList::English[w1]);
-            words.push_back(WordList::English[w2]);
-            words.push_back(WordList::English[w3]);
+            words.emplace_back(WordList::English[w1]);
+            words.emplace_back(WordList::English[w2]);
+            words.emplace_back(WordList::English[w3]);
         }
 
-        words.push_back(GetChecksumWord(words));
+        words.push_back(getChecksumWord(words));
 
         std::string result;
 
@@ -149,7 +147,7 @@ namespace mnemonics
     }
 
     /* Assumes the input is 25 words long */
-    bool HasValidChecksum(const std::vector<std::string> words)
+    bool hasValidChecksum(const std::vector<std::string> &words)
     {
         /* Make a copy since erase() is mutating */
         auto wordsNoChecksum = words;
@@ -159,10 +157,10 @@ namespace mnemonics
 
         /* Assert the last word (the checksum word) is equal to the derived
            checksum */
-        return words[words.size() - 1] == GetChecksumWord(wordsNoChecksum);
+        return words[words.size() - 1] == getChecksumWord(wordsNoChecksum);
     }
 
-    std::string GetChecksumWord(const std::vector<std::string> words)
+    std::string getChecksumWord(const std::vector<std::string> &words)
     {
         std::string trimmed;
 
@@ -180,7 +178,7 @@ namespace mnemonics
         return words[hash % words.size()];
     }
 
-    std::vector<int> GetWordIndexes(const std::vector<std::string> words)
+    std::vector<int> getWordIndexes(const std::vector<std::string> &words)
     {
         std::vector<int> result;
 

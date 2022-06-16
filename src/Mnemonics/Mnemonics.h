@@ -7,17 +7,16 @@
 
 #include <vector>
 
-
 namespace mnemonics
 {
-    crypto::SecretKey MnemonicToPrivateKey(const std::string words);
-    crypto::SecretKey MnemonicToPrivateKey(const std::vector<std::string> words);
+    crypto::SecretKey mnemonicToPrivateKey(const std::string &words);
+    crypto::SecretKey mnemonicToPrivateKey(const std::vector<std::string> &words);
 
-    std::string PrivateKeyToMnemonic(const crypto::SecretKey privateKey);
+    std::string privateKeyToMnemonic(const crypto::SecretKey &privateKey);
 
-    bool HasValidChecksum(const std::vector<std::string> words);
+    bool hasValidChecksum(const std::vector<std::string> &words);
 
-    std::string GetChecksumWord(const std::vector<std::string> words);
+    std::string getChecksumWord(const std::vector<std::string> &words);
 
-    std::vector<int> GetWordIndexes(const std::vector<std::string> words);
+    std::vector<int> getWordIndexes(const std::vector<std::string> &words);
 }

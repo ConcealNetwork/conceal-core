@@ -32,7 +32,7 @@ SOFTWARE.
 namespace crc32
 {
     /* oof */
-    std::vector<uint64_t> table
+    const std::vector<uint64_t> table
     {
         0, 1996959894, 3993919788, 2567524794, 124634137, 1886057615, 3915621685, 2657392035,
         249268274, 2044508324, 3772115230, 2547177864, 162941995, 2125561021, 3887607047, 2428444049,
@@ -68,7 +68,7 @@ namespace crc32
         3009837614, 3294710456, 1567103746, 711928724, 3020668471, 3272380065, 1510334235, 755167117
     };
 
-    uint64_t crc32(std::string input)
+    uint64_t crc32(const std::string& input)
     {
         uint64_t crc = 0xFFFFFFFF;
 

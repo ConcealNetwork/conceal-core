@@ -897,7 +897,7 @@ bool simple_wallet::init(const boost::program_options::variables_map& vm) {
         boost::algorithm::to_lower(mnemonic_phrase);
       } while (mnemonic_phrase.empty());
 
-      private_spend_key = mnemonics::MnemonicToPrivateKey(mnemonic_phrase);
+      private_spend_key = mnemonics::mnemonicToPrivateKey(mnemonic_phrase);
 
       /* This is not used, but is needed to be passed to the function, not sure how we can avoid this */
       crypto::PublicKey unused_dummy_variable;
@@ -1009,7 +1009,7 @@ bool simple_wallet::new_wallet(const std::string &wallet_file, const std::string
     std::cout << "Wallet Address: " << m_wallet->getAddress() << std::endl;
     std::cout << "Private spend key: " << common::podToHex(keys.spendSecretKey) << std::endl;
     std::cout << "Private view key: " <<  common::podToHex(keys.viewSecretKey) << std::endl;
-    std::cout << "Mnemonic Seed: " << mnemonics::PrivateKeyToMnemonic(keys.spendSecretKey) << std::endl;
+    std::cout << "Mnemonic Seed: " << mnemonics::privateKeyToMnemonic(keys.spendSecretKey) << std::endl;
   }
   catch (const std::exception& e) {
     fail_msg_writer() << "failed to generate new wallet: " << e.what();
@@ -1421,7 +1421,7 @@ bool simple_wallet::export_keys(const std::vector<std::string>& args/* = std::ve
 
   /* dont show a mnemonic seed if it is an old non-deterministic wallet */
   if (deterministic_private_keys) {
-    std::cout << "Mnemonic seed: " << mnemonics::PrivateKeyToMnemonic(keys.spendSecretKey) << std::endl << std::endl;
+    std::cout << "Mnemonic seed: " << mnemonics::privateKeyToMnemonic(keys.spendSecretKey) << std::endl << std::endl;
   }
 
   return true;
@@ -1895,7 +1895,7 @@ bool simple_wallet::save_keys_to_file(const std::vector<std::string>& args)
 
   /* dont show a mnemonic seed if it is an old non-deterministic wallet */
   if (deterministic_private_keys) {
-    std::cout << "Mnemonic seed: " << mnemonics::PrivateKeyToMnemonic(keys.spendSecretKey) << std::endl << std::endl;
+    std::cout << "Mnemonic seed: " << mnemonics::privateKeyToMnemonic(keys.spendSecretKey) << std::endl << std::endl;
   }
 
   backup_file << priv_key;
