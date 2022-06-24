@@ -388,15 +388,6 @@ std::string tryToOpenWalletOrLoadKeysOrThrow(LoggerRef& logger, std::unique_ptr<
   }
 }
 
-std::string makeCenteredString(size_t width, const std::string& text) {
-  if (text.size() >= width) {
-    return text;
-  }
-
-  size_t offset = (width - text.size() + 1) / 2;
-  return std::string(offset, ' ') + text + std::string(width - text.size() - offset, ' ');
-}
-
 const size_t TIMESTAMP_MAX_WIDTH = 32;
 const size_t HASH_MAX_WIDTH = 64;
 const size_t TOTAL_AMOUNT_MAX_WIDTH = 20;
@@ -405,15 +396,26 @@ const size_t BLOCK_MAX_WIDTH = 7;
 const size_t UNLOCK_TIME_MAX_WIDTH = 11;
 
 void printListTransfersHeader(LoggerRef& logger) {
-  std::string header = makeCenteredString(TIMESTAMP_MAX_WIDTH, "timestamp (UTC)") + "  ";
-  header += makeCenteredString(HASH_MAX_WIDTH, "hash") + "  ";
-  header += makeCenteredString(TOTAL_AMOUNT_MAX_WIDTH, "total amount") + "  ";
-  header += makeCenteredString(FEE_MAX_WIDTH, "fee") + "  ";
-  header += makeCenteredString(BLOCK_MAX_WIDTH, "block") + "  ";
-  header += makeCenteredString(UNLOCK_TIME_MAX_WIDTH, "unlock time");
+  std::string header = common::makeCenteredString(TIMESTAMP_MAX_WIDTH, "timestamp (UTC)") + "  ";
+  header += common::makeCenteredString(HASH_MAX_WIDTH, "hash") + "  ";
+  header += common::makeCenteredString(TOTAL_AMOUNT_MAX_WIDTH, "total amount") + "  ";
+  header += common::makeCenteredString(FEE_MAX_WIDTH, "fee") + "  ";
+  header += common::makeCenteredString(BLOCK_MAX_WIDTH, "block") + "  ";
+  header += common::makeCenteredString(UNLOCK_TIME_MAX_WIDTH, "unlock time");
 
   logger(INFO) << header;
   logger(INFO) << std::string(header.size(), '-');
+}
+
+void printListDepositsHeader(LoggerRef& logger) {
+  std::string header = common::makeCenteredString(8, "ID") + " | ";
+  header += common::makeCenteredString(20, "Amount") + " | ";
+  header += common::makeCenteredString(20, "Interest") + " | ";
+  header += common::makeCenteredString(16, "Unlock Height") + " | ";
+  header += common::makeCenteredString(10, "State");
+
+  logger(INFO) << "\n" << header;
+  logger(INFO) << std::string(header.size(), '=');
 }
 
 void printListTransfersItem(LoggerRef& logger, const WalletLegacyTransaction& txInfo, IWalletLegacy& wallet, const Currency& currency) {
@@ -553,24 +555,27 @@ bool askAliasesTransfersConfirmation(const std::map<std::string, std::vector<Wal
 
 }
 
-bool processServerFeeAddressResponse(const std::string& response, std::string& fee_address) {
-    try {
-        std::stringstream stream(response);
-        JsonValue json;
-        stream >> json;
+bool processServerFeeAddressResponse(const std::string& response, std::string& fee_address)
+{
+  try
+  {
+    std::stringstream stream(response);
+    JsonValue json;
+    stream >> json;
 
-        auto rootIt = json.getObject().find("fee_address");
-        if (rootIt == json.getObject().end()) {
-            return false;
-        }
-
-        fee_address = rootIt->second.getString();
-    }
-    catch (std::exception&) {
-        return false;
+    auto rootIt = json.getObject().find("fee_address");
+    if (rootIt == json.getObject().end()) {
+      return false;
     }
 
-    return true;
+    fee_address = rootIt->second.getString();
+  }
+  catch (std::exception&)
+  {
+    return false;
+  }
+
+  return true;
 }
 
 std::string simple_wallet::get_commands_str(bool do_ext) {
@@ -637,23 +642,31 @@ simple_wallet::simple_wallet(platform_system::Dispatcher& dispatcher, const cn::
   m_consoleHandler.setHandler("exit", boost::bind(&simple_wallet::exit, this, boost::arg<1>()), "Close wallet");  
   m_consoleHandler.setHandler("get_reserve_proof", boost::bind(&simple_wallet::get_reserve_proof, this, boost::arg<1>()), "all|<amount> [<message>] - Generate a signature proving that you own at least <amount>, optionally with a challenge string <message>. ");
   m_consoleHandler.setHandler("save_keys", boost::bind(&simple_wallet::save_keys_to_file, this, boost::arg<1>()), "Saves wallet private keys to \"<wallet_name>_conceal_backup.txt\"");
+  m_consoleHandler.setHandler("list_deposits", boost::bind(&simple_wallet::list_deposits, this, boost::arg<1>()), "Show all known deposits from this wallet");
+  m_consoleHandler.setHandler("deposit", boost::bind(&simple_wallet::deposit, this, boost::arg<1>()), "deposit <months> <amount> - Create a deposit");
+  m_consoleHandler.setHandler("withdraw", boost::bind(&simple_wallet::withdraw, this, boost::arg<1>()), "withdraw <id> - Withdraw a deposit");
+  m_consoleHandler.setHandler("deposit_info", boost::bind(&simple_wallet::deposit_info, this, boost::arg<1>()), "deposit_info <id> - Get infomation for deposit <id>");
 }
 
 std::string simple_wallet::simple_menu()
 {
   std::string menu_item = "\t\tConceal Wallet Menu\n\n";
-  menu_item += "[ ] = Optional arg\n";
+  menu_item += "[ ] = Optional arg\n\n";
+  menu_item += "\"help\" | \"ext_help\"           - Shows this help dialog or extended help dialog.\n\n";
   menu_item += "\"address\"                     - Shows wallet address.\n";
-  menu_item += "\"balance\"                     - Shows wallet balance.\n";
+  menu_item += "\"balance\"                     - Shows wallet main and deposit balance.\n";
   menu_item += "\"bc_height\"                   - Shows current blockchain height.\n";
+  menu_item += "\"deposit <months> <amount>\"   - Create a deposit to the blockchain.\n";
+  menu_item += "\"deposit_info <id>\"           - Display full information for deposit <id>.\n";
   menu_item += "\"exit\"                        - Safely exits the wallet application.\n";
   menu_item += "\"export_keys\"                 - Displays backup keys.\n";
-  menu_item += "\"help\" | \"ext_help\"           - Shows this help dialog or extended help dialog.\n";
+  menu_item += "\"list_deposits\"               - Show all known deposits.\n";
   menu_item += "\"list_transfers\"              - Show all known transfers, optionally from a certain height. | <block_height>\n";
   menu_item += "\"reset\"                       - Reset cached blockchain data and starts synchronizing from block 0.\n";
   menu_item += "\"transfer <address> <amount>\" - Transfers <amount> to <address>. | [-p<payment_id>] [<amount_2>]...[<amount_N>] [<address_2>]...[<address_n>]\n";
   menu_item += "\"save\"                        - Save wallet synchronized blockchain data.\n";
   menu_item += "\"save_keys\"                   - Saves wallet private keys to \"<wallet_name>_conceal_backup.txt\".\n";
+  menu_item += "\"withdraw <id>\"               - Withdraw a deposit from the blockchain.\n";
   return menu_item;
 }
 
@@ -1337,9 +1350,25 @@ void simple_wallet::synchronizationProgressUpdated(uint32_t current, uint32_t to
   }
 }
 
-bool simple_wallet::show_balance(const std::vector<std::string>& args/* = std::vector<std::string>()*/) {
-  success_msg_writer() << "available balance: " << m_currency.formatAmount(m_wallet->actualBalance()) <<
-    ", locked amount: " << m_currency.formatAmount(m_wallet->pendingBalance());
+bool simple_wallet::show_balance(const std::vector<std::string>& args/* = std::vector<std::string>()*/)
+{
+  uint64_t full_balance = m_wallet->actualBalance() + m_wallet->pendingBalance() + m_wallet->actualDepositBalance() + m_wallet->pendingDepositBalance();
+  std::string full_balance_text = "Total Balance: " + m_currency.formatAmount(full_balance) + "\n";
+
+  uint64_t non_deposit_unlocked_balance = m_wallet->actualBalance();
+  std::string non_deposit_unlocked_balance_text = "Available: " + m_currency.formatAmount(non_deposit_unlocked_balance) + "\n";
+
+  uint64_t non_deposit_locked_balance = m_wallet->pendingBalance();
+  std::string non_deposit_locked_balance_text = "Locked: " + m_currency.formatAmount(non_deposit_locked_balance) + "\n";
+
+  uint64_t deposit_unlocked_balance = m_wallet->actualDepositBalance();
+  std::string deposit_locked_balance_text = "Unlocked Balance: " + m_currency.formatAmount(deposit_unlocked_balance) + "\n";
+
+  uint64_t deposit_locked_balance = m_wallet->pendingDepositBalance();
+  std::string deposit_unlocked_balance_text = "Locked Deposits: " + m_currency.formatAmount(deposit_locked_balance) + "\n";
+
+  logger(INFO) << full_balance_text << non_deposit_unlocked_balance_text << non_deposit_locked_balance_text
+    << deposit_unlocked_balance_text << deposit_locked_balance_text;
 
   return true;
 }
@@ -1736,22 +1765,32 @@ bool simple_wallet::optimize_all_outputs(const std::vector<std::string>& args) {
 
 //----------------------------------------------------------------------------------------------------
 
-std::string simple_wallet::resolveAlias(const std::string& aliasUrl) {
+std::string simple_wallet::resolveAlias(const std::string& aliasUrl)
+{
   std::string host;
-	std::string uri;
-	std::vector<std::string>records;
-	std::string address;
+  std::string uri;
+  std::vector<std::string>records;
+  std::string address;
 
-	if (!common::fetch_dns_txt(aliasUrl, records)) {
-		throw std::runtime_error("Failed to lookup DNS record");
-	}
+  if (!splitUrlToHostAndUri(aliasUrl, host, uri))
+  {
+    throw std::runtime_error("Failed to split URL to Host and URI");
+  }
 
-	for (const auto& record : records) {
-		if (processServerAliasResponse(record, address)) {
-			return address;
-		}
-	}
-	throw std::runtime_error("Failed to parse server response");
+  if (!common::fetch_dns_txt(aliasUrl, records))
+  {
+    throw std::runtime_error("Failed to lookup DNS record");
+  }
+
+  for (const auto& record : records)
+  {
+    if (processServerAliasResponse(record, address))
+    {
+      return address;
+    }
+  }
+
+  throw std::runtime_error("Failed to parse server response");
 }
 //----------------------------------------------------------------------------------------------------
 
@@ -1897,8 +1936,8 @@ bool simple_wallet::run() {
 
   std::cout << std::endl;
 
-  std::string addr_start = m_wallet->getAddress().substr(0, 6);
-  m_consoleHandler.start(false, "[wallet " + addr_start + "]: ", common::console::Color::BrightYellow);
+  std::string addr_start = m_wallet->getAddress().substr(0, 10);
+  m_consoleHandler.start(false, "[" + addr_start + "]: ", common::console::Color::BrightYellow);
   return true;
 }
 //----------------------------------------------------------------------------------------------------
@@ -1955,6 +1994,257 @@ bool simple_wallet::save_keys_to_file(const std::vector<std::string>& args)
     << formatted_wal_str << "_conceal_backup.txt\".";
 
   return true;
+}
+
+bool simple_wallet::list_deposits(const std::vector<std::string> &args)
+{
+  bool haveDeposits = m_wallet->getDepositCount() > 0;
+
+  if (!haveDeposits)
+  {
+    success_msg_writer() << "No deposits";
+    return true;
+  }
+
+  printListDepositsHeader(logger);
+
+  /* go through deposits ids for the amount of deposits in wallet */
+  for (DepositId id = 0; id < m_wallet->getDepositCount(); ++id)
+  {
+    /* get deposit info from id and store it to deposit */
+    Deposit deposit = m_wallet->get_deposit(id);
+    cn::WalletLegacyTransaction txInfo;
+    m_wallet->getTransaction(deposit.creatingTransactionId, txInfo);
+
+    logger(INFO) << m_dhelper.get_deposit_info(deposit, id, m_currency, txInfo);
+  }
+
+  return true;
+}
+
+bool simple_wallet::deposit(const std::vector<std::string> &args)
+{
+  if (args.size() != 2)
+  {
+    logger(ERROR) << "Usage: deposit <months> <amount>";
+    return true;
+  }
+
+  try
+  {
+    /**
+     * Change arg to uint64_t using boost then
+     * multiply by min_term so user can type in months
+    **/
+    uint64_t deposit_term = boost::lexical_cast<uint64_t>(args[0]) * 21900;
+
+    /* Now validate the deposit term and the amount */
+    if (deposit_term < cn::parameters::DEPOSIT_MIN_TERM_V3)
+    {
+      logger(ERROR, BRIGHT_RED) << "Deposit term is too small, min=21900, given=" << deposit_term;
+      return true;
+    }
+
+    if (deposit_term > cn::parameters::DEPOSIT_MAX_TERM_V3)
+    {
+      logger(ERROR, BRIGHT_RED) << "Deposit term is too big, min=" << cn::parameters::DEPOSIT_MAX_TERM_V3
+        << ", given=" << deposit_term;
+      return true;
+    }
+
+    uint64_t deposit_amount = boost::lexical_cast<uint64_t>(args[1]);
+    bool ok = m_currency.parseAmount(args[1], deposit_amount);
+
+    if (!ok || 0 == deposit_amount)
+    {
+      logger(ERROR, BRIGHT_RED) << "amount is wrong: " << deposit_amount <<
+        ", expected number from 1 to " << m_currency.formatAmount(cn::parameters::MONEY_SUPPLY);
+      return true;
+    }
+
+    if (deposit_amount < cn::parameters::DEPOSIT_MIN_AMOUNT)
+    {
+      logger(ERROR, BRIGHT_RED) << "Deposit amount is too small, min=" << cn::parameters::DEPOSIT_MIN_AMOUNT
+        << ", given=" << m_currency.formatAmount(deposit_amount);
+      return true;
+    }
+
+    if (!confirm_deposit(deposit_term, deposit_amount))
+    {
+      logger(ERROR) << "Deposit is not being created.";
+      return true;
+    }
+
+    logger(INFO) << "Creating deposit...";
+
+    /* Use defaults for fee + mix in */
+    uint64_t deposit_fee = cn::parameters::MINIMUM_FEE_V2;
+    uint64_t deposit_mix_in = cn::parameters::MINIMUM_MIXIN;
+
+    cn::WalletHelper::SendCompleteResultObserver sent;
+    WalletHelper::IWalletRemoveObserverGuard removeGuard(*m_wallet, sent);
+
+    cn::TransactionId tx = m_wallet->deposit(deposit_term, deposit_amount, deposit_fee, deposit_mix_in);
+
+    if (tx == WALLET_LEGACY_INVALID_DEPOSIT_ID)
+    {
+      fail_msg_writer() << "Can't deposit money";
+      return true;
+    }
+
+    std::error_code sendError = sent.wait(tx);
+    removeGuard.removeObserver();
+
+    if (sendError)
+    {
+      fail_msg_writer() << sendError.message();
+      return true;
+    }
+
+    cn::WalletLegacyTransaction d_info;
+    m_wallet->getTransaction(tx, d_info);
+    success_msg_writer(true) << "Money successfully sent, transaction hash: " << common::podToHex(d_info.hash)
+      << "\n\tID: " << d_info.firstDepositId;
+
+    try
+    {
+      cn::WalletHelper::storeWallet(*m_wallet, m_wallet_file);
+    }
+    catch (const std::exception& e)
+    {
+      fail_msg_writer() << e.what();
+      return true;
+    }
+  }
+  catch (const std::system_error& e)
+  {
+    fail_msg_writer() << e.what();
+  }
+  catch (const std::exception& e)
+  {
+    fail_msg_writer() << e.what();
+  }
+  catch (...)
+  {
+    fail_msg_writer() << "unknown error";
+  }
+
+  return true;
+}
+
+bool simple_wallet::withdraw(const std::vector<std::string> &args)
+{
+  if (args.size() != 1)
+  {
+    logger(ERROR) << "Usage: withdraw <id>";
+    return true;
+  }
+
+  try
+  {
+    if (m_wallet->getDepositCount() == 0)
+    {
+      logger(ERROR) << "No deposits have been made in this wallet.";
+      return true;
+    }
+
+    uint64_t deposit_id = boost::lexical_cast<uint64_t>(args[0]);
+    uint64_t deposit_fee = cn::parameters::MINIMUM_FEE_V2;
+    
+    cn::WalletHelper::SendCompleteResultObserver sent;
+    WalletHelper::IWalletRemoveObserverGuard removeGuard(*m_wallet, sent);
+
+    cn::TransactionId tx = m_wallet->withdrawDeposit(deposit_id, deposit_fee);
+  
+    if (tx == WALLET_LEGACY_INVALID_DEPOSIT_ID)
+    {
+      fail_msg_writer() << "Can't withdraw money";
+      return true;
+    }
+
+    std::error_code sendError = sent.wait(tx);
+    removeGuard.removeObserver();
+
+    if (sendError)
+    {
+      fail_msg_writer() << sendError.message();
+      return true;
+    }
+
+    cn::WalletLegacyTransaction d_info;
+    m_wallet->getTransaction(tx, d_info);
+    success_msg_writer(true) << "Money successfully sent, transaction hash: " << common::podToHex(d_info.hash);
+
+    try
+    {
+      cn::WalletHelper::storeWallet(*m_wallet, m_wallet_file);
+    }
+    catch (const std::exception& e)
+    {
+      fail_msg_writer() << e.what();
+      return true;
+    }
+  }
+  catch (std::exception &e)
+  {
+    fail_msg_writer() << "failed to withdraw deposit: " << e.what();
+  }
+
+  return true;
+}
+
+bool simple_wallet::deposit_info(const std::vector<std::string> &args)
+{
+  if (args.size() != 1)
+  {
+    logger(ERROR) << "Usage: withdraw <id>";
+    return true;
+  }
+
+  uint64_t deposit_id = boost::lexical_cast<uint64_t>(args[0]);
+  cn::Deposit deposit;
+  if (!m_wallet->getDeposit(deposit_id, deposit))
+  {
+    logger(ERROR, BRIGHT_RED) << "Error: Invalid deposit id: " << deposit_id;
+    return false;
+  }
+  cn::WalletLegacyTransaction txInfo;
+  m_wallet->getTransaction(deposit.creatingTransactionId, txInfo);
+
+  logger(INFO) << m_dhelper.get_full_deposit_info(deposit, deposit_id, m_currency, txInfo);
+
+  return true;
+}
+
+bool simple_wallet::confirm_deposit(uint64_t term, uint64_t amount)
+{
+  uint64_t interest = m_currency.calculateInterestV3(amount, term);
+
+  logger(INFO) << "Confirm deposit details:\n"
+    << "\tAmount: " << m_currency.formatAmount(amount) << "\n"
+    << "\tMonths: " << term / 21900 << "\n"
+    << "\tInterest: " << m_currency.formatAmount(interest) << "\n";
+
+  logger(INFO) << "Is this correct? (Y/N): \n";
+
+  char c;
+  std::cin >> c;
+  c = std::tolower(c);
+
+  if (c == 'y')
+  {
+    return true;
+  }
+  else if (c == 'n')
+  {
+    return false;
+  }
+  else
+  {
+    logger(ERROR) << "Bad input, please enter either Y or N.";
+  }
+
+  return false;
 }
 
 int main(int argc, char* argv[]) {

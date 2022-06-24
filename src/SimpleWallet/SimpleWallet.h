@@ -16,6 +16,7 @@
 
 #include "IWalletLegacy.h"
 #include "PasswordContainer.h"
+#include "DepositHelper.h"
 
 #include "Common/ConsoleHandler.h"
 #include "CryptoNoteCore/CryptoNoteBasicImpl.h"
@@ -96,6 +97,12 @@ namespace cn
     bool reset(const std::vector<std::string> &args);
     bool set_log(const std::vector<std::string> &args);
     bool save_keys_to_file(const std::vector<std::string> &args);
+
+    bool deposit(const std::vector<std::string> &args);
+    bool withdraw(const std::vector<std::string> &args);
+    bool list_deposits(const std::vector<std::string> &args);
+    bool deposit_info(const std::vector<std::string> &args);
+    bool confirm_deposit(uint64_t term, uint64_t amount);
 
     std::string simple_menu();
     std::string extended_menu();
@@ -181,6 +188,7 @@ namespace cn
     logging::LoggerManager& logManager;
     platform_system::Dispatcher& m_dispatcher;
     logging::LoggerRef logger;
+    cn::deposit_helper m_dhelper;
 
     std::unique_ptr<cn::NodeRpcProxy> m_node;
     std::unique_ptr<cn::IWalletLegacy> m_wallet;
