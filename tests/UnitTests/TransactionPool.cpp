@@ -106,10 +106,12 @@ public:
     
     std::vector<TransactionDestinationEntry> destinations;
     uint64_t amountPerOut = (amount - fee) / outputs;
+    uint64_t lastAmount = amountPerOut + (amount - fee) % outputs;
 
-    for (size_t i = 0; i < outputs; ++i) {
-      destinations.push_back(TransactionDestinationEntry(amountPerOut, rv_acc.getAccountKeys().address));
+    for (size_t i = 1; i < outputs; ++i) {
+      destinations.emplace_back(amountPerOut, rv_acc.getAccountKeys().address);
     }
+    destinations.emplace_back(lastAmount, rv_acc.getAccountKeys().address);
     crypto::SecretKey txSK;
     constructTransaction(m_realSenderKeys, m_sources, destinations, std::vector<uint8_t>(), tx, 0, m_logger, txSK);
   }
@@ -300,7 +302,7 @@ TEST_F(tx_pool, fillblock_same_fee)
 
   size_t maxOuts = 0;
 
-  for (auto& th : bl.transactionHashes) {
+  for (const auto& th : bl.transactionHashes) {
     auto iter = transactions.find(th);
     ASSERT_TRUE(iter != transactions.end());
 
@@ -750,12 +752,12 @@ public:
       fusionTxs.emplace(getObjectHash(tx), std::move(tx));
     }
 
-    for (auto pair : ordinaryTxs) {
+    for (const auto& pair : ordinaryTxs) {
       tx_verification_context tvc = boost::value_initialized<tx_verification_context>();
       ASSERT_TRUE(pool->add_tx(pair.second, tvc, false, 0));
     }
 
-    for (auto pair : fusionTxs) {
+    for (const auto& pair : fusionTxs) {
       tx_verification_context tvc = boost::value_initialized<tx_verification_context>();
       ASSERT_TRUE(pool->add_tx(pair.second, tvc, false, 0));
     }
@@ -768,7 +770,7 @@ public:
 
     size_t fusionTxCount = 0;
     size_t ordinaryTxCount = 0;
-    for (auto txHash : block.transactionHashes) {
+    for (const auto& txHash : block.transactionHashes) {
       if (fusionTxs.count(txHash) > 0) {
         ++fusionTxCount;
       } else {
