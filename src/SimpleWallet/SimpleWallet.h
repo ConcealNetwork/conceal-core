@@ -197,5 +197,6 @@ namespace cn
     bool m_walletSynchronized;
     std::mutex m_walletSynchronizedMutex;
     std::condition_variable m_walletSynchronizedCV;
+    bool m_testnet;
   };
 }

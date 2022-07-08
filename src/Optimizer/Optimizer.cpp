@@ -46,7 +46,7 @@ const uint64_t DEFAULT_THRESHOLD = UINT64_C(100);
 namespace {
   const command_line::arg_descriptor<std::string> arg_address   = {"address", "Address of the wallet to optimize inputs. If not provided, all addresses will be checked and, if applicable, optimized using polling interval between each interaction. Default: All", "", true};
   const command_line::arg_descriptor<std::string> arg_ip        = {"walletd-ip", "IP address of walletd. Default: 127.0.0.1", "127.0.0.1"};
-  const command_line::arg_descriptor<uint16_t>    arg_rpc_port  = {"walletd-port", "RPC port of walletd. Default: 8070", 8070};
+  const command_line::arg_descriptor<uint16_t>    arg_rpc_port  = {"walletd-port", "RPC port of walletd. Default: " + PAYMENT_GATE_DEFAULT_PORT, PAYMENT_GATE_DEFAULT_PORT};
   const command_line::arg_descriptor<std::string> arg_user      = {"walletd-user", "RPC user. Default: none", "", true};
   const command_line::arg_descriptor<std::string> arg_pass      = {"walletd-password", "RPC password. Default: none", "", true};
   const command_line::arg_descriptor<uint16_t>    arg_interval  = {"interval", "polling interval in seconds. Default: 5. Minimum: 1. Maximum: 120.", 5, true};

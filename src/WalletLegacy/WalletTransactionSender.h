@@ -25,7 +25,7 @@ class INode;
 class WalletTransactionSender
 {
 public:
-  WalletTransactionSender(const Currency& currency, WalletUserTransactionsCache& transactionsCache, AccountKeys keys, ITransfersContainer& transfersContainer, INode& node);
+  WalletTransactionSender(const Currency& currency, WalletUserTransactionsCache& transactionsCache, AccountKeys keys, ITransfersContainer& transfersContainer, INode& node, bool testnet);
 
   void stop();
 
@@ -129,6 +129,7 @@ private:
   ITransfersContainer& m_transferDetails;
 
   INode& m_node; //used solely to get last known block height for calculateInterest
+  bool m_testnet;
 };
 
 } /* namespace cn */

@@ -10,6 +10,7 @@
 #include <System/InterruptedException.h>
 #include <System/Timer.h>
 #include <gtest/gtest.h>
+#include <thread>
 
 using namespace platform_system;
 

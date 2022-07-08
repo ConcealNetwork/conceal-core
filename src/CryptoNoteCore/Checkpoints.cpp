@@ -77,9 +77,18 @@ bool Checkpoints::is_alternative_block_allowed(uint32_t  blockchain_height, uint
   if (0 == block_height)
     return false;
 
-  if (block_height < blockchain_height - cn::parameters::CRYPTONOTE_MINED_MONEY_UNLOCK_WINDOW && !is_in_checkpoint_zone(block_height)) {
+  uint32_t lowest_height = blockchain_height - cn::parameters::CRYPTONOTE_MINED_MONEY_UNLOCK_WINDOW;
+
+  if (blockchain_height < cn::parameters::CRYPTONOTE_MINED_MONEY_UNLOCK_WINDOW)
+  {
+    lowest_height = 0;
+  }
+
+  if (block_height < lowest_height && !is_in_checkpoint_zone(block_height))
+  {
     logger(logging::DEBUGGING, logging::WHITE)
-      << "<< Checkpoints.cpp << " << "Reorganization depth too deep : " << (blockchain_height - block_height) << ". Block Rejected";
+        << "<< Checkpoints.cpp << "
+        << "Reorganization depth too deep : " << (blockchain_height - block_height) << ". Block Rejected";
     return false;
   }
 
@@ -107,6 +116,10 @@ std::vector<uint32_t> Checkpoints::getCheckpointHeights() const {
 bool Checkpoints::load_checkpoints_from_dns()
 {
   std::string domain("checkpoints.conceal.id");
+  if (m_testnet)
+  {
+    domain = "testpoints.conceal.gq";
+  }
   std::vector<std::string>records;
 
   logger(logging::DEBUGGING) << "<< Checkpoints.cpp << " << "Fetching DNS checkpoint records from " << domain;
@@ -143,9 +156,19 @@ bool Checkpoints::load_checkpoints_from_dns()
 
 bool Checkpoints::load_checkpoints()
 {
-  for (const auto& cp : cn::CHECKPOINTS) 
+  if (m_testnet)
   {
-    add_checkpoint(cp.height, cp.blockId);    
+    for (const auto &cp : cn::TESTNET_CHECKPOINTS)
+    {
+      add_checkpoint(cp.height, cp.blockId);
+    }
+  }
+  else
+  {
+    for (const auto &cp : cn::CHECKPOINTS)
+    {
+      add_checkpoint(cp.height, cp.blockId);
+    }
   }
   return true;
 }
@@ -174,5 +197,7 @@ bool Checkpoints::load_checkpoints_from_file(const std::string& fileName) {
 	logger(logging::INFO) << "Loaded " << m_points.size() << " checkpoints from "	<< fileName;
 	return true;
 }
+
+void Checkpoints::set_testnet(bool testnet) { m_testnet = testnet; }
 
 }

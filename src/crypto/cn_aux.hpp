@@ -32,7 +32,7 @@ inline uint64_t _umul128(uint64_t multiplier, uint64_t multiplicand, uint64_t* p
 }
 #endif
 
-#if defined(__GNUC__) && !defined(ARM)
+#if defined(__GNUC__) && !defined(ARM) && !defined(__MINGW64__)
 	#pragma GCC target ("aes,sse2")
 	#include <x86intrin.h>
 	static inline uint64_t _umul128(uint64_t a, uint64_t b, uint64_t* hi)

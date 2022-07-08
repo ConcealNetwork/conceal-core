@@ -16,7 +16,7 @@ void read(IInputStream& in, void* data, size_t size) {
   while (size > 0) {
     size_t readSize = in.readSome(data, size);
     if (readSize == 0) {
-      throw std::runtime_error("Failed to read from IInputStream");
+      throw std::runtime_error("Reading from IInputStream failed");
     }
 
     data = static_cast<uint8_t*>(data) + readSize;
@@ -85,7 +85,7 @@ void readVarint(IInputStream& in, uint8_t& value) {
     temp |= static_cast<size_t>(piece & 0x7f) << shift;
     if ((piece & 0x80) == 0) {
       if (piece == 0 && shift != 0) {
-        throw std::runtime_error("readVarint, invalid value representation");
+        throw std::runtime_error("readVarint, unrepresentable value");
       }
 
       break;
@@ -107,7 +107,7 @@ void readVarint(IInputStream& in, uint16_t& value) {
     temp |= static_cast<size_t>(piece & 0x7f) << shift;
     if ((piece & 0x80) == 0) {
       if (piece == 0 && shift != 0) {
-        throw std::runtime_error("readVarint, invalid value representation");
+        throw std::runtime_error("readVarint, unrepresentable value");
       }
 
       break;
@@ -129,7 +129,7 @@ void readVarint(IInputStream& in, uint32_t& value) {
     temp |= static_cast<size_t>(piece & 0x7f) << shift;
     if ((piece & 0x80) == 0) {
       if (piece == 0 && shift != 0) {
-        throw std::runtime_error("readVarint, invalid value representation");
+        throw std::runtime_error("readVarint, unrepresentable value");
       }
 
       break;
@@ -151,7 +151,7 @@ void readVarint(IInputStream& in, uint64_t& value) {
     temp |= static_cast<uint64_t>(piece & 0x7f) << shift;
     if ((piece & 0x80) == 0) {
       if (piece == 0 && shift != 0) {
-        throw std::runtime_error("readVarint, invalid value representation");
+        throw std::runtime_error("readVarint, unrepresentable value");
       }
 
       break;
@@ -165,7 +165,7 @@ void write(IOutputStream& out, const void* data, size_t size) {
   while (size > 0) {
     size_t writtenSize = out.writeSome(data, size);
     if (writtenSize == 0) {
-      throw std::runtime_error("Failed to write to IOutputStream");
+      throw std::runtime_error("IOutputStream could not be written to");
     }
 
     data = static_cast<const uint8_t*>(data) + writtenSize;

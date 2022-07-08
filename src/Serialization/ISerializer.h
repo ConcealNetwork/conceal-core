@@ -22,7 +22,7 @@ public:
     OUTPUT
   };
 
-  virtual ~ISerializer() {}
+  virtual ~ISerializer() = default;
 
   virtual SerializerType type() const = 0;
 

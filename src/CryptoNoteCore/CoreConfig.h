@@ -17,11 +17,12 @@ class CoreConfig {
 public:
   CoreConfig();
 
-  static void initOptions(boost::program_options::options_description& desc);
+  static void initOptions(const boost::program_options::options_description& desc);
   void init(const boost::program_options::variables_map& options);
 
   std::string configFolder;
   bool configFolderDefaulted = true;
+  bool testnet = false;
 };
 
 } //namespace cn

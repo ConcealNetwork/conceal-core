@@ -84,7 +84,7 @@ TransfersConsumerTest::TransfersConsumerTest() :
   m_generator(m_currency),
   m_node(m_generator, true),
   m_accountKeys(generateAccountKeys()),
-  m_consumer(m_currency, m_node, m_accountKeys.viewSecretKey)
+  m_consumer(m_currency, m_node, m_logger, m_accountKeys.viewSecretKey)
 {
 }
 
@@ -406,12 +406,12 @@ TEST_F(TransfersConsumerTest, onNewBlocks_getTransactionOutsGlobalIndicesError) 
     virtual void getTransactionOutsGlobalIndices(const crypto::Hash& transactionHash,
       std::vector<uint32_t>& outsGlobalIndices, const Callback& callback) override {
       callback(std::make_error_code(std::errc::operation_canceled));
-    };
+    };    
   };
 
   INodeGlobalIndicesStub node;
 
-  TransfersConsumer consumer(m_currency, node, m_accountKeys.viewSecretKey);
+  TransfersConsumer consumer(m_currency, node, m_logger, m_accountKeys.viewSecretKey);
 
   auto subscription = getAccountSubscriptionWithSyncStart(m_accountKeys, 1234, 10);
 
@@ -530,7 +530,7 @@ TEST_F(TransfersConsumerTest, onNewBlocks_getTransactionOutsGlobalIndicesIsPrope
   };
 
   INodeGlobalIndicesStub node;
-  TransfersConsumer consumer(m_currency, node, m_accountKeys.viewSecretKey);
+  TransfersConsumer consumer(m_currency, node, m_logger, m_accountKeys.viewSecretKey);
 
   AccountSubscription subscription = getAccountSubscription(m_accountKeys);
   subscription.syncStart.height = 0;
@@ -568,7 +568,7 @@ TEST_F(TransfersConsumerTest, onNewBlocks_getTransactionOutsGlobalIndicesIsNotCa
   };
 
   INodeGlobalIndicesStub node;
-  TransfersConsumer consumer(m_currency, node, m_accountKeys.viewSecretKey);
+  TransfersConsumer consumer(m_currency, node, m_logger, m_accountKeys.viewSecretKey);
 
   AccountSubscription subscription = getAccountSubscription(m_accountKeys);
   subscription.syncStart.height = 0;
@@ -638,7 +638,7 @@ TEST_F(TransfersConsumerTest, onNewBlocks_checkTransactionOutputInformation) {
   const uint64_t index = 2;
 
   INodeGlobalIndexStub node;
-  TransfersConsumer consumer(m_currency, node, m_accountKeys.viewSecretKey);
+  TransfersConsumer consumer(m_currency, node, m_logger, m_accountKeys.viewSecretKey);
 
   node.globalIndex = index;
 
@@ -671,7 +671,7 @@ TEST_F(TransfersConsumerTest, onNewBlocks_checkTransactionOutputInformationMulti
   const uint64_t index = 2;
 
   INodeGlobalIndexStub node;
-  TransfersConsumer consumer(m_currency, node, m_accountKeys.viewSecretKey);
+  TransfersConsumer consumer(m_currency, node, m_logger, m_accountKeys.viewSecretKey);
 
   node.globalIndex = index;
 
