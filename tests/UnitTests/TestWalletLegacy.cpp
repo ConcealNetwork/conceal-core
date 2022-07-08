@@ -1262,7 +1262,7 @@ TEST_F(WalletLegacyApi, checkChange) {
   EXPECT_EQ(banknote - sendAmount - fee, alice->pendingBalance());
 }
 
-TEST_F(WalletLegacyApi, checkBalanceAfterSend) {
+TEST_F(WalletLegacyApi, DISABLED_checkBalanceAfterSend) {
   alice->initAndGenerate("pass");
 
   ASSERT_NO_FATAL_FAILURE(WaitWalletSync(aliceWalletObserver.get()));
@@ -1370,7 +1370,7 @@ TEST_F(WalletLegacyApi, DISABLED_balanceAfterTransactionsPlacedInBlockchain) {
   bob->shutdown();
 }
 
-TEST_F(WalletLegacyApi, checkMyMoneyInTxPool) {
+TEST_F(WalletLegacyApi, DISABLED_checkMyMoneyInTxPool) {
   alice->initAndGenerate("pass");
   ASSERT_NO_FATAL_FAILURE(WaitWalletSync(aliceWalletObserver.get()));
 
@@ -1457,7 +1457,7 @@ TEST_F(WalletLegacyApi, DISABLED_deleteTxFromPool) {
   bob->shutdown();
 }
 
-TEST_F(WalletLegacyApi, sendAfterFailedTransaction) {
+TEST_F(WalletLegacyApi, DISABLED_sendAfterFailedTransaction) {
   alice->initAndGenerate("pass");
   ASSERT_NO_FATAL_FAILURE(WaitWalletSync(aliceWalletObserver.get()));
 
