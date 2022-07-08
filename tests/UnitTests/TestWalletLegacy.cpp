@@ -779,11 +779,11 @@ TEST_F(WalletLegacyApi, saveAndLoadCacheDetails) {
   bob->shutdown();
 }
 
-TEST_F(WalletLegacyApi, sendMoneySuccessNoMixin) {
+TEST_F(WalletLegacyApi, DISABLED_sendMoneySuccessNoMixin) {
   ASSERT_NO_FATAL_FAILURE(TestSendMoney(4000000, 1000, 0));
 }
 
-TEST_F(WalletLegacyApi, sendMoneySuccessWithMixin) {
+TEST_F(WalletLegacyApi, DISABLED_sendMoneySuccessWithMixin) {
   ASSERT_NO_FATAL_FAILURE(TestSendMoney(4000000, 1000, 3));
 }
 
@@ -1065,7 +1065,7 @@ TEST_F(WalletLegacyApi, mineSaveNoCacheNoDetailsRefresh) {
 }
 
 
-TEST_F(WalletLegacyApi, sendMoneyToMyself) {
+TEST_F(WalletLegacyApi, DISABLED_sendMoneyToMyself) {
   alice->initAndGenerate("pass");
 
   ASSERT_NO_FATAL_FAILURE(WaitWalletSync(aliceWalletObserver.get()));
