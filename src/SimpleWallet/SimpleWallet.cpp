@@ -1994,19 +1994,20 @@ bool simple_wallet::deposit(const std::vector<std::string> &args)
      * Change arg to uint64_t using boost then
      * multiply by min_term so user can type in months
     **/
-    uint64_t deposit_term = boost::lexical_cast<uint64_t>(args[0]) * 21900;
+    uint64_t min_term = m_testnet ? parameters::TESTNET_DEPOSIT_MIN_TERM_V3 : parameters::DEPOSIT_MIN_TERM_V3;
+    uint64_t max_term = m_testnet ? parameters::TESTNET_DEPOSIT_MAX_TERM_V3 : parameters::DEPOSIT_MAX_TERM_V3;
+    uint64_t deposit_term = boost::lexical_cast<uint64_t>(args[0]) * min_term;
 
     /* Now validate the deposit term and the amount */
-    if (deposit_term < cn::parameters::DEPOSIT_MIN_TERM_V3)
+    if (deposit_term < min_term)
     {
-      logger(ERROR, BRIGHT_RED) << "Deposit term is too small, min=21900, given=" << deposit_term;
+      logger(ERROR, BRIGHT_RED) << "Deposit term is too small, min=" << min_term << ", given=" << deposit_term;
       return true;
     }
 
-    if (deposit_term > cn::parameters::DEPOSIT_MAX_TERM_V3)
+    if (deposit_term > max_term)
     {
-      logger(ERROR, BRIGHT_RED) << "Deposit term is too big, min=" << cn::parameters::DEPOSIT_MAX_TERM_V3
-        << ", given=" << deposit_term;
+      logger(ERROR, BRIGHT_RED) << "Deposit term is too big, max=" << max_term << ", given=" << deposit_term;
       return true;
     }
 
@@ -2177,10 +2178,11 @@ bool simple_wallet::deposit_info(const std::vector<std::string> &args)
 bool simple_wallet::confirm_deposit(uint64_t term, uint64_t amount)
 {
   uint64_t interest = m_currency.calculateInterestV3(amount, term);
+  uint64_t min_term = m_testnet ? parameters::TESTNET_DEPOSIT_MIN_TERM_V3 : parameters::DEPOSIT_MIN_TERM_V3;
 
   logger(INFO) << "Confirm deposit details:\n"
     << "\tAmount: " << m_currency.formatAmount(amount) << "\n"
-    << "\tMonths: " << term / 21900 << "\n"
+    << "\tMonths: " << term / min_term << "\n"
     << "\tInterest: " << m_currency.formatAmount(interest) << "\n";
 
   logger(INFO) << "Is this correct? (Y/N): \n";
