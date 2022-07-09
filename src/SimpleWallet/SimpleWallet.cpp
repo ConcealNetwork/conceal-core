@@ -42,11 +42,11 @@
 #include "WalletLegacy/WalletLegacy.h"
 #include "Wallet/LegacyKeysImporter.h"
 #include "WalletLegacy/WalletHelper.h"
-#include "Mnemonics/electrum-words.cpp"
 
 #include "version.h"
 
 #include <Logging/LoggerManager.h>
+#include <Mnemonics/Mnemonics.h>
 
 #if defined(WIN32)
 #include <crtdbg.h>
@@ -885,47 +885,52 @@ bool simple_wallet::init(const boost::program_options::variables_map& vm) {
     std::string private_spend_key_string;
     std::string private_view_key_string;
 
-crypto::SecretKey private_spend_key;
-crypto::SecretKey private_view_key;
+    crypto::SecretKey private_spend_key;
+    crypto::SecretKey private_view_key;
 
-if (key_import) {
-    do {
-      std::cout << "Private Spend Key: ";
-      std::getline(std::cin, private_spend_key_string);
-      boost::algorithm::trim(private_spend_key_string);
-    } while (private_spend_key_string.empty());
-    do {
-      std::cout << "Private View Key: ";
-      std::getline(std::cin, private_view_key_string);
-      boost::algorithm::trim(private_view_key_string);
-    } while (private_view_key_string.empty());
-} else {
-  std::string mnemonic_phrase;
+    if (key_import) {
+      do {
+        std::cout << "Private Spend Key: ";
+        std::getline(std::cin, private_spend_key_string);
+        boost::algorithm::trim(private_spend_key_string);
+      } while (private_spend_key_string.empty());
 
-  do {
-    std::cout << "Mnemonics Phrase (25 words): ";
-    std::getline(std::cin, mnemonic_phrase);
-    boost::algorithm::trim(mnemonic_phrase);
-    boost::algorithm::to_lower(mnemonic_phrase);
-  } while (!is_valid_mnemonic(mnemonic_phrase, private_spend_key));
+      do {
+        std::cout << "Private View Key: ";
+        std::getline(std::cin, private_view_key_string);
+        boost::algorithm::trim(private_view_key_string);
+      } while (private_view_key_string.empty());
+    } else {
+      std::string mnemonic_phrase;
+  
+      do {
+        std::cout << "Mnemonics Phrase (25 words): ";
+        std::getline(std::cin, mnemonic_phrase);
+        boost::algorithm::trim(mnemonic_phrase);
+        boost::algorithm::to_lower(mnemonic_phrase);
+      } while (mnemonic_phrase.empty());
 
-  /* This is not used, but is needed to be passed to the function, not sure how we can avoid this */
-  crypto::PublicKey unused_dummy_variable;
+      private_spend_key = mnemonics::mnemonicToPrivateKey(mnemonic_phrase);
 
-  AccountBase::generateViewFromSpend(private_spend_key, private_view_key, unused_dummy_variable);
-}
+      /* This is not used, but is needed to be passed to the function, not sure how we can avoid this */
+      crypto::PublicKey unused_dummy_variable;
 
-/* We already have our keys if we import via mnemonic seed */
-if (key_import) {
-    crypto::Hash private_spend_key_hash;
-    crypto::Hash private_view_key_hash;
-    size_t size;
-    if (!common::fromHex(private_spend_key_string, &private_spend_key_hash, sizeof(private_spend_key_hash), size) || size != sizeof(private_spend_key_hash)) {
-      return false;
+      AccountBase::generateViewFromSpend(private_spend_key, private_view_key, unused_dummy_variable);
     }
-    if (!common::fromHex(private_view_key_string, &private_view_key_hash, sizeof(private_view_key_hash), size) || size != sizeof(private_spend_key_hash)) {
-      return false;
-    }
+
+    /* We already have our keys if we import via mnemonic seed */
+    if (key_import) {
+      crypto::Hash private_spend_key_hash;
+      crypto::Hash private_view_key_hash;
+      size_t size;
+
+      if (!common::fromHex(private_spend_key_string, &private_spend_key_hash, sizeof(private_spend_key_hash), size) || size != sizeof(private_spend_key_hash)) {
+        return false;
+      }
+      if (!common::fromHex(private_view_key_string, &private_view_key_hash, sizeof(private_view_key_hash), size) || size != sizeof(private_spend_key_hash)) {
+        return false;
+      }
+
       private_spend_key = *(struct crypto::SecretKey *) &private_spend_key_hash;
       private_view_key = *(struct crypto::SecretKey *) &private_view_key_hash;
     }
@@ -961,63 +966,6 @@ if (key_import) {
 
   return true;
 }
-
-
-//----------------------------------------------------------------------------------------------------
-/* adding support for 25 word electrum seeds. however, we have to ensure that all old wallets that are
-not deterministic, dont get a seed to avoid any loss of funds.
-*/
-std::string simple_wallet::generate_mnemonic(crypto::SecretKey &private_spend_key) {
-
-  std::string mnemonic_str;
-
-  if (!crypto::electrum_words::bytes_to_words(private_spend_key, mnemonic_str, "English")) {
-      logger(ERROR, BRIGHT_RED) << "Cant create the mnemonic for the private spend key!";
-  }
-
-  return mnemonic_str;
-}
-//----------------------------------------------------------------------------------------------------
-void simple_wallet::log_incorrect_words(std::vector<std::string> words) {
-  seed_language::Base *language = seed_language::Singleton<seed_language::English>::instance();
-  const std::vector<std::string> &dictionary = language->get_word_list();
-
-  for (auto i : words) {
-    if (std::find(dictionary.begin(), dictionary.end(), i) == dictionary.end()) {
-      logger(ERROR, BRIGHT_RED) << i << " is not in the english word list!";
-    }
-  }
-}
-//----------------------------------------------------------------------------------------------------
-bool simple_wallet::is_valid_mnemonic(std::string &mnemonic_phrase, crypto::SecretKey &private_spend_key) {
-
-  static std::string languages[] = {"English"};
-  static const int num_of_languages = 1;
-  static const int mnemonic_phrase_length = 25;
-
-  std::vector<std::string> words;
-
-  words = boost::split(words, mnemonic_phrase, ::isspace);
-
-  if (words.size() != mnemonic_phrase_length) {
-    logger(ERROR, BRIGHT_RED) << "Invalid mnemonic phrase!";
-    logger(ERROR, BRIGHT_RED) << "Seed phrase is not 25 words! Please try again.";
-    log_incorrect_words(words);
-    return false;
-  }
-
-  for (int i = 0; i < num_of_languages; i++) {
-    if (crypto::electrum_words::words_to_bytes(mnemonic_phrase, private_spend_key, languages[i])) {
-      return true;
-    }
-  }
-
-  logger(ERROR, BRIGHT_RED) << "Invalid mnemonic phrase!";
-  log_incorrect_words(words);
-  return false;
-}
-//----------------------------------------------------------------------------------------------------
-
 
 //----------------------------------------------------------------------------------------------------
 bool simple_wallet::deinit() {
@@ -1083,8 +1031,7 @@ bool simple_wallet::new_wallet(const std::string &wallet_file, const std::string
     std::cout << "Wallet Address: " << m_wallet->getAddress() << std::endl;
     std::cout << "Private spend key: " << common::podToHex(keys.spendSecretKey) << std::endl;
     std::cout << "Private view key: " <<  common::podToHex(keys.viewSecretKey) << std::endl;
-    std::cout << "Mnemonic Seed: " << generate_mnemonic(keys.spendSecretKey) << std::endl;
-
+    std::cout << "Mnemonic Seed: " << mnemonics::privateKeyToMnemonic(keys.spendSecretKey) << std::endl;
   }
   catch (const std::exception& e) {
     fail_msg_writer() << "failed to generate new wallet: " << e.what();
@@ -1510,10 +1457,11 @@ bool simple_wallet::export_keys(const std::vector<std::string>& args/* = std::ve
 
   bool deterministic_private_keys = deterministic_private_view_key == keys.viewSecretKey;
 
-/* dont show a mnemonic seed if it is an old non-deterministic wallet */
+  /* dont show a mnemonic seed if it is an old non-deterministic wallet */
   if (deterministic_private_keys) {
-    std::cout << "Mnemonic seed: " << generate_mnemonic(keys.spendSecretKey) << std::endl << std::endl;
+    std::cout << "Mnemonic seed: " << mnemonics::privateKeyToMnemonic(keys.spendSecretKey) << std::endl << std::endl;
   }
+
   return true;
 }
 //----------------------------------------------------------------------------------------------------
@@ -1994,8 +1942,9 @@ bool simple_wallet::save_keys_to_file(const std::vector<std::string>& args)
   bool deterministic_private_keys = deterministic_private_view_key == keys.viewSecretKey;
 
   /* dont show a mnemonic seed if it is an old non-deterministic wallet */
-  if (deterministic_private_keys)
-    priv_key += "Mnemonic seed: " + generate_mnemonic(keys.spendSecretKey) + "\n";
+  if (deterministic_private_keys) {
+    std::cout << "Mnemonic seed: " << mnemonics::privateKeyToMnemonic(keys.spendSecretKey) << std::endl << std::endl;
+  }
 
   backup_file << priv_key;
 
