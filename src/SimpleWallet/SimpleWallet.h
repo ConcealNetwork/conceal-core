@@ -102,7 +102,12 @@ namespace cn
     bool withdraw(const std::vector<std::string> &args);
     bool list_deposits(const std::vector<std::string> &args);
     bool deposit_info(const std::vector<std::string> &args);
+
+    bool save_all_txs_to_file(const std::vector<std::string> &args);
+
     bool confirm_deposit(uint64_t term, uint64_t amount);
+
+    std::string list_tx_item(const WalletLegacyTransaction& txInfo, std::string listed_tx);
 
     std::string simple_menu();
     std::string extended_menu();

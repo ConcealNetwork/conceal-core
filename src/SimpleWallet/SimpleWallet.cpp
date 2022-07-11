@@ -646,6 +646,7 @@ simple_wallet::simple_wallet(platform_system::Dispatcher& dispatcher, const cn::
   m_consoleHandler.setHandler("deposit", boost::bind(&simple_wallet::deposit, this, boost::arg<1>()), "deposit <months> <amount> - Create a deposit");
   m_consoleHandler.setHandler("withdraw", boost::bind(&simple_wallet::withdraw, this, boost::arg<1>()), "withdraw <id> - Withdraw a deposit");
   m_consoleHandler.setHandler("deposit_info", boost::bind(&simple_wallet::deposit_info, this, boost::arg<1>()), "deposit_info <id> - Get infomation for deposit <id>");
+  m_consoleHandler.setHandler("save_txs_to_file", boost::bind(&simple_wallet::save_all_txs_to_file, this, boost::arg<1>()), "save_txs_to_file - Saves all known transactions to <wallet_name>_conceal_transactions.txt");
 }
 
 std::string simple_wallet::simple_menu()
@@ -682,6 +683,7 @@ std::string simple_wallet::extended_menu()
   menu_item += "\"optimize_all\"                                     - Optimize your wallet several times so you can send large transactions.\n";
   menu_item += "\"outputs\"                                          - Show the number of unlocked outputs available for a transaction.\n";
   menu_item += "\"payments <payment_id>\"                            - Show payments from payment ID. | [<payment_id_2> ... <payment_id_N>]\n";
+  menu_item += "\"save_txs_to_file\"                                 - Saves all known transactions to <wallet_name>_conceal_transactions.txt.\n";
   menu_item += "\"set_log <level>\"                                  - Change current log level, default = 3, <level> is a number 0-4.\n";
   menu_item += "\"sign_message <message>\"                           - Sign a message with your wallet keys.\n";
   menu_item += "\"show_dust\"                                        - Show the number of unmixable dust outputs.\n";
@@ -1952,6 +1954,114 @@ bool simple_wallet::save_keys_to_file(const std::vector<std::string>& args)
     << formatted_wal_str << "_conceal_backup.txt\".";
 
   return true;
+}
+
+bool simple_wallet::save_all_txs_to_file(const std::vector<std::string> &args)
+{
+  if (!args.empty())
+  {
+    logger(ERROR) <<  "Usage: \"save_txs_to_file\"";
+    return true;
+  }
+
+  /* get total txs in wallet */
+  size_t tx_count = m_wallet->getTransactionCount();
+
+  /* check wallet txs before doing work */
+  if (tx_count == 0) {
+    logger(ERROR, BRIGHT_RED) << "No transfers";
+    return true;
+  }
+
+  // we do should do optional bool to include deposits
+
+  /* remove ".wallet" from the end of the string to create filename */
+  std::string formatted_wal_str = m_wallet_file.erase(m_wallet_file.size() - 7) + "_conceal_transactions.txt";
+  std::ofstream tx_file(formatted_wal_str);
+
+  /* create line from string */
+  std::string listed_tx;
+
+  /* get tx struct */
+  WalletLegacyTransaction txInfo;
+
+  /* create header for listed txs */
+  std::string header = common::makeCenteredString(32, "timestamp (UTC)") + "  ";
+  header += common::makeCenteredString(64, "hash") + "  ";
+  header += common::makeCenteredString(20, "total amount") + "  ";
+  header += common::makeCenteredString(14, "fee") + "  ";
+  header += common::makeCenteredString(8, "block") + "  ";
+  header += common::makeCenteredString(12, "unlock time");
+
+  /* make header string to ss so we can use .size() */
+  std::stringstream hs(header + "\n");
+  hs << std::string(header.size(), '-');
+
+  /* push header to start of file */
+  tx_file << hs.str();
+
+  for (size_t i = 0; i < tx_count; ++i) 
+  {
+    /* get tx to list from i */
+    m_wallet->getTransaction(i, txInfo);
+
+    /* check tx state */
+    if (txInfo.state != WalletLegacyTransactionState::Active || txInfo.blockHeight == WALLET_LEGACY_UNCONFIRMED_TRANSACTION_HEIGHT) {
+      continue;
+    }
+
+    /* grab tx info */
+    std::string formatted_item = list_tx_item(txInfo, listed_tx);
+
+    /* push info to end of file */
+    tx_file << formatted_item;
+  }
+
+  return true;
+}
+
+std::string simple_wallet::list_tx_item(const WalletLegacyTransaction& txInfo, std::string listed_tx)
+{
+  std::vector<uint8_t> extraVec = common::asBinaryArray(txInfo.extra);
+
+  crypto::Hash paymentId;
+  std::string paymentIdStr = (getPaymentIdFromTxExtra(extraVec, paymentId) && paymentId != NULL_HASH ? common::podToHex(paymentId) : "");
+
+  char timeString[32 + 1];
+  time_t timestamp = static_cast<time_t>(txInfo.timestamp);
+  struct tm time;
+#ifdef _WIN32
+  gmtime_s(&time, &timestamp);
+#else
+  gmtime_r(&timestamp, &time);
+#endif
+
+  if (!std::strftime(timeString, sizeof(timeString), "%c", &time))
+  {
+    throw std::runtime_error("time buffer is too small");
+  }
+
+  std::string format_amount = m_currency.formatAmount(txInfo.totalAmount);
+  std::string is_minus = txInfo.totalAmount < 0 ? "-" + format_amount : "" + format_amount;
+
+  std::stringstream ss_time(timeString);
+  std::stringstream ss_hash(common::podToHex(txInfo.hash));
+  std::stringstream ss_amount(is_minus);
+  std::stringstream ss_fee(m_currency.formatAmount(txInfo.fee));
+  std::stringstream ss_blockheight(std::to_string(txInfo.blockHeight));
+  std::stringstream ss_unlocktime(std::to_string(txInfo.unlockTime));
+
+  ss_time >> std::setw(32);
+  ss_hash >> std::setw(64);
+  ss_amount >> std::setw(20);
+  ss_fee >> std::setw(14);
+  ss_blockheight >> std::setw(8);
+  ss_unlocktime >> std::setw(12);
+
+  listed_tx = ss_time.str() + " " + ss_hash.str() + " " + ss_amount.str() + " " + ss_fee.str() + " "
+    + ss_blockheight.str() + " " + ss_unlocktime.str() + "\n";
+
+  return listed_tx;
 }
 
 bool simple_wallet::list_deposits(const std::vector<std::string> &args)
