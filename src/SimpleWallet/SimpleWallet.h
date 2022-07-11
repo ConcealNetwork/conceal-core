@@ -97,13 +97,12 @@ namespace cn
     bool reset(const std::vector<std::string> &args);
     bool set_log(const std::vector<std::string> &args);
     bool save_keys_to_file(const std::vector<std::string> &args);
+    bool save_all_txs_to_file(const std::vector<std::string> &args);
 
     bool deposit(const std::vector<std::string> &args);
     bool withdraw(const std::vector<std::string> &args);
     bool list_deposits(const std::vector<std::string> &args);
     bool deposit_info(const std::vector<std::string> &args);
-
-    bool save_all_txs_to_file(const std::vector<std::string> &args);
 
     bool confirm_deposit(uint64_t term, uint64_t amount);
 
