@@ -958,6 +958,8 @@ bool simple_wallet::init(const boost::program_options::variables_map& vm) {
     m_wallet->addObserver(this);
     m_node->addObserver(static_cast<INodeObserver*>(this));
 
+    m_frmt_wallet_file = m_wallet_file.size() - 7;
+
     logger(INFO, BRIGHT_WHITE) << "Opened wallet: " << m_wallet->getAddress();
 
     success_msg_writer() <<
@@ -1925,9 +1927,8 @@ bool simple_wallet::save_keys_to_file(const std::vector<std::string>& args)
     return true;
   }
 
-  /* remove ".wallet" from the end of the string */
-  std::string formatted_wal_str = m_wallet_file.erase(m_wallet_file.size() - 7);
-  std::ofstream backup_file(formatted_wal_str + "_conceal_backup.txt");
+  std::string formatted_wal_str = m_frmt_wallet_file + "_conceal_backup.txt";
+  std::ofstream backup_file(formatted_wal_str);
 
   AccountKeys keys;
   m_wallet->getAccountKeys(keys);
@@ -1951,13 +1952,14 @@ bool simple_wallet::save_keys_to_file(const std::vector<std::string>& args)
   backup_file << priv_key;
 
   logger(INFO, BRIGHT_GREEN) << "Wallet keys have been saved to the current folder where \"concealwallet\" is located as \""
-    << formatted_wal_str << "_conceal_backup.txt\".";
+    << formatted_wal_str << ".";
 
   return true;
 }
 
 bool simple_wallet::save_all_txs_to_file(const std::vector<std::string> &args)
 {
+  /* check args, should be empty */
   if (!args.empty())
   {
     logger(ERROR) <<  "Usage: \"save_txs_to_file\"";
@@ -1973,10 +1975,13 @@ bool simple_wallet::save_all_txs_to_file(const std::vector<std::string> &args)
     return true;
   }
 
+  /* tell user about prepped job */
+  logger(INFO) << "Preparing file and transactions...";
+
   // we do should do optional bool to include deposits
 
-  /* remove ".wallet" from the end of the string to create filename */
-  std::string formatted_wal_str = m_wallet_file.erase(m_wallet_file.size() - 7) + "_conceal_transactions.txt";
+  /* create filename and file */
+  std::string formatted_wal_str = m_frmt_wallet_file + "_conceal_transactions.txt";
   std::ofstream tx_file(formatted_wal_str);
 
   /* create line from string */
@@ -1994,11 +1999,11 @@ bool simple_wallet::save_all_txs_to_file(const std::vector<std::string> &args)
   header += common::makeCenteredString(12, "unlock time");
 
   /* make header string to ss so we can use .size() */
-  std::stringstream hs(header + "\n");
-  hs << std::string(header.size(), '-');
+  std::stringstream hs(header);
+  std::stringstream line(std::string(header.size(), '-'));
 
   /* push header to start of file */
-  tx_file << hs.str();
+  tx_file << hs.str() << line.str();
 
   for (size_t i = 0; i < tx_count; ++i) 
   {
@@ -2015,7 +2020,14 @@ bool simple_wallet::save_all_txs_to_file(const std::vector<std::string> &args)
 
     /* push info to end of file */
     tx_file << formatted_item;
+
+    /* tell user about progress */
+    logger(INFO) << "Transaction: " << i << " was pushed to " << formatted_wal_str;
   }
+
+  /* tell user job complete */
+  logger(INFO, BRIGHT_GREEN) << "All transactions have been saved to the current folder where \"concealwallet\" is located as \""
+    << formatted_wal_str << "\".";
 
   return true;
 }
@@ -2042,11 +2054,10 @@ std::string simple_wallet::list_tx_item(const WalletLegacyTransaction& txInfo, s
   }
 
   std::string format_amount = m_currency.formatAmount(txInfo.totalAmount);
-  std::string is_minus = txInfo.totalAmount < 0 ? "-" + format_amount : "" + format_amount;
 
   std::stringstream ss_time(timeString);
   std::stringstream ss_hash(common::podToHex(txInfo.hash));
-  std::stringstream ss_amount(is_minus);
+  std::stringstream ss_amount(m_currency.formatAmount(txInfo.totalAmount));
   std::stringstream ss_fee(m_currency.formatAmount(txInfo.fee));
   std::stringstream ss_blockheight(std::to_string(txInfo.blockHeight));
   std::stringstream ss_unlocktime(std::to_string(txInfo.unlockTime));

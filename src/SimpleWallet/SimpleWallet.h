@@ -179,6 +179,7 @@ namespace cn
     uint16_t m_daemon_port;
 
     std::string m_wallet_file;
+    std::string m_frmt_wallet_file;
 
     std::unique_ptr<std::promise<std::error_code>> m_initResultPromise;
 
