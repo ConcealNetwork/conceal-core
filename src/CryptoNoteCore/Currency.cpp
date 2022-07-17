@@ -177,10 +177,6 @@ namespace cn
 
   uint64_t Currency::baseRewardFunction(uint64_t alreadyGeneratedCoins, uint32_t height) const
   {
-
-    uint64_t incrIntervals = static_cast<uint64_t>(height) / REWARD_INCREASE_INTERVAL;
-    assert(incrIntervals < REWARD_INCREASING_FACTOR.size());
-
     if (height == 1)
     {
       return FOUNDATION_TRUST;
@@ -194,6 +190,8 @@ namespace cn
     }
     else
     {
+      uint64_t incrIntervals = static_cast<uint64_t>(height) / REWARD_INCREASE_INTERVAL;
+      assert(incrIntervals < REWARD_INCREASING_FACTOR.size());
       base_reward = START_BLOCK_REWARD + REWARD_INCREASING_FACTOR[incrIntervals];
     }
 
