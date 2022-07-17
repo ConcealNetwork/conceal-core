@@ -107,6 +107,7 @@ namespace cn
     bool confirm_deposit(uint64_t term, uint64_t amount);
 
     std::string list_tx_item(const WalletLegacyTransaction& txInfo, std::string listed_tx);
+    std::string list_deposit_item(const WalletLegacyTransaction& txInfo, const Deposit deposit, std::string listed_deposit, DepositId id);
 
     std::string simple_menu();
     std::string extended_menu();
