@@ -87,7 +87,7 @@ namespace cn
     bool show_blockchain_height(const std::vector<std::string> &args);
     bool show_num_unlocked_outputs(const std::vector<std::string> &args);
     bool optimize_outputs(const std::vector<std::string> &args);
-	  bool get_reserve_proof(const std::vector<std::string> &args);    
+    bool get_reserve_proof(const std::vector<std::string> &args);    
     bool get_tx_proof(const std::vector<std::string> &args);    
     bool optimize_all_outputs(const std::vector<std::string> &args);
     bool listTransfers(const std::vector<std::string> &args);
@@ -97,12 +97,17 @@ namespace cn
     bool reset(const std::vector<std::string> &args);
     bool set_log(const std::vector<std::string> &args);
     bool save_keys_to_file(const std::vector<std::string> &args);
+    bool save_all_txs_to_file(const std::vector<std::string> &args);
 
     bool deposit(const std::vector<std::string> &args);
     bool withdraw(const std::vector<std::string> &args);
     bool list_deposits(const std::vector<std::string> &args);
     bool deposit_info(const std::vector<std::string> &args);
+
     bool confirm_deposit(uint64_t term, uint64_t amount);
+
+    std::string list_tx_item(const WalletLegacyTransaction& txInfo, std::string listed_tx);
+    std::string list_deposit_item(const WalletLegacyTransaction& txInfo, const Deposit deposit, std::string listed_deposit, DepositId id);
 
     std::string simple_menu();
     std::string extended_menu();
@@ -175,6 +180,7 @@ namespace cn
     uint16_t m_daemon_port;
 
     std::string m_wallet_file;
+    std::string m_frmt_wallet_file;
 
     std::unique_ptr<std::promise<std::error_code>> m_initResultPromise;
 

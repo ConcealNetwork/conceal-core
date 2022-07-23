@@ -646,6 +646,7 @@ simple_wallet::simple_wallet(platform_system::Dispatcher& dispatcher, const cn::
   m_consoleHandler.setHandler("deposit", boost::bind(&simple_wallet::deposit, this, boost::arg<1>()), "deposit <months> <amount> - Create a deposit");
   m_consoleHandler.setHandler("withdraw", boost::bind(&simple_wallet::withdraw, this, boost::arg<1>()), "withdraw <id> - Withdraw a deposit");
   m_consoleHandler.setHandler("deposit_info", boost::bind(&simple_wallet::deposit_info, this, boost::arg<1>()), "deposit_info <id> - Get infomation for deposit <id>");
+  m_consoleHandler.setHandler("save_txs_to_file", boost::bind(&simple_wallet::save_all_txs_to_file, this, boost::arg<1>()), "save_txs_to_file - Saves all known transactions to <wallet_name>_conceal_transactions.txt");
 }
 
 std::string simple_wallet::simple_menu()
@@ -682,6 +683,7 @@ std::string simple_wallet::extended_menu()
   menu_item += "\"optimize_all\"                                     - Optimize your wallet several times so you can send large transactions.\n";
   menu_item += "\"outputs\"                                          - Show the number of unlocked outputs available for a transaction.\n";
   menu_item += "\"payments <payment_id>\"                            - Show payments from payment ID. | [<payment_id_2> ... <payment_id_N>]\n";
+  menu_item += "\"save_txs_to_file\"                                 - Saves all known transactions to <wallet_name>_conceal_transactions.txt | [false] or [true] to include deposits (default: false)\n";
   menu_item += "\"set_log <level>\"                                  - Change current log level, default = 3, <level> is a number 0-4.\n";
   menu_item += "\"sign_message <message>\"                           - Sign a message with your wallet keys.\n";
   menu_item += "\"show_dust\"                                        - Show the number of unmixable dust outputs.\n";
@@ -955,6 +957,9 @@ bool simple_wallet::init(const boost::program_options::variables_map& vm) {
 
     m_wallet->addObserver(this);
     m_node->addObserver(static_cast<INodeObserver*>(this));
+
+    std::string tmp_str = m_wallet_file;
+    m_frmt_wallet_file = tmp_str.erase(tmp_str.size() - 7);
 
     logger(INFO, BRIGHT_WHITE) << "Opened wallet: " << m_wallet->getAddress();
 
@@ -1923,9 +1928,8 @@ bool simple_wallet::save_keys_to_file(const std::vector<std::string>& args)
     return true;
   }
 
-  /* remove ".wallet" from the end of the string */
-  std::string formatted_wal_str = m_wallet_file.erase(m_wallet_file.size() - 7);
-  std::ofstream backup_file(formatted_wal_str + "_conceal_backup.txt");
+  std::string formatted_wal_str = m_frmt_wallet_file + "_conceal_backup.txt";
+  std::ofstream backup_file(formatted_wal_str);
 
   AccountKeys keys;
   m_wallet->getAccountKeys(keys);
@@ -1949,9 +1953,222 @@ bool simple_wallet::save_keys_to_file(const std::vector<std::string>& args)
   backup_file << priv_key;
 
   logger(INFO, BRIGHT_GREEN) << "Wallet keys have been saved to the current folder where \"concealwallet\" is located as \""
-    << formatted_wal_str << "_conceal_backup.txt\".";
+    << formatted_wal_str << ".";
 
   return true;
+}
+
+bool simple_wallet::save_all_txs_to_file(const std::vector<std::string> &args)
+{
+  /* check args, default: include_deposits = false */
+  bool include_deposits;
+
+  if (args.empty() || args[0] == "false")
+  {
+    include_deposits = false;
+  }
+  else if (args[0] == "true")
+  {
+    include_deposits = true;
+  }
+  else
+  {
+    logger(ERROR) << "Usage: \"save_txs_to_file\" - Saves only transactions to file.\n"
+      << "        \"save_txs_to_file false\" - Saves only transactions to file.\n"
+      << "        \"save_txs_to_file true\" - Saves transactions and deposits to file.";
+    return true;
+  }
+
+  /* get total txs in wallet */
+  size_t tx_count = m_wallet->getTransactionCount();
+
+  /* check wallet txs before doing work */
+  if (tx_count == 0) {
+    logger(ERROR, BRIGHT_RED) << "No transfers";
+    return true;
+  }
+
+  /* tell user about prepped job */
+  logger(INFO) << "Preparing file and transactions...";
+
+  /* create filename and file */
+  std::string formatted_wal_str = m_frmt_wallet_file + "_conceal_transactions.txt";
+  std::ofstream tx_file(formatted_wal_str);
+
+  /* create header for listed txs */
+  std::string header = common::makeCenteredString(32, "timestamp (UTC)") + " | ";
+  header += common::makeCenteredString(64, "hash") + " | ";
+  header += common::makeCenteredString(20, "total amount") + " | ";
+  header += common::makeCenteredString(14, "fee") + " | ";
+  header += common::makeCenteredString(8, "block") + " | ";
+  header += common::makeCenteredString(12, "unlock time");
+
+  /* make header string to ss so we can use .size() */
+  std::stringstream hs(header);
+  std::stringstream line(std::string(header.size(), '-'));
+
+  /* push header to start of file */
+  tx_file << hs.str() << "\n" << line.str() << "\n";
+
+  /* create line from string */
+  std::string listed_tx;
+
+  /* get tx struct */
+  WalletLegacyTransaction txInfo;
+
+  /* go through tx ids for the amount of transactions in wallet */
+  for (TransactionId i = 0; i < tx_count; ++i) 
+  {
+    /* get tx to list from i */
+    m_wallet->getTransaction(i, txInfo);
+
+    /* check tx state */
+    if (txInfo.state != WalletLegacyTransactionState::Active || txInfo.blockHeight == WALLET_LEGACY_UNCONFIRMED_TRANSACTION_HEIGHT) {
+      continue;
+    }
+
+    /* grab tx info */
+    std::string formatted_item_tx = list_tx_item(txInfo, listed_tx);
+
+    /* push info to end of file */
+    tx_file << formatted_item_tx;
+
+    /* tell user about progress */
+    logger(INFO) << "Transaction: " << i << " was pushed to " << formatted_wal_str;
+  }
+
+  /* tell user job complete */
+  logger(INFO, BRIGHT_GREEN) << "All transactions have been saved to the current folder where \"concealwallet\" is located as \""
+    << formatted_wal_str << "\".";
+  
+  /* if user uses "save_txs_to_file true" then we go through the deposits */
+  if (include_deposits == true)
+  {
+    /* get total deposits in wallet */
+    size_t deposit_count = m_wallet->getDepositCount();
+
+    /* check wallet txs before doing work */
+    if (deposit_count == 0) {
+      logger(ERROR, BRIGHT_RED) << "No deposits";
+      return true;
+    }
+
+    /* tell user about prepped job */
+    logger(INFO) << "Preparing deposits...";
+
+    /* create new header for listed deposits */
+    std::string headerd = common::makeCenteredString(8, "ID") + " | ";
+    headerd += common::makeCenteredString(20, "Amount") + " | ";
+    headerd += common::makeCenteredString(20, "Interest") + " | ";
+    headerd += common::makeCenteredString(16, "Height") + " | ";
+    headerd += common::makeCenteredString(16, "Unlock Height") + " | ";
+    headerd += common::makeCenteredString(10, "State");
+
+    /* make header string to ss so we can use .size() */
+    std::stringstream hds(headerd);
+    std::stringstream lined(std::string(headerd.size(), '-'));
+
+    /* push new header to start of file with an extra new line */
+    tx_file << "\n\n" << hds.str() << "\n" << lined.str() << "\n";
+
+    /* create line from string */
+    std::string listed_deposit;
+
+    /* go through deposits ids for the amount of deposits in wallet */
+    for (DepositId id = 0; id < deposit_count; ++id)
+    {
+      /* get deposit info from id and store it to deposit */
+      Deposit deposit = m_wallet->get_deposit(id);
+      cn::WalletLegacyTransaction txInfo;
+
+      /* get deposit info and use its transaction in the chain */
+      m_wallet->getTransaction(deposit.creatingTransactionId, txInfo);
+
+      /* grab deposit info */
+      std::string formatted_item_d = list_deposit_item(txInfo, deposit, listed_deposit, id);
+
+      /* push info to end of file */
+      tx_file << formatted_item_d;
+
+      /* tell user about progress */
+      logger(INFO) << "Deposit: " << id << " was pushed to " << formatted_wal_str;
+    }
+
+    /* tell user job complete */
+    logger(INFO, BRIGHT_GREEN) << "All deposits have been saved to the end of the file current folder where \"concealwallet\" is located as \""
+      << formatted_wal_str << "\".";
+  }
+
+  return true;
+}
+
+std::string simple_wallet::list_tx_item(const WalletLegacyTransaction& txInfo, std::string listed_tx)
+{
+  std::vector<uint8_t> extraVec = common::asBinaryArray(txInfo.extra);
+
+  crypto::Hash paymentId;
+  std::string paymentIdStr = (getPaymentIdFromTxExtra(extraVec, paymentId) && paymentId != NULL_HASH ? common::podToHex(paymentId) : "");
+
+  char timeString[32 + 1];
+  time_t timestamp = static_cast<time_t>(txInfo.timestamp);
+  struct tm time;
+#ifdef _WIN32
+  gmtime_s(&time, &timestamp);
+#else
+  gmtime_r(&timestamp, &time);
+#endif
+
+  if (!std::strftime(timeString, sizeof(timeString), "%c", &time))
+  {
+    throw std::runtime_error("time buffer is too small");
+  }
+
+  std::string format_amount = m_currency.formatAmount(txInfo.totalAmount);
+
+  std::stringstream ss_time(common::makeCenteredString(32, timeString));
+  std::stringstream ss_hash(common::makeCenteredString(64, common::podToHex(txInfo.hash)));
+  std::stringstream ss_amount(common::makeCenteredString(20, m_currency.formatAmount(txInfo.totalAmount)));
+  std::stringstream ss_fee(common::makeCenteredString(14, m_currency.formatAmount(txInfo.fee)));
+  std::stringstream ss_blockheight(common::makeCenteredString(8, std::to_string(txInfo.blockHeight)));
+  std::stringstream ss_unlocktime(common::makeCenteredString(12, std::to_string(txInfo.unlockTime)));
+
+  ss_time >> std::setw(32);
+  ss_hash >> std::setw(64);
+  ss_amount >> std::setw(20);
+  ss_fee >> std::setw(14);
+  ss_blockheight >> std::setw(8);
+  ss_unlocktime >> std::setw(12);
+
+  listed_tx = ss_time.str() + " | " + ss_hash.str() + " | " + ss_amount.str() + " | " + ss_fee.str() + " | "
+    + ss_blockheight.str() + " | " + ss_unlocktime.str() + "\n";
+
+  return listed_tx;
+}
+
+std::string simple_wallet::list_deposit_item(const WalletLegacyTransaction& txInfo, Deposit deposit, std::string listed_deposit, DepositId id)
+{
+  std::string format_amount = m_currency.formatAmount(deposit.amount);
+  std::string format_interest = m_currency.formatAmount(deposit.interest);
+  std::string format_total = m_currency.formatAmount(deposit.amount + deposit.interest);
+
+  std::stringstream ss_id(common::makeCenteredString(8, std::to_string(id)));
+  std::stringstream ss_amount(common::makeCenteredString(20, format_amount));
+  std::stringstream ss_interest(common::makeCenteredString(20, format_interest));
+  std::stringstream ss_height(common::makeCenteredString(16, m_dhelper.deposit_height(txInfo)));
+  std::stringstream ss_unlockheight(common::makeCenteredString(16, m_dhelper.deposit_unlock_height(deposit, txInfo)));
+  std::stringstream ss_status(common::makeCenteredString(10, m_dhelper.deposit_status(deposit)));
+
+  ss_id >> std::setw(8);
+  ss_amount >> std::setw(20);
+  ss_interest >> std::setw(20);
+  ss_height >> std::setw(16);
+  ss_unlockheight >> std::setw(16);
+  ss_status >> std::setw(10);
+
+  listed_deposit = ss_id.str() + " | " + ss_amount.str() + " | " + ss_interest.str() + " | " + ss_height.str() + " | "
+    + ss_unlockheight.str() + " | " + ss_status.str() + "\n";
+
+  return listed_deposit;
 }
 
 bool simple_wallet::list_deposits(const std::vector<std::string> &args)
