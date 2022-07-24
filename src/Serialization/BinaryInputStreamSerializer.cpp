@@ -121,7 +121,7 @@ bool BinaryInputStreamSerializer::binary(std::string& value, common::StringView 
 
 bool BinaryInputStreamSerializer::operator()(double& value, common::StringView name) {
   assert(false); //the method is not supported for this type of serialization
-  throw std::runtime_error("double serialization is not supported in BinaryInputStreamSerializer");
+  throw std::runtime_error("BinaryInputStreamSerializer does not support double serialization");
   return false;
 }
 

@@ -11,6 +11,7 @@
 #include <Logging/ConsoleLogger.h>
 
 #include "PaymentGate/WalletService.h"
+#include "Wallet/WalletGreen.h"
 
 // test helpers
 #include "INodeStubs.h"
@@ -33,8 +34,9 @@ public:
   }
 
   std::unique_ptr<WalletService> createWalletService(const WalletConfiguration& cfg) {
-    WalletGreen* walletGreen = new cn::WalletGreen(dispatcher, currency, nodeStub, logger);
+    cn::WalletGreen* walletGreen = new cn::WalletGreen(dispatcher, currency, nodeStub, logger);
     wallet.reset(walletGreen);
+    std::unique_ptr<payment_service::WalletService> service(new payment_service::WalletService(currency, dispatcher, nodeStub, *walletGreen, *walletGreen, cfg, logger, false));
     service->init();
     return service;
   }
@@ -81,9 +83,12 @@ TEST_F(PaymentGateTest, addTransaction) {
 
   platform_system::Timer(dispatcher).sleep(std::chrono::seconds(2));
 
-  uint64_t pending = 0, actual = 0;
+  uint64_t actual = 0;
+  uint64_t pending = 0;
+  uint64_t lockedDepositBalance = 0;
+  uint64_t unlockedDepositBalance = 0;
 
-  service->getBalance(actual, pending);
+  service->getBalance(actual, pending, lockedDepositBalance, unlockedDepositBalance);
 
   ASSERT_NE(0, pending);
   ASSERT_NE(0, actual);

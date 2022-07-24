@@ -2817,6 +2817,7 @@ namespace cn
       }
       catch (...)
       {
+        m_logger(WARNING, BRIGHT_RED) << "Rollback has failed. The TX will be stored as unconfirmed and will be deleted after the wallet is relaunched during TX pool sync.";
         // Ignore any exceptions. If rollback fails then the transaction is stored as unconfirmed and will be deleted after wallet relaunch
         // during transaction pool synchronization
       }

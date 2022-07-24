@@ -52,8 +52,6 @@ namespace
   const command_line::arg_descriptor<std::string> arg_set_view_key = { "view-key", "Set secret view-key for remote node fee confirmation", "" };
   const command_line::arg_descriptor<int>         arg_log_level   = {"log-level", "", 2};
   const command_line::arg_descriptor<bool>        arg_console     = {"no-console", "Disable daemon console commands"};
-  const command_line::arg_descriptor<bool>        arg_testnet_on  = {"testnet", "Used to deploy test nets. Checkpoints and hardcoded seeds are ignored, "
-    "network id is changed. Use it with --data-dir flag. The wallet must be launched with --testnet flag.", false};
   const command_line::arg_descriptor<bool>        arg_print_genesis_tx = { "print-genesis-tx", "Prints genesis' block tx hex to insert it to config and exits" };
 }
 
@@ -120,7 +118,7 @@ int main(int argc, char* argv[])
     command_line::add_arg(desc_cmd_sett, arg_log_level);
     command_line::add_arg(desc_cmd_sett, arg_console);
     command_line::add_arg(desc_cmd_sett, arg_set_view_key);
-    command_line::add_arg(desc_cmd_sett, arg_testnet_on);
+    command_line::add_arg(desc_cmd_sett, command_line::arg_testnet_on);
     command_line::add_arg(desc_cmd_sett, arg_print_genesis_tx);
 
     RpcServerConfig::initOptions(desc_cmd_sett);
@@ -131,8 +129,10 @@ int main(int argc, char* argv[])
     desc_options.add(desc_cmd_only).add(desc_cmd_sett);
 
     po::variables_map vm;
+    CoreConfig coreConfig;
     bool r = command_line::handle_error_helper(desc_options, [&]() {
       po::store(po::parse_command_line(argc, argv, desc_options), vm);
+      coreConfig.init(vm);
 
       // logger is not configured yet, std::cout is fine here
       if (command_line::get_arg(vm, command_line::arg_help))
@@ -205,13 +205,15 @@ int main(int argc, char* argv[])
 
     logger(INFO) << "Module folder: " << argv[0];
 
-    bool testnet_mode = command_line::get_arg(vm, arg_testnet_on);
-    if (testnet_mode)
-      logger(INFO) << "Starting in testnet mode!";
+    logger(INFO) << "Blockchain and configuration folder: " << coreConfig.configFolder;
+    if (coreConfig.testnet)
+    {
+      logger(INFO, MAGENTA) << "/!\\ Starting in testnet mode /!\\";
+    }
 
     //create objects and link them
     cn::CurrencyBuilder currencyBuilder(logManager);
-    currencyBuilder.testnet(testnet_mode);
+    currencyBuilder.testnet(coreConfig.testnet);
 
     try
     {
@@ -227,21 +229,15 @@ int main(int argc, char* argv[])
     cn::core ccore(currency, nullptr, logManager, vm["enable-blockchain-indexes"].as<bool>(), vm["enable-autosave"].as<bool>());
 
     cn::Checkpoints checkpoints(logManager);
-    for (const auto& cp : cn::CHECKPOINTS) {
-      checkpoints.add_checkpoint(cp.height, cp.blockId);
-    }
-
+    checkpoints.set_testnet(coreConfig.testnet);
+    checkpoints.load_checkpoints();
     checkpoints.load_checkpoints_from_dns();
+    ccore.set_checkpoints(std::move(checkpoints));
 
-    if (!testnet_mode) {
-      ccore.set_checkpoints(std::move(checkpoints));
-    }
-
-    CoreConfig coreConfig;
-    coreConfig.init(vm);
     NetNodeConfig netNodeConfig;
     netNodeConfig.init(vm);
-    netNodeConfig.setTestnet(testnet_mode);
+    netNodeConfig.setTestnet(coreConfig.testnet);
+    netNodeConfig.setConfigFolder(coreConfig.configFolder);
     MinerConfig minerConfig;
     minerConfig.init(vm);
     RpcServerConfig rpcConfig;

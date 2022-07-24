@@ -139,7 +139,7 @@ public:
   BlockchainSynchronizer& m_sync;
 };
 
-WalletLegacy::WalletLegacy(const cn::Currency& currency, INode& node, logging::ILogger& loggerGroup) :
+WalletLegacy::WalletLegacy(const cn::Currency& currency, INode& node, logging::ILogger& loggerGroup, bool testnet) :
   m_state(NOT_INITIALIZED),
   m_currency(currency),
   m_node(node),
@@ -156,7 +156,8 @@ WalletLegacy::WalletLegacy(const cn::Currency& currency, INode& node, logging::I
   m_transferDetails(nullptr),
   m_transactionsCache(m_currency.mempoolTxLiveTime()),
   m_sender(nullptr),
-  m_onInitSyncStarter(new SyncStarter(m_blockchainSync))
+  m_onInitSyncStarter(new SyncStarter(m_blockchainSync)),
+  m_testnet(testnet)
 {
   addObserver(m_onInitSyncStarter.get());
 }
@@ -247,7 +248,7 @@ void WalletLegacy::initSync() {
   m_transferDetails = &subObject.getContainer();
   subObject.addObserver(this);
 
-  m_sender.reset(new WalletTransactionSender(m_currency, m_transactionsCache, m_account.getAccountKeys(), *m_transferDetails, m_node));
+  m_sender.reset(new WalletTransactionSender(m_currency, m_transactionsCache, m_account.getAccountKeys(), *m_transferDetails, m_node, m_testnet));
   m_state = INITIALIZED;
 
   m_blockchainSync.addObserver(this);
@@ -269,8 +270,10 @@ void WalletLegacy::doLoad(std::istream& source) {
         std::stringstream stream(cache);
         m_transfersSync.load(stream);
       }
-    } catch (const std::exception&) {
+    } catch (const std::exception& e) {
+      // TODO Make this pass through file log at some point
       // ignore cache loading errors
+      std::cout << "Exception during loading cache: " << e.what() << std::endl;
     }
 	// Read all output keys cache
     std::vector<TransactionOutputInformation> allTransfers;
@@ -804,6 +807,34 @@ TransactionId WalletLegacy::deposit(uint32_t term, uint64_t amount, uint64_t fee
   return txId;
 }
 
+TransactionId WalletLegacy::withdrawDeposit(const DepositId& depositId, uint64_t fee) {
+  throwIfNotInitialised();
+
+  TransactionId txId = 0;
+  std::unique_ptr<WalletRequest> request;
+  std::deque<std::unique_ptr<WalletLegacyEvent>> events;
+
+  fee = cn::parameters::MINIMUM_FEE;
+
+  {
+    std::unique_lock<std::mutex> lock(m_cacheMutex);
+    request = m_sender->makeWithdrawDepositRequest(txId, events, depositId, fee);
+
+    if (request != nullptr) {
+      pushBalanceUpdatedEvents(events);
+    }
+  }
+
+  notifyClients(events);
+
+  if (request != nullptr) {
+    m_asyncContextCounter.addAsyncContext();
+    request->perform(m_node, std::bind(&WalletLegacy::sendTransactionCallback, this, std::placeholders::_1, std::placeholders::_2));
+  }
+
+  return txId;
+}
+
 TransactionId WalletLegacy::withdrawDeposits(const std::vector<DepositId>& depositIds, uint64_t fee) {
   throwIfNotInitialised();
 
@@ -815,7 +846,7 @@ TransactionId WalletLegacy::withdrawDeposits(const std::vector<DepositId>& depos
 
   {
     std::unique_lock<std::mutex> lock(m_cacheMutex);
-    request = m_sender->makeWithdrawDepositRequest(txId, events, depositIds, fee);
+    request = m_sender->makeWithdrawDepositsRequest(txId, events, depositIds, fee);
 
     if (request != nullptr) {
       pushBalanceUpdatedEvents(events);
@@ -1466,6 +1497,11 @@ bool WalletLegacy::checkWalletPassword(std::istream& source, const std::string& 
   std::unique_lock<std::mutex> lock(m_cacheMutex);
   WalletLegacySerializer serializer(m_account, m_transactionsCache);
   return serializer.deserialize(source, password);
+}
+
+Deposit WalletLegacy::get_deposit(DepositId depositId)
+{
+  return m_transactionsCache.getDeposit(depositId);
 }
 
 

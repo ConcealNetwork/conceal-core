@@ -46,7 +46,7 @@ struct TransactionsInBlockInfoFilter;
 class WalletService
 {
 public:
-  WalletService(const cn::Currency &currency, platform_system::Dispatcher &sys, cn::INode &node, cn::IWallet &wallet, cn::IFusionManager &fusionManager, const WalletConfiguration &conf, logging::ILogger &logger);
+  WalletService(const cn::Currency &currency, platform_system::Dispatcher &sys, cn::INode &node, cn::IWallet &wallet, cn::IFusionManager &fusionManager, const WalletConfiguration &conf, logging::ILogger &logger, bool testnet);
   virtual ~WalletService();
 
   void init();
@@ -128,8 +128,8 @@ private:
   platform_system::Dispatcher &dispatcher;
   platform_system::Event readyEvent;
   platform_system::ContextGroup refreshContext;
-
   std::map<std::string, size_t> transactionIdIndex;
+  bool m_testnet;
 };
 
 } //namespace payment_service

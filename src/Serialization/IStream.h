@@ -15,11 +15,13 @@ namespace cn {
 class IInputStream {
 public:
   virtual size_t read(char* data, size_t size) = 0;
+  virtual ~IInputStream() = default;
 };
 
 class IOutputStream {
 public:
   virtual void write(const char* data, size_t size) = 0;
+  virtual ~IOutputStream() = default;
 };
 
 }

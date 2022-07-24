@@ -15,6 +15,8 @@
 namespace {
   using cn::BLOCK_MAJOR_VERSION_1;
   using cn::BLOCK_MAJOR_VERSION_2;
+  using cn::BLOCK_MAJOR_VERSION_3;
+  using cn::BLOCK_MAJOR_VERSION_4;
   using cn::BLOCK_MINOR_VERSION_0;
   using cn::BLOCK_MINOR_VERSION_1;
 
@@ -35,6 +37,7 @@ namespace {
       currencyBuilder.upgradeWindow(720);
       currencyBuilder.upgradeHeightV2(upgradeHeight);
       currencyBuilder.upgradeHeightV3(UpgradeDetector::UNDEF_HEIGHT);
+      currencyBuilder.upgradeHeightV6(UpgradeDetector::UNDEF_HEIGHT);
       return currencyBuilder.currency();
     }
 
@@ -142,8 +145,6 @@ namespace {
 
   TEST_F(UpgradeDetector_voting_init, handlesAFewCompleteUpgrades) {
     cn::Currency currency = createCurrency();
-    const uint8_t BLOCK_V3 = BLOCK_MAJOR_VERSION_2 + 1;
-    const uint8_t BLOCK_V4 = BLOCK_MAJOR_VERSION_2 + 2;
 
     BlockVector blocks;
 
@@ -159,26 +160,26 @@ namespace {
     uint64_t upgradeHeightV3 = currency.calculateUpgradeHeight(votingCompleteHeigntV3);
     createBlocks(blocks, upgradeHeightV3 - blocks.size(), BLOCK_MAJOR_VERSION_2, BLOCK_MINOR_VERSION_0);
     // Upgrade to v3 is here
-    createBlocks(blocks, 1, BLOCK_V3, BLOCK_MINOR_VERSION_0);
+    createBlocks(blocks, 1, BLOCK_MAJOR_VERSION_3, BLOCK_MINOR_VERSION_0);
 
-    createBlocks(blocks, currency.upgradeVotingWindow() * currency.upgradeVotingThreshold() / 100, BLOCK_V3, BLOCK_MINOR_VERSION_1);
+    createBlocks(blocks, currency.upgradeVotingWindow() * currency.upgradeVotingThreshold() / 100, BLOCK_MAJOR_VERSION_3, BLOCK_MINOR_VERSION_1);
     uint64_t votingCompleteHeigntV4 = blocks.size() - 1;
     uint64_t upgradeHeightV4 = currency.calculateUpgradeHeight(votingCompleteHeigntV4);
-    createBlocks(blocks, upgradeHeightV4 - blocks.size(), BLOCK_V3, BLOCK_MINOR_VERSION_0);
+    createBlocks(blocks, upgradeHeightV4 - blocks.size(), BLOCK_MAJOR_VERSION_3, BLOCK_MINOR_VERSION_0);
     // Upgrade to v4 is here
-    createBlocks(blocks, 1, BLOCK_V4, BLOCK_MINOR_VERSION_0);
+    createBlocks(blocks, 1, BLOCK_MAJOR_VERSION_4, BLOCK_MINOR_VERSION_0);
 
     UpgradeDetector upgradeDetectorV2(currency, blocks, BLOCK_MAJOR_VERSION_2, logger);
     ASSERT_TRUE(upgradeDetectorV2.init());
     ASSERT_EQ(upgradeDetectorV2.votingCompleteHeight(), votingCompleteHeigntV2);
     ASSERT_EQ(upgradeDetectorV2.upgradeHeight(), upgradeHeightV2);
 
-    UpgradeDetector upgradeDetectorV3(currency, blocks, BLOCK_V3, logger);
+    UpgradeDetector upgradeDetectorV3(currency, blocks, BLOCK_MAJOR_VERSION_3, logger);
     ASSERT_TRUE(upgradeDetectorV3.init());
     ASSERT_EQ(upgradeDetectorV3.votingCompleteHeight(), votingCompleteHeigntV3);
     ASSERT_EQ(upgradeDetectorV3.upgradeHeight(), upgradeHeightV3);
 
-    UpgradeDetector upgradeDetectorV4(currency, blocks, BLOCK_V4, logger);
+    UpgradeDetector upgradeDetectorV4(currency, blocks, BLOCK_MAJOR_VERSION_4, logger);
     ASSERT_TRUE(upgradeDetectorV4.init());
     ASSERT_EQ(upgradeDetectorV4.votingCompleteHeight(), votingCompleteHeigntV4);
     ASSERT_EQ(upgradeDetectorV4.upgradeHeight(), upgradeHeightV4);

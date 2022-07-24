@@ -15,23 +15,26 @@
 using common::JsonValue;
 using namespace cn;
 
+class serializer_error : public std::runtime_error
+{
+public:
+  explicit serializer_error(const std::string &s) : std::runtime_error("This type of serialization is not supported: " + s){};
+};
+
 JsonInputValueSerializer::JsonInputValueSerializer(const common::JsonValue& value) {
   if (!value.isObject()) {
-    throw std::runtime_error("Serializer doesn't support this type of serialization: Object expected.");
+    throw serializer_error("Object expected.");
   }
 
   chain.push_back(&value);
 }
 
-JsonInputValueSerializer::JsonInputValueSerializer(common::JsonValue&& value) : value(std::move(value)) {
-  if (!this->value.isObject()) {
-    throw std::runtime_error("Serializer doesn't support this type of serialization: Object expected.");
+JsonInputValueSerializer::JsonInputValueSerializer(common::JsonValue&& value) : root(std::move(value)) {
+  if (!this->root.isObject()) {
+    throw serializer_error("Object expected.");
   }
 
-  chain.push_back(&this->value);
-}
-
-JsonInputValueSerializer::~JsonInputValueSerializer() {
+  chain.push_back(&this->root);
 }
 
 ISerializer::SerializerType JsonInputValueSerializer::type() const {

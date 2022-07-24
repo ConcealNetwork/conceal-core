@@ -34,14 +34,15 @@ public:
     cn::decompose_amount_into_digits(this->m_source_amount, 0,
       [&](uint64_t chunk) { destinations.push_back(cn::TransactionDestinationEntry(chunk, address)); },
       [&](uint64_t a_dust) { destinations.push_back(cn::TransactionDestinationEntry(a_dust, address)); });
-
-    cn::constructTransaction(this->m_miners[this->real_source_idx].getAccountKeys(), this->m_sources, destinations, std::vector<uint8_t>(), tx, unlockTime, m_logger);
+    crypto::SecretKey txSK;
+    cn::constructTransaction(this->m_miners[this->real_source_idx].getAccountKeys(), this->m_sources, destinations, std::vector<uint8_t>(), tx, unlockTime, m_logger, txSK);
   }
 
   void generateSingleOutputTx(const AccountPublicAddress& address, uint64_t amount, Transaction& tx) {
     std::vector<TransactionDestinationEntry> destinations;
     destinations.push_back(TransactionDestinationEntry(amount, address));
-    constructTransaction(this->m_miners[this->real_source_idx].getAccountKeys(), this->m_sources, destinations, std::vector<uint8_t>(), tx, 0, m_logger);
+    crypto::SecretKey txSK;
+    constructTransaction(this->m_miners[this->real_source_idx].getAccountKeys(), this->m_sources, destinations, std::vector<uint8_t>(), tx, 0, m_logger, txSK);
   }
 };
 

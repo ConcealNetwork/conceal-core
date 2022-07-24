@@ -113,17 +113,10 @@ struct aesdata
 		v64x1 ^= mem.as_uqword(1);
 	}
 
-	inline void write(cn_sptr mem)
+	inline void write(cn_sptr mem) const
 	{
 		mem.as_uqword(0) = v64x0;
 		mem.as_uqword(1) = v64x1;
-	}
-
-	inline aesdata& operator=(const aesdata& rhs) noexcept
-	{
-		v64x0 = rhs.v64x0;
-		v64x1 = rhs.v64x1;
-		return *this;
 	}
 
 	inline aesdata& operator^=(const aesdata& rhs) noexcept
@@ -141,7 +134,7 @@ struct aesdata
 		return *this;
 	}
 
-	inline void get_quad(uint32_t& x0, uint32_t& x1, uint32_t& x2, uint32_t& x3)
+	inline void get_quad(uint32_t& x0, uint32_t& x1, uint32_t& x2, uint32_t& x3) const
 	{
 		x0 = v64x0;
 		x1 = v64x0 >> 32;
@@ -483,7 +476,7 @@ void cn_slow_hash<MEMORY, ITER, CN_SLOW_HASH_VERSION>::software_hash(const void*
 
 	explode_scratchpad_soft();
 
-	uint64_t* h0 = spad.as_uqword();
+	const uint64_t* h0 = spad.as_uqword();
 
 	aesdata ax;
 	ax.v64x0 = h0[0] ^ h0[4];

@@ -35,24 +35,31 @@ namespace {
 using namespace cn;
 using namespace common;
 
+class serialization_error : public std::runtime_error
+{
+public:
+  using runtime_error::runtime_error;
+};
+
 size_t getSignaturesCount(const TransactionInput& input) {
   struct txin_signature_size_visitor : public boost::static_visitor < size_t > {
-    size_t operator()(const BaseInput& txin) const { return 0; }
-    size_t operator()(const KeyInput& txin) const { return txin.outputIndexes.size(); }
+    size_t operator()(const BaseInput &) const { return 0; }
+    size_t operator()(const KeyInput &txin) const { return txin.outputIndexes.size(); }
     size_t operator()(const MultisignatureInput& txin) const { return txin.signatureCount; }
   };
 
   return boost::apply_visitor(txin_signature_size_visitor(), input);
 }
 
-struct BinaryVariantTagGetter: boost::static_visitor<uint8_t> {
-  uint8_t operator()(const cn::BaseInput) { return  0xff; }
-  uint8_t operator()(const cn::KeyInput) { return  0x2; }
-  uint8_t operator()(const cn::MultisignatureInput) { return  0x3; }
-  uint8_t operator()(const cn::KeyOutput) { return  0x2; }
-  uint8_t operator()(const cn::MultisignatureOutput) { return  0x3; }
-  uint8_t operator()(const cn::Transaction) { return  0xcc; }
-  uint8_t operator()(const cn::Block) { return  0xbb; }
+struct BinaryVariantTagGetter : boost::static_visitor<uint8_t>
+{
+  uint8_t operator()(const cn::BaseInput &) const { return 0xff; }
+  uint8_t operator()(const cn::KeyInput &) const { return 0x2; }
+  uint8_t operator()(const cn::MultisignatureInput &) const { return 0x3; }
+  uint8_t operator()(const cn::KeyOutput &) const { return 0x2; }
+  uint8_t operator()(const cn::MultisignatureOutput &) const { return 0x3; }
+  uint8_t operator()(const cn::Transaction &) const { return 0xcc; }
+  uint8_t operator()(const cn::Block &) const { return 0xbb; }
 };
 
 struct VariantSerializer : boost::static_visitor<> {
@@ -86,7 +93,7 @@ void getVariantValue(cn::ISerializer& serializer, uint8_t tag, cn::TransactionIn
     break;
   }
   default:
-    throw std::runtime_error("Unknown variant tag");
+    throw serialization_error("Unknown variant tag");
   }
 }
 
@@ -105,7 +112,7 @@ void getVariantValue(cn::ISerializer& serializer, uint8_t tag, cn::TransactionOu
     break;
   }
   default:
-    throw std::runtime_error("Unknown variant tag");
+    throw serialization_error("Unknown variant tag");
   }
 }
 
@@ -177,7 +184,7 @@ void serialize(TransactionPrefix& txP, ISerializer& serializer) {
   serializer(txP.version, "version");
 
   if (TRANSACTION_VERSION_2 < txP.version) {
-    throw std::runtime_error("Wrong transaction version");
+    throw serialization_error("Wrong transaction version");
   }
 
   serializer(txP.unlockTime, "unlock_time");
@@ -190,8 +197,6 @@ void serialize(Transaction& tx, ISerializer& serializer) {
   serialize(static_cast<TransactionPrefix&>(tx), serializer);
 
   size_t sigSize = tx.inputs.size();
-  //TODO: make arrays without sizes
-//  serializer.beginArray(sigSize, "signatures");
   
   if (serializer.type() == ISerializer::INPUT) {
     tx.signatures.resize(sigSize);
@@ -199,7 +204,7 @@ void serialize(Transaction& tx, ISerializer& serializer) {
 
   bool signaturesNotExpected = tx.signatures.empty();
   if (!signaturesNotExpected && tx.inputs.size() != tx.signatures.size()) {
-    throw std::runtime_error("Serialization error: unexpected signatures size");
+    throw serialization_error("Unexpected signature size caused a serialization problem");
   }
 
   for (size_t i = 0; i < tx.inputs.size(); ++i) {
@@ -208,13 +213,13 @@ void serialize(Transaction& tx, ISerializer& serializer) {
       if (signatureSize == 0) {
         continue;
       } else {
-        throw std::runtime_error("Serialization error: signatures are not expected");
+        throw serialization_error("Unexpected signatures caused a serialization problem");
       }
     }
 
     if (serializer.type() == ISerializer::OUTPUT) {
       if (signatureSize != tx.signatures[i].size()) {
-        throw std::runtime_error("Serialization error: unexpected signatures size");
+        throw serialization_error("Unexpected signature size caused a serialization problem");
       }
 
       for (crypto::Signature& sig : tx.signatures[i]) {
@@ -230,7 +235,6 @@ void serialize(Transaction& tx, ISerializer& serializer) {
       tx.signatures[i] = std::move(signatures);
     }
   }
-//  serializer.endArray();
 }
 
 void serialize(TransactionInput& in, ISerializer& serializer) {
@@ -306,7 +310,7 @@ void serialize(MultisignatureOutput& multisignature, ISerializer& serializer) {
 void serializeBlockHeader(BlockHeader& header, ISerializer& serializer) {
   serializer(header.majorVersion, "major_version");
   if (header.majorVersion > BLOCK_MAJOR_VERSION_8) {
-    throw std::runtime_error("Wrong major version");
+    throw serialization_error("Wrong major version");
   }
 
   serializer(header.minorVersion, "minor_version");
@@ -338,9 +342,7 @@ void serialize(AccountKeys& keys, ISerializer& s) {
 }
 
 void doSerialize(TransactionExtraMergeMiningTag& tag, ISerializer& serializer) {
-  uint64_t depth = static_cast<uint64_t>(tag.depth);
-  serializer(depth, "depth");
-  tag.depth = static_cast<size_t>(depth);
+  serializer(tag.depth, "depth");
   serializer(tag.merkleRoot, "merkle_root");
 }
 
