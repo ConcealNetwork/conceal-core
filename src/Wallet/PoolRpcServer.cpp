@@ -348,7 +348,7 @@ bool pool_rpc_server::on_create_integrated(const wallet_rpc::COMMAND_RPC_CREATE_
     if (!valid)
     {
       logger(logging::ERROR) << "Failed to parse address!";
-      return false;
+      throw JsonRpc::JsonRpcError(cn::error::BAD_ADDRESS, "Failed to parse address!");
     }
 
     cn::BinaryArray ba;

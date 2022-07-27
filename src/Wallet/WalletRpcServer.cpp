@@ -485,8 +485,8 @@ bool wallet_rpc_server::on_create_integrated(const wallet_rpc::COMMAND_RPC_CREAT
 
     if (!valid)
     {
-      /* throw or return false? */
-      throw JsonRpc::JsonRpcError(cn::error::BAD_ADDRESS, std::string("Failed to parse address!"));
+      logger(logging::ERROR) << "Failed to parse address!";
+      throw JsonRpc::JsonRpcError(cn::error::BAD_ADDRESS, "Failed to parse address!");
     }
 
     cn::BinaryArray ba;
