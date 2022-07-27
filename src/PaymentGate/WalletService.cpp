@@ -1141,7 +1141,6 @@ namespace payment_service
         spendingTransactionHash = common::podToHex(walletstx.hash);
       }
 
-      bool state = true;
       uint32_t knownBlockCount = node.getKnownBlockCount();
       if (knownBlockCount > unlockHeight)
       {
@@ -1451,6 +1450,12 @@ namespace payment_service
                                                              addr,
                                                              address_str);
 
+    if (!valid)
+    {
+      logger(logging::ERROR) << "Failed to parse address!";
+      return make_error_code(cn::error::BAD_ADDRESS);
+    }
+
     cn::BinaryArray ba;
     cn::toBinaryArray(addr, ba);
     std::string keys = common::asString(ba);
@@ -1647,7 +1652,6 @@ namespace payment_service
     {
       platform_system::EventLock lk(readyEvent);
 
-      auto estimateResult = fusionManager.estimate(1000000, {});
       knownBlockCount = node.getKnownBlockCount();
       peerCount = static_cast<uint32_t>(node.getPeerCount());
       blockCount = wallet.getBlockCount();

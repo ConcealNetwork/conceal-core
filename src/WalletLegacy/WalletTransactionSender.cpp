@@ -135,22 +135,6 @@ namespace
     return result;
   }
 
-  uint64_t checkDepositsAndCalculateAmount(const std::vector<DepositId> &depositIds, const WalletUserTransactionsCache &transactionsCache)
-  {
-    uint64_t amount = 0;
-
-    for (const auto &id : depositIds)
-    {
-      Deposit deposit;
-      throwIf(!transactionsCache.getDeposit(id, deposit), error::DEPOSIT_DOESNOT_EXIST);
-      throwIf(deposit.locked, error::DEPOSIT_LOCKED);
-
-      amount += deposit.amount + deposit.interest;
-    }
-
-    return amount;
-  }
-
   void countDepositTotalSumAndInterestSum(const DepositId &depositId, WalletUserTransactionsCache &depositsCache,
                                            uint64_t &totalSum, uint64_t &interestsSum)
   {

@@ -483,6 +483,12 @@ bool wallet_rpc_server::on_create_integrated(const wallet_rpc::COMMAND_RPC_CREAT
                                                             addr,
                                                             address_str);
 
+    if (!valid)
+    {
+      /* throw or return false? */
+      throw JsonRpc::JsonRpcError(cn::error::BAD_ADDRESS, std::string("Failed to parse address!"));
+    }
+
     cn::BinaryArray ba;
     cn::toBinaryArray(addr, ba);
     std::string keys = common::asString(ba);
