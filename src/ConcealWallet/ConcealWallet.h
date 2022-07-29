@@ -16,7 +16,7 @@
 
 #include "IWalletLegacy.h"
 #include "PasswordContainer.h"
-#include "DepositHelper.h"
+#include "ClientHelper.h"
 
 #include "Common/ConsoleHandler.h"
 #include "CryptoNoteCore/CryptoNoteBasicImpl.h"
@@ -35,9 +35,9 @@ namespace cn
   /************************************************************************/
   /*                                                                      */
   /************************************************************************/
-  class simple_wallet : public cn::INodeObserver, public cn::IWalletLegacyObserver, public cn::INodeRpcProxyObserver {
+  class conceal_wallet : public cn::INodeObserver, public cn::IWalletLegacyObserver, public cn::INodeRpcProxyObserver {
   public:
-    simple_wallet(platform_system::Dispatcher& dispatcher, const cn::Currency& currency, logging::LoggerManager& log);
+    conceal_wallet(platform_system::Dispatcher& dispatcher, const cn::Currency& currency, logging::LoggerManager& log);
 
     bool init(const boost::program_options::variables_map& vm);
     bool deinit();
@@ -46,6 +46,7 @@ namespace cn
 
     bool process_command(const std::vector<std::string> &args);
     std::string get_commands_str(bool do_ext);
+  
     std::string getFeeAddress();
 
     const cn::Currency& currency() const { return m_currency; }
@@ -73,6 +74,9 @@ namespace cn
     bool open_wallet(const std::string &wallet_file, const std::string& password);
     bool close_wallet();
 
+    std::string wallet_menu(bool do_ext);
+
+    /* Wallet Commands */
     bool help(const std::vector<std::string> &args = std::vector<std::string>());
     bool extended_help(const std::vector<std::string> &args);
     bool exit(const std::vector<std::string> &args);
@@ -98,19 +102,11 @@ namespace cn
     bool set_log(const std::vector<std::string> &args);
     bool save_keys_to_file(const std::vector<std::string> &args);
     bool save_all_txs_to_file(const std::vector<std::string> &args);
-
     bool deposit(const std::vector<std::string> &args);
     bool withdraw(const std::vector<std::string> &args);
     bool list_deposits(const std::vector<std::string> &args);
     bool deposit_info(const std::vector<std::string> &args);
-
-    bool confirm_deposit(uint64_t term, uint64_t amount);
-
-    std::string list_tx_item(const WalletLegacyTransaction& txInfo, std::string listed_tx);
-    std::string list_deposit_item(const WalletLegacyTransaction& txInfo, const Deposit deposit, std::string listed_deposit, DepositId id);
-
-    std::string simple_menu();
-    std::string extended_menu();
+    /* End of Commands */
 
     std::string resolveAlias(const std::string& aliasUrl);
     void printConnectionError() const;
@@ -131,8 +127,8 @@ namespace cn
     class refresh_progress_reporter_t
     {
     public:
-      refresh_progress_reporter_t(cn::simple_wallet& simple_wallet)
-        : m_simple_wallet(simple_wallet)
+      refresh_progress_reporter_t(cn::conceal_wallet& conceal_wallet)
+        : m_conceal_wallet(conceal_wallet)
         , m_blockchain_height(0)
         , m_blockchain_height_update_time()
         , m_print_time()
@@ -142,7 +138,7 @@ namespace cn
       void update(uint64_t height, bool force = false)
       {
         auto current_time = std::chrono::system_clock::now();
-        if (std::chrono::seconds(m_simple_wallet.currency().difficultyTarget() / 2) < current_time - m_blockchain_height_update_time ||
+        if (std::chrono::seconds(m_conceal_wallet.currency().difficultyTarget() / 2) < current_time - m_blockchain_height_update_time ||
             m_blockchain_height <= height) {
           update_blockchain_height();
           m_blockchain_height = (std::max)(m_blockchain_height, height);
@@ -157,13 +153,13 @@ namespace cn
     private:
       void update_blockchain_height()
       {
-        uint64_t blockchain_height = m_simple_wallet.m_node->getLastLocalBlockHeight();
+        uint64_t blockchain_height = m_conceal_wallet.m_node->getLastLocalBlockHeight();
         m_blockchain_height = blockchain_height;
         m_blockchain_height_update_time = std::chrono::system_clock::now();
       }
 
     private:
-      cn::simple_wallet& m_simple_wallet;
+      cn::conceal_wallet& m_conceal_wallet;
       uint64_t m_blockchain_height;
       std::chrono::system_clock::time_point m_blockchain_height_update_time;
       std::chrono::system_clock::time_point m_print_time;
@@ -189,7 +185,7 @@ namespace cn
     logging::LoggerManager& logManager;
     platform_system::Dispatcher& m_dispatcher;
     logging::LoggerRef logger;
-    cn::deposit_helper m_dhelper;
+    cn::client_helper m_chelper;
 
     std::unique_ptr<cn::NodeRpcProxy> m_node;
     std::unique_ptr<cn::IWalletLegacy> m_wallet;
