@@ -19,6 +19,10 @@
 
 #include <Logging/LoggerManager.h>
 
+#if defined(WIN32)
+#include <crtdbg.h>
+#endif
+
 namespace po = boost::program_options;
 using namespace logging;
 
