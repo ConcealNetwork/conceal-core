@@ -69,8 +69,8 @@ void HttpServer::acceptLoop() {
         accepted = true;
       } catch (platform_system::InterruptedException&) {
         throw;
-      } catch (std::exception&) {
-        // try again
+      } catch (std::exception& e) {
+        logger(WARNING) << "Exception while trying to accept the loop, trying again.";
       }
     }
 
@@ -120,6 +120,7 @@ void HttpServer::acceptLoop() {
     logger(DEBUGGING) << "Closing connection from " << addr.first.toDottedDecimal() << ":" << addr.second << " total=" << m_connections.size();
 
   } catch (platform_system::InterruptedException&) {
+    throw;
   } catch (std::exception& e) {
     logger(DEBUGGING) << "Connection error: " << e.what();
   }

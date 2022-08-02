@@ -81,17 +81,6 @@ namespace cn
       return false;
     }
 
-    if (isTestnet())
-    {
-      m_upgradeHeightV2 = 0;
-      m_upgradeHeightV3 = static_cast<uint32_t>(-1);
-      m_blocksFileName = "testnet_" + m_blocksFileName;
-      m_blocksCacheFileName = "testnet_" + m_blocksCacheFileName;
-      m_blockIndexesFileName = "testnet_" + m_blockIndexesFileName;
-      m_txPoolFileName = "testnet_" + m_txPoolFileName;
-      m_blockchinIndicesFileName = "testnet_" + m_blockchinIndicesFileName;
-    }
-
     return true;
   }
 
@@ -184,7 +173,7 @@ namespace cn
 
     uint64_t base_reward = 0;
 
-    if (height > cn::parameters::UPGRADE_HEIGHT_V8)
+    if (height > cn::parameters::UPGRADE_HEIGHT_V8 || (isTestnet() && height > cn::parameters::TESTNET_UPGRADE_HEIGHT_V8))
     {
       base_reward = cn::MAX_BLOCK_REWARD_V1;
     }
@@ -262,7 +251,7 @@ namespace cn
   {
 
     /* deposits 3.0 and investments 1.0 */
-    if ((term % 21900 == 0) && (height > parameters::DEPOSIT_HEIGHT_V3))
+    if (((term % 21900 == 0) && (height > parameters::DEPOSIT_HEIGHT_V3)) || (isTestnet() && (term % parameters::TESTNET_DEPOSIT_MIN_TERM_V3 == 0) && (height > parameters::TESTNET_DEPOSIT_HEIGHT_V3)))
     {
       return calculateInterestV3(amount, term);
     }
@@ -409,12 +398,20 @@ namespace cn
 
     /* Consensus 2019 - Monthly deposits */
 
-    float months = term / 21900;
+    float months = 0;
+    if (isTestnet())
+    {
+      months = term / parameters::TESTNET_DEPOSIT_MIN_TERM_V3;
+    }
+    else
+    {
+      months = term / parameters::DEPOSIT_MIN_TERM_V3;
+    }
     if (months > 12)
     {
       months = 12;
     }
-    float ear = baseInterest + (months - 1) * 0.001;
+    float ear = baseInterest + (months - 1) * 0.001f;
     float eir = (ear / 12) * months;
     returnVal = static_cast<uint64_t>(eir);
 
@@ -1189,6 +1186,13 @@ namespace cn
     uint64_t T = 120;
     uint64_t N = 60;
     uint64_t difficulty_guess = 7200000;
+
+    if (isTestnet() && m_upgradeHeightV8 <= height && height < m_upgradeHeightV8 + N)
+    {
+      difficulty_guess = 10;
+      logger(DEBUGGING, YELLOW) << "guess applied";
+      return difficulty_guess;
+    }
 
     // Genesis should be the only time sizes are < N+1.
     assert(timestamps.size() == cumulative_difficulties.size() && timestamps.size() <= N + 1);

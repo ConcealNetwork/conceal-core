@@ -67,6 +67,19 @@ private:
   TransactionId m_id;
 };
 
+class WalletDepositUpdatedEvent : public WalletLegacyEvent {
+public:
+  WalletDepositUpdatedEvent(DepositId& depositId) : updatedDeposit(depositId) {}
+
+  virtual ~WalletDepositUpdatedEvent() {}
+
+  virtual void notify(tools::ObserverManager<cn::IWalletLegacyObserver>& observer) override {
+    observer.notify(&IWalletLegacyObserver::depositUpdated, updatedDeposit);
+  }
+private:
+  DepositId updatedDeposit;
+};
+
 class WalletDepositsUpdatedEvent : public WalletLegacyEvent {
 public:
   WalletDepositsUpdatedEvent(std::vector<DepositId>&& depositIds) : updatedDeposits(depositIds) {}

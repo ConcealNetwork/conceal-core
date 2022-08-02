@@ -75,12 +75,15 @@ NetNodeConfig::NetNodeConfig() {
 
 bool NetNodeConfig::init(const boost::program_options::variables_map& vm)
 {
+  testnet = vm[command_line::arg_testnet_on.name].as<bool>();
   if (vm.count(arg_p2p_bind_ip.name) != 0 && (!vm[arg_p2p_bind_ip.name].defaulted() || bindIp.empty())) {
     bindIp = command_line::get_arg(vm, arg_p2p_bind_ip);
   }
 
-  if (vm.count(arg_p2p_bind_port.name) != 0 && (!vm[arg_p2p_bind_port.name].defaulted() || bindPort == 0)) {
+  if (vm.count(arg_p2p_bind_port.name) != 0 && (!vm[arg_p2p_bind_port.name].defaulted()))  {
     bindPort = command_line::get_arg(vm, arg_p2p_bind_port);
+  }  else  {
+    bindPort = testnet ? TESTNET_P2P_DEFAULT_PORT : P2P_DEFAULT_PORT;
   }
 
   if (vm.count(arg_p2p_external_port.name) != 0 && (!vm[arg_p2p_external_port.name].defaulted() || externalPort == 0)) {
@@ -137,10 +140,6 @@ void NetNodeConfig::setTestnet(bool isTestnet) {
 }
 
 std::string NetNodeConfig::getP2pStateFilename() const {
-  if (testnet) {
-    return "testnet_" + p2pStateFilename;
-  }
-
   return p2pStateFilename;
 }
 

@@ -48,7 +48,7 @@ namespace cn {
   {
     assert(m_index.count(startBlockId) > 0);
 
-    uint32_t startBlockHeight;
+    uint32_t startBlockHeight = 0;
     std::vector<crypto::Hash> result;
     if (getBlockHeight(startBlockId, startBlockHeight))
     {

@@ -33,11 +33,8 @@ void insertOrPush(JsonValue& js, common::StringView name, const T& value) {
 
 }
 
-JsonOutputStreamSerializer::JsonOutputStreamSerializer() : root(JsonValue::OBJECT) {
+JsonOutputStreamSerializer::JsonOutputStreamSerializer() {
   chain.push_back(&root);
-}
-
-JsonOutputStreamSerializer::~JsonOutputStreamSerializer() {
 }
 
 ISerializer::SerializerType JsonOutputStreamSerializer::type() const {
@@ -75,27 +72,27 @@ void JsonOutputStreamSerializer::endArray() {
 }
 
 bool JsonOutputStreamSerializer::operator()(uint64_t& value, common::StringView name) {
-  int64_t v = static_cast<int64_t>(value);
+  auto v = static_cast<int64_t>(value);
   return operator()(v, name);
 }
 
 bool JsonOutputStreamSerializer::operator()(uint16_t& value, common::StringView name) {
-  uint64_t v = static_cast<uint64_t>(value);
+  auto v = static_cast<uint64_t>(value);
   return operator()(v, name);
 }
 
 bool JsonOutputStreamSerializer::operator()(int16_t& value, common::StringView name) {
-  int64_t v = static_cast<int64_t>(value);
+  auto v = static_cast<int64_t>(value);
   return operator()(v, name);
 }
 
 bool JsonOutputStreamSerializer::operator()(uint32_t& value, common::StringView name) {
-  uint64_t v = static_cast<uint64_t>(value);
+  auto v = static_cast<uint64_t>(value);
   return operator()(v, name);
 }
 
 bool JsonOutputStreamSerializer::operator()(int32_t& value, common::StringView name) {
-  int64_t v = static_cast<int64_t>(value);
+  auto v = static_cast<int64_t>(value);
   return operator()(v, name);
 }
 

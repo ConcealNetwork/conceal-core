@@ -16,6 +16,7 @@
 
 #include "IWalletLegacy.h"
 #include "PasswordContainer.h"
+#include "DepositHelper.h"
 
 #include "Common/ConsoleHandler.h"
 #include "CryptoNoteCore/CryptoNoteBasicImpl.h"
@@ -29,7 +30,6 @@
 #include <System/Dispatcher.h>
 #include <System/Ipv4Address.h>
 
-std::string remote_fee_address;
 namespace cn
 {
   /************************************************************************/
@@ -49,6 +49,8 @@ namespace cn
     std::string getFeeAddress();
 
     const cn::Currency& currency() const { return m_currency; }
+
+    std::string m_remote_node_address;
 
   private:
 
@@ -85,7 +87,7 @@ namespace cn
     bool show_blockchain_height(const std::vector<std::string> &args);
     bool show_num_unlocked_outputs(const std::vector<std::string> &args);
     bool optimize_outputs(const std::vector<std::string> &args);
-	  bool get_reserve_proof(const std::vector<std::string> &args);    
+    bool get_reserve_proof(const std::vector<std::string> &args);    
     bool get_tx_proof(const std::vector<std::string> &args);    
     bool optimize_all_outputs(const std::vector<std::string> &args);
     bool listTransfers(const std::vector<std::string> &args);
@@ -95,17 +97,23 @@ namespace cn
     bool reset(const std::vector<std::string> &args);
     bool set_log(const std::vector<std::string> &args);
     bool save_keys_to_file(const std::vector<std::string> &args);
+    bool save_all_txs_to_file(const std::vector<std::string> &args);
+
+    bool deposit(const std::vector<std::string> &args);
+    bool withdraw(const std::vector<std::string> &args);
+    bool list_deposits(const std::vector<std::string> &args);
+    bool deposit_info(const std::vector<std::string> &args);
+
+    bool confirm_deposit(uint64_t term, uint64_t amount);
+
+    std::string list_tx_item(const WalletLegacyTransaction& txInfo, std::string listed_tx);
+    std::string list_deposit_item(const WalletLegacyTransaction& txInfo, const Deposit deposit, std::string listed_deposit, DepositId id);
 
     std::string simple_menu();
     std::string extended_menu();
 
     std::string resolveAlias(const std::string& aliasUrl);
     void printConnectionError() const;
-
-    std::string generate_mnemonic(crypto::SecretKey &);
-    void log_incorrect_words(std::vector<std::string>);
-    bool is_valid_mnemonic(std::string &, crypto::SecretKey &);
-
 
     //---------------- IWalletLegacyObserver -------------------------
     virtual void initCompleted(std::error_code result) override;
@@ -172,6 +180,7 @@ namespace cn
     uint16_t m_daemon_port;
 
     std::string m_wallet_file;
+    std::string m_frmt_wallet_file;
 
     std::unique_ptr<std::promise<std::error_code>> m_initResultPromise;
 
@@ -180,6 +189,7 @@ namespace cn
     logging::LoggerManager& logManager;
     platform_system::Dispatcher& m_dispatcher;
     logging::LoggerRef logger;
+    cn::deposit_helper m_dhelper;
 
     std::unique_ptr<cn::NodeRpcProxy> m_node;
     std::unique_ptr<cn::IWalletLegacy> m_wallet;
@@ -188,5 +198,6 @@ namespace cn
     bool m_walletSynchronized;
     std::mutex m_walletSynchronizedMutex;
     std::condition_variable m_walletSynchronizedCV;
+    bool m_testnet;
   };
 }

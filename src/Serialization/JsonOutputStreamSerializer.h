@@ -16,28 +16,28 @@ namespace cn {
 class JsonOutputStreamSerializer : public ISerializer {
 public:
   JsonOutputStreamSerializer();
-  virtual ~JsonOutputStreamSerializer();
+  ~JsonOutputStreamSerializer() override = default;
 
   SerializerType type() const override;
 
-  virtual bool beginObject(common::StringView name) override;
-  virtual void endObject() override;
+  bool beginObject(common::StringView name) override;
+  void endObject() override;
 
-  virtual bool beginArray(size_t& size, common::StringView name) override;
-  virtual void endArray() override;
+  bool beginArray(size_t& size, common::StringView name) override;
+  void endArray() override;
 
-  virtual bool operator()(uint8_t& value, common::StringView name) override;
-  virtual bool operator()(int16_t& value, common::StringView name) override;
-  virtual bool operator()(uint16_t& value, common::StringView name) override;
-  virtual bool operator()(int32_t& value, common::StringView name) override;
-  virtual bool operator()(uint32_t& value, common::StringView name) override;
-  virtual bool operator()(int64_t& value, common::StringView name) override;
-  virtual bool operator()(uint64_t& value, common::StringView name) override;
-  virtual bool operator()(double& value, common::StringView name) override;
-  virtual bool operator()(bool& value, common::StringView name) override;
-  virtual bool operator()(std::string& value, common::StringView name) override;
-  virtual bool binary(void* value, size_t size, common::StringView name) override;
-  virtual bool binary(std::string& value, common::StringView name) override;
+  bool operator()(uint8_t& value, common::StringView name) override;
+  bool operator()(int16_t& value, common::StringView name) override;
+  bool operator()(uint16_t& value, common::StringView name) override;
+  bool operator()(int32_t& value, common::StringView name) override;
+  bool operator()(uint32_t& value, common::StringView name) override;
+  bool operator()(int64_t& value, common::StringView name) override;
+  bool operator()(uint64_t& value, common::StringView name) override;
+  bool operator()(double& value, common::StringView name) override;
+  bool operator()(bool& value, common::StringView name) override;
+  bool operator()(std::string& value, common::StringView name) override;
+  bool binary(void* value, size_t size, common::StringView name) override;
+  bool binary(std::string& value, common::StringView name) override;
 
   template<typename T>
   bool operator()(T& value, common::StringView name) {
@@ -51,7 +51,7 @@ public:
   friend std::ostream& operator<<(std::ostream& out, const JsonOutputStreamSerializer& enumerator);
 
 private:
-  common::JsonValue root;
+  common::JsonValue root = common::JsonValue::OBJECT;
   std::vector<common::JsonValue*> chain;
 };
 

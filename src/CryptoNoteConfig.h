@@ -113,6 +113,20 @@ namespace cn
 		const size_t UPGRADE_VOTING_WINDOW = EXPECTED_NUMBER_OF_BLOCKS_PER_DAY;
 		const size_t UPGRADE_WINDOW = EXPECTED_NUMBER_OF_BLOCKS_PER_DAY;
 
+
+		const uint64_t TESTNET_UPGRADE_HEIGHT = 1;
+		const uint64_t TESTNET_UPGRADE_HEIGHT_V2 = 1;
+		const uint64_t TESTNET_UPGRADE_HEIGHT_V3 = 12;	  /* Cryptonight-Fast */
+		const uint64_t TESTNET_UPGRADE_HEIGHT_V4 = 24;	  /* MixIn 2 */
+		const uint64_t TESTNET_UPGRADE_HEIGHT_V5 = 36;	  /* Deposits 2.0, Investments 1.0 */
+		const uint64_t TESTNET_UPGRADE_HEIGHT_V6 = 48;	  /* LWMA3 */
+		const uint64_t TESTNET_UPGRADE_HEIGHT_V7 = 60;	  /* Cryptoight Conceal */
+		const uint64_t TESTNET_UPGRADE_HEIGHT_V8 = 72;	  /* LWMA1, CN-GPU, Halving */
+
+		const uint32_t TESTNET_DEPOSIT_MIN_TERM_V3 = 30;		/* testnet deposits 1 month -> 1 hour */
+		const uint32_t TESTNET_DEPOSIT_MAX_TERM_V3 = 12 * 30;	/* testnet deposits 1 year -> 12 hour */
+		const uint32_t TESTNET_DEPOSIT_HEIGHT_V3 = 60;		
+
 		static_assert(0 < UPGRADE_VOTING_THRESHOLD && UPGRADE_VOTING_THRESHOLD <= 100, "Bad UPGRADE_VOTING_THRESHOLD");
 		static_assert(UPGRADE_VOTING_WINDOW > 1, "Bad UPGRADE_VOTING_WINDOW");
 
@@ -155,6 +169,11 @@ namespace cn
 
 	const int P2P_DEFAULT_PORT = 15000;
 	const int RPC_DEFAULT_PORT = 16000;
+    const int PAYMENT_GATE_DEFAULT_PORT = 8070;
+
+	const int TESTNET_P2P_DEFAULT_PORT = 15500;
+	const int TESTNET_RPC_DEFAULT_PORT = 16600;
+    const int TESTNET_PAYMENT_GATE_DEFAULT_PORT = 8770;
 
 	/* P2P Network Configuration Section - This defines our current P2P network version
 	and the minimum version for communication between nodes */
@@ -188,6 +207,11 @@ namespace cn
 		"185.58.227.32:15000", // UK
 		"185.35.64.209:15000",	 // France 
 		"94.177.245.107:15000"	 // Germany
+	};
+
+	const std::initializer_list<const char *> TESTNET_SEED_NODES = {
+		"161.97.145.65:15500",
+		"161.97.145.65:15501"
 	};
 
 	struct CheckpointData
@@ -308,6 +332,38 @@ namespace cn
 			{1010000, "f341d678cfbd5d488bbc179bc54fc92587dad7fb29823facc95f3e26158a722d"},
 			{1020000, "e3dae82d451358ac300e3960695784efb7d76833e620d75196cd0af9db0568bb"}
 	};
+
+    const std::initializer_list<CheckpointData> TESTNET_CHECKPOINTS = {
+        {0, "850ac16022f4dddab624fad3f9049dba80592c8ea51a5dff19fefeb386e536b1"},
+        {5000, "e232d411f2264e185bba87cad56053bd35596d629faf9d6e6cddc410d3fdf3de"},
+        {10000, "ad40d09ed6194709da7aabc893a71a7d28745386b765ff29cbab34fc1df83696"},
+        {15000, "a5874d60032c365150acaf528e06b403471560a7bee1faea2b8ac3d09b4e06c5"},
+        {20000, "41b738d741339a9609eceade3c5adffd54b89a5c70274d7edeade1ebdfd483a7"},
+        {25000, "bdde29c10211c911947e1e0d602309e95fb915372f3317690c7860ef451a78e7"},
+        {30000, "2bfd5dcd511b836755e413db911301a7e0bbb324c43fe38c4e2ec696996cb557"},
+        {35000, "dc0f5be53085ffe347c92ff551a4e8757759ef30bdd4589a636d976c580ce4c3"},
+        {40000, "724886ca65c2c90f3507cabd13e14ed998222193f2d4a1cfd043749632a0a0a7"},
+        {45000, "200c0a0090f5f31893ab7cb9853d596cb4bdef33f680de7f772dc83d615f554c"},
+        {50000, "ceb6c3e01ccd832779060a65a348ef38cab067bc951df11aa38332b8c2b7d299"},
+        {55000, "306d852d99c6bb7ac3070d93c4495ae6964f5d5ec3f01d2657afe55ebb34e5e9"},
+        {60000, "cfb9869db7c336b56f2eeffab109dfe8eb9adb79defc70c9d0024526a7eeb787"},
+        {65000, "191d92f5c7cbe6f4482c6c7ea935dfebbaf929e8a918a668a99152ae0b3eb3c6"},
+        {70000, "075590cc76603d59bc72a91564b5cfb5431034adac9cc0ceac9b88b70508238d"},
+        {75000, "cf2e2c171107e05aa9932e7f66a3df5117e5c1a4b084bb9b0c9c79300ebb82ce"},
+        {80000, "59b24deb207138ab7b15d38d9daf387d507e0fed33aae16175a30a1e7fa6ab33"},
+        {85000, "1b03c9547f1650763e675439d1882df0bde91c7df8bd490036d61c7591a73677"},
+        {90000, "991e40e508f420994afdc94398353508164a24af697402fb9a5f65164166a856"},
+        {95000, "c861cf7d0ea8b1f59c1220c4141de5725ed3cc03e41a7fd6a9ca457b5606c666"},
+        {100000, "a2c7179f5e7ea541ba8ed929044600b9cbf2aa20e5cf1d29cb93439fda4431ba"},
+        {105000, "5afc590c15c8f115350c8095f45f4a9efc3debca2de6bac09a8d694ff6f22a00"},
+        {110000, "15d37aadf963f32167a916a73f1e8ede7ccfee181f6cbe149c95d7b536f4be91"},
+        {115000, "dcdddd9412dd93d1b7231bd070c3ba5a9b3931f0b850fa58f02a2c5e4ea8b8fe"},
+        {120000, "56d0352b187a17d7523c10c85df98e8b8860af2c34f05c109b7d4966337191c5"},
+        {125000, "8a1737f2eee125776dff01288ada59ced95f9ab3a3fcbbed9c32a3dc20cad033"},
+        {130000, "30be866410a6a2bb4d7fdf69dc8e8256af116c5a8fdcf5169096a211c01bf160"},
+        {135000, "eaf75463b54076c4db11afb5d4917cded75b329b84b33fc8f455b7275867449c"},
+        {140000, "645512f82ab6e20fd8531716ea1f735fcaf5dcadeaec06bb4c238b36057b4934"}
+    };
 
 } // namespace cn
 

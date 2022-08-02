@@ -40,7 +40,7 @@ class WalletLegacy :
   ITransfersObserver {
 
 public:
-  WalletLegacy(const cn::Currency& currency, INode& node, logging::ILogger& loggerGroup);
+  WalletLegacy(const cn::Currency& currency, INode& node, logging::ILogger& loggerGroup, bool testnet);
   virtual ~WalletLegacy();
 
   virtual void addObserver(IWalletLegacyObserver* observer) override;
@@ -102,10 +102,13 @@ public:
   virtual std::list<TransactionOutputInformation> selectFusionTransfersToSend(uint64_t threshold, size_t minInputCount, size_t maxInputCount);
   virtual TransactionId sendFusionTransaction(const std::list<TransactionOutputInformation>& fusionInputs, uint64_t fee, const std::string& extra = "", uint64_t mixIn = 0, uint64_t unlockTimestamp = 0);
   virtual TransactionId deposit(uint32_t term, uint64_t amount, uint64_t fee, uint64_t mixIn = parameters::MINIMUM_MIXIN) override;
+  virtual TransactionId withdrawDeposit(const DepositId& depositId, uint64_t fee) override;
   virtual TransactionId withdrawDeposits(const std::vector<DepositId>& depositIds, uint64_t fee) override;
   virtual std::error_code cancelTransaction(size_t transactionId) override;
 
   virtual void getAccountKeys(AccountKeys& keys) override;
+
+  virtual Deposit get_deposit(DepositId depositId);
 
 private:
 
@@ -194,6 +197,7 @@ private:
   tools::ObserverManager<cn::IWalletLegacyObserver> m_observerManager;
 
   std::unique_ptr<SyncStarter> m_onInitSyncStarter;
+  bool m_testnet;
 };
 
 } //namespace cn
