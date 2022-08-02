@@ -1118,7 +1118,7 @@ std::unique_ptr<IBlock> core::getBlock(const crypto::Hash& blockId) {
     return std::unique_ptr<BlockWithTransactions>(nullptr);
   }
 
-  return std::move(blockPtr);
+  return blockPtr;
 }
 
 bool core::is_key_image_spent(const crypto::KeyImage& key_im) {
