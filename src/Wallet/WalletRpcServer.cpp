@@ -8,6 +8,7 @@
 #include "WalletRpcServer.h"
 
 #include <fstream>
+
 #include "Common/CommandLine.h"
 #include "Common/StringTools.h"
 #include "CryptoNoteCore/CryptoNoteFormatUtils.h"
@@ -482,6 +483,12 @@ bool wallet_rpc_server::on_create_integrated(const wallet_rpc::COMMAND_RPC_CREAT
     const bool valid = cn::parseAccountAddressString(prefix, 
                                                             addr,
                                                             address_str);
+
+    if (!valid)
+    {
+      logger(logging::ERROR) << "Failed to parse address!";
+      throw JsonRpc::JsonRpcError(cn::error::BAD_ADDRESS, "Failed to parse address!");
+    }
 
     cn::BinaryArray ba;
     cn::toBinaryArray(addr, ba);
