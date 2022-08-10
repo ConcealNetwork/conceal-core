@@ -799,6 +799,14 @@ bool simple_wallet::init(const boost::program_options::variables_map& vm) {
     do {
       std::cout << "Wallet file name: ";
       std::getline(std::cin, userInput);
+
+#if defined (WIN32)
+      userInput = std::regex_replace(userInput, std::regex("~"), getenv("USERPROFILE"));
+#else
+      userInput = std::regex_replace(userInput, std::regex("~"), getenv("HOME"));
+#endif
+
+
       boost::algorithm::trim(userInput);
     } while (userInput.empty());
     if (c == 'i' || c == 'I'){
