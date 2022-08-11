@@ -403,14 +403,16 @@ namespace cn
 
   void client_helper::save_wallet(cn::IWalletLegacy& wallet, const std::string& walletFilename, logging::LoggerRef& logger)
   {
+    logger(logging::INFO) << "Saving wallet...";
+
     try
     {
       cn::WalletHelper::storeWallet(wallet, walletFilename);
+      logger(logging::INFO, logging::BRIGHT_GREEN) << "Saved successful";
     }
     catch (std::exception& e)
     {
       logger(logging::ERROR, logging::BRIGHT_RED) << "Failed to store wallet: " << e.what();
-
       throw std::runtime_error("error saving wallet file '" + walletFilename + "'");
     }
   }

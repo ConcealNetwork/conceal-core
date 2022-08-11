@@ -260,14 +260,18 @@ bool processServerFeeAddressResponse(const std::string& response, std::string& f
 std::string conceal_wallet::get_commands_str(bool do_ext) {
   std::stringstream ss;
   ss << "";
+
   std::string usage;
   if (do_ext)
     usage = wallet_menu(true);
   else
     usage = wallet_menu(false);
+
   boost::replace_all(usage, "\n", "\n  ");
   usage.insert(0, "  ");
-  ss << usage << ENDL;
+
+  ss << usage << std::endl;
+
   return ss.str();
 }
 
@@ -332,13 +336,13 @@ std::string conceal_wallet::wallet_menu(bool do_ext)
 {
   std::string menu_item;
 
-  if (do_ext == true)
+  if (do_ext)
   {
     menu_item += "\t\tConceal Wallet Extended Menu\n\n";
     menu_item += "[ ] = Optional arg\n";
+    menu_item += "\"balance_proof <amount>\"                           - Generate a signature proving that you own at least <amount> | [<message>]\n";
     menu_item += "\"create_integrated <payment_id>\"                   - Create an integrated address with a payment ID.\n";
     menu_item += "\"get_tx_proof <txid> <address>\"                    - Generate a signature to prove payment | [<txkey>]\n";
-    menu_item += "\"balance_proof <amount>\"                           - Generate a signature proving that you own at least <amount> | [<message>]\n";
     menu_item += "\"incoming_transfers\"                               - Show incoming transfers.\n";
     menu_item += "\"optimize\"                                         - Combine many available outputs into a few by sending a transaction to self.\n";
     menu_item += "\"optimize_all\"                                     - Optimize your wallet several times so you can send large transactions.\n";
@@ -350,7 +354,7 @@ std::string conceal_wallet::wallet_menu(bool do_ext)
     menu_item += "\"show_dust\"                                        - Show the number of unmixable dust outputs.\n";
     menu_item += "\"verify_signature <message> <address> <signature>\" - Verify a signed message.\n";
   }
-  else if (do_ext == false)
+  else
   {
     menu_item += "\t\tConceal Wallet Menu\n\n";
     menu_item += "[ ] = Optional arg\n\n";
@@ -701,9 +705,7 @@ bool conceal_wallet::new_wallet(const std::string &wallet_file, const std::strin
       return false;
     }
 
-    logger(logging::INFO) << "Saving wallet...";
     m_chelper.save_wallet(*m_wallet, m_wallet_file, logger);
-    logger(logging::INFO, logging::BRIGHT_GREEN) << "Saved successful";
 
     AccountKeys keys;
     m_wallet->getAccountKeys(keys);
@@ -760,9 +762,7 @@ bool conceal_wallet::new_wallet(crypto::SecretKey &secret_key, crypto::SecretKey
       return false;
     }
 
-    logger(logging::INFO) << "Saving wallet...";
     m_chelper.save_wallet(*m_wallet, m_wallet_file, logger);
-    logger(logging::INFO, logging::BRIGHT_GREEN) << "Saving successful";
 
     AccountKeys keys;
     m_wallet->getAccountKeys(keys);
@@ -790,9 +790,8 @@ bool conceal_wallet::new_wallet(crypto::SecretKey &secret_key, crypto::SecretKey
 //----------------------------------------------------------------------------------------------------
 bool conceal_wallet::close_wallet()
 {
-  logger(logging::INFO) << "Saving wallet...";
   m_chelper.save_wallet(*m_wallet, m_wallet_file, logger);
-  logger(logging::INFO, logging::BRIGHT_GREEN) << "Saving successful.\nClosing wallet...";
+  logger(logging::INFO, logging::BRIGHT_GREEN) << "Closing wallet...";
 
   m_wallet->removeObserver(this);
   m_wallet->shutdown();
@@ -803,9 +802,7 @@ bool conceal_wallet::close_wallet()
 //----------------------------------------------------------------------------------------------------
 bool conceal_wallet::save(const std::vector<std::string> &args)
 {
-  logger(logging::INFO) << "Saving wallet...";
   m_chelper.save_wallet(*m_wallet, m_wallet_file, logger);
-  logger(logging::INFO, logging::BRIGHT_GREEN) << "Saving successful";
   return true;
 }
 
@@ -851,7 +848,7 @@ bool conceal_wallet::get_reserve_proof(const std::vector<std::string> &args)
 		
 		//logger(INFO, BRIGHT_WHITE) << "\n\n" << sig_str << "\n\n" << std::endl;
 
-		const std::string filename = "reserve_proof_" + args[0] + "_CCX.txt";
+		const std::string filename = "balance_proof_" + args[0] + "_CCX.txt";
 		boost::system::error_code ec;
 		if (boost::filesystem::exists(filename, ec)) {
 			boost::filesystem::remove(filename, ec);
@@ -1314,10 +1311,7 @@ bool conceal_wallet::optimize_outputs(const std::vector<std::string>& args) {
     success_msg_writer(true) << "Money successfully sent, transaction " << common::podToHex(txInfo.hash);
     success_msg_writer(true) << "Transaction secret key " << common::podToHex(transactionSK);
 
-    logger(logging::INFO) << "Saving wallet...";
     m_chelper.save_wallet(*m_wallet, m_wallet_file, logger);
-    logger(logging::INFO, logging::BRIGHT_GREEN) << "Saving successful";
-
   } catch (const std::system_error& e) {
     fail_msg_writer() << e.what();
   } catch (const std::exception& e) {
@@ -1379,10 +1373,7 @@ bool conceal_wallet::optimize_all_outputs(const std::vector<std::string>& args) 
       m_wallet->getTransaction(tx, txInfo);
       success_msg_writer(true) << a << ". Optimization transaction successfully sent, transaction " << common::podToHex(txInfo.hash);
 
-      logger(logging::INFO) << "Saving wallet...";
       m_chelper.save_wallet(*m_wallet, m_wallet_file, logger);
-      logger(logging::INFO, logging::BRIGHT_GREEN) << "Saving successful";
-
     } catch (const std::system_error& e) {
       fail_msg_writer() << e.what();
     } catch (const std::exception& e) {
@@ -1540,10 +1531,7 @@ bool conceal_wallet::transfer(const std::vector<std::string> &args) {
     success_msg_writer(true) << "Money successfully sent, transaction hash: " << common::podToHex(txInfo.hash);
     success_msg_writer(true) << "Transaction secret key " << common::podToHex(transactionSK); 
 
-    logger(logging::INFO) << "Saving wallet...";
     m_chelper.save_wallet(*m_wallet, m_wallet_file, logger);
-    logger(logging::INFO, logging::BRIGHT_GREEN) << "Saving successful";
-
   } catch (const std::system_error& e) {
     fail_msg_writer() << e.what();
   } catch (const std::exception& e) {
@@ -1880,10 +1868,7 @@ bool conceal_wallet::deposit(const std::vector<std::string> &args)
     success_msg_writer(true) << "Money successfully sent, transaction hash: " << common::podToHex(d_info.hash)
       << "\n\tID: " << d_info.firstDepositId;
 
-    logger(logging::INFO) << "Saving wallet...";
     m_chelper.save_wallet(*m_wallet, m_wallet_file, logger);
-    logger(logging::INFO, logging::BRIGHT_GREEN) << "Saving successful";
-
   }
   catch (const std::system_error& e)
   {
@@ -1944,10 +1929,7 @@ bool conceal_wallet::withdraw(const std::vector<std::string> &args)
     m_wallet->getTransaction(tx, d_info);
     success_msg_writer(true) << "Money successfully sent, transaction hash: " << common::podToHex(d_info.hash);
 
-    logger(logging::INFO) << "Saving wallet...";
     m_chelper.save_wallet(*m_wallet, m_wallet_file, logger);
-    logger(logging::INFO, logging::BRIGHT_GREEN) << "Saving successful";
-
   }
   catch (std::exception &e)
   {

@@ -18,7 +18,7 @@ namespace cn
     m_currency(currency),
     m_remote_address(remote_fee_address),
     fake_outs_count(0),
-    fee(currency.minimumFee()) {
+    fee(currency.minimumFeeV2()) {
   }
 
   bool transfer_cmd::parseTx(LoggerRef& logger, const std::vector<std::string> &args)
