@@ -23,6 +23,7 @@
 #include <boost/program_options.hpp>
 #include <boost/algorithm/string.hpp>
 #include <boost/filesystem.hpp>
+#include <boost/predef.h>
 
 #include "Common/Base58.h"
 #include "Common/CommandLine.h"
@@ -794,11 +795,19 @@ bool simple_wallet::init(const boost::program_options::variables_map& vm) {
       return false;
     }
 
+    std::string homeEnvVar;
+
+    if (BOOST_OS_WINDOWS)
+	    homeEnvVar = "USERPROFILE";
+    else
+	    homeEnvVar = "HOME";
+
     std::cout << "Specify wallet file name (e.g., name.wallet).\n";
     std::string userInput;
     do {
       std::cout << "Wallet file name: ";
       std::getline(std::cin, userInput);
+      userInput = std::regex_replace(userInput, std::regex("~"), getenv(homeEnvVar.c_str()));
       boost::algorithm::trim(userInput);
     } while (userInput.empty());
     if (c == 'i' || c == 'I'){
