@@ -46,7 +46,7 @@ In some build scenarios it may be necessary to increase the size of the SWAP to 
 
 For example if you have 8GB of RAM, then your SWAP size should be 5GB
 
--   Ubuntu / Linux
+-   Ubuntu / Debian
 
 ```bash
 sudo fallocate -l 5G /swapfile
@@ -67,20 +67,22 @@ sudo dphys-swapfile setup
 sudo dphys-swapfile swapon
 ```
 
-### Linux / Ubuntu / Debian
+### Linux
 
 #### Prerequisites
 
 -   You will need the following dependencies to build the Conceal CLI: boost, cmake, git, gcc, g++, python, and make:
 
+##### Ubuntu and Debian Based Systems
+
 ```bash
 sudo apt update
-sudo apt-get install -y build-essential python-dev gcc g++ git cmake libboost-all-dev
+sudo apt install -y build-essential python3-dev git cmake libboost-all-dev
 ```
 
 #### Building
 
--   On Ubuntu:
+-   On Linux Systems:
 
 ```bash
 git clone https://github.com/ConcealNetwork/conceal-core
