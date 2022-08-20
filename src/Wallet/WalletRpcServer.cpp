@@ -8,6 +8,7 @@
 #include "WalletRpcServer.h"
 
 #include <fstream>
+
 #include "Common/CommandLine.h"
 #include "Common/StringTools.h"
 #include "CryptoNoteCore/CryptoNoteFormatUtils.h"
