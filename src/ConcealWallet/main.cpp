@@ -161,12 +161,13 @@ int main(int argc, char* argv[])
     std::unique_ptr<cn::IWalletLegacy> wallet(new cn::WalletLegacy(currency, *node.get(), logManager, testnet));
 
     std::string walletFileName;
+
     try
     {
       walletFileName = m_chelper.tryToOpenWalletOrLoadKeysOrThrow(logger, wallet, wallet_file, wallet_password);
 
-      logger(INFO) << "available balance: " << currency.formatAmount(wallet->actualBalance()) <<
-      ", locked amount: " << currency.formatAmount(wallet->pendingBalance());
+      std::stringstream balances = m_chelper.balances(wallet, currency);
+      logger(INFO) << balances.str();
 
       logger(INFO, BRIGHT_GREEN) << "Loaded ok";
     }

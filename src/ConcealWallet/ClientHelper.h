@@ -102,5 +102,10 @@ namespace cn
     std::string tryToOpenWalletOrLoadKeysOrThrow(logging::LoggerRef& logger, std::unique_ptr<cn::IWalletLegacy>& wallet, const std::string& walletFile, const std::string& password);
 
     void save_wallet(cn::IWalletLegacy& wallet, const std::string& walletFilename, logging::LoggerRef& logger);
+
+    /**
+     * @return - Displays all balances (main + deposits)
+     */
+    std::stringstream balances(std::unique_ptr<cn::IWalletLegacy>& wallet, const Currency& currency);
   };
 }

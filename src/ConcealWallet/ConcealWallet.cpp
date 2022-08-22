@@ -41,6 +41,7 @@
 #include "CryptoNoteCore/CryptoNoteTools.h"
 
 #include "Wallet/WalletRpcServer.h"
+#include "Wallet/WalletUtils.h"
 #include "WalletLegacy/WalletLegacy.h"
 #include "Wallet/LegacyKeysImporter.h"
 #include "WalletLegacy/WalletHelper.h"
@@ -331,6 +332,7 @@ conceal_wallet::conceal_wallet(platform_system::Dispatcher& dispatcher, const cn
   m_consoleHandler.setHandler("withdraw", boost::bind(&conceal_wallet::withdraw, this, boost::arg<1>()), "withdraw <id> - Withdraw a deposit");
   m_consoleHandler.setHandler("deposit_info", boost::bind(&conceal_wallet::deposit_info, this, boost::arg<1>()), "deposit_info <id> - Get infomation for deposit <id>");
   m_consoleHandler.setHandler("save_txs_to_file", boost::bind(&conceal_wallet::save_all_txs_to_file, this, boost::arg<1>()), "save_txs_to_file - Saves all known transactions to <wallet_name>_conceal_transactions.txt");
+  m_consoleHandler.setHandler("check_address", boost::bind(&conceal_wallet::check_address, this, boost::arg<1>()), "check_address <address> - Checks to see if given wallet is valid.");
 }
 
 std::string conceal_wallet::wallet_menu(bool do_ext)
@@ -363,6 +365,7 @@ std::string conceal_wallet::wallet_menu(bool do_ext)
     menu_item += "\"address\"                     - Shows wallet address.\n";
     menu_item += "\"balance\"                     - Shows wallet main and deposit balance.\n";
     menu_item += "\"bc_height\"                   - Shows current blockchain height.\n";
+    menu_item += "\"check_address <address>\"     - Checks to see if given wallet is valid.\n";
     menu_item += "\"deposit <months> <amount>\"   - Create a deposit to the blockchain.\n";
     menu_item += "\"deposit_info <id>\"           - Display full information for deposit <id>.\n";
     menu_item += "\"exit\"                        - Safely exits the wallet application.\n";
@@ -836,11 +839,11 @@ bool conceal_wallet::reset(const std::vector<std::string> &args) {
 
 bool conceal_wallet::get_reserve_proof(const std::vector<std::string> &args)
 {
-	if (args.size() != 1 && args.size() != 2) {
+	if (args.size() != 1 && args.size() != 2)
+  {
 		fail_msg_writer() << "Usage: balance_proof (all|<amount>) [<message>]";
 		return true;
 	}
-
 
 	uint64_t reserve = 0;
 	if (args[0] != "all") {
@@ -992,23 +995,14 @@ void conceal_wallet::synchronizationProgressUpdated(uint32_t current, uint32_t t
 
 bool conceal_wallet::show_balance(const std::vector<std::string>& args/* = std::vector<std::string>()*/)
 {
-  uint64_t full_balance = m_wallet->actualBalance() + m_wallet->pendingBalance() + m_wallet->actualDepositBalance() + m_wallet->pendingDepositBalance();
-  std::string full_balance_text = "Total Balance: " + m_currency.formatAmount(full_balance) + "\n";
+  if (!args.empty())
+  {
+    logger(ERROR) << "Usage: balance";
+    return true;
+  }
 
-  uint64_t non_deposit_unlocked_balance = m_wallet->actualBalance();
-  std::string non_deposit_unlocked_balance_text = "Available: " + m_currency.formatAmount(non_deposit_unlocked_balance) + "\n";
-
-  uint64_t non_deposit_locked_balance = m_wallet->pendingBalance();
-  std::string non_deposit_locked_balance_text = "Locked: " + m_currency.formatAmount(non_deposit_locked_balance) + "\n";
-
-  uint64_t deposit_unlocked_balance = m_wallet->actualDepositBalance();
-  std::string deposit_locked_balance_text = "Unlocked Balance: " + m_currency.formatAmount(deposit_unlocked_balance) + "\n";
-
-  uint64_t deposit_locked_balance = m_wallet->pendingDepositBalance();
-  std::string deposit_unlocked_balance_text = "Locked Deposits: " + m_currency.formatAmount(deposit_locked_balance) + "\n";
-
-  logger(INFO) << full_balance_text << non_deposit_unlocked_balance_text << non_deposit_locked_balance_text
-    << deposit_unlocked_balance_text << deposit_locked_balance_text;
+  std::stringstream balances = m_chelper.balances(m_wallet, m_currency);
+  logger(INFO) << balances.str();
 
   return true;
 }
@@ -1967,6 +1961,27 @@ bool conceal_wallet::deposit_info(const std::vector<std::string> &args)
   m_wallet->getTransaction(deposit.creatingTransactionId, txInfo);
 
   logger(INFO) << m_chelper.get_full_deposit_info(deposit, deposit_id, m_currency, txInfo);
+
+  return true;
+}
+
+bool conceal_wallet::check_address(const std::vector<std::string> &args)
+{
+  if (args.size() != 1) 
+  {
+    logger(ERROR) << "Usage: check_address <address>";
+    return true;
+  }
+
+  const std::string addr = args[0];
+
+  if (!cn::validateAddress(addr, m_currency))
+  {
+    logger(ERROR) << "Invalid wallet address: " << addr;
+    return true;
+  }
+
+  logger(INFO) << "The wallet " << addr << " seems to be valid, please still be cautious still.";
 
   return true;
 }
