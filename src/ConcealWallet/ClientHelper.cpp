@@ -50,7 +50,7 @@ namespace cn
     else if (deposit.spendingTransactionId == cn::WALLET_LEGACY_INVALID_TRANSACTION_ID)
       status_str = "Unlocked";
     else
-      status_str = "Spent";
+      status_str = "Withdrawn";
 
     return status_str;
   }
@@ -120,7 +120,7 @@ namespace cn
       std::setw(20) << makeCenteredString(20, deposit_amount(deposit, currency)) << " | " <<
       std::setw(20) << makeCenteredString(20, deposit_interest(deposit, currency)) << " | " <<
       std::setw(16) << makeCenteredString(16, deposit_unlock_height(deposit, txInfo)) << " | " <<
-      std::setw(10) << makeCenteredString(10, deposit_status(deposit));
+      std::setw(12) << makeCenteredString(12, deposit_status(deposit));
     
     std::string as_str = full_info.str();
 
@@ -154,14 +154,14 @@ namespace cn
     std::stringstream ss_interest(makeCenteredString(20, format_interest));
     std::stringstream ss_height(makeCenteredString(16, deposit_height(txInfo)));
     std::stringstream ss_unlockheight(makeCenteredString(16, deposit_unlock_height(deposit, txInfo)));
-    std::stringstream ss_status(makeCenteredString(10, deposit_status(deposit)));
+    std::stringstream ss_status(makeCenteredString(12, deposit_status(deposit)));
 
     ss_id >> std::setw(8);
     ss_amount >> std::setw(20);
     ss_interest >> std::setw(20);
     ss_height >> std::setw(16);
     ss_unlockheight >> std::setw(16);
-    ss_status >> std::setw(10);
+    ss_status >> std::setw(12);
 
     listed_deposit = ss_id.str() + " | " + ss_amount.str() + " | " + ss_interest.str() + " | " + ss_height.str() + " | "
       + ss_unlockheight.str() + " | " + ss_status.str() + "\n";
