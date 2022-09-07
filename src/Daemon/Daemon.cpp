@@ -60,14 +60,12 @@ void print_genesis_tx_hex() {
   cn::Transaction tx = cn::CurrencyBuilder(logger).generateGenesisTransaction();
   cn::BinaryArray txb = cn::toBinaryArray(tx);
   std::string tx_hex = common::toHex(txb);
-  LoggerManager lm;
-  LoggerRef gen_log(lm, "[Genesis]");
 
   /**
    * Someone who knows what to do with this will find it helpful,
    * if not, it't not our job to teach.
   **/
-  gen_log(INFO) << "Random genesis hex: " << tx_hex;
+  std::cout << "Random genesis hex: " << tx_hex << std::endl;
   return;
 }
 
