@@ -35,6 +35,7 @@ namespace cn
         if (arg.size() && arg[0] == '-') 
         {
           const auto& value = ar.next();
+          ttl = 0;
           bool ttl_to_str = common::fromString(value, ttl) || ttl < 1 || ttl * 60 > m_currency.mempoolTxLiveTime();
 
           if (arg == "-p" && !createTxExtraWithPaymentId(value, extra))

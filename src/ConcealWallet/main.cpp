@@ -177,6 +177,19 @@ int main(int argc, char* argv[])
       return 1;
     }
 
+    if ((command_line::has_arg(vm, arg_daemon_address) && command_line::has_arg(vm, arg_daemon_host))
+        || 0 != command_line::has_arg(vm,arg_daemon_port))
+    {
+      logger(ERROR, BRIGHT_RED) << "You can't specify daemon host or port several times.";
+      return 1;
+    }
+
+    if (command_line::has_arg(vm, arg_generate_new_wallet) && command_line::has_arg(vm, arg_wallet_file))
+    {
+      logger(ERROR, BRIGHT_RED) << "You can't specify 'generate-new-wallet' and 'wallet-file' arguments simultaneously";
+      return 1;
+    }
+
     tools::wallet_rpc_server wrpc(dispatcher, logManager, *wallet, *node, currency, walletFileName);
 
     if (!wrpc.init(vm))
@@ -221,7 +234,7 @@ int main(int argc, char* argv[])
     cwal.run();
 
     if (!cwal.deinit())
-      logger(ERROR, BRIGHT_RED) << "Failed to close wallet";
+      logger(ERROR, BRIGHT_RED) << "Failed to deinitialize the wallet correctly.";
     else
       logger(INFO) << "Wallet closed";
 

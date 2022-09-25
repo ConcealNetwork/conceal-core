@@ -107,5 +107,27 @@ namespace cn
      * @return - Displays all balances (main + deposits)
      */
     std::stringstream balances(std::unique_ptr<cn::IWalletLegacy>& wallet, const Currency& currency);
+
+    /**
+     * @return - wallet commands as string
+     */
+    std::string wallet_commands(bool is_extended);
+
+    /**
+     * @return - creates wallet address file if possible
+     */
+    bool write_addr_file(const std::string& addr_filename, const std::string& address);
+
+    /**
+     * @return - string ending with .address for wallet file
+     */
+    std::string prep_wallet_filename(const std::string& wallet_basename);
+
+    /**
+     * @return - checks if file already exists in current location
+     */
+    bool existing_file(std::string address_file, logging::LoggerRef logger);
+
+    std::string get_commands_str(bool do_ext);
   };
 }

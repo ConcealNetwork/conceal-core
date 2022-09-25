@@ -25,7 +25,7 @@ namespace cn
       uint64_t fee;
       std::map<std::string, std::vector<WalletLegacyTransfer>> aliases;
       std::vector<std::string> messages;
-      uint64_t ttl = 0;
+      uint64_t ttl;
       std::string m_remote_address;
 
       transfer_cmd(const cn::Currency& currency, std::string remote_fee_address);

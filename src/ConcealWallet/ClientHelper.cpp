@@ -441,4 +441,102 @@ namespace cn
 
     return balances;
   }
+  
+  std::string client_helper::wallet_commands(bool is_extended)
+  {
+    std::string menu_item;
+
+    if (is_extended)
+    {
+      menu_item += "\t\tConceal Wallet Extended Menu\n\n";
+      menu_item += "[ ] = Optional arg\n";
+      menu_item += "\"balance_proof <amount>\"                           - Generate a signature proving that you own at least <amount> | [<message>]\n";
+      menu_item += "\"create_integrated <payment_id>\"                   - Create an integrated address with a payment ID.\n";
+      menu_item += "\"get_tx_proof <txid> <address>\"                    - Generate a signature to prove payment | [<txkey>]\n";
+      menu_item += "\"incoming_transfers\"                               - Show incoming transfers.\n";
+      menu_item += "\"optimize\"                                         - Combine many available outputs into a few by sending a transaction to self.\n";
+      menu_item += "\"optimize_all\"                                     - Optimize your wallet several times so you can send large transactions.\n";
+      menu_item += "\"outputs\"                                          - Show the number of unlocked outputs available for a transaction.\n";
+      menu_item += "\"payments <payment_id>\"                            - Show payments from payment ID. | [<payment_id_2> ... <payment_id_N>]\n";
+      menu_item += "\"save_txs_to_file\"                                 - Saves all known transactions to <wallet_name>_conceal_transactions.txt | [false] or [true] to include deposits (default: false)\n";
+      menu_item += "\"set_log <level>\"                                  - Change current log level, default = 3, <level> is a number 0-4.\n";
+      menu_item += "\"sign_message <message>\"                           - Sign a message with your wallet keys.\n";
+      menu_item += "\"show_dust\"                                        - Show the number of unmixable dust outputs.\n";
+      menu_item += "\"verify_signature <message> <address> <signature>\" - Verify a signed message.\n";
+    }
+    else
+    {
+      menu_item += "\t\tConceal Wallet Menu\n\n";
+      menu_item += "[ ] = Optional arg\n\n";
+      menu_item += "\"help\" | \"ext_help\"           - Shows this help dialog or extended help dialog.\n\n";
+      menu_item += "\"address\"                     - Shows wallet address.\n";
+      menu_item += "\"balance\"                     - Shows wallet main and deposit balance.\n";
+      menu_item += "\"bc_height\"                   - Shows current blockchain height.\n";
+      menu_item += "\"check_address <address>\"     - Checks to see if given wallet is valid.\n";
+      menu_item += "\"deposit <months> <amount>\"   - Create a deposit to the blockchain.\n";
+      menu_item += "\"deposit_info <id>\"           - Display full information for deposit <id>.\n";
+      menu_item += "\"exit\"                        - Safely exits the wallet application.\n";
+      menu_item += "\"export_keys\"                 - Displays backup keys.\n";
+      menu_item += "\"list_deposits\"               - Show all known deposits.\n";
+      menu_item += "\"list_transfers\"              - Show all known transfers, optionally from a certain height. | <block_height>\n";
+      menu_item += "\"reset\"                       - Reset cached blockchain data and starts synchronizing from block 0.\n";
+      menu_item += "\"transfer <address> <amount>\" - Transfers <amount> to <address>. | [-p<payment_id>] [<amount_2>]...[<amount_N>] [<address_2>]...[<address_n>]\n";
+      menu_item += "\"save\"                        - Save wallet synchronized blockchain data.\n";
+      menu_item += "\"save_keys\"                   - Saves wallet private keys to \"<wallet_name>_conceal_backup.txt\".\n";
+      menu_item += "\"withdraw <id>\"               - Withdraw a deposit from the blockchain.\n";
+    }
+
+    return menu_item;
+  }
+
+  bool client_helper::write_addr_file(const std::string& addr_filename, const std::string& address)
+  {
+    std::ofstream file(addr_filename, std::ios::out | std::ios::trunc | std::ios::binary);
+    if (!file.good()) {
+      return false;
+    }
+    file << address;
+
+    return true;
+  }
+
+  std::string client_helper::prep_wallet_filename(const std::string& wallet_basename) {
+    return wallet_basename + ".address";
+  }
+
+  bool client_helper::existing_file(std::string address_file, logging::LoggerRef logger)
+  {
+    prep_wallet_filename(address_file);
+    boost::system::error_code ignore;
+    if (boost::filesystem::exists(address_file, ignore))
+    {
+      logger(logging::ERROR, logging::BRIGHT_RED) << "Address file already exists: " + address_file;
+      return true;
+    }
+    return false;
+  }
+
+  std::string client_helper::get_commands_str(bool do_ext)
+  {
+    std::stringstream ss;
+    ss << "";
+
+    // define seperate cmds when m_is_view_wallet is implemented
+    std::string usage;
+    if (do_ext)
+    {
+      usage = wallet_commands(true);
+    }
+    else
+    {
+      usage = wallet_commands(false);
+    }
+
+    boost::replace_all(usage, "\n", "\n  ");
+    usage.insert(0, "  ");
+
+    ss << usage << std::endl;
+
+    return ss.str();
+  }
 }

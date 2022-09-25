@@ -70,11 +70,9 @@ namespace cn
     bool run_console_handler();
 
     bool new_wallet(const std::string &wallet_file, const std::string& password);
-    bool new_wallet(crypto::SecretKey &secret_key, crypto::SecretKey &view_key, const std::string &wallet_file, const std::string& password);
+    bool new_imported_wallet(crypto::SecretKey &secret_key, crypto::SecretKey &view_key, const std::string &wallet_file, const std::string& password);
     bool open_wallet(const std::string &wallet_file, const std::string& password);
     bool close_wallet();
-
-    std::string wallet_menu(bool do_ext);
 
     /* Wallet Commands */
     bool help(const std::vector<std::string> &args = std::vector<std::string>());
@@ -94,7 +92,7 @@ namespace cn
     bool get_reserve_proof(const std::vector<std::string> &args);    
     bool get_tx_proof(const std::vector<std::string> &args);    
     bool optimize_all_outputs(const std::vector<std::string> &args);
-    bool listTransfers(const std::vector<std::string> &args);
+    bool list_transfers(const std::vector<std::string> &args);
     bool transfer(const std::vector<std::string> &args);
     bool print_address(const std::vector<std::string> &args = std::vector<std::string>());
     bool save(const std::vector<std::string> &args);
@@ -159,18 +157,14 @@ namespace cn
         m_blockchain_height_update_time = std::chrono::system_clock::now();
       }
 
-    private:
       cn::conceal_wallet& m_conceal_wallet;
       uint64_t m_blockchain_height;
       std::chrono::system_clock::time_point m_blockchain_height_update_time;
       std::chrono::system_clock::time_point m_print_time;
     };
 
-  private:
     std::string m_wallet_file_arg;
-    std::string m_generate_new;
-    std::string m_import_new;
-    std::string m_import_path;
+    std::string m_generate_new_arg;
 
     std::string m_daemon_address;
     std::string m_daemon_host;
@@ -196,5 +190,6 @@ namespace cn
     std::mutex m_walletSynchronizedMutex;
     std::condition_variable m_walletSynchronizedCV;
     bool m_testnet;
+    //bool m_is_view_wallet;
   };
 }
