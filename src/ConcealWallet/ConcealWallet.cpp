@@ -370,7 +370,7 @@ bool conceal_wallet::init(const boost::program_options::variables_map& vm)
     << "  " << ENDL
     << "  " << ENDL;
 
-    std::cout << "How you would like to proceed?\n\n\t[O]pen an existing wallet\n\t[G]enerate a new wallet file\n\t[I]mport wallet from keys\n\t[M]nemonic seed import\n\t[E]xit.\n\n";
+    std::cout << "How you would like to proceed?\n\n\t[O]pen an existing wallet\n\t[G]enerate a new wallet file\n\t[I]mport wallet from keys/seed\n\t[E]xit.\n\n";
     std::string user_input_str;
     
     do
@@ -378,8 +378,8 @@ bool conceal_wallet::init(const boost::program_options::variables_map& vm)
       std::getline(std::cin, user_input_str);
       boost::algorithm::to_lower(user_input_str);
       bool good_input = user_input_str == "open" || user_input_str == "generate" ||
-          user_input_str == "import" || user_input_str == "mnemonic" || user_input_str == "exit" ||
-          user_input_str == "o" || user_input_str == "g" || user_input_str == "i" || user_input_str == "m" ||
+          user_input_str == "import" || user_input_str == "exit" ||
+          user_input_str == "o" || user_input_str == "g" || user_input_str == "i" ||
           user_input_str == "e";
 
       if (!good_input)
@@ -442,7 +442,7 @@ bool conceal_wallet::init(const boost::program_options::variables_map& vm)
         }
       }
 
-      std::cout << "What keys would you like to import?\n\t[P]rivate Keys\n\t[G]UI Keys" << std::endl;
+      std::cout << "What keys would you like to import?\n\t[P]rivate Keys\n\t[M]nemonic seed" << std::endl;
       std::string user_import_str;
 
       do
@@ -450,9 +450,9 @@ bool conceal_wallet::init(const boost::program_options::variables_map& vm)
         std::getline(std::cin, user_import_str);
         boost::algorithm::to_lower(user_import_str);
         bool good_input = user_import_str == "private" || user_import_str == "private keys" ||
-            user_import_str == "gui" || user_import_str == "gui keys" || user_import_str == "exit" ||
-            user_import_str == "p" || user_import_str == "g" || user_import_str == "e" ||
-            user_import_str == "v" || user_import_str == "view" || user_import_str == "view keys";
+            user_import_str == "mnemonic seed" || user_import_str == "mnemonic" || user_import_str == "exit" ||
+            user_import_str == "p" || user_import_str == "m" || user_import_str == "e";
+
         if (!good_input)
         {
           std::cout << "Bad input: " << user_import_str << std::endl;
@@ -515,85 +515,43 @@ bool conceal_wallet::init(const boost::program_options::variables_map& vm)
 
         return true;
       }
-      // not implemented yet, TODO wallet legacy view
-      /* else if (user_import_str == "view" || user_import_str == "view keys" || user_import_str == "v")
+      else // else we assume seed import
       {
-        std::string view_private_key_str;
-        std::string address;
-
         do {
-          std::cout << "Private View Key: ";
-          std::getline(std::cin, view_private_key_str);
-          boost::algorithm::trim(view_private_key_str);
-        } while (view_private_key_str.empty());
+          std::cout << "Wallet file name: ";
+          std::getline(std::cin, wallet_name);
+          wallet_name = std::regex_replace(wallet_name, std::regex("~"), getenv(homeEnvVar.c_str()));
+          boost::algorithm::trim(wallet_name);
+        } while (wallet_name.empty());
 
-        do {
-          std::cout << "Wallet Address: ";
-          std::getline(std::cin, address);
-          boost::algorithm::trim(address);
-        } while (address.empty());
-        
-        if (!cn::validateAddress(address, m_currency))
+        if (m_chelper.existing_file(wallet_name, logger))
         {
-          logger(ERROR) << "Invalid wallet address: " << address;
           return false;
         }
 
-        crypto::SecretKey view_key;
-        crypto::Hash view_hash;
-        size_t size;
-
-        if (!common::fromHex(view_private_key_str, &view_hash, sizeof(view_hash), size) || size != sizeof(view_hash))
-        { // cout/log as why - invalid key 
-          return false;
+        if (password_str.empty()) {
+          if (pwd_container.read_password()) {
+            password_str = pwd_container.password();
+          }
         }
 
-        view_key = *(struct crypto::SecretKey *) &view_hash;
-        crypto::SecretKey view_public_key;
+        std::string mnemonic_seed;
 
-        if (!new_imported_wallet(view_public_key, view_key, wallet_name, pwd_container.password())) {
-          logger(ERROR, BRIGHT_RED) << "account creation failed";
-          return false;
-        }
-
-        if (!m_chelper.write_addr_file(address_file, m_wallet->getAddress())) {
-          logger(WARNING, BRIGHT_RED) << "Couldn't write wallet address file: " + address_file;
-        }
-
-        m_is_view_wallet = true;
-
-        return true;
-      }*/
-      else // else we assume we're importing gui keys
-      {
-        std::string gui_private_key_str;
-        std::string data;
-        uint64_t address_prefix;
-        AccountKeys keys;
-
-        do {
-          std::cout << "GUI Private Key: ";
-          std::getline(std::cin, gui_private_key_str);
-          boost::algorithm::trim(gui_private_key_str);
-        } while (gui_private_key_str.empty());
-
-        if (gui_private_key_str.length() != 98)
+        do
         {
-          std::cout << "Bad input: Incorrect length of " << std::to_string(gui_private_key_str.length()) << std::endl;
-          return false;
-        }
+          std::cout << "Mnemonics Phrase (25 words): ";
+          std::getline(std::cin, mnemonic_seed);
+          boost::algorithm::trim(mnemonic_seed);
+          boost::algorithm::to_lower(mnemonic_seed);
+        } while (mnemonic_seed.empty());
+      
+        crypto::SecretKey p_spend = mnemonics::mnemonicToPrivateKey(mnemonic_seed);
+        crypto::SecretKey p_view;
+        crypto::PublicKey dummy_var;
 
-        if (!tools::base_58::decode_addr(gui_private_key_str, address_prefix, data))
-        {
-          std::cout << "Failed to decode GUI key." << std::endl;
-          return false;
-        }
+        AccountBase::generateViewFromSpend(p_spend, p_view, dummy_var);
 
-        /* Copy the keys into the struct */
-        std::memcpy(&keys, data.data(), sizeof(keys));
-
-        // import with (keys.spend, keys.view)
-        if (!new_imported_wallet(keys.spendSecretKey, keys.viewSecretKey, wallet_name, pwd_container.password())) {
+        if (!new_imported_wallet(p_spend, p_view, wallet_name, pwd_container.password())) {
           logger(ERROR, BRIGHT_RED) << "account creation failed";
           return false;
         }
@@ -604,53 +562,6 @@ bool conceal_wallet::init(const boost::program_options::variables_map& vm)
 
         return true;
       }
-    }
-    else if (user_input_str == "mnemonic" || user_input_str == "m")
-    {
-      do {
-        std::cout << "Wallet file name: ";
-        std::getline(std::cin, wallet_name);
-        wallet_name = std::regex_replace(wallet_name, std::regex("~"), getenv(homeEnvVar.c_str()));
-        boost::algorithm::trim(wallet_name);
-      } while (wallet_name.empty());
-
-      if (m_chelper.existing_file(wallet_name, logger))
-      {
-        return false;
-      }
-
-      if (password_str.empty()) {
-        if (pwd_container.read_password()) {
-          password_str = pwd_container.password();
-        }
-      }
-
-      std::string mnemonic_seed;
-
-      do
-      {
-        std::cout << "Mnemonics Phrase (25 words): ";
-        std::getline(std::cin, mnemonic_seed);
-        boost::algorithm::trim(mnemonic_seed);
-        boost::algorithm::to_lower(mnemonic_seed);
-      } while (mnemonic_seed.empty());
-      
-      crypto::SecretKey p_spend = mnemonics::mnemonicToPrivateKey(mnemonic_seed);
-      crypto::SecretKey p_view;
-      crypto::PublicKey dummy_var;
-
-      AccountBase::generateViewFromSpend(p_spend, p_view, dummy_var);
-
-      if (!new_imported_wallet(p_spend, p_view, wallet_name, pwd_container.password())) {
-        logger(ERROR, BRIGHT_RED) << "account creation failed";
-        return false;
-      }
-
-      if (!m_chelper.write_addr_file(wallet_name, m_wallet->getAddress())) {
-        logger(WARNING, BRIGHT_RED) << "Couldn't write wallet address file: " + wallet_name;
-      }
-
-      return true;
     }
     else if (user_input_str == "generate" || user_input_str == "g")
     {
