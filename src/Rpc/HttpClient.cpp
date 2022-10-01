@@ -35,6 +35,8 @@ HttpClient::~HttpClient() {
 }
 
 void HttpClient::request(const HttpRequest &req, HttpResponse &res) {
+  std::scoped_lock lock(m_mutex);
+
   if (!m_connected) {
     connect();
   }
