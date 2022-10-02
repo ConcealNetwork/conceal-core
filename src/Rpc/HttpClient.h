@@ -55,6 +55,7 @@ private:
   platform_system::Dispatcher& m_dispatcher;
   platform_system::TcpConnection m_connection;
   std::unique_ptr<platform_system::TcpStreambuf> m_streamBuf;
+  std::mutex m_mutex;
 };
 
 template <typename Request, typename Response>
