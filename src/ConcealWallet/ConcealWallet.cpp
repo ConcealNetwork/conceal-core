@@ -283,6 +283,8 @@ conceal_wallet::conceal_wallet(platform_system::Dispatcher& dispatcher, const cn
   m_initResultPromise(nullptr),
   m_walletSynchronized(false) {
   /* help cmd prints out from m_chelper (ClientHelper), don't forget to update with new commands */
+  m_consoleHandler.setHandler("help", boost::bind(&conceal_wallet::help, this, boost::arg<1>()), "Show this help");
+  m_consoleHandler.setHandler("ext_help", boost::bind(&conceal_wallet::extended_help, this, boost::arg<1>()), "Show this help");
   m_consoleHandler.setHandler("create_integrated", boost::bind(&conceal_wallet::create_integrated, this, boost::arg<1>()), "create_integrated <payment_id> - Create an integrated address with a payment ID");
   m_consoleHandler.setHandler("export_keys", boost::bind(&conceal_wallet::export_keys, this, boost::arg<1>()), "Show the secret keys of the current wallet");
   m_consoleHandler.setHandler("balance", boost::bind(&conceal_wallet::show_balance, this, boost::arg<1>()), "Show current wallet balance");
@@ -304,8 +306,6 @@ conceal_wallet::conceal_wallet(platform_system::Dispatcher& dispatcher, const cn
   m_consoleHandler.setHandler("address", boost::bind(&conceal_wallet::print_address, this, boost::arg<1>()), "Show current wallet public address");
   m_consoleHandler.setHandler("save", boost::bind(&conceal_wallet::save, this, boost::arg<1>()), "Save wallet synchronized data");
   m_consoleHandler.setHandler("reset", boost::bind(&conceal_wallet::reset, this, boost::arg<1>()), "Discard cache data and start synchronizing from the start");
-  m_consoleHandler.setHandler("help", boost::bind(&conceal_wallet::help, this, boost::arg<1>()), "Show this help");
-  m_consoleHandler.setHandler("ext_help", boost::bind(&conceal_wallet::extended_help, this, boost::arg<1>()), "Show this help");
   m_consoleHandler.setHandler("exit", boost::bind(&conceal_wallet::exit, this, boost::arg<1>()), "Close wallet");  
   m_consoleHandler.setHandler("balance_proof", boost::bind(&conceal_wallet::get_reserve_proof, this, boost::arg<1>()), "all|<amount> [<message>] - Generate a signature proving that you own at least <amount>, optionally with a challenge string <message>. ");
   m_consoleHandler.setHandler("save_keys", boost::bind(&conceal_wallet::save_keys_to_file, this, boost::arg<1>()), "Saves wallet private keys to \"<wallet_name>_conceal_backup.txt\"");
@@ -796,15 +796,11 @@ bool conceal_wallet::process_command(const std::vector<std::string> &args)
 
 bool conceal_wallet::run()
 {
-  {
-    std::unique_lock<std::mutex> lock(m_walletSynchronizedMutex);
-    while (!m_walletSynchronized)
-    {
-      m_walletSynchronizedCV.wait(lock);
-    }
-  }
+  std::unique_lock<std::mutex> lock(m_walletSynchronizedMutex);
+  while (!m_walletSynchronized) { m_walletSynchronizedCV.wait(lock); }
 
   std::cout << std::endl;
+  // print first 10 chars of address
   std::string addr_start = m_wallet->getAddress().substr(0, 10);
   m_consoleHandler.start(false, "[" + addr_start + "]: ", common::console::Color::BrightYellow);
   return true;
@@ -901,10 +897,7 @@ void conceal_wallet::synchronizationCompleted(std::error_code result)
 void conceal_wallet::synchronizationProgressUpdated(uint32_t current, uint32_t total)
 {
   std::unique_lock<std::mutex> lock(m_walletSynchronizedMutex);
-  if (!m_walletSynchronized)
-  {
-    m_refresh_progress_reporter.update(current, false);
-  }
+  if (!m_walletSynchronized) { m_refresh_progress_reporter.update(current, false); }
 }
 
 //----------------------------------------------------------------------------------------------------
@@ -1128,7 +1121,7 @@ bool conceal_wallet::reset(const std::vector<std::string> &args)
 
   try
   {
-    {  // nested for redec on mutex lock
+    {  // nesting avoids redec on mutex lock
       std::unique_lock<std::mutex> lock(m_walletSynchronizedMutex);
       m_walletSynchronized = false;
     }
