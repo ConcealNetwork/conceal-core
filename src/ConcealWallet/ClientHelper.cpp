@@ -143,30 +143,59 @@ namespace cn
     return as_str;
   }
 
-  std::string client_helper::list_deposit_item(const WalletLegacyTransaction& txInfo, Deposit deposit, std::string listed_deposit, DepositId id, const Currency &currency)
+  ListedDepositItem client_helper::list_deposit_item(const WalletLegacyTransaction& txInfo, Deposit deposit, DepositId id, const Currency &currency)
   {
-    std::string format_amount = currency.formatAmount(deposit.amount);
-    std::string format_interest = currency.formatAmount(deposit.interest);
-    std::string format_total = currency.formatAmount(deposit.amount + deposit.interest);
+    char timeString[32 + 1];
+    time_t timestamp = static_cast<time_t>(txInfo.timestamp);
+    struct tm time;
+#ifdef _WIN32
+    gmtime_s(&time, &timestamp);
+#else
+    gmtime_r(&timestamp, &time);
+#endif
 
-    std::stringstream ss_id(makeCenteredString(8, std::to_string(id)));
-    std::stringstream ss_amount(makeCenteredString(20, format_amount));
-    std::stringstream ss_interest(makeCenteredString(20, format_interest));
-    std::stringstream ss_height(makeCenteredString(16, deposit_height(txInfo)));
-    std::stringstream ss_unlockheight(makeCenteredString(16, deposit_unlock_height(deposit, txInfo)));
-    std::stringstream ss_status(makeCenteredString(12, deposit_status(deposit)));
+    if (!std::strftime(timeString, sizeof(timeString), "%c", &time))
+    {
+      throw std::runtime_error("time buffer is too small");
+    }
 
-    ss_id >> std::setw(8);
-    ss_amount >> std::setw(20);
-    ss_interest >> std::setw(20);
-    ss_height >> std::setw(16);
-    ss_unlockheight >> std::setw(16);
-    ss_status >> std::setw(12);
+    ListedDepositItem deposit_item;
+    deposit_item.timestamp = timeString;
+    deposit_item.id = podToHex(txInfo.hash);
+    deposit_item.amount = currency.formatAmount(deposit.amount);
+    deposit_item.interest = currency.formatAmount(deposit.interest);
+    deposit_item.block_height = std::to_string(txInfo.blockHeight);
+    deposit_item.unlock_time = deposit_unlock_height(deposit, txInfo);
+    deposit_item.status = deposit_status(deposit);
 
-    listed_deposit = ss_id.str() + " | " + ss_amount.str() + " | " + ss_interest.str() + " | " + ss_height.str() + " | "
-      + ss_unlockheight.str() + " | " + ss_status.str() + "\n";
+    return deposit_item;
+  }
 
-    return listed_deposit;
+  ListedTxItem client_helper::tx_item(const WalletLegacyTransaction& txInfo, const Currency &currency)
+  {
+    char timeString[32 + 1];
+    time_t timestamp = static_cast<time_t>(txInfo.timestamp);
+    struct tm time;
+#ifdef _WIN32
+    gmtime_s(&time, &timestamp);
+#else
+    gmtime_r(&timestamp, &time);
+#endif
+
+    if (!std::strftime(timeString, sizeof(timeString), "%c", &time))
+    {
+      throw std::runtime_error("time buffer is too small");
+    }
+
+    ListedTxItem tx;
+    tx.timestamp = timeString;
+    tx.tx_hash = podToHex(txInfo.hash);
+    tx.amount = currency.formatAmount(txInfo.totalAmount);
+    tx.fee = currency.formatAmount(txInfo.fee);
+    tx.block_height = std::to_string(txInfo.blockHeight);
+    tx.unlock_time = std::to_string(txInfo.unlockTime);
+
+    return tx;
   }
 
   std::string client_helper::list_tx_item(const WalletLegacyTransaction& txInfo, std::string listed_tx, const Currency &currency)

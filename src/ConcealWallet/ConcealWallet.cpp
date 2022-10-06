@@ -29,6 +29,7 @@
 #include "version.h"
 
 #include "Common/Base58.h"
+#include "Common/csv2.hpp"
 #include "Common/CommandLine.h"
 #include "Common/SignalHandler.h"
 #include "Common/StringTools.h"
@@ -1982,26 +1983,11 @@ bool conceal_wallet::save_all_txs_to_file(const std::vector<std::string> &args)
     std::string formatted_wal_str = m_frmt_wallet_file + "_conceal_transactions.txt";
     std::ofstream tx_file(formatted_wal_str);
 
-    /* create header for listed txs */
-    std::string header = common::makeCenteredString(32, "timestamp (UTC)") + " | ";
-    header += common::makeCenteredString(64, "hash") + " | ";
-    header += common::makeCenteredString(20, "total amount") + " | ";
-    header += common::makeCenteredString(14, "fee") + " | ";
-    header += common::makeCenteredString(8, "block") + " | ";
-    header += common::makeCenteredString(12, "unlock time");
-
-    /* make header string to ss so we can use .size() */
-    std::stringstream hs(header);
-    std::stringstream line(std::string(header.size(), '-'));
-
-    /* push header to start of file */
-    tx_file << hs.str() << "\n" << line.str() << "\n";
-
-    /* create line from string */
-    std::string listed_tx;
-
     /* get tx struct */
     WalletLegacyTransaction txInfo;
+
+    /* declare csv2 writer */
+    csv2::Writer<csv2::delimiter<','>> writer(tx_file);
 
     /* go through tx ids for the amount of transactions in wallet */
     for (TransactionId i = 0; i < tx_count; ++i) 
@@ -2015,18 +2001,31 @@ bool conceal_wallet::save_all_txs_to_file(const std::vector<std::string> &args)
         continue;
       }
 
-      /* grab tx info */
-      std::string formatted_item_tx = m_chelper.list_tx_item(txInfo, listed_tx, m_currency);
+      /* get the tx from this struct */
+      ListedTxItem tx_item = m_chelper.tx_item(txInfo, m_currency);
 
-      /* push info to end of file */
-      tx_file << formatted_item_tx;
+      /* create a single line with this information */
+      std::vector<std::vector<std::string>> rows = 
+      {
+        {
+          tx_item.timestamp,
+          tx_item.tx_hash,
+          tx_item.amount,
+          tx_item.fee,
+          tx_item.block_height,
+          tx_item.unlock_time
+        }
+      };
+
+      /* write line to file */
+      writer.write_rows(rows);
 
       /* tell user about progress */
       logger(INFO) << "Transaction: " << i << " was pushed to " << formatted_wal_str;
     }
 
     /* tell user job complete */
-    logger(INFO, BRIGHT_GREEN) << "All transactions have been saved to the current folder where \"concealwallet\" is located as \""
+    logger(INFO, BRIGHT_GREEN) << "All transactions have been saved to the current folder where the wallet file is located as \""
       << formatted_wal_str << "\".";
   
     /* if user uses "save_txs_to_file true" then we go through the deposits */
@@ -2043,25 +2042,7 @@ bool conceal_wallet::save_all_txs_to_file(const std::vector<std::string> &args)
       }
 
       /* tell user about prepped job */
-      logger(INFO) << "Preparing " << std::to_string(deposit_count) << "deposits...";
-
-      /* create new header for listed deposits */
-      std::string headerd = common::makeCenteredString(8, "ID") + " | ";
-      headerd += common::makeCenteredString(20, "Amount") + " | ";
-      headerd += common::makeCenteredString(20, "Interest") + " | ";
-      headerd += common::makeCenteredString(16, "Height") + " | ";
-      headerd += common::makeCenteredString(16, "Unlock Height") + " | ";
-      headerd += common::makeCenteredString(10, "State");
-
-      /* make header string to ss so we can use .size() */
-      std::stringstream hds(headerd);
-      std::stringstream lined(std::string(headerd.size(), '-'));
-
-      /* push new header to start of file with an extra new line */
-      tx_file << "\n\n" << hds.str() << "\n" << lined.str() << "\n";
-
-      /* create line from string */
-      std::string listed_deposit;
+      logger(INFO) << "Preparing " << std::to_string(deposit_count) << " deposits...";
 
       /* go through deposits ids for the amount of deposits in wallet */
       for (DepositId id = 0; id < deposit_count; ++id)
@@ -2073,18 +2054,32 @@ bool conceal_wallet::save_all_txs_to_file(const std::vector<std::string> &args)
         /* get deposit info and use its transaction in the chain */
         m_wallet->getTransaction(deposit.creatingTransactionId, txInfo);
 
-        /* grab deposit info */
-        std::string formatted_item_d = m_chelper.list_deposit_item(txInfo, deposit, listed_deposit, id, m_currency);
+        /* get the tx from this struct */
+        ListedDepositItem deposit_item = m_chelper.list_deposit_item(txInfo, deposit, id, m_currency);
 
-        /* push info to end of file */
-        tx_file << formatted_item_d;
+        /* create a single line with this information */
+        std::vector<std::vector<std::string>> rows = 
+        {
+          {
+            deposit_item.timestamp,
+            deposit_item.id,
+            deposit_item.amount,
+            deposit_item.interest,
+            deposit_item.block_height,
+            deposit_item.unlock_time,
+            deposit_item.status
+          }
+        };
+
+        /* write line to file */
+        writer.write_rows(rows);
 
         /* tell user about progress */
         logger(INFO) << "Deposit: " << id << " was pushed to " << formatted_wal_str;
       }
 
       /* tell user job complete */
-      logger(INFO, BRIGHT_GREEN) << "All deposits have been saved to the end of the file current folder where \"concealwallet\" is located as \""
+      logger(INFO, BRIGHT_GREEN) << "All deposits have been saved to the end of the file current folder where the wallet file is located as \""
         << formatted_wal_str << "\".";
     }
   }

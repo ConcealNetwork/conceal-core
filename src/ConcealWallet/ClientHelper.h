@@ -19,6 +19,27 @@ using common::JsonValue;
 
 namespace cn
 {
+  struct ListedTxItem
+  { // these are strings, made to be used for exporting txs to csv
+    std::string timestamp;
+    std::string tx_hash;
+    std::string amount;
+    std::string fee;
+    std::string block_height;
+    std::string unlock_time;
+  };
+
+  struct ListedDepositItem
+  { // these are strings, made to be used for exporting deposits to csv
+    std::string timestamp;
+    std::string id;
+    std::string amount;
+    std::string interest;
+    std::string block_height;
+    std::string unlock_time;
+    std::string status;
+  };
+
   class client_helper
   {
   public:
@@ -129,5 +150,11 @@ namespace cn
     bool existing_file(std::string address_file, logging::LoggerRef logger);
 
     std::string get_commands_str(bool do_ext);
+
+    /**
+     * @return - structed information
+     */
+    ListedDepositItem list_deposit_item(const WalletLegacyTransaction& txInfo, Deposit deposit, DepositId id, const Currency &currency);
+    ListedTxItem tx_item(const WalletLegacyTransaction& txInfo, const Currency &currency);
   };
 }
