@@ -29,7 +29,7 @@
 #include "version.h"
 
 #include "Common/Base58.h"
-#include "Common/csv2.hpp"
+#include "Common/CsvWriter.h"
 #include "Common/CommandLine.h"
 #include "Common/SignalHandler.h"
 #include "Common/StringTools.h"
@@ -1979,15 +1979,14 @@ bool conceal_wallet::save_all_txs_to_file(const std::vector<std::string> &args)
     /* tell user about prepped job */
     logger(INFO) << "Preparing file and " << std::to_string(tx_count) << " transactions...";
 
-    /* create filename and file */
+    /* create filename for later use */
     std::string formatted_wal_str = m_frmt_wallet_file + "_conceal_transactions.txt";
-    std::ofstream tx_file(formatted_wal_str);
 
     /* get tx struct */
     WalletLegacyTransaction txInfo;
 
-    /* declare csv2 writer */
-    csv2::Writer<csv2::delimiter<','>> writer(tx_file);
+    /* declare csv_writer */
+    csv_writer csv;
 
     /* go through tx ids for the amount of transactions in wallet */
     for (TransactionId i = 0; i < tx_count; ++i) 
@@ -2004,21 +2003,19 @@ bool conceal_wallet::save_all_txs_to_file(const std::vector<std::string> &args)
       /* get the tx from this struct */
       ListedTxItem tx_item = m_chelper.tx_item(txInfo, m_currency);
 
+      /* make sure we dont exceed 6 columns */
+      csv.enableAutoNewRow(6);
+
       /* create a single line with this information */
-      std::vector<std::vector<std::string>> rows = 
-      {
-        {
-          tx_item.timestamp,
-          tx_item.tx_hash,
-          tx_item.amount,
-          tx_item.fee,
-          tx_item.block_height,
-          tx_item.unlock_time
-        }
-      };
+      csv.newRow() << tx_item.timestamp <<
+          tx_item.tx_hash <<
+          tx_item.amount <<
+          tx_item.fee <<
+          tx_item.block_height <<
+          tx_item.unlock_time;
 
       /* write line to file */
-      writer.write_rows(rows);
+      csv.writeToFile(formatted_wal_str, true);
 
       /* tell user about progress */
       logger(INFO) << "Transaction: " << i << " was pushed to " << formatted_wal_str;
@@ -2057,22 +2054,20 @@ bool conceal_wallet::save_all_txs_to_file(const std::vector<std::string> &args)
         /* get the tx from this struct */
         ListedDepositItem deposit_item = m_chelper.list_deposit_item(txInfo, deposit, id, m_currency);
 
+        /* make sure we dont exceed 7 columns */
+        csv.enableAutoNewRow(7);
+
         /* create a single line with this information */
-        std::vector<std::vector<std::string>> rows = 
-        {
-          {
-            deposit_item.timestamp,
-            deposit_item.id,
-            deposit_item.amount,
-            deposit_item.interest,
-            deposit_item.block_height,
-            deposit_item.unlock_time,
-            deposit_item.status
-          }
-        };
+        csv.newRow() << deposit_item.timestamp <<
+            deposit_item.id <<
+            deposit_item.amount <<
+            deposit_item.interest <<
+            deposit_item.block_height <<
+            deposit_item.unlock_time <<
+            deposit_item.status;
 
         /* write line to file */
-        writer.write_rows(rows);
+        csv.writeToFile(formatted_wal_str, true);
 
         /* tell user about progress */
         logger(INFO) << "Deposit: " << id << " was pushed to " << formatted_wal_str;
