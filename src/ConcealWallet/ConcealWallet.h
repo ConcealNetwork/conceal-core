@@ -105,6 +105,8 @@ namespace cn
     bool list_deposits(const std::vector<std::string> &args);
     bool deposit_info(const std::vector<std::string> &args);
     bool check_address(const std::vector<std::string> &args);
+
+    bool read_file_csv(const std::vector<std::string> &args);
     /* End of Commands */
 
     std::string resolveAlias(const std::string& aliasUrl);

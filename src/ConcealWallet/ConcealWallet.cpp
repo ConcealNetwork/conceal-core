@@ -1980,7 +1980,7 @@ bool conceal_wallet::save_all_txs_to_file(const std::vector<std::string> &args)
     logger(INFO) << "Preparing file and " << std::to_string(tx_count) << " transactions...";
 
     /* create filename for later use */
-    std::string formatted_wal_str = m_frmt_wallet_file + "_conceal_transactions.txt";
+    std::string formatted_wal_str = m_frmt_wallet_file + "_conceal_transactions.csv";
 
     /* get tx struct */
     WalletLegacyTransaction txInfo;
@@ -2333,6 +2333,47 @@ bool conceal_wallet::check_address(const std::vector<std::string> &args)
   catch(const std::exception& e)
   {
     logger(ERROR) << "Failed to execute \"check_address\" command: " << e.what();
+  }
+
+  return true;
+}
+
+bool conceal_wallet::read_file_csv(const std::vector<std::string> &args)
+{
+  // designed to read and print csv file, could be used for other things in future
+  std::string filename = m_frmt_wallet_file + "_conceal_transactions.csv";
+
+  std::ifstream file(filename);
+  std::vector<std::vector<std::string>> matrix;
+  std::vector<std::string> row;
+  std::string line;
+  std::string cell;
+
+  while(file)
+  {
+    std::getline(file, line);
+    std::stringstream lineStream(line);
+    row.clear();
+
+    while(std::getline(lineStream, cell, ',' ))
+    {
+      row.push_back(cell);
+    }
+    if(!row.empty())
+    {
+      matrix.push_back( row );
+    }
+  }
+
+  for(int i = 0; i < int(matrix.size()); i++) // row
+  {
+    for(int j = 0; j < int(matrix[i].size()); j++) // column
+    {
+      // dont clog the logger, use a cout
+      std::cout << matrix[i][j] << " ";
+    }
+
+    std::cout << std::endl;
   }
 
   return true;
