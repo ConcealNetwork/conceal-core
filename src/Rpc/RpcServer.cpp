@@ -71,9 +71,12 @@ RpcServer::HandlerFunction jsonMethod(bool (RpcServer::*handler)(typename Comman
 
     bool result = (obj->*handler)(req, res);
 
-    response.addHeader("Access-Control-Allow-Origin", "*");
-    response.addHeader("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept");
-    response.addHeader("Access-Control-Allow-Methods", "POST, GET");
+    std::string cors_domain = obj->getCorsDomain();
+    if (!cors_domain.empty()) {
+      response.addHeader("Access-Control-Allow-Origin", cors_domain);
+      response.addHeader("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept");
+      response.addHeader("Access-Control-Allow-Methods", "POST, GET");
+    }
     response.addHeader("Content-Type", "application/json");
 
     response.setBody(storeToJson(res.data()));
@@ -137,9 +140,11 @@ bool RpcServer::processJsonRpcRequest(const HttpRequest& request, HttpResponse& 
   using namespace JsonRpc;
 
   response.addHeader("Content-Type", "application/json");
-  response.addHeader("Access-Control-Allow-Origin", "*");
-  response.addHeader("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept");
-  response.addHeader("Access-Control-Allow-Methods", "POST, GET");
+  if (!m_cors_domain.empty()) {
+    response.addHeader("Access-Control-Allow-Origin", m_cors_domain);
+    response.addHeader("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept");
+    response.addHeader("Access-Control-Allow-Methods", "POST, GET");
+  }  
 
   JsonRpcRequest jsonRequest;
   JsonRpcResponse jsonResponse;
@@ -196,6 +201,15 @@ bool RpcServer::processJsonRpcRequest(const HttpRequest& request, HttpResponse& 
 
 bool RpcServer::isCoreReady() {
   return m_core.currency().isTestnet() || m_p2p.get_payload_object().isSynchronized();
+}
+
+bool RpcServer::enableCors(const std::string domain) {
+  m_cors_domain = domain;
+  return true;
+}
+
+std::string RpcServer::getCorsDomain() {
+  return m_cors_domain;
 }
 
 //
