@@ -514,10 +514,20 @@ bool core::saveBlockchain()
 
 bool core::handle_block_found(Block& b) {
   block_verification_context bvc = boost::value_initialized<block_verification_context>();
-  handle_incoming_block(b, bvc, true, true);
+  m_miner->pause();
 
-  if (bvc.m_verification_failed) {
-    logger(ERROR) << "mined block failed verification";
+  try
+  {
+    handle_incoming_block(b, bvc, true, true);
+
+    if (bvc.m_verification_failed) {
+      logger(ERROR) << "mined block failed verification";
+    }
+  }
+  catch(const std::exception& e)
+  {
+    m_miner->resume();
+    return false;
   }
 
   return bvc.m_added_to_main_chain;
