@@ -69,8 +69,8 @@ namespace cn
   {
     std::string unlock_str = "";
 
-    if (txInfo.blockHeight > cn::parameters::CRYPTONOTE_MAX_BLOCK_NUMBER)
-    {
+    if (txInfo.blockHeight + deposit_term(deposit) > cn::parameters::CRYPTONOTE_MAX_BLOCK_NUMBER)
+    { // this happens because the deposit isn't in the chain YET
       unlock_str = "Please wait.";
     }
     else
@@ -80,7 +80,7 @@ namespace cn
 
     bool bad_unlock2 = unlock_str == "0";
     if (bad_unlock2)
-    {
+    { // genuine error or reload wallet
       unlock_str = "ERROR";
     }
 
@@ -512,6 +512,7 @@ namespace cn
       menu_item += "\"transfer <address> <amount>\" - Transfers <amount> to <address>. | [-p<payment_id>] [<amount_2>]...[<amount_N>] [<address_2>]...[<address_n>]\n";
       menu_item += "\"save\"                        - Save wallet synchronized blockchain data.\n";
       menu_item += "\"save_keys\"                   - Saves wallet private keys to \"<wallet_name>_conceal_backup.txt\".\n";
+      menu_item += "\"show_view_tracking\"          - Show view tracking wallet keys.\n";
       menu_item += "\"withdraw <id>\"               - Withdraw a deposit from the blockchain.\n";
     }
 
@@ -533,7 +534,7 @@ namespace cn
     return wallet_basename + ".address";
   }
 
-  bool client_helper::existing_file(std::string address_file, logging::LoggerRef logger)
+  bool client_helper::existing_file(const std::string address_file, logging::LoggerRef logger)
   {
     prep_wallet_filename(address_file);
     boost::system::error_code ignore;

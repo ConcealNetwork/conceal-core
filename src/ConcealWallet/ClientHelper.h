@@ -147,7 +147,7 @@ namespace cn
     /**
      * @return - checks if file already exists in current location
      */
-    bool existing_file(std::string address_file, logging::LoggerRef logger);
+    bool existing_file(const std::string address_file, logging::LoggerRef logger);
 
     std::string get_commands_str(bool do_ext);
 

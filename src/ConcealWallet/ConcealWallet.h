@@ -71,6 +71,7 @@ namespace cn
 
     bool new_wallet(const std::string &wallet_file, const std::string& password);
     bool new_imported_wallet(crypto::SecretKey &secret_key, crypto::SecretKey &view_key, const std::string &wallet_file, const std::string& password);
+    bool new_view_wallet(AccountKeys &view_key, const std::string &wallet_file, const std::string& password);
     bool open_wallet(const std::string &wallet_file, const std::string& password);
     bool close_wallet();
 
@@ -105,6 +106,7 @@ namespace cn
     bool list_deposits(const std::vector<std::string> &args);
     bool deposit_info(const std::vector<std::string> &args);
     bool check_address(const std::vector<std::string> &args);
+    bool show_view_key(const std::vector<std::string> &args);
 
     bool read_file_csv(const std::vector<std::string> &args);
     /* End of Commands */
@@ -192,6 +194,6 @@ namespace cn
     std::mutex m_walletSynchronizedMutex;
     std::condition_variable m_walletSynchronizedCV;
     bool m_testnet;
-    //bool m_is_view_wallet;
+    bool m_is_view_wallet;
   };
 }

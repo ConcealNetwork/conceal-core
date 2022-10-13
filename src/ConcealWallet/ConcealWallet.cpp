@@ -282,7 +282,8 @@ conceal_wallet::conceal_wallet(platform_system::Dispatcher& dispatcher, const cn
   logger(log, "concealwallet"),
   m_refresh_progress_reporter(*this),
   m_initResultPromise(nullptr),
-  m_walletSynchronized(false) {
+  m_walletSynchronized(false),
+  m_is_view_wallet(false) {
   /* help cmd prints out from m_chelper (ClientHelper), don't forget to update with new commands */
   m_consoleHandler.setHandler("help", boost::bind(&conceal_wallet::help, this, boost::arg<1>()), "Show this help");
   m_consoleHandler.setHandler("ext_help", boost::bind(&conceal_wallet::extended_help, this, boost::arg<1>()), "Show this help");
@@ -316,6 +317,7 @@ conceal_wallet::conceal_wallet(platform_system::Dispatcher& dispatcher, const cn
   m_consoleHandler.setHandler("deposit_info", boost::bind(&conceal_wallet::deposit_info, this, boost::arg<1>()), "deposit_info <id> - Get infomation for deposit <id>");
   m_consoleHandler.setHandler("save_txs_to_file", boost::bind(&conceal_wallet::save_all_txs_to_file, this, boost::arg<1>()), "save_txs_to_file - Saves all known transactions to <wallet_name>_conceal_transactions.txt");
   m_consoleHandler.setHandler("check_address", boost::bind(&conceal_wallet::check_address, this, boost::arg<1>()), "check_address <address> - Checks to see if given wallet is valid.");
+  m_consoleHandler.setHandler("show_view_tracking", boost::bind(&conceal_wallet::show_view_key, this, boost::arg<1>()), "Show view wallet tracking keys.");
 }
 
 //----------------------------------------------------------------------------------------------------
@@ -443,7 +445,8 @@ bool conceal_wallet::init(const boost::program_options::variables_map& vm)
         }
       }
 
-      std::cout << "What keys would you like to import?\n\t[P]rivate Keys\n\t[M]nemonic seed" << std::endl;
+      std::cout << "What keys would you like to import?\n\t[P]rivate Keys\n\t[M]nemonic Seed\n\t[V]iew Tracking Key" << std::endl;
+      std::cout << "\nWallets imported via [V]iew Tracking Keys have limited functionality" << std::endl;
       std::string user_import_str;
 
       do
@@ -451,8 +454,9 @@ bool conceal_wallet::init(const boost::program_options::variables_map& vm)
         std::getline(std::cin, user_import_str);
         boost::algorithm::to_lower(user_import_str);
         bool good_input = user_import_str == "private" || user_import_str == "private keys" ||
+            user_import_str == "view" || user_import_str == "view keys" ||
             user_import_str == "mnemonic seed" || user_import_str == "mnemonic" || user_import_str == "exit" ||
-            user_import_str == "p" || user_import_str == "m" || user_import_str == "e";
+            user_import_str == "p" || user_import_str == "m" || user_import_str == "v" || user_import_str == "e";
 
         if (!good_input)
         {
@@ -516,26 +520,80 @@ bool conceal_wallet::init(const boost::program_options::variables_map& vm)
 
         return true;
       }
-      else // else we assume seed import
+      else if (user_import_str == "view" || user_import_str == "view keys" || user_import_str == "v")
       {
-        do {
-          std::cout << "Wallet file name: ";
-          std::getline(std::cin, wallet_name);
-          wallet_name = std::regex_replace(wallet_name, std::regex("~"), getenv(homeEnvVar.c_str()));
-          boost::algorithm::trim(wallet_name);
-        } while (wallet_name.empty());
+        std::string view_key_str;
 
-        if (m_chelper.existing_file(wallet_name, logger))
+        do
+        {
+          std::cout << "View Key: ";
+          std::getline(std::cin, view_key_str);
+          boost::algorithm::trim(view_key_str);
+          boost::algorithm::to_lower(view_key_str);
+        } while (view_key_str.empty());
+
+        if (view_key_str.length() != 256)
+        {
+          logger(ERROR, BRIGHT_RED) << "Wrong view key.";
+          return false;
+        }
+        
+        AccountKeys keys;
+        
+        std::string public_spend_key_string = view_key_str.substr(0, 64);
+        std::string public_view_key_string = view_key_str.substr(64, 64);
+        std::string private_spend_key_string = view_key_str.substr(128, 64);
+        std::string private_view_key_string = view_key_str.substr(192, 64);
+
+        crypto::Hash public_spend_key_hash;
+        crypto::Hash public_view_key_hash;
+        crypto::Hash private_spend_key_hash;
+        crypto::Hash private_view_key_hash;
+
+        size_t size;
+        if (!common::fromHex(public_spend_key_string, &public_spend_key_hash, sizeof(public_spend_key_hash), size)
+            || size != sizeof(public_spend_key_hash))
+        {
+          return false;
+        }
+        if (!common::fromHex(public_view_key_string, &public_view_key_hash, sizeof(public_view_key_hash), size)
+            || size != sizeof(public_view_key_hash))
+        {
+          return false;
+        }
+        if (!common::fromHex(private_spend_key_string, &private_spend_key_hash, sizeof(private_spend_key_hash), size)
+            || size != sizeof(private_spend_key_hash))
+        {
+          return false;
+        }
+        if (!common::fromHex(private_view_key_string, &private_view_key_hash, sizeof(private_view_key_hash), size)
+            || size != sizeof(private_view_key_hash))
         {
           return false;
         }
 
-        if (password_str.empty()) {
-          if (pwd_container.read_password()) {
-            password_str = pwd_container.password();
-          }
+        crypto::PublicKey public_spend_key = *(struct crypto::PublicKey*)&public_spend_key_hash;
+        crypto::PublicKey public_view_key = *(struct crypto::PublicKey*)&public_view_key_hash;
+        crypto::SecretKey private_spend_key = *(struct crypto::SecretKey*)&private_spend_key_hash;
+        crypto::SecretKey private_view_key = *(struct crypto::SecretKey*)&private_view_key_hash;
+
+        keys.address.spendPublicKey = public_spend_key;
+        keys.address.viewPublicKey = public_view_key;
+        keys.spendSecretKey = private_spend_key;
+        keys.viewSecretKey = private_view_key;
+
+        if (!new_view_wallet(keys, wallet_name, pwd_container.password()))
+        {
+          logger(ERROR, BRIGHT_RED) << "account creation failed";
+          return false;
         }
 
+        if (!m_chelper.write_addr_file(wallet_name, m_wallet->getAddress())) {
+          logger(WARNING, BRIGHT_RED) << "Couldn't write wallet address file: " + wallet_name;
+        }
+      }
+      else // else we assume seed import
+      {
         std::string mnemonic_seed;
 
         do
@@ -687,7 +745,6 @@ bool conceal_wallet::new_wallet(const std::string &wallet_file, const std::strin
     std::cout << "Private spend key: " << common::podToHex(keys.spendSecretKey) << std::endl;
     std::cout << "Private view key: " <<  common::podToHex(keys.viewSecretKey) << std::endl;
     std::cout << "Mnemonic Seed: " << mnemonics::privateKeyToMnemonic(keys.spendSecretKey) << std::endl;
-    std::cout << "GUI key: " << guiKeys << std::endl;
   }
   catch (const std::exception& e)
   {
@@ -743,6 +800,11 @@ bool conceal_wallet::new_imported_wallet(crypto::SecretKey &secret_key, crypto::
 
     logger(INFO, BRIGHT_WHITE) <<
       "Imported wallet: " << m_wallet->getAddress() << std::endl;
+
+    if (keys.spendSecretKey == boost::value_initialized<crypto::SecretKey>())
+    {
+      m_is_view_wallet = true;
+    }
   }
   catch (const std::exception& e)
   {
@@ -761,6 +823,57 @@ bool conceal_wallet::new_imported_wallet(crypto::SecretKey &secret_key, crypto::
   return true;
 }
 
+//----------------------------------------------------------------------------------------------------
+bool conceal_wallet::new_view_wallet(AccountKeys &view_key, const std::string &wallet_file, const std::string& password)
+{
+  m_wallet_file = wallet_file;
+
+  m_wallet.reset(new WalletLegacy(m_currency, *m_node.get(), logManager, m_testnet));
+  m_node->addObserver(static_cast<INodeObserver*>(this));
+  m_wallet->addObserver(this);
+
+  try
+  {
+    m_initResultPromise.reset(new std::promise<std::error_code>());
+    std::future<std::error_code> f_initError = m_initResultPromise->get_future();
+
+    m_wallet->initWithKeys(view_key, password);
+
+    auto initError = f_initError.get();
+    m_initResultPromise.reset(nullptr);
+    if (initError)
+    {
+      fail_msg_writer() << "failed to generate new wallet: " << initError.message();
+      return false;
+    }
+
+    m_chelper.save_wallet(*m_wallet, m_wallet_file, logger);
+
+    AccountKeys keys;
+    m_wallet->getAccountKeys(keys);
+
+    logger(INFO, BRIGHT_WHITE) << "Imported wallet: " << m_wallet->getAddress() << std::endl;
+
+    m_is_view_wallet = true;
+  }
+  catch (const std::exception& e)
+  {
+    fail_msg_writer() << "failed to import wallet: " << e.what();
+    return false;
+  }
+
+  success_msg_writer() <<
+      "**********************************************************************\n" <<
+      "Your tracking wallet has been imported. It doesn't allow spending funds.\n" <<
+      "It allows to view incoming transactions but not outgoing ones. \n" <<
+      "If there were spendings total balance will be inaccurate. \n" <<
+      "Use \"help\" command to see the list of available commands.\n" <<
+      "Always use \"exit\" command when closing concealwallet to save\n" <<
+      "current session's state. Otherwise, you will possibly need to synchronize \n" <<
+      "your wallet again. Your wallet key is NOT under risk anyway.\n" <<
+      "**********************************************************************";
+  return true;
+}
 //----------------------------------------------------------------------------------------------------
 
 bool conceal_wallet::deinit()
@@ -1122,7 +1235,7 @@ bool conceal_wallet::reset(const std::vector<std::string> &args)
 
   try
   {
-    {  // nesting avoids redec on mutex lock
+    { // nesting avoids redec on mutex lock
       std::unique_lock<std::mutex> lock(m_walletSynchronizedMutex);
       m_walletSynchronized = false;
     }
@@ -1145,6 +1258,12 @@ bool conceal_wallet::reset(const std::vector<std::string> &args)
 
 bool conceal_wallet::get_reserve_proof(const std::vector<std::string> &args)
 {
+  if (m_is_view_wallet)
+  {
+    logger(ERROR) << "This is view wallet. Spending is impossible.";
+    return true;
+  }
+
   if (args.size() > 2 || args.empty())
   {
     fail_msg_writer() << "Usage: balance_proof (all|<amount>) [<message>]";
@@ -1292,6 +1411,12 @@ bool conceal_wallet::show_balance(const std::vector<std::string>& args)
 
 bool conceal_wallet::sign_message(const std::vector<std::string>& args)
 {
+  if (m_is_view_wallet)
+  {
+    logger(ERROR) << "This is view wallet. Spending is impossible.";
+    return true;
+  }
+
   if(args.size() != 1)
   {
     fail_msg_writer() << "Use: sign_message <message>";
@@ -1653,7 +1778,14 @@ bool conceal_wallet::show_num_unlocked_outputs(const std::vector<std::string>& a
   return true;
 }
 
-bool conceal_wallet::optimize_outputs(const std::vector<std::string>& args) {
+bool conceal_wallet::optimize_outputs(const std::vector<std::string>& args)
+{
+  if (m_is_view_wallet)
+  {
+    logger(ERROR) << "This is view wallet. Spending is impossible.";
+    return true;
+  }
+
   if(!args.empty())
   {
     logger(ERROR) << "Usage: \"optimize\"";
@@ -1713,6 +1845,12 @@ bool conceal_wallet::optimize_outputs(const std::vector<std::string>& args) {
 
 bool conceal_wallet::optimize_all_outputs(const std::vector<std::string>& args)
 {
+  if (m_is_view_wallet)
+  {
+    logger(ERROR) << "This is view wallet. Spending is impossible.";
+    return true;
+  }
+
   uint64_t num_unlocked_outputs = 0;
 
   try
@@ -1780,7 +1918,14 @@ bool conceal_wallet::optimize_all_outputs(const std::vector<std::string>& args)
   return true;
 }
 
-bool conceal_wallet::transfer(const std::vector<std::string> &args) {
+bool conceal_wallet::transfer(const std::vector<std::string> &args)
+{
+  if (m_is_view_wallet)
+  {
+    logger(ERROR) << "This is view wallet. Spending is impossible.";
+    return true;
+  }
+
   try {
     transfer_cmd cmd(m_currency, m_remote_node_address);
 
@@ -2126,6 +2271,12 @@ bool conceal_wallet::list_deposits(const std::vector<std::string> &args)
 
 bool conceal_wallet::deposit(const std::vector<std::string> &args)
 {
+  if (m_is_view_wallet)
+  {
+    logger(ERROR) << "This is view wallet. Spending is impossible.";
+    return true;
+  }
+
   if (args.size() != 2)
   {
     logger(ERROR) << "Usage: deposit <months> <amount>";
@@ -2228,6 +2379,12 @@ bool conceal_wallet::deposit(const std::vector<std::string> &args)
 
 bool conceal_wallet::withdraw(const std::vector<std::string> &args)
 {
+  if (m_is_view_wallet)
+  {
+    logger(ERROR) << "This is view wallet. Spending is impossible.";
+    return true;
+  }
+
   if (args.size() != 1)
   {
     logger(ERROR) << "Usage: withdraw <id>";
@@ -2376,5 +2533,30 @@ bool conceal_wallet::read_file_csv(const std::vector<std::string> &args)
     std::cout << std::endl;
   }
 
+  return true;
+}
+
+bool conceal_wallet::show_view_key(const std::vector<std::string> &args)
+{
+  if (!args.empty())
+  {
+    logger(ERROR) << "Usage: \"show_view_tracking\"";
+    return true;
+  }
+
+  try
+  {
+    AccountKeys keys;
+    m_wallet->getAccountKeys(keys);
+    std::string spend_public_key = common::podToHex(keys.address.spendPublicKey);
+    keys.spendSecretKey = boost::value_initialized<crypto::SecretKey>();
+
+    std::cout << "View Tracking Key: " << spend_public_key << common::podToHex(keys.address.viewPublicKey)
+      << common::podToHex(keys.spendSecretKey) << common::podToHex(keys.viewSecretKey) << std::endl;
+  }
+  catch(const std::exception& e)
+  {
+    logger(ERROR) << "Failed to execute \"show_view_tracking\" command: " << e.what();
+  }
   return true;
 }
