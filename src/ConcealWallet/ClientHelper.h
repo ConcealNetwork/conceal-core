@@ -43,20 +43,20 @@ namespace cn
   class client_helper
   {
   public:
-    /**
-     * @return - returns deposit term, should be multiple of 21900
-    **/
-    uint32_t deposit_term(const cn::Deposit &deposit) const;
+    /** conceal_wallet **/
+    JsonValue buildLoggerConfiguration(logging::Level level, const std::string& logfile);
+    std::error_code initAndLoadWallet(cn::IWalletLegacy& wallet, std::istream& walletFile, const std::string& password);
 
-    /**
-     * @return - returns deposit amount as string
-    **/
-    std::string deposit_amount(const cn::Deposit &deposit, const Currency &currency) const;
+    bool parseUrlAddress(const std::string& url, std::string& address, uint16_t& port);
+    bool write_addr_file(const std::string& addr_filename, const std::string& address);
+    bool existing_file(const std::string address_file, logging::LoggerRef logger);
 
-    /**
-     * @return - returns deposit interest based of amount and term as string
-    **/
-    std::string deposit_interest(const cn::Deposit &deposit, const Currency &currency) const;
+    void save_wallet(cn::IWalletLegacy& wallet, const std::string& walletFilename, logging::LoggerRef& logger);
+
+    std::string prep_wallet_filename(const std::string& wallet_basename);
+    std::string tryToOpenWalletOrLoadKeysOrThrow(logging::LoggerRef& logger, std::unique_ptr<cn::IWalletLegacy>& wallet, const std::string& walletFile, const std::string& password);
+    std::string get_commands_str(bool do_ext);
+    std::string wallet_commands(bool is_extended);
 
     /**
      * @return - "Locked", "Unlocked" or "Spent" depending on state of deposit
@@ -64,44 +64,24 @@ namespace cn
     std::string deposit_status(const cn::Deposit &deposit) const;
 
     /**
-     * @return - returns deposit creatingTransactionId 
-    **/
-    size_t deposit_creating_tx_id(const cn::Deposit &deposit) const;
-
-    /**
-     * @return - returns deposit spendingTransactionId
-    **/
-    size_t deposit_spending_tx_id(const cn::Deposit &deposit) const;
-
-    /**
-     * @return - returns unlock height from transaction blockheight + deposit term
+     * @return - returns unlock height from txInfo.blockheight + deposit.term
     **/
     std::string deposit_unlock_height(const cn::Deposit &deposit, const cn::WalletLegacyTransaction &txInfo) const;
 
     /**
-     * @return - returns deposit height
+     * @return - returns deposit height from txInfo.blockHeight
     **/
     std::string deposit_height(const cn::WalletLegacyTransaction &txInfo) const;
 
     /**
-     * @return - returns deposit info string for client output
+     * @return - returns deposit info string as row for multiple deposit outputs
     **/
     std::string get_deposit_info(const cn::Deposit &deposit, cn::DepositId did, const Currency &currency, const cn::WalletLegacyTransaction &txInfo) const;
 
     /**
-     * @return - returns full deposit info string for client output
+     * @return - returns single deposit info string for client output
     **/
-    std::string get_full_deposit_info(const cn::Deposit &deposit, cn::DepositId did, const Currency &currency, const cn::WalletLegacyTransaction &txInfo) const;
-
-    /**
-     * @return - returns deposit info string for file output
-    **/
-    std::string list_deposit_item(const WalletLegacyTransaction& txInfo, const Deposit deposit, std::string listed_deposit, DepositId id, const Currency &currency);
-
-    /**
-     * @return - returns transaction info string for file output
-    **/
-    std::string list_tx_item(const WalletLegacyTransaction& txInfo, std::string listed_tx, const Currency &currency);
+    std::string get_single_deposit_info(const cn::Deposit &deposit, cn::DepositId did, const Currency &currency, const cn::WalletLegacyTransaction &txInfo) const;
 
     /**
      * @return - returns false if user rejects deposit
@@ -109,47 +89,9 @@ namespace cn
     bool confirm_deposit(uint64_t term, uint64_t amount, bool is_testnet, const Currency& currency, logging::LoggerRef logger);
 
     /**
-     * @return - returns logging config for file and client output
-     */
-    JsonValue buildLoggerConfiguration(logging::Level level, const std::string& logfile);
-
-    /**
-     * @return - returns a formatted url address
-     */
-    bool parseUrlAddress(const std::string& url, std::string& address, uint16_t& port);
-
-    std::error_code initAndLoadWallet(cn::IWalletLegacy& wallet, std::istream& walletFile, const std::string& password);
-
-    std::string tryToOpenWalletOrLoadKeysOrThrow(logging::LoggerRef& logger, std::unique_ptr<cn::IWalletLegacy>& wallet, const std::string& walletFile, const std::string& password);
-
-    void save_wallet(cn::IWalletLegacy& wallet, const std::string& walletFilename, logging::LoggerRef& logger);
-
-    /**
      * @return - Displays all balances (main + deposits)
      */
-    std::stringstream balances(std::unique_ptr<cn::IWalletLegacy>& wallet, const Currency& currency);
-
-    /**
-     * @return - wallet commands as string
-     */
-    std::string wallet_commands(bool is_extended);
-
-    /**
-     * @return - creates wallet address file if possible
-     */
-    bool write_addr_file(const std::string& addr_filename, const std::string& address);
-
-    /**
-     * @return - string ending with .address for wallet file
-     */
-    std::string prep_wallet_filename(const std::string& wallet_basename);
-
-    /**
-     * @return - checks if file already exists in current location
-     */
-    bool existing_file(const std::string address_file, logging::LoggerRef logger);
-
-    std::string get_commands_str(bool do_ext);
+    std::string balances(std::unique_ptr<cn::IWalletLegacy>& wallet, const Currency& currency);
 
     /**
      * @return - structed information

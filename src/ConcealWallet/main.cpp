@@ -166,8 +166,7 @@ int main(int argc, char* argv[])
     {
       walletFileName = m_chelper.tryToOpenWalletOrLoadKeysOrThrow(logger, wallet, wallet_file, wallet_password);
 
-      std::stringstream balances = m_chelper.balances(wallet, currency);
-      logger(INFO) << balances.str();
+      logger(INFO) << m_chelper.balances(wallet, currency);
 
       logger(INFO, BRIGHT_GREEN) << "Loaded ok";
     }

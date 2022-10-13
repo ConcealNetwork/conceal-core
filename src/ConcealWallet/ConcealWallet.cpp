@@ -284,7 +284,7 @@ conceal_wallet::conceal_wallet(platform_system::Dispatcher& dispatcher, const cn
   m_initResultPromise(nullptr),
   m_walletSynchronized(false),
   m_is_view_wallet(false) {
-  /* help cmd prints out from m_chelper (ClientHelper), don't forget to update with new commands */
+  /* help cmd prints out from m_chelper.wallet_commands(bool), don't forget to update with new commands */
   m_consoleHandler.setHandler("help", boost::bind(&conceal_wallet::help, this, boost::arg<1>()), "Show this help");
   m_consoleHandler.setHandler("ext_help", boost::bind(&conceal_wallet::extended_help, this, boost::arg<1>()), "Show this help");
   m_consoleHandler.setHandler("create_integrated", boost::bind(&conceal_wallet::create_integrated, this, boost::arg<1>()), "create_integrated <payment_id> - Create an integrated address with a payment ID");
@@ -1398,8 +1398,7 @@ bool conceal_wallet::show_balance(const std::vector<std::string>& args)
 
   try
   {
-    std::stringstream balances = m_chelper.balances(m_wallet, m_currency);
-    logger(INFO) << balances.str();
+    logger(INFO) << m_chelper.balances(m_wallet, m_currency);
   }
   catch(const std::exception& e)
   {
@@ -2457,7 +2456,7 @@ bool conceal_wallet::deposit_info(const std::vector<std::string> &args)
     cn::WalletLegacyTransaction txInfo;
     m_wallet->getTransaction(deposit.creatingTransactionId, txInfo);
 
-    logger(INFO) << m_chelper.get_full_deposit_info(deposit, deposit_id, m_currency, txInfo);
+    logger(INFO) << m_chelper.get_single_deposit_info(deposit, deposit_id, m_currency, txInfo);
   }
   catch(const std::exception& e)
   {
