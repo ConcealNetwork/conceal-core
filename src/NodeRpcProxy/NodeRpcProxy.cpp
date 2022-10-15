@@ -461,7 +461,7 @@ void NodeRpcProxy::isSynchronized(bool& syncStatus, const Callback& callback) {
     return;
   }
 
-  syncStatus = getPeerCount() > 0 && m_nodeHeight + 1 >= getLastKnownBlockHeight();
+  syncStatus = getPeerCount() > 0 && getLastLocalBlockHeight() >= getLastKnownBlockHeight();
   callback(std::error_code());
 }
 
