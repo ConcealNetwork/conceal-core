@@ -427,24 +427,6 @@ bool conceal_wallet::init(const boost::program_options::variables_map& vm)
 
     if (user_input_str == "import" || user_input_str == "i")
     {
-      do {
-        std::cout << "Wallet file name: ";
-        std::getline(std::cin, wallet_name);
-        wallet_name = std::regex_replace(wallet_name, std::regex("~"), getenv(homeEnvVar.c_str()));
-        boost::algorithm::trim(wallet_name);
-      } while (wallet_name.empty());
-
-      if (m_chelper.existing_file(wallet_name, logger))
-      {
-        return false;
-      }
-
-      if (password_str.empty()) {
-        if (pwd_container.read_password()) {
-          password_str = pwd_container.password();
-        }
-      }
-
       std::cout << "What keys would you like to import?\n\t[P]rivate Keys\n\t[M]nemonic Seed\n\t[V]iew Tracking Key" << std::endl;
       std::cout << "\nWallets imported via [V]iew Tracking Keys have limited functionality" << std::endl;
       std::string user_import_str;
@@ -471,6 +453,24 @@ bool conceal_wallet::init(const boost::program_options::variables_map& vm)
       if (user_import_str == "exit" || user_import_str == "e")
       {
         return false;
+      }
+
+      do {
+        std::cout << "Wallet file name: ";
+        std::getline(std::cin, wallet_name);
+        wallet_name = std::regex_replace(wallet_name, std::regex("~"), getenv(homeEnvVar.c_str()));
+        boost::algorithm::trim(wallet_name);
+      } while (wallet_name.empty());
+
+      if (m_chelper.existing_file(wallet_name, logger))
+      {
+        return false;
+      }
+
+      if (password_str.empty()) {
+        if (pwd_container.read_password()) {
+          password_str = pwd_container.password();
+        }
       }
 
       if (user_import_str == "private" || user_import_str == "private keys" || user_import_str == "p")
