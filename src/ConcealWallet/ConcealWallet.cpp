@@ -2123,11 +2123,11 @@ bool conceal_wallet::save_all_txs_to_file(const std::vector<std::string> &args)
     /* tell user about prepped job */
     logger(INFO) << "Preparing file and " << std::to_string(tx_count) << " transactions...";
 
-    /* create filename for later use */
-    std::string formatted_wal_str = m_frmt_wallet_file + "_conceal_transactions.csv";
-
     /* get tx struct */
     WalletLegacyTransaction txInfo;
+
+    /* create filename for later use */
+    std::string wallet_txs_str = m_frmt_wallet_file + "_conceal_transactions.csv";
 
     /* declare csv_writer */
     csv_writer csv;
@@ -2159,15 +2159,15 @@ bool conceal_wallet::save_all_txs_to_file(const std::vector<std::string> &args)
           tx_item.unlock_time;
 
       /* write line to file */
-      csv.writeToFile(formatted_wal_str, true);
+      csv.writeToFile(wallet_txs_str, true);
 
       /* tell user about progress */
-      logger(INFO) << "Transaction: " << i << " was pushed to " << formatted_wal_str;
+      logger(INFO) << "Transaction: " << i << " was pushed to " << wallet_txs_str;
     }
 
     /* tell user job complete */
     logger(INFO, BRIGHT_GREEN) << "All transactions have been saved to the current folder where the wallet file is located as \""
-      << formatted_wal_str << "\".";
+      << wallet_txs_str << "\".";
   
     /* if user uses "save_txs_to_file true" then we go through the deposits */
     if (include_deposits == true)
@@ -2185,6 +2185,12 @@ bool conceal_wallet::save_all_txs_to_file(const std::vector<std::string> &args)
       /* tell user about prepped job */
       logger(INFO) << "Preparing " << std::to_string(deposit_count) << " deposits...";
 
+      /* create filename for later use */
+      std::string wallet_deposits_str = m_frmt_wallet_file + "_conceal_deposits.csv";
+
+      /* declare csv_writer */
+      csv_writer csv2;
+
       /* go through deposits ids for the amount of deposits in wallet */
       for (DepositId id = 0; id < deposit_count; ++id)
       {
@@ -2199,10 +2205,10 @@ bool conceal_wallet::save_all_txs_to_file(const std::vector<std::string> &args)
         ListedDepositItem deposit_item = m_chelper.list_deposit_item(txInfo, deposit, id, m_currency);
 
         /* make sure we dont exceed 7 columns */
-        csv.enableAutoNewRow(7);
+        csv2.enableAutoNewRow(7);
 
         /* create a single line with this information */
-        csv.newRow() << deposit_item.timestamp <<
+        csv2.newRow() << deposit_item.timestamp <<
             deposit_item.id <<
             deposit_item.amount <<
             deposit_item.interest <<
@@ -2211,15 +2217,15 @@ bool conceal_wallet::save_all_txs_to_file(const std::vector<std::string> &args)
             deposit_item.status;
 
         /* write line to file */
-        csv.writeToFile(formatted_wal_str, true);
+        csv2.writeToFile(wallet_deposits_str, true);
 
         /* tell user about progress */
-        logger(INFO) << "Deposit: " << id << " was pushed to " << formatted_wal_str;
+        logger(INFO) << "Deposit: " << id << " was pushed to " << wallet_deposits_str;
       }
 
       /* tell user job complete */
-      logger(INFO, BRIGHT_GREEN) << "All deposits have been saved to the end of the file current folder where the wallet file is located as \""
-        << formatted_wal_str << "\".";
+      logger(INFO, BRIGHT_GREEN) << "All deposits have been saved to the current folder where the wallet file is located as \""
+        << wallet_deposits_str << "\".";
     }
   }
   catch(const std::exception& e)
