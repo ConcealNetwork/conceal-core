@@ -105,8 +105,30 @@ int main(int argc, char* argv[])
   cn::Currency currency = cn::CurrencyBuilder(logManager).
     testnet(testnet).currency();
 
-  if ((command_line::has_arg(vm, arg_daemon_address) && command_line::has_arg(vm, arg_daemon_host))
-      || 0 != command_line::has_arg(vm,arg_daemon_port))
+  bool multi_args_port = vm.count(arg_daemon_port.name) > 1;
+  if (multi_args_port)
+  {
+    logger(ERROR, BRIGHT_RED) << "You can't specify daemon port multiple times.";
+    return 1;
+  }
+
+  std::string arg_dmn_addr = command_line::get_arg(vm, arg_daemon_address);
+  std::string arg_dmn_host = command_line::get_arg(vm, arg_daemon_host);
+  if (!arg_dmn_addr.empty() && !arg_dmn_host.empty())
+  {
+    logger(ERROR, BRIGHT_RED) << "You can't specify daemon address & host together.";
+    return 1;
+  }
+
+  std::string arg_gen_wal = command_line::get_arg(vm, arg_generate_new_wallet);
+  std::string arg_file_wal = command_line::get_arg(vm, arg_wallet_file);
+  if (!arg_gen_wal.empty() && !arg_file_wal.empty())
+  {
+    logger(ERROR, BRIGHT_RED) << "You can't specify 'generate-new-wallet' and 'wallet-file' arguments simultaneously";
+    return 1;
+  }
+
+  if ((command_line::has_arg(vm, arg_daemon_address) && command_line::has_arg(vm, arg_daemon_host)))
   {
     logger(ERROR, BRIGHT_RED) << "You can't specify daemon host or port several times.";
     return 1;
