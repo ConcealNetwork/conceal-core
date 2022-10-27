@@ -128,18 +128,6 @@ int main(int argc, char* argv[])
     return 1;
   }
 
-  if ((command_line::has_arg(vm, arg_daemon_address) && command_line::has_arg(vm, arg_daemon_host)))
-  {
-    logger(ERROR, BRIGHT_RED) << "You can't specify daemon host or port several times.";
-    return 1;
-  }
-
-  if (command_line::has_arg(vm, arg_generate_new_wallet) && command_line::has_arg(vm, arg_wallet_file))
-  {
-    logger(ERROR, BRIGHT_RED) << "You can't specify 'generate-new-wallet' and 'wallet-file' arguments simultaneously";
-    return 1;
-  }
-
   if (command_line::has_arg(vm, tools::wallet_rpc_server::arg_rpc_bind_port))
   {
     //runs wallet with rpc interface
