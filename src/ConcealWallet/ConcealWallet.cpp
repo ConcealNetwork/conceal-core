@@ -1800,8 +1800,8 @@ bool conceal_wallet::deposit(const std::vector<std::string> &args)
      * Change arg to uint64_t using boost then
      * multiply by min_term so user can type in months
     **/
-    uint64_t min_term = m_testnet ? parameters::TESTNET_DEPOSIT_MIN_TERM_V3 : parameters::DEPOSIT_MIN_TERM_V3;
-    uint64_t max_term = m_testnet ? parameters::TESTNET_DEPOSIT_MAX_TERM_V3 : parameters::DEPOSIT_MAX_TERM_V3;
+    uint64_t min_term = m_currency.depositMinTermV3();
+    uint64_t max_term = m_currency.depositMaxTermV3();
     uint64_t deposit_term = boost::lexical_cast<uint64_t>(args[0]) * min_term;
 
     /* Now validate the deposit term and the amount */
@@ -1827,10 +1827,10 @@ bool conceal_wallet::deposit(const std::vector<std::string> &args)
       return true;
     }
 
-    if (deposit_amount < cn::parameters::DEPOSIT_MIN_AMOUNT)
+    if (deposit_amount < m_currency.depositMinAmount())
     {
-      logger(ERROR, BRIGHT_RED) << "Deposit amount is too small, min=" << cn::parameters::DEPOSIT_MIN_AMOUNT
-        << ", given=" << m_currency.formatAmount(deposit_amount);
+      logger(ERROR, BRIGHT_RED) << "Deposit amount is too small, min=" << m_currency.depositMinAmount()
+                                << ", given=" << m_currency.formatAmount(deposit_amount);
       return true;
     }
 

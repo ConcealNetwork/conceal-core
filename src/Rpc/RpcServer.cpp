@@ -407,10 +407,7 @@ bool RpcServer::fill_f_block_details_response(const crypto::Hash &hash, f_block_
     uint64_t amount_out = get_outs_money_amount(tx);
 
     transaction_short.hash = common::podToHex(getObjectHash(tx));
-    transaction_short.fee =
-        amount_in < amount_out + parameters::MINIMUM_FEE //account for interest in output, it always has minimum fee
-            ? parameters::MINIMUM_FEE
-            : amount_in - amount_out;
+    transaction_short.fee = m_core.currency().getTransactionFee(tx, static_cast<uint32_t>(block.height));
     transaction_short.amount_out = amount_out;
     transaction_short.size = getObjectBinarySize(tx);
     block.transactions.push_back(transaction_short);
@@ -517,7 +514,7 @@ bool RpcServer::on_get_txs_with_output_global_indexes(const COMMAND_RPC_GET_TRAN
           e.timestamp = blk.timestamp;
           e.transaction = *static_cast<const TransactionPrefix*>(&txi.first);
           e.output_indexes = txi.second;
-          e.fee = is_coinbase(txi.first) ? 0 : getInputAmount(txi.first) - getOutputAmount(txi.first);
+          e.fee = m_core.currency().getTransactionFee(txi.first, height);
         }
       }
 
@@ -1276,14 +1273,7 @@ bool RpcServer::f_on_transaction_json(const F_COMMAND_RPC_GET_TRANSACTION_DETAIL
   uint64_t amount_out = get_outs_money_amount(res.tx);
 
   res.txDetails.hash = common::podToHex(getObjectHash(res.tx));
-  if (amount_in == 0)
-    res.txDetails.fee = 0;
-  else {
-	res.txDetails.fee =
-		amount_in < amount_out + parameters::MINIMUM_FEE //account for interest in output, it always has minimum fee
-		? parameters::MINIMUM_FEE
-		: amount_in - amount_out;
-  }
+  res.txDetails.fee = m_core.currency().getTransactionFee(res.tx, res.block.height);
   res.txDetails.amount_out = amount_out;
   res.txDetails.size = getObjectBinarySize(res.tx);
 
@@ -1320,16 +1310,13 @@ bool RpcServer::f_getMixin(const Transaction& transaction, uint64_t& mixin) {
 
 bool RpcServer::f_on_transactions_pool_json(const F_COMMAND_RPC_GET_POOL::request& req, F_COMMAND_RPC_GET_POOL::response& res) {
     auto pool = m_core.getPoolTransactions();
+    auto height = m_core.get_current_blockchain_height();
     for (const Transaction tx : pool) {
         f_transaction_short_response transaction_short;
-        uint64_t amount_in = getInputAmount(tx);
         uint64_t amount_out = getOutputAmount(tx);
 
         transaction_short.hash = common::podToHex(getObjectHash(tx));
-        transaction_short.fee =
-			amount_in < amount_out + parameters::MINIMUM_FEE //account for interest in output, it always has minimum fee
-			? parameters::MINIMUM_FEE
-			: amount_in - amount_out;
+        transaction_short.fee = m_core.currency().getTransactionFee(tx, height);
         transaction_short.amount_out = amount_out;
         transaction_short.size = getObjectBinarySize(tx);
         res.transactions.push_back(transaction_short);

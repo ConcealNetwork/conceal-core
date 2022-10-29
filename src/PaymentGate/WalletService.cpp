@@ -1706,28 +1706,25 @@ namespace payment_service
         /* Now validate the deposit term and the amount */
 
         /* Deposits should be multiples of 21,900 blocks */
-        if ((!m_testnet && term % cn::parameters::DEPOSIT_MIN_TERM_V3 != 0) ||
-            (m_testnet && term % cn::parameters::TESTNET_DEPOSIT_MIN_TERM_V3 != 0))
+        if (term % currency.depositMinTermV3() != 0)
         {
           return make_error_code(cn::error::DEPOSIT_WRONG_TERM);
         }
 
         /* The minimum term should be 21,900 */
-        if ((!m_testnet && term < cn::parameters::DEPOSIT_MIN_TERM_V3) ||
-            (m_testnet && term < cn::parameters::TESTNET_DEPOSIT_MIN_TERM_V3))
+        if (term < currency.depositMinTermV3())
         {
-          return make_error_code(cn::error::DEPOSIT_TERM_TOO_BIG);
+          return make_error_code(cn::error::DEPOSIT_TERM_TOO_SMALL);
         }
 
         /* Current deposit rates are for a maximum term of one year, 262800 */
-        if ((!m_testnet && term > cn::parameters::DEPOSIT_MAX_TERM_V3) ||
-            (m_testnet && term > cn::parameters::TESTNET_DEPOSIT_MAX_TERM_V3))
+        if (term > currency.depositMaxTermV3())
         {
           return make_error_code(cn::error::DEPOSIT_TERM_TOO_BIG);
         }
 
         /* The minimum deposit amount is 1 CCX */
-        if (amount < cn::parameters::DEPOSIT_MIN_AMOUNT)
+        if (amount < currency.depositMinAmount())
         {
           return make_error_code(cn::error::DEPOSIT_AMOUNT_TOO_SMALL);
         }
@@ -1736,12 +1733,12 @@ namespace payment_service
         wallet.createDeposit(amount, term, sourceAddress, sourceAddress, transactionHash);
       }
 
-      catch (std::system_error &x)
+      catch (const std::system_error &x)
       {
         logger(logging::WARNING) << "Error: " << x.what();
         return x.code();
       }
-      catch (std::exception &x)
+      catch (const std::exception &x)
       {
         logger(logging::WARNING) << "Error : " << x.what();
         return make_error_code(cn::error::INTERNAL_WALLET_ERROR);
@@ -1788,19 +1785,17 @@ namespace payment_service
 
         /* Now validate the deposit term and the amount */
 
-        if ((!m_testnet && term < cn::parameters::DEPOSIT_MIN_TERM_V3) ||
-            (m_testnet && term < cn::parameters::TESTNET_DEPOSIT_MIN_TERM_V3))
+        if (term < currency.depositMinTermV3())
         {
           return make_error_code(cn::error::DEPOSIT_TERM_TOO_SMALL);
         }
 
-        if ((!m_testnet && term > cn::parameters::DEPOSIT_MAX_TERM_V3) ||
-            (m_testnet && term > cn::parameters::TESTNET_DEPOSIT_MIN_TERM_V3))
+        if (term > currency.depositMaxTermV3())
         {
           return make_error_code(cn::error::DEPOSIT_TERM_TOO_BIG);
         }
 
-        if (amount < cn::parameters::DEPOSIT_MIN_AMOUNT)
+        if (amount < currency.depositMinAmount())
         {
           return make_error_code(cn::error::DEPOSIT_AMOUNT_TOO_SMALL);
         }
@@ -1809,12 +1804,12 @@ namespace payment_service
         wallet.createDeposit(amount, term, sourceAddress, destinationAddress, transactionHash);
       }
 
-      catch (std::system_error &x)
+      catch (const std::system_error &x)
       {
         logger(logging::WARNING) << "Error: " << x.what();
         return x.code();
       }
-      catch (std::exception &x)
+      catch (const std::exception &x)
       {
         logger(logging::WARNING) << "Error : " << x.what();
         return make_error_code(cn::error::INTERNAL_WALLET_ERROR);

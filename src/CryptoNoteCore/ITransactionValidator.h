@@ -31,8 +31,8 @@ namespace cn {
 
   class ITransactionValidator {
   public:
-    virtual ~ITransactionValidator() {}
-    
+    virtual ~ITransactionValidator() = default;
+
     virtual bool checkTransactionInputs(const cn::Transaction& tx, BlockInfo& maxUsedBlock) = 0;
     virtual bool checkTransactionInputs(const cn::Transaction& tx, BlockInfo& maxUsedBlock, BlockInfo& lastFailed) = 0;
     virtual bool haveSpentKeyImages(const cn::Transaction& tx) = 0;
