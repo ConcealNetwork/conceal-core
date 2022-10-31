@@ -1,0 +1,56 @@
+name: Ubuntu 22.04
+
+on:
+  push:
+    tags:
+      - "*"
+
+jobs:
+  build-ubuntu22:
+    name: Ubuntu 22.04
+    runs-on: ubuntu-22.04
+    steps:
+      - uses: actions/checkout@master
+
+      - name: Build
+        id: build
+        run: |
+          sudo fallocate -l 6G /swapfile
+          sudo chmod 600 /swapfile
+          sudo mkswap /swapfile
+          sudo swapon /swapfile
+          sudo apt-get update
+          sudo apt-get install -y libboost-all-dev
+          build_folder="build/debug"
+          ccx_version=$(echo "$GITHUB_REF" | sed 's|refs/tags/||')
+          ccx_ver_folder=$(echo $ccx_version | sed 's/\.//g')
+          release_name=ccx-cli-ubuntu-2204-v"$ccx_version"
+          mkdir -p "$build_folder"
+          cd "$build_folder"
+          cmake ../..
+          make -j2
+          mkdir -p "$release_name/$ccx_ver_folder"
+          exeFiles=()
+          for f in src/*; do [[ -x $f && -f $f ]] && exeFiles+=( "$f" ); done
+          cp "${exeFiles[@]}" "$release_name/$ccx_ver_folder"
+          cd "$release_name"
+          tar -czf "$release_name".tar.gz "$ccx_ver_folder"
+          sha256=$(shasum -a 256 "$release_name".tar.gz | awk '{print toupper($1)}')
+          asset_path="./$build_folder/$release_name/$release_name.tar.gz"
+          echo "::set-output name=sha256::${sha256}"
+          echo "::set-output name=release_name::${release_name}.tar.gz"
+          echo "::set-output name=asset_path::${asset_path}"
+          echo "::set-output name=ccx_version::${ccx_version}"
+
+      # since https://github.com/softprops/action-gh-release/pull/145 body is replaced instead of being appended
+      # use v0.1.12 for now
+      - name: Create Release
+        uses: softprops/action-gh-release@v0.1.12
+        with:
+          files: ${{ steps.build.outputs.asset_path }}
+          name: Conceal Core CLI v${{ steps.build.outputs.ccx_version }}
+          body: |
+            [Download for Ubuntu 22.04](../../releases/download/${{ steps.build.outputs.ccx_version }}/${{ steps.build.outputs.release_name }}) **${{ steps.build.outputs.release_name }}**
+            `SHA256 : ${{ steps.build.outputs.sha256 }}`
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

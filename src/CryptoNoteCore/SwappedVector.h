@@ -24,18 +24,17 @@
 
 template<class T> class SwappedVector {
 public:
-  typedef T value_type;
+  using value_type = T;
 
   class const_iterator {
   public:
-    typedef ptrdiff_t difference_type;
-    typedef std::random_access_iterator_tag iterator_category;
-    typedef const T* pointer;
-    typedef const T& reference;
-    typedef T value_type;
+    using difference_type = ptrdiff_t;
+    using iterator_category = std::random_access_iterator_tag;
+    using pointer = const T *;
+    using reference = const T &;
+    using value_type = T;
 
-    const_iterator() {
-    }
+    const_iterator() = default;
 
     const_iterator(SwappedVector* swappedVector, size_t index) : m_swappedVector(swappedVector), m_index(index) {
     }
@@ -134,9 +133,9 @@ public:
   };
 
   SwappedVector();
-  //SwappedVector(const SwappedVector&) = delete;
+  SwappedVector(const SwappedVector&) = delete;
   ~SwappedVector();
-  //SwappedVector& operator=(const SwappedVector&) = delete;
+  SwappedVector& operator=(const SwappedVector&) = delete;
 
   bool open(const std::string& itemFileName, const std::string& indexFileName, size_t poolSize);
   void close();
@@ -151,6 +150,7 @@ public:
   void clear();
   void pop_back();
   void push_back(const T& item);
+  void replace(uint64_t index, const T &item);
 
 private:
   struct ItemEntry;
@@ -180,8 +180,7 @@ private:
   T* prepare(uint64_t index);
 };
 
-template<class T> SwappedVector<T>::SwappedVector() {
-}
+template<class T> SwappedVector<T>::SwappedVector() = default;
 
 template<class T> SwappedVector<T>::~SwappedVector() {
   close();
@@ -242,6 +241,14 @@ template<class T> bool SwappedVector<T>::open(const std::string& itemFileName, c
 }
 
 template<class T> void SwappedVector<T>::close() {
+  if (m_indexesFile.is_open())
+  {
+    m_indexesFile.close();
+  }
+  if (m_itemsFile.is_open())
+  {
+    m_itemsFile.close();
+  }
   std::cout << "SwappedVector cache hits: " << m_cacheHits << ", misses: " << m_cacheMisses << " (" << std::fixed << std::setprecision(2) << static_cast<double>(m_cacheMisses) / (m_cacheHits + m_cacheMisses) * 100 << "%)" << std::endl;
 }
 
@@ -382,6 +389,19 @@ template<class T> void SwappedVector<T>::push_back(const T& item) {
 
   T* newItem = prepare(m_offsets.size() - 1);
   *newItem = item;
+}
+
+template<class T> void SwappedVector<T>::replace(uint64_t index, const T& item) {
+  if (!m_itemsFile)
+  {
+    throw std::runtime_error("SwappedVector::replace");
+  }
+
+  m_itemsFile.seekp(m_offsets[index]);
+
+  common::StdOutputStream stream(m_itemsFile);
+  cn::BinaryOutputStreamSerializer archive(stream);
+  serialize(const_cast<T &>(item), archive);
 }
 
 template<class T> T* SwappedVector<T>::prepare(uint64_t index) {

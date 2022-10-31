@@ -38,7 +38,7 @@ namespace std {
 
 namespace cn {
 
-typedef std::vector<DepositInfo> UserDeposits;
+using UserDeposits = std::vector<DepositInfo>;
 
 class WalletUserTransactionsCache
 {
@@ -124,9 +124,8 @@ private:
 
   void eraseCreatedDeposit(DepositId id);
 
-  typedef std::vector<WalletLegacyTransfer> UserTransfers;
-  typedef std::vector<WalletLegacyTransaction> UserTransactions;
-  typedef std::vector<DepositInfo> UserDeposits;
+  using UserTransfers = std::vector<WalletLegacyTransfer>;
+  using UserTransactions = std::vector<WalletLegacyTransaction>;
   using Offset = UserTransactions::size_type;
   using UserPaymentIndex = std::unordered_map<PaymentId, std::vector<Offset>, boost::hash<PaymentId>>;
 

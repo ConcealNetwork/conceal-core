@@ -62,7 +62,6 @@ namespace cn
     uint64_t blockFutureTimeLimit_v1() const { return m_blockFutureTimeLimit_v1; }
 
     uint64_t moneySupply() const { return m_moneySupply; }
-    //uint64_t genesisBlockReward() const { return m_genesisBlockReward; }
 
     size_t rewardBlocksWindow() const { return m_rewardBlocksWindow; }
 
@@ -112,8 +111,13 @@ namespace cn
     uint32_t depositMinTerm() const { return m_depositMinTerm; }
     uint32_t depositMaxTerm() const { return m_depositMaxTerm; }
     uint32_t depositMaxTermV1() const { return m_depositMaxTermV1; }
+    uint32_t depositMinTermV3() const { return m_depositMinTermV3; }
+    uint32_t depositMaxTermV3() const { return m_depositMaxTermV3; }
     uint64_t depositMinTotalRateFactor() const { return m_depositMinTotalRateFactor; }
     uint64_t depositMaxTotalRate() const { return m_depositMaxTotalRate; }
+
+    uint32_t depositHeightV3() const { return m_depositHeightV3; }
+    uint32_t depositHeightV4() const { return m_depositHeightV4; }
 
     size_t maxBlockSizeInitial() const { return m_maxBlockSizeInitial; }
     uint64_t maxBlockSizeGrowthSpeedNumerator() const { return m_maxBlockSizeGrowthSpeedNumerator; }
@@ -126,7 +130,7 @@ namespace cn
     uint64_t mempoolTxFromAltBlockLiveTime() const { return m_mempoolTxFromAltBlockLiveTime; }
     uint64_t numberOfPeriodsToForgetTxDeletedFromPool() const { return m_numberOfPeriodsToForgetTxDeletedFromPool; }
 
-    uint32_t upgradeHeight(uint8_t majorVersion) const;
+    uint64_t upgradeHeight(uint8_t majorVersion) const;
     unsigned int upgradeVotingThreshold() const { return m_upgradeVotingThreshold; }
     uint32_t upgradeVotingWindow() const { return m_upgradeVotingWindow; }
     uint32_t upgradeWindow() const { return m_upgradeWindow; }
@@ -152,9 +156,10 @@ namespace cn
 
     bool getBlockReward(size_t medianSize, size_t currentBlockSize, uint64_t alreadyGeneratedCoins, uint64_t fee, uint32_t height,
                         uint64_t &reward, int64_t &emissionChange) const;
-    uint64_t calculateInterest(uint64_t amount, uint32_t term, uint32_t height) const;
+    uint64_t calculateInterest(uint64_t amount, uint32_t term, uint32_t lockHeight) const;
     uint64_t calculateInterestV2(uint64_t amount, uint32_t term) const;
     uint64_t calculateInterestV3(uint64_t amount, uint32_t term) const;
+    uint64_t getInterestForInput(const MultisignatureInput &input, uint32_t height) const;
     uint64_t calculateTotalTransactionInterest(const Transaction &tx, uint32_t height) const;
     uint64_t getTransactionInputAmount(const TransactionInput &in, uint32_t height) const;
     uint64_t getTransactionAllInputsAmount(const Transaction &tx, uint32_t height) const;
@@ -189,8 +194,10 @@ namespace cn
 
     size_t getApproximateMaximumInputCount(size_t transactionSize, size_t outputCount, size_t mixinCount) const;
 
+    bool validateOutput(uint64_t amount, const MultisignatureOutput &output, uint32_t height) const;
+
   private:
-    Currency(logging::ILogger &log) : logger(log, "currency")
+    explicit Currency(logging::ILogger &log) : logger(log, "currency")
     {
     }
 
@@ -199,7 +206,6 @@ namespace cn
     bool generateGenesisBlock();
     uint64_t baseRewardFunction(uint64_t alreadyGeneratedCoins, uint32_t height) const;
 
-  private:
     uint64_t m_maxBlockHeight;
     size_t m_maxBlockBlobSize;
     size_t m_maxTxSize;
@@ -213,7 +219,6 @@ namespace cn
     uint64_t m_blockFutureTimeLimit_v1;
 
     uint64_t m_moneySupply;
-    //uint64_t m_genesisBlockReward;
 
     size_t m_rewardBlocksWindow;
 
@@ -242,8 +247,15 @@ namespace cn
     uint32_t m_depositMinTerm;
     uint32_t m_depositMaxTerm;
     uint32_t m_depositMaxTermV1;
+    uint32_t m_depositMinTermV3;
+    uint32_t m_depositMaxTermV3;
     uint64_t m_depositMinTotalRateFactor;
     uint64_t m_depositMaxTotalRate;
+
+    uint32_t m_depositHeightV3;
+    uint32_t m_depositHeightV4;
+
+    uint32_t m_blockWithMissingInterest;
 
     size_t m_maxBlockSizeInitial;
     uint64_t m_maxBlockSizeGrowthSpeedNumerator;
@@ -256,11 +268,11 @@ namespace cn
     uint64_t m_mempoolTxFromAltBlockLiveTime;
     uint64_t m_numberOfPeriodsToForgetTxDeletedFromPool;
 
-    uint32_t m_upgradeHeightV2;
-    uint32_t m_upgradeHeightV3;
-    uint32_t m_upgradeHeightV6;
-    uint32_t m_upgradeHeightV7;
-    uint32_t m_upgradeHeightV8;
+    uint64_t m_upgradeHeightV2;
+    uint64_t m_upgradeHeightV3;
+    uint64_t m_upgradeHeightV6;
+    uint64_t m_upgradeHeightV7;
+    uint64_t m_upgradeHeightV8;
 
     unsigned int m_upgradeVotingThreshold;
     uint32_t m_upgradeVotingWindow;
@@ -290,10 +302,10 @@ namespace cn
     friend class CurrencyBuilder;
   };
 
-  class CurrencyBuilder : boost::noncopyable
+  class CurrencyBuilder : private boost::noncopyable
   {
   public:
-    CurrencyBuilder(logging::ILogger &log);
+    explicit CurrencyBuilder(logging::ILogger &log);
 
     Currency currency()
     {
@@ -304,8 +316,7 @@ namespace cn
       return m_currency;
     }
 
-    Transaction generateGenesisTransaction();
-    //Transaction generateGenesisTransaction(const std::vector<AccountPublicAddress>& targets);
+    Transaction generateGenesisTransaction() const;
 
     CurrencyBuilder &maxBlockNumber(uint64_t val)
     {
@@ -359,7 +370,6 @@ namespace cn
       m_currency.m_moneySupply = val;
       return *this;
     }
-    //CurrencyBuilder& genesisBlockReward(uint64_t val) { m_currency.m_genesisBlockReward = val; return *this; }
 
     CurrencyBuilder &rewardBlocksWindow(size_t val)
     {
@@ -456,6 +466,16 @@ namespace cn
       m_currency.m_depositMaxTerm = val;
       return *this;
     }
+    CurrencyBuilder &depositMinTermV3(uint32_t val)
+    {
+      m_currency.m_depositMinTermV3 = val;
+      return *this;
+    }
+    CurrencyBuilder &depositMaxTermV3(uint32_t val)
+    {
+      m_currency.m_depositMaxTermV3 = val;
+      return *this;
+    }
     CurrencyBuilder &depositMaxTermV1(uint32_t val)
     {
       m_currency.m_depositMaxTermV1 = val;
@@ -469,6 +489,23 @@ namespace cn
     CurrencyBuilder &depositMaxTotalRate(uint64_t val)
     {
       m_currency.m_depositMaxTotalRate = val;
+      return *this;
+    }
+
+    CurrencyBuilder &depositHeightV3(uint32_t val)
+    {
+      m_currency.m_depositHeightV3 = val;
+      return *this;
+    }
+    CurrencyBuilder &depositHeightV4(uint32_t val)
+    {
+      m_currency.m_depositHeightV4 = val;
+      return *this;
+    }
+
+    CurrencyBuilder &blockWithMissingInterest(uint32_t val)
+    {
+      m_currency.m_blockWithMissingInterest = val;
       return *this;
     }
 
@@ -608,6 +645,14 @@ namespace cn
       {
         depositMinTerm(parameters::TESTNET_DEPOSIT_MIN_TERM_V3);
         depositMaxTerm(parameters::TESTNET_DEPOSIT_MAX_TERM_V3);
+        depositMinTermV3(parameters::TESTNET_DEPOSIT_MIN_TERM_V3);
+        depositMaxTermV3(parameters::TESTNET_DEPOSIT_MAX_TERM_V3);
+
+        depositHeightV3(parameters::TESTNET_DEPOSIT_HEIGHT_V3);
+        depositHeightV4(parameters::TESTNET_DEPOSIT_HEIGHT_V4);
+
+        blockWithMissingInterest(parameters::TESTNET_BLOCK_WITH_MISSING_INTEREST);
+
         upgradeHeightV2(parameters::TESTNET_UPGRADE_HEIGHT_V2);
         upgradeHeightV3(parameters::TESTNET_UPGRADE_HEIGHT_V3);
         upgradeHeightV6(parameters::TESTNET_UPGRADE_HEIGHT_V6);
@@ -619,6 +664,32 @@ namespace cn
 
   private:
     Currency m_currency;
+  };
+
+  class input_amount_visitor : public boost::static_visitor<uint64_t>
+  {
+  private:
+    const Currency &m_currency;
+    uint32_t m_height;
+
+  public:
+    input_amount_visitor(const Currency &currency, uint32_t height) : m_currency(currency), m_height(height) {}
+    uint64_t operator()(const BaseInput &) const { return 0; }
+    uint64_t operator()(const KeyInput &keyInput) const
+    {
+      return keyInput.amount;
+    }
+    uint64_t operator()(const MultisignatureInput &multisignatureInput) const
+    {
+      if (multisignatureInput.term == 0)
+      {
+        return multisignatureInput.amount;
+      }
+      else
+      {
+        return multisignatureInput.amount + m_currency.getInterestForInput(multisignatureInput, m_height);
+      }
+    }
   };
 
 } // namespace cn
