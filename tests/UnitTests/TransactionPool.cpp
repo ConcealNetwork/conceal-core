@@ -25,19 +25,19 @@ using namespace cn;
 using namespace cn;
 
 class TransactionValidator : public cn::ITransactionValidator {
-  virtual bool checkTransactionInputs(const cn::Transaction& tx, BlockInfo& maxUsedBlock) override {
+  bool checkTransactionInputs(const cn::Transaction& tx, BlockInfo& maxUsedBlock) override {
     return true;
   }
 
-  virtual bool checkTransactionInputs(const cn::Transaction& tx, BlockInfo& maxUsedBlock, BlockInfo& lastFailed) override {
+  bool checkTransactionInputs(const cn::Transaction& tx, BlockInfo& maxUsedBlock, BlockInfo& lastFailed) override {
     return true;
   }
 
-  virtual bool haveSpentKeyImages(const cn::Transaction& tx) override {
+  bool haveSpentKeyImages(const cn::Transaction& tx) override {
     return false;
   }
 
-  virtual bool checkTransactionSize(size_t blobSize) override {
+  bool checkTransactionSize(size_t blobSize) override {
     return true;
   }
 };

@@ -75,6 +75,8 @@ namespace cn
 		const uint32_t DEPOSIT_HEIGHT_V3 = 413400;			 /* consensus 2019 - deposts v3.0 */
 		const uint64_t DEPOSIT_MIN_TOTAL_RATE_FACTOR = 0;	 /* constant rate */
 		const uint64_t DEPOSIT_MAX_TOTAL_RATE = 4;			 /* legacy deposits */
+		const uint32_t DEPOSIT_HEIGHT_V4 = 1162162;			 /* enforce deposit terms */
+		const uint32_t BLOCK_WITH_MISSING_INTEREST = 425799; /*  */
 
 		static_assert(DEPOSIT_MIN_TERM > 0, "Bad DEPOSIT_MIN_TERM");
 		static_assert(DEPOSIT_MIN_TERM <= DEPOSIT_MAX_TERM, "Bad DEPOSIT_MAX_TERM");
@@ -126,6 +128,8 @@ namespace cn
 		const uint32_t TESTNET_DEPOSIT_MIN_TERM_V3 = 30;		/* testnet deposits 1 month -> 1 hour */
 		const uint32_t TESTNET_DEPOSIT_MAX_TERM_V3 = 12 * 30;	/* testnet deposits 1 year -> 12 hour */
 		const uint32_t TESTNET_DEPOSIT_HEIGHT_V3 = 60;		
+		const uint32_t TESTNET_DEPOSIT_HEIGHT_V4 = 300000;
+		const uint32_t TESTNET_BLOCK_WITH_MISSING_INTEREST = 0; /* testnet is not impacted */
 
 		static_assert(0 < UPGRADE_VOTING_THRESHOLD && UPGRADE_VOTING_THRESHOLD <= 100, "Bad UPGRADE_VOTING_THRESHOLD");
 		static_assert(UPGRADE_VOTING_WINDOW > 1, "Bad UPGRADE_VOTING_WINDOW");
@@ -368,7 +372,7 @@ namespace cn
         {125000, "8a1737f2eee125776dff01288ada59ced95f9ab3a3fcbbed9c32a3dc20cad033"},
         {130000, "30be866410a6a2bb4d7fdf69dc8e8256af116c5a8fdcf5169096a211c01bf160"},
         {135000, "eaf75463b54076c4db11afb5d4917cded75b329b84b33fc8f455b7275867449c"},
-        {140000, "645512f82ab6e20fd8531716ea1f735fcaf5dcadeaec06bb4c238b36057b4934"}
+        {140000, "645512f82ab6e20fd8531716ea1f735fcaf5dcadeaec06bb4c238b36057b4934"}		
     };
 
 } // namespace cn

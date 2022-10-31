@@ -280,9 +280,8 @@ bool core::check_tx_semantic(const Transaction& tx, bool keeped_by_block, uint32
     return false;
   }
 
-  std::string errmsg;
-  if (!check_outs_valid(tx, &errmsg)) {
-    logger(ERROR) << "tx with invalid outputs, rejected for tx id= " << getObjectHash(tx) << ": " << errmsg;
+  if (!m_blockchain.check_tx_outputs(tx, height)) {
+    logger(ERROR) << "tx with invalid outputs, rejected for tx id= " << getObjectHash(tx);
     return false;
   }
 
@@ -298,12 +297,15 @@ bool core::check_tx_semantic(const Transaction& tx, bool keeped_by_block, uint32
 	  //correct check for unknown deposit creation height
 	  uint32_t testHeight = height > parameters::END_MULTIPLIER_BLOCK ? 0 : (uint32_t)(-1); //try other mode
 	  amount_in = m_currency.getTransactionAllInputsAmount(tx, testHeight);
-	  if (amount_in < amount_out) {
-		logger(ERROR) << "tx with wrong amounts: ins " << amount_in << ", outs " << amount_out << ", rejected for tx id= " << getObjectHash(tx);
-		return false;
-	  } else {
-		  height = testHeight;
-	  }
+    if (height > m_currency.depositHeightV4() || amount_in < amount_out)
+    {
+      logger(ERROR) << "tx with wrong amounts: ins " << amount_in << ", outs " << amount_out << ", rejected for tx id= " << getObjectHash(tx);
+      return false;
+    }
+    else
+    {
+      height = testHeight;
+    }
   }
 
   //check if tx use different key images

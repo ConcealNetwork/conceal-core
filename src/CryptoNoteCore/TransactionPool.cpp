@@ -159,7 +159,7 @@ namespace cn
       ttl.ttl = 0;
     }
 
-    const uint64_t fee = inputs_amount - outputs_amount;
+    const uint64_t fee = m_currency.getTransactionFee(tx, height);
     bool isFusionTransaction = fee == 0 && m_currency.isFusionTransaction(tx, blobSize);
 
     if (ttl.ttl != 0 && !keptByBlock)
@@ -269,11 +269,14 @@ namespace cn
       logger(DEBUGGING) << "Transaction " << txd.id << " added to pool";
     }
 
-    if (height >= parameters::UPGRADE_HEIGHT_V8) {
+    if (height >= m_currency.upgradeHeight(BLOCK_MAJOR_VERSION_8))
+    {
       tvc.m_added_to_pool = true;
       tvc.m_should_be_relayed = inputsValid && (fee == 1000 || isFusionTransaction || isWithdrawalTransaction || ttl.ttl != 0);
       tvc.m_verification_failed = true;
-    } else {
+    }
+    else
+    {
       tvc.m_added_to_pool = true;
       tvc.m_should_be_relayed = inputsValid && (fee > 0 || isFusionTransaction || ttl.ttl != 0);
       tvc.m_verification_failed = true;
