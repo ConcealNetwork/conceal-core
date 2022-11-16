@@ -196,6 +196,8 @@ namespace cn
 
     bool validateOutput(uint64_t amount, const MultisignatureOutput &output, uint32_t height) const;
 
+    uint64_t getGenesisTimestamp() const;
+
   private:
     explicit Currency(logging::ILogger &log) : logger(log, "currency")
     {

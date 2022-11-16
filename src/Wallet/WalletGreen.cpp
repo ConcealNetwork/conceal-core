@@ -2377,8 +2377,7 @@ namespace cn
     secondsSinceLaunch = static_cast<uint64_t>(secondsSinceLaunch * 0.95);
 
     /* Get the genesis block timestamp and add the time since launch */
-    timestamp = UINT64_C(1527135120) + secondsSinceLaunch;
-
+    timestamp = m_currency.getGenesisTimestamp() + secondsSinceLaunch;
     /* Timestamp in the future */
     if (timestamp >= static_cast<uint64_t>(std::time(nullptr)))
     {

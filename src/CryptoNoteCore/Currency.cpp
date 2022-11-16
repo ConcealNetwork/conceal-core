@@ -1300,6 +1300,15 @@ namespace cn
     return true;
   }
 
+  uint64_t Currency::getGenesisTimestamp() const
+  {
+    if (m_testnet)
+    {
+      return TESTNET_GENESIS_TIMESTAMP;
+    }
+    return GENESIS_TIMESTAMP;
+  }
+
   /* ---------------------------------------------------------------------------------------------------- */
 
   CurrencyBuilder::CurrencyBuilder(logging::ILogger &log) : m_currency(log)

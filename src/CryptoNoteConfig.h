@@ -155,6 +155,8 @@ namespace cn
 	const uint32_t GENESIS_NONCE = 10000;
 	const uint64_t GENESIS_TIMESTAMP = 1527078920;
 
+	const uint64_t TESTNET_GENESIS_TIMESTAMP = 1632048808;
+
 	const uint8_t TRANSACTION_VERSION_1 = 1;
 	const uint8_t TRANSACTION_VERSION_2 = 2;
 	const uint8_t BLOCK_MAJOR_VERSION_1 = 1; // (Consensus I)
