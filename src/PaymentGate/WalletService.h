@@ -118,6 +118,11 @@ private:
   std::vector<TransactionsInBlockRpcInfo> getRpcTransactions(const crypto::Hash &blockHash, size_t blockCount, const TransactionsInBlockInfoFilter &filter) const;
   std::vector<TransactionsInBlockRpcInfo> getRpcTransactions(uint32_t firstBlockIndex, size_t blockCount, const TransactionsInBlockInfoFilter &filter) const;
 
+  TransactionRpcInfo convertTransactionWithTransfersToTransactionRpcInfo(
+      const cn::WalletTransactionWithTransfers &transactionWithTransfers, const uint32_t &knownBlockCount) const;
+  std::vector<TransactionsInBlockRpcInfo> convertTransactionsInBlockInfoToTransactionsInBlockRpcInfo(
+      const std::vector<cn::TransactionsInBlockInfo> &blocks, const uint32_t &knownBlockCount) const;
+
   const cn::Currency &currency;
   cn::IWallet &wallet;
   cn::IFusionManager &fusionManager;

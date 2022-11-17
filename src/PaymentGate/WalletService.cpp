@@ -193,7 +193,7 @@ namespace payment_service
       std::copy(extraVector.begin(), extraVector.end(), std::back_inserter(extra));
     }
 
-    void validatePaymentId(const std::string &paymentId, logging::LoggerRef logger)
+    void validatePaymentId(const std::string &paymentId, const logging::LoggerRef& logger)
     {
       if (!checkPaymentId(paymentId))
       {
@@ -251,7 +251,7 @@ namespace payment_service
       tools::replace_file(tempFilePath, path);
     }
 
-    crypto::Hash parseHash(const std::string &hashString, logging::LoggerRef logger)
+    crypto::Hash parseHash(const std::string &hashString, const logging::LoggerRef& logger)
     {
       crypto::Hash hash;
 
@@ -293,56 +293,6 @@ namespace payment_service
     }
 
     //KD2
-
-    payment_service::TransactionRpcInfo convertTransactionWithTransfersToTransactionRpcInfo(const cn::WalletTransactionWithTransfers &transactionWithTransfers)
-    {
-      payment_service::TransactionRpcInfo transactionInfo;
-      transactionInfo.state = static_cast<uint8_t>(transactionWithTransfers.transaction.state);
-      transactionInfo.transactionHash = common::podToHex(transactionWithTransfers.transaction.hash);
-      transactionInfo.blockIndex = transactionWithTransfers.transaction.blockHeight;
-      transactionInfo.timestamp = transactionWithTransfers.transaction.timestamp;
-      transactionInfo.isBase = transactionWithTransfers.transaction.isBase;
-      transactionInfo.depositCount = transactionWithTransfers.transaction.depositCount;
-      transactionInfo.firstDepositId = transactionWithTransfers.transaction.firstDepositId;
-      transactionInfo.unlockTime = transactionWithTransfers.transaction.unlockTime;
-      transactionInfo.amount = transactionWithTransfers.transaction.totalAmount;
-      transactionInfo.fee = transactionWithTransfers.transaction.fee;
-      transactionInfo.extra = common::toHex(transactionWithTransfers.transaction.extra.data(), transactionWithTransfers.transaction.extra.size());
-      transactionInfo.paymentId = getPaymentIdStringFromExtra(transactionWithTransfers.transaction.extra);
-
-      for (const cn::WalletTransfer &transfer : transactionWithTransfers.transfers)
-      {
-        payment_service::TransferRpcInfo rpcTransfer;
-        rpcTransfer.address = transfer.address;
-        rpcTransfer.amount = transfer.amount;
-        rpcTransfer.type = static_cast<uint8_t>(transfer.type);
-        transactionInfo.transfers.push_back(std::move(rpcTransfer));
-      }
-      return transactionInfo;
-    }
-
-    std::vector<payment_service::TransactionsInBlockRpcInfo> convertTransactionsInBlockInfoToTransactionsInBlockRpcInfo(
-        const std::vector<cn::TransactionsInBlockInfo> &blocks, uint32_t &knownBlockCount)
-    {
-      std::vector<payment_service::TransactionsInBlockRpcInfo> rpcBlocks;
-      rpcBlocks.reserve(blocks.size());
-      for (const auto &block : blocks)
-      {
-        payment_service::TransactionsInBlockRpcInfo rpcBlock;
-        rpcBlock.blockHash = common::podToHex(block.blockHash);
-
-        for (const cn::WalletTransactionWithTransfers &transactionWithTransfers : block.transactions)
-        {
-          payment_service::TransactionRpcInfo transactionInfo = convertTransactionWithTransfersToTransactionRpcInfo(transactionWithTransfers);
-          transactionInfo.confirmations = knownBlockCount - transactionInfo.blockIndex;
-          rpcBlock.transactions.push_back(std::move(transactionInfo));
-        }
-
-        rpcBlocks.push_back(std::move(rpcBlock));
-      }
-
-      return rpcBlocks;
-    }
 
     std::vector<payment_service::TransactionHashesInBlockRpcInfo> convertTransactionsInBlockInfoToTransactionHashesInBlockRpcInfo(
         const std::vector<cn::TransactionsInBlockInfo> &blocks)
@@ -1240,53 +1190,7 @@ namespace payment_service
         logger(logging::WARNING) << "Transaction " << transactionHash << " is deleted";
         return make_error_code(cn::error::OBJECT_NOT_FOUND);
       }
-
-      /* Pull all the transaction information and add it to the transaction reponse */
-      transaction.state = static_cast<uint8_t>(transactionWithTransfers.transaction.state);
-      transaction.transactionHash = common::podToHex(transactionWithTransfers.transaction.hash);
-      transaction.blockIndex = transactionWithTransfers.transaction.blockHeight;
-      transaction.timestamp = transactionWithTransfers.transaction.timestamp;
-      transaction.isBase = transactionWithTransfers.transaction.isBase;
-      transaction.unlockTime = transactionWithTransfers.transaction.unlockTime;
-      transaction.amount = transactionWithTransfers.transaction.totalAmount;
-      transaction.fee = transactionWithTransfers.transaction.fee;
-      transaction.firstDepositId = transactionWithTransfers.transaction.firstDepositId;
-      transaction.depositCount = transactionWithTransfers.transaction.depositCount;
-      transaction.extra = common::toHex(transactionWithTransfers.transaction.extra.data(), transactionWithTransfers.transaction.extra.size());
-      transaction.paymentId = getPaymentIdStringFromExtra(transactionWithTransfers.transaction.extra);
-
-      /* Calculate the number of confirmations for the transaction */
-      uint32_t knownBlockCount = node.getKnownBlockCount();
-      transaction.confirmations = knownBlockCount - transaction.blockIndex;
-
-      /* Cycle through all the transfers in the transaction and extract the address, 
-       amount, and pull any messages from Extra */
-      std::vector<std::string> messages;
-      std::vector<uint8_t> extraBin = common::fromHex(transaction.extra);
-      crypto::PublicKey publicKey = cn::getTransactionPublicKeyFromExtra(extraBin);
-      messages.clear();
-
-      for (const cn::WalletTransfer &transfer : transactionWithTransfers.transfers)
-      {
-        payment_service::TransferRpcInfo rpcTransfer;
-        rpcTransfer.address = transfer.address;
-        rpcTransfer.amount = transfer.amount;
-        rpcTransfer.type = static_cast<uint8_t>(transfer.type);
-
-        for (size_t i = 0; i < wallet.getAddressCount(); ++i)
-        {
-          if (wallet.getAddress(i) == rpcTransfer.address)
-          {
-            crypto::SecretKey secretKey = wallet.getAddressSpendKey(wallet.getAddress(i)).secretKey;
-            std::vector<std::string> m = cn::get_messages_from_extra(extraBin, publicKey, &secretKey);
-            if (!m.empty())
-            {
-              rpcTransfer.message = m[0];
-            }
-          }
-        }
-        transaction.transfers.push_back(std::move(rpcTransfer));
-      }
+      transaction = convertTransactionWithTransfersToTransactionRpcInfo(transactionWithTransfers, node.getKnownBlockCount());
     }
     catch (std::system_error &x)
     {
@@ -1442,6 +1346,8 @@ namespace payment_service
     std::string payment_id_str = request.payment_id;
     std::string address_str = request.address;
 
+    validatePaymentId(payment_id_str, logger);
+
     uint64_t prefix;
     cn::AccountPublicAddress addr;
 
@@ -1459,8 +1365,6 @@ namespace payment_service
     cn::BinaryArray ba;
     cn::toBinaryArray(addr, ba);
     std::string keys = common::asString(ba);
-
-    logger(logging::INFO) << "keys:" + keys;
 
     /* Create the integrated address the same way you make a public address */
     integrated_address = tools::base_58::encode_addr(
@@ -2098,6 +2002,76 @@ namespace payment_service
       std::vector<cn::TransactionsInBlockInfo> allTransactions = getTransactions(firstBlockIndex, blockCount);
       std::vector<cn::TransactionsInBlockInfo> filteredTransactions = filterTransactions(allTransactions, filter);
       return convertTransactionsInBlockInfoToTransactionsInBlockRpcInfo(filteredTransactions, knownBlockCount);
+    }
+
+    TransactionRpcInfo WalletService::convertTransactionWithTransfersToTransactionRpcInfo(const cn::WalletTransactionWithTransfers &transactionWithTransfers, const uint32_t &knownBlockCount) const
+    {
+      TransactionRpcInfo transactionInfo;
+      transactionInfo.state = static_cast<uint8_t>(transactionWithTransfers.transaction.state);
+      transactionInfo.transactionHash = common::podToHex(transactionWithTransfers.transaction.hash);
+      transactionInfo.blockIndex = transactionWithTransfers.transaction.blockHeight;
+      transactionInfo.timestamp = transactionWithTransfers.transaction.timestamp;
+      if (transactionInfo.blockIndex != WALLET_UNCONFIRMED_TRANSACTION_HEIGHT)
+      {
+        transactionInfo.confirmations = knownBlockCount - transactionInfo.blockIndex;
+      }
+      transactionInfo.isBase = transactionWithTransfers.transaction.isBase;
+      transactionInfo.depositCount = transactionWithTransfers.transaction.depositCount;
+      transactionInfo.firstDepositId = transactionWithTransfers.transaction.firstDepositId;
+      transactionInfo.unlockTime = transactionWithTransfers.transaction.unlockTime;
+      transactionInfo.amount = transactionWithTransfers.transaction.totalAmount;
+      transactionInfo.fee = transactionWithTransfers.transaction.fee;
+      transactionInfo.extra = common::toHex(transactionWithTransfers.transaction.extra.data(), transactionWithTransfers.transaction.extra.size());
+      transactionInfo.paymentId = getPaymentIdStringFromExtra(transactionWithTransfers.transaction.extra);
+
+      std::vector<uint8_t> extraBin = common::fromHex(transactionInfo.extra);
+      crypto::PublicKey publicKey = cn::getTransactionPublicKeyFromExtra(extraBin);
+
+      for (const cn::WalletTransfer &transfer : transactionWithTransfers.transfers)
+      {
+        TransferRpcInfo rpcTransfer;
+        rpcTransfer.address = transfer.address;
+        rpcTransfer.amount = transfer.amount;
+        rpcTransfer.type = static_cast<uint8_t>(transfer.type);
+
+        for (size_t i = 0; i < wallet.getAddressCount(); ++i)
+        {
+          const std::string &address = wallet.getAddress(i);
+          if (address == rpcTransfer.address)
+          {
+            crypto::SecretKey secretKey = wallet.getAddressSpendKey(address).secretKey;
+            std::vector<std::string> m = cn::get_messages_from_extra(extraBin, publicKey, &secretKey);
+            if (!m.empty())
+            {
+              rpcTransfer.message = m[0];
+            }
+          }
+        }
+        transactionInfo.transfers.push_back(std::move(rpcTransfer));
+      }
+      return transactionInfo;
+    }
+
+    std::vector<TransactionsInBlockRpcInfo> WalletService::convertTransactionsInBlockInfoToTransactionsInBlockRpcInfo(
+        const std::vector<cn::TransactionsInBlockInfo> &blocks, const uint32_t &knownBlockCount) const
+    {
+      std::vector<TransactionsInBlockRpcInfo> rpcBlocks;
+      rpcBlocks.reserve(blocks.size());
+      for (const auto &block : blocks)
+      {
+        TransactionsInBlockRpcInfo rpcBlock;
+        rpcBlock.blockHash = common::podToHex(block.blockHash);
+
+        for (const cn::WalletTransactionWithTransfers &transactionWithTransfers : block.transactions)
+        {
+          TransactionRpcInfo transactionInfo = convertTransactionWithTransfersToTransactionRpcInfo(transactionWithTransfers, knownBlockCount);
+          rpcBlock.transactions.push_back(std::move(transactionInfo));
+        }
+
+        rpcBlocks.push_back(std::move(rpcBlock));
+      }
+
+      return rpcBlocks;
     }
 
   } //namespace payment_service
