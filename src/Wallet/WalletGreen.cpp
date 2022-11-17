@@ -2366,18 +2366,15 @@ namespace cn
       return 0;
     }
 
-    /* Get the block timestamp from the node if the node has it */
-    uint64_t timestamp = static_cast<uint64_t>(std::time(nullptr));
-
     /* Get the amount of seconds since the blockchain launched */
-    uint64_t secondsSinceLaunch = scanHeight * cn::parameters::DIFFICULTY_TARGET;
+    double secondsSinceLaunch = scanHeight * cn::parameters::DIFFICULTY_TARGET;
 
     /* Add a bit of a buffer in case of difficulty weirdness, blocks coming
 	   out too fast */
-    secondsSinceLaunch = static_cast<uint64_t>(secondsSinceLaunch * 0.95);
+    secondsSinceLaunch = secondsSinceLaunch * 0.95;
 
     /* Get the genesis block timestamp and add the time since launch */
-    timestamp = m_currency.getGenesisTimestamp() + secondsSinceLaunch;
+    uint64_t timestamp = m_currency.getGenesisTimestamp() + static_cast<uint64_t>(secondsSinceLaunch);
     /* Timestamp in the future */
     if (timestamp >= static_cast<uint64_t>(std::time(nullptr)))
     {
