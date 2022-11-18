@@ -2211,11 +2211,9 @@ namespace cn
     insertTx.state = WalletTransactionState::CREATED;
     insertTx.creationTime = static_cast<uint64_t>(time(nullptr));
     insertTx.unlockTime = unlockTimestamp;
-    insertTx.firstDepositId = cn::WALLET_INVALID_DEPOSIT_ID;
     insertTx.blockHeight = cn::WALLET_UNCONFIRMED_TRANSACTION_HEIGHT;
     insertTx.extra.assign(reinterpret_cast<const char *>(extra.data()), extra.size());
     insertTx.fee = fee;
-    insertTx.depositCount = 77;
     insertTx.hash = transactionHash;
     insertTx.totalAmount = 0; // 0 until transactionHandlingEnd() is called
     insertTx.timestamp = 0;   //0 until included in a block
@@ -3478,7 +3476,7 @@ namespace cn
       return;
     }
 
-    size_t firstDepositId = std::numeric_limits<DepositId>::max();
+    size_t firstDepositId = WALLET_INVALID_DEPOSIT_ID;
     size_t depositCount = 0;
 
     bool updated = false;
