@@ -18,10 +18,11 @@ namespace cn {
 
     const command_line::arg_descriptor<std::string> arg_rpc_bind_ip = { "rpc-bind-ip", "", DEFAULT_RPC_IP };
     const command_line::arg_descriptor<uint16_t> arg_rpc_bind_port = { "rpc-bind-port", "", DEFAULT_RPC_PORT };
+    const command_line::arg_descriptor<std::string> arg_enable_cors = { "enable-cors", "Adds header 'Access-Control-Allow-Origin' to the daemon's RPC responses. Uses the value as domain. Use * for all", "" };
   }
 
 
-  RpcServerConfig::RpcServerConfig() : bindIp(DEFAULT_RPC_IP), bindPort(DEFAULT_RPC_PORT) {
+  RpcServerConfig::RpcServerConfig() : bindIp(DEFAULT_RPC_IP), bindPort(DEFAULT_RPC_PORT), enableCors("") {
   }
 
   std::string RpcServerConfig::getBindAddress() const {
@@ -31,6 +32,7 @@ namespace cn {
   void RpcServerConfig::initOptions(boost::program_options::options_description& desc) {
     command_line::add_arg(desc, arg_rpc_bind_ip);
     command_line::add_arg(desc, arg_rpc_bind_port);
+    command_line::add_arg(desc, arg_enable_cors);
   }
 
   void RpcServerConfig::init(const boost::program_options::variables_map &vm)
@@ -48,5 +50,6 @@ namespace cn {
         bindPort = argPort;
       }
     }
+    enableCors = command_line::get_arg(vm, arg_enable_cors);
   }
 }
