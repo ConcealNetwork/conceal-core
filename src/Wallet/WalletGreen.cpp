@@ -2696,6 +2696,29 @@ namespace cn
 
     std::unique_ptr<ITransaction> tx = createTransaction();
 
+    using AmountToAddress = std::pair<const AccountPublicAddress *, uint64_t>;
+    std::vector<AmountToAddress> amountsToAddresses;
+    for (const auto &output : decomposedOutputs)
+    {
+      for (auto amount : output.amounts)
+      {
+        amountsToAddresses.emplace_back(AmountToAddress{&output.receiver, amount});
+      }
+    }
+
+    std::shuffle(amountsToAddresses.begin(), amountsToAddresses.end(), std::default_random_engine{crypto::rand<std::default_random_engine::result_type>()});
+    std::sort(amountsToAddresses.begin(), amountsToAddresses.end(), [](const AmountToAddress &left, const AmountToAddress &right) {
+      return left.second < right.second;
+    });
+
+    tx->setUnlockTime(unlockTimestamp);
+
+    for (auto &input : keysInfo)
+    {
+      tx->addInput(makeAccountKeys(*input.walletRecord), input.keyInfo, input.ephKeys);
+    }
+
+    tx->setDeterministicTransactionSecretKey(m_viewSecretKey);
     tx->getTransactionSecretKey(transactionSK);
     crypto::PublicKey publicKey = tx->getTransactionPublicKey();
     cn::KeyPair kp = {publicKey, transactionSK};
@@ -2713,38 +2736,18 @@ namespace cn
       tx->appendExtra(ba);
     }
 
-    typedef std::pair<const AccountPublicAddress *, uint64_t> AmountToAddress;
-    std::vector<AmountToAddress> amountsToAddresses;
-    for (const auto &output : decomposedOutputs)
-    {
-      for (auto amount : output.amounts)
-      {
-        amountsToAddresses.emplace_back(AmountToAddress{&output.receiver, amount});
-      }
-    }
-
-    std::shuffle(amountsToAddresses.begin(), amountsToAddresses.end(), std::default_random_engine{crypto::rand<std::default_random_engine::result_type>()});
-    std::sort(amountsToAddresses.begin(), amountsToAddresses.end(), [](const AmountToAddress &left, const AmountToAddress &right) {
-      return left.second < right.second;
-    });
-
     for (const auto &amountToAddress : amountsToAddresses)
     {
       tx->addOutput(amountToAddress.second, *amountToAddress.first);
     }
 
-    tx->setUnlockTime(unlockTimestamp);
     tx->appendExtra(common::asBinaryArray(extra));
 
-    for (auto &input : keysInfo)
-    {
-      tx->addInput(makeAccountKeys(*input.walletRecord), input.keyInfo, input.ephKeys);
-    }
-
     size_t i = 0;
-    for (auto &input : keysInfo)
+    for (const auto &input : keysInfo)
     {
-      tx->signInputKey(i++, input.keyInfo, input.ephKeys);
+      tx->signInputKey(i, input.keyInfo, input.ephKeys);
+      i++;
     }
 
     return tx;
