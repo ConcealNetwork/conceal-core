@@ -143,7 +143,7 @@ std::error_code PaymentServiceJsonRpcServer::handleExportWallet(const ExportWall
 
 std::error_code PaymentServiceJsonRpcServer::handleExportWalletKeys(const ExportWalletKeys::Request &request, ExportWalletKeys::Response &response)
 {
-  return service.exportWalletKeys(request.exportFilename);
+  return service.exportWallet(request.exportFilename, true);
 }
 
 std::error_code PaymentServiceJsonRpcServer::handleCreateAddressList(const CreateAddressList::Request& request, CreateAddressList::Response& response) {

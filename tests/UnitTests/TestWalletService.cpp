@@ -94,8 +94,7 @@ struct IWalletBaseStub : public cn::IWallet, public cn::IFusionManager {
   }
   void load(const std::string &path, const std::string &password, std::string &extra) override {}
   void reset(const uint64_t scanHeight) override {}
-  void exportWallet(const std::string& path, bool encrypt = true, WalletSaveLevel saveLevel = WalletSaveLevel::SAVE_ALL, const std::string& extra = "") override {}
-  void exportWalletKeys(const std::string &path, bool encrypt = true, WalletSaveLevel saveLevel = WalletSaveLevel::SAVE_KEYS_ONLY, const std::string &extra = "") override {}
+  void exportWallet(const std::string &path, WalletSaveLevel saveLevel, bool encrypt = true, const std::string &extra = "") override {}
   size_t getWalletDepositCount() const override { return 0; }
   std::vector<DepositsInBlockInfo> getDeposits(const crypto::Hash &blockHash, size_t count) const override { return {}; }
   std::vector<DepositsInBlockInfo> getDeposits(uint32_t blockIndex, size_t count) const override { return {}; }

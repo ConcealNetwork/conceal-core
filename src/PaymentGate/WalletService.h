@@ -55,8 +55,7 @@ public:
   std::error_code saveWalletNoThrow();
   std::error_code resetWallet();
   std::error_code resetWallet(const uint32_t scanHeight);
-  std::error_code exportWallet(const std::string& fileName);
-  std::error_code exportWalletKeys(const std::string &fileName);
+  std::error_code exportWallet(const std::string &fileName, bool keysOnly = false);
   std::error_code replaceWithNewWallet(const std::string &viewSecretKey);
   std::error_code createAddress(const std::string &spendSecretKeyText, std::string &address);
   std::error_code createAddress(std::string &address);
