@@ -23,24 +23,25 @@ class PaymentServiceJsonRpcServer : public cn::JsonRpcServer {
 public:
   PaymentServiceJsonRpcServer(platform_system::Dispatcher& sys, platform_system::Event& stopEvent, WalletService& service, logging::ILogger& loggerGroup);
   PaymentServiceJsonRpcServer(const PaymentServiceJsonRpcServer&) = delete;
+  virtual ~PaymentServiceJsonRpcServer() = default;
 
 protected:
-  virtual void processJsonRpcRequest(const common::JsonValue& req, common::JsonValue& resp) override;
+  void processJsonRpcRequest(const common::JsonValue& req, common::JsonValue& resp) override;
 
 private:
   WalletService& service;
   logging::LoggerRef logger;
 
-  typedef std::function<void (const common::JsonValue& jsonRpcParams, common::JsonValue& jsonResponse)> HandlerFunction;
+  using HandlerFunction = std::function<void(const common::JsonValue &jsonRpcParams, common::JsonValue &jsonResponse)>;
 
   template <typename RequestType, typename ResponseType, typename RequestHandler>
-  HandlerFunction jsonHandler(RequestHandler handler) {
+  HandlerFunction jsonHandler(RequestHandler handler) const {
     return [handler] (const common::JsonValue& jsonRpcParams, common::JsonValue& jsonResponse) mutable {
       RequestType request;
       ResponseType response;
 
       try {
-        cn::JsonInputValueSerializer inputSerializer(const_cast<common::JsonValue&>(jsonRpcParams));
+        cn::JsonInputValueSerializer inputSerializer(jsonRpcParams);
         serialize(request, inputSerializer);
       } catch (std::exception&) {
         makeGenericErrorReponse(jsonResponse, "Invalid Request", -32600);
@@ -61,15 +62,15 @@ private:
 
   std::unordered_map<std::string, HandlerFunction> handlers;
 
-  std::error_code handleReset(const Reset::Request& request, Reset::Response& response);
-  std::error_code handleSave(const Save::Request& request, Save::Response& response);
-  std::error_code handleExportWallet(const ExportWallet::Request &request, ExportWallet::Response &response);
-  std::error_code handleExportWalletKeys(const ExportWalletKeys::Request &request, ExportWalletKeys::Response &response);
+  std::error_code handleReset(const Reset::Request &request, const Reset::Response &response);
+  std::error_code handleSave(const Save::Request& request, const Save::Response& response);
+  std::error_code handleExportWallet(const ExportWallet::Request &request, const ExportWallet::Response &response);
+  std::error_code handleExportWalletKeys(const ExportWalletKeys::Request &request, const ExportWalletKeys::Response &response);
   std::error_code handleCreateIntegrated(const CreateIntegrated::Request& request, CreateIntegrated::Response& response);
   std::error_code handleSplitIntegrated(const SplitIntegrated::Request& request, SplitIntegrated::Response& response);
   std::error_code handleCreateAddress(const CreateAddress::Request& request, CreateAddress::Response& response);
   std::error_code handleCreateAddressList(const CreateAddressList::Request& request, CreateAddressList::Response& response);
-  std::error_code handleDeleteAddress(const DeleteAddress::Request& request, DeleteAddress::Response& response);
+  std::error_code handleDeleteAddress(const DeleteAddress::Request& request, const DeleteAddress::Response& response);
   std::error_code handleGetSpendKeys(const GetSpendKeys::Request& request, GetSpendKeys::Response& response);
   std::error_code handleGetBalance(const GetBalance::Request& request, GetBalance::Response& response);
   std::error_code handleGetBlockHashes(const GetBlockHashes::Request& request, GetBlockHashes::Response& response);
@@ -80,8 +81,8 @@ private:
   std::error_code handleSendTransaction(const SendTransaction::Request& request, SendTransaction::Response& response);
   std::error_code handleCreateDelayedTransaction(const CreateDelayedTransaction::Request& request, CreateDelayedTransaction::Response& response);
   std::error_code handleGetDelayedTransactionHashes(const GetDelayedTransactionHashes::Request& request, GetDelayedTransactionHashes::Response& response);
-  std::error_code handleDeleteDelayedTransaction(const DeleteDelayedTransaction::Request& request, DeleteDelayedTransaction::Response& response);
-  std::error_code handleSendDelayedTransaction(const SendDelayedTransaction::Request& request, SendDelayedTransaction::Response& response);
+  std::error_code handleDeleteDelayedTransaction(const DeleteDelayedTransaction::Request& request, const DeleteDelayedTransaction::Response& response);
+  std::error_code handleSendDelayedTransaction(const SendDelayedTransaction::Request& request, const SendDelayedTransaction::Response& response);
   std::error_code handleGetViewKey(const GetViewKey::Request& request, GetViewKey::Response& response);
   std::error_code handleGetStatus(const GetStatus::Request& request, GetStatus::Response& response);
   std::error_code handleCreateDeposit(const CreateDeposit::Request& request, CreateDeposit::Response& response);
