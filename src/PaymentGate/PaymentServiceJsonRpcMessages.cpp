@@ -164,6 +164,7 @@ void CreateAddressList::Request::serialize(cn::ISerializer &serializer)
   {
     throw RequestSerializationError();
   }
+  serializer(reset, "reset");
 }
 
 void CreateAddressList::Response::serialize(cn::ISerializer &serializer)

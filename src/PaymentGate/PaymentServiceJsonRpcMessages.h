@@ -236,7 +236,7 @@ struct CreateAddressList
   struct Request
   {
     std::vector<std::string> spendSecretKeys;
-    bool reset;
+    bool reset = false;
     void serialize(cn::ISerializer &serializer);
   };
 
