@@ -12,26 +12,9 @@
 #include <algorithm>
 #include <boost/program_options.hpp>
 
-#include "Logging/ILogger.h"
-
 namespace po = boost::program_options;
 
 namespace payment_service {
-
-Configuration::Configuration() {
-  generateNewContainer = false;
-  daemonize = false;
-  registerService = false;
-  unregisterService = false;
-  logFile = "payment_gate.log";
-  testnet = false;
-  printAddresses = false;
-  logLevel = logging::INFO;
-  bindAddress = "";
-  bindPort = 0;
-  secretSpendKey = "";
-  secretViewKey = "";
-}
 
 void Configuration::initOptions(boost::program_options::options_description& desc) {
   desc.add_options()

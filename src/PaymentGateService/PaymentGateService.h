@@ -19,8 +19,8 @@
 
 class PaymentGateService {
 public:
-
-  PaymentGateService() : dispatcher(nullptr), stopEvent(nullptr), config(), service(nullptr), logger(), currencyBuilder(logger) {
+  PaymentGateService() : currencyBuilder(logger)
+  {
   }
 
   bool init(int argc, char** argv);
@@ -36,15 +36,15 @@ public:
 
 private:
 
-  void runInProcess(logging::LoggerRef& log);
-  void runRpcProxy(logging::LoggerRef& log);
+  void runInProcess(const logging::LoggerRef& log);
+  void runRpcProxy(const logging::LoggerRef& log);
 
   void runWalletService(const cn::Currency& currency, cn::INode& node);
 
-  platform_system::Dispatcher* dispatcher;
-  platform_system::Event* stopEvent;
+  platform_system::Dispatcher* dispatcher = nullptr;
+  platform_system::Event* stopEvent = nullptr;
   payment_service::ConfigurationManager config;
-  payment_service::WalletService* service;
+  payment_service::WalletService* service = nullptr;
   cn::CurrencyBuilder currencyBuilder;
   
   logging::LoggerGroup logger;

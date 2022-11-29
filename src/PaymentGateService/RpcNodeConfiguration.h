@@ -14,13 +14,13 @@ namespace payment_service {
 
 class RpcNodeConfiguration {
 public:
-  RpcNodeConfiguration();
+  RpcNodeConfiguration() = default;
 
   static void initOptions(boost::program_options::options_description& desc);
   void init(const boost::program_options::variables_map& options);
 
   std::string daemonHost;
-  uint16_t daemonPort;
+  uint16_t daemonPort = 0;
 };
 
 } //namespace payment_service
