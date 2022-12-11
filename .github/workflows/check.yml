@@ -24,7 +24,7 @@ jobs:
           $os="windows"
           $ccx_version="${{ github.sha }}".SubString(0,7)
           $release_name="ccx-cli-$os-dev-$ccx_version"
-          Write-Output "release_name=${release_name}" >> $GITHUB_OUTPUT
+          $GITHUB_OUTPUT = "$GITHUB_OUTPUT release_name=${release_name}"
 
       - name: Install msbuild
         uses: microsoft/setup-msbuild@v1.1.3
@@ -112,7 +112,7 @@ jobs:
           $os="mingw"
           $ccx_version="${{ github.sha }}".SubString(0,7)
           $release_name="ccx-cli-$os-dev-$ccx_version"
-          Write-Output "release_name=${release_name}" >> $GITHUB_OUTPUT
+          $GITHUB_OUTPUT = "$GITHUB_OUTPUT release_name=${release_name}"
 
       - name: Build
         shell: msys2 {0}
