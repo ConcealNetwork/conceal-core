@@ -579,8 +579,9 @@ bool RpcServer::k_on_check_tx_proof(const K_COMMAND_RPC_CHECK_TX_PROOF::request&
 		throw JsonRpc::JsonRpcError{ CORE_RPC_ERROR_CODE_WRONG_PARAM, "Failed to parse address " + req.dest_address + '.' };
 	}
 	// parse pubkey r*A & signature
-	const size_t header_len = strlen("ProofV1");
-	if (req.signature.size() < header_len || req.signature.substr(0, header_len) != "ProofV1") {
+  const std::string prefix = "ProofV1";
+	const size_t header_len = prefix.size();
+	if (req.signature.size() < header_len || req.signature.substr(0, header_len) != prefix) {
 		throw JsonRpc::JsonRpcError{ CORE_RPC_ERROR_CODE_WRONG_PARAM, "Signature header check error" };
 	}
 	crypto::PublicKey rA;
@@ -689,8 +690,8 @@ bool RpcServer::k_on_check_reserve_proof(const K_COMMAND_RPC_CHECK_RESERVE_PROOF
   }
 
   // parse signature
-  static constexpr char header[] = "ReserveProofV1";
-  const size_t header_len = strlen(header);
+  const std::string header = "ReserveProofV1";
+  const size_t header_len = header.size();
   if (req.signature.size() < header_len || req.signature.substr(0, header_len) != header)
   {
     throw JsonRpc::JsonRpcError{CORE_RPC_ERROR_CODE_INTERNAL_ERROR, "Signature header check error"};
