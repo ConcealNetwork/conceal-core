@@ -13,21 +13,23 @@
 
 #include <boost/program_options.hpp>
 
+#include "Logging/ILogger.h"
+
 namespace payment_service {
 
 class ConfigurationError : public std::runtime_error {
 public:
-  ConfigurationError(const char* desc) : std::runtime_error(desc) {}
+  using runtime_error::runtime_error;
 };
 
 struct Configuration {
-  Configuration();
+  Configuration() = default;
 
   void init(const boost::program_options::variables_map& options);
   static void initOptions(boost::program_options::options_description& desc);
 
   std::string bindAddress;
-  uint16_t bindPort;
+  uint16_t bindPort = 0;
   std::string rpcUser;
   std::string rpcPassword;
   std::string secretSpendKey;
@@ -35,17 +37,17 @@ struct Configuration {
 
   std::string containerFile;
   std::string containerPassword;
-  std::string logFile;
+  std::string logFile = "payment_gate.log";
   std::string serverRoot;
 
-  bool generateNewContainer;
-  bool daemonize;
-  bool registerService;
-  bool unregisterService;
-  bool testnet;
-  bool printAddresses;
+  bool generateNewContainer = false;
+  bool daemonize = false;
+  bool registerService = false;
+  bool unregisterService = false;
+  bool testnet = false;
+  bool printAddresses = false;
 
-  size_t logLevel;
+  size_t logLevel = logging::INFO;
 };
 
 } //namespace payment_service

@@ -978,60 +978,7 @@ namespace cn
     incIv(dstPrefix->nextIv);
   }
 
-  void WalletGreen::exportWalletKeys(const std::string &path, bool encrypt, WalletSaveLevel saveLevel, const std::string &extra)
-  {
-    m_logger(INFO, BRIGHT_WHITE) << "Exporting container...";
-
-    throwIfNotInitialized();
-    throwIfStopped();
-    stopBlockchainSynchronizer();
-
-    try
-    {
-      bool storageCreated = false;
-      tools::ScopeExit failExitHandler([path, &storageCreated] {
-        // Don't delete file if it has existed
-        if (storageCreated)
-        {
-          boost::system::error_code ignore;
-          boost::filesystem::remove(path, ignore);
-        }
-      });
-
-      ContainerStorage newStorage(path, FileMappedVectorOpenMode::CREATE, m_containerStorage.prefixSize());
-      storageCreated = true;
-
-      chacha8_key newStorageKey;
-      if (encrypt)
-      {
-        newStorageKey = m_key;
-      }
-      else
-      {
-        cn_context cnContext;
-        generate_chacha8_key(cnContext, "", newStorageKey);
-      }
-
-      copyContainerStoragePrefix(m_containerStorage, m_key, newStorage, newStorageKey);
-      copyContainerStorageKeys(m_containerStorage, m_key, newStorage, newStorageKey);
-      saveWalletCache(newStorage, newStorageKey, saveLevel, extra);
-
-      failExitHandler.cancel();
-
-      m_logger(INFO) << "Container export finished";
-    }
-    catch (const std::exception &e)
-    {
-      m_logger(ERROR, BRIGHT_RED) << "Failed to export container: " << e.what();
-      startBlockchainSynchronizer();
-      throw;
-    }
-
-    startBlockchainSynchronizer();
-    m_logger(INFO, BRIGHT_WHITE) << "Container exported";
-  }
-
-  void WalletGreen::exportWallet(const std::string &path, bool encrypt, WalletSaveLevel saveLevel, const std::string &extra)
+  void WalletGreen::exportWallet(const std::string &path, WalletSaveLevel saveLevel, bool encrypt, const std::string &extra)
   {
     m_logger(INFO, BRIGHT_WHITE) << "Exporting container...";
 
@@ -2211,11 +2158,9 @@ namespace cn
     insertTx.state = WalletTransactionState::CREATED;
     insertTx.creationTime = static_cast<uint64_t>(time(nullptr));
     insertTx.unlockTime = unlockTimestamp;
-    insertTx.firstDepositId = cn::WALLET_INVALID_DEPOSIT_ID;
     insertTx.blockHeight = cn::WALLET_UNCONFIRMED_TRANSACTION_HEIGHT;
     insertTx.extra.assign(reinterpret_cast<const char *>(extra.data()), extra.size());
     insertTx.fee = fee;
-    insertTx.depositCount = 77;
     insertTx.hash = transactionHash;
     insertTx.totalAmount = 0; // 0 until transactionHandlingEnd() is called
     insertTx.timestamp = 0;   //0 until included in a block
@@ -2366,19 +2311,15 @@ namespace cn
       return 0;
     }
 
-    /* Get the block timestamp from the node if the node has it */
-    uint64_t timestamp = static_cast<uint64_t>(std::time(nullptr));
-
     /* Get the amount of seconds since the blockchain launched */
-    uint64_t secondsSinceLaunch = scanHeight * cn::parameters::DIFFICULTY_TARGET;
+    double secondsSinceLaunch = scanHeight * cn::parameters::DIFFICULTY_TARGET;
 
     /* Add a bit of a buffer in case of difficulty weirdness, blocks coming
 	   out too fast */
-    secondsSinceLaunch = static_cast<uint64_t>(secondsSinceLaunch * 0.95);
+    secondsSinceLaunch = secondsSinceLaunch * 0.95;
 
     /* Get the genesis block timestamp and add the time since launch */
-    timestamp = UINT64_C(1527135120) + secondsSinceLaunch;
-
+    uint64_t timestamp = m_currency.getGenesisTimestamp() + static_cast<uint64_t>(secondsSinceLaunch);
     /* Timestamp in the future */
     if (timestamp >= static_cast<uint64_t>(std::time(nullptr)))
     {
@@ -2702,6 +2643,29 @@ namespace cn
 
     std::unique_ptr<ITransaction> tx = createTransaction();
 
+    using AmountToAddress = std::pair<const AccountPublicAddress *, uint64_t>;
+    std::vector<AmountToAddress> amountsToAddresses;
+    for (const auto &output : decomposedOutputs)
+    {
+      for (auto amount : output.amounts)
+      {
+        amountsToAddresses.emplace_back(AmountToAddress{&output.receiver, amount});
+      }
+    }
+
+    std::shuffle(amountsToAddresses.begin(), amountsToAddresses.end(), std::default_random_engine{crypto::rand<std::default_random_engine::result_type>()});
+    std::sort(amountsToAddresses.begin(), amountsToAddresses.end(), [](const AmountToAddress &left, const AmountToAddress &right) {
+      return left.second < right.second;
+    });
+
+    tx->setUnlockTime(unlockTimestamp);
+
+    for (auto &input : keysInfo)
+    {
+      tx->addInput(makeAccountKeys(*input.walletRecord), input.keyInfo, input.ephKeys);
+    }
+
+    tx->setDeterministicTransactionSecretKey(m_viewSecretKey);
     tx->getTransactionSecretKey(transactionSK);
     crypto::PublicKey publicKey = tx->getTransactionPublicKey();
     cn::KeyPair kp = {publicKey, transactionSK};
@@ -2719,38 +2683,18 @@ namespace cn
       tx->appendExtra(ba);
     }
 
-    typedef std::pair<const AccountPublicAddress *, uint64_t> AmountToAddress;
-    std::vector<AmountToAddress> amountsToAddresses;
-    for (const auto &output : decomposedOutputs)
-    {
-      for (auto amount : output.amounts)
-      {
-        amountsToAddresses.emplace_back(AmountToAddress{&output.receiver, amount});
-      }
-    }
-
-    std::shuffle(amountsToAddresses.begin(), amountsToAddresses.end(), std::default_random_engine{crypto::rand<std::default_random_engine::result_type>()});
-    std::sort(amountsToAddresses.begin(), amountsToAddresses.end(), [](const AmountToAddress &left, const AmountToAddress &right) {
-      return left.second < right.second;
-    });
-
     for (const auto &amountToAddress : amountsToAddresses)
     {
       tx->addOutput(amountToAddress.second, *amountToAddress.first);
     }
 
-    tx->setUnlockTime(unlockTimestamp);
     tx->appendExtra(common::asBinaryArray(extra));
 
-    for (auto &input : keysInfo)
-    {
-      tx->addInput(makeAccountKeys(*input.walletRecord), input.keyInfo, input.ephKeys);
-    }
-
     size_t i = 0;
-    for (auto &input : keysInfo)
+    for (const auto &input : keysInfo)
     {
-      tx->signInputKey(i++, input.keyInfo, input.ephKeys);
+      tx->signInputKey(i, input.keyInfo, input.ephKeys);
+      i++;
     }
 
     return tx;
@@ -3482,7 +3426,7 @@ namespace cn
       return;
     }
 
-    size_t firstDepositId = std::numeric_limits<DepositId>::max();
+    size_t firstDepositId = WALLET_INVALID_DEPOSIT_ID;
     size_t depositCount = 0;
 
     bool updated = false;

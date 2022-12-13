@@ -11,6 +11,7 @@
 #include <limits>
 #include <vector>
 #include "crypto/hash.h"
+#include "IWallet.h"
 #include "ITransaction.h"
 #include "IObservable.h"
 #include "IStreamSerializable.h"
@@ -27,7 +28,7 @@ namespace cn
     crypto::PublicKey publicKey;
     uint32_t blockHeight;
     uint64_t timestamp;
-    size_t firstDepositId;
+    size_t firstDepositId = WALLET_INVALID_DEPOSIT_ID;
     size_t depositCount = 0;
     uint64_t unlockTime;
     uint64_t totalAmountIn;
@@ -104,6 +105,8 @@ namespace cn
       TransferAvailable,
       TransferSpent
     };
+
+    virtual ~ITransfersContainer() = default;
 
     virtual size_t transfersCount() const = 0;
     virtual size_t transactionsCount() const = 0;

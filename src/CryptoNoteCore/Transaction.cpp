@@ -106,6 +106,7 @@ namespace cn {
     // secret key
     virtual bool getTransactionSecretKey(SecretKey& key) const override;
     virtual void setTransactionSecretKey(const SecretKey& key) override;
+    void setDeterministicTransactionSecretKey(const SecretKey& key) override;
 
   private:
 
@@ -235,6 +236,20 @@ namespace cn {
     }
 
     secretKey = key;
+  }
+
+  void TransactionImpl::setDeterministicTransactionSecretKey(const SecretKey& key)
+  {
+    checkIfSigning();
+    KeyPair deterministicTxKeys;
+    generateDeterministicTransactionKeys(getTransactionInputsHash(), key, deterministicTxKeys);
+
+    TransactionExtraPublicKey pk = { deterministicTxKeys.publicKey };
+    extra.set(pk);
+
+    transaction.extra = extra.serialize();
+
+    secretKey = deterministicTxKeys.secretKey;
   }
 
   size_t TransactionImpl::addInput(const KeyInput& input) {

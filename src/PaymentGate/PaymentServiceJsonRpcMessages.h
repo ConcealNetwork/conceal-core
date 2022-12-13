@@ -19,19 +19,19 @@ namespace payment_service
 class RequestSerializationError : public std::exception
 {
 public:
-  virtual const char *what() const throw() override { return "Request error"; }
+  const char *what() const throw() override { return "Request error"; }
 };
 
 struct Save
 {
   struct Request
   {
-    void serialize(cn::ISerializer &serializer);
+    void serialize(const cn::ISerializer &serializer) const;
   };
 
   struct Response
   {
-    void serialize(cn::ISerializer &serializer);
+    void serialize(const cn::ISerializer &serializer) const;
   };
 };
 
@@ -44,7 +44,7 @@ struct Reset {
   };
 
   struct Response {
-    void serialize(cn::ISerializer& serializer);
+    void serialize(const cn::ISerializer &serializer) const;
   };
 };
 
@@ -59,7 +59,7 @@ struct ExportWallet
 
   struct Response
   {
-    void serialize(cn::ISerializer &serializer);
+    void serialize(const cn::ISerializer &serializer) const;
   };
 };
 
@@ -74,7 +74,7 @@ struct ExportWalletKeys
 
   struct Response
   {
-    void serialize(cn::ISerializer &serializer);
+    void serialize(const cn::ISerializer &serializer) const;
   };
 };
 
@@ -82,7 +82,7 @@ struct GetViewKey
 {
   struct Request
   {
-    void serialize(cn::ISerializer &serializer);
+    void serialize(const cn::ISerializer &serializer) const;
   };
 
   struct Response
@@ -97,7 +97,7 @@ struct GetStatus
 {
   struct Request
   {
-    void serialize(cn::ISerializer &serializer);
+    void serialize(const cn::ISerializer &serializer) const;
   };
 
   struct Response
@@ -202,7 +202,7 @@ struct GetAddresses
 {
   struct Request
   {
-    void serialize(cn::ISerializer &serializer);
+    void serialize(const cn::ISerializer &serializer) const;
   };
 
   struct Response
@@ -236,7 +236,7 @@ struct CreateAddressList
   struct Request
   {
     std::vector<std::string> spendSecretKeys;
-    bool reset;
+    bool reset = false;
     void serialize(cn::ISerializer &serializer);
   };
 
@@ -258,7 +258,7 @@ struct DeleteAddress
 
   struct Response
   {
-    void serialize(cn::ISerializer &serializer);
+    void serialize(const cn::ISerializer &serializer) const;
   };
 };
 
@@ -545,7 +545,7 @@ struct GetDelayedTransactionHashes
 {
   struct Request
   {
-    void serialize(cn::ISerializer &serializer);
+    void serialize(const cn::ISerializer &serializer) const;
   };
 
   struct Response
@@ -567,7 +567,7 @@ struct DeleteDelayedTransaction
 
   struct Response
   {
-    void serialize(cn::ISerializer &serializer);
+    void serialize(const cn::ISerializer &serializer) const;
   };
 };
 
@@ -582,7 +582,7 @@ struct SendDelayedTransaction
 
   struct Response
   {
-    void serialize(cn::ISerializer &serializer);
+    void serialize(const cn::ISerializer &serializer) const;
   };
 };
 

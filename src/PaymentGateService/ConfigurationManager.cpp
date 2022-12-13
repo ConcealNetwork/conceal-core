@@ -18,10 +18,6 @@ namespace payment_service {
 
 namespace po = boost::program_options;
 
-ConfigurationManager::ConfigurationManager() {
-  startInprocess = false;
-}
-
 bool ConfigurationManager::init(int argc, char** argv) {
   po::options_description cmdGeneralOptions("Common Options");
 

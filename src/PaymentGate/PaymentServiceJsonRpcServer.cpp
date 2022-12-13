@@ -110,7 +110,7 @@ void PaymentServiceJsonRpcServer::processJsonRpcRequest(const common::JsonValue&
   }
 }
 
-std::error_code PaymentServiceJsonRpcServer::handleReset(const Reset::Request& request, Reset::Response& response) {
+std::error_code PaymentServiceJsonRpcServer::handleReset(const Reset::Request& request, const Reset::Response&) {
   if (request.viewSecretKey.empty()) {
     if (request.scanHeight != std::numeric_limits<uint32_t>::max()) {
       return service.resetWallet(request.scanHeight);
@@ -136,21 +136,21 @@ std::error_code PaymentServiceJsonRpcServer::handleCreateAddress(const CreateAdd
   }
 }
 
-std::error_code PaymentServiceJsonRpcServer::handleExportWallet(const ExportWallet::Request &request, ExportWallet::Response &response)
+std::error_code PaymentServiceJsonRpcServer::handleExportWallet(const ExportWallet::Request &request, const ExportWallet::Response &)
 {
   return service.exportWallet(request.exportFilename);
 }
 
-std::error_code PaymentServiceJsonRpcServer::handleExportWalletKeys(const ExportWalletKeys::Request &request, ExportWalletKeys::Response &response)
+std::error_code PaymentServiceJsonRpcServer::handleExportWalletKeys(const ExportWalletKeys::Request &request, const ExportWalletKeys::Response &)
 {
-  return service.exportWalletKeys(request.exportFilename);
+  return service.exportWallet(request.exportFilename, true);
 }
 
 std::error_code PaymentServiceJsonRpcServer::handleCreateAddressList(const CreateAddressList::Request& request, CreateAddressList::Response& response) {
   return service.createAddressList(request.spendSecretKeys, request.reset, response.addresses);
 }
 
-std::error_code PaymentServiceJsonRpcServer::handleSave(const Save::Request& /*request*/, Save::Response& /*response*/) 
+std::error_code PaymentServiceJsonRpcServer::handleSave(const Save::Request &, const Save::Response &)
 {
   return service.saveWalletNoThrow();
 }
@@ -165,7 +165,7 @@ std::error_code PaymentServiceJsonRpcServer::handleSplitIntegrated(const SplitIn
 {
   return service.splitIntegratedAddress(request, response.address, response.payment_id);
 }
-std::error_code PaymentServiceJsonRpcServer::handleDeleteAddress(const DeleteAddress::Request& request, DeleteAddress::Response& response) {
+std::error_code PaymentServiceJsonRpcServer::handleDeleteAddress(const DeleteAddress::Request& request, const DeleteAddress::Response&) {
   return service.deleteAddress(request.address);
 }
 
@@ -217,23 +217,23 @@ std::error_code PaymentServiceJsonRpcServer::handleCreateDelayedTransaction(cons
   return service.createDelayedTransaction(request, response.transactionHash);
 }
 
-std::error_code PaymentServiceJsonRpcServer::handleGetDelayedTransactionHashes(const GetDelayedTransactionHashes::Request& request, GetDelayedTransactionHashes::Response& response) {
+std::error_code PaymentServiceJsonRpcServer::handleGetDelayedTransactionHashes(const GetDelayedTransactionHashes::Request&, GetDelayedTransactionHashes::Response& response) {
   return service.getDelayedTransactionHashes(response.transactionHashes);
 }
 
-std::error_code PaymentServiceJsonRpcServer::handleDeleteDelayedTransaction(const DeleteDelayedTransaction::Request& request, DeleteDelayedTransaction::Response& response) {
+std::error_code PaymentServiceJsonRpcServer::handleDeleteDelayedTransaction(const DeleteDelayedTransaction::Request& request, const DeleteDelayedTransaction::Response&) {
   return service.deleteDelayedTransaction(request.transactionHash);
 }
 
-std::error_code PaymentServiceJsonRpcServer::handleSendDelayedTransaction(const SendDelayedTransaction::Request& request, SendDelayedTransaction::Response& response) {
+std::error_code PaymentServiceJsonRpcServer::handleSendDelayedTransaction(const SendDelayedTransaction::Request& request, const SendDelayedTransaction::Response&) {
   return service.sendDelayedTransaction(request.transactionHash);
 }
 
-std::error_code PaymentServiceJsonRpcServer::handleGetViewKey(const GetViewKey::Request& request, GetViewKey::Response& response) {
+std::error_code PaymentServiceJsonRpcServer::handleGetViewKey(const GetViewKey::Request&, GetViewKey::Response& response) {
   return service.getViewKey(response.viewSecretKey);
 }
 
-std::error_code PaymentServiceJsonRpcServer::handleGetStatus(const GetStatus::Request& request, GetStatus::Response& response) {
+std::error_code PaymentServiceJsonRpcServer::handleGetStatus(const GetStatus::Request&, GetStatus::Response& response) {
   return service.getStatus(response.blockCount, response.knownBlockCount, response.lastBlockHash, response.peerCount, response.depositCount, response.transactionCount, response.addressCount);
 }
 
@@ -254,7 +254,7 @@ std::error_code PaymentServiceJsonRpcServer::handleGetDeposit(const GetDeposit::
   return service.getDeposit(request.depositId, response.amount, response.term, response.interest, response.creatingTransactionHash, response.spendingTransactionHash, response.locked, response.height, response.unlockHeight, response.address);
 }
 
-std::error_code PaymentServiceJsonRpcServer::handleGetAddresses(const GetAddresses::Request& request, GetAddresses::Response& response) {
+std::error_code PaymentServiceJsonRpcServer::handleGetAddresses(const GetAddresses::Request&, GetAddresses::Response& response) {
   return service.getAddresses(response.addresses);
 }
 
