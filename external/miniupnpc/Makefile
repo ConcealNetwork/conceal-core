@@ -3,7 +3,7 @@
 # http://miniupnp.free.fr/
 # https://miniupnp.tuxfamily.org/
 # https://github.com/miniupnp/miniupnp
-# (c) 2005-2021 Thomas Bernard
+# (c) 2005-2022 Thomas Bernard
 # to install use :
 # $ make DESTDIR=/tmp/dummylocation install
 # or
@@ -162,7 +162,7 @@ PKGCONFIGDIR = $(INSTALLDIRLIB)/pkgconfig
 
 FILESTOINSTALL = $(LIBRARY) $(EXECUTABLES)
 ifeq (, $(findstring amiga, $(OS)))
-FILESTOINSTALL += $(SHAREDLIBRARY) miniupnpc.pc
+FILESTOINSTALL += $(SHAREDLIBRARY) $(BUILD)/miniupnpc.pc
 endif
 
 
@@ -251,15 +251,15 @@ install:	updateversion $(FILESTOINSTALL)
 	$(INSTALL) -m 644 $(LIBRARY) $(DESTDIR)$(INSTALLDIRLIB)
 ifeq (, $(findstring amiga, $(OS)))
 	$(INSTALL) -m 644 $(SHAREDLIBRARY) $(DESTDIR)$(INSTALLDIRLIB)/$(SONAME)
-	ln -fs $(SONAME) $(DESTDIR)$(INSTALLDIRLIB)/$(SHAREDLIBRARY)
+	ln -fs $(SONAME) $(DESTDIR)$(INSTALLDIRLIB)/$(notdir $(SHAREDLIBRARY))
 	$(INSTALL) -d $(DESTDIR)$(PKGCONFIGDIR)
-	$(INSTALL) -m 644 miniupnpc.pc $(DESTDIR)$(PKGCONFIGDIR)
+	$(INSTALL) -m 644 $(BUILD)/miniupnpc.pc $(DESTDIR)$(PKGCONFIGDIR)
 endif
 	$(INSTALL) -d $(DESTDIR)$(INSTALLDIRBIN)
 ifneq (, $(findstring amiga, $(OS)))
-	$(INSTALL) -m 755 upnpc-static $(DESTDIR)$(INSTALLDIRBIN)/upnpc
+	$(INSTALL) -m 755 $(BUILD)/upnpc-static $(DESTDIR)$(INSTALLDIRBIN)/upnpc
 else
-	$(INSTALL) -m 755 upnpc-shared $(DESTDIR)$(INSTALLDIRBIN)/upnpc
+	$(INSTALL) -m 755 $(BUILD)/upnpc-shared $(DESTDIR)$(INSTALLDIRBIN)/upnpc
 endif
 	$(INSTALL) -m 755 external-ip.sh $(DESTDIR)$(INSTALLDIRBIN)/external-ip
 ifeq (, $(findstring amiga, $(OS)))
@@ -293,6 +293,7 @@ $(BUILD)/miniupnpc.pc:	VERSION
 	echo "" >> $@
 	echo "Name: miniUPnPc" >> $@
 	echo "Description: UPnP IGD client lightweight library" >> $@
+	echo "URL: https://miniupnp.tuxfamily.org/" >> $@
 	echo "Version: $(VERSION)" >> $@
 	echo "Libs: -L\$${libdir} -lminiupnpc" >> $@
 	echo "Cflags: -I\$${includedir}" >> $@
