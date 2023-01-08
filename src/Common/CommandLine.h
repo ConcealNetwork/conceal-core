@@ -159,6 +159,12 @@ namespace command_line
     return !value.empty();
   }
 
+  template <typename T, bool required>
+  bool has_arg_2(const boost::program_options::variables_map &vm, const arg_descriptor<T, required> &arg)
+  {
+    auto value = vm[arg.name];
+    return !value.empty() && !value.defaulted();
+  }
 
   template<typename T, bool required>
   T get_arg(const boost::program_options::variables_map& vm, const arg_descriptor<T, required>& arg)
