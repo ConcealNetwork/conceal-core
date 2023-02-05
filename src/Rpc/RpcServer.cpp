@@ -368,14 +368,8 @@ bool RpcServer::fill_f_block_details_response(const crypto::Hash &hash, f_block_
   uint64_t maxReward = 0;
   uint64_t currentReward = 0;
   int64_t emissionChange = 0;
-  if (blk.majorVersion < 2)
-  {
-    block.effectiveSizeMedian = block.sizeMedian;
-  }
-  else
-  {
-    block.effectiveSizeMedian = 0;
-  }
+  block.effectiveSizeMedian = std::max(block.sizeMedian, m_core.currency().blockGrantedFullRewardZone());
+
   if (!m_core.getBlockReward(block.sizeMedian, 0, prevBlockGeneratedCoins, 0, block.height, maxReward, emissionChange))
   {
     return false;
@@ -859,7 +853,7 @@ bool RpcServer::setViewKey(const std::string& view_key) {
   crypto::Hash private_view_key_hash;
   size_t size;
   if (!common::fromHex(view_key, &private_view_key_hash, sizeof(private_view_key_hash), size) || size != sizeof(private_view_key_hash)) {
-    logger(INFO) << "<< rpcserver.cpp << " << "Could not parse private view key";
+    logger(INFO) << "Could not parse private view key";
     return false;
   }
   m_view_key = *(struct crypto::SecretKey *) &private_view_key_hash;
@@ -1056,29 +1050,36 @@ bool RpcServer::on_send_raw_tx(const COMMAND_RPC_SEND_RAW_TX::request& req, COMM
   BinaryArray tx_blob;
   if (!fromHex(req.tx_as_hex, tx_blob))
   {
-    logger(INFO) << "<< rpcserver.cpp << " << "[on_send_raw_tx]: Failed to parse tx from hexbuff: " << req.tx_as_hex;
+    logger(INFO) << "[on_send_raw_tx]: Failed to parse tx from hexbuff: " << req.tx_as_hex;
     res.status = "Failed";
+    return true;
+  }
+
+  if (tx_blob.size() > m_core.currency().transactionMaxSize())
+  {
+    logger(INFO) << "[on_send_raw_tx]: Too big size: " << tx_blob.size();
+    res.status = "Too big";
     return true;
   }
 
   tx_verification_context tvc = boost::value_initialized<tx_verification_context>();
   if (!m_core.handle_incoming_tx(tx_blob, tvc, false))
   {
-    logger(INFO) << "<< rpcserver.cpp << " << "[on_send_raw_tx]: Failed to process tx";
+    logger(INFO) << "[on_send_raw_tx]: Failed to process tx";
     res.status = "Failed";
     return true;
   }
 
   if (tvc.m_verification_failed)
   {
-    logger(INFO) << "<< rpcserver.cpp << " << "[on_send_raw_tx]: tx verification failed";
+    logger(INFO) << "[on_send_raw_tx]: tx verification failed";
     res.status = "Failed";
     return true;
   }
 
   if (!tvc.m_should_be_relayed)
   {
-    logger(INFO) << "<< rpcserver.cpp << " << "[on_send_raw_tx]: tx accepted, but not relayed";
+    logger(INFO) << "[on_send_raw_tx]: tx accepted, but not relayed";
     res.status = "Not relayed";
     return true;
   }
@@ -1087,7 +1088,7 @@ bool RpcServer::on_send_raw_tx(const COMMAND_RPC_SEND_RAW_TX::request& req, COMM
 
   if (!m_fee_address.empty() && m_view_key != NULL_SECRET_KEY) {
     if (!remotenode_check_incoming_tx(tx_blob)) {
-      logger(INFO) << "<< rpcserver.cpp << " << "Transaction not relayed due to lack of remote node fee";		
+      logger(INFO) << "Transaction not relayed due to lack of remote node fee";		
       res.status = "Not relayed due to lack of node fee";
       return true;
     }
@@ -1125,7 +1126,7 @@ bool RpcServer::remotenode_check_incoming_tx(const BinaryArray& tx_blob) {
 	crypto::Hash tx_prefixt_hash = NULL_HASH;
 	Transaction tx;
 	if (!parseAndValidateTransactionFromBinaryArray(tx_blob, tx, tx_hash, tx_prefixt_hash)) {
-		logger(INFO) << "<< rpcserver.cpp << " << "Could not parse tx from blob";
+		logger(INFO) << "Could not parse tx from blob";
 		return false;
 	}
 	cn::TransactionPrefix transaction = *static_cast<const TransactionPrefix*>(&tx);
@@ -1134,12 +1135,12 @@ bool RpcServer::remotenode_check_incoming_tx(const BinaryArray& tx_blob) {
 	uint64_t amount;
 
 	if (!cn::findOutputsToAccount(transaction, m_fee_acc, m_view_key, out, amount)) {
-		logger(INFO) << "<< rpcserver.cpp << " << "Could not find outputs to remote node fee address";
+		logger(INFO) << "Could not find outputs to remote node fee address";
 		return false;
 	}
 
 	if (amount != 0) {
-		logger(INFO) << "<< rpcserver.cpp << " << "Node received relayed transaction fee: " << m_core.currency().formatAmount(amount) << " CCX";
+		logger(INFO) << "Node received relayed transaction fee: " << m_core.currency().formatAmount(amount) << " CCX";
 		return true;
 	}
 	return false;
