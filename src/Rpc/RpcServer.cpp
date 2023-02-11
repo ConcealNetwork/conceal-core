@@ -71,9 +71,12 @@ RpcServer::HandlerFunction jsonMethod(bool (RpcServer::*handler)(typename Comman
 
     bool result = (obj->*handler)(req, res);
 
-    response.addHeader("Access-Control-Allow-Origin", "*");
-    response.addHeader("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept");
-    response.addHeader("Access-Control-Allow-Methods", "POST, GET");
+    std::string cors_domain = obj->getCorsDomain();
+    if (!cors_domain.empty()) {
+      response.addHeader("Access-Control-Allow-Origin", cors_domain);
+      response.addHeader("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept");
+      response.addHeader("Access-Control-Allow-Methods", "POST, GET");
+    }
     response.addHeader("Content-Type", "application/json");
 
     response.setBody(storeToJson(res.data()));
@@ -137,9 +140,11 @@ bool RpcServer::processJsonRpcRequest(const HttpRequest& request, HttpResponse& 
   using namespace JsonRpc;
 
   response.addHeader("Content-Type", "application/json");
-  response.addHeader("Access-Control-Allow-Origin", "*");
-  response.addHeader("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept");
-  response.addHeader("Access-Control-Allow-Methods", "POST, GET");
+  if (!m_cors_domain.empty()) {
+    response.addHeader("Access-Control-Allow-Origin", m_cors_domain);
+    response.addHeader("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept");
+    response.addHeader("Access-Control-Allow-Methods", "POST, GET");
+  }  
 
   JsonRpcRequest jsonRequest;
   JsonRpcResponse jsonResponse;
@@ -196,6 +201,15 @@ bool RpcServer::processJsonRpcRequest(const HttpRequest& request, HttpResponse& 
 
 bool RpcServer::isCoreReady() {
   return m_core.currency().isTestnet() || m_p2p.get_payload_object().isSynchronized();
+}
+
+bool RpcServer::enableCors(const std::string domain) {
+  m_cors_domain = domain;
+  return true;
+}
+
+std::string RpcServer::getCorsDomain() {
+  return m_cors_domain;
 }
 
 //
@@ -354,14 +368,8 @@ bool RpcServer::fill_f_block_details_response(const crypto::Hash &hash, f_block_
   uint64_t maxReward = 0;
   uint64_t currentReward = 0;
   int64_t emissionChange = 0;
-  if (blk.majorVersion < 2)
-  {
-    block.effectiveSizeMedian = block.sizeMedian;
-  }
-  else
-  {
-    block.effectiveSizeMedian = 0;
-  }
+  block.effectiveSizeMedian = std::max(block.sizeMedian, m_core.currency().blockGrantedFullRewardZone());
+
   if (!m_core.getBlockReward(block.sizeMedian, 0, prevBlockGeneratedCoins, 0, block.height, maxReward, emissionChange))
   {
     return false;
@@ -565,8 +573,9 @@ bool RpcServer::k_on_check_tx_proof(const K_COMMAND_RPC_CHECK_TX_PROOF::request&
 		throw JsonRpc::JsonRpcError{ CORE_RPC_ERROR_CODE_WRONG_PARAM, "Failed to parse address " + req.dest_address + '.' };
 	}
 	// parse pubkey r*A & signature
-	const size_t header_len = strlen("ProofV1");
-	if (req.signature.size() < header_len || req.signature.substr(0, header_len) != "ProofV1") {
+  const std::string prefix = "ProofV1";
+	const size_t header_len = prefix.size();
+	if (req.signature.size() < header_len || req.signature.substr(0, header_len) != prefix) {
 		throw JsonRpc::JsonRpcError{ CORE_RPC_ERROR_CODE_WRONG_PARAM, "Signature header check error" };
 	}
 	crypto::PublicKey rA;
@@ -675,8 +684,8 @@ bool RpcServer::k_on_check_reserve_proof(const K_COMMAND_RPC_CHECK_RESERVE_PROOF
   }
 
   // parse signature
-  static constexpr char header[] = "ReserveProofV1";
-  const size_t header_len = strlen(header);
+  const std::string header = "ReserveProofV1";
+  const size_t header_len = header.size();
   if (req.signature.size() < header_len || req.signature.substr(0, header_len) != header)
   {
     throw JsonRpc::JsonRpcError{CORE_RPC_ERROR_CODE_INTERNAL_ERROR, "Signature header check error"};
@@ -844,7 +853,7 @@ bool RpcServer::setViewKey(const std::string& view_key) {
   crypto::Hash private_view_key_hash;
   size_t size;
   if (!common::fromHex(view_key, &private_view_key_hash, sizeof(private_view_key_hash), size) || size != sizeof(private_view_key_hash)) {
-    logger(INFO) << "<< rpcserver.cpp << " << "Could not parse private view key";
+    logger(INFO) << "Could not parse private view key";
     return false;
   }
   m_view_key = *(struct crypto::SecretKey *) &private_view_key_hash;
@@ -1041,29 +1050,36 @@ bool RpcServer::on_send_raw_tx(const COMMAND_RPC_SEND_RAW_TX::request& req, COMM
   BinaryArray tx_blob;
   if (!fromHex(req.tx_as_hex, tx_blob))
   {
-    logger(INFO) << "<< rpcserver.cpp << " << "[on_send_raw_tx]: Failed to parse tx from hexbuff: " << req.tx_as_hex;
+    logger(INFO) << "[on_send_raw_tx]: Failed to parse tx from hexbuff: " << req.tx_as_hex;
     res.status = "Failed";
+    return true;
+  }
+
+  if (tx_blob.size() > m_core.currency().transactionMaxSize())
+  {
+    logger(INFO) << "[on_send_raw_tx]: Too big size: " << tx_blob.size();
+    res.status = "Too big";
     return true;
   }
 
   tx_verification_context tvc = boost::value_initialized<tx_verification_context>();
   if (!m_core.handle_incoming_tx(tx_blob, tvc, false))
   {
-    logger(INFO) << "<< rpcserver.cpp << " << "[on_send_raw_tx]: Failed to process tx";
+    logger(INFO) << "[on_send_raw_tx]: Failed to process tx";
     res.status = "Failed";
     return true;
   }
 
   if (tvc.m_verification_failed)
   {
-    logger(INFO) << "<< rpcserver.cpp << " << "[on_send_raw_tx]: tx verification failed";
+    logger(INFO) << "[on_send_raw_tx]: tx verification failed";
     res.status = "Failed";
     return true;
   }
 
   if (!tvc.m_should_be_relayed)
   {
-    logger(INFO) << "<< rpcserver.cpp << " << "[on_send_raw_tx]: tx accepted, but not relayed";
+    logger(INFO) << "[on_send_raw_tx]: tx accepted, but not relayed";
     res.status = "Not relayed";
     return true;
   }
@@ -1072,7 +1088,7 @@ bool RpcServer::on_send_raw_tx(const COMMAND_RPC_SEND_RAW_TX::request& req, COMM
 
   if (!m_fee_address.empty() && m_view_key != NULL_SECRET_KEY) {
     if (!remotenode_check_incoming_tx(tx_blob)) {
-      logger(INFO) << "<< rpcserver.cpp << " << "Transaction not relayed due to lack of remote node fee";		
+      logger(INFO) << "Transaction not relayed due to lack of remote node fee";		
       res.status = "Not relayed due to lack of node fee";
       return true;
     }
@@ -1110,7 +1126,7 @@ bool RpcServer::remotenode_check_incoming_tx(const BinaryArray& tx_blob) {
 	crypto::Hash tx_prefixt_hash = NULL_HASH;
 	Transaction tx;
 	if (!parseAndValidateTransactionFromBinaryArray(tx_blob, tx, tx_hash, tx_prefixt_hash)) {
-		logger(INFO) << "<< rpcserver.cpp << " << "Could not parse tx from blob";
+		logger(INFO) << "Could not parse tx from blob";
 		return false;
 	}
 	cn::TransactionPrefix transaction = *static_cast<const TransactionPrefix*>(&tx);
@@ -1119,12 +1135,12 @@ bool RpcServer::remotenode_check_incoming_tx(const BinaryArray& tx_blob) {
 	uint64_t amount;
 
 	if (!cn::findOutputsToAccount(transaction, m_fee_acc, m_view_key, out, amount)) {
-		logger(INFO) << "<< rpcserver.cpp << " << "Could not find outputs to remote node fee address";
+		logger(INFO) << "Could not find outputs to remote node fee address";
 		return false;
 	}
 
 	if (amount != 0) {
-		logger(INFO) << "<< rpcserver.cpp << " << "Node received relayed transaction fee: " << m_core.currency().formatAmount(amount) << " CCX";
+		logger(INFO) << "Node received relayed transaction fee: " << m_core.currency().formatAmount(amount) << " CCX";
 		return true;
 	}
 	return false;

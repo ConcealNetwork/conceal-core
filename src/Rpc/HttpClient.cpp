@@ -70,13 +70,15 @@ void HttpClient::disconnect() {
   m_streamBuf.reset();
   try {
     m_connection.write(nullptr, 0); //Socket shutdown.
-  } catch (std::exception& e) {
+  } catch (const std::exception& e) {
+    m_connected = false;
     throw ConnectException(e.what());
   }
 
   try {
     m_connection = platform_system::TcpConnection();
-  } catch (std::exception& e) {
+  } catch (const std::exception& e) {
+    m_connected = false;
     throw ConnectException(e.what());
   }
 

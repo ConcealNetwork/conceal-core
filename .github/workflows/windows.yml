@@ -15,7 +15,7 @@ jobs:
       - uses: actions/checkout@master
 
       - name: Setup msbuild
-        uses: microsoft/setup-msbuild@v1.0.2
+        uses: microsoft/setup-msbuild@v1.1.3
 
       - name: Install Boost
         shell: powershell
@@ -42,20 +42,19 @@ jobs:
           $asset_path = "./$build_folder/src/Release/$release_name.zip"
           mkdir "$release_name"
           cp *.exe "$release_name/"
-          echo "::set-output name=sha256::${sha256}"
-          echo "::set-output name=release_name::${release_name}.zip"
-          echo "::set-output name=asset_path::${asset_path}"
-          echo "::set-output name=ccx_version::${ccx_version}"
+          echo "sha256=${sha256}" >> $env:GITHUB_OUTPUT
+          echo "release_name=${release_name}.zip" >> $env:GITHUB_OUTPUT
+          echo "asset_path=${asset_path}" >> $env:GITHUB_OUTPUT
+          echo "ccx_version=${ccx_version}" >> $env:GITHUB_OUTPUT
 
-      # since https://github.com/softprops/action-gh-release/pull/145 body is replaced instead of being appended
-      # use v0.1.12 for now
       - name: Create Release
-        uses: softprops/action-gh-release@v0.1.12
+        uses: softprops/action-gh-release@v0.1.15
         with:
           files: ${{ steps.build.outputs.asset_path }}
           name: Conceal Core CLI v${{ steps.build.outputs.ccx_version }}
           body: |
             [Download for Windows](../../releases/download/${{ steps.build.outputs.ccx_version }}/${{ steps.build.outputs.release_name }}) **${{ steps.build.outputs.release_name }}**
             `SHA256 : ${{ steps.build.outputs.sha256 }}`
+          append_body: true
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

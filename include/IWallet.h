@@ -101,7 +101,7 @@ struct WalletTransaction
   uint64_t creationTime;
   uint64_t unlockTime;
   std::string extra;
-  size_t firstDepositId = std::numeric_limits<DepositId>::max();
+  size_t firstDepositId = WALLET_INVALID_DEPOSIT_ID;
   size_t depositCount = 0;
   bool isBase;
 };
@@ -174,7 +174,7 @@ struct DepositsInBlockInfo
 class IWallet
 {
 public:
-  virtual ~IWallet() {}
+  virtual ~IWallet() = default;
 
   virtual void initialize(const std::string& path, const std::string& password) = 0;
   virtual void createDeposit(uint64_t amount, uint64_t term, std::string sourceAddress, std::string destinationAddress, std::string &transactionHash) = 0;
@@ -185,8 +185,7 @@ public:
   virtual void load(const std::string& path, const std::string& password) = 0;
   virtual void shutdown() = 0;
   virtual void reset(const uint64_t scanHeight) = 0;
-  virtual void exportWallet(const std::string& path, bool encrypt = true, WalletSaveLevel saveLevel = WalletSaveLevel::SAVE_ALL, const std::string& extra = "") = 0;
-  virtual void exportWalletKeys(const std::string &path, bool encrypt = true, WalletSaveLevel saveLevel = WalletSaveLevel::SAVE_KEYS_ONLY, const std::string &extra = "") = 0;
+  virtual void exportWallet(const std::string &path, WalletSaveLevel saveLevel, bool encrypt = true, const std::string &extra = "") = 0;
 
   virtual void changePassword(const std::string &oldPassword, const std::string &newPassword) = 0;
   virtual void save(WalletSaveLevel saveLevel = WalletSaveLevel::SAVE_ALL, const std::string& extra = "") = 0;

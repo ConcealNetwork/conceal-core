@@ -1037,9 +1037,10 @@ bool conceal_wallet::verify_signature(const std::vector<std::string>& args)
   }
   
   std::string encodedSig = args[2];
-  const size_t prefix_size = strlen("Sig");
+  const std::string sig_prefix = "Sig";
+  const size_t prefix_size = sig_prefix.size();
   
-  if(encodedSig.substr(0, prefix_size) != "Sig")
+  if(encodedSig.substr(0, prefix_size) != sig_prefix)
   {
     fail_msg_writer() << "Invalid signature prefix";
     return true;

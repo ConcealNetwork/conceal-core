@@ -27,16 +27,16 @@ class WalletServiceErrorCategory : public std::error_category {
 public:
   static WalletServiceErrorCategory INSTANCE;
 
-  virtual const char* name() const throw() override {
+  const char* name() const throw() override {
     return "WalletServiceErrorCategory";
   }
 
-  virtual std::error_condition default_error_condition(int ev) const throw() override {
+  std::error_condition default_error_condition(int ev) const throw() override {
     return std::error_condition(ev, *this);
   }
 
-  virtual std::string message(int ev) const override {
-    WalletServiceErrorCode code = static_cast<WalletServiceErrorCode>(ev);
+  std::string message(int ev) const override {
+    auto code = static_cast<WalletServiceErrorCode>(ev);
 
     switch (code) {
       case WalletServiceErrorCode::WRONG_KEY_FORMAT: return "Wrong key format";
@@ -50,8 +50,7 @@ public:
   }
 
 private:
-  WalletServiceErrorCategory() {
-  }
+  WalletServiceErrorCategory() = default;
 };
 
 } //namespace error

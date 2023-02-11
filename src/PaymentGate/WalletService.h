@@ -55,8 +55,7 @@ public:
   std::error_code saveWalletNoThrow();
   std::error_code resetWallet();
   std::error_code resetWallet(const uint32_t scanHeight);
-  std::error_code exportWallet(const std::string& fileName);
-  std::error_code exportWalletKeys(const std::string &fileName);
+  std::error_code exportWallet(const std::string &fileName, bool keysOnly = false);
   std::error_code replaceWithNewWallet(const std::string &viewSecretKey);
   std::error_code createAddress(const std::string &spendSecretKeyText, std::string &address);
   std::error_code createAddress(std::string &address);
@@ -117,6 +116,11 @@ private:
 
   std::vector<TransactionsInBlockRpcInfo> getRpcTransactions(const crypto::Hash &blockHash, size_t blockCount, const TransactionsInBlockInfoFilter &filter) const;
   std::vector<TransactionsInBlockRpcInfo> getRpcTransactions(uint32_t firstBlockIndex, size_t blockCount, const TransactionsInBlockInfoFilter &filter) const;
+
+  TransactionRpcInfo convertTransactionWithTransfersToTransactionRpcInfo(
+      const cn::WalletTransactionWithTransfers &transactionWithTransfers, const uint32_t &knownBlockCount) const;
+  std::vector<TransactionsInBlockRpcInfo> convertTransactionsInBlockInfoToTransactionsInBlockRpcInfo(
+      const std::vector<cn::TransactionsInBlockInfo> &blocks, const uint32_t &knownBlockCount) const;
 
   const cn::Currency &currency;
   cn::IWallet &wallet;

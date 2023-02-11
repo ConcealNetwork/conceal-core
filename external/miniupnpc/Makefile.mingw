@@ -5,7 +5,7 @@
 # This Makefile is made for MinGW
 #
 # To cross compile on a *nix machine :
-# make -f Makefile.mingw DLLWRAP=mingw32-dllwrap CC=mingw32-gcc AR=mingw32-ar
+# make -f Makefile.mingw DLLWRAP=mingw32-dllwrap CC=mingw32-gcc AR=mingw32-ar WINDRES=mingw32-windres
 #
 SRCDIR = src
 INCDIR = include
@@ -21,15 +21,18 @@ RM = del
 else
 RM = rm -f
 endif
-#CFLAGS = -Wall -g
-#CPPFLAGS = -DDEBUG -D_WIN32_WINNT=0X501
-CFLAGS = -Wall -W -Wstrict-prototypes -Os
-CPPFLAGS = -DNDEBUG -D_WIN32_WINNT=0X501
+
+CFLAGS ?= -Os
+CFLAGS += -Wall
+CFLAGS += -W -Wstrict-prototypes
+
+CPPFLAGS += -DNDEBUG -D_WIN32_WINNT=0x501
 CPPFLAGS += -Iinclude
 CPPFLAGS += -I.
-LDLIBS = -lws2_32 -liphlpapi
-# -lwsock32
+
 # -liphlpapi is needed for GetBestRoute() and GetIpAddrTable()
+LDLIBS = -lws2_32 -liphlpapi
+
 PYTHON=\utils\python25\python
 OBJS=miniwget.o minixml.o igd_desc_parse.o minisoap.o \
      minissdpc.o \
@@ -44,9 +47,21 @@ BINARIES=upnpc-static.exe upnpc-shared.exe \
 ifneq ($(GITHUB_SHA),)
 COMMITREF=$(GITHUB_SHA)
 else
+ifneq ($(CI_COMMIT_SHORT_SHA),)
+COMMITREF=$(CI_COMMIT_SHORT_SHA)
+else
 COMMITREF=$(shell git rev-parse --short HEAD)
 endif
+endif
 DISTFILE:=$(shell echo "miniupnpc-bin-win32-`cat VERSION`-$(COMMITREF).zip")
+
+LIBDIR ?= lib
+# install directories
+ifeq ($(strip $(PREFIX)),)
+INSTALLPREFIX ?= /usr
+else
+INSTALLPREFIX ?= $(PREFIX)
+endif
 
 .PHONY:	all dist clean
 
@@ -60,6 +75,7 @@ clean:
 	$(RM) *.exe
 	$(RM) miniupnpc.dll miniupnpc.lib miniupnpc.dll.def
 	$(RM) libminiupnpc.a
+	$(RM) $(DISTFILE)
 
 $(DISTFILE):	$(BINARIES)
 	$(ZIP) $@ *.exe *.dll *.lib *.def *.a LICENSE README Changelog.txt
@@ -120,6 +136,19 @@ rc_version.h:	VERSION
 	echo "#define LIBMINIUPNPC_MICRO_VERSION $(shell cat VERSION|cut -d. -f3)" >> $@.tmp
 	mv $@.tmp $@
 endif
+
+miniupnpc.pc:	VERSION
+	$(RM) $@
+	echo "prefix=$(INSTALLPREFIX)" >> $@
+	echo "exec_prefix=\$${prefix}" >> $@
+	echo "libdir=\$${exec_prefix}/$(LIBDIR)" >> $@
+	echo "includedir=\$${prefix}/include" >> $@
+	echo "" >> $@
+	echo "Name: miniUPnPc" >> $@
+	echo "Description: UPnP IGD client lightweight library" >> $@
+	echo "Version: $(shell cat VERSION)" >> $@
+	echo "Libs: -L\$${libdir} -lminiupnpc" >> $@
+	echo "Cflags: -I\$${includedir}" >> $@
 
 winres.o:	miniupnpc.rc rc_version.h
 	$(WINDRES) -D INTERNAL_NAME=\\\"miniupnpc.dll\\0\\\" -i $< -o $@

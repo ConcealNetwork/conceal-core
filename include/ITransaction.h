@@ -116,6 +116,7 @@ public:
 
   // transaction info
   virtual void setTransactionSecretKey(const crypto::SecretKey& key) = 0;
+  virtual void setDeterministicTransactionSecretKey(const crypto::SecretKey& key) = 0;
 
   // signing
   virtual void signInputKey(size_t input, const transaction_types::InputKeyInfo& info, const KeyPair& ephKeys) = 0;

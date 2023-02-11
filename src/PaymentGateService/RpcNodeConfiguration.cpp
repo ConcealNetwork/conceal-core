@@ -12,11 +12,6 @@ namespace payment_service {
 
 namespace po = boost::program_options;
 
-RpcNodeConfiguration::RpcNodeConfiguration() {
-  daemonHost = "";
-  daemonPort = 0;
-}
-
 void RpcNodeConfiguration::initOptions(boost::program_options::options_description& desc) {
   desc.add_options()
     ("daemon-address", po::value<std::string>()->default_value("127.0.0.1"), "daemon address")

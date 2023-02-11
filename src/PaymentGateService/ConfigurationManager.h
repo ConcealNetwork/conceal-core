@@ -16,10 +16,10 @@ namespace payment_service {
 
 class ConfigurationManager {
 public:
-  ConfigurationManager();
+  ConfigurationManager() = default;
   bool init(int argc, char** argv);
 
-  bool startInprocess;
+  bool startInprocess = false;
   Configuration gateConfiguration;
   cn::NetNodeConfig netNodeConfig;
   cn::CoreConfig coreConfig;
