@@ -3674,7 +3674,7 @@ namespace cn
     bool updated = false;
 
     /* First get the available and pending balances from the container */
-    uint64_t actual = container->balance(ITransfersContainer::IncludeAllUnlocked);
+    uint64_t actual = container->balance(ITransfersContainer::IncludeKeyUnlocked);
     uint64_t pending = container->balance(ITransfersContainer::IncludeKeyNotUnlocked);
 
     /* Now update the overall balance (getBalance without parameters) */
@@ -3683,7 +3683,7 @@ namespace cn
       m_actualBalance += actual - it->actualBalance;
       updated = true;
     }
-    else
+    else if (it->actualBalance > actual)
     {
       m_actualBalance -= it->actualBalance - actual;
       updated = true;
@@ -3694,7 +3694,7 @@ namespace cn
       m_pendingBalance += pending - it->pendingBalance;
       updated = true;
     }
-    else
+    else if (it->pendingBalance > pending)
     {
       m_pendingBalance -= it->pendingBalance - pending;
       updated = true;
@@ -3706,15 +3706,13 @@ namespace cn
     container->getOutputs(transfers2, ITransfersContainer::IncludeTypeDeposit | ITransfersContainer::IncludeStateLocked | ITransfersContainer::IncludeStateSoftLocked);
 
     std::vector<uint32_t> heights2;
-    for (auto transfer2 : transfers2)
+    for (const auto &transfer2 : transfers2)
     {
       crypto::Hash hash2 = transfer2.transactionHash;
       TransactionInformation info2;
-      bool ok2 = container->getTransactionInformation(hash2, info2, NULL, NULL);
-      if (ok2)
+      if (container->getTransactionInformation(hash2, info2, nullptr, nullptr))
       {
         heights2.push_back(info2.blockHeight);
-        updated = true;
       }
     }
     uint64_t locked = calculateDepositsAmount(transfers2, m_currency, heights2);
@@ -3725,13 +3723,14 @@ namespace cn
     container->getOutputs(transfers, ITransfersContainer::IncludeTypeDeposit | ITransfersContainer::IncludeStateUnlocked);
 
     std::vector<uint32_t> heights;
-    for (auto transfer : transfers)
+    for (const auto &transfer : transfers)
     {
       crypto::Hash hash = transfer.transactionHash;
       TransactionInformation info;
-      bool ok = container->getTransactionInformation(hash, info, NULL, NULL);
-      assert(ok);
-      heights.push_back(info.blockHeight);
+      if (container->getTransactionInformation(hash, info, nullptr, nullptr))
+      {
+        heights.push_back(info.blockHeight);
+      }
     }
     uint64_t unlocked = calculateDepositsAmount(transfers, m_currency, heights);
 
@@ -3741,7 +3740,7 @@ namespace cn
       m_lockedDepositBalance += locked - it->lockedDepositBalance;
       updated = true;
     }
-    else
+    else if (it->lockedDepositBalance > locked)
     {
       m_lockedDepositBalance -= it->lockedDepositBalance - locked;
       updated = true;
@@ -3752,7 +3751,7 @@ namespace cn
       m_unlockedDepositBalance += unlocked - it->unlockedDepositBalance;
       updated = true;
     }
-    else
+    else if (it->unlockedDepositBalance > unlocked)
     {
       m_unlockedDepositBalance -= it->unlockedDepositBalance - unlocked;
       updated = true;
