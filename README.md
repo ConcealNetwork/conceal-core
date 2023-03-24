@@ -165,3 +165,6 @@ If the build is successful the binaries will be located in the `src` folder.
 #### Special Thanks
 
 Special thanks goes out to the developers from Cryptonote, Bytecoin, Ryo, Monero, Forknote, TurtleCoin, Karbo and Masari.
+
+
+Copyright (c) 2017-2023 Conceal Community, Conceal Network & Conceal Devs
