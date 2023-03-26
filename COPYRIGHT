@@ -1,7 +1,9 @@
 MIT License
+Distributed under the MIT/X11 software license http://www.opensource.org/licenses/mit-license.php
 
+Copyright (c) 2017-2023 Conceal Community
 Copyright (c) 2017-2018 The Circle Foundation & Conceal Devs
-Copyright (c) 2018-2021 Conceal Network & Conceal Devs
+Copyright (c) 2018-2023 Conceal Network & Conceal Devs
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
