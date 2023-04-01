@@ -89,7 +89,7 @@ int main(int argc, char* argv[])
     return 1;
 
   //set up logging options
-  Level logLevel = DEBUGGING;
+  Level logLevel = INFO;
 
   if (command_line::has_arg(vm, arg_log_level))
     logLevel = static_cast<Level>(command_line::get_arg(vm, arg_log_level));
@@ -166,8 +166,8 @@ int main(int argc, char* argv[])
     {
       walletFileName = m_chelper.tryToOpenWalletOrLoadKeysOrThrow(logger, wallet, wallet_file, wallet_password);
 
-      std::stringstream balances = m_chelper.balances(wallet, currency);
-      logger(INFO) << balances.str();
+      // std::stringstream balances = m_chelper.balances(wallet, currency);
+      // logger(INFO) << balances.str();
 
       logger(INFO, BRIGHT_GREEN) << "Loaded ok";
     }
@@ -195,7 +195,7 @@ int main(int argc, char* argv[])
     logger(INFO) << "Stopped wallet rpc server";
 
     logger(logging::INFO) << "Saving wallet...";
-    m_chelper.save_wallet(*wallet, walletFileName, logger);
+    // m_chelper.save_wallet(*wallet, walletFileName, logger);
     logger(logging::INFO, logging::BRIGHT_GREEN) << "Saving successful";
   }
   else

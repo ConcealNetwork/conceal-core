@@ -5,8 +5,8 @@
 
 #pragma once
 
+#include "IWallet.h"
 #include "CryptoNoteCore/Currency.h"
-#include "WalletLegacy/WalletLegacy.h"
 #include "Common/StringTools.h"
 
 #include <Logging/LoggerRef.h>
@@ -19,18 +19,18 @@ namespace cn
   {
     public:
       const cn::Currency& m_currency;
-      size_t fake_outs_count;
-      std::vector<cn::WalletLegacyTransfer> dsts;
+      size_t fake_outs_count = 0;
+      std::vector<WalletOrder> dsts;
       std::vector<uint8_t> extra;
       uint64_t fee;
-      std::map<std::string, std::vector<WalletLegacyTransfer>> aliases;
+      std::map<std::string, std::vector<WalletOrder>> aliases;
       std::vector<std::string> messages;
       uint64_t ttl = 0;
       std::string m_remote_address;
 
-      transfer_cmd(const cn::Currency& currency, std::string remote_fee_address);
+      transfer_cmd(const cn::Currency& currency, const std::string& remote_fee_address);
 
-      bool parseTx(LoggerRef& logger, const std::vector<std::string> &args);
+      bool parseTx(const LoggerRef& logger, const std::vector<std::string> &args);
   };
 
   template <typename IterT, typename ValueT = typename IterT::value_type>

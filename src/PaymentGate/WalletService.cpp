@@ -34,7 +34,6 @@
 #include "NodeFactory.h"
 
 #include "Wallet/WalletGreen.h"
-#include "Wallet/LegacyKeysImporter.h"
 #include "Wallet/WalletErrors.h"
 #include "Wallet/WalletUtils.h"
 #include "WalletServiceErrorCategory.h"
@@ -385,28 +384,6 @@ namespace payment_service
 
   } // namespace
 
-  void createWalletFile(std::fstream &walletFile, const std::string &filename)
-  {
-    boost::filesystem::path pathToWalletFile(filename);
-    boost::filesystem::path directory = pathToWalletFile.parent_path();
-    if (!directory.empty() && !tools::directoryExists(directory.string()))
-    {
-      throw std::runtime_error("Directory does not exist: " + directory.string());
-    }
-
-    walletFile.open(filename.c_str(), std::fstream::in | std::fstream::out | std::fstream::binary);
-    if (walletFile)
-    {
-      walletFile.close();
-      throw std::runtime_error("Wallet file already exists");
-    }
-
-    walletFile.open(filename.c_str(), std::fstream::out);
-    walletFile.close();
-
-    walletFile.open(filename.c_str(), std::fstream::in | std::fstream::out | std::fstream::binary);
-  }
-
   void saveWallet(cn::IWallet &wallet, std::fstream &walletFile, bool saveDetailed = true, bool saveCache = true)
   {
     wallet.save();
@@ -516,20 +493,6 @@ namespace payment_service
     wallet->save(cn::WalletSaveLevel::SAVE_KEYS_ONLY);
     log(logging::INFO) << "Wallet is saved";
   } // namespace payment_service
-
-  void importLegacyKeys(const std::string &legacyKeysFile, const WalletConfiguration &conf)
-  {
-    std::stringstream archive;
-
-    cn::importLegacyKeys(legacyKeysFile, conf.walletPassword, archive);
-
-    std::fstream walletFile;
-    createWalletFile(walletFile, conf.walletFile);
-
-    archive.flush();
-    walletFile << archive.rdbuf();
-    walletFile.flush();
-  }
 
   WalletService::WalletService(
       const cn::Currency &currency,

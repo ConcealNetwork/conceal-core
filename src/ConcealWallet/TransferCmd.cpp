@@ -9,19 +9,20 @@
 #include "Common/StringTools.h"
 #include "CryptoNoteCore/CryptoNoteTools.h"
 #include "CryptoNoteCore/CryptoNoteBasicImpl.h"
+#include "CryptoNoteCore/TransactionExtra.h"
+#include "CryptoNoteCore/CryptoNoteFormatUtils.h"
 
 using namespace logging;
 
 namespace cn
 {
-  transfer_cmd::transfer_cmd(const cn::Currency& currency, std::string remote_fee_address) :
+  transfer_cmd::transfer_cmd(const cn::Currency& currency, const std::string& remote_fee_address) :
     m_currency(currency),
-    m_remote_address(remote_fee_address),
-    fake_outs_count(0),
-    fee(currency.minimumFeeV2()) {
+    fee(currency.minimumFeeV2()),
+    m_remote_address(remote_fee_address) {
   }
 
-  bool transfer_cmd::parseTx(LoggerRef& logger, const std::vector<std::string> &args)
+  bool transfer_cmd::parseTx(const LoggerRef& logger, const std::vector<std::string> &args)
   {
     ArgumentReader<std::vector<std::string>::const_iterator> ar(args.begin(), args.end());
 
@@ -89,8 +90,8 @@ namespace cn
             arg = address;
           }
 
-          WalletLegacyTransfer destination;
-          WalletLegacyTransfer feeDestination;          
+          WalletOrder destination;
+          WalletOrder feeDestination;          
           cn::TransactionDestinationEntry de;
           std::string aliasUrl;
 
@@ -115,7 +116,7 @@ namespace cn
           }
           else
           {
-            aliases[aliasUrl].emplace_back(WalletLegacyTransfer{"", static_cast<int64_t>(de.amount)});
+            aliases[aliasUrl].emplace_back(WalletOrder{"", de.amount});
           }
 
           /* Remote node transactions fees are 10000 X */

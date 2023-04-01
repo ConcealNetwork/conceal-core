@@ -55,42 +55,42 @@ namespace cn
     /**
      * @return - returns unlock height from transaction blockheight + deposit term
     **/
-    std::string deposit_unlock_height(const cn::Deposit &deposit, const cn::WalletLegacyTransaction &txInfo) const;
+    std::string deposit_unlock_height(const cn::Deposit &deposit, const uint32_t &blockHeight) const;
 
     /**
      * @return - returns deposit height
     **/
-    std::string deposit_height(const cn::WalletLegacyTransaction &txInfo) const;
+    std::string deposit_height(const uint32_t &blockHeight) const;
 
     /**
      * @return - returns deposit info string for client output
     **/
-    std::string get_deposit_info(const cn::Deposit &deposit, cn::DepositId did, const Currency &currency, const cn::WalletLegacyTransaction &txInfo) const;
+    std::string get_deposit_info(const cn::Deposit &deposit, cn::DepositId did, const Currency &currency, const uint32_t &blockHeight) const;
 
     /**
      * @return - returns full deposit info string for client output
     **/
-    std::string get_full_deposit_info(const cn::Deposit &deposit, cn::DepositId did, const Currency &currency, const cn::WalletLegacyTransaction &txInfo) const;
+    std::string get_full_deposit_info(const cn::Deposit &deposit, cn::DepositId did, const Currency &currency, const uint32_t &blockHeight) const;
 
     /**
      * @return - returns deposit info string for file output
     **/
-    std::string list_deposit_item(const WalletLegacyTransaction& txInfo, const Deposit deposit, std::string listed_deposit, DepositId id, const Currency &currency);
+    std::string list_deposit_item(const WalletTransaction& txInfo, const Deposit& deposit, std::string listed_deposit, DepositId id, const Currency &currency) const;
 
     /**
      * @return - returns transaction info string for file output
     **/
-    std::string list_tx_item(const WalletLegacyTransaction& txInfo, std::string listed_tx, const Currency &currency);
+    std::string list_tx_item(const WalletTransaction& txInfo, std::string listed_tx, const Currency &currency) const;
 
     /**
      * @return - returns false if user rejects deposit
      */
-    bool confirm_deposit(uint64_t term, uint64_t amount, bool is_testnet, const Currency& currency, logging::LoggerRef logger);
+    bool confirm_deposit(uint32_t term, uint64_t amount, bool is_testnet, const Currency& currency, const logging::LoggerRef& logger) const;
 
     /**
      * @return - returns logging config for file and client output
      */
-    JsonValue buildLoggerConfiguration(logging::Level level, const std::string& logfile);
+    JsonValue buildLoggerConfiguration(logging::Level level, const std::string& logfile) const;
 
     /**
      * @return - returns a formatted url address
@@ -101,11 +101,9 @@ namespace cn
 
     std::string tryToOpenWalletOrLoadKeysOrThrow(logging::LoggerRef& logger, std::unique_ptr<cn::IWalletLegacy>& wallet, const std::string& walletFile, const std::string& password);
 
-    void save_wallet(cn::IWalletLegacy& wallet, const std::string& walletFilename, logging::LoggerRef& logger);
-
     /**
      * @return - Displays all balances (main + deposits)
      */
-    std::stringstream balances(std::unique_ptr<cn::IWalletLegacy>& wallet, const Currency& currency);
+    std::stringstream balances(const cn::IWallet &wallet, const Currency &currency) const;
   };
 }
