@@ -117,16 +117,16 @@ public:
                              TransactionId creatingTransactionId,
                              const Currency &currency, uint32_t height);
 
-  std::vector<TransactionOutputInformation> getUnspentOutputs();
-  size_t getUnspentOutputsCount();
+  std::vector<TransactionOutputInformation> getUnspentOutputs() override;
+  size_t getUnspentOutputsCount() override;
   std::string getReserveProof(const std::string &address, const uint64_t &reserve, const std::string &message) override;
   bool getTxProof(const crypto::Hash &transactionHash, const cn::AccountPublicAddress &address, const crypto::SecretKey &tx_key, std::string &signature) override;
   crypto::SecretKey getTransactionDeterministicSecretKey(crypto::Hash &transactionHash) const override;
   size_t createOptimizationTransaction(const std::string &address) override;
   std::vector<PaymentIdTransactions> getTransactionsByPaymentIds(const std::vector<crypto::Hash> &paymentIds) override;
 
-  void addObserver(IBlockchainSynchronizerObserver *observer);
-  void removeObserver(IBlockchainSynchronizerObserver *observer);
+  void addObserver(IBlockchainSynchronizerObserver *observer) override;
+  void removeObserver(IBlockchainSynchronizerObserver *observer) override;
 
 protected:
   struct NewAddressData

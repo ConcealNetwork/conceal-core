@@ -14,7 +14,7 @@
 
 #include <boost/program_options/variables_map.hpp>
 
-#include "Wallet/WalletGreen.h"
+#include "IWallet.h"
 #include "PasswordContainer.h"
 #include "ClientHelper.h"
 
@@ -23,10 +23,12 @@
 #include "CryptoNoteCore/Currency.h"
 #include "NodeRpcProxy/NodeRpcProxy.h"
 #include "WalletLegacy/WalletHelper.h"
+#include "Transfers/IBlockchainSynchronizer.h"
 
 #include <Logging/LoggerRef.h>
 #include <Logging/LoggerManager.h>
 
+#include <System/Event.h>
 #include <System/Dispatcher.h>
 #include <System/Ipv4Address.h>
 
@@ -178,7 +180,7 @@ namespace cn
     cn::client_helper m_chelper;
 
     std::unique_ptr<cn::NodeRpcProxy> m_node;
-    std::unique_ptr<cn::WalletGreen> m_wallet;
+    std::unique_ptr<cn::IWallet> m_wallet;
     refresh_progress_reporter_t m_refresh_progress_reporter;
 
     bool m_walletSynchronized;

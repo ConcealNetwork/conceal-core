@@ -177,6 +177,9 @@ struct PaymentIdTransactions
   std::vector<WalletTransaction> transactions;
 };
 
+class TransactionOutputInformation;
+class IBlockchainSynchronizerObserver;
+
 class IWallet
 {
 public:
@@ -248,11 +251,16 @@ public:
   virtual void commitTransaction(size_t transactionId) = 0;
   virtual void rollbackUncommitedTransaction(size_t transactionId) = 0;
 
+  virtual std::vector<TransactionOutputInformation> getUnspentOutputs() = 0;
+  virtual size_t getUnspentOutputsCount() = 0;
   virtual std::string getReserveProof(const std::string &address, const uint64_t &reserve, const std::string &message) = 0;
   virtual bool getTxProof(const crypto::Hash &transactionHash, const cn::AccountPublicAddress &address, const crypto::SecretKey &tx_key, std::string &signature) = 0;
   virtual crypto::SecretKey getTransactionDeterministicSecretKey(crypto::Hash &transactionHash) const = 0;
   virtual size_t createOptimizationTransaction(const std::string &address) = 0;
   virtual std::vector<PaymentIdTransactions> getTransactionsByPaymentIds(const std::vector<crypto::Hash> &paymentIds) = 0;
+
+  virtual void addObserver(IBlockchainSynchronizerObserver *observer) = 0;
+  virtual void removeObserver(IBlockchainSynchronizerObserver *observer) = 0;
 
   virtual void start() = 0;
   virtual void stop() = 0;

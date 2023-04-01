@@ -40,6 +40,7 @@
 #include "Rpc/HttpClient.h"
 #include "CryptoNoteCore/CryptoNoteTools.h"
 
+#include "Wallet/WalletGreen.h"
 #include "Wallet/WalletRpcServer.h"
 #include "Wallet/WalletUtils.h"
 #include "Wallet/LegacyKeysImporter.h"
