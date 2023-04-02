@@ -20,11 +20,12 @@
 #include <System/Event.h>
 #include "Transfers/TransfersSynchronizer.h"
 #include "Transfers/BlockchainSynchronizer.h"
+#include "Transfers/IObservableImpl.h"
 
 namespace cn
 {
 
-class WalletGreen : public IWallet,
+class WalletGreen : public IObservableImpl<IWalletObserver, IWallet>,
                     public ITransfersObserver,
                     public IBlockchainSynchronizerObserver,
                     public ITransfersSynchronizerObserver,
@@ -125,8 +126,6 @@ public:
   size_t createOptimizationTransaction(const std::string &address) override;
   std::vector<PaymentIdTransactions> getTransactionsByPaymentIds(const std::vector<crypto::Hash> &paymentIds) override;
 
-  void addObserver(IBlockchainSynchronizerObserver *observer) override;
-  void removeObserver(IBlockchainSynchronizerObserver *observer) override;
 
 protected:
   struct NewAddressData
@@ -385,6 +384,12 @@ protected:
   void deleteFromUncommitedTransactions(const std::vector<size_t> &deletedTransactions);
   void pushToPaymentsIndex(const crypto::Hash &paymentId, size_t txId);
   void buildPaymentIds();
+
+  cn::WalletEvent makeTransactionUpdatedEvent(size_t id);
+  cn::WalletEvent makeTransactionCreatedEvent(size_t id);
+  cn::WalletEvent makeMoneyUnlockedEvent();
+  cn::WalletEvent makeSyncProgressUpdatedEvent(uint32_t current, uint32_t total);
+  cn::WalletEvent makeSyncCompletedEvent();
 
 private:
   platform_system::Dispatcher &m_dispatcher;

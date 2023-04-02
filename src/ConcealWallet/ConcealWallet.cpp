@@ -1794,3 +1794,56 @@ bool conceal_wallet::check_address(const std::vector<std::string> &args)
 
   return true;
 }
+
+void conceal_wallet::initCompleted(std::error_code result)
+{
+  // Nothing to do here
+}
+void conceal_wallet::saveCompleted(std::error_code result)
+{
+  // Nothing to do here
+}
+void conceal_wallet::actualBalanceUpdated(uint64_t balance)
+{
+  // Nothing to do here
+}
+void conceal_wallet::pendingBalanceUpdated(uint64_t balance)
+{
+  // Nothing to do here
+}
+void conceal_wallet::actualDepositBalanceUpdated(uint64_t balance)
+{
+  // Nothing to do here
+}
+void conceal_wallet::pendingDepositBalanceUpdated(uint64_t balance)
+{
+  // Nothing to do here
+}
+void conceal_wallet::actualInvestmentBalanceUpdated(uint64_t balance)
+{
+  // Nothing to do here
+}
+void conceal_wallet::pendingInvestmentBalanceUpdated(uint64_t balance)
+{
+  // Nothing to do here
+}
+void conceal_wallet::externalTransactionCreated(TransactionId transactionId)
+{
+  // Nothing to do here
+}
+void conceal_wallet::sendTransactionCompleted(TransactionId transactionId, std::error_code result)
+{
+  // Nothing to do here
+}
+void conceal_wallet::transactionUpdated(TransactionId transactionId)
+{
+  // Nothing to do here
+}
+void conceal_wallet::depositUpdated(DepositId depositId)
+{
+  // Nothing to do here
+}
+void conceal_wallet::depositsUpdated(const std::vector<DepositId> &depositIds)
+{
+  // Nothing to do here
+}

@@ -137,49 +137,6 @@ namespace
     }
   }
 
-  cn::WalletEvent makeTransactionUpdatedEvent(size_t id)
-  {
-    cn::WalletEvent event;
-    event.type = cn::WalletEventType::TRANSACTION_UPDATED;
-    event.transactionUpdated.transactionIndex = id;
-
-    return event;
-  }
-
-  cn::WalletEvent makeTransactionCreatedEvent(size_t id)
-  {
-    cn::WalletEvent event;
-    event.type = cn::WalletEventType::TRANSACTION_CREATED;
-    event.transactionCreated.transactionIndex = id;
-
-    return event;
-  }
-
-  cn::WalletEvent makeMoneyUnlockedEvent()
-  {
-    cn::WalletEvent event;
-    event.type = cn::WalletEventType::BALANCE_UNLOCKED;
-
-    return event;
-  }
-
-  cn::WalletEvent makeSyncProgressUpdatedEvent(uint32_t current, uint32_t total)
-  {
-    cn::WalletEvent event;
-    event.type = cn::WalletEventType::SYNC_PROGRESS_UPDATED;
-    event.synchronizationProgressUpdated.processedBlockCount = current;
-    event.synchronizationProgressUpdated.totalBlockCount = total;
-    return event;
-  }
-
-  cn::WalletEvent makeSyncCompletedEvent()
-  {
-    cn::WalletEvent event;
-    event.type = cn::WalletEventType::SYNC_COMPLETED;
-
-    return event;
-  }
-
   size_t getTransactionSize(const ITransactionReader &transaction)
   {
     return transaction.getTransactionData().size();
@@ -943,12 +900,14 @@ namespace cn
     catch (const std::exception &e)
     {
       m_logger(ERROR, BRIGHT_RED) << "Failed to save container: " << e.what();
+      m_observerManager.notify(&IWalletObserver::saveCompleted, make_error_code(cn::error::INTERNAL_WALLET_ERROR));
       startBlockchainSynchronizer();
       throw;
     }
 
     startBlockchainSynchronizer();
     m_logger(INFO, BRIGHT_WHITE) << "Container saved";
+    m_observerManager.notify(&IWalletObserver::saveCompleted, std::error_code());
   }
 
   void WalletGreen::copyContainerStorageKeys(ContainerStorage &src, const chacha8_key &srcKey, ContainerStorage &dst, const chacha8_key &dstKey)
@@ -3285,6 +3244,7 @@ namespace cn
 
   void WalletGreen::synchronizationCompleted(std::error_code result)
   {
+    m_observerManager.notify(&IWalletObserver::synchronizationCompleted, result);
     m_dispatcher.remoteSpawn([this]() { onSynchronizationCompleted(); });
   }
 
@@ -4025,6 +3985,10 @@ namespace cn
                                         << m_currency.formatAmount(m_pendingBalance) << ", locked deposits "
                                         << m_currency.formatAmount(m_lockedDepositBalance) << ",unlocked deposits "
                                         << m_currency.formatAmount(m_unlockedDepositBalance);
+      m_observerManager.notify(&IWalletObserver::actualBalanceUpdated, actual);
+      m_observerManager.notify(&IWalletObserver::pendingBalanceUpdated, pending);
+      m_observerManager.notify(&IWalletObserver::actualDepositBalanceUpdated, locked);
+      m_observerManager.notify(&IWalletObserver::pendingDepositBalanceUpdated, unlocked);
     }
   }
 
@@ -4872,14 +4836,47 @@ namespace cn
     return payments;
   }
 
-  void WalletGreen::addObserver(IBlockchainSynchronizerObserver *observer)
+  cn::WalletEvent WalletGreen::makeTransactionUpdatedEvent(size_t id)
   {
-    m_blockchainSynchronizer.addObserver(observer);
+    cn::WalletEvent event;
+    event.type = cn::WalletEventType::TRANSACTION_UPDATED;
+    event.transactionUpdated.transactionIndex = id;
+    m_observerManager.notify(&IWalletObserver::transactionUpdated, id);
+    return event;
   }
 
-  void WalletGreen::removeObserver(IBlockchainSynchronizerObserver *observer)
+  cn::WalletEvent WalletGreen::makeTransactionCreatedEvent(size_t id)
   {
-    m_blockchainSynchronizer.removeObserver(observer);
+    cn::WalletEvent event;
+    event.type = cn::WalletEventType::TRANSACTION_CREATED;
+    event.transactionCreated.transactionIndex = id;
+    m_observerManager.notify(&IWalletObserver::sendTransactionCompleted, id, std::error_code());
+    return event;
+  }
+
+  cn::WalletEvent WalletGreen::makeMoneyUnlockedEvent()
+  {
+    cn::WalletEvent event;
+    event.type = cn::WalletEventType::BALANCE_UNLOCKED;
+
+    return event;
+  }
+
+  cn::WalletEvent WalletGreen::makeSyncProgressUpdatedEvent(uint32_t current, uint32_t total)
+  {
+    cn::WalletEvent event;
+    event.type = cn::WalletEventType::SYNC_PROGRESS_UPDATED;
+    event.synchronizationProgressUpdated.processedBlockCount = current;
+    event.synchronizationProgressUpdated.totalBlockCount = total;
+    m_observerManager.notify(&IWalletObserver::synchronizationProgressUpdated, current, total);
+    return event;
+  }
+
+  cn::WalletEvent WalletGreen::makeSyncCompletedEvent()
+  {
+    cn::WalletEvent event;
+    event.type = cn::WalletEventType::SYNC_COMPLETED;
+    return event;
   }
 
 } //namespace cn

@@ -95,8 +95,8 @@ struct IWalletBaseStub : public cn::IWallet, public cn::IFusionManager {
   virtual size_t createOptimizationTransaction(const std::string &address) {return 0; };
   virtual std::vector<PaymentIdTransactions> getTransactionsByPaymentIds(const std::vector<crypto::Hash> &paymentIds) { return std::vector<PaymentIdTransactions>{}; };
 
-  virtual void addObserver(IBlockchainSynchronizerObserver *observer) override{};
-  virtual void removeObserver(IBlockchainSynchronizerObserver *observer) override{};
+  virtual void addObserver(IWalletObserver *observer) override{};
+  virtual void removeObserver(IWalletObserver *observer) override{};
 
   virtual void start() override { m_stopped = false; }
   virtual void stop() override { m_stopped = true; m_eventOccurred.set(); }

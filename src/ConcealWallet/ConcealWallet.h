@@ -37,7 +37,7 @@ namespace cn
   /************************************************************************/
   /*                                                                      */
   /************************************************************************/
-  class conceal_wallet : public IBlockchainSynchronizerObserver {
+  class conceal_wallet : public IWalletObserver {
   public:
     conceal_wallet(platform_system::Dispatcher& dispatcher, const cn::Currency& currency, logging::LoggerManager& log);
 
@@ -115,8 +115,21 @@ namespace cn
     void printConnectionError() const;
     std::string get_wallet_keys() const;
 
+    void initCompleted(std::error_code result) override;
+    void saveCompleted(std::error_code result) override;
+    void synchronizationProgressUpdated(uint32_t current, uint32_t total) override;
     void synchronizationCompleted(std::error_code result) override;
-    void synchronizationProgressUpdated(uint32_t processedBlockCount, uint32_t totalBlockCount) override;
+    void actualBalanceUpdated(uint64_t balance) override;
+    void pendingBalanceUpdated(uint64_t balance) override;
+    void actualDepositBalanceUpdated(uint64_t balance) override;
+    void pendingDepositBalanceUpdated(uint64_t balance) override;
+    void actualInvestmentBalanceUpdated(uint64_t balance) override;
+    void pendingInvestmentBalanceUpdated(uint64_t balance) override;
+    void externalTransactionCreated(TransactionId transactionId) override;
+    void sendTransactionCompleted(TransactionId transactionId, std::error_code result) override;
+    void transactionUpdated(TransactionId transactionId) override;
+    void depositUpdated(DepositId depositId) override;
+    void depositsUpdated(const std::vector<DepositId> &depositIds) override;
 
     friend class refresh_progress_reporter_t;
 
