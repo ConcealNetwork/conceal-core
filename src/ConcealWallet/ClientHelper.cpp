@@ -3,7 +3,6 @@
 // Distributed under the MIT/X11 software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#include <ctime>
 #include <future>
 #include <fstream>
 #include <sstream>
@@ -175,19 +174,7 @@ namespace cn
     crypto::Hash paymentId;
     std::string paymentIdStr = (cn::getPaymentIdFromTxExtra(extraVec, paymentId) && paymentId != NULL_HASH ? podToHex(paymentId) : "");
 
-    char timeString[32 + 1];
-    time_t timestamp = static_cast<time_t>(txInfo.timestamp);
-    struct tm time;
-#ifdef _WIN32
-    gmtime_s(&time, &timestamp);
-#else
-    gmtime_r(&timestamp, &time);
-#endif
-
-    if (!std::strftime(timeString, sizeof(timeString), "%c", &time))
-    {
-      throw std::runtime_error("time buffer is too small");
-    }
+    std::string timeString = formatTimestamp(static_cast<time_t>(txInfo.timestamp));
 
     std::string format_amount = currency.formatAmount(txInfo.totalAmount);
 

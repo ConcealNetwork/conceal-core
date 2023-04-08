@@ -9,7 +9,6 @@
 
 #include <algorithm>
 #include <cstdint>
-#include <ctime>
 
 #include "Common/StringTools.h"
 #include "CryptoNoteCore/CryptoNoteBasicImpl.h"
@@ -126,21 +125,10 @@ namespace cn {
 
           if (m_blockchain.size() % (60 * 60 / m_currency.difficultyTarget()) == 0) {
             auto interval = m_currency.difficultyTarget() * (upgradeHeight() - m_blockchain.size() + 2);
-            char upgradeTimeStr[32];
-            struct tm upgradeTimeTm;
             time_t upgradeTimestamp = time(nullptr) + static_cast<time_t>(interval);
-#ifdef _WIN32
-            gmtime_s(&upgradeTimeTm, &upgradeTimestamp);
-#else
-            gmtime_r(&upgradeTimestamp, &upgradeTimeTm);
-#endif
-            if (!std::strftime(upgradeTimeStr, sizeof(upgradeTimeStr), "%c", &upgradeTimeTm))
-            {
-              throw std::runtime_error("time buffer is too small");
-            }
-
+            std::string upgradeTime = common::formatTimestamp(upgradeTimestamp);
             logger(logging::TRACE, logging::BRIGHT_GREEN) << "###### UPGRADE is going to happen after block index " << upgradeHeight() << " at about " <<
-              upgradeTimeStr << " UTC" << " (in " << common::timeIntervalToString(interval) << ")! Current last block index " << (m_blockchain.size() - 1) <<
+              upgradeTime << " (in " << common::timeIntervalToString(interval) << ")! Current last block index " << (m_blockchain.size() - 1) <<
               ", hash " << get_block_hash(m_blockchain.back().bl);
           }
         } else if (m_blockchain.size() == upgradeHeight() + 1) {

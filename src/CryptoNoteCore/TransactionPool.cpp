@@ -8,7 +8,6 @@
 #include "TransactionPool.h"
 
 #include <algorithm>
-#include <ctime>
 #include <vector>
 #include <unordered_set>
 
@@ -451,45 +450,12 @@ namespace cn
 
       ss << "blobSize: " << txd.blobSize << std::endl
          << "fee: " << m_currency.formatAmount(txd.fee) << std::endl
-         << "received: ";
-
-      char receivedTimeStr[32];
-      struct tm receivedTimeTm;
-#ifdef _WIN32
-      gmtime_s(&receivedTimeTm, &txd.receiveTime);
-#else
-      gmtime_r(&txd.receiveTime, &receivedTimeTm);
-#endif
-      if (std::strftime(receivedTimeStr, sizeof(receivedTimeStr), "%c", &receivedTimeTm))
-      {
-        ss << receivedTimeStr << " UTC";
-      }
-      else
-      {
-        ss << "unable to get time";
-      }
-      ss << std::endl;
+         << "received: " << common::formatTimestamp(txd.receiveTime) << std::endl;
 
       auto ttlIt = m_ttlIndex.find(txd.id);
       if (ttlIt != m_ttlIndex.end())
       {
-        char ttlTimeStr[32];
-        struct tm ttlTimeTm;
-        time_t timestamp = reinterpret_cast<time_t>(&ttlIt->second);
-#ifdef _WIN32
-        gmtime_s(&ttlTimeTm, &timestamp);
-#else
-        gmtime_r(&timestamp, &ttlTimeTm);
-#endif
-        if (std::strftime(ttlTimeStr, sizeof(ttlTimeStr), "%c", &ttlTimeTm))
-        {
-          ss << "TTL: " << ttlTimeStr << " UTC";
-        }
-        else
-        {
-          ss << "TTL failed";
-        }
-        ss << std::endl;
+        ss << "TTL: " << common::formatTimestamp(static_cast<time_t>(ttlIt->second)) << std::endl;
       }
     }
     return ss.str();

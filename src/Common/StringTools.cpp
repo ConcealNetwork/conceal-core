@@ -7,6 +7,7 @@
 
 #include "StringTools.h"
 #include <fstream>
+#include <ctime>
 
 namespace common {
 
@@ -348,5 +349,17 @@ std::string makeCenteredString(size_t width, const std::string& text) {
   return std::string(offset, ' ') + text + std::string(width - text.size() - offset, ' ');
 }
 
-
+std::string formatTimestamp(time_t timestamp)
+{
+  std::string buffer(32, '\0');
+  struct tm time_info;
+#ifdef _WIN32
+  gmtime_s(&time_info, &timestamp);
+#else
+  gmtime_r(&timestamp, &time_info);
+#endif
+  std::strftime(&buffer[0], buffer.size(), "%c", &time_info);
+  buffer += " UTC";
+  return buffer;
+}
 }

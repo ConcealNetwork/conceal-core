@@ -9,7 +9,6 @@
 #include "TransferCmd.h"
 #include "Const.h"
 
-#include <ctime>
 #include <fstream>
 #include <future>
 #include <iomanip>
@@ -106,19 +105,7 @@ void printListTransfersItem(LoggerRef& logger, const WalletTransaction& txInfo, 
   crypto::Hash paymentId;
   std::string paymentIdStr = (getPaymentIdFromTxExtra(extraVec, paymentId) && paymentId != NULL_HASH ? common::podToHex(paymentId) : "");
 
-  char timeString[TIMESTAMP_MAX_WIDTH + 1];
-  time_t timestamp = static_cast<time_t>(txInfo.timestamp);
-  struct tm time;
-#ifdef _WIN32
-  gmtime_s(&time, &timestamp);
-#else
-  gmtime_r(&timestamp, &time);
-#endif
-
-  if (!std::strftime(timeString, sizeof(timeString), "%c", &time))
-  {
-    throw std::runtime_error("time buffer is too small");
-  }
+  std::string timeString = formatTimestamp(static_cast<time_t>(txInfo.timestamp));
 
   std::string rowColor = txInfo.totalAmount < 0 ? MAGENTA : GREEN;
   logger(INFO, rowColor)
