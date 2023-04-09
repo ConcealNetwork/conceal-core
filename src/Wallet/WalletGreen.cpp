@@ -335,24 +335,6 @@ namespace cn
     crypto::SecretKey transactionSK;
     transaction->getTransactionSecretKey(transactionSK);
 
-    /* Add the transaction extra */
-    std::vector<WalletMessage> messages;
-    crypto::PublicKey publicKey = transaction->getTransactionPublicKey();
-    cn::KeyPair kp = {publicKey, transactionSK};
-    for (size_t i = 0; i < messages.size(); ++i)
-    {
-      cn::AccountPublicAddress addressBin;
-      if (!m_currency.parseAccountAddressString(messages[i].address, addressBin))
-        continue;
-      cn::tx_extra_message tag;
-      if (!tag.encrypt(i, messages[i].message, &addressBin, kp))
-        continue;
-      BinaryArray ba;
-      toBinaryArray(tag, ba);
-      ba.insert(ba.begin(), TX_EXTRA_MESSAGE_TAG);
-      transaction->appendExtra(ba);
-    }
-
     assert(inputs.size() == selectedTransfers.size());
     for (size_t i = 0; i < inputs.size(); ++i)
     {
@@ -517,24 +499,6 @@ namespace cn
     crypto::SecretKey transactionSK;
     transaction->getTransactionSecretKey(transactionSK);
     transaction->setUnlockTime(0);
-
-    /* Add the transaction extra */
-    std::vector<WalletMessage> messages;
-    crypto::PublicKey publicKey = transaction->getTransactionPublicKey();
-    cn::KeyPair kp = {publicKey, transactionSK};
-    for (size_t i = 0; i < messages.size(); ++i)
-    {
-      cn::AccountPublicAddress addressBin;
-      if (!m_currency.parseAccountAddressString(messages[i].address, addressBin))
-        continue;
-      cn::tx_extra_message tag;
-      if (!tag.encrypt(i, messages[i].message, &addressBin, kp))
-        continue;
-      BinaryArray ba;
-      toBinaryArray(tag, ba);
-      ba.insert(ba.begin(), TX_EXTRA_MESSAGE_TAG);
-      transaction->appendExtra(ba);
-    }
 
     /* Prepare the inputs */
 
@@ -2677,9 +2641,10 @@ namespace cn
       if (!tag.encrypt(i, messages[i].message, &addressBin, kp))
         continue;
       BinaryArray ba;
-      toBinaryArray(tag, ba);
-      ba.insert(ba.begin(), TX_EXTRA_MESSAGE_TAG);
-      tx->appendExtra(ba);
+      if (cn::append_message_to_extra(ba, tag))
+      {
+        tx->appendExtra(ba);
+      }
     }
 
     for (const auto &amountToAddress : amountsToAddresses)
