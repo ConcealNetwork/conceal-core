@@ -1871,9 +1871,8 @@ namespace cn
 
   size_t WalletGreen::transfer(const TransactionParameters &transactionParameters, crypto::SecretKey &transactionSK)
   {
-    tools::ScopeExit releaseContext([this] {
-      m_dispatcher.yield();
-    });
+    tools::ScopeExit releaseContext([this]
+                                    { m_dispatcher.yield(); });
 
     platform_system::EventLock lk(m_readyEvent);
 
@@ -1881,11 +1880,11 @@ namespace cn
     throwIfTrackingMode();
     throwIfStopped();
 
-    return doTransfer(transactionParameters, transactionSK);
+    return doTransfer(transactionParameters, transactionSK, true);
   }
 
   void WalletGreen::prepareTransaction(
-      std::vector<WalletOuts> &&wallets,
+      const std::vector<WalletOuts> &wallets,
       const std::vector<WalletOrder> &orders,
       const std::vector<WalletMessage> &messages,
       uint64_t fee,
@@ -1955,7 +1954,7 @@ namespace cn
     validateOrders(transactionParameters.destinations);
   }
 
-  size_t WalletGreen::doTransfer(const TransactionParameters &transactionParameters, crypto::SecretKey &transactionSK)
+  size_t WalletGreen::doTransfer(const TransactionParameters &transactionParameters, crypto::SecretKey &transactionSK, bool send)
   {
     validateTransactionParameters(transactionParameters);
     cn::AccountPublicAddress changeDestination = getChangeDestination(transactionParameters.changeDestination, transactionParameters.sourceAddresses);
@@ -1972,7 +1971,7 @@ namespace cn
 
     PreparedTransaction preparedTransaction;
     prepareTransaction(
-        std::move(wallets),
+        wallets,
         transactionParameters.destinations,
         transactionParameters.messages,
         transactionParameters.fee,
@@ -1984,53 +1983,21 @@ namespace cn
         preparedTransaction,
         transactionSK);
 
-    return validateSaveAndSendTransaction(*preparedTransaction.transaction, preparedTransaction.destinations, false, true);
+    return validateSaveAndSendTransaction(*preparedTransaction.transaction, preparedTransaction.destinations, false, send);
   }
 
   size_t WalletGreen::makeTransaction(const TransactionParameters &sendingTransaction)
   {
-    size_t id = WALLET_INVALID_TRANSACTION_ID;
-    tools::ScopeExit releaseContext([this] {
-      m_dispatcher.yield();
-    });
+    tools::ScopeExit releaseContext([this]
+                                    { m_dispatcher.yield(); });
 
     platform_system::EventLock lk(m_readyEvent);
 
     throwIfNotInitialized();
     throwIfTrackingMode();
     throwIfStopped();
-
-    validateTransactionParameters(sendingTransaction);
-    cn::AccountPublicAddress changeDestination = getChangeDestination(sendingTransaction.changeDestination, sendingTransaction.sourceAddresses);
-    m_logger(DEBUGGING) << "Change address " << m_currency.accountAddressAsString(changeDestination);
-
-    std::vector<WalletOuts> wallets;
-    if (!sendingTransaction.sourceAddresses.empty())
-    {
-      wallets = pickWallets(sendingTransaction.sourceAddresses);
-    }
-    else
-    {
-      wallets = pickWalletsWithMoney();
-    }
-
-    PreparedTransaction preparedTransaction;
     crypto::SecretKey txSecretKey;
-    prepareTransaction(
-        std::move(wallets),
-        sendingTransaction.destinations,
-        sendingTransaction.messages,
-        sendingTransaction.fee,
-        sendingTransaction.mixIn,
-        sendingTransaction.extra,
-        sendingTransaction.unlockTimestamp,
-        sendingTransaction.donation,
-        changeDestination,
-        preparedTransaction,
-        txSecretKey);
-
-    id = validateSaveAndSendTransaction(*preparedTransaction.transaction, preparedTransaction.destinations, false, false);
-    return id;
+    return doTransfer(sendingTransaction, txSecretKey, false);
   }
 
   void WalletGreen::commitTransaction(size_t transactionId)
@@ -4669,7 +4636,7 @@ namespace cn
     PreparedTransaction preparedTransaction;
     crypto::SecretKey txSecretKey;
     prepareTransaction(
-        std::move(wallets),
+        wallets,
         sendingTransaction.destinations,
         sendingTransaction.messages,
         sendingTransaction.fee,

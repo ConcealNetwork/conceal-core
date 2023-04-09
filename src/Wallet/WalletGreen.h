@@ -264,7 +264,7 @@ protected:
     uint64_t changeAmount;
   };
 
-  void prepareTransaction(std::vector<WalletOuts> &&wallets,
+  void prepareTransaction(const std::vector<WalletOuts> &wallets,
                           const std::vector<WalletOrder> &orders,
                           const std::vector<WalletMessage> &messages,
                           uint64_t fee,
@@ -281,7 +281,7 @@ protected:
   void validateOrders(const std::vector<WalletOrder> &orders) const;
 
   void validateTransactionParameters(const TransactionParameters &transactionParameters) const;
-  size_t doTransfer(const TransactionParameters &transactionParameters, crypto::SecretKey &transactionSK);
+  size_t doTransfer(const TransactionParameters &transactionParameters, crypto::SecretKey &transactionSK, bool send);
 
   void requestMixinOuts(const std::vector<OutputToTransfer> &selectedTransfers,
                         uint64_t mixIn,
