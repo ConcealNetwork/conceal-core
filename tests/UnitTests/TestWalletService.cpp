@@ -101,7 +101,7 @@ struct IWalletBaseStub : public cn::IWallet, public cn::IFusionManager {
   virtual void start() override { m_stopped = false; }
   virtual void stop() override { m_stopped = true; m_eventOccurred.set(); }
 
-  void createDeposit(uint64_t amount, uint64_t term, std::string sourceAddress, std::string destinationAddress, std::string &transactionHash) override {}
+  void createDeposit(uint64_t amount, uint32_t term, std::string sourceAddress, std::string destinationAddress, std::string &transactionHash) override {}
   void withdrawDeposit(DepositId depositId, std::string &transactionHash) override{};
   Deposit getDeposit(size_t depositIndex) const override
   {
