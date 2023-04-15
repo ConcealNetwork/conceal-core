@@ -384,6 +384,7 @@ protected:
   void deleteFromUncommitedTransactions(const std::vector<size_t> &deletedTransactions);
   void pushToPaymentsIndex(const crypto::Hash &paymentId, size_t txId);
   void buildPaymentIds();
+  std::vector<std::string> getMessagesFromExtra(const std::string &extra) const;
 
   cn::WalletEvent makeTransactionUpdatedEvent(size_t id);
   cn::WalletEvent makeTransactionCreatedEvent(size_t id);

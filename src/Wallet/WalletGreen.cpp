@@ -1810,7 +1810,23 @@ namespace cn
       throw std::system_error(make_error_code(cn::error::INDEX_OUT_OF_RANGE));
     }
 
-    return m_transactions.get<RandomAccessIndex>()[transactionIndex];
+    WalletTransaction transaction = m_transactions.get<RandomAccessIndex>()[transactionIndex];
+    transaction.messages = getMessagesFromExtra(transaction.extra);
+    return transaction;
+  }
+
+  std::vector<std::string> WalletGreen::getMessagesFromExtra(const std::string &extra) const
+  {
+    std::vector<std::string> messages;
+    std::vector<uint8_t> extraBin = common::asBinaryArray(extra);
+    crypto::PublicKey publicKey = cn::getTransactionPublicKeyFromExtra(extraBin);
+    for (size_t i = 0; i < getAddressCount(); ++i)
+    {
+      crypto::SecretKey secretKey = getAddressSpendKey(getAddress(i)).secretKey;
+      std::vector<std::string> m = cn::get_messages_from_extra(extraBin, publicKey, &secretKey);
+      messages.insert(std::end(messages), std::begin(m), std::end(m));
+    }
+    return messages;
   }
 
   Deposit WalletGreen::getDeposit(size_t depositIndex) const
@@ -2195,6 +2211,12 @@ namespace cn
         transaction.isBase = isBase;
         updated = true;
       }
+
+      if (transaction.messages != info.messages)
+      {
+        transaction.messages = info.messages;
+        updated = true;
+      }
     });
     (void)r;
     assert(r);
@@ -2227,6 +2249,7 @@ namespace cn
     tx.extra.assign(reinterpret_cast<const char *>(info.extra.data()), info.extra.size());
     tx.totalAmount = txBalance;
     tx.creationTime = info.timestamp;
+    tx.messages = info.messages;
 
     size_t txId = index.size();
     index.push_back(std::move(tx));
@@ -2973,6 +2996,7 @@ namespace cn
 
     WalletTransactionWithTransfers walletTransaction;
     walletTransaction.transaction = *it;
+    walletTransaction.transaction.messages = getMessagesFromExtra(it->extra);
     walletTransaction.transfers = getTransactionTransfers(*it);
 
     return walletTransaction;

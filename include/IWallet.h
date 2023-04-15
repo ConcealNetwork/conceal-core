@@ -107,6 +107,7 @@ struct WalletTransaction
   size_t firstDepositId = WALLET_INVALID_DEPOSIT_ID;
   size_t depositCount = 0;
   bool isBase;
+  std::vector<std::string> messages;
 };
 
 enum class WalletTransferType : uint8_t
