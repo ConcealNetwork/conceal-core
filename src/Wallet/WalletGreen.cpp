@@ -2633,16 +2633,15 @@ namespace cn
 
   void WalletGreen::sendTransaction(const cn::Transaction &cryptoNoteTransaction)
   {
-    std::error_code ec;
     throwIfStopped();
     auto relayTransactionCompleted = std::promise<std::error_code>();
     auto relayTransactionWaitFuture = relayTransactionCompleted.get_future();
-    m_node.relayTransaction(cryptoNoteTransaction, [&ec, &relayTransactionCompleted](std::error_code)
+    m_node.relayTransaction(cryptoNoteTransaction, [&relayTransactionCompleted](std::error_code ec)
                             {
                               auto detachedPromise = std::move(relayTransactionCompleted);
                               detachedPromise.set_value(ec);
                             });
-    ec = relayTransactionWaitFuture.get();
+    std::error_code ec = relayTransactionWaitFuture.get();
 
     if (ec)
     {
@@ -2739,24 +2738,22 @@ namespace cn
       amounts.push_back(out.out.amount);
     }
 
-    std::error_code mixinError;
-
     throwIfStopped();
 
     auto getRandomOutsByAmountsCompleted = std::promise<std::error_code>();
     auto getRandomOutsByAmountsWaitFuture = getRandomOutsByAmountsCompleted.get_future();
 
     m_node.getRandomOutsByAmounts(std::move(amounts), mixIn, mixinResult, [&getRandomOutsByAmountsCompleted](std::error_code ec) {
-     auto detachedPromise = std::move(getRandomOutsByAmountsCompleted);
+      auto detachedPromise = std::move(getRandomOutsByAmountsCompleted);
       detachedPromise.set_value(ec);
     });
-    mixinError = getRandomOutsByAmountsWaitFuture.get();
+    std::error_code ec = getRandomOutsByAmountsWaitFuture.get();
 
     checkIfEnoughMixins(mixinResult, mixIn);
 
-    if (mixinError)
+    if (ec)
     {
-      throw std::system_error(mixinError);
+      throw std::system_error(ec);
     }
   }
 
