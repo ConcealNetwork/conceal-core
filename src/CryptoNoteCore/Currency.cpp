@@ -1274,29 +1274,35 @@ namespace cn
     return (transactionSize - headerSize - outputsSize) / inputSize;
   }
 
-  bool Currency::validateOutput(uint64_t amount, const MultisignatureOutput &output, uint32_t height) const
+  bool Currency::validateOutput(uint64_t amount, const TransactionOutputTarget &output, uint32_t height) const
   {
-    if (output.term != 0)
+    // we don't need to validate keyOutputs here, skip to multisig
+    if (output.which() == 1)
     {
-      if (height > m_depositHeightV4)
+      const auto& multisigOutput = boost::get<MultisignatureOutput>(output);
+      if (multisigOutput.term != 0)
       {
-        if (output.term < m_depositMinTermV3 || output.term > m_depositMaxTermV3 || output.term % m_depositMinTermV3 != 0)
+        if (height > m_depositHeightV4)
         {
-          logger(INFO, BRIGHT_WHITE) << "multisignature output has invalid term: " << output.term;
+          if (multisigOutput.term < m_depositMinTermV3 || multisigOutput.term > m_depositMaxTermV3 || multisigOutput.term % m_depositMinTermV3 != 0)
+          {
+            logger(INFO, BRIGHT_WHITE) << "multisignature output has invalid term: " << multisigOutput.term;
+            return false;
+          }
+        }
+        else if (multisigOutput.term < m_depositMinTerm || multisigOutput.term > m_depositMaxTermV1)
+        {
+          logger(INFO, BRIGHT_WHITE) << "multisignature output has invalid term: " << multisigOutput.term;
+          return false;
+        }
+        if (amount < m_depositMinAmount)
+        {
+          logger(INFO, BRIGHT_WHITE) << "multisignature output is a deposit output, but it has too small amount: " << amount;
           return false;
         }
       }
-      else if (output.term < m_depositMinTerm || output.term > m_depositMaxTermV1)
-      {
-        logger(INFO, BRIGHT_WHITE) << "multisignature output has invalid term: " << output.term;
-        return false;
-      }
-      if (amount < m_depositMinAmount)
-      {
-        logger(INFO, BRIGHT_WHITE) << "multisignature output is a deposit output, but it has too small amount: " << amount;
-        return false;
-      }
     }
+
     return true;
   }
 
