@@ -1353,7 +1353,7 @@ bool conceal_wallet::transfer(const std::vector<std::string> &args) {
     sendParams.destinations = cmd.dsts;
     sendParams.messages = messages;
     sendParams.extra = extraString;
-    sendParams.unlockTimestamp = ttl;
+    sendParams.ttl = ttl;
     sendParams.changeDestination = m_wallet->getAddress(0);
 
     crypto::SecretKey transactionSK;

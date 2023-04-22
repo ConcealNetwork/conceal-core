@@ -273,6 +273,7 @@ protected:
                           uint64_t unlockTimestamp,
                           const DonationSettings &donation,
                           const cn::AccountPublicAddress &changeDestinationAddress,
+                          uint64_t ttl,
                           PreparedTransaction &preparedTransaction,
                           crypto::SecretKey &transactionSK);
   void validateAddresses(const std::vector<std::string> &addresses) const;
@@ -302,7 +303,7 @@ protected:
   ReceiverAmounts splitAmount(uint64_t amount, const AccountPublicAddress &destination, uint64_t dustThreshold) const;
 
   std::unique_ptr<cn::ITransaction> makeTransaction(const std::vector<ReceiverAmounts> &decomposedOutputs,
-                                                            std::vector<InputInfo> &keysInfo, const std::vector<WalletMessage> &messages, const std::string &extra, uint64_t unlockTimestamp, crypto::SecretKey &transactionSK);
+                                                    std::vector<InputInfo> &keysInfo, const std::vector<WalletMessage> &messages, const std::string &extra, uint64_t unlockTimestamp, uint64_t ttl, crypto::SecretKey &transactionSK);
 
   void sendTransaction(const cn::Transaction &cryptoNoteTransaction);
   size_t validateSaveAndSendTransaction(const ITransactionReader &transaction, const std::vector<WalletTransfer> &destinations, bool isFusion, bool send);

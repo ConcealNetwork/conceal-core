@@ -1909,10 +1909,14 @@ namespace cn
       uint64_t unlockTimestamp,
       const DonationSettings &donation,
       const cn::AccountPublicAddress &changeDestination,
+      uint64_t ttl,
       PreparedTransaction &preparedTransaction,
       crypto::SecretKey &transactionSK)
   {
-
+    if (ttl != 0)
+    {
+      fee = 0;
+    }
     preparedTransaction.destinations = convertOrdersToTransfers(orders);
     preparedTransaction.neededMoney = countNeededMoney(preparedTransaction.destinations, fee);
 
@@ -1950,7 +1954,7 @@ namespace cn
       decomposedOutputs.emplace_back(std::move(splittedChange));
     }
 
-    preparedTransaction.transaction = makeTransaction(decomposedOutputs, keysInfo, messages, extra, unlockTimestamp, transactionSK);
+    preparedTransaction.transaction = makeTransaction(decomposedOutputs, keysInfo, messages, extra, unlockTimestamp, ttl, transactionSK);
   }
 
   void WalletGreen::validateTransactionParameters(const TransactionParameters &transactionParameters) const
@@ -1996,6 +2000,7 @@ namespace cn
         transactionParameters.unlockTimestamp,
         transactionParameters.donation,
         changeDestination,
+        transactionParameters.ttl,
         preparedTransaction,
         transactionSK);
 
@@ -2591,7 +2596,7 @@ namespace cn
   }
 
   std::unique_ptr<cn::ITransaction> WalletGreen::makeTransaction(const std::vector<ReceiverAmounts> &decomposedOutputs,
-                                                                         std::vector<InputInfo> &keysInfo, const std::vector<WalletMessage> &messages, const std::string &extra, uint64_t unlockTimestamp, crypto::SecretKey &transactionSK)
+                                                                 std::vector<InputInfo> &keysInfo, const std::vector<WalletMessage> &messages, const std::string &extra, uint64_t unlockTimestamp, uint64_t ttl, crypto::SecretKey &transactionSK)
   {
 
     std::unique_ptr<ITransaction> tx = createTransaction();
@@ -2635,6 +2640,13 @@ namespace cn
       {
         tx->appendExtra(ba);
       }
+    }
+
+    if (ttl != 0)
+    {
+       BinaryArray ba;
+       cn::appendTTLToExtra(ba, ttl);
+       tx->appendExtra(ba);
     }
 
     for (const auto &amountToAddress : amountsToAddresses)
@@ -4063,7 +4075,7 @@ namespace cn
 
       crypto::SecretKey txkey;
       std::vector<WalletMessage> messages;
-      fusionTransaction = makeTransaction(std::vector<ReceiverAmounts>{decomposedOutputs}, keysInfo, messages, "", 0, txkey);
+      fusionTransaction = makeTransaction(std::vector<ReceiverAmounts>{decomposedOutputs}, keysInfo, messages, "", 0, 0, txkey);
       transactionSize = getTransactionSize(*fusionTransaction);
 
       ++round;
@@ -4666,6 +4678,7 @@ namespace cn
         sendingTransaction.unlockTimestamp,
         sendingTransaction.donation,
         changeDestination,
+        sendingTransaction.ttl,
         preparedTransaction,
         txSecretKey);
 

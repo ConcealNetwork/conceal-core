@@ -155,6 +155,7 @@ struct TransactionParameters
   uint64_t unlockTimestamp = 0;
   DonationSettings donation;
   std::string changeDestination;
+  uint64_t ttl = 0;
 };
 
 struct WalletTransactionWithTransfers
