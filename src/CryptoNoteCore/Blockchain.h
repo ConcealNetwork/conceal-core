@@ -451,7 +451,6 @@ namespace cn
           m_error = "output with invalid key";
           return false;
         }
-        return true;
       }
       else if (output.which() == 1)
       {
@@ -480,8 +479,8 @@ namespace cn
           m_error = "contains multisignature output with invalid public key";
           return false;
         }
-        return true;
       }
+      return true;
     }
   };
 } // namespace cn
