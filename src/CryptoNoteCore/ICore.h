@@ -108,6 +108,8 @@ public:
   virtual bool getPoolTransactionsByTimestamp(uint64_t timestampBegin, uint64_t timestampEnd, uint32_t transactionsNumberLimit, std::vector<Transaction>& transactions, uint64_t& transactionsNumberWithinTimestamps) = 0;
   virtual bool getTransactionsByPaymentId(const crypto::Hash& paymentId, std::vector<Transaction>& transactions) = 0;
 
+  virtual std::vector<crypto::Hash> getTransactionHashesByPaymentId(const crypto::Hash& paymentId) = 0;
+
   virtual std::unique_ptr<IBlock> getBlock(const crypto::Hash& blocksId) = 0;
   virtual bool handleIncomingTransaction(const Transaction& tx, const crypto::Hash& txHash, size_t blobSize, tx_verification_context& tvc, bool keptByBlock, uint32_t height) = 0;
   virtual std::error_code executeLocked(const std::function<std::error_code()>& func) = 0;

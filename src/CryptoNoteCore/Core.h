@@ -156,6 +156,8 @@ namespace cn {
 
     bool is_key_image_spent(const crypto::KeyImage &key_im);
 
+     virtual std::vector<crypto::Hash> getTransactionHashesByPaymentId(const crypto::Hash& paymentId) override;
+
   private:
     bool add_new_tx(const Transaction &tx, const crypto::Hash &tx_hash, size_t blob_size, tx_verification_context &tvc, bool keeped_by_block, uint32_t height);
     bool load_state_data();

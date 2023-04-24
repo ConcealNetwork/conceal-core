@@ -101,6 +101,8 @@ private:
   virtual void getTransaction(const crypto::Hash &transactionHash, cn::Transaction &transaction, const Callback &callback) override;
   std::error_code doGetTransaction(const crypto::Hash &transactionHash, cn::Transaction &transaction);
 
+  std::error_code doGetTransactionHashesByPaymentId(const crypto::Hash& paymentId, std::vector<crypto::Hash>& transactionHashes);
+
   void scheduleRequest(std::function<std::error_code()>&& procedure, const Callback& callback);
 template <typename Request, typename Response>
   std::error_code binaryCommand(const std::string& url, const Request& req, Response& res);

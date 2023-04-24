@@ -1135,4 +1135,19 @@ bool core::removeMessageQueue(MessageQueue<BlockchainMessage>& messageQueue) {
   return m_blockchain.removeMessageQueue(messageQueue);
 }
 
+std::vector<crypto::Hash> core::getTransactionHashesByPaymentId(const crypto::Hash& paymentId) {
+  logger(DEBUGGING) << "getTransactionHashesByPaymentId request with paymentId " << paymentId;
+
+  std::vector<crypto::Hash> blockchainTransactionHashes;
+  m_blockchain.getTransactionIdsByPaymentId(paymentId, blockchainTransactionHashes);
+
+  std::vector<crypto::Hash> poolTransactionHashes;
+  m_mempool.getTransactionIdsByPaymentId(paymentId, poolTransactionHashes);
+
+  blockchainTransactionHashes.reserve(blockchainTransactionHashes.size() + poolTransactionHashes.size());
+  std::move(poolTransactionHashes.begin(), poolTransactionHashes.end(), std::back_inserter(blockchainTransactionHashes));
+
+  return blockchainTransactionHashes;
+}
+
 }
