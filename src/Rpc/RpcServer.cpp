@@ -1,6 +1,6 @@
 // Copyright (c) 2011-2017 The Cryptonote developers
 // Copyright (c) 2017-2018 The Circle Foundation & Conceal Devs
-// Copyright (c) 2018-2022 Conceal Network & Conceal Devs
+// Copyright (c) 2018-2023 Conceal Network & Conceal Devs
 //
 // Distributed under the MIT/X11 software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
@@ -457,12 +457,17 @@ bool RpcServer::on_get_txs_with_output_global_indexes(const COMMAND_RPC_GET_TRAN
       }
       std::vector<uint32_t> range = req.heights;
 
+      if (range.back() < range.front())
+      {
+        throw JsonRpc::JsonRpcError{CORE_RPC_ERROR_CODE_WRONG_PARAM,
+                                    std::string("Invalid heights range: ") + std::to_string(range.front()) + " must be < " + std::to_string(range.back())};
+      }
+
       if (range.back() - range.front() > BLOCK_LIST_MAX_COUNT) {
         throw JsonRpc::JsonRpcError{ CORE_RPC_ERROR_CODE_WRONG_PARAM,
           std::string("Requested blocks count: ") + std::to_string(range.back() - range.front()) + " exceeded max limit of " + std::to_string(BLOCK_LIST_MAX_COUNT) };
       }
 
-      std::sort(range.begin(), range.end());
       uint32_t upperBound = std::min(range[1], m_core.get_current_blockchain_height());
       for (size_t i = 0; i < (upperBound - range[0]); i++) {
         heights.push_back(range[0] + i);
