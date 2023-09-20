@@ -13,7 +13,7 @@ jobs:
     name: Windows
     runs-on: windows-2019
     env:
-      BOOST_ROOT: C:/local/boost_1_72_0
+      BOOST_ROOT: C:/local/boost_1_83_0
     steps:
       - uses: actions/checkout@master
 
@@ -32,8 +32,7 @@ jobs:
       - name: Install dependencies
         shell: powershell
         run: |
-          echo "${env:BOOST_ROOT}"
-          $Url = "https://sourceforge.net/projects/boost/files/boost-binaries/1.72.0/boost_1_72_0-msvc-14.2-64.exe"
+          $Url = "https://sourceforge.net/projects/boost/files/boost-binaries/1.83.0/boost_1_83_0-msvc-14.2-64.exe"
           (New-Object System.Net.WebClient).DownloadFile($Url, "$env:TEMP\boost.exe")
           Start-Process -Wait -FilePath "$env:TEMP\boost.exe" "/SILENT","/SP-","/SUPPRESSMSGBOXES","/DIR=${env:BOOST_ROOT}"
 
