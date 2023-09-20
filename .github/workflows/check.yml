@@ -11,7 +11,7 @@ on:
 jobs:
   build-windows:
     name: Windows
-    runs-on: windows-2019
+    runs-on: windows-2022
     env:
       BOOST_ROOT: C:/local/boost_1_83_0
     steps:
@@ -32,7 +32,7 @@ jobs:
       - name: Install dependencies
         shell: powershell
         run: |
-          $Url = "https://sourceforge.net/projects/boost/files/boost-binaries/1.83.0/boost_1_83_0-msvc-14.2-64.exe"
+          $Url = "https://sourceforge.net/projects/boost/files/boost-binaries/1.83.0/boost_1_83_0-msvc-14.3-64.exe"
           (New-Object System.Net.WebClient).DownloadFile($Url, "$env:TEMP\boost.exe")
           Start-Process -Wait -FilePath "$env:TEMP\boost.exe" "/SILENT","/SP-","/SUPPRESSMSGBOXES","/DIR=${env:BOOST_ROOT}"
 
@@ -42,7 +42,7 @@ jobs:
         run: |
           mkdir build
           cd build
-          cmake .. -G "Visual Studio 16 2019" -DCMAKE_BUILD_TYPE=Release -DBUILD_TESTS=ON
+          cmake .. -G "Visual Studio 17 2022" -DCMAKE_BUILD_TYPE=Release -DBUILD_TESTS=ON
           msbuild concealX.sln /p:Configuration=Release /m:2
 
       - name: Prepare release
@@ -90,7 +90,7 @@ jobs:
 
   build-mingw:
     name: MinGW
-    runs-on: windows-2019
+    runs-on: windows-2022
     steps:
       - uses: msys2/setup-msys2@v2
         with:
