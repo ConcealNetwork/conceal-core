@@ -183,13 +183,10 @@ namespace payment_service
 
     void addPaymentIdToExtra(const std::string &paymentId, std::string &extra)
     {
-      std::vector<uint8_t> extraVector;
-      if (!cn::createTxExtraWithPaymentId(paymentId, extraVector))
+      if (!cn::addPaymentIdToExtra(paymentId, extra))
       {
         throw std::runtime_error("Couldn't add payment id to extra");
       }
-
-      std::copy(extraVector.begin(), extraVector.end(), std::back_inserter(extra));
     }
 
     void validatePaymentId(const std::string &paymentId, const logging::LoggerRef& logger)

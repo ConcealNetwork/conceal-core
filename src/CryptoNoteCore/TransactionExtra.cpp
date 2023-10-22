@@ -357,6 +357,15 @@ namespace cn
     return true;
   }
 
+  bool addPaymentIdToExtra(const std::string &paymentId, std::string &extra) {
+    std::vector<uint8_t> extraVector;
+    if (!createTxExtraWithPaymentId(paymentId, extraVector)) {
+      return false;
+    }
+    std::copy(extraVector.begin(), extraVector.end(), std::back_inserter(extra));
+    return true;
+  }
+
 #define TX_EXTRA_MESSAGE_CHECKSUM_SIZE 4
 
 #pragma pack(push, 1)
