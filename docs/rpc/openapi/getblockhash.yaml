@@ -1,0 +1,84 @@
+openapi: 3.0.0
+info:
+  title: Conceal Core API Documentation
+  version: "6.7.2"
+  description: API documentation for Conceal Core
+  contact:
+    name: Conceal Help Desk
+    url: https://conceal.network/support
+
+servers:
+  - url: "http://localhost:16000"
+    description: Mainnet local node
+  - url: "http://localhost:16600"
+    description: Testnet local node
+
+tags:
+  - name: JSON-RPC
+
+paths:
+  /json_rpc:
+    post:
+      summary: Get Block Hash
+      description: Get the block hash using JSON-RPC.
+      operationId: getBlockHash
+      tags: ["JSON-RPC"]
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/GetBlockHashRequest"
+      responses:
+        "200":
+          description: Successful response.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/GetBlockHashResponse"
+
+components:
+  schemas:
+    GetBlockHashRequest:
+      type: object
+      properties:
+        jsonrpc:
+          type: string
+          enum: ["2.0"]
+        method:
+          type: string
+          enum: ["getblockhash", "on_getblockhash"]
+        params:
+          $ref: "#/components/schemas/GetBlockHashParams"
+        id:
+          type: string
+          example: "1"
+      required:
+        - jsonrpc
+        - method
+        - params
+        - id
+
+    GetBlockHashParams:
+      type: array
+      items:
+        type: integer
+      description: An array of block heights.
+      example:
+        - 12345
+
+    GetBlockHashResponse:
+      type: object
+      properties:
+        jsonrpc:
+          type: string
+          enum: ["2.0"]
+        result:
+          $ref: "#/components/schemas/GetBlockHashResult"
+        id:
+          type: string
+          example: "1"
+
+    GetBlockHashResult:
+      type: string
+      description: The block hash for the specified block height.
+      example: 20e93738606e150ea3f2dd30b4b60fd9af2db05b6aecdd1201159a4e50455d44

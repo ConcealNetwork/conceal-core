@@ -1,0 +1,91 @@
+openapi: 3.0.0
+info:
+  title: Conceal Core API Documentation
+  version: "6.7.2"
+  description: API documentation for Conceal Core
+  contact:
+    name: Conceal Help Desk
+    url: https://conceal.network/support
+
+servers:
+  - url: "http://localhost:16000"
+    description: Mainnet local node
+  - url: "http://localhost:16600"
+    description: Testnet local node
+
+tags:
+  - name: JSON-RPC
+
+paths:
+  /json_rpc:
+    post:
+      summary: Get Block Timestamp by Height
+      description: Retrieve the timestamp of a block by height using JSON-RPC.
+      operationId: getBlockTimestampByHeight
+      tags: ["JSON-RPC"]
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/GetBlockTimestampByHeightRequest"
+      responses:
+        "200":
+          description: Successful response.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/GetBlockTimestampByHeightResponse"
+
+components:
+  schemas:
+    GetBlockTimestampByHeightRequest:
+      type: object
+      properties:
+        jsonrpc:
+          type: string
+          enum: ["2.0"]
+        method:
+          type: string
+          enum: ["getblocktimestamp"]
+        params:
+          $ref: "#/components/schemas/GetBlockTimestampByHeightParams"
+        id:
+          type: string
+          example: "1"
+      required:
+        - jsonrpc
+        - method
+        - params
+        - id
+
+    GetBlockTimestampByHeightParams:
+      type: object
+      properties:
+        height:
+          type: integer
+          description: The height of the block.
+          example: 12345
+
+    GetBlockTimestampByHeightResponse:
+      type: object
+      properties:
+        jsonrpc:
+          type: string
+          enum: ["2.0"]
+        result:
+          $ref: "#/components/schemas/GetBlockTimestampByHeightResult"
+        id:
+          type: string
+          example: "1"
+
+    GetBlockTimestampByHeightResult:
+      type: object
+      properties:
+        timestamp:
+          type: integer
+          description: The timestamp of the block.
+          example: 1633510598
+        status:
+          type: string
+          description: The status of the operation
+          example: OK

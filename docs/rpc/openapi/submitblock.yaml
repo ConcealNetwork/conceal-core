@@ -1,0 +1,83 @@
+openapi: 3.0.0
+info:
+  title: Conceal Core API Documentation
+  version: "6.7.2"
+  description: API documentation for Conceal Core
+  contact:
+    name: Conceal Help Desk
+    url: https://conceal.network/support
+
+servers:
+  - url: "http://localhost:16000"
+    description: Mainnet local node
+  - url: "http://localhost:16600"
+    description: Testnet local node
+
+tags:
+  - name: JSON-RPC
+
+paths:
+  /json_rpc:
+    post:
+      summary: Submit Block
+      description: Submit a new block using JSON-RPC.
+      operationId: submitBlock
+      tags: ["JSON-RPC"]
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/SubmitBlockRequest"
+      responses:
+        "200":
+          description: Successful response.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SubmitBlockResponse"
+
+components:
+  schemas:
+    SubmitBlockRequest:
+      type: object
+      properties:
+        jsonrpc:
+          type: string
+          enum: ["2.0"]
+        method:
+          type: string
+          enum: ["submitblock"]
+        params:
+          $ref: "#/components/schemas/SubmitBlockParams"
+        id:
+          type: string
+          example: "1"
+      required:
+        - jsonrpc
+        - method
+        - params
+        - id
+
+    SubmitBlockParams:
+      type: string
+      description: The block data.
+
+    SubmitBlockResponse:
+      type: object
+      properties:
+        jsonrpc:
+          type: string
+          enum: ["2.0"]
+        result:
+          $ref: "#/components/schemas/SubmitBlockResult"
+        id:
+          type: string
+          example: "1"
+
+    SubmitBlockResult:
+      type: object
+      properties:
+        status:
+          type: string
+          description: The status of the operation
+          example: OK

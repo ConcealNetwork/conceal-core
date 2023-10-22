@@ -1,0 +1,107 @@
+openapi: 3.0.0
+info:
+  title: Conceal Core API Documentation
+  version: "6.7.2"
+  description: API documentation for Conceal Core
+  contact:
+    name: Conceal Help Desk
+    url: https://conceal.network/support
+
+servers:
+  - url: "http://localhost:16000"
+    description: Mainnet local node
+  - url: "http://localhost:16600"
+    description: Testnet local node
+
+tags:
+  - name: JSON-RPC
+
+paths:
+  /json_rpc:
+    post:
+      summary: Get Block Template
+      description: Get block template using JSON-RPC.
+      operationId: getBlockTemplate
+      tags: ["JSON-RPC"]
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/GetBlockTemplateRequest"
+      responses:
+        "200":
+          description: Successful response.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/GetBlockTemplateResponse"
+
+components:
+  schemas:
+    GetBlockTemplateRequest:
+      type: object
+      properties:
+        jsonrpc:
+          type: string
+          enum: ["2.0"]
+        method:
+          type: string
+          enum: ["getblocktemplate"]
+        params:
+          $ref: "#/components/schemas/GetBlockTemplateParams"
+        id:
+          type: string
+          example: "1"
+      required:
+        - jsonrpc
+        - method
+        - params
+        - id
+
+    GetBlockTemplateParams:
+      type: object
+      properties:
+        reserve_size:
+          type: integer
+          description: The reserve size (max 255 bytes).
+          example: 0
+        wallet_address:
+          type: string
+          description: The wallet address.
+          example: ccx7WVMV8EEEQE7GcN9xME6zAK8ZonvqYgA3694nXk97ZsxUGmD5chx48ze9hrhZ4V81bQ7xMMHLkFbB9HtPEcqq3edGYYnahU
+
+    GetBlockTemplateResponse:
+      type: object
+      properties:
+        jsonrpc:
+          type: string
+          enum: ["2.0"]
+        result:
+          $ref: "#/components/schemas/GetBlockTemplateResult"
+        id:
+          type: string
+          example: "1"
+
+    GetBlockTemplateResult:
+      type: object
+      properties:
+        difficulty:
+          type: integer
+          description: The difficulty for the block.
+          example: 252
+        height:
+          type: integer
+          description: The height of the block.
+          example: 12346
+        reserved_offset:
+          type: integer
+          description: The reserved offset.
+          example: 0
+        blocktemplate_blob:
+          type: string
+          description: The block template blob.
+          example: 080099a58ca906061a5e877a9e84ea6e01772f86520005f3c04a6da967cdc6c785d5b19169d4a30000000001bfed2001ffb5ed2001809bee0202c068049f8cadf2da104eacf2a1f453521dfc4cc8b10ef29ee2105c362dcaae3b21014a6555f52174a84758e77b6aa92970df88d33c39ee2e2cb84cec6507a87cf84200
+        status:
+          type: string
+          description: The status of the operation
+          example: OK
