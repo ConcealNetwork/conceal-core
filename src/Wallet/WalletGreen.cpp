@@ -1259,6 +1259,7 @@ namespace cn
 
     m_state = WalletState::INITIALIZED;
     m_logger(INFO, BRIGHT_WHITE) << "Container loaded, view public key " << common::podToHex(m_viewPublicKey) << ", wallet count " << m_walletsContainer.size() << ", actual balance " << m_currency.formatAmount(m_actualBalance) << ", pending balance " << m_currency.formatAmount(m_pendingBalance);
+    m_observerManager.notify(&IWalletObserver::initCompleted, std::error_code());
   }
 
   void WalletGreen::clearCaches(bool clearTransactions, bool clearCachedData)
