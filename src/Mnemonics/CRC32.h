@@ -26,7 +26,7 @@ SOFTWARE.
 #pragma once
 
 #include <string>
-
+#include <cstdint>
 #include <vector>
 
 namespace crc32
