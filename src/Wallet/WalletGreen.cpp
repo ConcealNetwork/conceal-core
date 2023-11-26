@@ -1368,7 +1368,30 @@ namespace cn
       throw std::system_error(make_error_code(error::WRONG_PASSWORD));
     }
 
+    if (oldPassword == newPassword)
+    {
+      return;
+    }
+
+    crypto::cn_context cnContext;
+    crypto::chacha8_key newKey;
+    crypto::generate_chacha8_key(cnContext, newPassword, newKey);
+
+    m_containerStorage.atomicUpdate([this, newKey](ContainerStorage &newStorage)
+                                    {
+    copyContainerStoragePrefix(m_containerStorage, m_key, newStorage, newKey);
+    copyContainerStorageKeys(m_containerStorage, m_key, newStorage, newKey);
+
+    if (m_containerStorage.suffixSize() > 0) {
+      BinaryArray containerData;
+      loadAndDecryptContainerData(m_containerStorage, m_key, containerData);
+      encryptAndSaveContainerData(newStorage, newKey, containerData.data(), containerData.size());
+    } });
+
+    m_key = newKey;
     m_password = newPassword;
+
+    m_logger(INFO, BRIGHT_WHITE) << "Container password changed";
   }
 
   size_t WalletGreen::getAddressCount() const
