@@ -16,11 +16,11 @@
 
 namespace cn {
 //-----------------------------------------------
-#define CORE_RPC_STATUS_OK "OK"
-#define CORE_RPC_STATUS_BUSY "BUSY"
+const std::string CORE_RPC_STATUS_OK = "OK";
+const std::string CORE_RPC_STATUS_BUSY = "BUSY";
 
 struct EMPTY_STRUCT {
-  void serialize(ISerializer &s) {}
+  void serialize(const ISerializer &) const {/* Nothing to serialize*/}
 };
 
 struct STATUS_STRUCT {
@@ -32,10 +32,10 @@ struct STATUS_STRUCT {
 };
 
 struct COMMAND_RPC_GET_HEIGHT {
-  typedef EMPTY_STRUCT request;
+  using request = EMPTY_STRUCT;
 
   struct response {
-    uint64_t height;
+    uint32_t height;
     std::string status;
 
     void serialize(ISerializer &s) {
@@ -141,7 +141,7 @@ struct COMMAND_RPC_GET_POOL_CHANGES {
 
 struct COMMAND_RPC_GET_ALT_BLOCKS_LIST
 {
-  typedef EMPTY_STRUCT request;
+  using request = EMPTY_STRUCT;
 
   struct response
   {
@@ -254,7 +254,7 @@ struct COMMAND_RPC_GET_RANDOM_OUTPUTS_FOR_AMOUNTS_response {
   std::string status;
 
   void serialize(ISerializer &s) {
-    KV_MEMBER(outs);
+    KV_MEMBER(outs)
     KV_MEMBER(status)
   }
 };
@@ -264,25 +264,25 @@ struct COMMAND_RPC_GET_RANDOM_OUTPUTS_FOR_AMOUNTS_response_json {
   std::string status;
 
   void serialize(ISerializer &s) {
-    KV_MEMBER(outs);
+    KV_MEMBER(outs)
     KV_MEMBER(status)
   }
 };
 
 struct COMMAND_RPC_GET_RANDOM_OUTPUTS_FOR_AMOUNTS {
-  typedef COMMAND_RPC_GET_RANDOM_OUTPUTS_FOR_AMOUNTS_request request;
-  typedef COMMAND_RPC_GET_RANDOM_OUTPUTS_FOR_AMOUNTS_response response;
+  using request = COMMAND_RPC_GET_RANDOM_OUTPUTS_FOR_AMOUNTS_request;
+  using response = COMMAND_RPC_GET_RANDOM_OUTPUTS_FOR_AMOUNTS_response;
 
-  typedef COMMAND_RPC_GET_RANDOM_OUTPUTS_FOR_AMOUNTS_out_entry out_entry;
-  typedef COMMAND_RPC_GET_RANDOM_OUTPUTS_FOR_AMOUNTS_outs_for_amount outs_for_amount;
+  using out_entry = COMMAND_RPC_GET_RANDOM_OUTPUTS_FOR_AMOUNTS_out_entry;
+  using outs_for_amount = COMMAND_RPC_GET_RANDOM_OUTPUTS_FOR_AMOUNTS_outs_for_amount;
 };
 
 struct COMMAND_RPC_GET_RANDOM_OUTPUTS_FOR_AMOUNTS_JSON {
-  typedef COMMAND_RPC_GET_RANDOM_OUTPUTS_FOR_AMOUNTS_request request;
-  typedef COMMAND_RPC_GET_RANDOM_OUTPUTS_FOR_AMOUNTS_response_json response;
+  using request = COMMAND_RPC_GET_RANDOM_OUTPUTS_FOR_AMOUNTS_request;
+  using response = COMMAND_RPC_GET_RANDOM_OUTPUTS_FOR_AMOUNTS_response_json;
 
-  typedef COMMAND_RPC_GET_RANDOM_OUTPUTS_FOR_AMOUNTS_out_entry_json out_entry;
-  typedef COMMAND_RPC_GET_RANDOM_OUTPUTS_FOR_AMOUNTS_outs_for_amount_json outs_for_amount;
+  using out_entry = COMMAND_RPC_GET_RANDOM_OUTPUTS_FOR_AMOUNTS_out_entry_json;
+  using outs_for_amount = COMMAND_RPC_GET_RANDOM_OUTPUTS_FOR_AMOUNTS_outs_for_amount_json;
 };
 
 //-----------------------------------------------
@@ -290,7 +290,7 @@ struct COMMAND_RPC_SEND_RAW_TX {
   struct request {
     std::string tx_as_hex;
 
-    request() {}
+    request() = default;
     explicit request(const Transaction &);
 
     void serialize(ISerializer &s) {
@@ -328,14 +328,14 @@ struct COMMAND_RPC_START_MINING {
 };
 //-----------------------------------------------
 struct COMMAND_RPC_GET_INFO {
-  typedef EMPTY_STRUCT request;
+  using request = EMPTY_STRUCT;
 
   struct response {
     std::string status;
     std::string version;
     std::string fee_address;
     std::string top_block_hash;
-    uint64_t height;
+    uint32_t height;
     uint64_t difficulty;
     uint64_t tx_count;
     uint64_t tx_pool_size;
@@ -381,7 +381,7 @@ struct COMMAND_RPC_GET_INFO {
 
 //-----------------------------------------------
 struct COMMAND_RPC_GET_PEER_LIST {
-	typedef EMPTY_STRUCT request;
+	using request = EMPTY_STRUCT;
 
 	struct response {
 		std::vector<std::string> peers;
@@ -396,19 +396,19 @@ struct COMMAND_RPC_GET_PEER_LIST {
 
 //-----------------------------------------------
 struct COMMAND_RPC_STOP_MINING {
-  typedef EMPTY_STRUCT request;
-  typedef STATUS_STRUCT response;
+  using request = EMPTY_STRUCT;
+  using response = STATUS_STRUCT;
 };
 
 //-----------------------------------------------
 struct COMMAND_RPC_STOP_DAEMON {
-  typedef EMPTY_STRUCT request;
-  typedef STATUS_STRUCT response;
+  using request = EMPTY_STRUCT;
+  using response = STATUS_STRUCT;
 };
 
 //
 struct COMMAND_RPC_GETBLOCKCOUNT {
-  typedef std::vector<std::string> request;
+  using request = std::vector<std::string>;
 
   struct response {
     uint64_t count;
@@ -422,7 +422,7 @@ struct COMMAND_RPC_GETBLOCKCOUNT {
 };
 
 struct COMMAND_RPC_GET_FEE_ADDRESS {
-  typedef EMPTY_STRUCT request;
+  using request = EMPTY_STRUCT;
 
   struct response {
     std::string fee_address;
@@ -438,8 +438,8 @@ struct COMMAND_RPC_GET_FEE_ADDRESS {
 
 
 struct COMMAND_RPC_GETBLOCKHASH {
-  typedef std::vector<uint64_t> request;
-  typedef std::string response;
+  using request = std::vector<uint64_t>;
+  using response = std::string;
 };
 
 struct COMMAND_RPC_GETBLOCKTEMPLATE {
@@ -471,7 +471,7 @@ struct COMMAND_RPC_GETBLOCKTEMPLATE {
 };
 
 struct COMMAND_RPC_GET_CURRENCY_ID {
-  typedef EMPTY_STRUCT request;
+  using request = EMPTY_STRUCT;
 
   struct response {
     std::string currency_id_blob;
@@ -483,8 +483,8 @@ struct COMMAND_RPC_GET_CURRENCY_ID {
 };
 
 struct COMMAND_RPC_SUBMITBLOCK {
-  typedef std::vector<std::string> request;
-  typedef STATUS_STRUCT response;
+  using request = std::vector<std::string>;
+  using response = STATUS_STRUCT;
 };
 
 struct block_header_response {
@@ -494,7 +494,7 @@ struct block_header_response {
   std::string prev_hash;
   uint32_t nonce;
   bool orphan_status;
-  uint64_t height;
+  uint32_t height;
   uint64_t depth;
   uint64_t deposits;
   std::string hash;
@@ -585,7 +585,7 @@ struct f_block_details_response {
   std::string prev_hash;
   uint32_t nonce;
   bool orphan_status;
-  uint64_t height;
+  uint32_t height;
   uint64_t depth;
   std::string hash;
   difficulty_type difficulty;
@@ -686,8 +686,8 @@ struct currency_core {
 
 
 struct COMMAND_RPC_GET_LAST_BLOCK_HEADER {
-  typedef EMPTY_STRUCT request;
-  typedef BLOCK_HEADER_RESPONSE response;
+  using request = EMPTY_STRUCT;
+  using response = BLOCK_HEADER_RESPONSE;
 };
 
 struct COMMAND_RPC_GET_BLOCK_HEADER_BY_HASH {
@@ -699,26 +699,26 @@ struct COMMAND_RPC_GET_BLOCK_HEADER_BY_HASH {
     }
   };
 
-  typedef BLOCK_HEADER_RESPONSE response;
+  using response = BLOCK_HEADER_RESPONSE;
 };
 
 struct COMMAND_RPC_GET_BLOCK_HEADER_BY_HEIGHT {
   struct request {
-    uint64_t height;
+    uint32_t height;
 
     void serialize(ISerializer &s) {
       KV_MEMBER(height)
     }
   };
 
-  typedef BLOCK_HEADER_RESPONSE response;
+  using response = BLOCK_HEADER_RESPONSE;
 };
 
 
 
 struct F_COMMAND_RPC_GET_BLOCKS_LIST {
   struct request {
-    uint64_t height;
+    uint32_t height;
 
     void serialize(ISerializer &s) {
       KV_MEMBER(height)
@@ -781,7 +781,7 @@ struct F_COMMAND_RPC_GET_TRANSACTION_DETAILS {
 };
 
 struct F_COMMAND_RPC_GET_POOL {
-    typedef EMPTY_STRUCT request;
+    using request = EMPTY_STRUCT;
 
     struct response {
         std::vector<f_transaction_short_response> transactions; //transactions blobs as hex
@@ -795,7 +795,7 @@ struct F_COMMAND_RPC_GET_POOL {
 };
 
 struct F_COMMAND_RPC_GET_BLOCKCHAIN_SETTINGS {
-  typedef EMPTY_STRUCT request;
+  using request = EMPTY_STRUCT;
   struct response {
     currency_base_coin base_coin;
     currency_core core;
@@ -903,7 +903,7 @@ struct COMMAND_RPC_GET_BLOCK_TIMESTAMP_BY_HEIGHT
 {
   struct request
   {
-    uint64_t height;
+    uint32_t height;
 
     void serialize(ISerializer &s)
     {
@@ -928,7 +928,7 @@ struct COMMAND_RPC_GET_BLOCK_DETAILS_BY_HEIGHT
 {
   struct request
   {
-    uint64_t height;
+    uint32_t height;
 
     void serialize(ISerializer &s)
     {
@@ -998,7 +998,7 @@ struct COMMAND_RPC_GET_TRANSACTIONS_WITH_OUTPUT_GLOBAL_INDEXES {
 };
 
 struct COMMAND_RPC_GET_RAW_TRANSACTIONS_POOL {
-  typedef EMPTY_STRUCT request;
+  using request = EMPTY_STRUCT;
 
   struct response {
     std::vector<tx_with_output_global_indexes> transactions;

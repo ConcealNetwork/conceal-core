@@ -8,20 +8,27 @@ on:
 jobs:
   build-windows:
     name: Windows
-    runs-on: windows-2019
+    runs-on: windows-2022
     env:
-      BOOST_ROOT: C:/local/boost_1_72_0
+      BOOST_ROOT: C:/local/boost_1_83_0
     steps:
       - uses: actions/checkout@master
 
       - name: Setup msbuild
         uses: microsoft/setup-msbuild@v1.1.3
 
+      - name: Restore Boost
+        uses: actions/cache@v3
+        id: restore-boost
+        with:
+          path: ${{env.BOOST_ROOT}}
+          key: boost_1_83_0-msvc-14.3-64
+
       - name: Install Boost
+        if: steps.restore-boost.outputs.cache-hit != 'true'
         shell: powershell
         run: |
-          echo "${env:BOOST_ROOT}"
-          $Url = "https://sourceforge.net/projects/boost/files/boost-binaries/1.72.0/boost_1_72_0-msvc-14.2-64.exe"
+          $Url = "https://sourceforge.net/projects/boost/files/boost-binaries/1.83.0/boost_1_83_0-msvc-14.3-64.exe"
           (New-Object System.Net.WebClient).DownloadFile($Url, "$env:TEMP\boost.exe")
           Start-Process -Wait -FilePath "$env:TEMP\boost.exe" "/SILENT","/SP-","/SUPPRESSMSGBOXES","/DIR=${env:BOOST_ROOT}"
 
@@ -34,7 +41,7 @@ jobs:
           $release_name = "ccx-cli-win64-v$ccx_version"
           mkdir "$build_folder"
           cd "$build_folder"
-          cmake -G "Visual Studio 16 2019" ..
+          cmake -G "Visual Studio 17 2022" ..
           msbuild concealX.sln /p:Configuration=Release /m
           cd src\Release
           Compress-Archive -Path *.exe -DestinationPath "$release_name.zip"

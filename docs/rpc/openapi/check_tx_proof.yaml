@@ -1,0 +1,168 @@
+openapi: 3.0.0
+info:
+  title: Conceal Core API Documentation
+  version: "6.7.2"
+  description: API documentation for Conceal Core
+  contact:
+    name: Conceal Help Desk
+    url: https://conceal.network/support
+
+servers:
+  - url: "http://localhost:16000"
+    description: Mainnet local node
+  - url: "http://localhost:16600"
+    description: Testnet local node
+
+tags:
+  - name: JSON-RPC
+
+paths:
+  /json_rpc:
+    post:
+      summary: Check Transaction Proof
+      description: Check the transaction proof using JSON-RPC.
+      operationId: checkTransactionProof
+      tags: ["JSON-RPC"]
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CheckTxProofRequest"
+      responses:
+        "200":
+          description: Successful response.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CheckTxProofResponse"
+
+components:
+  schemas:
+    CheckTxProofRequest:
+      type: object
+      properties:
+        jsonrpc:
+          type: string
+          enum: ["2.0"]
+        method:
+          type: string
+          enum: ["check_tx_proof"]
+        params:
+          $ref: "#/components/schemas/CheckTxProofParams"
+        id:
+          type: string
+          example: "1"
+      required:
+        - jsonrpc
+        - method
+        - params
+        - id
+
+    CheckTxProofParams:
+      type: object
+      properties:
+        tx_id:
+          type: string
+          description: The transaction ID.
+          example: f16dbf513d5d056316450b7a75888eb8efb89db06ce835e348ba47cd58621d4e
+        dest_address:
+          type: string
+          description: The destination address.
+          example: ccx7WVMV8EEEQE7GcN9xME6zAK8ZonvqYgA3694nXk97ZsxUGmD5chx48ze9hrhZ4V81bQ7xMMHLkFbB9HtPEcqq3edGYYnahU
+        signature:
+          type: string
+          description: The transaction signature.
+          example: ProofV1f9UnC8p5CguFpjZ4WoqYCRW26NCJJHFTuBoD74jhMWVbSkL5vZ3gtcnY2H12HLa27uF2ndPtUU6axKX8cHiJwJmKQsuLDCNDyvr36yGfeUSM8jCW5stQk8aLGcfAcAV3wAzE
+
+    CheckTxProofResponse:
+      type: object
+      properties:
+        jsonrpc:
+          type: string
+          enum: ["2.0"]
+        result:
+          $ref: "#/components/schemas/CheckTxProofResult"
+        id:
+          type: string
+          example: "1"
+
+    CheckTxProofResult:
+      type: object
+      properties:
+        signature_valid:
+          type: boolean
+          description: Whether the signature is valid or not.
+          example: true
+        received_amount:
+          type: integer
+          description: The received amount.
+          example: 200000000
+        outputs:
+          type: array
+          items:
+            $ref: "#/components/schemas/TransactionOutput"
+          description: The transaction outputs.
+        confirmations:
+          type: integer
+          description: The number of confirmations.
+          example: 12
+        status:
+          type: string
+          description: The status of the operation
+          example: OK
+
+    TransactionOutput:
+      type: object
+      properties:
+        amount:
+          type: integer
+          description: The amount for the transaction output.
+          example: 200000000
+        target:
+          $ref: "#/components/schemas/TransactionOutputTarget"
+
+    TransactionOutputTarget:
+      type: object
+      oneOf:
+        - $ref: "#/components/schemas/KeyOutput"
+        - $ref: "#/components/schemas/MultisignatureOutput"
+      discriminator:
+        propertyName: type
+        mapping:
+          "02": "#/components/schemas/KeyOutput"
+          "03": "#/components/schemas/MultisignatureOutput"
+
+    KeyOutput:
+      type: object
+      properties:
+        type:
+          type: string
+          enum: ["02"]
+        data:
+          type: object
+          description: The public key for the key output.
+          properties:
+            key:
+              type: string
+              example: 9e32c015362a892ea40d02148b453f774f6ce8e2036acda96255cefda6bf2ba3
+
+    MultisignatureOutput:
+      type: object
+      properties:
+        type:
+          type: string
+          enum: ["03"]
+        data:
+          type: object
+          properties:
+            keys:
+              type: array
+              items:
+                type: string
+              description: The public keys for the multisignature output.
+            required_signatures:
+              type: integer
+              description: The required signature count for the multisignature output.
+            term:
+              type: integer
+              description: The term for the multisignature output.

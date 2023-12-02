@@ -25,6 +25,7 @@ SOFTWARE.
 
 #pragma once
 
+#include <cstdint>
 #include <string>
 #include <cstdint>
 #include <vector>

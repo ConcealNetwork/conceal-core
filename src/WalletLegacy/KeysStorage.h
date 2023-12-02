@@ -9,6 +9,7 @@
 
 #include "crypto/crypto.h"
 
+#include <string>
 #include <stdint.h>
 
 namespace cn {
