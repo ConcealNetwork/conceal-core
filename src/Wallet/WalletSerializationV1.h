@@ -48,7 +48,7 @@ public:
   void load(const crypto::chacha8_key &key, common::IInputStream &source);
 
 private:
-  static const uint32_t SERIALIZATION_VERSION;
+  static const uint8_t SERIALIZATION_VERSION;
 
   void loadWallet(common::IInputStream &source, const crypto::chacha8_key &key, uint32_t version);
   void loadWalletV1(common::IInputStream &source, const crypto::chacha8_key &key);

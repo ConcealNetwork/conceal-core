@@ -3,7 +3,6 @@
 // Distributed under the MIT/X11 software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#include <ctime>
 #include <future>
 #include <fstream>
 #include <sstream>
@@ -47,7 +46,7 @@ namespace cn
 
     if (deposit.locked)
       status_str = "Locked";
-    else if (deposit.spendingTransactionId == cn::WALLET_LEGACY_INVALID_TRANSACTION_ID)
+    else if (deposit.spendingTransactionId == cn::WALLET_INVALID_TRANSACTION_ID)
       status_str = "Unlocked";
     else
       status_str = "Withdrawn";
@@ -65,17 +64,17 @@ namespace cn
     return deposit.spendingTransactionId;
   }
 
-  std::string client_helper::deposit_unlock_height(const cn::Deposit &deposit, const cn::WalletLegacyTransaction &txInfo) const
+  std::string client_helper::deposit_unlock_height(const cn::Deposit &deposit, const uint32_t &blockHeight) const
   {
     std::string unlock_str = "";
 
-    if (txInfo.blockHeight > cn::parameters::CRYPTONOTE_MAX_BLOCK_NUMBER)
+    if (blockHeight > cn::parameters::CRYPTONOTE_MAX_BLOCK_NUMBER)
     {
       unlock_str = "Please wait.";
     }
     else
     {
-      unlock_str = std::to_string(txInfo.blockHeight + deposit_term(deposit));
+      unlock_str = std::to_string(blockHeight + deposit_term(deposit));
     }
 
     bool bad_unlock2 = unlock_str == "0";
@@ -87,19 +86,18 @@ namespace cn
     return unlock_str;
   }
 
-  std::string client_helper::deposit_height(const cn::WalletLegacyTransaction &txInfo) const
+  std::string client_helper::deposit_height(const uint32_t &blockHeight) const
   {
     std::string height_str = "";
-    uint64_t deposit_height = txInfo.blockHeight;
 
-    bool bad_unlock = deposit_height > cn::parameters::CRYPTONOTE_MAX_BLOCK_NUMBER;
+    bool bad_unlock = blockHeight > cn::parameters::CRYPTONOTE_MAX_BLOCK_NUMBER;
     if (bad_unlock)
     {
       height_str = "Please wait.";
     }
     else
     {
-      height_str = std::to_string(deposit_height);
+      height_str = std::to_string(blockHeight);
     }
 
     bool bad_unlock2 = height_str == "0";
@@ -111,7 +109,7 @@ namespace cn
     return height_str;
   }
 
-  std::string client_helper::get_deposit_info(const cn::Deposit &deposit, cn::DepositId did, const Currency &currency, const cn::WalletLegacyTransaction &txInfo) const
+  std::string client_helper::get_deposit_info(const cn::Deposit &deposit, cn::DepositId did, const Currency &currency, const uint32_t &blockHeight) const
   {
     std::stringstream full_info;
 
@@ -119,7 +117,7 @@ namespace cn
       std::setw(8)  << makeCenteredString(8, std::to_string(did)) << " | " <<
       std::setw(20) << makeCenteredString(20, deposit_amount(deposit, currency)) << " | " <<
       std::setw(20) << makeCenteredString(20, deposit_interest(deposit, currency)) << " | " <<
-      std::setw(16) << makeCenteredString(16, deposit_unlock_height(deposit, txInfo)) << " | " <<
+      std::setw(16) << makeCenteredString(16, deposit_unlock_height(deposit, blockHeight)) << " | " <<
       std::setw(12) << makeCenteredString(12, deposit_status(deposit));
     
     std::string as_str = full_info.str();
@@ -127,15 +125,15 @@ namespace cn
     return as_str;
   }
 
-  std::string client_helper::get_full_deposit_info(const cn::Deposit &deposit, cn::DepositId did, const Currency &currency, const cn::WalletLegacyTransaction &txInfo) const
+  std::string client_helper::get_full_deposit_info(const cn::Deposit &deposit, cn::DepositId did, const Currency &currency, const uint32_t &blockHeight) const
   {
     std::stringstream full_info;
 
     full_info << "ID:            " << std::to_string(did) << "\n"
               << "Amount:        " << deposit_amount(deposit, currency) << "\n"
               << "Interest:      " << deposit_interest(deposit, currency) << "\n"
-              << "Height:        " << deposit_height(txInfo) << "\n"
-              << "Unlock Height: " << deposit_unlock_height(deposit, txInfo) << "\n"
+              << "Height:        " << deposit_height(blockHeight) << "\n"
+              << "Unlock Height: " << deposit_unlock_height(deposit, blockHeight) << "\n"
               << "Status:        " << deposit_status(deposit) << "\n";
 
     std::string as_str = full_info.str();
@@ -143,7 +141,7 @@ namespace cn
     return as_str;
   }
 
-  std::string client_helper::list_deposit_item(const WalletLegacyTransaction& txInfo, Deposit deposit, std::string listed_deposit, DepositId id, const Currency &currency)
+  std::string client_helper::list_deposit_item(const WalletTransaction& txInfo, const Deposit& deposit, std::string listed_deposit, DepositId id, const Currency &currency) const
   {
     std::string format_amount = currency.formatAmount(deposit.amount);
     std::string format_interest = currency.formatAmount(deposit.interest);
@@ -152,8 +150,8 @@ namespace cn
     std::stringstream ss_id(makeCenteredString(8, std::to_string(id)));
     std::stringstream ss_amount(makeCenteredString(20, format_amount));
     std::stringstream ss_interest(makeCenteredString(20, format_interest));
-    std::stringstream ss_height(makeCenteredString(16, deposit_height(txInfo)));
-    std::stringstream ss_unlockheight(makeCenteredString(16, deposit_unlock_height(deposit, txInfo)));
+    std::stringstream ss_height(makeCenteredString(16, deposit_height(txInfo.blockHeight)));
+    std::stringstream ss_unlockheight(makeCenteredString(16, deposit_unlock_height(deposit, txInfo.blockHeight)));
     std::stringstream ss_status(makeCenteredString(12, deposit_status(deposit)));
 
     ss_id >> std::setw(8);
@@ -169,26 +167,14 @@ namespace cn
     return listed_deposit;
   }
 
-  std::string client_helper::list_tx_item(const WalletLegacyTransaction& txInfo, std::string listed_tx, const Currency &currency)
+  std::string client_helper::list_tx_item(const WalletTransaction& txInfo, std::string listed_tx, const Currency &currency) const
   {
     std::vector<uint8_t> extraVec = asBinaryArray(txInfo.extra);
 
     crypto::Hash paymentId;
     std::string paymentIdStr = (cn::getPaymentIdFromTxExtra(extraVec, paymentId) && paymentId != NULL_HASH ? podToHex(paymentId) : "");
 
-    char timeString[32 + 1];
-    time_t timestamp = static_cast<time_t>(txInfo.timestamp);
-    struct tm time;
-#ifdef _WIN32
-    gmtime_s(&time, &timestamp);
-#else
-    gmtime_r(&timestamp, &time);
-#endif
-
-    if (!std::strftime(timeString, sizeof(timeString), "%c", &time))
-    {
-      throw std::runtime_error("time buffer is too small");
-    }
+    std::string timeString = formatTimestamp(static_cast<time_t>(txInfo.timestamp));
 
     std::string format_amount = currency.formatAmount(txInfo.totalAmount);
 
@@ -212,7 +198,7 @@ namespace cn
     return listed_tx;
   }
 
-  bool client_helper::confirm_deposit(uint64_t term, uint64_t amount, bool is_testnet, const Currency& currency, logging::LoggerRef logger)
+  bool client_helper::confirm_deposit(uint32_t term, uint64_t amount, bool is_testnet, const Currency &currency, const logging::LoggerRef &logger) const
   {
     uint64_t interest = currency.calculateInterestV3(amount, term);
     uint64_t min_term = is_testnet ? parameters::TESTNET_DEPOSIT_MIN_TERM_V3 : parameters::DEPOSIT_MIN_TERM_V3;
@@ -244,7 +230,7 @@ namespace cn
     return false;
   }
 
-  JsonValue client_helper::buildLoggerConfiguration(logging::Level level, const std::string& logfile)
+  JsonValue client_helper::buildLoggerConfiguration(logging::Level level, const std::string& logfile) const
   {
     using common::JsonValue;
 
@@ -354,9 +340,9 @@ namespace cn
           if (initError)
             throw std::runtime_error("failed to load wallet: " + initError.message());
 
-          logger(logging::INFO) << "Saving wallet...";
-          save_wallet(*wallet, walletFileName, logger);
-          logger(logging::INFO, logging::BRIGHT_GREEN) << "Saving successful";
+          // logger(logging::INFO) << "Saving wallet...";
+          // save_wallet(*wallet, walletFileName, logger);
+          // logger(logging::INFO, logging::BRIGHT_GREEN) << "Saving successful";
 
           return walletFileName;
         }
@@ -389,9 +375,9 @@ namespace cn
         throw std::runtime_error("failed to load wallet: " + initError.message());
       }
 
-      logger(logging::INFO) << "Saving wallet...";
-      save_wallet(*wallet, walletFileName, logger);
-      logger(logging::INFO, logging::BRIGHT_GREEN) << "Saved successful";
+      // logger(logging::INFO) << "Saving wallet...";
+      // save_wallet(*wallet, walletFileName, logger);
+      // logger(logging::INFO, logging::BRIGHT_GREEN) << "Saved successful";
 
       return walletFileName;
     }
@@ -401,43 +387,21 @@ namespace cn
     }
   }
 
-  void client_helper::save_wallet(cn::IWalletLegacy& wallet, const std::string& walletFilename, logging::LoggerRef& logger)
-  {
-    logger(logging::INFO) << "Saving wallet...";
-
-    try
-    {
-      cn::WalletHelper::storeWallet(wallet, walletFilename);
-      logger(logging::INFO, logging::BRIGHT_GREEN) << "Saved successful";
-    }
-    catch (std::exception& e)
-    {
-      logger(logging::ERROR, logging::BRIGHT_RED) << "Failed to store wallet: " << e.what();
-      throw std::runtime_error("error saving wallet file '" + walletFilename + "'");
-    }
-  }
-  
-  std::stringstream client_helper::balances(std::unique_ptr<cn::IWalletLegacy>& wallet, const Currency& currency)
+  std::stringstream client_helper::balances(const cn::IWallet &wallet, const Currency &currency) const
   {
     std::stringstream balances;
-    
-    uint64_t full_balance = wallet->actualBalance() + wallet->pendingBalance() + wallet->actualDepositBalance() + wallet->pendingDepositBalance();
-    std::string full_balance_text = "Total Balance: " + currency.formatAmount(full_balance) + "\n";
 
-    uint64_t non_deposit_unlocked_balance = wallet->actualBalance();
-    std::string non_deposit_unlocked_balance_text = "Available: " + currency.formatAmount(non_deposit_unlocked_balance) + "\n";
+    uint64_t actualBalance = wallet.getActualBalance();
+    uint64_t pendingBalance = wallet.getPendingBalance();
+    uint64_t unlockedDepositBalance = wallet.getUnlockedDepositBalance();
+    uint64_t lockedDepositBalance = wallet.getLockedDepositBalance();
 
-    uint64_t non_deposit_locked_balance = wallet->pendingBalance();
-    std::string non_deposit_locked_balance_text = "Locked: " + currency.formatAmount(non_deposit_locked_balance) + "\n";
-
-    uint64_t deposit_unlocked_balance = wallet->actualDepositBalance();
-    std::string deposit_locked_balance_text = "Unlocked Balance: " + currency.formatAmount(deposit_unlocked_balance) + "\n";
-
-    uint64_t deposit_locked_balance = wallet->pendingDepositBalance();
-    std::string deposit_unlocked_balance_text = "Locked Deposits: " + currency.formatAmount(deposit_locked_balance) + "\n";
-
-    balances << full_balance_text << non_deposit_unlocked_balance_text << non_deposit_locked_balance_text
-      << deposit_unlocked_balance_text << deposit_locked_balance_text; 
+    uint64_t totalBalance = actualBalance + pendingBalance + unlockedDepositBalance + lockedDepositBalance;
+    balances << "Total Balance: " + currency.formatAmount(totalBalance) << std::endl
+             << "Available: " + currency.formatAmount(actualBalance) << std::endl
+             << "Locked: " + currency.formatAmount(pendingBalance) << std::endl
+             << "Unlocked Balance: " + currency.formatAmount(unlockedDepositBalance) << std::endl
+             << "Locked Deposits: " + currency.formatAmount(lockedDepositBalance);
 
     return balances;
   }

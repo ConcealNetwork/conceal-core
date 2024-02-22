@@ -7,9 +7,16 @@
 
 #include "WalletUtils.h"
 
+#include <fstream>
+
+#include <boost/filesystem/operations.hpp>
+
+#include "Common/Util.h"
 #include "CryptoNote.h"
 #include "crypto/crypto.h"
 #include "Wallet/WalletErrors.h"
+#include "Wallet/LegacyKeysImporter.h"
+
 
 namespace cn {
 
@@ -26,4 +33,39 @@ void throwIfKeysMissmatch(const crypto::SecretKey& secretKey, const crypto::Publ
   }
 }
 
+  void importLegacyKeys(const std::string &legacyKeysFile, const std::string &filename, const std::string &password)
+  {
+    std::stringstream archive;
+
+    cn::importLegacyKeys(legacyKeysFile, password, archive);
+
+    std::fstream walletFile;
+    createWalletFile(walletFile, filename);
+
+    archive.flush();
+    walletFile << archive.rdbuf();
+    walletFile.flush();
+  }
+
+  void createWalletFile(std::fstream &walletFile, const std::string &filename)
+  {
+    boost::filesystem::path pathToWalletFile(filename);
+    boost::filesystem::path directory = pathToWalletFile.parent_path();
+    if (!directory.empty() && !tools::directoryExists(directory.string()))
+    {
+      throw std::runtime_error("Directory does not exist: " + directory.string());
+    }
+
+    walletFile.open(filename.c_str(), std::fstream::in | std::fstream::out | std::fstream::binary);
+    if (walletFile)
+    {
+      walletFile.close();
+      throw std::runtime_error("Wallet file already exists");
+    }
+
+    walletFile.open(filename.c_str(), std::fstream::out);
+    walletFile.close();
+
+    walletFile.open(filename.c_str(), std::fstream::in | std::fstream::out | std::fstream::binary);
+  }
 }

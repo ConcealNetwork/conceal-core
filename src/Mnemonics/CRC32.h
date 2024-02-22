@@ -27,7 +27,7 @@ SOFTWARE.
 
 #include <cstdint>
 #include <string>
-
+#include <cstdint>
 #include <vector>
 
 namespace crc32

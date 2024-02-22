@@ -15,4 +15,6 @@ namespace cn {
 
 bool validateAddress(const std::string& address, const cn::Currency& currency);
 void throwIfKeysMissmatch(const crypto::SecretKey& secretKey, const crypto::PublicKey& expectedPublicKey, const std::string& message = "");
+void importLegacyKeys(const std::string &legacyKeysFile, const std::string &filename, const std::string &password);
+void createWalletFile(std::fstream &walletFile, const std::string &filename);
 }

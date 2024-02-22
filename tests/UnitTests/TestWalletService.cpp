@@ -20,6 +20,7 @@
 #include "PaymentGate/WalletServiceErrorCategory.h"
 #include "INodeStubs.h"
 #include "Wallet/WalletErrors.h"
+#include "ITransfersContainer.h"
 
 using namespace cn;
 using namespace payment_service;
@@ -42,6 +43,7 @@ struct IWalletBaseStub : public cn::IWallet, public cn::IFusionManager {
 
   virtual void initialize(const std::string& path, const std::string& password) override { }
   virtual void initializeWithViewKey(const std::string& path, const std::string& password, const crypto::SecretKey& viewSecretKey) override { }
+  virtual void generateNewWallet(const std::string &path, const std::string &password) override { };
   virtual void load(const std::string& path, const std::string& password) override { }
   virtual void shutdown() override { }
 
@@ -62,6 +64,8 @@ struct IWalletBaseStub : public cn::IWallet, public cn::IFusionManager {
   virtual uint64_t getActualBalance(const std::string& address) const override { return 0; }
   virtual uint64_t getPendingBalance() const override { return 0; }
   virtual uint64_t getPendingBalance(const std::string& address) const override { return 0; }
+  virtual uint64_t getDustBalance() const override { return 0; };
+  virtual uint64_t getDustBalance(const std::string &address) const override { return 0; }
 
   virtual size_t getTransactionCount() const override { return 0; }
   virtual WalletTransaction getTransaction(size_t transactionIndex) const override { return WalletTransaction(); }
@@ -82,10 +86,22 @@ struct IWalletBaseStub : public cn::IWallet, public cn::IFusionManager {
   virtual void commitTransaction(size_t transactionId) override { }
   virtual void rollbackUncommitedTransaction(size_t transactionId) override { }
 
+  std::vector<TransactionOutputInformation> getUnspentOutputs() override { return std::vector<TransactionOutputInformation>{}; };
+  size_t getUnspentOutputsCount() override { return 0; };
+  virtual std::string getReserveProof(const std::string &address, const uint64_t &reserve, const std::string &message) override { return ""; }
+  virtual bool getTxProof(const crypto::Hash &transactionHash, const cn::AccountPublicAddress &address, const crypto::SecretKey &tx_key, std::string &signature) override { return true; }
+
+  virtual crypto::SecretKey getTransactionDeterministicSecretKey(crypto::Hash &transactionHash) const { return cn::NULL_SECRET_KEY; }
+  virtual size_t createOptimizationTransaction(const std::string &address) {return 0; };
+  virtual std::vector<PaymentIdTransactions> getTransactionsByPaymentIds(const std::vector<crypto::Hash> &paymentIds) { return std::vector<PaymentIdTransactions>{}; };
+
+  virtual void addObserver(IWalletObserver *observer) override{};
+  virtual void removeObserver(IWalletObserver *observer) override{};
+
   virtual void start() override { m_stopped = false; }
   virtual void stop() override { m_stopped = true; m_eventOccurred.set(); }
 
-  void createDeposit(uint64_t amount, uint64_t term, std::string sourceAddress, std::string destinationAddress, std::string &transactionHash) override {}
+  void createDeposit(uint64_t amount, uint32_t term, std::string sourceAddress, std::string destinationAddress, std::string &transactionHash) override {}
   void withdrawDeposit(DepositId depositId, std::string &transactionHash) override{};
   Deposit getDeposit(size_t depositIndex) const override
   {

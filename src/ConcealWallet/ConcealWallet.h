@@ -14,7 +14,7 @@
 
 #include <boost/program_options/variables_map.hpp>
 
-#include "IWalletLegacy.h"
+#include "IWallet.h"
 #include "PasswordContainer.h"
 #include "ClientHelper.h"
 
@@ -23,10 +23,12 @@
 #include "CryptoNoteCore/Currency.h"
 #include "NodeRpcProxy/NodeRpcProxy.h"
 #include "WalletLegacy/WalletHelper.h"
+#include "Transfers/IBlockchainSynchronizer.h"
 
 #include <Logging/LoggerRef.h>
 #include <Logging/LoggerManager.h>
 
+#include <System/Event.h>
 #include <System/Dispatcher.h>
 #include <System/Ipv4Address.h>
 
@@ -35,7 +37,7 @@ namespace cn
   /************************************************************************/
   /*                                                                      */
   /************************************************************************/
-  class conceal_wallet : public cn::INodeObserver, public cn::IWalletLegacyObserver, public cn::INodeRpcProxyObserver {
+  class conceal_wallet : public IWalletObserver {
   public:
     conceal_wallet(platform_system::Dispatcher& dispatcher, const cn::Currency& currency, logging::LoggerManager& log);
 
@@ -55,7 +57,7 @@ namespace cn
 
   private:
 
-    logging::LoggerMessage success_msg_writer(bool color = false) {
+    logging::LoggerMessage success_msg_writer(bool color = false) const{
       return logger(logging::INFO, color ? logging::GREEN : logging::DEFAULT);
     }
 
@@ -70,7 +72,7 @@ namespace cn
     bool run_console_handler();
 
     bool new_wallet(const std::string &wallet_file, const std::string& password);
-    bool new_wallet(crypto::SecretKey &secret_key, crypto::SecretKey &view_key, const std::string &wallet_file, const std::string& password);
+    bool new_wallet(const crypto::SecretKey &secret_key, const crypto::SecretKey &view_key, const std::string &wallet_file, const std::string& password);
     bool open_wallet(const std::string &wallet_file, const std::string& password);
     bool close_wallet();
 
@@ -111,28 +113,31 @@ namespace cn
 
     std::string resolveAlias(const std::string& aliasUrl);
     void printConnectionError() const;
+    std::string get_wallet_keys() const;
 
-    //---------------- IWalletLegacyObserver -------------------------
-    virtual void initCompleted(std::error_code result) override;
-    virtual void externalTransactionCreated(cn::TransactionId transactionId) override;
-    virtual void synchronizationCompleted(std::error_code result) override;
-    virtual void synchronizationProgressUpdated(uint32_t current, uint32_t total) override;
-    //----------------------------------------------------------
-
-    //----------------- INodeRpcProxyObserver --------------------------
-    virtual void connectionStatusUpdated(bool connected) override;
-    //----------------------------------------------------------
+    void initCompleted(std::error_code result) override;
+    void saveCompleted(std::error_code result) override;
+    void synchronizationProgressUpdated(uint32_t current, uint32_t total) override;
+    void synchronizationCompleted(std::error_code result) override;
+    void actualBalanceUpdated(uint64_t balance) override;
+    void pendingBalanceUpdated(uint64_t balance) override;
+    void actualDepositBalanceUpdated(uint64_t balance) override;
+    void pendingDepositBalanceUpdated(uint64_t balance) override;
+    void actualInvestmentBalanceUpdated(uint64_t balance) override;
+    void pendingInvestmentBalanceUpdated(uint64_t balance) override;
+    void externalTransactionCreated(TransactionId transactionId) override;
+    void sendTransactionCompleted(TransactionId transactionId, std::error_code result) override;
+    void transactionUpdated(TransactionId transactionId) override;
+    void depositUpdated(DepositId depositId) override;
+    void depositsUpdated(const std::vector<DepositId> &depositIds) override;
 
     friend class refresh_progress_reporter_t;
 
     class refresh_progress_reporter_t
     {
     public:
-      refresh_progress_reporter_t(cn::conceal_wallet& conceal_wallet)
+      explicit refresh_progress_reporter_t(cn::conceal_wallet& conceal_wallet)
         : m_conceal_wallet(conceal_wallet)
-        , m_blockchain_height(0)
-        , m_blockchain_height_update_time()
-        , m_print_time()
       {
       }
 
@@ -159,14 +164,12 @@ namespace cn
         m_blockchain_height_update_time = std::chrono::system_clock::now();
       }
 
-    private:
       cn::conceal_wallet& m_conceal_wallet;
-      uint64_t m_blockchain_height;
+      uint64_t m_blockchain_height = 0;
       std::chrono::system_clock::time_point m_blockchain_height_update_time;
       std::chrono::system_clock::time_point m_print_time;
     };
 
-  private:
     std::string m_wallet_file_arg;
     std::string m_generate_new;
     std::string m_import_new;
@@ -185,11 +188,12 @@ namespace cn
     const cn::Currency& m_currency;
     logging::LoggerManager& logManager;
     platform_system::Dispatcher& m_dispatcher;
+    platform_system::Event m_stopEvent;
     logging::LoggerRef logger;
     cn::client_helper m_chelper;
 
     std::unique_ptr<cn::NodeRpcProxy> m_node;
-    std::unique_ptr<cn::IWalletLegacy> m_wallet;
+    std::unique_ptr<cn::IWallet> m_wallet;
     refresh_progress_reporter_t m_refresh_progress_reporter;
 
     bool m_walletSynchronized;
