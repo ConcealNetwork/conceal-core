@@ -386,14 +386,14 @@ jobs:
 
   build-macos11:
     name: macOS
-    runs-on: macos-11
+    runs-on: macos-12
     steps:
       - uses: actions/checkout@master
 
       - name: Prepare version
         id: setup
         run: |
-          os=macos-11
+          os=macos-12
           ccx_version=${GITHUB_SHA::7}
           release_name=ccx-cli-"$os"-dev-"$ccx_version"
           echo "release_name=${release_name}" >> $GITHUB_OUTPUT
