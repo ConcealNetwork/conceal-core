@@ -6,8 +6,8 @@ output_folder=""
 display_help() {
     echo "Usage: $0 [OPTIONS]"
     echo "Options:"
-    echo "  -i, --input INPUT_FOLDER  Specify the input folder (default: chatgpt)"
-    echo "  -o, --output OUTPUT_FOLDER Specify the output folder (default: docs)"
+    echo "  -i, --input INPUT_FOLDER  Specify the input folder (default: rpc/openapi)"
+    echo "  -o, --output OUTPUT_FOLDER Specify the output folder (default: rpc)"
     echo "  -h, --help                Display this help message"
     exit 0
 }

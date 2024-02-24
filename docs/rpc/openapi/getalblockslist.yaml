@@ -1,7 +1,7 @@
 openapi: 3.0.0
 info:
   title: Conceal Core API Documentation
-  version: "6.7.2"
+  version: "6.7.3"
   description: API documentation for Conceal Core
   contact:
     name: Conceal Help Desk
