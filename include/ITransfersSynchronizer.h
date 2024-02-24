@@ -31,6 +31,7 @@ class ITransfersSubscription;
 
 class ITransfersObserver {
 public:
+  virtual ~ITransfersObserver() = default;
   virtual void onError(ITransfersSubscription* object,
     uint32_t height, std::error_code ec) {
   }
@@ -53,7 +54,7 @@ public:
 
 class ITransfersSubscription : public IObservable < ITransfersObserver > {
 public:
-  virtual ~ITransfersSubscription() {}
+  virtual ~ITransfersSubscription() = default;
 
   virtual AccountPublicAddress getAddress() = 0;
   virtual ITransfersContainer& getContainer() = 0;
@@ -61,17 +62,18 @@ public:
 
 class ITransfersSynchronizerObserver {
 public:
+  virtual ~ITransfersSynchronizerObserver() = default;
   virtual void onBlocksAdded(const crypto::PublicKey& viewPublicKey, const std::vector<crypto::Hash>& blockHashes) {}
   virtual void onBlockchainDetach(const crypto::PublicKey& viewPublicKey, uint32_t blockIndex) {}
-  virtual void onTransactionDeleteBegin(const crypto::PublicKey& viewPublicKey, crypto::Hash transactionHash) {}
-  virtual void onTransactionDeleteEnd(const crypto::PublicKey& viewPublicKey, crypto::Hash transactionHash) {}
+  virtual void onTransactionDeleteBegin(const crypto::PublicKey &viewPublicKey, const crypto::Hash &transactionHash) {}
+  virtual void onTransactionDeleteEnd(const crypto::PublicKey &viewPublicKey, const crypto::Hash &transactionHash) {}
   virtual void onTransactionUpdated(const crypto::PublicKey& viewPublicKey, const crypto::Hash& transactionHash,
     const std::vector<ITransfersContainer*>& containers) {}
 };
 
 class ITransfersSynchronizer : public IStreamSerializable {
 public:
-  virtual ~ITransfersSynchronizer() {}
+  virtual ~ITransfersSynchronizer() = default;
 
   virtual ITransfersSubscription& addSubscription(const AccountSubscription& acc) = 0;
   virtual bool removeSubscription(const AccountPublicAddress& acc) = 0;

@@ -9,15 +9,18 @@
 
 #include <limits>
 #include <string>
+#include <system_error>
 #include <vector>
 #include <boost/optional.hpp>
 #include "CryptoNote.h"
 #include "CryptoNoteConfig.h"
+#include "IObservable.h"
 
 namespace cn
 {
 
-typedef size_t DepositId;
+using DepositId = size_t;
+using TransactionId = size_t;
 
 const size_t WALLET_INVALID_TRANSACTION_ID = std::numeric_limits<size_t>::max();
 const size_t WALLET_INVALID_TRANSFER_ID = std::numeric_limits<size_t>::max();
@@ -104,6 +107,7 @@ struct WalletTransaction
   size_t firstDepositId = WALLET_INVALID_DEPOSIT_ID;
   size_t depositCount = 0;
   bool isBase;
+  std::vector<std::string> messages;
 };
 
 enum class WalletTransferType : uint8_t
@@ -151,6 +155,7 @@ struct TransactionParameters
   uint64_t unlockTimestamp = 0;
   DonationSettings donation;
   std::string changeDestination;
+  uint64_t ttl = 0;
 };
 
 struct WalletTransactionWithTransfers
@@ -171,16 +176,48 @@ struct DepositsInBlockInfo
   std::vector<Deposit> deposits;
 };
 
-class IWallet
+struct PaymentIdTransactions
+{
+  crypto::Hash paymentId;
+  std::vector<WalletTransaction> transactions;
+};
+
+class TransactionOutputInformation;
+class IBlockchainSynchronizerObserver;
+
+class IWalletObserver
+{
+public:
+  virtual ~IWalletObserver() = default;
+
+  virtual void initCompleted(std::error_code result) = 0;
+  virtual void saveCompleted(std::error_code result) = 0;
+  virtual void synchronizationProgressUpdated(uint32_t current, uint32_t total) = 0;
+  virtual void synchronizationCompleted(std::error_code result) = 0;
+  virtual void actualBalanceUpdated(uint64_t balance) = 0;
+  virtual void pendingBalanceUpdated(uint64_t balance) = 0;
+  virtual void actualDepositBalanceUpdated(uint64_t balance) = 0;
+  virtual void pendingDepositBalanceUpdated(uint64_t balance) = 0;
+  virtual void actualInvestmentBalanceUpdated(uint64_t balance) = 0;
+  virtual void pendingInvestmentBalanceUpdated(uint64_t balance) = 0;
+  virtual void externalTransactionCreated(TransactionId transactionId) = 0;
+  virtual void sendTransactionCompleted(TransactionId transactionId, std::error_code result) = 0;
+  virtual void transactionUpdated(TransactionId transactionId) = 0;
+  virtual void depositUpdated(DepositId depositId) = 0;
+  virtual void depositsUpdated(const std::vector<DepositId> &depositIds) = 0;
+};
+
+class IWallet : public IObservable<IWalletObserver>
 {
 public:
   virtual ~IWallet() = default;
 
   virtual void initialize(const std::string& path, const std::string& password) = 0;
-  virtual void createDeposit(uint64_t amount, uint64_t term, std::string sourceAddress, std::string destinationAddress, std::string &transactionHash) = 0;
+  virtual void createDeposit(uint64_t amount, uint32_t term, std::string sourceAddress, std::string destinationAddress, std::string &transactionHash) = 0;
   virtual void withdrawDeposit(DepositId depositId, std::string &transactionHash) = 0;
   virtual Deposit getDeposit(size_t depositIndex) const = 0;
   virtual void initializeWithViewKey(const std::string& path, const std::string& password, const crypto::SecretKey& viewSecretKey) = 0;
+  virtual void generateNewWallet(const std::string &path, const std::string &password) = 0;
   virtual void load(const std::string& path, const std::string& password, std::string& extra) = 0;
   virtual void load(const std::string& path, const std::string& password) = 0;
   virtual void shutdown() = 0;
@@ -210,6 +247,8 @@ public:
   virtual uint64_t getActualBalance(const std::string &address) const = 0;
   virtual uint64_t getPendingBalance() const = 0;
   virtual uint64_t getPendingBalance(const std::string &address) const = 0;
+  virtual uint64_t getDustBalance() const = 0;
+  virtual uint64_t getDustBalance(const std::string &address) const = 0;
 
   virtual uint64_t getLockedDepositBalance() const = 0;
   virtual uint64_t getLockedDepositBalance(const std::string &address) const = 0;
@@ -238,6 +277,14 @@ public:
   virtual size_t makeTransaction(const TransactionParameters &sendingTransaction) = 0;
   virtual void commitTransaction(size_t transactionId) = 0;
   virtual void rollbackUncommitedTransaction(size_t transactionId) = 0;
+
+  virtual std::vector<TransactionOutputInformation> getUnspentOutputs() = 0;
+  virtual size_t getUnspentOutputsCount() = 0;
+  virtual std::string getReserveProof(const std::string &address, const uint64_t &reserve, const std::string &message) = 0;
+  virtual bool getTxProof(const crypto::Hash &transactionHash, const cn::AccountPublicAddress &address, const crypto::SecretKey &tx_key, std::string &signature) = 0;
+  virtual crypto::SecretKey getTransactionDeterministicSecretKey(crypto::Hash &transactionHash) const = 0;
+  virtual size_t createOptimizationTransaction(const std::string &address) = 0;
+  virtual std::vector<PaymentIdTransactions> getTransactionsByPaymentIds(const std::vector<crypto::Hash> &paymentIds) = 0;
 
   virtual void start() = 0;
   virtual void stop() = 0;

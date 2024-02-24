@@ -1,0 +1,83 @@
+openapi: 3.0.0
+info:
+  title: Conceal Core API Documentation
+  version: "6.7.3"
+  description: API documentation for Conceal Core
+  contact:
+    name: Conceal Help Desk
+    url: https://conceal.network/support
+
+servers:
+  - url: "http://localhost:16000"
+    description: Mainnet local node
+  - url: "http://localhost:16600"
+    description: Testnet local node
+
+tags:
+  - name: JSON-RPC
+
+paths:
+  /json_rpc:
+    post:
+      summary: Get Currency ID
+      description: Get currency ID using JSON-RPC.
+      operationId: getCurrencyId
+      tags: ["JSON-RPC"]
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/GetCurrencyIdRequest"
+      responses:
+        "200":
+          description: Successful response.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/GetCurrencyIdResponse"
+
+components:
+  schemas:
+    GetCurrencyIdRequest:
+      type: object
+      properties:
+        jsonrpc:
+          type: string
+          enum: ["2.0"]
+        method:
+          type: string
+          enum: ["getcurrencyid"]
+        params:
+          $ref: "#/components/schemas/EmptyParams"
+        id:
+          type: string
+          example: "1"
+      required:
+        - jsonrpc
+        - method
+        - params
+        - id
+
+    EmptyParams:
+      type: object
+      additionalProperties: false
+
+    GetCurrencyIdResponse:
+      type: object
+      properties:
+        jsonrpc:
+          type: string
+          enum: ["2.0"]
+        result:
+          $ref: "#/components/schemas/GetCurrencyIdResult"
+        id:
+          type: string
+          example: "1"
+
+    GetCurrencyIdResult:
+      type: object
+      properties:
+        currency_id_blob:
+          type: string
+          description: The currency ID blob.
+          example: 850ac16022f4dddab624fad3f9049dba80592c8ea51a5dff19fefeb386e536b1

@@ -1,0 +1,87 @@
+openapi: 3.0.0
+info:
+  title: Conceal Core API Documentation
+  version: "6.7.3"
+  description: API documentation for Conceal Core
+  contact:
+    name: Conceal Help Desk
+    url: https://conceal.network/support
+
+servers:
+  - url: "http://localhost:16000"
+    description: Mainnet local node
+  - url: "http://localhost:16600"
+    description: Testnet local node
+
+tags:
+  - name: JSON-RPC
+
+paths:
+  /json_rpc:
+    post:
+      summary: Get Block Count
+      description: Get the current block count using JSON-RPC.
+      operationId: getBlockCount
+      tags: ["JSON-RPC"]
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/GetBlockCountRequest"
+      responses:
+        "200":
+          description: Successful response.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/GetBlockCountResponse"
+
+components:
+  schemas:
+    GetBlockCountRequest:
+      type: object
+      properties:
+        jsonrpc:
+          type: string
+          enum: ["2.0"]
+        method:
+          type: string
+          enum: ["getblockcount"]
+        params:
+          $ref: "#/components/schemas/EmptyParams"
+        id:
+          type: string
+          example: "1"
+      required:
+        - jsonrpc
+        - method
+        - params
+        - id
+
+    EmptyParams:
+      type: object
+      additionalProperties: false
+
+    GetBlockCountResponse:
+      type: object
+      properties:
+        jsonrpc:
+          type: string
+          enum: ["2.0"]
+        result:
+          $ref: "#/components/schemas/GetBlockCountResult"
+        id:
+          type: string
+          example: "1"
+
+    GetBlockCountResult:
+      type: object
+      properties:
+        count:
+          type: integer
+          description: The current block count.
+          example: 12345
+        status:
+          type: string
+          description: The status of the operation
+          example: OK

@@ -1,0 +1,291 @@
+openapi: 3.0.0
+info:
+  title: Conceal Core API Documentation
+  version: "6.7.3"
+  description: API documentation for Conceal Core
+  contact:
+    name: Conceal Help Desk
+    url: https://conceal.network/support
+
+servers:
+  - url: "http://localhost:16000"
+    description: Mainnet local node
+  - url: "http://localhost:16600"
+    description: Testnet local node
+
+tags:
+  - name: JSON-RPC
+
+paths:
+  /json_rpc:
+    post:
+      summary: Get Raw Transactions from Pool
+      description: Get raw transactions from the transaction pool using JSON-RPC.
+      operationId: getRawTransactionsPool
+      tags: ["JSON-RPC"]
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/GetRawTransactionsPoolRequest"
+      responses:
+        "200":
+          description: Successful response.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/GetRawTransactionsPoolResponse"
+
+components:
+  schemas:
+    GetRawTransactionsPoolRequest:
+      type: object
+      properties:
+        jsonrpc:
+          type: string
+          enum: ["2.0"]
+        method:
+          type: string
+          enum: ["getrawtransactionspool"]
+        params:
+          $ref: "#/components/schemas/EmptyParams"
+        id:
+          type: string
+          example: "1"
+      required:
+        - jsonrpc
+        - method
+        - params
+        - id
+
+    EmptyParams:
+      type: object
+      additionalProperties: false
+
+    GetRawTransactionsPoolResponse:
+      type: object
+      properties:
+        jsonrpc:
+          type: string
+          enum: ["2.0"]
+        result:
+          $ref: "#/components/schemas/GetRawTransactionsPoolResult"
+        id:
+          type: string
+          example: "1"
+
+    GetRawTransactionsPoolResult:
+      type: object
+      properties:
+        transactions:
+          type: array
+          items:
+            $ref: "#/components/schemas/TxWithOutputGlobalIndexes"
+          description: List of raw transactions from the transaction pool.
+        status:
+          type: string
+          description: The status of the operation
+          example: OK
+
+    TxWithOutputGlobalIndexes:
+      type: object
+      properties:
+        transaction:
+          $ref: "#/components/schemas/TransactionPrefix"
+          description: The transaction prefix.
+        hash:
+          type: string
+          description: The hash of the transaction.
+          example: 030e1d9fb2a672c8ac99d0d684f7189221e2ae1143fe69e1524fdd3b0db8cbff
+        block_hash:
+          type: string
+          description: The hash of the block containing the transaction.
+          example: "0000000000000000000000000000000000000000000000000000000000000000"
+        height:
+          type: integer
+          description: The height of the block containing the transaction.
+          example: 0
+        fee:
+          type: integer
+          description: The fee of the transaction.
+          example: 1000
+        timestamp:
+          type: integer
+          description: The timestamp of the transaction.
+          example: 1633510598
+        output_indexes:
+          type: array
+          items:
+            type: integer
+          description: List of output indexes.
+          example: []
+
+    TransactionPrefix:
+      type: object
+      properties:
+        version:
+          type: integer
+          description: The version of the transaction.
+          example: 1
+        unlock_time:
+          type: integer
+          description: The unlock time of the transaction.
+          example: 0
+        vin:
+          type: array
+          items:
+            $ref: "#/components/schemas/TransactionInput"
+          description: The transaction inputs.
+        vout:
+          type: array
+          items:
+            $ref: "#/components/schemas/TransactionOutput"
+          description: The transaction outputs.
+        extra:
+          type: array
+          items:
+            type: integer
+          description: Additional transaction data.
+          example: 02210067c35be8114117cd58031e9115d9c7692e675950e60369d54f05ea0b1b7d1b8301b68ebe0733f70a44044676a9f75ed7deacf4df00a81ddd78dd22420a15d0675e
+
+    TransactionInput:
+      type: object
+      oneOf:
+        - $ref: "#/components/schemas/BaseInput"
+        - $ref: "#/components/schemas/KeyInput"
+        - $ref: "#/components/schemas/MultisignatureInput"
+      discriminator:
+        propertyName: type
+        mapping:
+          "ff": "#/components/schemas/BaseInput"
+          "02": "#/components/schemas/KeyInput"
+          "03": "#/components/schemas/MultisignatureInput"
+
+    BaseInput:
+      type: object
+      properties:
+        type:
+          type: string
+          enum: ["ff"]
+        value:
+          type: object
+          properties:
+            height:
+              type: integer
+              description: The block index.
+
+    KeyInput:
+      type: object
+      properties:
+        type:
+          type: string
+          enum: ["02"]
+        value:
+          type: object
+          properties:
+            amount:
+              type: integer
+              description: The amount for the key input.
+              example: 6000000
+            key_offsets:
+              type: array
+              items:
+                type: integer
+              description: The output indexes for the key input.
+              example:
+                - 8328
+                - 15424
+                - 155100
+                - 65645
+                - 2834
+                - 46125
+            k_image:
+              type: object
+              description: The key image for the key input.
+              example: b0de5d7bb9355f0796d2177dddedf10e1a2889f70692e7b2af33a4461bf23864
+
+    MultisignatureInput:
+      type: object
+      properties:
+        type:
+          type: string
+          enum: ["03"]
+        value:
+          type: object
+          properties:
+            amount:
+              type: integer
+              description: The amount for the multisignature input.
+              example: 5000000
+            signatures:
+              type: integer
+              description: The signature count for the multisignature input.
+              example: 1
+            outputIndex:
+              type: integer
+              description: The output index for the multisignature input.
+              example: 0
+            term:
+              type: integer
+              description: The term for the multisignature input.
+              example: 21900
+
+    TransactionOutput:
+      type: object
+      properties:
+        amount:
+          type: integer
+          description: The amount for the transaction output.
+          example: 6000000
+        target:
+          $ref: "#/components/schemas/TransactionOutputTarget"
+
+    TransactionOutputTarget:
+      type: object
+      oneOf:
+        - $ref: "#/components/schemas/KeyOutput"
+        - $ref: "#/components/schemas/MultisignatureOutput"
+      discriminator:
+        propertyName: type
+        mapping:
+          "02": "#/components/schemas/KeyOutput"
+          "03": "#/components/schemas/MultisignatureOutput"
+
+    KeyOutput:
+      type: object
+      properties:
+        type:
+          type: string
+          enum: ["02"]
+        data:
+          type: object
+          description: The public key for the key output.
+          properties:
+            key:
+              type: string
+              example: 477bddc9954a47aef3d3dc20a071e1955200fcc01a4cf43db7235eafc8da19b4
+
+    MultisignatureOutput:
+      type: object
+      properties:
+        type:
+          type: string
+          enum: ["03"]
+        data:
+          type: object
+          properties:
+            keys:
+              type: array
+              items:
+                type: string
+              description: The public keys for the multisignature output.
+              example:
+                - c9b8d92eb3aba2d3519741f2c5b314099e232d027dcbce10ba1d5d595b615b34
+            required_signatures:
+              type: integer
+              description: The required signature count for the multisignature output.
+              example: 1
+            term:
+              type: integer
+              description: The term for the multisignature output.
+              example: 21900

@@ -1,0 +1,664 @@
+openapi: 3.0.0
+info:
+  title: Conceal Core API Documentation
+  version: "6.7.3"
+  description: API documentation for Conceal Core
+  contact:
+    name: Conceal Help Desk
+    url: https://conceal.network/support
+
+servers:
+  - url: "http://localhost:16000"
+    description: Mainnet local node
+  - url: "http://localhost:16600"
+    description: Testnet local node
+
+tags:
+  - name: JSON
+
+paths:
+  /getinfo:
+    get:
+      summary: Get Info
+      description: Get information about the Conceal Core node.
+      operationId: getInfo
+      tags: ["JSON"]
+      responses:
+        "200":
+          description: Successful response.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/GetInfoResponse"
+
+  /getheight:
+    get:
+      summary: Get Height
+      description: Get the current blockchain height.
+      operationId: getHeight
+      tags: ["JSON"]
+      responses:
+        "200":
+          description: Successful response.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/GetHeightResponse"
+
+  /feeaddress:
+    get:
+      summary: Get Fee Address
+      description: Get the fee address for transactions.
+      operationId: getFeeAddress
+      tags: ["JSON"]
+      responses:
+        "200":
+          description: Successful response.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/GetFeeAddressResponse"
+
+  /peers:
+    get:
+      summary: Get Peers
+      description: Get the list of peers.
+      operationId: getPeers
+      tags: ["JSON"]
+      responses:
+        "200":
+          description: Successful response.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/GetPeersResponse"
+
+  /getpeers:
+    get:
+      summary: Get Peers
+      description: Get the list of peers.
+      operationId: getPeersAlt
+      tags: ["JSON"]
+      responses:
+        "200":
+          description: Successful response.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/GetPeersResponse"
+
+  /getrawtransactionspool:
+    get:
+      summary: Get Raw Transactions Pool
+      description: Get the raw transactions from the transaction pool.
+      operationId: getRawTransactionsPool
+      tags: ["JSON"]
+      responses:
+        "200":
+          description: Successful response.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/GetRawTransactionsPoolResult"
+
+  /getrandom_outs:
+    post:
+      summary: Get Random Outputs for Amounts
+      description: Get random outputs for specified amounts.
+      operationId: getRandomOutputs
+      tags: ["JSON"]
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/GetRandomOutputsRequest"
+      responses:
+        "200":
+          description: Successful response.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/GetRandomOutputsResponse"
+
+  /gettransactions:
+    post:
+      summary: Get Transactions
+      description: Get transactions by their hashes.
+      operationId: getTransactions
+      tags: ["JSON"]
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/GetTransactionsRequest"
+      responses:
+        "200":
+          description: Successful response.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/GetTransactionsResponse"
+
+  /get_raw_transactions_by_heights:
+    post:
+      summary: Get Transactions by Heights
+      description: Get transactions for specified heights.
+      operationId: getTransactionsByHeights
+      tags: ["JSON"]
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/GetTransactionsByHeightsParams"
+      responses:
+        "200":
+          description: Successful response.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/GetTransactionsByHeightsResult"
+
+  /sendrawtransaction:
+    post:
+      summary: Send Raw Transaction
+      description: Send a raw transaction in hex format.
+      operationId: sendRawTransaction
+      tags: ["JSON"]
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/SendRawTransactionRequest"
+      responses:
+        "200":
+          description: Successful response.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SendRawTransactionResponse"
+
+components:
+  schemas:
+    GetInfoResponse:
+      type: object
+      properties:
+        status:
+          type: string
+          description: The status of the operation
+          example: OK
+        version:
+          type: string
+          description: The version of Conceal Core.
+          example: "6.7.2"
+        fee_address:
+          type: string
+          description: The fee address.
+          example: ccx7WVMV8EEEQE7GcN9xME6zAK8ZonvqYgA3694nXk97ZsxUGmD5chx48ze9hrhZ4V81bQ7xMMHLkFbB9HtPEcqq3edGYYnahU
+        top_block_hash:
+          type: string
+          description: The hash of the top block.
+          example: 20e93738606e150ea3f2dd30b4b60fd9af2db05b6aecdd1201159a4e50455d44
+        height:
+          type: integer
+          description: The current block height.
+          example: 12346
+        difficulty:
+          type: integer
+          description: The current difficulty.
+          example: 74
+        tx_count:
+          type: integer
+          description: The total number of transactions.
+          example: 7890
+        tx_pool_size:
+          type: integer
+          description: The size of the transaction pool.
+          example: 2
+        alt_blocks_count:
+          type: integer
+          description: The number of alternative blocks.
+          example: 2
+        outgoing_connections_count:
+          type: integer
+          description: The number of outgoing connections.
+          example: 2
+        incoming_connections_count:
+          type: integer
+          description: The number of incoming connections.
+          example: 2
+        white_peerlist_size:
+          type: integer
+          description: The size of the white peerlist.
+          example: 100
+        grey_peerlist_size:
+          type: integer
+          description: The size of the grey peerlist.
+          example: 50
+        block_major_version:
+          type: integer
+          description: The major version of the current block.
+          example: 8
+        block_minor_version:
+          type: integer
+          description: The minor version of the current block.
+          example: 0
+        last_known_block_index:
+          type: integer
+          description: The last known block index.
+          example: 12345
+        full_deposit_amount:
+          type: integer
+          description: The full deposit amount.
+          example: 1000000
+        last_block_reward:
+          type: integer
+          description: The reward for the last block.
+          example: 6000000
+        last_block_timestamp:
+          type: integer
+          description: The timestamp of the last block.
+          example: 1633816200
+        last_block_difficulty:
+          type: integer
+          description: The difficulty of the last block.
+          example: 71
+        connections:
+          type: array
+          items:
+            type: string
+          description: List of connections.
+          example:
+            - "1.2.3.4"
+            - "5.6.7.8"
+
+    GetHeightResponse:
+      type: object
+      properties:
+        height:
+          type: integer
+          description: The current blockchain height.
+          example: 12345
+        status:
+          type: string
+          description: The status of the operation
+          example: OK
+
+    GetFeeAddressResponse:
+      type: object
+      properties:
+        fee_address:
+          type: string
+          description: The fee address.
+          example: ccx7WVMV8EEEQE7GcN9xME6zAK8ZonvqYgA3694nXk97ZsxUGmD5chx48ze9hrhZ4V81bQ7xMMHLkFbB9HtPEcqq3edGYYnahU
+        status:
+          type: string
+          description: The status of the operation
+          example: OK
+
+    GetPeersResponse:
+      type: object
+      properties:
+        peers:
+          type: array
+          items:
+            type: string
+          description: List of peers.
+          example:
+            - "1.2.3.4:5678"
+            - "9.8.7.6:5432"
+        status:
+          type: string
+          description: The status of the operation
+          example: OK
+
+    GetRawTransactionsPoolResult:
+      type: object
+      properties:
+        transactions:
+          type: array
+          items:
+            $ref: "#/components/schemas/TxWithOutputGlobalIndexes"
+          description: List of raw transactions from the transaction pool.
+        status:
+          type: string
+          description: The status of the operation
+          example: OK
+
+    TxWithOutputGlobalIndexes:
+      type: object
+      properties:
+        transaction:
+          $ref: "#/components/schemas/TransactionPrefix"
+        hash:
+          type: string
+          description: The hash of the transaction.
+          example: 030e1d9fb2a672c8ac99d0d684f7189221e2ae1143fe69e1524fdd3b0db8cbff
+        block_hash:
+          type: string
+          description: The hash of the block containing the transaction.
+          example: "0000000000000000000000000000000000000000000000000000000000000000"
+        height:
+          type: integer
+          description: The height of the block containing the transaction.
+          example: 0
+        fee:
+          type: integer
+          description: The fee of the transaction.
+          example: 1000
+        timestamp:
+          type: integer
+          description: The timestamp of the transaction.
+          example: 1633510598
+        output_indexes:
+          type: array
+          items:
+            type: integer
+          description: List of output indexes.
+          example: []
+
+    TransactionPrefix:
+      type: object
+      properties:
+        version:
+          type: integer
+          description: The version of the transaction.
+          example: 1
+        unlock_time:
+          type: integer
+          description: The unlock time of the transaction.
+          example: 0
+        vin:
+          type: array
+          items:
+            $ref: "#/components/schemas/TransactionInput"
+          description: The transaction inputs.
+        vout:
+          type: array
+          items:
+            $ref: "#/components/schemas/TransactionOutput"
+          description: The transaction outputs.
+        extra:
+          type: string
+          description: Additional transaction data.
+          example: 02210067c35be8114117cd58031e9115d9c7692e675950e60369d54f05ea0b1b7d1b8301b68ebe0733f70a44044676a9f75ed7deacf4df00a81ddd78dd22420a15d0675e
+
+    TransactionInput:
+      type: object
+      oneOf:
+        - $ref: "#/components/schemas/BaseInput"
+        - $ref: "#/components/schemas/KeyInput"
+        - $ref: "#/components/schemas/MultisignatureInput"
+      discriminator:
+        propertyName: type
+        mapping:
+          "ff": "#/components/schemas/BaseInput"
+          "02": "#/components/schemas/KeyInput"
+          "03": "#/components/schemas/MultisignatureInput"
+
+    BaseInput:
+      type: object
+      properties:
+        type:
+          type: string
+          enum: ["ff"]
+        value:
+          type: object
+          properties:
+            height:
+              type: integer
+              description: The block index.
+
+    KeyInput:
+      type: object
+      properties:
+        type:
+          type: string
+          enum: ["02"]
+        value:
+          type: object
+          properties:
+            amount:
+              type: integer
+              description: The amount for the key input.
+              example: 6000000
+            key_offsets:
+              type: array
+              items:
+                type: integer
+              description: The output indexes for the key input.
+              example:
+                - 8328
+                - 15424
+                - 155100
+                - 65645
+                - 2834
+                - 46125
+            k_image:
+              type: object
+              description: The key image for the key input.
+              example: b0de5d7bb9355f0796d2177dddedf10e1a2889f70692e7b2af33a4461bf23864
+
+    MultisignatureInput:
+      type: object
+      properties:
+        type:
+          type: string
+          enum: ["03"]
+        value:
+          type: object
+          properties:
+            amount:
+              type: integer
+              description: The amount for the multisignature input.
+              example: 5000000
+            signatures:
+              type: integer
+              description: The signature count for the multisignature input.
+              example: 1
+            outputIndex:
+              type: integer
+              description: The output index for the multisignature input.
+              example: 0
+            term:
+              type: integer
+              description: The term for the multisignature input.
+              example: 21900
+
+    TransactionOutput:
+      type: object
+      properties:
+        amount:
+          type: integer
+          description: The amount for the transaction output.
+          example: 6000000
+        target:
+          $ref: "#/components/schemas/TransactionOutputTarget"
+
+    TransactionOutputTarget:
+      type: object
+      oneOf:
+        - $ref: "#/components/schemas/KeyOutput"
+        - $ref: "#/components/schemas/MultisignatureOutput"
+      discriminator:
+        propertyName: type
+        mapping:
+          "02": "#/components/schemas/KeyOutput"
+          "03": "#/components/schemas/MultisignatureOutput"
+
+    KeyOutput:
+      type: object
+      properties:
+        type:
+          type: string
+          enum: ["02"]
+        data:
+          type: object
+          description: The public key for the key output.
+          properties:
+            key:
+              type: string
+              example: 477bddc9954a47aef3d3dc20a071e1955200fcc01a4cf43db7235eafc8da19b4
+
+    MultisignatureOutput:
+      type: object
+      properties:
+        type:
+          type: string
+          enum: ["03"]
+        data:
+          type: object
+          properties:
+            keys:
+              type: array
+              items:
+                type: string
+              description: The public keys for the multisignature output.
+              example:
+                - c9b8d92eb3aba2d3519741f2c5b314099e232d027dcbce10ba1d5d595b615b34
+            required_signatures:
+              type: integer
+              description: The required signature count for the multisignature output.
+              example: 1
+            term:
+              type: integer
+              description: The term for the multisignature output.
+              example: 21900
+
+    GetRandomOutputsRequest:
+      type: object
+      properties:
+        amounts:
+          type: array
+          items:
+            type: integer
+          description: List of amounts for which to get random outputs.
+          example:
+            - 6000000
+        outs_count:
+          type: integer
+          description: Number of random outputs to retrieve.
+          example: 5
+
+    GetRandomOutputsResponse:
+      type: object
+      properties:
+        outs:
+          type: array
+          items:
+            $ref: "#/components/schemas/RandomOutputsForAmount"
+          description: Random outputs for specified amounts.
+        status:
+          type: string
+          description: The status of the operation
+          example: OK
+
+    RandomOutputsForAmount:
+      type: object
+      properties:
+        amount:
+          type: integer
+          description: The amount for which random outputs are provided.
+          example: 6000000
+        outs:
+          type: array
+          items:
+            $ref: "#/components/schemas/RandomOutputEntry"
+          description: Random output entries for the specified amount.
+
+    RandomOutputEntry:
+      type: object
+      properties:
+        global_index:
+          type: integer
+          description: Global amount index.
+          example: 8267
+        public_key:
+          type: string
+          description: Public key for the output.
+          example: 3b99ff1afd669f63fd086610fc720fea80c0a507e70eca1a3157acc0ac9fde54
+
+    GetTransactionsRequest:
+      type: object
+      properties:
+        txs_hashes:
+          type: array
+          items:
+            type: string
+          description: List of transaction hashes to retrieve.
+          example:
+            - d1a55fc4ca4bdc80383d836a5e10e0218cd2ecfa4905f847101b7bdb11531493
+
+    GetTransactionsResponse:
+      type: object
+      properties:
+        txs_as_hex:
+          type: array
+          items:
+            type: string
+          description: Transactions blobs as hex.
+          example:
+            - 01c36001ffb96001809bee0202477bddc9954a47aef3d3dc20a071e1955200fcc01a4cf43db7235eafc8da19b421012b7c0e7d977e81fd2cbfa9b26d0ef7dd99da38d65ee18f856c52731358bd611d
+        missed_tx:
+          type: array
+          items:
+            type: string
+          description: Not found transactions.
+          example: []
+        status:
+          type: string
+          description: The status of the operation
+          example: OK
+
+    GetTransactionsByHeightsParams:
+      type: object
+      properties:
+        heights:
+          type: array
+          items:
+            type: integer
+          description: List of block heights to retrieve transactions for.
+          example:
+            - 12345
+            - 12355
+        include_miner_txs:
+          type: boolean
+          description: Flag to include miner transactions.
+          example: true
+        range:
+          type: boolean
+          description: Flag to indicate if the heights are provided as a range.
+          example: false
+
+    GetTransactionsByHeightsResult:
+      type: object
+      properties:
+        transactions:
+          type: array
+          items:
+            $ref: "#/components/schemas/TxWithOutputGlobalIndexes"
+          description: List of raw transactions.
+        missed_txs:
+          type: array
+          items:
+            type: string
+          description: List of missed transactions.
+          example: []
+        status:
+          type: string
+          description: The status of the operation
+          example: OK
+
+    SendRawTransactionRequest:
+      type: object
+      properties:
+        tx_as_hex:
+          type: string
+          description: Raw transaction in hex format.
+
+    SendRawTransactionResponse:
+      type: object
+      properties:
+        status:
+          type: string
+          description: The status of the operation
+          example: OK

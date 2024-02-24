@@ -1,0 +1,200 @@
+openapi: 3.0.0
+info:
+  title: Conceal Core API Documentation
+  version: "6.7.3"
+  description: API documentation for Conceal Core
+  contact:
+    name: Conceal Help Desk
+    url: https://conceal.network/support
+
+servers:
+  - url: "http://localhost:16000"
+    description: Mainnet local node
+  - url: "http://localhost:16600"
+    description: Testnet local node
+
+tags:
+  - name: JSON-RPC
+  - name: blockchain-indexes
+    description: Mandatory blockchain indexes
+
+paths:
+  /json_rpc:
+    post:
+      summary: Get Block Details
+      description: Retrieve details of a block using JSON-RPC.
+      operationId: getBlockDetails
+      tags: ["JSON-RPC", "blockchain-indexes"]
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/GetBlockRequest"
+      responses:
+        "200":
+          description: Successful response.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/GetBlockResponse"
+
+components:
+  schemas:
+    GetBlockRequest:
+      type: object
+      properties:
+        jsonrpc:
+          type: string
+          enum: ["2.0"]
+        method:
+          type: string
+          enum: ["f_block_json"]
+        params:
+          $ref: "#/components/schemas/GetBlockParams"
+        id:
+          type: string
+          example: "1"
+      required:
+        - jsonrpc
+        - method
+        - params
+        - id
+
+    GetBlockParams:
+      type: object
+      properties:
+        hash:
+          type: string
+          description: The hash of the block.
+          example: 20e93738606e150ea3f2dd30b4b60fd9af2db05b6aecdd1201159a4e50455d44
+
+    GetBlockResponse:
+      type: object
+      properties:
+        jsonrpc:
+          type: string
+          enum: ["2.0"]
+        result:
+          $ref: "#/components/schemas/GetBlockResult"
+        id:
+          type: string
+          example: "1"
+
+    GetBlockResult:
+      type: object
+      properties:
+        block:
+          $ref: "#/components/schemas/BlockDetails"
+          description: Block details for the specified hash
+        status:
+          type: string
+          description: The status of the operation
+          example: OK
+
+    BlockDetails:
+      type: object
+      properties:
+        major_version:
+          type: integer
+          description: The major version of the block.
+          example: 8
+        minor_version:
+          type: integer
+          description: The minor version of the block.
+          example: 0
+        timestamp:
+          type: integer
+          description: The timestamp of the block.
+          example: 1633510598
+        prev_hash:
+          type: string
+          description: The hash of the previous block.
+          example: 09371a62201ba2393b2e250bc101e9e772e8bbab3b02ebddcdd3e35e5dd17c4c
+        nonce:
+          type: integer
+          description: The nonce of the block.
+          example: 3425989702
+        orphan_status:
+          type: boolean
+          description: Whether the block is an orphan.
+          example: false
+        height:
+          type: integer
+          description: The height of the block.
+          example: height
+        depth:
+          type: integer
+          description: The depth of the block.
+          example: 123456
+        hash:
+          type: string
+          description: The hash of the block.
+          example: 20e93738606e150ea3f2dd30b4b60fd9af2db05b6aecdd1201159a4e50455d44
+        difficulty:
+          type: integer
+          description: The difficulty of the block.
+          example: 74
+        reward:
+          type: integer
+          description: The reward of the block.
+          example: 6000000
+        blockSize:
+          type: integer
+          description: The size of the block.
+          example: 123
+        sizeMedian:
+          type: integer
+          description: The median size of the block.
+          example: 79
+        effectiveSizeMedian:
+          type: integer
+          description: The effective median size of the block.
+          example: 100000
+        transactionsCumulativeSize:
+          type: integer
+          description: The cumulative size of transactions in the block.
+          example: 79
+        alreadyGeneratedCoins:
+          type: string
+          description: The already generated coins.
+          example: "12073996950581"
+        alreadyGeneratedTransactions:
+          type: integer
+          description: The already generated transactions.
+          example: 12464
+        baseReward:
+          type: integer
+          description: The base reward.
+          example: 6000000
+        penalty:
+          type: number
+          description: The penalty.
+          example: 0.0
+        totalFeeAmount:
+          type: integer
+          description: The total fee amount.
+          example: 0
+        transactions:
+          type: array
+          items:
+            $ref: "#/components/schemas/TransactionShort"
+
+    TransactionShort:
+      type: object
+      properties:
+        hash:
+          type: string
+          description: The hash of the transaction.
+          example: d1a55fc4ca4bdc80383d836a5e10e0218cd2ecfa4905f847101b7bdb11531493
+        fee:
+          type: integer
+          description: The fee of the transaction.
+          example: 0
+        amount_out:
+          type: integer
+          description: The amount out in the transaction.
+          example: 6000000
+        size:
+          type: integer
+          description: The size of the transaction.
+          example: 79

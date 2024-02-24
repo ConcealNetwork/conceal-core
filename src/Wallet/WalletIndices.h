@@ -140,5 +140,7 @@ struct EncryptedWalletRecord {
                 boost::multi_index::tag<BlockHashIndex>,
                 boost::multi_index::identity<crypto::Hash>>>>
         BlockHashesContainer;
+    
+    using WalletPaymentIds = std::unordered_map<crypto::Hash, std::vector<size_t>, boost::hash<crypto::Hash>>;
 
 } // namespace cn

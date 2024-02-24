@@ -1,0 +1,115 @@
+openapi: 3.0.0
+info:
+  title: Conceal Core API Documentation
+  version: "6.7.3"
+  description: API documentation for Conceal Core
+  contact:
+    name: Conceal Help Desk
+    url: https://conceal.network/support
+
+servers:
+  - url: "http://localhost:16000"
+    description: Mainnet local node
+  - url: "http://localhost:16600"
+    description: Testnet local node
+
+tags:
+  - name: JSON-RPC
+
+paths:
+  /json_rpc:
+    post:
+      summary: Get Alternative Blocks List
+      description: Retrieve a list of alternative blocks using JSON-RPC.
+      operationId: getAltBlocksList
+      tags: ["JSON-RPC"]
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/GetAltBlocksListRequest"
+      responses:
+        "200":
+          description: Successful response.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/GetAltBlocksListResponse"
+
+components:
+  schemas:
+    GetAltBlocksListRequest:
+      type: object
+      properties:
+        jsonrpc:
+          type: string
+          enum: ["2.0"]
+        method:
+          type: string
+          enum: ["getaltblockslist"]
+        params:
+          $ref: "#/components/schemas/EmptyParams"
+        id:
+          type: string
+          example: "1"
+      required:
+        - jsonrpc
+        - method
+        - params
+        - id
+
+    EmptyParams:
+      type: object
+      additionalProperties: false
+
+    GetAltBlocksListResponse:
+      type: object
+      properties:
+        jsonrpc:
+          type: string
+          enum: ["2.0"]
+        result:
+          $ref: "#/components/schemas/GetAltBlocksListResult"
+        id:
+          type: string
+          example: "1"
+
+    GetAltBlocksListResult:
+      type: object
+      properties:
+        alt_blocks:
+          type: array
+          items:
+            $ref: "#/components/schemas/BlockShort"
+        status:
+          type: string
+          description: The status of the operation
+          example: OK
+
+    BlockShort:
+      type: object
+      properties:
+        timestamp:
+          type: integer
+          description: The timestamp of the block.
+          example: 1683611541
+        height:
+          type: integer
+          description: The height of the block.
+          example: 428207
+        hash:
+          type: string
+          description: The hash of the block.
+          example: c0a685377857a23ea789b796ffe1fce1eb8fa93fe3cf2b725a8a07a985785072
+        transactions_count:
+          type: integer
+          description: The number of transactions in the block.
+          example: 1
+        cumulative_size:
+          type: integer
+          description: The cumulative size of the block.
+          example: 44
+        difficulty:
+          type: integer
+          description: The difficulty type of the block.
+          example: 341

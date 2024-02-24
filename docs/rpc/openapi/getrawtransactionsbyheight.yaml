@@ -1,0 +1,293 @@
+openapi: 3.0.0
+info:
+  title: Conceal Core API Documentation
+  version: "6.7.3"
+  description: API documentation for Conceal Core
+  contact:
+    name: Conceal Help Desk
+    url: https://conceal.network/support
+
+servers:
+  - url: "http://localhost:16000"
+    description: Mainnet local node
+  - url: "http://localhost:16600"
+    description: Testnet local node
+
+tags:
+  - name: JSON-RPC
+
+paths:
+  /json_rpc:
+    post:
+      summary: Get Raw Transactions by Heights
+      description: Get raw transactions by block heights using JSON-RPC.
+      operationId: getRawTransactionsByHeights
+      tags: ["JSON-RPC"]
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/GetTransactionsByHeightsRequest"
+      responses:
+        "200":
+          description: Successful response.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/GetTransactionsByHeightsResponse"
+
+components:
+  schemas:
+    GetTransactionsByHeightsRequest:
+      type: object
+      properties:
+        jsonrpc:
+          type: string
+          enum: ["2.0"]
+        method:
+          type: string
+          enum: ["getrawtransactionsbyheights"]
+        params:
+          $ref: "#/components/schemas/GetTransactionsByHeightsParams"
+        id:
+          type: string
+          example: "1"
+      required:
+        - jsonrpc
+        - method
+        - params
+        - id
+
+    GetTransactionsByHeightsParams:
+      type: object
+      properties:
+        heights:
+          type: array
+          items:
+            type: integer
+          description: List of block heights to retrieve transactions for.
+          example:
+            - 12345
+            - 12355
+        include_miner_txs:
+          type: boolean
+          description: Flag to include miner transactions.
+          example: true
+        range:
+          type: boolean
+          description: Flag to indicate if the heights are provided as a range.
+          example: false
+
+    GetTransactionsByHeightsResponse:
+      type: object
+      properties:
+        jsonrpc:
+          type: string
+          enum: ["2.0"]
+        result:
+          $ref: "#/components/schemas/GetTransactionsByHeightsResult"
+        id:
+          type: string
+          example: "1"
+
+    GetTransactionsByHeightsResult:
+      type: object
+      properties:
+        transactions:
+          type: array
+          items:
+            $ref: "#/components/schemas/TxWithOutputGlobalIndexes"
+          description: List of raw transactions.
+        missed_txs:
+          type: array
+          items:
+            type: string
+          description: List of missed transactions.
+          example: []
+        status:
+          type: string
+          description: The status of the operation
+          example: OK
+
+    TxWithOutputGlobalIndexes:
+      type: object
+      properties:
+        transaction:
+          $ref: "#/components/schemas/TransactionPrefix"
+          description: The transaction prefix.
+        hash:
+          type: string
+          description: The hash of the transaction.
+          example: d1a55fc4ca4bdc80383d836a5e10e0218cd2ecfa4905f847101b7bdb11531493
+        block_hash:
+          type: string
+          description: The hash of the block containing the transaction.
+          example: 20e93738606e150ea3f2dd30b4b60fd9af2db05b6aecdd1201159a4e50455d44
+        height:
+          type: integer
+          description: The height of the block containing the transaction.
+          example: 12345
+        fee:
+          type: integer
+          description: The fee of the transaction.
+          example: 0
+        timestamp:
+          type: integer
+          description: The timestamp of the transaction.
+          example: 1633510598
+        output_indexes:
+          type: array
+          items:
+            type: integer
+          description: List of output indexes.
+          example:
+            - 12269
+
+    TransactionPrefix:
+      type: object
+      properties:
+        version:
+          type: integer
+          description: The version of the transaction.
+          example: 1
+        unlock_time:
+          type: integer
+          description: The unlock time of the transaction.
+          example: 12345
+        vin:
+          type: array
+          items:
+            $ref: "#/components/schemas/TransactionInput"
+        vout:
+          type: array
+          items:
+            $ref: "#/components/schemas/TransactionOutput"
+        extra:
+          type: string
+          example: 012b7c0e7d977e81fd2cbfa9b26d0ef7dd99da38d65ee18f856c52731358bd611d
+
+    TransactionInput:
+      type: object
+      oneOf:
+        - $ref: "#/components/schemas/BaseInput"
+        - $ref: "#/components/schemas/KeyInput"
+        - $ref: "#/components/schemas/MultisignatureInput"
+      discriminator:
+        propertyName: type
+        mapping:
+          "ff": "#/components/schemas/BaseInput"
+          "02": "#/components/schemas/KeyInput"
+          "03": "#/components/schemas/MultisignatureInput"
+
+    BaseInput:
+      type: object
+      properties:
+        type:
+          type: string
+          enum: ["ff"]
+        value:
+          type: object
+          properties:
+            height:
+              type: integer
+              description: The block index.
+              example: 12345
+
+    KeyInput:
+      type: object
+      properties:
+        type:
+          type: string
+          enum: ["02"]
+        value:
+          type: object
+          properties:
+            amount:
+              type: integer
+              description: The amount for the key input.
+            key_offsets:
+              type: array
+              items:
+                type: integer
+              description: The output indexes for the key input.
+            k_image:
+              type: object
+              description: The key image for the key input.
+
+    MultisignatureInput:
+      type: object
+      properties:
+        type:
+          type: string
+          enum: ["03"]
+        value:
+          type: object
+          properties:
+            amount:
+              type: integer
+              description: The amount for the multisignature input.
+            signatures:
+              type: integer
+              description: The signature count for the multisignature input.
+            outputIndex:
+              type: integer
+              description: The output index for the multisignature input.
+            term:
+              type: integer
+              description: The term for the multisignature input.
+
+    TransactionOutput:
+      type: object
+      properties:
+        amount:
+          type: integer
+          description: The amount for the transaction output.
+          example: 6000000
+        target:
+          $ref: "#/components/schemas/TransactionOutputTarget"
+
+    TransactionOutputTarget:
+      type: object
+      oneOf:
+        - $ref: "#/components/schemas/KeyOutput"
+        - $ref: "#/components/schemas/MultisignatureOutput"
+      discriminator:
+        propertyName: type
+        mapping:
+          "02": "#/components/schemas/KeyOutput"
+          "03": "#/components/schemas/MultisignatureOutput"
+
+    KeyOutput:
+      type: object
+      properties:
+        type:
+          type: string
+          enum: ["02"]
+        data:
+          type: object
+          description: The public key for the key output.
+          properties:
+            key:
+              type: string
+              example: 477bddc9954a47aef3d3dc20a071e1955200fcc01a4cf43db7235eafc8da19b4
+
+    MultisignatureOutput:
+      type: object
+      properties:
+        type:
+          type: string
+          enum: ["03"]
+        data:
+          type: object
+          properties:
+            keys:
+              type: array
+              items:
+                type: string
+              description: The public keys for the multisignature output.
+            required_signatures:
+              type: integer
+              description: The required signature count for the multisignature output.
+            term:
+              type: integer
+              description: The term for the multisignature output.

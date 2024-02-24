@@ -23,5 +23,4 @@ compile_commands.json
 *.ipch
 *.bin
 *.json
-*.json
-*.json
+cmake-build*

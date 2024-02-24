@@ -99,5 +99,6 @@ bool createTxExtraWithPaymentId(const std::string& paymentIdString, std::vector<
 //returns false if payment id is not found or parse error
 bool getPaymentIdFromTxExtra(const std::vector<uint8_t>& extra, crypto::Hash& paymentId);
 bool parsePaymentId(const std::string& paymentIdString, crypto::Hash& paymentId);
+bool addPaymentIdToExtra(const std::string &paymentId, std::string &extra);
 
 }

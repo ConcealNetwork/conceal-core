@@ -264,7 +264,7 @@ cn::WalletTransfer convert(const cn::WalletLegacyTransfer& tr) {
 
 namespace cn {
 
-const uint32_t WalletSerializer::SERIALIZATION_VERSION = 5;
+const uint8_t WalletSerializer::SERIALIZATION_VERSION = 5;
 
 void CryptoContext::incIv() {
   uint64_t * i = reinterpret_cast<uint64_t *>(&iv.data[0]);

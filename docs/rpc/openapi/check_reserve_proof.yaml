@@ -1,0 +1,103 @@
+openapi: 3.0.0
+info:
+  title: Conceal Core API Documentation
+  version: "6.7.3"
+  description: API documentation for Conceal Core
+  contact:
+    name: Conceal Help Desk
+    url: https://conceal.network/support
+
+servers:
+  - url: "http://localhost:16000"
+    description: Mainnet local node
+  - url: "http://localhost:16600"
+    description: Testnet local node
+
+tags:
+  - name: JSON-RPC
+
+paths:
+  /json_rpc:
+    post:
+      summary: Check Reserve Proof
+      description: Check the reserve proof using JSON-RPC.
+      operationId: checkReserveProof
+      tags: ["JSON-RPC"]
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CheckReserveProofRequest"
+      responses:
+        "200":
+          description: Successful response.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CheckReserveProofResponse"
+
+components:
+  schemas:
+    CheckReserveProofRequest:
+      type: object
+      properties:
+        jsonrpc:
+          type: string
+          enum: ["2.0"]
+        method:
+          type: string
+          enum: ["check_reserve_proof"]
+        params:
+          $ref: "#/components/schemas/CheckReserveProofParams"
+        id:
+          type: string
+          example: "1"
+      required:
+        - jsonrpc
+        - method
+        - params
+        - id
+
+    CheckReserveProofParams:
+      type: object
+      properties:
+        address:
+          type: string
+          description: The address for the reserve proof.
+          example: ccx7WVMV8EEEQE7GcN9xME6zAK8ZonvqYgA3694nXk97ZsxUGmD5chx48ze9hrhZ4V81bQ7xMMHLkFbB9HtPEcqq3edGYYnahU
+        message:
+          type: string
+          description: The message for the reserve proof.
+          example: concealrpc
+        signature:
+          type: string
+          description: The signature for the reserve proof.
+          example: ReserveProofV194Xs6wZjz4d9u2nsjVtDekA4oqmKtfihoAGFfsMP3aEYHRrsmWdFvdyHRYtWk4rwYYHvmUvAAbebGHdDqw45farP9mJPG9EVEMTHG9nMLUZW1JAGT3BdtffbzJ6SMwkj3ZCN9Ztq7bALP1694iTbpS9Jva9jNMjLjBP4EAbjQTMSvJsc9ZrdEa2rYQB9jShDok8BnJA6hnmoHrk7N9Ru5E9i61yS9w3FrKr2s8FA6fZPisMYZxHHtus4JJ8vW9mM3EHCvHqB9tzeJJbxYueA6ZPm37JCob9Pvnjo5we4JAa2Tk8XP2jZ9GF2gQLrm8eAGSeN8UCAex9GCPofkZoDQHFtoPpu7CjPAGFcUUfmL66A6hmNUYkgDzA4oqGfubEnY96VmHUpFVigAQSpZpLNpif9G83LKWayswAGNFQPV5dhyHFyBFqvbQg39vxroHMtfxtARzVsqpbLE89u5PBLfsS2QJ6WjpYMcDp89GCp7vCGsmA9tzcPJrqK3AJ6UaKcXL376A6kPkKu46E8Hnot1APNWj79G3cndVx9CqAZqUq7jNuWn9ZfdKzuCpRE9mLfDhs81uz9jJMgf9BhKaHxZBQYD9hwxAQKoERs6MQ694VCpyYB5T5HbN9NqktiRTHG9mGGaAzom9EGi7m3MiHF9ZredMP5gHSHTXZv3TttcuHxZBtdaViHe9PtbMRy327K9Zfck9rzEF19Q3QgATkkDvHRpEnn1o8dp9mE4NdXDRfzHbXKDPgWbpHHkxBTJroJ8AHHpUuLK4z6RA535eBU9ykk2Jva4Q
+
+    CheckReserveProofResponse:
+      type: object
+      properties:
+        jsonrpc:
+          type: string
+          enum: ["2.0"]
+        result:
+          $ref: "#/components/schemas/CheckReserveProofResult"
+        id:
+          type: string
+          example: "1"
+
+    CheckReserveProofResult:
+      type: object
+      properties:
+        good:
+          type: boolean
+          description: Whether the reserve proof is valid or not.
+          example: true
+        total:
+          type: integer
+          description: The total amount in the reserve proof.
+          example: 200000000
+        spent:
+          type: integer
+          description: The spent amount from the reserve proof.
+          example: 0

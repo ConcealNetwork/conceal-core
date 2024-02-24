@@ -1,0 +1,302 @@
+openapi: 3.0.0
+info:
+  title: Conceal Core API Documentation
+  version: "6.7.3"
+  description: API documentation for Conceal Core
+  contact:
+    name: Conceal Help Desk
+    url: https://conceal.network/support
+
+servers:
+  - url: "http://localhost:16000"
+    description: Mainnet local node
+  - url: "http://localhost:16600"
+    description: Testnet local node
+
+tags:
+  - name: JSON-RPC
+
+paths:
+  /json_rpc:
+    post:
+      summary: Get Transaction
+      description: Retrieve transaction using JSON-RPC.
+      operationId: getTransaction
+      tags: ["JSON-RPC"]
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/GetTransactionRequest"
+      responses:
+        "200":
+          description: Successful response.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/GetTransactionResponse"
+
+components:
+  schemas:
+    GetTransactionRequest:
+      type: object
+      properties:
+        jsonrpc:
+          type: string
+          enum: ["2.0"]
+        method:
+          type: string
+          enum: ["f_transaction_json"]
+        params:
+          $ref: "#/components/schemas/GetTransactionParams"
+        id:
+          type: string
+          example: "1"
+      required:
+        - jsonrpc
+        - method
+        - params
+        - id
+
+    GetTransactionParams:
+      type: object
+      properties:
+        hash:
+          type: string
+          description: The hash of the transaction.
+          example: d1a55fc4ca4bdc80383d836a5e10e0218cd2ecfa4905f847101b7bdb11531493
+
+    GetTransactionResponse:
+      type: object
+      properties:
+        jsonrpc:
+          type: string
+          enum: ["2.0"]
+        result:
+          $ref: "#/components/schemas/GetTransactionResult"
+        id:
+          type: string
+          example: "1"
+
+    GetTransactionResult:
+      type: object
+      properties:
+        tx:
+          $ref: "#/components/schemas/Transaction"
+        txDetails:
+          $ref: "#/components/schemas/TransactionDetails"
+        block:
+          $ref: "#/components/schemas/BlockShort"
+        status:
+          type: string
+          description: The status of the operation
+          example: OK
+
+    Transaction:
+      type: object
+      properties:
+        version:
+          type: integer
+          description: The version of the transaction.
+          example: 1
+        unlock_time:
+          type: integer
+          description: The unlock time of the transaction.
+          example: 12345
+        vin:
+          type: array
+          items:
+            $ref: "#/components/schemas/TransactionInput"
+        vout:
+          type: array
+          items:
+            $ref: "#/components/schemas/TransactionOutput"
+        extra:
+          type: string
+          example: 012b7c0e7d977e81fd2cbfa9b26d0ef7dd99da38d65ee18f856c52731358bd611d
+        "":
+          type: string
+          description: The transaction signature
+          example: 620a3ed1b6fdccfb694316a08609fc424f3c2af9cc44c1a02243c5c793c37300830f89a052ba3cfd2fd7d346dc7bd3d4e193a5c3f44b93524911dd5fa308b501
+
+    TransactionInput:
+      type: object
+      oneOf:
+        - $ref: "#/components/schemas/BaseInput"
+        - $ref: "#/components/schemas/KeyInput"
+        - $ref: "#/components/schemas/MultisignatureInput"
+      discriminator:
+        propertyName: type
+        mapping:
+          "ff": "#/components/schemas/BaseInput"
+          "02": "#/components/schemas/KeyInput"
+          "03": "#/components/schemas/MultisignatureInput"
+
+    BaseInput:
+      type: object
+      properties:
+        type:
+          type: string
+          enum: ["ff"]
+        value:
+          type: object
+          properties:
+            height:
+              type: integer
+              description: The block index.
+              example: 12345
+
+    KeyInput:
+      type: object
+      properties:
+        type:
+          type: string
+          enum: ["02"]
+        value:
+          type: object
+          properties:
+            amount:
+              type: integer
+              description: The amount for the key input.
+            key_offsets:
+              type: array
+              items:
+                type: integer
+              description: The output indexes for the key input.
+            k_image:
+              type: object
+              description: The key image for the key input.
+
+    MultisignatureInput:
+      type: object
+      properties:
+        type:
+          type: string
+          enum: ["03"]
+        value:
+          type: object
+          properties:
+            amount:
+              type: integer
+              description: The amount for the multisignature input.
+            signatures:
+              type: integer
+              description: The signature count for the multisignature input.
+            outputIndex:
+              type: integer
+              description: The output index for the multisignature input.
+            term:
+              type: integer
+              description: The term for the multisignature input.
+
+    TransactionOutput:
+      type: object
+      properties:
+        amount:
+          type: integer
+          description: The amount for the transaction output.
+          example: 6000000
+        target:
+          $ref: "#/components/schemas/TransactionOutputTarget"
+
+    TransactionOutputTarget:
+      type: object
+      oneOf:
+        - $ref: "#/components/schemas/KeyOutput"
+        - $ref: "#/components/schemas/MultisignatureOutput"
+      discriminator:
+        propertyName: type
+        mapping:
+          "02": "#/components/schemas/KeyOutput"
+          "03": "#/components/schemas/MultisignatureOutput"
+
+    KeyOutput:
+      type: object
+      properties:
+        type:
+          type: string
+          enum: ["02"]
+        data:
+          type: object
+          description: The public key for the key output.
+          properties:
+            key:
+              type: string
+              example: 477bddc9954a47aef3d3dc20a071e1955200fcc01a4cf43db7235eafc8da19b4
+
+    MultisignatureOutput:
+      type: object
+      properties:
+        type:
+          type: string
+          enum: ["03"]
+        data:
+          type: object
+          properties:
+            keys:
+              type: array
+              items:
+                type: string
+              description: The public keys for the multisignature output.
+            required_signatures:
+              type: integer
+              description: The required signature count for the multisignature output.
+            term:
+              type: integer
+              description: The term for the multisignature output.
+
+    TransactionDetails:
+      type: object
+      properties:
+        hash:
+          type: string
+          description: The hash of the transaction.
+          example: d1a55fc4ca4bdc80383d836a5e10e0218cd2ecfa4905f847101b7bdb11531493
+        size:
+          type: integer
+          description: The size of the transaction.
+          example: 79
+        paymentId:
+          type: string
+          description: The payment ID of the transaction.
+          example: ""
+        mixin:
+          type: integer
+          description: The mixin of the transaction.
+          example: 0
+        fee:
+          type: integer
+          description: The fee of the transaction.
+          example: 0
+        amount_out:
+          type: integer
+          description: The amount out in the transaction.
+          example: 6000000
+
+    BlockShort:
+      type: object
+      properties:
+        timestamp:
+          type: integer
+          description: The timestamp of the block.
+          example: 1633510598
+        height:
+          type: integer
+          description: The height of the block.
+          example: 12345
+        difficulty:
+          type: integer
+          description: The difficulty of the block.
+          example: 74
+        hash:
+          type: string
+          description: The hash of the block.
+          example: 20e93738606e150ea3f2dd30b4b60fd9af2db05b6aecdd1201159a4e50455d44
+        tx_count:
+          type: integer
+          description: The number of transactions in the block.
+          example: 1
+        cumul_size:
+          type: integer
+          description: The cumulative size of the block.
+          example: 123

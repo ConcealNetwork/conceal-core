@@ -1,7 +1,7 @@
 cmake_minimum_required(VERSION 3.0)
 
 include(CheckCXXCompilerFlag)
-set(VERSION "6.7.2")
+set(VERSION "6.7.3")
 set(VERSION_BUILD_NO "Trebopala")
 # Packaged from main commits
 set(COMMIT 1db6e66)

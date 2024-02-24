@@ -77,30 +77,6 @@ public:
 
 };
 
-
-class NodeInitObserver {
-public:
-  NodeInitObserver() {
-    initFuture = initPromise.get_future();
-  }
-
-  void initCompleted(std::error_code result) {
-    initPromise.set_value(result);
-  }
-
-  void waitForInitEnd() {
-    std::error_code ec = initFuture.get();
-    if (ec) {
-      throw std::system_error(ec);
-    }
-    return;
-  }
-
-private:
-  std::promise<std::error_code> initPromise;
-  std::future<std::error_code> initFuture;
-};
-
 NodeFactory::NodeFactory() = default;
 
 NodeFactory::~NodeFactory() = default;
@@ -108,8 +84,8 @@ NodeFactory::~NodeFactory() = default;
 cn::INode* NodeFactory::createNode(const std::string& daemonAddress, uint16_t daemonPort) {
   std::unique_ptr<cn::INode> node(new cn::NodeRpcProxy(daemonAddress, daemonPort));
 
-  NodeInitObserver initObserver;
-  node->init(std::bind(&NodeInitObserver::initCompleted, &initObserver, std::placeholders::_1));
+  cn::NodeInitObserver initObserver;
+  node->init(std::bind(&cn::NodeInitObserver::initCompleted, &initObserver, std::placeholders::_1));
   initObserver.waitForInitEnd();
 
   return node.release();
