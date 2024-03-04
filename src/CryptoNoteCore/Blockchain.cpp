@@ -480,12 +480,19 @@ namespace cn
     {
       logger(INFO) << "Loading blockchain";
       BlockCacheSerializer loader(*this, get_block_hash(m_blocks.back().bl), logger.getLogger());
-      loader.load(appendPath(config_folder, m_currency.blocksCacheFileName()));
+      const std::string &blocksCacheFileName = m_currency.blocksCacheFileName();
+      loader.load(appendPath(config_folder, blocksCacheFileName));
 
       if (!loader.loaded())
       {
-        logger(WARNING, BRIGHT_YELLOW) << " No actual blockchain cache found, rebuilding internal structures";
-        rebuildCache();
+        std::string blockCacheBkpFileName = blocksCacheFileName + ".bkp";
+        loader.load(appendPath(config_folder, blockCacheBkpFileName));
+        
+        if (!loader.loaded())
+        {
+          logger(WARNING, BRIGHT_YELLOW) << " No actual blockchain cache found, rebuilding internal structures";
+          rebuildCache();
+        }
       }
       uint64_t checkBlockHeight = 24732;
       uint64_t checkMinimum = 13000000000000;
@@ -736,7 +743,13 @@ namespace cn
 
     logger(INFO, BRIGHT_WHITE) << "Saving blockchain...";
     BlockCacheSerializer ser(*this, getTailId(), logger.getLogger());
-    if (!ser.save(appendPath(m_config_folder, m_currency.blocksCacheFileName())))
+
+    const std::string &blocksCacheFileName = m_currency.blocksCacheFileName();
+    std::string blockCacheBkpFileName = blocksCacheFileName + ".bkp";
+
+    std::rename(blocksCacheFileName.c_str(), blockCacheBkpFileName.c_str()); // fail here can be ignored
+
+    if (!ser.save(appendPath(m_config_folder, blocksCacheFileName)))
     {
       logger(ERROR, BRIGHT_RED) << "Failed to save blockchain cache";
       return false;
