@@ -106,6 +106,10 @@ void core::get_blockchain_top(uint32_t& height, crypto::Hash& top_id) {
   top_id = m_blockchain.getTailId(height);
 }
 
+crypto::Hash core::checkpoint_hash(uint32_t height) {
+  return m_blockchain.getCheckpointHash(height);
+}
+
 bool core::rollback_chain_to(uint32_t height) {
   return m_blockchain.rollbackBlockchainTo(height);
 }

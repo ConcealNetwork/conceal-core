@@ -3287,4 +3287,9 @@ namespace cn
     return m_checkpoints.is_in_checkpoint_zone(height);
   }
 
+  crypto::Hash Blockchain::getCheckpointHash(uint32_t height) const
+  {
+    std::lock_guard<decltype(m_blockchain_lock)> lk(m_blockchain_lock);
+    return m_blockIndex.getHashOfIds(0, height);
+  }
 } // namespace cn

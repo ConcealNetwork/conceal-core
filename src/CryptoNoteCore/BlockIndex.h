@@ -58,6 +58,7 @@ namespace cn
 
     crypto::Hash getBlockId(uint32_t height) const;
     std::vector<crypto::Hash> getBlockIds(uint32_t startBlockIndex, uint32_t maxCount) const;
+    crypto::Hash getHashOfIds(uint32_t startBlockIndex, uint32_t maxCount) const;
     bool findSupplement(const std::vector<crypto::Hash>& ids, uint32_t& offset) const;
     std::vector<crypto::Hash> buildSparseChain(const crypto::Hash& startBlockId) const;
     crypto::Hash getTailId() const;
