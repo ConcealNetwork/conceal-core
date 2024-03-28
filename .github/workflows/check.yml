@@ -64,7 +64,7 @@ jobs:
           cp build/tests/Release/*_tests.exe build/conceal
 
       - name: Upload To GH Artifacts
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: ${{ steps.setup.outputs.release_name }}
           path: build/conceal
@@ -142,7 +142,7 @@ jobs:
           cp build/tests/*_tests.exe build/conceal
 
       - name: Upload To GH Artifacts
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: ${{ steps.setup.outputs.release_name }}
           path: build/conceal
@@ -211,7 +211,7 @@ jobs:
           cp build/tests/*_tests build/conceal
 
       - name: Upload To GH Artifacts
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: ${{ steps.setup.outputs.release_name }}
           path: build/conceal
@@ -281,7 +281,7 @@ jobs:
           cp build/tests/*_tests build/conceal
 
       - name: Upload To GH Artifacts
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: ${{ steps.setup.outputs.release_name }}
           path: build/conceal
@@ -351,7 +351,7 @@ jobs:
           cp build/tests/*_tests build/conceal
 
       - name: Upload To GH Artifacts
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: ${{ steps.setup.outputs.release_name }}
           path: build/conceal
@@ -420,7 +420,7 @@ jobs:
           cp build/tests/*_tests build/conceal
 
       - name: Upload To GH Artifacts
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: ${{ steps.setup.outputs.release_name }}
           path: build/conceal
