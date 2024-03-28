@@ -27,6 +27,7 @@ struct COMMAND_RPC_GET_RANDOM_OUTPUTS_FOR_AMOUNTS_response;
 struct NOTIFY_RESPONSE_GET_OBJECTS_request;
 struct NOTIFY_REQUEST_GET_OBJECTS_request;
 
+class CheckpointList;
 class Currency;
 class IBlock;
 class ICoreObserver;
@@ -65,6 +66,7 @@ public:
   virtual void on_synchronized() = 0;
   virtual size_t addChain(const std::vector<const IBlock*>& chain) = 0;
 
+  virtual const CheckpointList& getCheckpointList() = 0;
   virtual void get_blockchain_top(uint32_t& height, crypto::Hash& top_id) = 0;
   virtual std::vector<crypto::Hash> findBlockchainSupplement(const std::vector<crypto::Hash>& remoteBlockIds, size_t maxCount,
     uint32_t& totalBlockCount, uint32_t& startBlockIndex) = 0;

@@ -20,6 +20,7 @@
 #include "CryptoNoteCore/Currency.h"
 #include "CryptoNoteCore/VerificationContext.h"
 #include "P2p/LevinProtocol.h"
+#include "CryptoNoteCore/CheckpointList.h"
 
 using namespace logging;
 using namespace common;
@@ -50,6 +51,7 @@ CryptoNoteProtocolHandler::CryptoNoteProtocolHandler(const Currency &currency, p
   m_core(rcore),
   m_synchronized(false),
   m_stop(false),
+  m_last_checkpoint_req(0),
   m_observedHeight(0),
   m_peersCount(0),
   logger(log, "protocol"),
@@ -213,6 +215,14 @@ bool CryptoNoteProtocolHandler::process_payload_sync_data(const CORE_SYNC_DATA &
     m_observerManager.notify(&ICryptoNoteProtocolObserver::peerCountUpdated, m_peersCount.load());
   }
 
+  if ( !m_core.getCheckpointList().is_ready() )
+  {
+    // only if checkpoint is loaded
+    NOTIFY_REQUEST_CHECKPOINT_LIST::request req = boost::value_initialized<NOTIFY_REQUEST_CHECKPOINT_LIST::request>();
+    if (!post_notify<NOTIFY_REQUEST_CHECKPOINT_LIST>(*m_p2p, req, context))
+      return false;
+  }
+
   return true;
 }
 
@@ -259,6 +269,8 @@ int CryptoNoteProtocolHandler::handleCommand(bool is_notify, int command, const 
     HANDLE_NOTIFY(NOTIFY_NEW_TRANSACTIONS, &CryptoNoteProtocolHandler::handle_notify_new_transactions)
     HANDLE_NOTIFY(NOTIFY_REQUEST_GET_OBJECTS, &CryptoNoteProtocolHandler::handle_request_get_objects)
     HANDLE_NOTIFY(NOTIFY_RESPONSE_GET_OBJECTS, &CryptoNoteProtocolHandler::handle_response_get_objects)
+    HANDLE_NOTIFY(NOTIFY_REQUEST_CHECKPOINT_LIST, &CryptoNoteProtocolHandler::handle_request_checkpoint_list)
+    HANDLE_NOTIFY(NOTIFY_RESPONSE_CHECKPOINT_LIST, &CryptoNoteProtocolHandler::handle_response_checkpoint_list)
     HANDLE_NOTIFY(NOTIFY_REQUEST_CHAIN, &CryptoNoteProtocolHandler::handle_request_chain)
     HANDLE_NOTIFY(NOTIFY_RESPONSE_CHAIN_ENTRY, &CryptoNoteProtocolHandler::handle_response_chain_entry)
     HANDLE_NOTIFY(NOTIFY_REQUEST_TX_POOL, &CryptoNoteProtocolHandler::handle_request_tx_pool)
@@ -1119,6 +1131,14 @@ int CryptoNoteProtocolHandler::doPushLiteBlock(NOTIFY_NEW_LITE_BLOCK::request ar
   }
 
   return 1;
+}
+
+int CryptoNoteProtocolHandler::handle_request_checkpoint_list(int command, NOTIFY_REQUEST_CHECKPOINT_LIST::request& arg, CryptoNoteConnectionContext& context)
+{
+}
+
+int CryptoNoteProtocolHandler::handle_response_checkpoint_list(int command, NOTIFY_RESPONSE_CHECKPOINT_LIST::request& arg, CryptoNoteConnectionContext& context)
+{
 }
 
 }; // namespace cn

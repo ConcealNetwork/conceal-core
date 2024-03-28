@@ -225,6 +225,9 @@ namespace cn
     typedef NOTIFY_NEW_LITE_BLOCK_request request;
   };
 
+  /************************************************************************/
+  /*                                                                      */
+  /************************************************************************/
   struct NOTIFY_MISSING_TXS_request
   {
     crypto::Hash blockHash;
@@ -243,6 +246,47 @@ namespace cn
   {
     const static int ID = BC_COMMANDS_POOL_BASE + 10;
     typedef NOTIFY_MISSING_TXS_request request;
+  };
+
+  /************************************************************************/
+  /*                                                                      */
+  /************************************************************************/
+  struct NOTIFY_REQUEST_CHECKPOINT_LIST_request
+  {
+    crypto::Hash cur_target_hash;
+    crypto::Hash max_target_hash;
+    uint32_t cur_list_height;
+
+    void serialize(ISerializer &s)
+    {
+      KV_MEMBER(cur_target_hash)
+      KV_MEMBER(max_target_hash)
+      KV_MEMBER(cur_list_height)
+    }
+  };
+
+  struct NOTIFY_REQUEST_CHECKPOINT_LIST
+  {
+    const static int ID = BC_COMMANDS_POOL_BASE + 11;
+    typedef NOTIFY_REQUEST_CHECKPOINT_LIST_request request;
+  };
+
+  struct NOTIFY_RESPONSE_CHECKPOINT_LIST_request
+  {
+    uint32_t list_start_height;
+    std::vector<crypto::Hash> checkpoint_list;
+
+    void serialize(ISerializer &s)
+    {
+      KV_MEMBER(list_start_height)
+      serializeAsBinary(checkpoint_list, "checkpoint_list", s);
+    }
+  };
+
+  struct NOTIFY_RESPONSE_CHECKPOINT_LIST
+  {
+    const static int ID = BC_COMMANDS_POOL_BASE + 12;
+    typedef NOTIFY_RESPONSE_CHECKPOINT_LIST_request request;
   };
 } // namespace cn
 

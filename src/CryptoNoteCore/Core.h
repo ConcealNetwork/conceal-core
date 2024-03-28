@@ -83,6 +83,10 @@ namespace cn {
      
      virtual bool addMessageQueue(MessageQueue<BlockchainMessage>& messageQueue) override;
      virtual bool removeMessageQueue(MessageQueue<BlockchainMessage>& messageQueue) override;
+     
+     virtual const CheckpointList& getCheckpointList() override {
+       return m_blockchain.getCheckpointList();
+     }
 
      uint32_t get_current_blockchain_height();
      bool have_block(const crypto::Hash& id) override;
@@ -118,7 +122,6 @@ namespace cn {
     uint64_t difficultyAtHeight(uint64_t height);
 
     void set_cryptonote_protocol(i_cryptonote_protocol *pprotocol);
-    void set_checkpoints(Checkpoints &&chk_pts);
 
     std::vector<Transaction> getPoolTransactions() override;
     bool getPoolTransaction(const crypto::Hash &tx_hash, Transaction &transaction) override;

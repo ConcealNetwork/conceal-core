@@ -1392,6 +1392,7 @@ namespace cn
     blockIndexesFileName(parameters::CRYPTONOTE_BLOCKINDEXES_FILENAME);
     txPoolFileName(parameters::CRYPTONOTE_POOLDATA_FILENAME);
     blockchinIndicesFileName(parameters::CRYPTONOTE_BLOCKCHAIN_INDICES_FILENAME);
+    checkpointFileName(parameters::CRYPTONOTE_CHECKPOINT_FILENAME);
 
     testnet(false);
   }

@@ -141,6 +141,7 @@ namespace cn
 		const char P2P_NET_DATA_FILENAME[] = "p2pstate.bin";
 		const char CRYPTONOTE_BLOCKCHAIN_INDICES_FILENAME[] = "blockchainindices.dat";
 		const char MINER_CONFIG_FILE_NAME[] = "miner_conf.json";
+		const char CRYPTONOTE_CHECKPOINT_FILENAME[] = "checkpoint.dat";
 
 	} // namespace parameters
 
@@ -191,6 +192,7 @@ namespace cn
 
 	// This defines the minimum P2P version required for lite blocks propogation
 	const uint8_t P2P_LITE_BLOCKS_PROPOGATION_VERSION = 3;
+    const uint8_t P2P_CHECKPOINT_LIST_VERSION = 3;
 
 	const size_t P2P_LOCAL_WHITE_PEERLIST_LIMIT = 1000;
 	const size_t P2P_LOCAL_GRAY_PEERLIST_LIMIT = 5000;
@@ -206,6 +208,7 @@ namespace cn
 	const uint32_t P2P_DEFAULT_PING_CONNECTION_TIMEOUT = 2000; // 2 seconds
 	const uint64_t P2P_DEFAULT_INVOKE_TIMEOUT = 60 * 2 * 1000; // 2 minutes
 	const size_t P2P_DEFAULT_HANDSHAKE_INVOKE_TIMEOUT = 5000;  // 5 seconds
+	const size_t P2P_CHECKPOINT_LIST_RE_REQUEST = 600;  // 10 minutes
 	const char P2P_STAT_TRUSTED_PUB_KEY[] = "f7061e9a5f0d30549afde49c9bfbaa52ac60afdc46304642b460a9ea34bf7a4e";
 
 	// Seed Nodes
@@ -229,6 +232,9 @@ namespace cn
 #ifdef __GNUC__
 	__attribute__((unused))
 #endif
+
+	const char DNS_CHECKPOINT_DOMAIN[] = "checkpoints.conceal.id";
+	const char TESTNET_DNS_CHECKPOINT_DOMAIN[] = "testpoints.conceal.gq";    
 
 	// Blockchain Checkpoints:
 	// {<block height>, "<block hash>"},

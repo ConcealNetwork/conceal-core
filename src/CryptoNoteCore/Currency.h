@@ -148,6 +148,7 @@ namespace cn
     const std::string &blockIndexesFileName() const { return m_blockIndexesFileName; }
     const std::string &txPoolFileName() const { return m_txPoolFileName; }
     const std::string &blockchinIndicesFileName() const { return m_blockchinIndicesFileName; }
+    const std::string &checkpointFileName() const { return m_checkpointFileName; }
 
     bool isTestnet() const { return m_testnet; }
 
@@ -290,6 +291,7 @@ namespace cn
     std::string m_blockIndexesFileName;
     std::string m_txPoolFileName;
     std::string m_blockchinIndicesFileName;
+    std::string m_checkpointFileName;
 
     static const std::vector<uint64_t> REWARD_INCREASING_FACTOR;
 
@@ -632,6 +634,11 @@ namespace cn
     CurrencyBuilder &blockchinIndicesFileName(const std::string &val)
     {
       m_currency.m_blockchinIndicesFileName = val;
+      return *this;
+    }
+    CurrencyBuilder &checkpointFileName(const std::string &val)
+    {
+      m_currency.m_checkpointFileName = val;
       return *this;
     }
 
