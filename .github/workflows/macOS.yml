@@ -36,7 +36,7 @@ jobs:
           echo "ccx_version=${ccx_version}" >> $GITHUB_OUTPUT
 
       - name: Create Release
-        uses: softprops/action-gh-release@v0.1.15
+        uses: softprops/action-gh-release@v2.0.4
         with:
           files: ${{ steps.build.outputs.asset_path }}
           name: Conceal Core CLI v${{ steps.build.outputs.ccx_version }}

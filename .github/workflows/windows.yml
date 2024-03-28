@@ -15,10 +15,10 @@ jobs:
       - uses: actions/checkout@master
 
       - name: Setup msbuild
-        uses: microsoft/setup-msbuild@v1.1.3
+        uses: microsoft/setup-msbuild@v2
 
       - name: Restore Boost
-        uses: actions/cache@v3
+        uses: actions/cache@v4
         id: restore-boost
         with:
           path: ${{env.BOOST_ROOT}}
@@ -55,7 +55,7 @@ jobs:
           echo "ccx_version=${ccx_version}" >> $env:GITHUB_OUTPUT
 
       - name: Create Release
-        uses: softprops/action-gh-release@v0.1.15
+        uses: softprops/action-gh-release@v2.0.4
         with:
           files: ${{ steps.build.outputs.asset_path }}
           name: Conceal Core CLI v${{ steps.build.outputs.ccx_version }}
