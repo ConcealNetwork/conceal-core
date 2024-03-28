@@ -83,6 +83,10 @@ namespace cn {
      
      virtual bool addMessageQueue(MessageQueue<BlockchainMessage>& messageQueue) override;
      virtual bool removeMessageQueue(MessageQueue<BlockchainMessage>& messageQueue) override;
+     
+     virtual CheckpointList& getCheckpointList() override {
+       return m_blockchain.getCheckpointList();
+     }
 
      uint32_t get_current_blockchain_height();
      bool have_block(const crypto::Hash& id) override;
@@ -102,6 +106,10 @@ namespace cn {
      }
      virtual bool queryBlocks(const std::vector<crypto::Hash>& block_ids, uint64_t timestamp,
        uint32_t& start_height, uint32_t& current_height, uint32_t& full_offset, std::vector<BlockFullInfo>& entries) override;
+    
+    virtual std::vector<crypto::Hash> getBlockIds(uint32_t start_height, uint32_t end_height) override {
+      return m_blockchain.getBlockIds(start_height, end_height);
+    }
     virtual bool queryBlocksLite(const std::vector<crypto::Hash>& knownBlockIds, uint64_t timestamp,
       uint32_t& resStartHeight, uint32_t& resCurrentHeight, uint32_t& resFullOffset, std::vector<BlockShortInfo>& entries) override;
     virtual crypto::Hash getBlockIdByHeight(uint32_t height) override;
@@ -118,7 +126,6 @@ namespace cn {
     uint64_t difficultyAtHeight(uint64_t height);
 
     void set_cryptonote_protocol(i_cryptonote_protocol *pprotocol);
-    void set_checkpoints(Checkpoints &&chk_pts);
 
     std::vector<Transaction> getPoolTransactions() override;
     bool getPoolTransaction(const crypto::Hash &tx_hash, Transaction &transaction) override;

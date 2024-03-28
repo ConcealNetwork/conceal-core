@@ -87,10 +87,6 @@ void core::set_cryptonote_protocol(i_cryptonote_protocol* pprotocol) {
   }
 }
 //-----------------------------------------------------------------------------------
-void core::set_checkpoints(Checkpoints&& chk_pts) {
-  m_blockchain.setCheckpoints(std::move(chk_pts));
-}
-//-----------------------------------------------------------------------------------
 void core::init_options(boost::program_options::options_description& /*desc*/) {
 }
 

@@ -355,7 +355,6 @@ namespace cn
     m_blockchainIndexesEnabled(blockchainIndexesEnabled),
     m_blockchainAutosaveEnabled(blockchainAutosaveEnabled),
     logger(logger, "Blockchain")
-
   {
   }
 
@@ -461,7 +460,6 @@ namespace cn
   bool Blockchain::init(const std::string &config_folder, bool load_existing, bool testnet)
   {
     m_testnet = testnet;
-    m_checkpoints.set_testnet(testnet);
     std::lock_guard<decltype(m_blockchain_lock)> lk(m_blockchain_lock);
     if (!config_folder.empty() && !tools::create_directories_if_necessary(config_folder))
     {
@@ -470,6 +468,9 @@ namespace cn
     }
 
     m_config_folder = config_folder;
+
+    m_checkpoints.init_targets(testnet, appendPath(config_folder, m_currency.checkpointFileName()));
+    m_checkpoints.load_checkpoints_from_file();
 
     if (!m_blocks.open(appendPath(config_folder, m_currency.blocksFileName()), appendPath(config_folder, m_currency.blockIndexesFileName()), 1024))
     {
@@ -593,25 +594,44 @@ namespace cn
 
   bool Blockchain::checkCheckpoints(uint32_t &lastValidCheckpointHeight)
   {
-    std::vector<uint32_t> checkpointHeights = m_checkpoints.getCheckpointHeights();
-    for (const auto &checkpointHeight : checkpointHeights)
-    {
-      if (m_blocks.size() <= checkpointHeight)
-      {
-        return true;
-      }
+    bool rv = true;
+    std::vector<std::pair<uint32_t, crypto::Hash>> checkpointHeights = m_checkpoints.get_checkpoint_targets();
+    lastValidCheckpointHeight = 0;
 
-      if (m_checkpoints.check_block(checkpointHeight, getBlockIdByHeight(checkpointHeight)))
+    /* Hashes are in reverse order so if everything is ok we will only do one iteration */
+    for (const auto &check : checkpointHeights)
+    {
+      uint32_t height = check.first;
+      if (m_blocks.size() <= height)
+        continue;
+
+      crypto::Hash hv = m_blockIndex.getHashOfIds(0, height+1);
+      if (hv == check.second)
       {
-        lastValidCheckpointHeight = checkpointHeight;
+        lastValidCheckpointHeight = height;
+        break;
       }
       else
       {
-        return false;
+        logger(ERROR, BRIGHT_RED) << "Checkpoint failed for " << height <<  " got " <<
+            hv  << " expected " << check.second;
+        rv = false;
       }
     }
-    logger(INFO, BRIGHT_WHITE) << "Checkpoints passed";
-    return true;
+
+    if(rv)
+    {
+      logger(INFO, BRIGHT_WHITE) << "Checkpoints passed " << m_checkpoints.get_points_size() << " " << lastValidCheckpointHeight;
+      uint32_t n_valid_blocks = lastValidCheckpointHeight+1;
+      if(m_checkpoints.get_points_size() < n_valid_blocks)
+        m_checkpoints.set_checkpoint_list(m_blockIndex.getBlockIds(0, n_valid_blocks));
+    }
+    else
+    {
+      logger(ERROR, BRIGHT_RED) << "Checkpoints failed, last valid height " << lastValidCheckpointHeight;
+    }
+
+    return rv;
   }
 
   void Blockchain::rebuildCache()
@@ -1403,6 +1423,29 @@ namespace cn
     return true;
   }
 
+  bool Blockchain::is_alternative_block_allowed(uint32_t  blockchain_height, uint32_t  block_height) const {
+    if (0 == block_height)
+      return false;
+
+    uint32_t lowest_height = blockchain_height - cn::parameters::CRYPTONOTE_MINED_MONEY_UNLOCK_WINDOW;
+
+    if (blockchain_height < cn::parameters::CRYPTONOTE_MINED_MONEY_UNLOCK_WINDOW)
+    {
+      lowest_height = 0;
+    }
+
+    if (block_height < lowest_height && !m_checkpoints.is_in_checkpoint_zone(block_height))
+    {
+      logger(logging::DEBUGGING, logging::WHITE)
+          << "<< Checkpoints.cpp << "
+          << "Reorganization depth too deep : " << (blockchain_height - block_height) << ". Block Rejected";
+      return false;
+    }
+
+    uint32_t  checkpoint_height = m_checkpoints.get_greatest_target_height();
+    return checkpoint_height < block_height;
+  }
+
   bool Blockchain::handle_alternative_block(const Block &b, const crypto::Hash &id, block_verification_context &bvc, bool sendNewAlternativeBlockMessage)
   {
     std::lock_guard<decltype(m_blockchain_lock)> lk(m_blockchain_lock);
@@ -1416,10 +1459,8 @@ namespace cn
       return false;
     }
 
-    /* in the absence of a better solution, we fetch checkpoints from dns records */
-    m_checkpoints.load_checkpoints_from_dns();
 
-    if (!m_checkpoints.is_alternative_block_allowed(getCurrentBlockchainHeight(), block_height))
+    if (!is_alternative_block_allowed(getCurrentBlockchainHeight(), block_height))
     {
       logger(DEBUGGING) << "Block with id: " << id << std::endl
                         << " can't be accepted for alternative chain, block height: " << block_height << std::endl
@@ -1514,8 +1555,8 @@ namespace cn
       bei.bl = b;
       bei.height = alt_chain.size() ? it_prev->second.height + 1 : mainPrevHeight + 1;
 
-      bool is_a_checkpoint;
-      if (!m_checkpoints.check_block(bei.height, id, is_a_checkpoint))
+      auto checkpoint_status = m_checkpoints.check_checkpoint(bei.height, id);
+      if ( checkpoint_status == CheckpointList::is_in_zone_failed )
       {
         logger(ERROR, BRIGHT_RED) << "Checkpoint validaton failure";
 
@@ -1581,7 +1622,7 @@ namespace cn
 
       alt_chain.push_back(i_res.first->first);
 
-      if (is_a_checkpoint)
+      if ( checkpoint_status == CheckpointList::is_checkpointed )
       {
         //do reorganize!
         logger(INFO, BRIGHT_GREEN) << "###### REORGANIZE on height: " << m_alternative_chains[alt_chain.front()].height << " of " << m_blocks.size() - 1 << ", checkpoint is found in alternative chain on height " << bei.height;
@@ -2481,15 +2522,13 @@ namespace cn
 
     auto longhashTimeStart = std::chrono::steady_clock::now();
     crypto::Hash proof_of_work = NULL_HASH;
-    if (m_checkpoints.is_in_checkpoint_zone(getCurrentBlockchainHeight()))
+    auto checkpoint_status = m_checkpoints.check_checkpoint(getCurrentBlockchainHeight(), blockHash);
+    if (checkpoint_status == CheckpointList::is_in_zone_failed )
     {
-      if (!m_checkpoints.check_block(getCurrentBlockchainHeight(), blockHash))
-      {
-        bvc.m_verification_failed = true;
-        return false;
-      }
+      bvc.m_verification_failed = true;
+      return false;
     }
-    else
+    else if(checkpoint_status == CheckpointList::is_out_of_zone )
     {
       if (!m_currency.checkProofOfWork(m_cn_context, blockData, currentDifficulty, proof_of_work))
       {
@@ -3290,6 +3329,6 @@ namespace cn
   crypto::Hash Blockchain::getCheckpointHash(uint32_t height) const
   {
     std::lock_guard<decltype(m_blockchain_lock)> lk(m_blockchain_lock);
-    return m_blockIndex.getHashOfIds(0, height);
+    return m_blockIndex.getHashOfIds(0, height+1);
   }
 } // namespace cn
