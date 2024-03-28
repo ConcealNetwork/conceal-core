@@ -83,6 +83,10 @@ namespace cn {
      
      virtual bool addMessageQueue(MessageQueue<BlockchainMessage>& messageQueue) override;
      virtual bool removeMessageQueue(MessageQueue<BlockchainMessage>& messageQueue) override;
+     
+     virtual const CheckpointList& getCheckpointList() override {
+       return m_blockchain.getCheckpointList();
+     }
 
      uint32_t get_current_blockchain_height();
      bool have_block(const crypto::Hash& id) override;
@@ -94,6 +98,7 @@ namespace cn {
      bool get_blocks(uint32_t start_offset, uint32_t count, std::list<Block>& blocks, std::list<Transaction>& txs);
      bool get_blocks(uint32_t start_offset, uint32_t count, std::list<Block>& blocks);
      bool rollback_chain_to(uint32_t height);
+     crypto::Hash checkpoint_hash(uint32_t height);
      template<class t_ids_container, class t_blocks_container, class t_missed_container>
      bool get_blocks(const t_ids_container& block_ids, t_blocks_container& blocks, t_missed_container& missed_bs)
      {
@@ -117,7 +122,6 @@ namespace cn {
     uint64_t difficultyAtHeight(uint64_t height);
 
     void set_cryptonote_protocol(i_cryptonote_protocol *pprotocol);
-    void set_checkpoints(Checkpoints &&chk_pts);
 
     std::vector<Transaction> getPoolTransactions() override;
     bool getPoolTransaction(const crypto::Hash &tx_hash, Transaction &transaction) override;
@@ -160,7 +164,7 @@ namespace cn {
     bool add_new_tx(const Transaction &tx, const crypto::Hash &tx_hash, size_t blob_size, tx_verification_context &tvc, bool keeped_by_block, uint32_t height);
     bool load_state_data();
     bool parse_tx_from_blob(Transaction &tx, crypto::Hash &tx_hash, crypto::Hash &tx_prefix_hash, const BinaryArray &blob);
-    bool handle_incoming_block(const Block &b, block_verification_context &bvc, bool control_miner, bool relay_block);
+    bool handle_incoming_block(const Block &b, block_verification_context &bvc, bool control_miner, bool relay_block) override;
 
     bool check_tx_syntax(const Transaction &tx);
     //check correct values, amounts and all lightweight checks not related with database

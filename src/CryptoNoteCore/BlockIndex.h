@@ -5,6 +5,8 @@
 // Distributed under the MIT/X11 software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
+#pragma once
+
 #include <boost/multi_index_container.hpp>
 #include <boost/multi_index/hashed_index.hpp>
 #include <boost/multi_index/random_access_index.hpp>
@@ -56,6 +58,7 @@ namespace cn
 
     crypto::Hash getBlockId(uint32_t height) const;
     std::vector<crypto::Hash> getBlockIds(uint32_t startBlockIndex, uint32_t maxCount) const;
+    crypto::Hash getHashOfIds(uint32_t startBlockIndex, uint32_t maxCount) const;
     bool findSupplement(const std::vector<crypto::Hash>& ids, uint32_t& offset) const;
     std::vector<crypto::Hash> buildSparseChain(const crypto::Hash& startBlockId) const;
     crypto::Hash getTailId() const;

@@ -34,6 +34,7 @@ DaemonCommandsHandler::DaemonCommandsHandler(cn::core &core, cn::NodeServer &srv
   m_consoleHandler.setHandler("save", boost::bind(&DaemonCommandsHandler::save, this, boost::arg<1>()), "Save the Blockchain data safely");
   m_consoleHandler.setHandler("print_pl", boost::bind(&DaemonCommandsHandler::print_pl, this, boost::arg<1>()), "Print peer list");
   m_consoleHandler.setHandler("rollback_chain", boost::bind(&DaemonCommandsHandler::rollback_chain, this, boost::arg<1>()), "Rollback chain to specific height, rollback_chain <height>");
+  m_consoleHandler.setHandler("checkpoint_hash", boost::bind(&DaemonCommandsHandler::checkpoint_hash, this, boost::arg<1>()), "Calculate checkpoint hash up to <height>");
   m_consoleHandler.setHandler("print_cn", boost::bind(&DaemonCommandsHandler::print_cn, this, boost::arg<1>()), "Print connections");
   m_consoleHandler.setHandler("print_bci", boost::bind(&DaemonCommandsHandler::print_bci, this, boost::arg<1>()), "Print blockchain current height");
   m_consoleHandler.setHandler("print_bc", boost::bind(&DaemonCommandsHandler::print_bc, this, boost::arg<1>()), "Print blockchain info in a given blocks range, print_bc <begin_height> [<end_height>]");
@@ -306,6 +307,25 @@ bool DaemonCommandsHandler::rollback_chain(const std::vector<std::string> &args)
   rollbackchainto(height);
 
   logger(logging::DEBUGGING) << "Finished: rollback_chain";
+  return true;
+}
+
+bool DaemonCommandsHandler::checkpoint_hash(const std::vector<std::string> &args)
+{
+  if (args.empty())
+  {
+    logger(logging::ERROR) << "Usage: \"checkpoint_hash <block_height>\"";
+    return true;
+  }
+  logger(logging::DEBUGGING) << "Attempting: checkpoint_hash";
+
+  const std::string &arg = args.front();
+  uint32_t height = boost::lexical_cast<uint32_t>(arg);
+  crypto::Hash hash = m_core.checkpoint_hash(height);
+  
+  logger(logging::INFO) << "Checkpoint hash: " << hash << " for " << height;
+
+  logger(logging::DEBUGGING) << "Finished: checkpoint_hash";
   return true;
 }
 
