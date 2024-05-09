@@ -1911,9 +1911,6 @@ namespace cn
 
   size_t WalletGreen::transfer(const TransactionParameters &transactionParameters, crypto::SecretKey &transactionSK)
   {
-    tools::ScopeExit releaseContext([this]
-                                    { m_dispatcher.yield(); });
-
     platform_system::EventLock lk(m_readyEvent);
 
     throwIfNotInitialized();
@@ -2033,9 +2030,6 @@ namespace cn
 
   size_t WalletGreen::makeTransaction(const TransactionParameters &sendingTransaction)
   {
-    tools::ScopeExit releaseContext([this]
-                                    { m_dispatcher.yield(); });
-
     platform_system::EventLock lk(m_readyEvent);
 
     throwIfNotInitialized();
@@ -2087,10 +2081,6 @@ namespace cn
 
   void WalletGreen::rollbackUncommitedTransaction(size_t transactionId)
   {
-    tools::ScopeExit releaseContext([this] {
-      m_dispatcher.yield();
-    });
-
     platform_system::EventLock lk(m_readyEvent);
 
     throwIfNotInitialized();
@@ -4025,13 +4015,8 @@ namespace cn
       const std::vector<std::string> &sourceAddresses,
       const std::string &destinationAddress)
   {
-
-    size_t id = WALLET_INVALID_TRANSACTION_ID;
-    tools::ScopeExit releaseContext([this] {
-      m_dispatcher.yield();
-    });
-
     platform_system::EventLock lk(m_readyEvent);
+    size_t id = WALLET_INVALID_TRANSACTION_ID;
 
     throwIfNotInitialized();
     throwIfTrackingMode();
