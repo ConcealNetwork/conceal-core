@@ -89,7 +89,7 @@ jobs:
         run: |
           cd build/conceal
           ./performance_tests.exe
-      
+
       - name: unit_tests
         shell: powershell
         run: |
@@ -167,7 +167,7 @@ jobs:
         run: |
           cd build/conceal
           ./performance_tests.exe
-      
+
       - name: unit_tests
         shell: powershell
         run: |
@@ -254,6 +254,76 @@ jobs:
         id: setup
         run: |
           os=ubuntu-22.04
+          ccx_version=${GITHUB_SHA::7}
+          release_name=ccx-cli-"$os"-dev-"$ccx_version"
+          echo "release_name=${release_name}" >> $GITHUB_OUTPUT
+
+      - name: Install dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y make cmake gcc g++ libboost-all-dev
+
+      - name: Build
+        id: build
+        run: |
+          mkdir build
+          cd build
+          cmake .. -DCMAKE_BUILD_TYPE=Release -DBUILD_TESTS=ON -DSTATIC=ON
+          make -j2
+
+      - name: Prepare release
+        run: |
+          mkdir build/conceal
+          mv build/src/conceald build/conceal
+          mv build/src/concealwallet build/conceal
+          mv build/src/optimizer build/conceal
+          mv build/src/walletd build/conceal
+          cp build/tests/*_tests build/conceal
+
+      - name: Upload To GH Artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ steps.setup.outputs.release_name }}
+          path: build/conceal
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: core_tests
+        run: |
+          cd build/conceal
+          ./core_tests --generate_and_play_test_data
+
+      - name: difficulty_tests
+        run: |
+          cp tests/Difficulty/data.txt build/conceal
+          cd build/conceal
+          ./difficulty_tests data.txt
+
+      - name: performance_tests
+        run: |
+          cd build/conceal
+          ./performance_tests
+
+      - name: system_tests
+        run: |
+          cd build/conceal
+          ./system_tests
+
+      - name: unit_tests
+        run: |
+          cd build/tests
+          ctest -R UnitTests --output-on-failure
+
+  build-ubuntu24:
+    name: Ubuntu 24.04
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@master
+
+      - name: Prepare version
+        id: setup
+        run: |
+          os=ubuntu-24.04
           ccx_version=${GITHUB_SHA::7}
           release_name=ccx-cli-"$os"-dev-"$ccx_version"
           echo "release_name=${release_name}" >> $GITHUB_OUTPUT
