@@ -2134,7 +2134,7 @@ namespace cn
     size_t txId = m_transactions.get<RandomAccessIndex>().size();
     m_transactions.get<RandomAccessIndex>().push_back(std::move(insertTx));
 
-    pushEvent(makeTransactionCreatedEvent(txId));
+    pushEvent(makeTransactionSendEvent(txId));
 
     return txId;
   }
@@ -4782,6 +4782,15 @@ namespace cn
   }
 
   cn::WalletEvent WalletGreen::makeTransactionCreatedEvent(size_t id)
+  {
+    cn::WalletEvent event;
+    event.type = cn::WalletEventType::TRANSACTION_CREATED;
+    event.transactionCreated.transactionIndex = id;
+    m_observerManager.notify(&IWalletObserver::externalTransactionCreated, id);
+    return event;
+  }
+
+  cn::WalletEvent WalletGreen::makeTransactionSendEvent(size_t id)
   {
     cn::WalletEvent event;
     event.type = cn::WalletEventType::TRANSACTION_CREATED;

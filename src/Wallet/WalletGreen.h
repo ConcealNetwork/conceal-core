@@ -389,6 +389,7 @@ protected:
 
   cn::WalletEvent makeTransactionUpdatedEvent(size_t id);
   cn::WalletEvent makeTransactionCreatedEvent(size_t id);
+  cn::WalletEvent makeTransactionSendEvent(size_t id);
   cn::WalletEvent makeMoneyUnlockedEvent();
   cn::WalletEvent makeSyncProgressUpdatedEvent(uint32_t current, uint32_t total);
   cn::WalletEvent makeSyncCompletedEvent();
