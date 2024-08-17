@@ -27,6 +27,8 @@ struct CryptoNoteConnectionContext {
   uint32_t m_remote_port = 0;
   bool m_is_income = false;
   time_t m_started = 0;
+  bool m_checkpoints_not_in_sync = false;
+  bool m_active_checkpoint_req = false;
 
   enum state {
     state_befor_handshake = 0, //default state

@@ -20,6 +20,7 @@
 #include "CryptoNoteCore/Currency.h"
 #include "CryptoNoteCore/VerificationContext.h"
 #include "P2p/LevinProtocol.h"
+#include "CryptoNoteCore/CheckpointList.h"
 
 using namespace logging;
 using namespace common;
@@ -50,6 +51,7 @@ CryptoNoteProtocolHandler::CryptoNoteProtocolHandler(const Currency &currency, p
   m_core(rcore),
   m_synchronized(false),
   m_stop(false),
+  m_last_checkpoint_req(0),
   m_observedHeight(0),
   m_peersCount(0),
   logger(log, "protocol"),
@@ -193,10 +195,10 @@ bool CryptoNoteProtocolHandler::process_payload_sync_data(const CORE_SYNC_DATA &
   {
     int64_t diff = static_cast<int64_t>(hshd.current_height) - static_cast<int64_t>(get_current_blockchain_height());
 
-    logger(diff >= 0 ? (is_inital ? logging::INFO : DEBUGGING) : logging::TRACE)  << context << "Unknown top block: " << get_current_blockchain_height() << " -> " << hshd.current_height
-                                                                                          << std::endl
-                                                                                          
-                                                                                          << "Synchronization started";
+    logger(diff >= 0 ? (is_inital ? logging::INFO : DEBUGGING) : logging::TRACE)  << context 
+              << "Unknown top block: " << get_current_blockchain_height() << " -> " << hshd.current_height
+              << std::endl
+              << "Synchronization started";
 
     logger(DEBUGGING) << "Remote top block height: " << hshd.current_height << ", id: " << hshd.top_id;
     //let the socket to send response to handshake, but request callback, to let send request data after response
@@ -211,6 +213,29 @@ bool CryptoNoteProtocolHandler::process_payload_sync_data(const CORE_SYNC_DATA &
   {
     m_peersCount++;
     m_observerManager.notify(&ICryptoNoteProtocolObserver::peerCountUpdated, m_peersCount.load());
+  }
+
+  if (context.version < cn::P2P_CHECKPOINT_LIST_VERSION || context.m_checkpoints_not_in_sync || context.m_active_checkpoint_req)
+    return true;
+
+  uint64_t time_now = time(nullptr);
+  uint64_t last_request = time_now - m_last_checkpoint_req.load();
+  if (last_request > P2P_CHECKPOINT_LIST_RE_REQUEST)
+    return true;
+
+  auto cl_status = m_core.getCheckpointList().get_incomplete_checkpoint_target();
+  if ( cl_status.target_hash != NULL_HASH )
+  {
+    NOTIFY_REQUEST_CHECKPOINT_LIST::request req = boost::value_initialized<NOTIFY_REQUEST_CHECKPOINT_LIST::request>();
+    req.target_hash = cl_status.target_hash;
+    req.start_height = cl_status.start_height;
+    req.end_height = cl_status.end_height;
+  
+    if (!post_notify<NOTIFY_REQUEST_CHECKPOINT_LIST>(*m_p2p, req, context))
+      return false;
+
+    m_last_checkpoint_req = time_now;
+    context.m_active_checkpoint_req = true;
   }
 
   return true;
@@ -259,6 +284,8 @@ int CryptoNoteProtocolHandler::handleCommand(bool is_notify, int command, const 
     HANDLE_NOTIFY(NOTIFY_NEW_TRANSACTIONS, &CryptoNoteProtocolHandler::handle_notify_new_transactions)
     HANDLE_NOTIFY(NOTIFY_REQUEST_GET_OBJECTS, &CryptoNoteProtocolHandler::handle_request_get_objects)
     HANDLE_NOTIFY(NOTIFY_RESPONSE_GET_OBJECTS, &CryptoNoteProtocolHandler::handle_response_get_objects)
+    HANDLE_NOTIFY(NOTIFY_REQUEST_CHECKPOINT_LIST, &CryptoNoteProtocolHandler::handle_request_checkpoint_list)
+    HANDLE_NOTIFY(NOTIFY_RESPONSE_CHECKPOINT_LIST, &CryptoNoteProtocolHandler::handle_response_checkpoint_list)
     HANDLE_NOTIFY(NOTIFY_REQUEST_CHAIN, &CryptoNoteProtocolHandler::handle_request_chain)
     HANDLE_NOTIFY(NOTIFY_RESPONSE_CHAIN_ENTRY, &CryptoNoteProtocolHandler::handle_response_chain_entry)
     HANDLE_NOTIFY(NOTIFY_REQUEST_TX_POOL, &CryptoNoteProtocolHandler::handle_request_tx_pool)
@@ -1116,6 +1143,48 @@ int CryptoNoteProtocolHandler::doPushLiteBlock(NOTIFY_NEW_LITE_BLOCK::request ar
         context.m_state = CryptoNoteConnectionContext::state_shutdown;
       }
     }
+  }
+
+  return 1;
+}
+
+int CryptoNoteProtocolHandler::handle_request_checkpoint_list(int command, NOTIFY_REQUEST_CHECKPOINT_LIST::request& arg, CryptoNoteConnectionContext& context)
+{
+  NOTIFY_RESPONSE_CHECKPOINT_LIST::request rsp;
+  rsp.list_start_height = arg.start_height;
+  rsp.checkpoint_list = m_core.getBlockIds(arg.start_height, arg.end_height);
+  
+  crypto::Hash hv = crypto::cn_fast_hash(rsp.checkpoint_list.data(), rsp.checkpoint_list.size() * sizeof(crypto::Hash));
+  if ( hv != arg.target_hash || rsp.checkpoint_list.size() == 0)
+  {
+    logger(logging::ERROR) << context << " peer requested different hash for start_height " << arg.start_height
+                      << " end_height " << arg.end_height << " checkpoint list size " << rsp.checkpoint_list.size()
+                      << " I have hash " << hv << " peer wants " << arg.target_hash;
+
+    rsp.checkpoint_list.clear();
+    rsp.list_start_height = 0;
+    context.m_checkpoints_not_in_sync = true;
+  }
+  
+  if (!post_notify<NOTIFY_RESPONSE_CHECKPOINT_LIST>(*m_p2p, rsp, context))
+    context.m_state = CryptoNoteConnectionContext::state_shutdown;
+  return 1;
+}
+
+int CryptoNoteProtocolHandler::handle_response_checkpoint_list(int command, NOTIFY_RESPONSE_CHECKPOINT_LIST::request& arg, CryptoNoteConnectionContext& context)
+{
+  if( !context.m_active_checkpoint_req )
+  {
+    context.m_state = CryptoNoteConnectionContext::state_shutdown;
+    return 1;
+  }
+
+  m_last_checkpoint_req = 0;
+  context.m_active_checkpoint_req = false;
+
+  if( arg.checkpoint_list.size() == 0 || !m_core.getCheckpointList().add_checkpoint_list(arg.list_start_height, arg.checkpoint_list) )
+  {
+    context.m_checkpoints_not_in_sync = true;
   }
 
   return 1;

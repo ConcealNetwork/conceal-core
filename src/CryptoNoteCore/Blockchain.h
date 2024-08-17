@@ -15,7 +15,7 @@
 #include "Common/ObserverManager.h"
 #include "Common/Util.h"
 #include "CryptoNoteCore/BlockIndex.h"
-#include "CryptoNoteCore/Checkpoints.h"
+#include "CryptoNoteCore/CheckpointList.h"
 #include "CryptoNoteCore/Currency.h"
 #include "CryptoNoteCore/DepositIndex.h"
 #include "CryptoNoteCore/IBlockchainStorageObserver.h"
@@ -68,7 +68,6 @@ namespace cn
     bool getLowerBound(uint64_t timestamp, uint64_t startOffset, uint32_t &height);
     std::vector<crypto::Hash> getBlockIds(uint32_t startHeight, uint32_t maxCount);
 
-    void setCheckpoints(Checkpoints &&chk_pts) { m_checkpoints = std::move(chk_pts); }
     bool getBlocks(uint32_t start_offset, uint32_t count, std::list<Block> &blocks, std::list<Transaction> &txs);
     bool getBlocks(uint32_t start_offset, uint32_t count, std::list<Block> &blocks);
     bool getAlternativeBlocks(std::list<Block> &blocks);
@@ -83,6 +82,10 @@ namespace cn
 
     bool haveTransaction(const crypto::Hash &id);
     bool haveTransactionKeyImagesAsSpent(const Transaction &tx);
+
+    CheckpointList& getCheckpointList() {
+      return m_checkpoints;
+    }
 
     uint32_t getCurrentBlockchainHeight(); // TODO rename to getCurrentBlockchainSize
     crypto::Hash getTailId();
@@ -125,6 +128,7 @@ namespace cn
     uint64_t coinsEmittedAtHeight(uint64_t height);
     uint64_t difficultyAtHeight(uint64_t height);
     bool isInCheckpointZone(const uint32_t height) const;
+    crypto::Hash getCheckpointHash(uint32_t height) const;
 
     template <class visitor_t>
     bool scanOutputKeysForIndexes(const KeyInput &tx_in_to_key, visitor_t &vis, uint32_t *pmax_related_block_height = nullptr);
@@ -284,7 +288,7 @@ namespace cn
     outputs_container m_outputs;
 
     std::string m_config_folder;
-    Checkpoints m_checkpoints;
+    CheckpointList m_checkpoints;
     std::atomic<bool> m_is_in_checkpoint_zone;
 
     using Blocks = SwappedVector<BlockEntry>;
@@ -319,6 +323,7 @@ namespace cn
 
 
     bool switch_to_alternative_blockchain(const std::list<crypto::Hash> &alt_chain, bool discard_disconnected_chain);
+    bool is_alternative_block_allowed(uint32_t  blockchain_height, uint32_t  block_height) const;
     bool handle_alternative_block(const Block &b, const crypto::Hash &id, block_verification_context &bvc, bool sendNewAlternativeBlockMessage = true);
     difficulty_type get_next_difficulty_for_alternative_chain(const std::list<crypto::Hash> &alt_chain, const BlockEntry &bei);
     void pushToDepositIndex(const BlockEntry &block, uint64_t interest);
