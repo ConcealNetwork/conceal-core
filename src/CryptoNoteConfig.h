@@ -9,6 +9,7 @@
 #pragma once
 
 #include <cstdint>
+#include <cstddef>
 #include <initializer_list>
 
 namespace cn
@@ -141,6 +142,29 @@ namespace cn
 		const char P2P_NET_DATA_FILENAME[] = "p2pstate.bin";
 		const char CRYPTONOTE_BLOCKCHAIN_INDICES_FILENAME[] = "blockchainindices.dat";
 		const char MINER_CONFIG_FILE_NAME[] = "miner_conf.json";
+
+		// Memory management constants
+		const uint32_t ABSOLUTE_MIN_OBJECTS = 200;      // Minimum for basic operation
+		const uint32_t ABSOLUTE_MAX_OBJECTS = 2000;     // Conservative max (~70MB max memory usage)
+		const uint32_t FALLBACK_OBJECT_COUNT = 500;     // Default when memory check fails
+		const uint32_t MEMORY_CHECK_INTERVAL = DIFFICULTY_TARGET * 5;  // Check every 5 blocks
+		constexpr double MEMORY_DEDICATED_PERCENTAGE = 0.7;  // Use 70% of available memory
+		const uint64_t AVG_BLOCK_SIZE_KB = 30;        // Average block size
+		const uint64_t AVG_TRANSACTION_SIZE_KB = 2;   // Average transaction size
+		const uint64_t MEMORY_OVERHEAD_KB = 3;        // Memory overhead per object
+		const uint64_t TOTAL_OBJECT_SIZE_KB = AVG_BLOCK_SIZE_KB + AVG_TRANSACTION_SIZE_KB + MEMORY_OVERHEAD_KB;
+
+		// Memory management constants validation
+		static_assert(AVG_BLOCK_SIZE_KB > 0, "Average block size must be positive");
+		static_assert(AVG_TRANSACTION_SIZE_KB > 0, "Average transaction size must be positive");
+		static_assert(MEMORY_OVERHEAD_KB > 0, "Memory overhead must be positive");
+		static_assert(MEMORY_DEDICATED_PERCENTAGE * MEMORY_DEDICATED_PERCENTAGE < 0.64,
+					 "Memory dedicated percentage must be less than 0.8 (square root of 0.64)");
+		static_assert(TOTAL_OBJECT_SIZE_KB > 0, "Total object size must be positive");
+		static_assert(ABSOLUTE_MIN_OBJECTS > 0, "Minimum object count must be positive");
+		static_assert(ABSOLUTE_MAX_OBJECTS > ABSOLUTE_MIN_OBJECTS, 
+					 "Maximum object count must be greater than minimum");
+
 
 	} // namespace parameters
 
