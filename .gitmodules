@@ -1,4 +1,0 @@
-[submodule "cryptonote"]
-	path = cryptonote
-	url = git@github.com:Acktarius/cryptonote.git
-	branch = ack/fix-paimentId
