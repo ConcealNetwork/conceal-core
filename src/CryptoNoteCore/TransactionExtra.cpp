@@ -310,7 +310,22 @@ namespace cn
 
   bool parsePaymentId(const std::string &paymentIdString, Hash &paymentId)
   {
-    return common::podFromHex(paymentIdString, paymentId);
+    // If input looks like transaction extra data (35 bytes)
+    if (paymentIdString.length() == 35) {
+        std::vector<uint8_t> extraNonce;
+        extraNonce.resize(paymentIdString.length() - 2); // Skip TX_EXTRA_NONCE tag
+        memcpy(extraNonce.data(), paymentIdString.data() + 2, paymentIdString.length() - 2);
+        
+        if (getPaymentIdFromTransactionExtraNonce(extraNonce, paymentId)) {
+            return true;
+        }
+    }
+    // Try parsing as hex string
+    if (paymentIdString.length() == 64) {
+        return common::podFromHex(paymentIdString, paymentId);
+    }
+    
+    return false;
   }
 
   bool createTxExtraWithPaymentId(const std::string &paymentIdString, std::vector<uint8_t> &extra)
