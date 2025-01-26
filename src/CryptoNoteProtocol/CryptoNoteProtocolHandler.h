@@ -9,7 +9,6 @@
 
 #include <atomic>
 #include <cstdint>
-#include <chrono>
 
 #include <Common/ObserverManager.h>
 #include "../CryptoNoteConfig.h"
