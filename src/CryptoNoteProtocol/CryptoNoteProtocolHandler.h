@@ -120,16 +120,10 @@ namespace cn
 
     std::atomic<size_t> m_peersCount;
     tools::ObserverManager<ICryptoNoteProtocolObserver> m_observerManager;
-
-    std::atomic<uint32_t> m_maxObjectCount;
-    static constexpr uint32_t MEMORY_CHECK_INTERVAL = cn::parameters::MEMORY_CHECK_INTERVAL;
-    std::chrono::steady_clock::time_point m_lastMemoryCheck;
-    mutable std::mutex m_memoryCheckMutex;
     
+    std::atomic<uint32_t> m_maxObjectCount;
     uint64_t getAvailableMemory() const;
     uint32_t calculateMaxObjectCount() const;
-
-    void updateMemoryLimit();
 
   };
 }

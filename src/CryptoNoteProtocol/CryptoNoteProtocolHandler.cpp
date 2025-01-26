@@ -20,13 +20,12 @@
 #include "CryptoNoteCore/Currency.h"
 #include "CryptoNoteCore/VerificationContext.h"
 #include "P2p/LevinProtocol.h"
-#include <iostream>
+
 #include "../CryptoNoteConfig.h"
 #include <cstdint>  // for UINT64_MAX
 #ifdef __linux__
 #include <sys/sysinfo.h>
 #endif
-#include <boost/algorithm/clamp.hpp>
 
 using namespace logging;
 using namespace common;
@@ -51,6 +50,7 @@ void relay_post_notify(IP2pEndpoint &p2p, typename t_parametr::request &arg, con
 
 } // namespace
 
+
 CryptoNoteProtocolHandler::CryptoNoteProtocolHandler(const Currency &currency, platform_system::Dispatcher &dispatcher, ICore &rcore, IP2pEndpoint *p_net_layout, logging::ILogger &log) :
   m_currency(currency),
   m_p2p(p_net_layout),
@@ -60,16 +60,14 @@ CryptoNoteProtocolHandler::CryptoNoteProtocolHandler(const Currency &currency, p
   m_observedHeight(0),
   m_peersCount(0),
   logger(log, "protocol"),
-  m_dispatcher(dispatcher)
-  {
-      std::cout << "\n=== Memory Management Configuration ===" << std::endl;
-      std::cout << "Initial max object count: " << m_maxObjectCount << std::endl;
-      std::cout << "Memory check interval: " << MEMORY_CHECK_INTERVAL << " seconds" << std::endl;
-      std::cout << "Memory dedicated percentage: " << (cn::parameters::MEMORY_DEDICATED_PERCENTAGE * 100) << "%" << std::endl;
-      std::cout << "==================================\n" << std::endl;
-    if (!m_p2p)
-      m_p2p = &m_p2p_stub;
-  }
+  m_dispatcher(dispatcher),
+  m_maxObjectCount(calculateMaxObjectCount())
+{
+  logger(INFO) << "Max object count: " << m_maxObjectCount;
+
+  if (!m_p2p)
+    m_p2p = &m_p2p_stub;
+}
 
 size_t CryptoNoteProtocolHandler::getPeerCount() const
 {
@@ -405,17 +403,16 @@ int CryptoNoteProtocolHandler::handle_request_get_objects(int command, NOTIFY_RE
 {
   logger(logging::TRACE) << context << "NOTIFY_REQUEST_GET_OBJECTS";
 
-  // Update memory limit if needed
-  updateMemoryLimit();
-
+  uint32_t maxObjects = m_maxObjectCount.load();
   const size_t totalObjects = arg.blocks.size() + arg.txs.size();
 
-  std::cout << "DEBUG: Request for " << totalObjects << " objects (limit: " << m_maxObjectCount << ")" << std::endl;
+  logger(INFO) << "DEBUG: Request for " << totalObjects << " objects (limit: " << maxObjects << ")";
 
-  if (totalObjects > m_maxObjectCount)
+
+  if (totalObjects > maxObjects)
   {
-    logger(logging::ERROR) << context << "Requested objects count exceeds current memory-based limit of " 
-                          << m_maxObjectCount << ": blocks " << arg.blocks.size() 
+    logger(logging::ERROR) << context << "Requested objects count exceeds limit of " 
+                          << maxObjects << ": blocks " << arg.blocks.size() 
                           << " + txs " << arg.txs.size() << " = " << totalObjects;
     context.m_state = CryptoNoteConnectionContext::state_shutdown;
     return 1;
@@ -616,13 +613,14 @@ int CryptoNoteProtocolHandler::processObjects(CryptoNoteConnectionContext& conte
   }
 
   return 0;
-
 }
+
 
 bool CryptoNoteProtocolHandler::on_idle()
 {
   return m_core.on_idle();
 }
+
 
 int CryptoNoteProtocolHandler::handle_request_chain(int command, NOTIFY_REQUEST_CHAIN::request &arg, CryptoNoteConnectionContext &context)
 {
@@ -1148,10 +1146,8 @@ uint64_t CryptoNoteProtocolHandler::getAvailableMemory() const {
     MEMORYSTATUSEX memInfo;
     memInfo.dwLength = sizeof(MEMORYSTATUSEX);
     if (GlobalMemoryStatusEx(&memInfo)) {
-        std::cout << "DEBUG: Windows available memory: " << (memInfo.ullAvailPhys / (1024*1024)) << "MB" << std::endl;
         return memInfo.ullAvailPhys;
     }
-    std::cout << "DEBUG: Failed to get Windows memory info!" << std::endl;
     logger(ERROR) << "Failed to get Windows memory info: " << GetLastError();
     return 0;
 #else
@@ -1159,90 +1155,23 @@ uint64_t CryptoNoteProtocolHandler::getAvailableMemory() const {
     if (sysinfo(&memInfo) == 0) {
         uint64_t available = memInfo.freeram;
         available *= memInfo.mem_unit;
-        std::cout << "DEBUG: Linux available memory: " << (available / (1024*1024)) << "MB" << std::endl;
         return available;
     }
-    std::cout << "DEBUG: Failed to get Linux memory info!" << std::endl;
     logger(ERROR) << "Failed to get system memory info: " << errno;
     return 0;
 #endif
 }
 
-uint32_t clampValue(uint32_t value, uint32_t min, uint32_t max) {
-    if (value < min) return min;
-    if (value > max) return max;
-    return value;
-}
-
 uint32_t CryptoNoteProtocolHandler::calculateMaxObjectCount() const {
     uint64_t availableMB = getAvailableMemory() / (1024 * 1024);
-    
-    std::cout << "DEBUG: Available memory (MB): " << availableMB << std::endl;
-    
-    if (availableMB == 0) {
-        std::cout << "DEBUG: Memory check failed, using fallback count: " << cn::parameters::FALLBACK_OBJECT_COUNT << std::endl;
-        logger(logging::WARNING) << "Memory check failed, using fallback count: " << cn::parameters::FALLBACK_OBJECT_COUNT;
-        return cn::parameters::FALLBACK_OBJECT_COUNT;
-    }
-    
-    // Ensure we don't overflow
-    if (availableMB > UINT64_MAX / 1024) {
-        std::cout << "DEBUG: Memory size overflow, using maximum limit" << std::endl;
-        logger(logging::WARNING) << "Memory size overflow, using maximum limit";
-        return cn::parameters::ABSOLUTE_MAX_OBJECTS;
+      
+    if (availableMB < cn::parameters::MIN_MEMORY_MB) {
+        logger(logging::WARNING) << "Memory check failed or small value, using fallback max objects";
+        return cn::parameters::FALLBACK_MAX_OBJECTS;
     }
 
-    // Use dedicated percentage of memory directly
-    availableMB = availableMB * cn::parameters::MEMORY_DEDICATED_PERCENTAGE;
-    std::cout << "DEBUG: Reserved memory (MB): " << availableMB << std::endl;
-    
-    // Sanity check the result
-    if (availableMB == 0) {
-        std::cout << "DEBUG: Available memory after reserve is 0, using minimum limit" << std::endl;
-        logger(logging::WARNING) << "Available memory after reserve is 0, using minimum limit";
-        return cn::parameters::ABSOLUTE_MIN_OBJECTS;
-    }
-
-    uint32_t maxCount = (availableMB * 1024) / cn::parameters::TOTAL_OBJECT_SIZE_KB;
-    std::cout << "DEBUG: Calculated max count before limits: " << maxCount << std::endl;
-    
-    uint32_t finalCount = boost::algorithm::clamp(maxCount, 
-                                                cn::parameters::ABSOLUTE_MIN_OBJECTS, 
-                                                cn::parameters::ABSOLUTE_MAX_OBJECTS);
-    std::cout << "DEBUG: Final max count after limits: " << finalCount << std::endl;
-
-    logger(DEBUGGING) << "Memory limit calculation: " 
-                      << availableMB << "MB available, "
-                      << "max objects: " << finalCount;
-
-    return finalCount;
+    // If we have enough memory, use max objects which would be a key value to prevent DDOS attack
+    return cn::parameters::ABSOLUTE_MAX_OBJECTS;
 }
 
-void CryptoNoteProtocolHandler::updateMemoryLimit() {
-  std::lock_guard<std::mutex> lock(m_memoryCheckMutex);
-  auto now = std::chrono::steady_clock::now();
-  auto elapsed = std::chrono::duration_cast<std::chrono::seconds>(now - m_lastMemoryCheck).count();
-  
-  std::cout << "\n=== Memory Check Update ===" << std::endl;
-  std::cout << "DEBUG: Time since last memory check (seconds): " << elapsed << std::endl;
-  
-  if (elapsed >= MEMORY_CHECK_INTERVAL) {
-    std::cout << "DEBUG: Updating memory limit..." << std::endl;
-    uint32_t newLimit = calculateMaxObjectCount();
-    uint32_t oldLimit = m_maxObjectCount.load();
-    
-    if (newLimit != oldLimit) {
-      std::cout << "DEBUG: Limit changed: " << oldLimit << " -> " << newLimit << std::endl;
-      logger(DEBUGGING) << "Memory-based object limit updated: " << oldLimit << " -> " << newLimit 
-                       << " (Available memory: " << (getAvailableMemory() / (1024*1024)) << "MB)";
-    } else {
-      std::cout << "DEBUG: Limit unchanged: " << oldLimit << std::endl;
-    }
-    
-    m_maxObjectCount.store(newLimit);
-    m_lastMemoryCheck = now;
-  } else {
-    std::cout << "DEBUG: Skipping update, not enough time elapsed" << std::endl;
-  }
-}
 }; // namespace cn
