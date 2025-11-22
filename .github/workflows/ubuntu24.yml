@@ -1,4 +1,4 @@
-name: Ubuntu 20.04
+name: Ubuntu 24.04
 
 on:
   push:
@@ -6,9 +6,9 @@ on:
       - "*"
 
 jobs:
-  build-ubuntu20:
-    name: Ubuntu 20.04
-    runs-on: ubuntu-20.04
+  build-ubuntu24:
+    name: Ubuntu 24.04
+    runs-on: ubuntu-24.04
     steps:
       - uses: actions/checkout@master
 
@@ -24,7 +24,7 @@ jobs:
           build_folder="build/debug"
           ccx_version=$(echo "$GITHUB_REF" | sed 's|refs/tags/||')
           ccx_ver_folder=$(echo $ccx_version | sed 's/\.//g')
-          release_name=ccx-cli-ubuntu-2004-v"$ccx_version"
+          release_name=ccx-cli-ubuntu-2404-v"$ccx_version"
           mkdir -p "$build_folder"
           cd "$build_folder"
           cmake ../.. -DCMAKE_BUILD_TYPE=Release -DSTATIC=ON
@@ -43,12 +43,12 @@ jobs:
           echo "ccx_version=${ccx_version}" >> $GITHUB_OUTPUT
 
       - name: Create Release
-        uses: softprops/action-gh-release@v0.1.15
+        uses: softprops/action-gh-release@v2.0.4
         with:
           files: ${{ steps.build.outputs.asset_path }}
           name: Conceal Core CLI v${{ steps.build.outputs.ccx_version }}
           body: |
-            [Download for Ubuntu 20.04](../../releases/download/${{ steps.build.outputs.ccx_version }}/${{ steps.build.outputs.release_name }}) **${{ steps.build.outputs.release_name }}**
+            [Download for Ubuntu 24.04](../../releases/download/${{ steps.build.outputs.ccx_version }}/${{ steps.build.outputs.release_name }}) **${{ steps.build.outputs.release_name }}**
             `SHA256 : ${{ steps.build.outputs.sha256 }}`
           append_body: true
         env:

@@ -20,6 +20,7 @@
 #include "CryptoNoteCore/Currency.h"
 #include "CryptoNoteCore/VerificationContext.h"
 #include "P2p/LevinProtocol.h"
+#include <cstdint>  // for UINT64_MAX
 
 using namespace logging;
 using namespace common;
@@ -53,7 +54,8 @@ CryptoNoteProtocolHandler::CryptoNoteProtocolHandler(const Currency &currency, p
   m_observedHeight(0),
   m_peersCount(0),
   logger(log, "protocol"),
-  m_dispatcher(dispatcher)
+  m_dispatcher(dispatcher),
+  m_maxObjectCount(cn::COMMAND_RPC_GET_OBJECTS_MAX_COUNT)
   {
     if (!m_p2p)
       m_p2p = &m_p2p_stub;
@@ -153,8 +155,9 @@ std::vector<std::string> CryptoNoteProtocolHandler::all_connections()
 {
   std::vector<std::string> connections;
   connections.clear();
-  m_p2p->for_each_connection([&connections](const CryptoNoteConnectionContext &cntxt, [[maybe_unused]] PeerIdType peer_id)
+  m_p2p->for_each_connection([&connections](const CryptoNoteConnectionContext &cntxt, PeerIdType peer_id)
                              {
+                               (void)peer_id;
                                std::string ipAddress = common::ipAddressToString(cntxt.m_remote_ip);
                                connections.push_back(ipAddress);
                              });
@@ -392,9 +395,17 @@ int CryptoNoteProtocolHandler::handle_notify_new_transactions(int command, NOTIF
 int CryptoNoteProtocolHandler::handle_request_get_objects(int command, NOTIFY_REQUEST_GET_OBJECTS::request &arg, CryptoNoteConnectionContext &context)
 {
   logger(logging::TRACE) << context << "NOTIFY_REQUEST_GET_OBJECTS";
-  if(arg.blocks.size() > COMMAND_RPC_GET_OBJECTS_MAX_COUNT || arg.txs.size() > COMMAND_RPC_GET_OBJECTS_MAX_COUNT)
+  size_t maxObjects = m_maxObjectCount.load();
+  const size_t totalObjects = arg.blocks.size() + arg.txs.size();
+
+  logger(INFO) << "DEBUG: Request for " << totalObjects << " objects (limit: " << maxObjects << ")";
+
+
+  if (totalObjects > maxObjects)
   {
-    logger(logging::ERROR) << context << "GET_OBJECTS_MAX_COUNT exceeded blocks: " << arg.blocks.size() << " txes: " << arg.txs.size();
+    logger(logging::ERROR) << context << "Requested objects count exceeds limit of " 
+                          << maxObjects << ": blocks " << arg.blocks.size() 
+                          << " + txs " << arg.txs.size() << " = " << totalObjects;
     context.m_state = CryptoNoteConnectionContext::state_shutdown;
     return 1;
   }

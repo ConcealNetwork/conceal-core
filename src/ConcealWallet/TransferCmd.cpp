@@ -36,7 +36,6 @@ namespace cn
         if (arg.size() && arg[0] == '-') 
         {
           const auto& value = ar.next();
-          bool ttl_to_str = common::fromString(value, ttl) || ttl < 1 || ttl * 60 > m_currency.mempoolTxLiveTime();
 
           if (arg == "-p" && !createTxExtraWithPaymentId(value, extra))
           {
@@ -47,7 +46,7 @@ namespace cn
           {
             messages.emplace_back(value);
           }
-          else if (arg == "-ttl" && !ttl_to_str)
+          else if (arg == "-ttl" && !(common::fromString(value, ttl) || ttl < 1 || ttl * 60 > m_currency.mempoolTxLiveTime()))
           {
             logger(ERROR, BRIGHT_RED) << "TTL has invalid format: \"" << value << "\", " <<
               "enter time from 1 to " << (m_currency.mempoolTxLiveTime() / 60) << " minutes";

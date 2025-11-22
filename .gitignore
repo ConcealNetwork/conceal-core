@@ -24,3 +24,5 @@ compile_commands.json
 *.bin
 *.json
 cmake-build*
+
+.cursorrules

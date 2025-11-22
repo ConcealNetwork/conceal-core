@@ -51,7 +51,7 @@ namespace cn
     bool addObserver(IBlockchainStorageObserver *observer);
     bool removeObserver(IBlockchainStorageObserver *observer);
 
-    void rebuildCache();
+    bool rebuildCache();
     bool rebuildBlocks();
     bool storeCache();
 

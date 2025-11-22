@@ -8,7 +8,7 @@ on:
 jobs:
   build-macos:
     name: macOS
-    runs-on: macos-12
+    runs-on: macos-13
     steps:
       - uses: actions/checkout@master
 
@@ -18,10 +18,10 @@ jobs:
           build_folder="build/"
           ccx_version=$(echo ${{ github.ref }} | sed 's|refs/tags/||')
           release_name="ccx-cli-macOS-v$ccx_version"
-          brew install gcc boost
+          brew install gcc boost@1.85
           mkdir "$build_folder"
           cd "$build_folder"
-          cmake -DCMAKE_C_FLAGS="-mmacosx-version-min=10.12" -DCMAKE_CXX_FLAGS="-mmacosx-version-min=10.12" -DCMAKE_BUILD_TYPE=Release -DSTATIC=ON ..
+          cmake -DCMAKE_C_FLAGS="-mmacosx-version-min=10.12" -DCMAKE_CXX_FLAGS="-mmacosx-version-min=10.12" -DCMAKE_BUILD_TYPE=Release -DSTATIC=ON -DBOOST_ROOT=/usr/local/opt/boost@1.85 ..
           make -j2
           mkdir "$release_name"
           exeFiles=()
@@ -36,7 +36,7 @@ jobs:
           echo "ccx_version=${ccx_version}" >> $GITHUB_OUTPUT
 
       - name: Create Release
-        uses: softprops/action-gh-release@v0.1.15
+        uses: softprops/action-gh-release@v2.0.4
         with:
           files: ${{ steps.build.outputs.asset_path }}
           name: Conceal Core CLI v${{ steps.build.outputs.ccx_version }}
