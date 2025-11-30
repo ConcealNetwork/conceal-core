@@ -60,20 +60,22 @@ private:
   friend class core;
 };
 
-core::core(const Currency &currency, i_cryptonote_protocol *pprotocol, logging::ILogger &logger, bool blockchainIndexesEnabled, bool blockchainAutosaveEnabled) : m_currency(currency),
-                                                                                                                                                                  logger(logger, "core"),
-                                                                                                                                                                  m_mempool(currency, m_blockchain, m_timeProvider, logger),
-                                                                                                                                                                  m_blockchain(currency, m_mempool, logger, blockchainIndexesEnabled, blockchainAutosaveEnabled),
-                                                                                                                                                                  m_miner(new Miner(currency, *this, logger)),
-                                                                                                                                                                  m_starter_message_showed(false)
+core::core(const Currency &currency, i_cryptonote_protocol *pprotocol, logging::ILogger &logger, bool blockchainIndexesEnabled, bool blockchainAutosaveEnabled) :
+  m_currency(currency),
+  logger(logger, "core"),
+  m_mempool(currency, m_blockchain, m_timeProvider, logger),
+  m_blockchain(currency, m_mempool, logger, blockchainIndexesEnabled, blockchainAutosaveEnabled),
+  m_miner(new Miner(currency, *this, logger)),
+  m_starter_message_showed(false)
 {
 
   set_cryptonote_protocol(pprotocol);
   m_blockchain.addObserver(this);
   m_mempool.addObserver(this);
 }
-  //-----------------------------------------------------------------------------------------------
-  core::~core() {
+
+//-----------------------------------------------------------------------------------------------
+core::~core() {
   m_blockchain.removeObserver(this);
 }
 
@@ -83,10 +85,6 @@ void core::set_cryptonote_protocol(i_cryptonote_protocol* pprotocol) {
   } else {
     m_pprotocol = &m_protocol_stub;
   }
-}
-//-----------------------------------------------------------------------------------
-void core::set_checkpoints(Checkpoints&& chk_pts) {
-  m_blockchain.setCheckpoints(std::move(chk_pts));
 }
 //-----------------------------------------------------------------------------------
 void core::init_options(boost::program_options::options_description& /*desc*/) {
@@ -104,6 +102,10 @@ uint32_t core::get_current_blockchain_height() {
 void core::get_blockchain_top(uint32_t& height, crypto::Hash& top_id) {
   assert(m_blockchain.getCurrentBlockchainHeight() > 0);
   top_id = m_blockchain.getTailId(height);
+}
+
+crypto::Hash core::checkpoint_hash(uint32_t height) {
+  return m_blockchain.getCheckpointHash(height);
 }
 
 bool core::rollback_chain_to(uint32_t height) {

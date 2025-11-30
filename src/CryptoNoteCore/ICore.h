@@ -27,6 +27,7 @@ struct COMMAND_RPC_GET_RANDOM_OUTPUTS_FOR_AMOUNTS_response;
 struct NOTIFY_RESPONSE_GET_OBJECTS_request;
 struct NOTIFY_REQUEST_GET_OBJECTS_request;
 
+class CheckpointList;
 class Currency;
 class IBlock;
 class ICoreObserver;
@@ -65,6 +66,7 @@ public:
   virtual void on_synchronized() = 0;
   virtual size_t addChain(const std::vector<const IBlock*>& chain) = 0;
 
+  virtual CheckpointList& getCheckpointList() = 0;
   virtual void get_blockchain_top(uint32_t& height, crypto::Hash& top_id) = 0;
   virtual std::vector<crypto::Hash> findBlockchainSupplement(const std::vector<crypto::Hash>& remoteBlockIds, size_t maxCount,
     uint32_t& totalBlockCount, uint32_t& startBlockIndex) = 0;
@@ -83,6 +85,7 @@ public:
                               std::vector<crypto::Hash>& deletedTxsIds) = 0;
   virtual bool queryBlocks(const std::vector<crypto::Hash>& block_ids, uint64_t timestamp,
     uint32_t& start_height, uint32_t& current_height, uint32_t& full_offset, std::vector<BlockFullInfo>& entries) = 0;
+  virtual std::vector<crypto::Hash> getBlockIds(uint32_t start_height, uint32_t end_height) = 0;
   virtual bool queryBlocksLite(const std::vector<crypto::Hash>& block_ids, uint64_t timestamp,
     uint32_t& start_height, uint32_t& current_height, uint32_t& full_offset, std::vector<BlockShortInfo>& entries) = 0;
 

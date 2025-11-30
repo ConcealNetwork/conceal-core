@@ -1362,7 +1362,7 @@ bool WalletLegacy::getTxProof(crypto::Hash& txid, cn::AccountPublicAddress& addr
   try {
     crypto::generate_tx_proof(txid, R, address.viewPublicKey, rA, tx_key, sig);
   }
-  catch (std::runtime_error) {
+  catch (const std::runtime_error&) {
     return false;
   }
 

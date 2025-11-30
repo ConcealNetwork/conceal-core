@@ -81,6 +81,16 @@ namespace cn
     int handle_notify_new_transactions(int command, NOTIFY_NEW_TRANSACTIONS::request& arg, CryptoNoteConnectionContext& context);
     int handle_request_get_objects(int command, NOTIFY_REQUEST_GET_OBJECTS::request& arg, CryptoNoteConnectionContext& context);
     int handle_response_get_objects(int command, NOTIFY_RESPONSE_GET_OBJECTS::request& arg, CryptoNoteConnectionContext& context);
+    int handle_request_checkpoint_list(int command, NOTIFY_REQUEST_CHECKPOINT_LIST::request& arg, CryptoNoteConnectionContext& context);
+    int handle_response_checkpoint_list(int command, NOTIFY_RESPONSE_CHECKPOINT_LIST::request& arg, CryptoNoteConnectionContext& context);
+    int handle_request_chunk_hash(int command, NOTIFY_REQUEST_CHUNK_HASH::request& arg, CryptoNoteConnectionContext& context);
+    int handle_response_chunk_hash(int command, NOTIFY_RESPONSE_CHUNK_HASH::request& arg, CryptoNoteConnectionContext& context);
+    
+    // Request chunk hash from a specific peer (for consensus mechanism)
+    // @param peer_id The peer ID to request from
+    // @param chunk_index The chunk index to request
+    // @return The chunk hash, or NULL_HASH if request failed or peer doesn't have it
+    crypto::Hash request_chunk_hash_from_peer(uint64_t peer_id, uint32_t chunk_index);
     int handle_request_chain(int command, NOTIFY_REQUEST_CHAIN::request& arg, CryptoNoteConnectionContext& context);
     int handle_response_chain_entry(int command, NOTIFY_RESPONSE_CHAIN_ENTRY::request& arg, CryptoNoteConnectionContext& context);
     int handle_request_tx_pool(int command, NOTIFY_REQUEST_TX_POOL::request &arg, CryptoNoteConnectionContext &context);
@@ -112,7 +122,9 @@ namespace cn
     IP2pEndpoint* m_p2p;
     std::atomic<bool> m_synchronized;
     std::atomic<bool> m_stop;
-    std::recursive_mutex m_sync_lock;    
+    std::recursive_mutex m_sync_lock;
+    
+    std::atomic<uint64_t> m_last_checkpoint_req;
 
     mutable std::mutex m_observedHeightMutex;
     uint32_t m_observedHeight;
@@ -121,5 +133,22 @@ namespace cn
     tools::ObserverManager<ICryptoNoteProtocolObserver> m_observerManager;
 
     std::atomic<size_t> m_maxObjectCount;
+    
+    // Pending chunk hash requests: (peer_id, chunk_index) -> chunk_hash
+    // Used for consensus mechanism to request chunk hashes from peers
+    mutable std::mutex m_pending_chunk_hashes_mutex;
+    std::map<std::pair<uint64_t, uint32_t>, crypto::Hash> m_pending_chunk_hashes;
+    
+    // Chunk validation state: track which chunk we're currently validating
+    // This prevents duplicate validation attempts and ensures chronological order
+    mutable std::mutex m_chunk_validation_mutex;
+    uint32_t m_current_validating_chunk_index;  // Currently validating chunk (or UINT32_MAX if none)
+    uint64_t m_last_chunk_validation_attempt;  // Last time we attempted validation (to avoid spamming)
+    
+    // Validate unverified chunks in chronological order (oldest first)
+    // This ensures we catch divergences at the root cause and rollback to the correct point
+    // Only validates when peers meet uptime requirements
+    // @return true if validation was attempted (even if it failed)
+    bool validate_unverified_chunks();
   };
 }

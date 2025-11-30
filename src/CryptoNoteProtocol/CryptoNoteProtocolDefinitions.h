@@ -225,6 +225,9 @@ namespace cn
     typedef NOTIFY_NEW_LITE_BLOCK_request request;
   };
 
+  /************************************************************************/
+  /*                                                                      */
+  /************************************************************************/
   struct NOTIFY_MISSING_TXS_request
   {
     crypto::Hash blockHash;
@@ -243,6 +246,82 @@ namespace cn
   {
     const static int ID = BC_COMMANDS_POOL_BASE + 10;
     typedef NOTIFY_MISSING_TXS_request request;
+  };
+
+  /************************************************************************/
+  /*                                                                      */
+  /************************************************************************/
+  struct NOTIFY_REQUEST_CHECKPOINT_LIST_request
+  {
+    crypto::Hash target_hash;
+    uint32_t start_height;
+    uint32_t end_height;
+
+    void serialize(ISerializer &s)
+    {
+      KV_MEMBER(target_hash)
+      KV_MEMBER(start_height)
+      KV_MEMBER(end_height)
+    }
+  };
+
+  struct NOTIFY_REQUEST_CHECKPOINT_LIST
+  {
+    const static int ID = BC_COMMANDS_POOL_BASE + 11;
+    typedef NOTIFY_REQUEST_CHECKPOINT_LIST_request request;
+  };
+
+  struct NOTIFY_RESPONSE_CHECKPOINT_LIST_request
+  {
+    uint32_t list_start_height;
+    std::vector<crypto::Hash> checkpoint_list;
+
+    void serialize(ISerializer &s)
+    {
+      KV_MEMBER(list_start_height)
+      serializeAsBinary(checkpoint_list, "checkpoint_list", s);
+    }
+  };
+
+  struct NOTIFY_RESPONSE_CHECKPOINT_LIST
+  {
+    const static int ID = BC_COMMANDS_POOL_BASE + 12;
+    typedef NOTIFY_RESPONSE_CHECKPOINT_LIST_request request;
+  };
+
+  // New protocol for chunk hash requests (version 2 checkpoint system)
+  struct NOTIFY_REQUEST_CHUNK_HASH_request
+  {
+    uint32_t chunk_index;  // Which chunk to request (0-based)
+
+    void serialize(ISerializer &s)
+    {
+      KV_MEMBER(chunk_index)
+    }
+  };
+
+  struct NOTIFY_REQUEST_CHUNK_HASH
+  {
+    const static int ID = BC_COMMANDS_POOL_BASE + 13;
+    typedef NOTIFY_REQUEST_CHUNK_HASH_request request;
+  };
+
+  struct NOTIFY_RESPONSE_CHUNK_HASH_request
+  {
+    uint32_t chunk_index;
+    crypto::Hash chunk_hash;  // The requested chunk hash, or NULL_HASH if chunk doesn't exist
+
+    void serialize(ISerializer &s)
+    {
+      KV_MEMBER(chunk_index)
+      KV_MEMBER(chunk_hash)
+    }
+  };
+
+  struct NOTIFY_RESPONSE_CHUNK_HASH
+  {
+    const static int ID = BC_COMMANDS_POOL_BASE + 14;
+    typedef NOTIFY_RESPONSE_CHUNK_HASH_request request;
   };
 } // namespace cn
 
