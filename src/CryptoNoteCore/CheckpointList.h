@@ -174,6 +174,8 @@ namespace cn
       uint32_t agreements_first_attempt;  // Number of agreements in first attempt
       uint32_t agreements_second_attempt; // Number of agreements in second attempt (if retried)
       bool used_second_chance;          // true if second attempt was made
+      crypto::Hash consensus_hash_first_attempt;   // Hash that M/K peers agreed on in attempt 1 (if different from local, NULL_HASH otherwise)
+      crypto::Hash consensus_hash_second_attempt; // Hash that M/K peers agreed on in attempt 2 (if different from local, NULL_HASH otherwise)
     };
     ConsensusResult verify_chunk_with_peer_consensus(
       uint32_t chunk_index,

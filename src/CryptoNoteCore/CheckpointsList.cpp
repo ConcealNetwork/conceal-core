@@ -1819,6 +1819,8 @@ namespace cn {
     result.agreements_first_attempt = 0;
     result.agreements_second_attempt = 0;
     result.used_second_chance = false;
+    result.consensus_hash_first_attempt = NULL_HASH;
+    result.consensus_hash_second_attempt = NULL_HASH;
     
     if (available_peers.empty())
     {
@@ -1839,7 +1841,20 @@ namespace cn {
     }
     
     // Helper function to sample peers and check consensus
-    auto attempt_consensus = [&](const std::string& attempt_name) -> uint32_t {
+    // Returns: agreements count, and tracks if all responses were NULL_HASH
+    uint32_t total_null_hash_responses = 0;
+    uint32_t total_mismatches = 0;
+    
+    // Structure to return both agreement count and consensus hash
+    struct AttemptResult {
+      uint32_t agreements;
+      crypto::Hash consensus_hash;  // Hash that M/K peers agreed on (if different from local, NULL_HASH otherwise)
+    };
+    
+    auto attempt_consensus = [&](const std::string& attempt_name) -> AttemptResult {
+      AttemptResult attempt_result;
+      attempt_result.agreements = 0;
+      attempt_result.consensus_hash = NULL_HASH;
       // Randomly sample M peers from available peers, ensuring network diversity
       std::vector<uint64_t> sampled_peers;
       std::map<uint32_t, uint32_t> network_votes; // network_16 -> vote_count (capped at 1)
@@ -1898,7 +1913,12 @@ namespace cn {
       }
       
       // Check consensus: need M agreements from K sampled peers
+      // Track hash votes to find consensus hash (hash with M+ votes, if different from local)
+      std::map<crypto::Hash, uint32_t> hash_votes;  // hash -> vote count
       uint32_t agreements = 0;
+      uint32_t null_hash_responses = 0;
+      uint32_t mismatches = 0;
+      
       for (uint64_t peer_id : sampled_peers)
       {
         crypto::Hash peer_hash = getPeerChunkHashFunc(peer_id);
@@ -1907,11 +1927,17 @@ namespace cn {
         {
           // Peer didn't respond, timed out, or doesn't have this chunk in memory
           // This is not necessarily a failure - the peer might not have created this chunk yet
+          // or might be using version 1 (doesn't support chunk-based checkpoints)
+          null_hash_responses++;
           logger(INFO) << "Peer " << peer_id 
                                      << " returned NULL_HASH for chunk " << chunk_index 
-                                     << " (" << attempt_name << ") - peer may not have this chunk in memory yet";
+                                     << " (" << attempt_name << ") - peer may not have this chunk in memory yet "
+                                     << "or may be using version 1 (doesn't support chunk checkpoints)";
           continue; // Don't count as agreement or disagreement - peer doesn't have the chunk
         }
+        
+        // Count votes for this hash
+        hash_votes[peer_hash]++;
         
         if (peer_hash == local_chunk_hash)
         {
@@ -1921,11 +1947,33 @@ namespace cn {
         }
         else
         {
+          mismatches++;
           logger(WARNING) << "Peer " << peer_id 
                                    << " chunk hash mismatch for chunk " << chunk_index 
                                    << " (" << attempt_name << "): local=" << local_chunk_hash 
                                    << ", peer=" << peer_hash;
         }
+      }
+      
+      // Find the consensus hash (hash with most votes, if >= M and different from local)
+      crypto::Hash consensus_hash = NULL_HASH;
+      uint32_t max_votes = 0;
+      for (const auto& vote : hash_votes)
+      {
+        if (vote.second >= req.min_agreements && vote.second > max_votes)
+        {
+          max_votes = vote.second;
+          consensus_hash = vote.first;
+        }
+      }
+      
+      // Only set consensus_hash if it's different from local and we have M+ agreements
+      if (consensus_hash != NULL_HASH && consensus_hash != local_chunk_hash && max_votes >= req.min_agreements)
+      {
+        attempt_result.consensus_hash = consensus_hash;
+        logger(WARNING) << "Chunk " << chunk_index << " (" << attempt_name 
+                                 << "): M/K peers (" << max_votes << ") agree on different hash: " 
+                                 << consensus_hash << " (local: " << local_chunk_hash << ")";
       }
       
       // Verify we have at least n diverse networks
@@ -1936,7 +1984,9 @@ namespace cn {
                                  << " consensus " << attempt_name << ": insufficient network diversity "
                                  << "(have " << diverse_networks << " networks, need n=" << req.min_diverse_networks << ")";
         // Return 0 agreements if diversity requirement not met (consensus fails)
-        return 0;
+        attempt_result.agreements = 0;
+        attempt_result.consensus_hash = NULL_HASH;
+        return attempt_result;
       }
       
       logger(INFO) << "Chunk " << chunk_index 
@@ -1945,15 +1995,22 @@ namespace cn {
                             << req.min_agreements << " from K=" << req.min_peers 
                             << ", have n=" << diverse_networks << " diverse networks)";
       
-      return agreements;
+      // Track statistics for better error messages
+      total_null_hash_responses += null_hash_responses;
+      total_mismatches += mismatches;
+      
+      attempt_result.agreements = agreements;
+      return attempt_result;
     };
     
     // First attempt
-    result.agreements_first_attempt = attempt_consensus("first attempt");
+    AttemptResult first_attempt = attempt_consensus("first attempt");
+    result.agreements_first_attempt = first_attempt.agreements;
+    result.consensus_hash_first_attempt = first_attempt.consensus_hash;
     
     if (result.agreements_first_attempt >= req.min_agreements)
     {
-      // Consensus reached on first attempt
+      // Consensus reached on first attempt (peers agree with local hash)
       result.consensus_reached = true;
       logger(INFO) << "Chunk " << chunk_index 
                             << " consensus reached on first attempt (" 
@@ -1962,17 +2019,32 @@ namespace cn {
     }
     
     // First attempt failed - use second chance
-    logger(WARNING) << "Chunk " << chunk_index 
-                             << " consensus failed on first attempt (" 
-                             << result.agreements_first_attempt << " agreements, need " 
-                             << req.min_agreements << "). Re-sampling peers for second chance...";
+    if (result.consensus_hash_first_attempt != NULL_HASH)
+    {
+      logger(WARNING) << "Chunk " << chunk_index 
+                               << " consensus failed on first attempt (" 
+                               << result.agreements_first_attempt << " agreements, need " 
+                               << req.min_agreements << "). "
+                               << "M/K peers agree on different hash: " << result.consensus_hash_first_attempt 
+                               << " (local: " << local_chunk_hash << "). "
+                               << "Re-sampling peers for second chance...";
+    }
+    else
+    {
+      logger(WARNING) << "Chunk " << chunk_index 
+                               << " consensus failed on first attempt (" 
+                               << result.agreements_first_attempt << " agreements, need " 
+                               << req.min_agreements << "). Re-sampling peers for second chance...";
+    }
     
     result.used_second_chance = true;
-    result.agreements_second_attempt = attempt_consensus("second attempt");
+    AttemptResult second_attempt = attempt_consensus("second attempt");
+    result.agreements_second_attempt = second_attempt.agreements;
+    result.consensus_hash_second_attempt = second_attempt.consensus_hash;
     
     if (result.agreements_second_attempt >= req.min_agreements)
     {
-      // Consensus reached on second attempt
+      // Consensus reached on second attempt (peers agree with local hash)
       result.consensus_reached = true;
       logger(INFO) << "Chunk " << chunk_index 
                             << " consensus reached on second attempt (" 
@@ -1981,11 +2053,48 @@ namespace cn {
     else
     {
       // Consensus failed even after second chance
-      logger(ERROR) << "Chunk " << chunk_index 
+      // Check if we got the same consensus hash in both attempts (different from local)
+      // This indicates our blockchain diverged and we should rollback
+      if (result.consensus_hash_first_attempt != NULL_HASH && 
+          result.consensus_hash_second_attempt != NULL_HASH &&
+          result.consensus_hash_first_attempt == result.consensus_hash_second_attempt &&
+          result.consensus_hash_first_attempt != local_chunk_hash)
+      {
+        // Same consensus hash in both attempts, different from local - ROLLBACK REQUIRED
+        logger(ERROR, BRIGHT_RED) << "Chunk " << chunk_index 
+                                          << " ROLLBACK REQUIRED: M/K peers agree on different hash in BOTH attempts. "
+                                          << "Consensus hash: " << result.consensus_hash_first_attempt 
+                                          << " (local: " << local_chunk_hash << "). "
+                                          << "This indicates blockchain divergence.";
+      }
+      else if (total_mismatches == 0 && total_null_hash_responses > 0)
+      {
+        // All peers returned NULL_HASH - this is expected if peers are v1 or don't have the chunk
+        logger(INFO) << "Chunk " << chunk_index 
+                              << " consensus not reached (all " << total_null_hash_responses 
+                              << " peer(s) returned NULL_HASH). This is normal if: "
+                              << "(1) peers are using version 1 (don't support chunk checkpoints), or "
+                              << "(2) peers haven't created this chunk yet. "
+                              << "Chunk will remain in memory and validation will be retried when v2+ peers become available.";
+      }
+      else if (total_mismatches > 0)
+      {
+        // We got hash mismatches but not consistent consensus across both attempts
+        logger(WARNING) << "Chunk " << chunk_index 
                               << " consensus failed after second attempt (first: " 
                               << result.agreements_first_attempt << ", second: " 
                               << result.agreements_second_attempt << ", need " 
-                              << req.min_agreements << "). Local blockchain may be wrong.";
+                              << req.min_agreements << "). "
+                              << total_mismatches << " peer(s) returned different hash(es). "
+                              << "Inconsistent results between attempts - monitoring for more mismatches.";
+      }
+      else
+      {
+        // No responses at all (shouldn't happen, but handle it)
+        logger(INFO) << "Chunk " << chunk_index 
+                              << " consensus not reached (no peer responses). "
+                              << "Chunk will remain in memory and validation will be retried.";
+      }
     }
     
     return result;

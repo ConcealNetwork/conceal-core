@@ -1406,7 +1406,8 @@ crypto::Hash CryptoNoteProtocolHandler::request_chunk_hash_from_peer(uint64_t pe
   // Wait for response (with timeout)
   // In a real implementation, this should use async/await or a callback mechanism
   // For now, we'll use a simple polling approach with timeout
-  const int max_wait_ms = 5000;  // 5 second timeout
+  // Increased timeout to handle network latency (responses were arriving 10+ seconds after request)
+  const int max_wait_ms = 15000;  // 15 second timeout (was 5 seconds, increased for slow networks)
   const int poll_interval_ms = 50;
   int waited_ms = 0;
   
@@ -1745,18 +1746,36 @@ bool CryptoNoteProtocolHandler::validate_unverified_chunks()
         }
       }
       
-      // Trigger blockchain rollback via core
-      // Note: This is a critical operation - the blockchain will be rolled back to the chunk boundary
-      logger(ERROR, BRIGHT_RED) << "Triggering blockchain rollback to height " << rollback_height 
-                                                   << " due to chunk validation failure";
+      // Check if rollback is required (same consensus hash in both attempts, different from local)
+      bool should_rollback = (result.consensus_hash_first_attempt != NULL_HASH && 
+                              result.consensus_hash_second_attempt != NULL_HASH &&
+                              result.consensus_hash_first_attempt == result.consensus_hash_second_attempt &&
+                              result.consensus_hash_first_attempt != local_chunk_hash);
       
-      // The rollback will be handled by the core's rollback mechanism
-      // For now, we signal the need for rollback by truncating checkpoint.dat
-      // The actual blockchain rollback should be triggered separately (e.g., via a flag or callback)
-      // TODO: Implement proper rollback trigger mechanism
+      if (should_rollback)
+      {
+        // Trigger blockchain rollback via existing core mechanism
+        // NOTE: ICore interface doesn't expose rollback_chain_to, but Core class does
+        // For now, we log the rollback requirement. The actual rollback should be triggered
+        // via a callback or by adding rollback_chain_to to ICore interface
+        logger(ERROR, BRIGHT_RED) << "ROLLBACK REQUIRED: Chunk " << chunk_index 
+                                                     << " validation failed - same consensus hash in both attempts. "
+                                                     << "Consensus hash: " << result.consensus_hash_first_attempt 
+                                                     << " (local: " << local_chunk_hash << "). "
+                                                     << "Rollback to height " << rollback_height 
+                                                     << " is required. "
+                                                     << "TODO: Implement rollback trigger mechanism (ICore interface needs rollback_chain_to method)";
+      }
+      else
+      {
+        // Consensus failed but no rollback required (inconsistent results, NULL_HASH responses, etc.)
+        logger(WARNING) << "Chunk " << chunk_index 
+                                 << " consensus failed but rollback not required (inconsistent results between attempts). "
+                                 << "Chunk will remain in memory and validation will be retried.";
+      }
       
-      // Stop validation - we found the divergence point
-      // The node will need to resync from the rollback height
+      // Stop validation - we found the divergence point (or need to wait for peers)
+      // The node will need to resync from the rollback height (if rollback occurred)
       break;
     }
   }
