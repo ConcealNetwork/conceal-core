@@ -39,6 +39,9 @@ namespace cn
                           std::atomic<uint64_t>& peersCount,
                           std::atomic<bool>& stop);
     
+    // Update P2P endpoint (called when endpoint is set/updated)
+    void set_p2p_endpoint(IP2pEndpoint* p2p);
+    
     // Validate unverified chunks in chronological order (oldest first)
     // This ensures we catch divergences at the root cause and rollback to the correct point
     // Only validates when peers meet uptime requirements

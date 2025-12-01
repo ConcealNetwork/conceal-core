@@ -57,6 +57,19 @@ ChunkValidationManager::ChunkValidationManager(ICore& core,
 {
 }
 
+void ChunkValidationManager::set_p2p_endpoint(IP2pEndpoint* p2p)
+{
+  if (p2p)
+  {
+    m_p2p = p2p;
+    logger(INFO) << "Updated P2P endpoint in ChunkValidationManager";
+  }
+  else
+  {
+    logger(WARNING) << "Attempted to set null P2P endpoint in ChunkValidationManager";
+  }
+}
+
 bool ChunkValidationManager::send_chunk_hash_request_async(uint64_t peer_id, uint32_t chunk_index)
 {
   // Find the peer connection

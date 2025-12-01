@@ -90,6 +90,12 @@ void CryptoNoteProtocolHandler::set_p2p_endpoint(IP2pEndpoint *p2p)
     m_p2p = p2p;
   else
     m_p2p = &m_p2p_stub;
+  
+  // Update chunk validation manager with the new P2P endpoint
+  if (m_chunkValidationManager)
+  {
+    m_chunkValidationManager->set_p2p_endpoint(m_p2p);
+  }
 }
 
 void CryptoNoteProtocolHandler::onConnectionOpened(CryptoNoteConnectionContext &context)
