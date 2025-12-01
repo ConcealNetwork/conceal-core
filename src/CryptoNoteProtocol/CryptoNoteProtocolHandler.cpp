@@ -1406,8 +1406,9 @@ crypto::Hash CryptoNoteProtocolHandler::request_chunk_hash_from_peer(uint64_t pe
   // Wait for response (with timeout)
   // In a real implementation, this should use async/await or a callback mechanism
   // For now, we'll use a simple polling approach with timeout
-  // Increased timeout to handle network latency (responses were arriving 10+ seconds after request)
-  const int max_wait_ms = 15000;  // 15 second timeout (was 5 seconds, increased for slow networks)
+  // Increased timeout to handle network latency (responses were arriving 30+ seconds after request)
+  // 45 seconds should be sufficient for slow networks, but this is unusually high latency
+  const int max_wait_ms = 45000;  // 45 second timeout (was 15 seconds, increased for very slow networks)
   const int poll_interval_ms = 50;
   int waited_ms = 0;
   
@@ -1422,6 +1423,19 @@ crypto::Hash CryptoNoteProtocolHandler::request_chunk_hash_from_peer(uint64_t pe
       m_pending_chunk_hashes.erase(it);
       logger(INFO) << "Received chunk hash response from peer " << peer_id << " " << *peer_context
                    << " for chunk " << chunk_index << ": " << result;
+      return result;
+    }
+  }
+  
+  // Timeout reached - check one more time for late response (network delays can cause responses to arrive just after timeout)
+  {
+    std::lock_guard<std::mutex> lock(m_pending_chunk_hashes_mutex);
+    auto it = m_pending_chunk_hashes.find(std::make_pair(peer_id, chunk_index));
+    if (it != m_pending_chunk_hashes.end()) {
+      crypto::Hash result = it->second;
+      m_pending_chunk_hashes.erase(it);
+      logger(INFO) << "Received late chunk hash response from peer " << peer_id << " " << *peer_context
+                   << " for chunk " << chunk_index << " (arrived after timeout): " << result;
       return result;
     }
   }
