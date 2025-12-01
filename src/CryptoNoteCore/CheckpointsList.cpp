@@ -71,9 +71,11 @@
 #include <vector>
 #include <iterator>
 #include <unordered_set>
+#include <unordered_map>
 #include <algorithm>
 #include <cmath>
 #include <random>
+#include <boost/functional/hash.hpp>
 
 
 #include "CheckpointList.h"
@@ -1914,7 +1916,8 @@ namespace cn {
       
       // Check consensus: need M agreements from K sampled peers
       // Track hash votes to find consensus hash (hash with M+ votes, if different from local)
-      std::map<crypto::Hash, uint32_t> hash_votes;  // hash -> vote count
+      // Use unordered_map since crypto::Hash doesn't have comparison operator for std::map
+      std::unordered_map<crypto::Hash, uint32_t, boost::hash<crypto::Hash>> hash_votes;  // hash -> vote count
       uint32_t agreements = 0;
       uint32_t null_hash_responses = 0;
       uint32_t mismatches = 0;
