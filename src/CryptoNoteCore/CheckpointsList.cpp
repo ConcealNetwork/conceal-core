@@ -378,125 +378,33 @@ namespace cn {
         return false;
       }
       
-      // PRIORITY ORDER for block hashes in chunk (applied in reverse order to maintain priority):
-      // 1. Start with blockchain.dat (base data)
-      // 2. Apply DNS checkpoints (overwrites blockchain.dat)
-      // 3. Apply CryptoNoteConfig.h checkpoints (overwrites both DNS and blockchain.dat)
-      // Final priority: CryptoNoteConfig.h > DNS > blockchain.dat
+      // Apply checkpoint priority: CryptoNoteConfig.h > DNS > blockchain.dat
+      CheckpointApplicationResult checkpoint_result = apply_checkpoint_priority_to_chunk(
+        chunk_index,
+        chunk_start_height,
+        chunk_end_height,
+        chunk_block_ids,
+        getBlockIdsFunc,
+        true); // track_checkpoint_heights = true for detailed logging
       
-      std::vector<uint32_t> checkpoints_in_chunk;
-      uint32_t checkpoints_from_config = 0;
-      uint32_t checkpoints_from_dns = 0;
-      
-      // STEP 1: Apply DNS checkpoints (PRIORITY 2)
-      // These will be overwritten by CryptoNoteConfig.h if there's a conflict
-      for (const auto& checkpoint : m_dns_checkpoint_hashes)
+      if (!checkpoint_result.success)
       {
-        uint32_t checkpoint_height = checkpoint.first;
-        if (checkpoint_height >= chunk_start_height && checkpoint_height <= chunk_end_height)
-        {
-          uint32_t index_in_chunk = checkpoint_height - chunk_start_height;
-          
-          if (index_in_chunk >= chunk_block_ids.size())
-          {
-            logger(ERROR) << "DNS checkpoint height " << checkpoint_height 
-                                   << " index out of range in chunk " << chunk_index;
-            m_chunks.clear();
-            return false;
-          }
-          
-          // VALIDATION: Verify that blockchain.dat matches the DNS checkpoint
-          const crypto::Hash& blockchain_hash = chunk_block_ids[index_in_chunk];
-          const crypto::Hash& dns_hash = checkpoint.second;
-          
-          if (blockchain_hash != dns_hash)
-          {
-            logger(ERROR) << "DNS CHECKPOINT VALIDATION FAILED for chunk " 
-                                   << chunk_index << " at height " << checkpoint_height << "!"
-                                   << " Expected (from DNS): " << dns_hash
-                                   << ", Got (from blockchain.dat): " << blockchain_hash
-                                   << ". Cannot create chunk - blockchain validation failed.";
-            m_chunks.clear();
-            return false;
-          }
-          
-          // Replace with DNS checkpoint hash
-          chunk_block_ids[index_in_chunk] = dns_hash;
-          checkpoints_from_dns++;
-          checkpoints_in_chunk.push_back(checkpoint_height);
-          
-          logger(DEBUGGING) << "Applied DNS checkpoint hash for height " 
-                                       << checkpoint_height << " in chunk " << chunk_index;
-        }
-      }
-      
-      // STEP 2: Apply CryptoNoteConfig.h checkpoints (PRIORITY 1 - HIGHEST)
-      // These overwrite both blockchain.dat and DNS checkpoints
-      for (const auto& checkpoint : m_old_checkpoint_hashes)
-      {
-        uint32_t checkpoint_height = checkpoint.first;
-        if (checkpoint_height >= chunk_start_height && checkpoint_height <= chunk_end_height)
-        {
-          uint32_t index_in_chunk = checkpoint_height - chunk_start_height;
-          
-          if (index_in_chunk >= chunk_block_ids.size())
-          {
-            logger(ERROR) << "CryptoNoteConfig.h checkpoint height " << checkpoint_height 
-                                   << " index out of range in chunk " << chunk_index;
-            m_chunks.clear();
-            return false;
-          }
-          
-          // VALIDATION: Verify that blockchain.dat matches the CryptoNoteConfig.h checkpoint
-          // (We validate against blockchain.dat, not the potentially overwritten DNS value)
-          const crypto::Hash& config_hash = checkpoint.second;
-          
-          // Re-fetch the original blockchain.dat hash for validation
-          std::vector<crypto::Hash> original_block_ids = getBlockIdsFunc(checkpoint_height, 1);
-          if (original_block_ids.empty() || original_block_ids[0] != config_hash)
-          {
-            logger(ERROR) << "CryptoNoteConfig.h CHECKPOINT VALIDATION FAILED for chunk " 
-                                   << chunk_index << " at height " << checkpoint_height << "!"
-                                   << " Expected (from CryptoNoteConfig.h): " << config_hash
-                                   << ", Got (from blockchain.dat): " << (original_block_ids.empty() ? NULL_HASH : original_block_ids[0])
-                                   << ". Cannot create chunk - blockchain validation failed.";
-            m_chunks.clear();
-            return false;
-          }
-          
-          // Replace with CryptoNoteConfig.h checkpoint hash (overwrites DNS if it was applied)
-          chunk_block_ids[index_in_chunk] = config_hash;
-          
-          // Update counters (only count if not already counted from DNS)
-          if (std::find(checkpoints_in_chunk.begin(), checkpoints_in_chunk.end(), checkpoint_height) == checkpoints_in_chunk.end())
-          {
-            checkpoints_in_chunk.push_back(checkpoint_height);
-          }
-          else
-          {
-            // This checkpoint was already applied from DNS, now overwritten by CryptoNoteConfig.h
-            checkpoints_from_dns--; // Remove DNS count, add config count
-          }
-          checkpoints_from_config++;
-          
-          logger(DEBUGGING) << "Applied CryptoNoteConfig.h checkpoint hash for height " 
-                                       << checkpoint_height << " in chunk " << chunk_index
-                                       << " (overwrites DNS if present)";
-        }
+        m_chunks.clear();
+        return false;
       }
       
       // Log validation success if there were checkpoints in this chunk
-      if (!checkpoints_in_chunk.empty())
+      if (!checkpoint_result.checkpoints_in_chunk.empty())
       {
         std::stringstream ss;
-        ss << "Validated and replaced " << checkpoints_in_chunk.size() << " checkpoint(s) in chunk " << chunk_index 
+        ss << "Validated and replaced " << checkpoint_result.checkpoints_in_chunk.size() << " checkpoint(s) in chunk " << chunk_index 
            << " (heights: ";
-        for (size_t i = 0; i < checkpoints_in_chunk.size(); i++) {
+        for (size_t i = 0; i < checkpoint_result.checkpoints_in_chunk.size(); i++) {
           if (i > 0) ss << ", ";
-          ss << checkpoints_in_chunk[i];
+          ss << checkpoint_result.checkpoints_in_chunk[i];
         }
-        ss << ") - Priority: " << checkpoints_from_config << " from CryptoNoteConfig.h, " 
-           << checkpoints_from_dns << " from DNS, rest from blockchain.dat";
+        ss << ") - Priority: " << checkpoint_result.checkpoints_from_config << " from CryptoNoteConfig.h, " 
+           << checkpoint_result.checkpoints_from_dns << " from DNS, rest from blockchain.dat";
         logger(INFO) << ss.str();
       }
       
@@ -586,93 +494,27 @@ namespace cn {
         return false;
       }
       
-      // PRIORITY ORDER for block hashes in chunk (applied in reverse order to maintain priority):
-      // 1. Start with blockchain.dat (base data - already loaded)
-      // 2. Apply DNS checkpoints (overwrites blockchain.dat)
-      // 3. Apply CryptoNoteConfig.h checkpoints (overwrites both DNS and blockchain.dat)
-      // Final priority: CryptoNoteConfig.h > DNS > blockchain.dat
+      // Apply checkpoint priority: CryptoNoteConfig.h > DNS > blockchain.dat
+      CheckpointApplicationResult checkpoint_result = apply_checkpoint_priority_to_chunk(
+        chunk_index,
+        chunk_start_height,
+        chunk_end_height,
+        chunk_block_ids,
+        getBlockIdsFunc,
+        false); // track_checkpoint_heights = false (only need counters)
       
-      uint32_t checkpoints_from_config = 0;
-      uint32_t checkpoints_from_dns = 0;
-      
-      // STEP 1: Apply DNS checkpoints (PRIORITY 2)
-      // These will be overwritten by CryptoNoteConfig.h if there's a conflict
-      for (const auto& checkpoint : m_dns_checkpoint_hashes)
+      if (!checkpoint_result.success)
       {
-        uint32_t checkpoint_height = checkpoint.first;
-        if (checkpoint_height >= chunk_start_height && checkpoint_height <= chunk_end_height)
-        {
-          uint32_t index_in_chunk = checkpoint_height - chunk_start_height;
-          
-          // VALIDATION: Verify that blockchain.dat matches the DNS checkpoint
-          const crypto::Hash& blockchain_hash = chunk_block_ids[index_in_chunk];
-          const crypto::Hash& dns_hash = checkpoint.second;
-          
-          if (blockchain_hash != dns_hash)
-          {
-            logger(ERROR) << "DNS CHECKPOINT VALIDATION FAILED for chunk " 
-                                   << chunk_index << " at height " << checkpoint_height << "!"
-                                   << " Expected (from DNS): " << dns_hash
-                                   << ", Got (from blockchain.dat): " << blockchain_hash;
-            return false;
-          }
-          
-          // Replace with DNS checkpoint hash
-          chunk_block_ids[index_in_chunk] = dns_hash;
-          checkpoints_from_dns++;
-          
-          logger(DEBUGGING) << "Applied DNS checkpoint hash for height " 
-                                       << checkpoint_height << " in chunk " << chunk_index;
-        }
+        return false;
       }
       
-      // STEP 2: Apply CryptoNoteConfig.h checkpoints (PRIORITY 1 - HIGHEST)
-      // These overwrite both blockchain.dat and DNS checkpoints
-      for (const auto& checkpoint : m_old_checkpoint_hashes)
-      {
-        uint32_t checkpoint_height = checkpoint.first;
-        if (checkpoint_height >= chunk_start_height && checkpoint_height <= chunk_end_height)
-        {
-          uint32_t index_in_chunk = checkpoint_height - chunk_start_height;
-          const crypto::Hash& config_hash = checkpoint.second;
-          
-          // VALIDATION: Verify that blockchain.dat matches the CryptoNoteConfig.h checkpoint
-          // Re-fetch the original blockchain.dat hash for validation (before DNS overwrite)
-          std::vector<crypto::Hash> original_block_ids = getBlockIdsFunc(checkpoint_height, 1);
-          if (original_block_ids.empty() || original_block_ids[0] != config_hash)
-          {
-            logger(ERROR) << "CryptoNoteConfig.h CHECKPOINT VALIDATION FAILED for chunk " 
-                                   << chunk_index << " at height " << checkpoint_height << "!"
-                                   << " Expected (from CryptoNoteConfig.h): " << config_hash
-                                   << ", Got (from blockchain.dat): " << (original_block_ids.empty() ? NULL_HASH : original_block_ids[0]);
-            return false;
-          }
-          
-          // Replace with CryptoNoteConfig.h checkpoint hash (overwrites DNS if it was applied)
-          chunk_block_ids[index_in_chunk] = config_hash;
-          
-          // Update counters
-          if (checkpoints_from_dns > 0)
-          {
-            // Check if this height was in DNS (we can't easily track which specific heights, so we approximate)
-            // Actually, we can't know for sure without tracking, so we'll just count config checkpoints
-            // The logging will show the actual priority applied
-          }
-          checkpoints_from_config++;
-          
-          logger(DEBUGGING) << "Applied CryptoNoteConfig.h checkpoint hash for height " 
-                                       << checkpoint_height << " in chunk " << chunk_index
-                                       << " (overwrites DNS if present)";
-        }
-      }
-      
-      uint32_t total_checkpoints_applied = checkpoints_from_config + checkpoints_from_dns;
+      uint32_t total_checkpoints_applied = checkpoint_result.checkpoints_from_config + checkpoint_result.checkpoints_from_dns;
       if (total_checkpoints_applied > 0)
       {
         logger(INFO) << "Applied " << total_checkpoints_applied 
                                    << " checkpoint(s) to chunk " << chunk_index 
-                                   << " (Priority: " << checkpoints_from_config << " from CryptoNoteConfig.h, " 
-                                   << checkpoints_from_dns << " from DNS, rest from blockchain.dat)";
+                                   << " (Priority: " << checkpoint_result.checkpoints_from_config << " from CryptoNoteConfig.h, " 
+                                   << checkpoint_result.checkpoints_from_dns << " from DNS, rest from blockchain.dat)";
       }
       
       // Compute hash of this chunk's block IDs
@@ -1450,6 +1292,86 @@ namespace cn {
     return (ip >> 16) & 0xFFFF;
   }
 
+  CheckpointList::PeerSamplingResult CheckpointList::sample_peers_with_diversity(
+    const std::vector<uint64_t>& available_peers,
+    std::function<uint32_t(uint64_t peer_id)> getPeerNetwork16Func,
+    size_t num_peers_to_sample)
+  {
+    PeerSamplingResult result;
+    
+    if (available_peers.empty() || num_peers_to_sample == 0)
+    {
+      return result;
+    }
+    
+    // Limit sampling to available peers count
+    size_t actual_sample_size = std::min(num_peers_to_sample, available_peers.size());
+    
+    std::random_device rd;
+    std::mt19937 gen(rd());
+    std::uniform_int_distribution<size_t> dis(0, available_peers.size() - 1);
+    
+    // Sample K peers with network diversity (max 1 vote per /16 network)
+    while (result.sampled_peers.size() < actual_sample_size)
+    {
+      // Try to find a peer from a different network
+      size_t attempts = 0;
+      const size_t max_attempts = available_peers.size() * 2; // Prevent infinite loop
+      
+      while (attempts < max_attempts && result.sampled_peers.size() < actual_sample_size)
+      {
+        size_t idx = dis(gen);
+        uint64_t peer_id = available_peers[idx];
+        
+        // Check if we already sampled this peer
+        if (std::find(result.sampled_peers.begin(), result.sampled_peers.end(), peer_id) != result.sampled_peers.end())
+        {
+          attempts++;
+          continue;
+        }
+        
+        // Check network diversity (max 1 vote per /16 network)
+        uint32_t net16 = getPeerNetwork16Func(peer_id);
+        if (result.network_votes[net16] >= 1 && result.sampled_peers.size() < available_peers.size())
+        {
+          // Already have a vote from this network, try another peer
+          attempts++;
+          continue;
+        }
+        
+        // Accept this peer
+        result.sampled_peers.push_back(peer_id);
+        result.network_votes[net16] = std::min(result.network_votes[net16] + 1, 1U);
+        break;
+      }
+      
+      // If we couldn't find enough diverse peers, relax diversity requirement
+      if (result.sampled_peers.size() < actual_sample_size && attempts >= max_attempts)
+      {
+        fallback_peer_selection(available_peers, result.sampled_peers, actual_sample_size);
+      }
+    }
+    
+    return result;
+  }
+
+  void CheckpointList::fallback_peer_selection(
+    const std::vector<uint64_t>& available_peers,
+    std::vector<uint64_t>& sampled_peers,
+    size_t target_size)
+  {
+    // Fall back to any available peer (diversity requirement relaxed)
+    for (uint64_t peer_id : available_peers)
+    {
+      if (std::find(sampled_peers.begin(), sampled_peers.end(), peer_id) == sampled_peers.end())
+      {
+        sampled_peers.push_back(peer_id);
+        if (sampled_peers.size() >= target_size)
+          break;
+      }
+    }
+  }
+
   CheckpointList::HealthMetrics CheckpointList::get_health_metrics() const
   {
     HealthMetrics metrics;
@@ -1641,58 +1563,19 @@ namespace cn {
       }
       
       // Apply priority order: CryptoNoteConfig.h > DNS > blockchain.dat
-      // Build a map of checkpoints to apply (same logic as chunk generation)
-      std::map<uint32_t, std::pair<crypto::Hash, std::string>> checkpoints_to_apply;
+      CheckpointApplicationResult checkpoint_result = apply_checkpoint_priority_to_chunk(
+        chunk_index,
+        chunk_start_height,
+        chunk_end_height,
+        chunk_block_ids,
+        nullptr, // No re-fetch needed - we already have the data
+        false);  // No need to track specific heights
       
-      // PRIORITY 1: CryptoNoteConfig.h checkpoints in this chunk
-      for (const auto& checkpoint : m_old_checkpoint_hashes)
+      if (!checkpoint_result.success)
       {
-        uint32_t cp_height = checkpoint.first;
-        if (cp_height >= chunk_start_height && cp_height <= chunk_end_height)
-        {
-          checkpoints_to_apply[cp_height] = std::make_pair(checkpoint.second, "CryptoNoteConfig.h");
-        }
-      }
-      
-      // PRIORITY 2: DNS checkpoints in this chunk (only if not in CryptoNoteConfig.h)
-      for (const auto& checkpoint : m_dns_checkpoint_hashes)
-      {
-        uint32_t cp_height = checkpoint.first;
-        if (cp_height >= chunk_start_height && cp_height <= chunk_end_height)
-        {
-          if (checkpoints_to_apply.find(cp_height) == checkpoints_to_apply.end())
-          {
-            checkpoints_to_apply[cp_height] = std::make_pair(checkpoint.second, "DNS");
-          }
-        }
-      }
-      
-      // Apply checkpoints with validation
-      for (const auto& cp_entry : checkpoints_to_apply)
-      {
-        uint32_t cp_height = cp_entry.first;
-        const crypto::Hash& cp_hash = cp_entry.second.first;
-        const std::string& cp_source = cp_entry.second.second;
-        
-        uint32_t index_in_chunk = cp_height - chunk_start_height;
-        
-        // Validate that blockchain.dat matches the checkpoint
-        const crypto::Hash& blockchain_hash = chunk_block_ids[index_in_chunk];
-        
-        if (blockchain_hash != cp_hash)
-        {
-          logger(ERROR) << "CHECKPOINT VALIDATION FAILED: "
-                                 << "Checkpoint from " << cp_source << " at height " << cp_height 
-                                 << " in chunk " << chunk_index << " does not match blockchain.dat!"
-                                 << " Expected: " << cp_hash
-                                 << ", Got: " << blockchain_hash;
-          result.is_valid = false;
-          result.first_mismatched_chunk_index = chunk_index;
-          return result;
-        }
-        
-        // Replace with checkpoint hash (using priority order)
-        chunk_block_ids[index_in_chunk] = cp_hash;
+        result.is_valid = false;
+        result.first_mismatched_chunk_index = chunk_index;
+        return result;
       }
       
       // Compute chunk hash using priority order
@@ -1793,6 +1676,371 @@ namespace cn {
   }
   
   /**
+   * Apply checkpoint priority to chunk block IDs
+   * 
+   * Applies checkpoints with priority order: CryptoNoteConfig.h > DNS > blockchain.dat
+   * Validates that blockchain.dat matches expected checkpoint values before applying.
+   */
+  CheckpointList::CheckpointApplicationResult CheckpointList::apply_checkpoint_priority_to_chunk(
+    uint32_t chunk_index,
+    uint32_t chunk_start_height,
+    uint32_t chunk_end_height,
+    std::vector<crypto::Hash>& chunk_block_ids,
+    std::function<std::vector<crypto::Hash>(uint32_t startHeight, uint32_t maxCount)> getBlockIdsFunc,
+    bool track_checkpoint_heights) const
+  {
+    CheckpointApplicationResult result;
+    result.success = true;
+    result.checkpoints_from_config = 0;
+    result.checkpoints_from_dns = 0;
+    
+    // STEP 1: Apply DNS checkpoints (PRIORITY 2)
+    // These will be overwritten by CryptoNoteConfig.h if there's a conflict
+    for (const auto& checkpoint : m_dns_checkpoint_hashes)
+    {
+      uint32_t checkpoint_height = checkpoint.first;
+      if (checkpoint_height >= chunk_start_height && checkpoint_height <= chunk_end_height)
+      {
+        uint32_t index_in_chunk = checkpoint_height - chunk_start_height;
+        
+        if (index_in_chunk >= chunk_block_ids.size())
+        {
+          logger(ERROR) << "DNS checkpoint height " << checkpoint_height 
+                                 << " index out of range in chunk " << chunk_index;
+          result.success = false;
+          return result;
+        }
+        
+        // VALIDATION: Verify that blockchain.dat matches the DNS checkpoint
+        const crypto::Hash& dns_hash = checkpoint.second;
+        
+        if (!validate_checkpoint_hash(checkpoint_height, dns_hash, chunk_block_ids, index_in_chunk, nullptr))
+        {
+          logger(ERROR) << "DNS CHECKPOINT VALIDATION FAILED for chunk " 
+                                 << chunk_index << " at height " << checkpoint_height << "!"
+                                 << " Expected (from DNS): " << dns_hash;
+          result.success = false;
+          return result;
+        }
+        
+        // Replace with DNS checkpoint hash
+        chunk_block_ids[index_in_chunk] = dns_hash;
+        result.checkpoints_from_dns++;
+        
+        if (track_checkpoint_heights)
+        {
+          result.checkpoints_in_chunk.push_back(checkpoint_height);
+        }
+        
+        logger(DEBUGGING) << "Applied DNS checkpoint hash for height " 
+                                     << checkpoint_height << " in chunk " << chunk_index;
+      }
+    }
+    
+    // STEP 2: Apply CryptoNoteConfig.h checkpoints (PRIORITY 1 - HIGHEST)
+    // These overwrite both blockchain.dat and DNS checkpoints
+    for (const auto& checkpoint : m_old_checkpoint_hashes)
+    {
+      uint32_t checkpoint_height = checkpoint.first;
+      if (checkpoint_height >= chunk_start_height && checkpoint_height <= chunk_end_height)
+      {
+        uint32_t index_in_chunk = checkpoint_height - chunk_start_height;
+        
+        if (index_in_chunk >= chunk_block_ids.size())
+        {
+          logger(ERROR) << "CryptoNoteConfig.h checkpoint height " << checkpoint_height 
+                                 << " index out of range in chunk " << chunk_index;
+          result.success = false;
+          return result;
+        }
+        
+        // VALIDATION: Verify that blockchain.dat matches the CryptoNoteConfig.h checkpoint
+        const crypto::Hash& config_hash = checkpoint.second;
+        
+        if (!validate_checkpoint_hash(checkpoint_height, config_hash, chunk_block_ids, index_in_chunk, getBlockIdsFunc))
+        {
+          logger(ERROR) << "CryptoNoteConfig.h CHECKPOINT VALIDATION FAILED for chunk " 
+                                 << chunk_index << " at height " << checkpoint_height << "!"
+                                 << " Expected (from CryptoNoteConfig.h): " << config_hash;
+          result.success = false;
+          return result;
+        }
+        
+        // Replace with CryptoNoteConfig.h checkpoint hash (overwrites DNS if it was applied)
+        chunk_block_ids[index_in_chunk] = config_hash;
+        
+        // Update counters
+        if (track_checkpoint_heights)
+        {
+          // Check if this height was already in the list (from DNS)
+          auto it = std::find(result.checkpoints_in_chunk.begin(), result.checkpoints_in_chunk.end(), checkpoint_height);
+          if (it == result.checkpoints_in_chunk.end())
+          {
+            result.checkpoints_in_chunk.push_back(checkpoint_height);
+          }
+          else
+          {
+            // This checkpoint was already applied from DNS, now overwritten by CryptoNoteConfig.h
+            result.checkpoints_from_dns--; // Remove DNS count, add config count
+          }
+        }
+        result.checkpoints_from_config++;
+        
+        logger(DEBUGGING) << "Applied CryptoNoteConfig.h checkpoint hash for height " 
+                                     << checkpoint_height << " in chunk " << chunk_index
+                                     << " (overwrites DNS if present)";
+      }
+    }
+    
+    return result;
+  }
+
+  bool CheckpointList::validate_checkpoint_hash(
+    uint32_t checkpoint_height,
+    const crypto::Hash& expected_hash,
+    const std::vector<crypto::Hash>& chunk_block_ids,
+    uint32_t index_in_chunk,
+    std::function<std::vector<crypto::Hash>(uint32_t startHeight, uint32_t maxCount)> getBlockIdsFunc) const
+  {
+    crypto::Hash actual_hash = NULL_HASH;
+    
+    // If getBlockIdsFunc is provided, re-fetch the original blockchain.dat hash for validation
+    // (This is needed because DNS may have already overwritten the value in chunk_block_ids)
+    if (getBlockIdsFunc)
+    {
+      std::vector<crypto::Hash> original_block_ids = getBlockIdsFunc(checkpoint_height, 1);
+      if (!original_block_ids.empty())
+      {
+        actual_hash = original_block_ids[0];
+      }
+    }
+    else
+    {
+      // No re-fetch function provided - validate against current chunk_block_ids
+      // (This is used in validate_chunks_against_checkpoints where we already have the data)
+      if (index_in_chunk < chunk_block_ids.size())
+      {
+        actual_hash = chunk_block_ids[index_in_chunk];
+      }
+    }
+    
+    if (actual_hash == NULL_HASH)
+    {
+      logger(ERROR) << "Failed to get blockchain hash for checkpoint validation at height " << checkpoint_height;
+      return false;
+    }
+    
+    if (actual_hash != expected_hash)
+    {
+      logger(ERROR) << "Checkpoint validation failed at height " << checkpoint_height
+                             << ": expected " << expected_hash
+                             << ", got " << actual_hash;
+      return false;
+    }
+    
+    return true;
+  }
+
+  /**
+   * Attempt to reach consensus on a chunk hash with peers
+   * 
+   * Samples K peers with network diversity, collects their chunk hashes,
+   * and determines if M peers agree with the local hash.
+   * 
+   * @param chunk_index The chunk index being validated
+   * @param local_chunk_hash The locally computed chunk hash
+   * @param getPeerChunkHashFunc Function to get chunk hash from a peer
+   * @param available_peers List of available peer IDs
+   * @param getPeerNetwork16Func Function to get /16 network for a peer
+   * @param req Consensus requirements (M, K, n)
+   * @param attempt_name Name of the attempt (for logging)
+   * @param total_null_hash_responses Reference to counter for NULL_HASH responses (updated)
+   * @param total_mismatches Reference to counter for mismatches (updated)
+   * @return AttemptResult with agreement count and consensus hash
+   */
+  CheckpointList::AttemptResult CheckpointList::attempt_consensus_impl(
+    uint32_t chunk_index,
+    const crypto::Hash& local_chunk_hash,
+    std::function<crypto::Hash(uint64_t peer_id)> getPeerChunkHashFunc,
+    const std::vector<uint64_t>& available_peers,
+    std::function<uint32_t(uint64_t peer_id)> getPeerNetwork16Func,
+    const ConsensusRequirements& req,
+    const std::string& attempt_name,
+    uint32_t& total_null_hash_responses,
+    uint32_t& total_mismatches) const
+  {
+    AttemptResult attempt_result;
+    attempt_result.agreements = 0;
+    attempt_result.consensus_hash = NULL_HASH;
+    
+    // Sample K peers (req.min_peers) with network diversity
+    PeerSamplingResult sampling_result = sample_peers_with_diversity(
+      available_peers,
+      getPeerNetwork16Func,
+      req.min_peers);
+    
+    const std::vector<uint64_t>& sampled_peers = sampling_result.sampled_peers;
+    const std::map<uint32_t, uint32_t>& network_votes = sampling_result.network_votes;
+    
+    // Check consensus: need M agreements from K sampled peers, with M agreements from at least n networks
+    // Track hash votes to find consensus hash (hash with M+ votes, if different from local)
+    // Use unordered_map since crypto::Hash doesn't have comparison operator for std::map
+    std::unordered_map<crypto::Hash, uint32_t, boost::hash<crypto::Hash>> hash_votes;  // hash -> vote count
+    // Track which networks agree with local hash (for network diversity requirement on M agreements)
+    std::map<uint32_t, uint32_t> agreeing_networks_local; // network_16 -> count of agreeing peers
+    // Track which networks agree with consensus hash (if different from local)
+    // Use unordered_map since crypto::Hash doesn't have comparison operator for std::map
+    std::unordered_map<crypto::Hash, std::map<uint32_t, uint32_t>, boost::hash<crypto::Hash>> agreeing_networks_by_hash; // hash -> (network_16 -> count)
+    
+    uint32_t agreements = 0;
+    uint32_t null_hash_responses = 0;
+    uint32_t mismatches = 0;
+    
+    for (uint64_t peer_id : sampled_peers)
+    {
+      crypto::Hash peer_hash = getPeerChunkHashFunc(peer_id);
+      uint32_t net16 = getPeerNetwork16Func(peer_id);
+      
+      if (peer_hash == NULL_HASH)
+      {
+        // Peer didn't respond, timed out, or doesn't have this chunk in memory
+        // This is not necessarily a failure - the peer might not have created this chunk yet
+        // or might be using version 1 (doesn't support chunk-based checkpoints)
+        null_hash_responses++;
+        logger(INFO) << "Peer " << peer_id 
+                                   << " returned NULL_HASH for chunk " << chunk_index 
+                                   << " (" << attempt_name << ") - peer may not have this chunk in memory yet "
+                                   << "or may be using version 1 (doesn't support chunk checkpoints)";
+        continue; // Don't count as agreement or disagreement - peer doesn't have the chunk
+      }
+      
+      // Count votes for this hash
+      hash_votes[peer_hash]++;
+      
+      if (peer_hash == local_chunk_hash)
+      {
+        agreements++;
+        agreeing_networks_local[net16]++;
+        logger(INFO) << "Peer " << peer_id << " agrees with local chunk " << chunk_index 
+                     << " hash (" << attempt_name << ") from network " << net16;
+      }
+      else
+      {
+        mismatches++;
+        agreeing_networks_by_hash[peer_hash][net16]++;
+        logger(WARNING) << "Peer " << peer_id 
+                                 << " chunk hash mismatch for chunk " << chunk_index 
+                                 << " (" << attempt_name << "): local=" << local_chunk_hash 
+                                 << ", peer=" << peer_hash << " from network " << net16;
+      }
+    }
+    
+    // Find the consensus hash (hash with most votes, if >= M and different from local)
+    crypto::Hash consensus_hash = NULL_HASH;
+    uint32_t max_votes = 0;
+    for (const auto& vote : hash_votes)
+    {
+      if (vote.second >= req.min_agreements && vote.second > max_votes)
+      {
+        max_votes = vote.second;
+        consensus_hash = vote.first;
+      }
+    }
+    
+    // Only set consensus_hash if it's different from local and we have M+ agreements
+    if (consensus_hash != NULL_HASH && consensus_hash != local_chunk_hash && max_votes >= req.min_agreements)
+    {
+      attempt_result.consensus_hash = consensus_hash;
+      logger(WARNING) << "Chunk " << chunk_index << " (" << attempt_name 
+                               << "): M/K peers (" << max_votes << ") agree on different hash: " 
+                               << consensus_hash << " (local: " << local_chunk_hash << ")";
+    }
+    
+    // CRITICAL: Verify that M agreeing peers come from at least n diverse networks
+    // This ensures consensus is not dominated by a single network
+    // Example: M=3, n=2 means we need 3 agreements from at least 2 different networks
+    // Valid: M11 M12 M21 (2 from network1, 1 from network2) or M11 M21 M22 (1 from network1, 2 from network2)
+    // Invalid: M11 M12 M13 (all 3 from network1 - not diverse enough)
+    uint32_t diverse_networks_in_agreements = 0;
+    bool meets_diversity_requirement = false;
+    
+    if (agreements >= req.min_agreements)
+    {
+      // Check if M agreeing peers come from at least n networks
+      diverse_networks_in_agreements = static_cast<uint32_t>(agreeing_networks_local.size());
+      meets_diversity_requirement = (diverse_networks_in_agreements >= req.min_diverse_networks);
+      
+      if (!meets_diversity_requirement)
+      {
+        logger(WARNING) << "Chunk " << chunk_index 
+                                 << " consensus " << attempt_name << ": M=" << agreements 
+                                 << " agreements but only from " << diverse_networks_in_agreements 
+                                 << " network(s), need at least n=" << req.min_diverse_networks 
+                                 << " networks for consensus";
+        // Return 0 agreements if diversity requirement not met (consensus fails)
+        attempt_result.agreements = 0;
+        attempt_result.consensus_hash = NULL_HASH;
+        return attempt_result;
+      }
+    }
+    else if (consensus_hash != NULL_HASH && max_votes >= req.min_agreements)
+    {
+      // Check if M peers agreeing on consensus_hash come from at least n networks
+      auto it = agreeing_networks_by_hash.find(consensus_hash);
+      if (it != agreeing_networks_by_hash.end())
+      {
+        diverse_networks_in_agreements = static_cast<uint32_t>(it->second.size());
+        meets_diversity_requirement = (diverse_networks_in_agreements >= req.min_diverse_networks);
+        
+        if (!meets_diversity_requirement)
+        {
+          logger(WARNING) << "Chunk " << chunk_index 
+                                   << " consensus " << attempt_name << ": M=" << max_votes 
+                                   << " peers agree on different hash but only from " << diverse_networks_in_agreements 
+                                   << " network(s), need at least n=" << req.min_diverse_networks 
+                                   << " networks for consensus";
+          // Return 0 agreements if diversity requirement not met (consensus fails)
+          attempt_result.agreements = 0;
+          attempt_result.consensus_hash = NULL_HASH;
+          return attempt_result;
+        }
+      }
+    }
+    else
+    {
+      // Not enough agreements, but still track network diversity for logging
+      diverse_networks_in_agreements = static_cast<uint32_t>(agreeing_networks_local.size());
+    }
+    
+    // Also verify we sampled from at least n diverse networks (for K sampling requirement)
+    uint32_t diverse_networks_sampled = static_cast<uint32_t>(network_votes.size());
+    if (diverse_networks_sampled < req.min_diverse_networks)
+    {
+      logger(WARNING) << "Chunk " << chunk_index 
+                               << " consensus " << attempt_name << ": insufficient network diversity in sampling "
+                               << "(sampled from " << diverse_networks_sampled << " networks, need n=" << req.min_diverse_networks << ")";
+      // Return 0 agreements if diversity requirement not met (consensus fails)
+      attempt_result.agreements = 0;
+      attempt_result.consensus_hash = NULL_HASH;
+      return attempt_result;
+    }
+    
+    logger(INFO) << "Chunk " << chunk_index 
+                          << " consensus " << attempt_name << ": " << agreements 
+                          << "/" << sampled_peers.size() << " peers agreed (need M=" 
+                          << req.min_agreements << " from K=" << req.min_peers 
+                          << ", M agreements from n=" << diverse_networks_in_agreements 
+                          << " network(s), sampled from n=" << diverse_networks_sampled << " network(s))";
+    
+    // Track statistics for better error messages
+    total_null_hash_responses += null_hash_responses;
+    total_mismatches += mismatches;
+    
+    attempt_result.agreements = agreements;
+    return attempt_result;
+  }
+
+  /**
    * Verify chunk with peer consensus (with second chance retry)
    * 
    * This implements the "second chance" mechanism for noisy environments:
@@ -1842,172 +2090,21 @@ namespace cn {
       return result;
     }
     
-    // Helper function to sample peers and check consensus
-    // Returns: agreements count, and tracks if all responses were NULL_HASH
+    // Helper variables to track statistics across both attempts
     uint32_t total_null_hash_responses = 0;
     uint32_t total_mismatches = 0;
     
-    // Structure to return both agreement count and consensus hash
-    struct AttemptResult {
-      uint32_t agreements;
-      crypto::Hash consensus_hash;  // Hash that M/K peers agreed on (if different from local, NULL_HASH otherwise)
-    };
-    
-    auto attempt_consensus = [&](const std::string& attempt_name) -> AttemptResult {
-      AttemptResult attempt_result;
-      attempt_result.agreements = 0;
-      attempt_result.consensus_hash = NULL_HASH;
-      // Randomly sample M peers from available peers, ensuring network diversity
-      std::vector<uint64_t> sampled_peers;
-      std::map<uint32_t, uint32_t> network_votes; // network_16 -> vote_count (capped at 1)
-      std::random_device rd;
-      std::mt19937 gen(rd());
-      std::uniform_int_distribution<size_t> dis(0, available_peers.size() - 1);
-      
-      // Sample K peers (req.min_peers) with network diversity, need M agreements (req.min_agreements)
-      while (sampled_peers.size() < req.min_peers)
-      {
-        // Try to find a peer from a different network
-        size_t attempts = 0;
-        const size_t max_attempts = available_peers.size() * 2; // Prevent infinite loop
-        
-        while (attempts < max_attempts && sampled_peers.size() < req.min_peers)
-        {
-          size_t idx = dis(gen);
-          uint64_t peer_id = available_peers[idx];
-          
-          // Check if we already sampled this peer
-          if (std::find(sampled_peers.begin(), sampled_peers.end(), peer_id) != sampled_peers.end())
-          {
-            attempts++;
-            continue;
-          }
-          
-          // Check network diversity (max 1 vote per /16 network)
-          uint32_t net16 = getPeerNetwork16Func(peer_id);
-          if (network_votes[net16] >= 1 && sampled_peers.size() < available_peers.size())
-          {
-            // Already have a vote from this network, try another peer
-            attempts++;
-            continue;
-          }
-          
-          // Accept this peer
-          sampled_peers.push_back(peer_id);
-          network_votes[net16] = std::min(network_votes[net16] + 1, 1U);
-          break;
-        }
-        
-        // If we couldn't find enough diverse peers, relax diversity requirement
-        if (sampled_peers.size() < req.min_peers && attempts >= max_attempts)
-        {
-          // Fall back to any available peer (diversity requirement relaxed)
-          for (uint64_t peer_id : available_peers)
-          {
-            if (std::find(sampled_peers.begin(), sampled_peers.end(), peer_id) == sampled_peers.end())
-            {
-              sampled_peers.push_back(peer_id);
-              if (sampled_peers.size() >= req.min_peers)
-                break;
-            }
-          }
-        }
-      }
-      
-      // Check consensus: need M agreements from K sampled peers
-      // Track hash votes to find consensus hash (hash with M+ votes, if different from local)
-      // Use unordered_map since crypto::Hash doesn't have comparison operator for std::map
-      std::unordered_map<crypto::Hash, uint32_t, boost::hash<crypto::Hash>> hash_votes;  // hash -> vote count
-      uint32_t agreements = 0;
-      uint32_t null_hash_responses = 0;
-      uint32_t mismatches = 0;
-      
-      for (uint64_t peer_id : sampled_peers)
-      {
-        crypto::Hash peer_hash = getPeerChunkHashFunc(peer_id);
-        
-        if (peer_hash == NULL_HASH)
-        {
-          // Peer didn't respond, timed out, or doesn't have this chunk in memory
-          // This is not necessarily a failure - the peer might not have created this chunk yet
-          // or might be using version 1 (doesn't support chunk-based checkpoints)
-          null_hash_responses++;
-          logger(INFO) << "Peer " << peer_id 
-                                     << " returned NULL_HASH for chunk " << chunk_index 
-                                     << " (" << attempt_name << ") - peer may not have this chunk in memory yet "
-                                     << "or may be using version 1 (doesn't support chunk checkpoints)";
-          continue; // Don't count as agreement or disagreement - peer doesn't have the chunk
-        }
-        
-        // Count votes for this hash
-        hash_votes[peer_hash]++;
-        
-        if (peer_hash == local_chunk_hash)
-        {
-          agreements++;
-          logger(INFO) << "Peer " << peer_id << " agrees with local chunk " << chunk_index 
-                       << " hash (" << attempt_name << ")";
-        }
-        else
-        {
-          mismatches++;
-          logger(WARNING) << "Peer " << peer_id 
-                                   << " chunk hash mismatch for chunk " << chunk_index 
-                                   << " (" << attempt_name << "): local=" << local_chunk_hash 
-                                   << ", peer=" << peer_hash;
-        }
-      }
-      
-      // Find the consensus hash (hash with most votes, if >= M and different from local)
-      crypto::Hash consensus_hash = NULL_HASH;
-      uint32_t max_votes = 0;
-      for (const auto& vote : hash_votes)
-      {
-        if (vote.second >= req.min_agreements && vote.second > max_votes)
-        {
-          max_votes = vote.second;
-          consensus_hash = vote.first;
-        }
-      }
-      
-      // Only set consensus_hash if it's different from local and we have M+ agreements
-      if (consensus_hash != NULL_HASH && consensus_hash != local_chunk_hash && max_votes >= req.min_agreements)
-      {
-        attempt_result.consensus_hash = consensus_hash;
-        logger(WARNING) << "Chunk " << chunk_index << " (" << attempt_name 
-                                 << "): M/K peers (" << max_votes << ") agree on different hash: " 
-                                 << consensus_hash << " (local: " << local_chunk_hash << ")";
-      }
-      
-      // Verify we have at least n diverse networks
-      uint32_t diverse_networks = static_cast<uint32_t>(network_votes.size());
-      if (diverse_networks < req.min_diverse_networks)
-      {
-        logger(WARNING) << "Chunk " << chunk_index 
-                                 << " consensus " << attempt_name << ": insufficient network diversity "
-                                 << "(have " << diverse_networks << " networks, need n=" << req.min_diverse_networks << ")";
-        // Return 0 agreements if diversity requirement not met (consensus fails)
-        attempt_result.agreements = 0;
-        attempt_result.consensus_hash = NULL_HASH;
-        return attempt_result;
-      }
-      
-      logger(INFO) << "Chunk " << chunk_index 
-                            << " consensus " << attempt_name << ": " << agreements 
-                            << "/" << sampled_peers.size() << " peers agreed (need M=" 
-                            << req.min_agreements << " from K=" << req.min_peers 
-                            << ", have n=" << diverse_networks << " diverse networks)";
-      
-      // Track statistics for better error messages
-      total_null_hash_responses += null_hash_responses;
-      total_mismatches += mismatches;
-      
-      attempt_result.agreements = agreements;
-      return attempt_result;
-    };
-    
     // First attempt
-    AttemptResult first_attempt = attempt_consensus("first attempt");
+    AttemptResult first_attempt = attempt_consensus_impl(
+      chunk_index,
+      local_chunk_hash,
+      getPeerChunkHashFunc,
+      available_peers,
+      getPeerNetwork16Func,
+      req,
+      "first attempt",
+      total_null_hash_responses,
+      total_mismatches);
     result.agreements_first_attempt = first_attempt.agreements;
     result.consensus_hash_first_attempt = first_attempt.consensus_hash;
     
@@ -2041,7 +2138,16 @@ namespace cn {
     }
     
     result.used_second_chance = true;
-    AttemptResult second_attempt = attempt_consensus("second attempt");
+    AttemptResult second_attempt = attempt_consensus_impl(
+      chunk_index,
+      local_chunk_hash,
+      getPeerChunkHashFunc,
+      available_peers,
+      getPeerNetwork16Func,
+      req,
+      "second attempt",
+      total_null_hash_responses,
+      total_mismatches);
     result.agreements_second_attempt = second_attempt.agreements;
     result.consensus_hash_second_attempt = second_attempt.consensus_hash;
     

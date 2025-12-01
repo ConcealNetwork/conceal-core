@@ -129,6 +129,44 @@ namespace cn
     //   }
     static uint32_t get_network_16(uint32_t ip);
     
+    // Structure to return peer sampling results
+    struct PeerSamplingResult {
+      std::vector<uint64_t> sampled_peers;
+      std::map<uint32_t, uint32_t> network_votes; // network_16 -> vote_count (capped at 1)
+    };
+    
+    /**
+     * Sample peers with network diversity
+     * 
+     * Randomly samples K peers from available peers, ensuring network diversity
+     * (max 1 peer per /16 network). Falls back to any available peer if diversity
+     * cannot be achieved.
+     * 
+     * @param available_peers List of available peer IDs
+     * @param getPeerNetwork16Func Function to get /16 network for a peer (peer_id -> network_16)
+     * @param num_peers_to_sample Number of peers to sample (K)
+     * @return PeerSamplingResult with sampled peers and network votes
+     */
+    static PeerSamplingResult sample_peers_with_diversity(
+      const std::vector<uint64_t>& available_peers,
+      std::function<uint32_t(uint64_t peer_id)> getPeerNetwork16Func,
+      size_t num_peers_to_sample);
+    
+    /**
+     * Fallback peer selection when diversity requirement cannot be met
+     * 
+     * When we can't find enough diverse peers, relax the diversity requirement
+     * and select any available peers to reach the target sample size.
+     * 
+     * @param available_peers List of all available peer IDs
+     * @param sampled_peers Already sampled peers (will be updated)
+     * @param target_size Target number of peers to sample
+     */
+    static void fallback_peer_selection(
+      const std::vector<uint64_t>& available_peers,
+      std::vector<uint64_t>& sampled_peers,
+      size_t target_size);
+    
     // Health metrics for monitoring
     struct HealthMetrics {
       uint32_t total_chunks;
@@ -504,5 +542,86 @@ namespace cn
       
       return m_valid_point_sizes.find(fsize) != m_valid_point_sizes.end();
     }
+    
+    // Internal structure for consensus attempt results
+    struct AttemptResult {
+      uint32_t agreements;
+      crypto::Hash consensus_hash;  // Hash that M/K peers agreed on (if different from local, NULL_HASH otherwise)
+    };
+    
+    /**
+     * Attempt to reach consensus on a chunk hash with peers
+     * 
+     * Samples K peers with network diversity, collects their chunk hashes,
+     * and determines if M peers agree with the local hash.
+     * 
+     * @param chunk_index The chunk index being validated
+     * @param local_chunk_hash The locally computed chunk hash
+     * @param getPeerChunkHashFunc Function to get chunk hash from a peer
+     * @param available_peers List of available peer IDs
+     * @param getPeerNetwork16Func Function to get /16 network for a peer
+     * @param req Consensus requirements (M, K, n)
+     * @param attempt_name Name of the attempt (for logging)
+     * @param total_null_hash_responses Reference to counter for NULL_HASH responses (updated)
+     * @param total_mismatches Reference to counter for mismatches (updated)
+     * @return AttemptResult with agreement count and consensus hash
+     */
+    AttemptResult attempt_consensus_impl(
+      uint32_t chunk_index,
+      const crypto::Hash& local_chunk_hash,
+      std::function<crypto::Hash(uint64_t peer_id)> getPeerChunkHashFunc,
+      const std::vector<uint64_t>& available_peers,
+      std::function<uint32_t(uint64_t peer_id)> getPeerNetwork16Func,
+      const ConsensusRequirements& req,
+      const std::string& attempt_name,
+      uint32_t& total_null_hash_responses,
+      uint32_t& total_mismatches) const;
+    
+    // Internal structure for checkpoint application results
+    struct CheckpointApplicationResult {
+      bool success;
+      uint32_t checkpoints_from_config;
+      uint32_t checkpoints_from_dns;
+      std::vector<uint32_t> checkpoints_in_chunk; // Heights of checkpoints applied (optional)
+    };
+    
+    /**
+     * Apply checkpoint priority to chunk block IDs
+     * 
+     * Applies checkpoints with priority order: CryptoNoteConfig.h > DNS > blockchain.dat
+     * Validates that blockchain.dat matches expected checkpoint values before applying.
+     * 
+     * @param chunk_index The chunk index being processed
+     * @param chunk_start_height Starting height of the chunk
+     * @param chunk_end_height Ending height of the chunk
+     * @param chunk_block_ids Reference to chunk block IDs (modified in place)
+     * @param getBlockIdsFunc Optional function to re-fetch block IDs for validation (nullptr if not needed)
+     * @param track_checkpoint_heights If true, tracks which specific checkpoint heights were applied
+     * @return CheckpointApplicationResult with success status and counters
+     */
+    CheckpointApplicationResult apply_checkpoint_priority_to_chunk(
+      uint32_t chunk_index,
+      uint32_t chunk_start_height,
+      uint32_t chunk_end_height,
+      std::vector<crypto::Hash>& chunk_block_ids,
+      std::function<std::vector<crypto::Hash>(uint32_t startHeight, uint32_t maxCount)> getBlockIdsFunc = nullptr,
+      bool track_checkpoint_heights = false) const;
+    
+    /**
+     * Validate a checkpoint hash against blockchain data
+     * 
+     * @param checkpoint_height The checkpoint height to validate
+     * @param expected_hash The expected hash from checkpoint source (CryptoNoteConfig.h or DNS)
+     * @param chunk_block_ids Current chunk block IDs (may have been modified by DNS checkpoints)
+     * @param index_in_chunk Index of checkpoint height within the chunk
+     * @param getBlockIdsFunc Optional function to re-fetch original blockchain data (nullptr if not needed)
+     * @return true if validation passed, false otherwise
+     */
+    bool validate_checkpoint_hash(
+      uint32_t checkpoint_height,
+      const crypto::Hash& expected_hash,
+      const std::vector<crypto::Hash>& chunk_block_ids,
+      uint32_t index_in_chunk,
+      std::function<std::vector<crypto::Hash>(uint32_t startHeight, uint32_t maxCount)> getBlockIdsFunc = nullptr) const;
   };
 }
