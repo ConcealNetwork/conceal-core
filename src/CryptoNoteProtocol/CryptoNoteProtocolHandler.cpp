@@ -1407,13 +1407,30 @@ crypto::Hash CryptoNoteProtocolHandler::request_chunk_hash_from_peer(uint64_t pe
   // This allows us to use responses that arrived after the timeout
   {
     std::lock_guard<std::mutex> lock(m_pending_chunk_hashes_mutex);
-    auto it = m_pending_chunk_hashes.find(std::make_pair(peer_id, chunk_index));
+    auto key = std::make_pair(peer_id, chunk_index);
+    auto it = m_pending_chunk_hashes.find(key);
     if (it != m_pending_chunk_hashes.end()) {
       crypto::Hash cached_result = it->second;
       m_pending_chunk_hashes.erase(it);
       logger(INFO) << "Using cached chunk hash response from peer " << peer_id << " " << *peer_context
                    << " for chunk " << chunk_index << " (from previous request): " << cached_result;
       return cached_result;
+    }
+    // Log for debugging - show what pending entries exist
+    if (!m_pending_chunk_hashes.empty()) {
+      logger(DEBUGGING) << "No cached response for peer " << peer_id << " chunk " << chunk_index 
+                        << ". Total pending entries: " << m_pending_chunk_hashes.size();
+      // Log first few pending entries to see what we have
+      int count = 0;
+      for (const auto& entry : m_pending_chunk_hashes) {
+        if (count++ < 3) {
+          logger(DEBUGGING) << "  Pending: peer " << entry.first.first << " chunk " << entry.first.second 
+                            << " hash " << entry.second;
+        }
+      }
+    } else {
+      logger(DEBUGGING) << "No cached response for peer " << peer_id << " chunk " << chunk_index 
+                        << " (no pending entries)";
     }
   }
   
@@ -1431,6 +1448,11 @@ crypto::Hash CryptoNoteProtocolHandler::request_chunk_hash_from_peer(uint64_t pe
   if (!sent) {
     logger(WARNING) << "Failed to send chunk hash request to peer " << peer_id << " " << *peer_context 
                     << " for chunk " << chunk_index;
+    // Remove the pending entry we just created
+    {
+      std::lock_guard<std::mutex> lock(m_pending_chunk_hashes_mutex);
+      m_pending_chunk_hashes.erase(std::make_pair(peer_id, chunk_index));
+    }
     return NULL_HASH;
   }
   
@@ -1460,7 +1482,7 @@ crypto::Hash CryptoNoteProtocolHandler::request_chunk_hash_from_peer(uint64_t pe
   }
   
   // Timeout reached - response may arrive later and will be used in next validation attempt
-  // Don't remove the pending entry - keep it so late responses can be used
+  // The response handler will store it in m_pending_chunk_hashes when it arrives
   logger(DEBUGGING) << "Timeout waiting for immediate chunk hash response from peer " << peer_id 
                     << " " << *peer_context << " for chunk " << chunk_index
                     << " (response may arrive later and will be used in next validation attempt)";
