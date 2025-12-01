@@ -760,10 +760,61 @@ namespace cn
                 logger(INFO, BRIGHT_GREEN) << "Successfully generated " << chunkCount 
                                           << " checkpoint chunks from CryptoNoteConfig.h (covers up to height " << coveredHeight << ")";
                 
-                // Step 2: Check if DNS checkpoints extend beyond CryptoNoteConfig.h
-                // If so, try to extend chunks up to the highest DNS checkpoint
-                // (This will be handled by the existing logic that creates missing chunks beyond hardcoded checkpoints)
-                // The chunks will use priority order (CryptoNoteConfig.h > DNS > blockchain.dat) during generation
+                // Step 2: Create chunks beyond hardcoded checkpoints up to current blockchain height
+                // These chunks will be stored in memory and validated via P2P consensus
+                if (currentHeight > greatestTargetHeight)
+                {
+                  uint32_t chunk_size = m_checkpoints.get_chunk_size();
+                  uint32_t last_hardcoded_chunk_index = (greatestTargetHeight - 1) / chunk_size;
+                  uint32_t current_chunk_index = (currentHeight - 1) / chunk_size;
+                  
+                  logger(INFO) << "Creating chunks " << (last_hardcoded_chunk_index + 1) 
+                               << " to " << current_chunk_index 
+                               << " (beyond hardcoded checkpoints, up to current height " << currentHeight << ")";
+                  
+                  // Create chunks beyond hardcoded checkpoints (these need P2P validation)
+                  // Use same logic as existing code path (lines 915-952) for consistency
+                  for (uint32_t chunk_idx = last_hardcoded_chunk_index + 1; chunk_idx <= current_chunk_index; chunk_idx++)
+                  {
+                    // SIMPLIFIED: All chunks are uniform (block 0 excluded)
+                    uint32_t chunk_start_height = chunk_idx * chunk_size + 1;
+                    uint32_t chunk_end_height = (chunk_idx + 1) * chunk_size;
+                    
+                    // Only create if we have all blocks for this chunk
+                    if (currentHeight >= chunk_end_height)
+                    {
+                      // Check if chunk already exists in memory (from previous session)
+                      crypto::Hash existing_chunk_hash = m_checkpoints.get_chunk_hash(chunk_idx);
+                      if (existing_chunk_hash == NULL_HASH)
+                      {
+                        if (m_checkpoints.add_chunk_from_block_ids(getBlockIdsFunc, chunk_start_height))
+                        {
+                          logger(INFO) << "Created checkpoint chunk " << chunk_idx 
+                                       << " (blocks " << chunk_start_height << "-" << chunk_end_height 
+                                       << ") - stored in memory, awaiting P2P validation";
+                          // NOTE: We do NOT call add_verified_chunk_to_file() here
+                          // These chunks need peer consensus before being saved to checkpoint.dat
+                        }
+                        else
+                        {
+                          logger(WARNING) << "Failed to create chunk " << chunk_idx << " - blockchain mismatch detected";
+                          break;
+                        }
+                      }
+                      else
+                      {
+                        logger(DEBUGGING) << "Chunk " << chunk_idx << " already exists in memory (from previous session), awaiting P2P validation";
+                      }
+                    }
+                    else
+                    {
+                      logger(DEBUGGING) << "Skipping chunk " << chunk_idx 
+                                       << " - not enough blocks (have " << currentHeight 
+                                       << ", need " << chunk_end_height << ")";
+                      break;
+                    }
+                  }
+                }
                 
                 logger(INFO) << "Initial setup complete. Chunks beyond CryptoNoteConfig.h checkpoints will be validated via P2P consensus.";
               }

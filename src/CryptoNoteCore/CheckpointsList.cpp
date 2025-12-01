@@ -447,21 +447,7 @@ namespace cn {
           
           // VALIDATION: Verify that blockchain.dat matches the CryptoNoteConfig.h checkpoint
           // (We validate against blockchain.dat, not the potentially overwritten DNS value)
-          // Get the original blockchain hash by checking if we already applied DNS
           const crypto::Hash& config_hash = checkpoint.second;
-          const crypto::Hash& current_hash = chunk_block_ids[index_in_chunk];
-          
-          // If this height was already overwritten by DNS, we need to validate against blockchain.dat
-          // For now, we validate against the current value (which might be DNS or blockchain.dat)
-          // The important thing is that blockchain.dat must match the config checkpoint
-          // We'll validate this by checking if current_hash matches config_hash OR if we need to check blockchain.dat
-          
-          // Actually, we should validate against blockchain.dat directly
-          // But we've already overwritten chunk_block_ids with DNS values
-          // So we need to track original blockchain.dat values, OR re-fetch, OR validate before overwriting
-          // Simplest: validate that current value (blockchain.dat or DNS) matches config
-          // If DNS was applied, current_hash is DNS hash, which should match blockchain.dat (we validated above)
-          // So if config_hash != current_hash, we need to check if blockchain.dat matches config_hash
           
           // Re-fetch the original blockchain.dat hash for validation
           std::vector<crypto::Hash> original_block_ids = getBlockIdsFunc(checkpoint_height, 1);
@@ -1180,9 +1166,127 @@ namespace cn {
     m_points = std::move(points);
     logger(INFO) << "Loaded " << m_points.size() << " checkpoints from disk (legacy format) " << m_save_file;
     
-    // TODO: Convert legacy format to chunked format automatically
-    // For now, we keep both formats during transition
+    // Automatically convert legacy format to chunked format (only for version 2+)
+    // Version 1 nodes continue using legacy format
+    if (cn::P2P_CURRENT_VERSION >= cn::P2P_CHECKPOINT_LIST_VERSION) {
+      if (convert_legacy_to_chunked_format()) {
+      logger(INFO) << "Successfully converted legacy checkpoint format to chunked format";
+      
+      // Backup old file before saving new format
+      std::string backup_file = m_save_file + ".bckv1";
+      std::ifstream src(m_save_file, std::ios::binary);
+      if (src.good()) {
+        std::ofstream dst(backup_file, std::ios::binary);
+        if (dst.good()) {
+          dst << src.rdbuf();
+          logger(INFO) << "Backed up legacy checkpoint file to " << backup_file;
+        } else {
+          logger(WARNING) << "Failed to create backup file " << backup_file;
+        }
+      }
+      
+      // Save in new chunked format (overwrites old file)
+      if (save_checkpoints()) {
+        logger(INFO) << "Migration complete: saved chunked format, legacy format backed up to " << backup_file;
+      } else {
+        logger(ERROR) << "Migration failed: could not save chunked format";
+        return true; // Still return true - legacy format is loaded
+      }
+      } else {
+        logger(WARNING) << "Failed to convert legacy format to chunked format - keeping legacy format";
+      }
+    } else {
+      logger(INFO) << "Node is version 1 - keeping legacy checkpoint format (migration only for version 2+)";
+    }
     
+    return true;
+  }
+  
+  /**
+   * Convert legacy format (individual block hashes) to chunked format
+   * 
+   * Legacy format: m_points[i] = block hash at height i (i=0 is genesis, i=1 is block 1, etc.)
+   * Chunked format: m_chunks[j] = hash of all block hashes in chunk j (chunks exclude block 0)
+   * 
+   * Conversion:
+   * - Skip block 0 (genesis) - chunks don't include it
+   * - chunk[0] = hash(m_points[1] || m_points[2] || ... || m_points[chunk_size])
+   * - chunk[1] = hash(m_points[chunk_size+1] || m_points[chunk_size+2] || ... || m_points[2*chunk_size])
+   * - etc.
+   */
+  bool CheckpointList::convert_legacy_to_chunked_format()
+  {
+    std::lock_guard<std::mutex> points_lock(m_points_lock);
+    
+    if (m_points.empty()) {
+      logger(WARNING) << "Cannot convert: legacy format is empty";
+      return false;
+    }
+    
+    // Legacy format: m_points[0] = block 0 (genesis), m_points[1] = block 1, etc.
+    // Chunks exclude block 0, so we start from m_points[1]
+    uint32_t total_blocks = static_cast<uint32_t>(m_points.size());
+    if (total_blocks < 2) {
+      logger(WARNING) << "Cannot convert: need at least block 0 and block 1 (have " << total_blocks << " blocks)";
+      return false;
+    }
+    
+    // Number of blocks to convert (excluding block 0/genesis)
+    uint32_t blocks_to_convert = total_blocks - 1;
+    
+    // Calculate number of chunks
+    uint32_t num_chunks = blocks_to_convert / m_chunk_size;
+    
+    if (num_chunks == 0) {
+      logger(WARNING) << "Cannot convert: not enough blocks for even one chunk (have " << blocks_to_convert 
+                      << " blocks, need " << m_chunk_size << " per chunk)";
+      return false;
+    }
+    
+    logger(INFO) << "Converting legacy format to chunked format: " << total_blocks 
+                << " blocks (" << blocks_to_convert << " excluding genesis) -> " 
+                << num_chunks << " chunks";
+    
+    // Convert to chunks
+    std::lock_guard<std::mutex> chunks_lock(m_chunks_lock);
+    m_chunks.clear();
+    m_chunks.reserve(num_chunks);
+    
+    for (uint32_t chunk_index = 0; chunk_index < num_chunks; chunk_index++) {
+      uint32_t start_block_index = chunk_index * m_chunk_size + 1; // +1 to skip block 0
+      uint32_t end_block_index = std::min(start_block_index + m_chunk_size, total_blocks);
+      uint32_t blocks_in_chunk = end_block_index - start_block_index;
+      
+      if (blocks_in_chunk != m_chunk_size && chunk_index < num_chunks - 1) {
+        // Last chunk can be partial, but intermediate chunks must be full
+        logger(ERROR) << "Invalid chunk " << chunk_index << ": expected " << m_chunk_size 
+                      << " blocks, got " << blocks_in_chunk;
+        return false;
+      }
+      
+      // Extract block hashes for this chunk
+      std::vector<crypto::Hash> chunk_block_ids;
+      chunk_block_ids.reserve(blocks_in_chunk);
+      for (uint32_t i = start_block_index; i < end_block_index; i++) {
+        chunk_block_ids.push_back(m_points[i]);
+      }
+      
+      // Calculate chunk hash
+      crypto::Hash chunk_hash = crypto::cn_fast_hash(
+        chunk_block_ids.data(), 
+        chunk_block_ids.size() * sizeof(crypto::Hash)
+      );
+      
+      m_chunks.push_back(chunk_hash);
+    }
+    
+    // Mark all converted chunks as confirmed (they came from validated legacy format)
+    m_confirmed_chunks.clear();
+    for (uint32_t i = 0; i < m_chunks.size(); i++) {
+      m_confirmed_chunks.insert(i);
+    }
+    
+    logger(INFO) << "Successfully converted " << num_chunks << " chunks from legacy format";
     return true;
   }
   
@@ -1499,7 +1603,6 @@ namespace cn {
     for (const auto& checkpoint_entry : checkpoints_to_verify)
     {
       uint32_t checkpoint_height = checkpoint_entry.first;
-      const crypto::Hash& expected_checkpoint_hash = checkpoint_entry.second.first;
       const std::string& source = checkpoint_entry.second.second;
       
       // SIMPLIFIED: Find which chunk this checkpoint belongs to

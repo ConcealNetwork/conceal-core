@@ -464,6 +464,9 @@ namespace cn
     bool save_checkpoints_legacy();
     bool load_checkpoints_from_file_legacy();
     
+    // Migration: Convert legacy format (individual block hashes) to chunked format
+    bool convert_legacy_to_chunked_format();
+    
     bool add_checkpoint_target(uint32_t height, const std::string &hash_str);
     
     // Helper: Calculate which chunk a block height belongs to
