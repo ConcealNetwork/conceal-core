@@ -16,6 +16,7 @@
 #include <mutex>
 #include <algorithm>
 #include <climits>
+#include <sstream>
 #include <boost/scope_exit.hpp>
 #include <boost/uuid/uuid_io.hpp>
 #include <System/Dispatcher.h>
@@ -1329,6 +1330,8 @@ int CryptoNoteProtocolHandler::handle_response_chunk_hash(int command, NOTIFY_RE
     return 1;
   }
   
+  logger(INFO) << context << " Received chunk hash response from peer " << peer_id << " for chunk " << arg.chunk_index;
+  
   // Store the response in pending chunk hashes map for the consensus mechanism
   // NOTE: NULL_HASH is a valid response (means peer doesn't have this chunk)
   {
@@ -1367,7 +1370,7 @@ crypto::Hash CryptoNoteProtocolHandler::request_chunk_hash_from_peer(uint64_t pe
     // Log all available peer IDs for debugging
     logger(DEBUGGING) << "Available peer IDs:";
     m_p2p->for_each_connection([&](CryptoNoteConnectionContext& ctx, uint64_t id) {
-      logger(DEBUGGING) << "  Peer ID: " << id << ", connection_id: " << ctx.m_connection_id 
+      logger(DEBUGGING) << "  Peer ID: " << id << " " << ctx 
                         << ", state: " << get_protocol_state_string(ctx.m_state)
                         << ", version: " << static_cast<int>(ctx.version);
     });
@@ -1385,18 +1388,20 @@ crypto::Hash CryptoNoteProtocolHandler::request_chunk_hash_from_peer(uint64_t pe
   req.chunk_index = chunk_index;
   
   logger(INFO) << "Requesting chunk hash for chunk " << chunk_index << " from peer " << peer_id 
+               << " " << *peer_context
                << " (connection_id: " << peer_context->m_connection_id 
                << ", state: " << get_protocol_state_string(peer_context->m_state)
                << ", version: " << static_cast<int>(peer_context->version) << ")";
   
   bool sent = post_notify<NOTIFY_REQUEST_CHUNK_HASH>(*m_p2p, req, *peer_context);
   if (!sent) {
-    logger(WARNING) << "Failed to send chunk hash request to peer " << peer_id << " for chunk " << chunk_index;
+    logger(WARNING) << "Failed to send chunk hash request to peer " << peer_id << " " << *peer_context 
+                    << " for chunk " << chunk_index;
     return NULL_HASH;
   }
   
   logger(INFO) << "Successfully sent chunk hash request for chunk " << chunk_index 
-               << " to peer " << peer_id << " (waiting for response...)";
+               << " to peer " << peer_id << " " << *peer_context << " (waiting for response...)";
   
   // Wait for response (with timeout)
   // In a real implementation, this should use async/await or a callback mechanism
@@ -1414,13 +1419,14 @@ crypto::Hash CryptoNoteProtocolHandler::request_chunk_hash_from_peer(uint64_t pe
     if (it != m_pending_chunk_hashes.end()) {
       crypto::Hash result = it->second;
       m_pending_chunk_hashes.erase(it);
-      logger(INFO) << "Received chunk hash response from peer " << peer_id 
+      logger(INFO) << "Received chunk hash response from peer " << peer_id << " " << *peer_context
                    << " for chunk " << chunk_index << ": " << result;
       return result;
     }
   }
   
-  logger(logging::WARNING) << "Timeout waiting for chunk hash response from peer " << peer_id << " for chunk " << chunk_index;
+  logger(logging::WARNING) << "Timeout waiting for chunk hash response from peer " << peer_id 
+                           << " " << *peer_context << " for chunk " << chunk_index;
   return NULL_HASH;
 }
 
@@ -1515,10 +1521,19 @@ bool CryptoNoteProtocolHandler::validate_unverified_chunks()
   std::vector<uint64_t> eligible_peers;
   std::map<uint64_t, uint32_t> peer_network_16; // peer_id -> /16 network
   
+  // First, log all connected peers for debugging
+  uint32_t total_connected = 0;
+  m_p2p->for_each_connection([&](CryptoNoteConnectionContext& ctx, uint64_t peer_id) {
+    total_connected++;
+  });
+  logger(INFO) << "Checking " << total_connected << " connected peer(s) for chunk validation eligibility";
+  
   m_p2p->for_each_connection([&](CryptoNoteConnectionContext& ctx, uint64_t peer_id) {
     // Only consider peers that support chunk-based checkpoints
     if (ctx.version < cn::P2P_CHECKPOINT_LIST_VERSION)
     {
+      logger(DEBUGGING) << "Peer " << peer_id << " " << ctx << " filtered: version " 
+                        << static_cast<int>(ctx.version) << " < " << cn::P2P_CHECKPOINT_LIST_VERSION;
       return; // Skip old version peers
     }
     
@@ -1527,6 +1542,8 @@ bool CryptoNoteProtocolHandler::validate_unverified_chunks()
     if (ctx.m_state != CryptoNoteConnectionContext::state_normal && 
         ctx.m_state != CryptoNoteConnectionContext::state_synchronizing)
     {
+      logger(DEBUGGING) << "Peer " << peer_id << " " << ctx << " filtered: state " 
+                        << get_protocol_state_string(ctx.m_state) << " (need normal or synchronizing)";
       return; // Skip peers that aren't in a usable state
     }
     
@@ -1536,6 +1553,7 @@ bool CryptoNoteProtocolHandler::validate_unverified_chunks()
     time_t connection_duration = time_now - ctx.m_started;
     if (connection_duration < 0)
     {
+      logger(DEBUGGING) << "Peer " << peer_id << " " << ctx << " filtered: invalid connection time";
       return; // Invalid connection time
     }
     
@@ -1544,10 +1562,16 @@ bool CryptoNoteProtocolHandler::validate_unverified_chunks()
     // Check if peer meets minimum uptime requirement
     if (peer_uptime_blocks < min_uptime_blocks)
     {
+      logger(DEBUGGING) << "Peer " << peer_id << " " << ctx << " filtered: uptime " 
+                        << peer_uptime_blocks << " blocks < " << min_uptime_blocks << " blocks required";
       return; // Peer doesn't meet uptime requirement
     }
     
     // Peer is eligible
+    logger(DEBUGGING) << "Peer " << peer_id << " " << ctx << " is ELIGIBLE: version " 
+                      << static_cast<int>(ctx.version) << ", state " 
+                      << get_protocol_state_string(ctx.m_state) << ", uptime " 
+                      << peer_uptime_blocks << " blocks";
     eligible_peers.push_back(peer_id);
     peer_network_16[peer_id] = CheckpointList::get_network_16(ctx.m_remote_ip);
   });
@@ -1556,6 +1580,9 @@ bool CryptoNoteProtocolHandler::validate_unverified_chunks()
   {
     logger(INFO) << "No eligible peers for chunk validation (need uptime > " 
                                << min_uptime_blocks << " blocks, version 2+, and in normal/synchronizing state)";
+    logger(INFO) << "Note: Only ACTIVE CONNECTIONS are considered, not peers in peerlist. "
+                 << "Use 'print_cn' command to see active connections. "
+                 << "To force connection to a peer, use --add-priority-node <IP>:<PORT>";
     logger(INFO) << "Chunk validation will be retried when eligible peers become available";
     return false;
   }
@@ -1606,7 +1633,16 @@ bool CryptoNoteProtocolHandler::validate_unverified_chunks()
       crypto::Hash peer_hash = request_chunk_hash_from_peer(peer_id, validating_chunk);
       if (peer_hash == NULL_HASH)
       {
-        logger(INFO) << "Peer " << peer_id << " does not have chunk " << validating_chunk 
+        // Find peer context to log IP address
+        std::string peer_info = "peer " + std::to_string(peer_id);
+        m_p2p->for_each_connection([&peer_info, peer_id](const CryptoNoteConnectionContext& ctx, uint64_t id) {
+          if (id == peer_id) {
+            std::ostringstream oss;
+            oss << ctx;
+            peer_info = "peer " + std::to_string(peer_id) + " " + oss.str();
+          }
+        });
+        logger(INFO) << peer_info << " does not have chunk " << validating_chunk 
                      << " in memory (returned NULL_HASH)";
       }
       return peer_hash;
@@ -1642,9 +1678,11 @@ bool CryptoNoteProtocolHandler::validate_unverified_chunks()
     {
       logger(INFO) << "Chunk " << chunk_index 
                             << " validation: No peers have this chunk in memory yet. "
-                            << "Will retry validation once peers create this chunk.";
+                            << "Will retry validation once peers create this chunk. "
+                            << "Stopping validation - no point to add subsequent chunks to checkpoint.dat "
+                            << "if chunk " << chunk_index << " is not validated first (file must be sequential).";
       // Don't rollback - peers just need to create the chunk first
-      continue; // Skip to next chunk or wait
+      break; // Stop - file must be sequential, no gaps allowed
     }
     
     if (result.consensus_reached)
@@ -1674,9 +1712,11 @@ bool CryptoNoteProtocolHandler::validate_unverified_chunks()
                                                    << (chunk_index > 0 ? chunk_index - 1 : 0) << " boundary.";
       
       // Calculate rollback height
-      // chunk[0]: blocks 0 to chunk_size (inclusive)
-      // chunk[1]: blocks (chunk_size + 1) to (2 * chunk_size) (inclusive)
-      // So chunk N ends at: (N + 1) * chunk_size
+      // SIMPLIFIED: Block 0 (genesis) is NOT in any chunk
+      // chunk[0]: blocks 1 to chunk_size
+      // chunk[1]: blocks (chunk_size + 1) to (2 * chunk_size)
+      // chunk[N]: blocks (N * chunk_size + 1) to ((N + 1) * chunk_size)
+      // 
       // Rollback to end of previous chunk (chunk_index - 1)
       uint32_t chunk_size = m_core.getCheckpointList().get_chunk_size();
       uint32_t rollback_height;
@@ -1688,6 +1728,7 @@ bool CryptoNoteProtocolHandler::validate_unverified_chunks()
       {
         // Rollback to end of previous chunk
         // Previous chunk (chunk_index - 1) ends at: chunk_index * chunk_size
+        // Example: If chunk 38 fails, rollback to: 38 * 10000 = 380,000 (end of chunk 37)
         rollback_height = chunk_index * chunk_size;
       }
       
