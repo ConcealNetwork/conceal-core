@@ -117,6 +117,7 @@ public:
 
   virtual bool addMessageQueue(MessageQueue<BlockchainMessage>& messageQueue) = 0;
   virtual bool removeMessageQueue(MessageQueue<BlockchainMessage>& messageQueue) = 0;
+  virtual bool rollback_chain_to(uint32_t height) = 0;
 };
 
 } //namespace cn

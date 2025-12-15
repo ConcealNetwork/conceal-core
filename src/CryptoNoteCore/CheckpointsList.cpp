@@ -154,27 +154,45 @@ namespace cn {
       uint32_t dns_checkpoints_invalid = 0;
 
     for (const auto& record : records) {
-      uint32_t height;
-      crypto::Hash hash = NULL_HASH;
-      std::stringstream ss;
-      size_t del = record.find_first_of(':');
+      // Support both formats:
+      // 1. One checkpoint per record: "height:hash"
+      // 2. Multiple checkpoints per record (newline-separated): "height1:hash1\nheight2:hash2\n..."
+      
+      std::stringstream record_stream(record);
+      std::string line;
+      bool record_has_valid_checkpoint = false;
+      
+      while (std::getline(record_stream, line)) {
+        // Skip empty lines
+        if (line.empty() || (line.find_first_not_of(" \t\r\n") == std::string::npos)) {
+          continue;
+        }
         
+        // Trim whitespace
+        line.erase(0, line.find_first_not_of(" \t"));
+        line.erase(line.find_last_not_of(" \t") + 1);
+        
+        uint32_t height;
+        crypto::Hash hash = NULL_HASH;
+        std::stringstream ss;
+        size_t del = line.find_first_of(':');
+          
         if (del == std::string::npos) {
-          logger(DEBUGGING) << "Invalid DNS checkpoint record format (missing ':'): " << record;
+          logger(DEBUGGING) << "Invalid DNS checkpoint format (missing ':'): " << line;
           dns_checkpoints_invalid++;
           continue;
         }
         
-      std::string height_str = record.substr(0, del), hash_str = record.substr(del + 1, 64);
-      ss.str(height_str);
-      ss >> height;
-      char c;
-        
-      if ((ss.fail() || ss.get(c)) || !common::podFromHex(hash_str, hash)) {
-          logger(DEBUGGING) << "Failed to parse DNS checkpoint record: " << record;
+        std::string height_str = line.substr(0, del), hash_str = line.substr(del + 1, 64);
+        ss.str(height_str);
+        ss >> height;
+        char c;
+          
+        if ((ss.fail() || ss.get(c)) || !common::podFromHex(hash_str, hash)) {
+          logger(DEBUGGING) << "Failed to parse DNS checkpoint: " << line;
           dns_checkpoints_invalid++;
-        continue;
-      }
+          continue;
+        }
 
         // Check if this height already exists in CryptoNoteConfig.h (PRIORITY 1 takes precedence)
         if (m_old_checkpoint_hashes.count(height) > 0) {
@@ -189,12 +207,19 @@ namespace cn {
         
         // Also add as target for validation (if not already a target)
         if (m_targets.count(height) == 0) {
-        add_checkpoint_target(height, hash_str);
+          add_checkpoint_target(height, hash_str);
         }
         
         dns_checkpoints_added++;
+        record_has_valid_checkpoint = true;
         logger(INFO) << "Added DNS checkpoint (PRIORITY 2): " << height_str << ":" << hash_str;
       }
+      
+      // If a record had no valid checkpoints, count it as invalid
+      if (!record_has_valid_checkpoint && !record.empty()) {
+        dns_checkpoints_invalid++;
+      }
+    }
       
       if (dns_checkpoints_added > 0)
       {
@@ -292,10 +317,11 @@ namespace cn {
    * 
    * CHUNKING EXPLANATION:
    * Instead of storing all 1.87M block hashes (60MB), we store chunk hashes:
-   * - Chunk 0: hash(blocks 0-9999)     -> 1 hash (32 bytes)
-   * - Chunk 1: hash(blocks 10000-19999) -> 1 hash (32 bytes)
+   * NOTE: Block 0 (genesis) is EXCLUDED from chunks
+   * - Chunk 0: hash(blocks 1-10000)     -> 1 hash (32 bytes)
+   * - Chunk 1: hash(blocks 10001-20000) -> 1 hash (32 bytes)
    * - ...
-   * - Chunk 186: hash(blocks 1860000-1869999) -> 1 hash (32 bytes)
+   * - Chunk 186: hash(blocks 1860001-1870000) -> 1 hash (32 bytes)
    * 
    * Total: 187 chunks × 32 bytes = ~6KB (vs 60MB for full list)
    * 
@@ -333,7 +359,6 @@ namespace cn {
       const std::lock_guard<std::mutex> lock(m_chunks_lock);
       
       // Calculate how many chunks we need
-    // SIMPLIFIED CHUNK STRUCTURE (block 0/genesis is NOT included in chunks):
     // chunk[0]: blocks 1 to chunk_size (inclusive) = chunk_size blocks
     // chunk[1]: blocks (chunk_size + 1) to (2 * chunk_size) (inclusive) = chunk_size blocks
     // chunk[n]: blocks (n * chunk_size + 1) to ((n + 1) * chunk_size) (inclusive) = chunk_size blocks
@@ -358,7 +383,6 @@ namespace cn {
     // Generate each chunk
     for (uint32_t chunk_index = 0; chunk_index < num_chunks; chunk_index++)
     {
-      // SIMPLIFIED: All chunks are uniform (chunk_size blocks each)
       // chunk[0]: blocks 1 to chunk_size
       // chunk[1]: blocks (chunk_size + 1) to (2 * chunk_size)
       // chunk[n]: blocks (n * chunk_size + 1) to ((n + 1) * chunk_size)
@@ -398,12 +422,12 @@ namespace cn {
       {
         std::stringstream ss;
         ss << "Validated and replaced " << checkpoint_result.checkpoints_in_chunk.size() << " checkpoint(s) in chunk " << chunk_index 
-           << " (heights: ";
+           << " (blocks " << chunk_start_height << "-" << chunk_end_height << ", heights: ";
         for (size_t i = 0; i < checkpoint_result.checkpoints_in_chunk.size(); i++) {
           if (i > 0) ss << ", ";
           ss << checkpoint_result.checkpoints_in_chunk[i];
         }
-        ss << ") - Priority: " << checkpoint_result.checkpoints_from_config << " from CryptoNoteConfig.h, " 
+        ss << ") - " << checkpoint_result.checkpoints_from_config << " from CryptoNoteConfig.h, " 
            << checkpoint_result.checkpoints_from_dns << " from DNS, rest from blockchain.dat";
         logger(INFO) << ss.str();
       }
@@ -513,8 +537,9 @@ namespace cn {
       {
         logger(INFO) << "Applied " << total_checkpoints_applied 
                                    << " checkpoint(s) to chunk " << chunk_index 
-                                   << " (Priority: " << checkpoint_result.checkpoints_from_config << " from CryptoNoteConfig.h, " 
-                                   << checkpoint_result.checkpoints_from_dns << " from DNS, rest from blockchain.dat)";
+                                   << " (blocks " << chunk_start_height << "-" << chunk_end_height << "): " 
+                                   << checkpoint_result.checkpoints_from_config << " from CryptoNoteConfig.h, " 
+                                   << checkpoint_result.checkpoints_from_dns << " from DNS, rest from blockchain.dat";
       }
       
       // Compute hash of this chunk's block IDs

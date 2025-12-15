@@ -471,14 +471,14 @@ int CryptoNoteProtocolHandler::handle_request_get_objects(int command, NOTIFY_RE
   size_t maxObjects = m_maxObjectCount.load();
   const size_t totalObjects = arg.blocks.size() + arg.txs.size();
 
-  logger(INFO) << "DEBUG: Request for " << totalObjects << " objects (limit: " << maxObjects << ")";
-
-
   if (totalObjects > maxObjects)
   {
+    std::string ipAddress = common::ipAddressToString(context.m_remote_ip);
     logger(logging::ERROR) << context << "Requested objects count exceeds limit of " 
                           << maxObjects << ": blocks " << arg.blocks.size() 
                           << " + txs " << arg.txs.size() << " = " << totalObjects;
+    logger(logging::WARNING) << "IP " << ipAddress << ":" << context.m_remote_port 
+                            << " attempted to overload with " << totalObjects << " objects (limit: " << maxObjects << ")";
     context.m_state = CryptoNoteConnectionContext::state_shutdown;
     return 1;
   }

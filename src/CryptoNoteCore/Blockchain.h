@@ -225,6 +225,9 @@ namespace cn
     bool have_tx_keyimg_as_spent(const crypto::KeyImage &key_im);
 
   private:
+    // Private helper for rollback - performs the actual rollback operation
+    // Precondition: m_blockchain_lock must be held
+    bool rollback_to_height_impl(uint32_t height);
     bool m_testnet = false;
     struct MultisignatureOutputUsage
     {

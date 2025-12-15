@@ -3764,34 +3764,45 @@ namespace cn
     try
     {
       std::lock_guard<decltype(m_blockchain_lock)> lk(m_blockchain_lock);
-      
-      logger(INFO, BRIGHT_YELLOW) << "Rolling back blockchain to height " << height;
-      
-      // Check if we're already at or below the requested height
-      if (height >= m_blocks.size())
-      {
-        logger(WARNING, BRIGHT_YELLOW) << "Requested rollback to height " << height 
-                                       << " which is higher than current height " << m_blocks.size();
-        return true;
-      }
-      
-      while (m_blocks.size() > height + 1)
-      {
-        if (!removeLastBlock())
-        {
-          logger(ERROR, BRIGHT_RED) << "Failed to remove last block during rollback";
-          return false;
-        }
-      }
-      
-      logger(INFO, BRIGHT_GREEN) << "Blockchain successfully rolled back to height: " << height << "Synchronization will resume";
-      return true;
+      return rollback_to_height_impl(height);
     }
     catch (const std::exception&)
     {
       logger(ERROR, BRIGHT_RED) << "Error rolling back blockchain";
       return false;
     }
+  }
+
+  bool Blockchain::rollback_to_height_impl(uint32_t height)
+  {
+    logger(INFO, BRIGHT_YELLOW) << "Rolling back blockchain to height " << height;
+    
+    // Check if we're already at or below the requested height
+    if (height >= m_blocks.size())
+    {
+      logger(WARNING, BRIGHT_YELLOW) << "Requested rollback to height " << height 
+                                     << " which is higher than current height " << m_blocks.size();
+      return true;
+    }
+    
+    // Validate height is reasonable (not 0, which would rollback genesis)
+    if (height == 0 && m_blocks.size() > 1)
+    {
+      logger(ERROR, BRIGHT_RED) << "Cannot rollback to height 0 (genesis block) - current height: " << m_blocks.size();
+      return false;
+    }
+    
+    while (m_blocks.size() > height + 1)
+    {
+      if (!removeLastBlock())
+      {
+        logger(ERROR, BRIGHT_RED) << "Failed to remove last block during rollback";
+        return false;
+      }
+    }
+    
+    logger(INFO, BRIGHT_GREEN) << "Blockchain successfully rolled back to height: " << height << "Synchronization will resume";
+    return true;
   }
 
   bool Blockchain::removeLastBlock()

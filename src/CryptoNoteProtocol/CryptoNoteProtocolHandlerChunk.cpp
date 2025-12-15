@@ -659,8 +659,36 @@ void ChunkValidationManager::check_pending_chunk_validations()
                                     << " (local: " << pending.local_hash << "). "
                                     << "This indicates blockchain divergence.";
         
-        // TODO: Handle rollback (same logic as before)
-        // For now, just remove pending validation
+        // Calculate rollback height (bottom of the chunk)
+        uint32_t chunk_size = m_core.getCheckpointList().get_chunk_size();
+        uint32_t rollback_height = chunk_index * chunk_size;
+        
+        logger(ERROR, BRIGHT_RED) << "Rolling back blockchain to height " << rollback_height 
+                                  << " (chunk " << chunk_index << " boundary) due to peer consensus divergence";
+        
+        // Truncate checkpoint.dat to the previous chunk (chunk_index - 1)
+        uint32_t last_valid_chunk = (chunk_index > 0) ? (chunk_index - 1) : 0;
+        if (!m_core.getCheckpointList().truncate_checkpoint_file(last_valid_chunk))
+        {
+          logger(ERROR, BRIGHT_RED) << "Failed to truncate checkpoint.dat to chunk " << last_valid_chunk;
+        }
+        else
+        {
+          logger(INFO) << "Truncated checkpoint.dat to chunk " << last_valid_chunk;
+        }
+        
+        // Rollback blockchain to the chunk boundary
+        if (!m_core.rollback_chain_to(rollback_height))
+        {
+          logger(ERROR, BRIGHT_RED) << "Failed to rollback blockchain to height " << rollback_height 
+                                    << " - node may be in inconsistent state";
+        }
+        else
+        {
+          logger(INFO, BRIGHT_GREEN) << "Successfully rolled back blockchain to height " << rollback_height;
+        }
+        
+        // Remove pending validation
         it = m_pending_validations.erase(it);
         
         // Clean up responses
