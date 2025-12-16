@@ -161,6 +161,8 @@ namespace cn {
       std::stringstream record_stream(record);
       std::string line;
       bool record_has_valid_checkpoint = false;
+      bool record_has_skipped_checkpoint = false;
+      uint32_t invalid_lines_in_record = 0;
       
       while (std::getline(record_stream, line)) {
         // Skip empty lines
@@ -179,7 +181,7 @@ namespace cn {
           
         if (del == std::string::npos) {
           logger(DEBUGGING) << "Invalid DNS checkpoint format (missing ':'): " << line;
-          dns_checkpoints_invalid++;
+          invalid_lines_in_record++;
           continue;
         }
         
@@ -190,7 +192,7 @@ namespace cn {
           
         if ((ss.fail() || ss.get(c)) || !common::podFromHex(hash_str, hash)) {
           logger(DEBUGGING) << "Failed to parse DNS checkpoint: " << line;
-          dns_checkpoints_invalid++;
+          invalid_lines_in_record++;
           continue;
         }
 
@@ -199,6 +201,7 @@ namespace cn {
           logger(DEBUGGING) << "Checkpoint at height " << height << " already exists in CryptoNoteConfig.h. "
                            << "Skipping DNS checkpoint (CryptoNoteConfig.h takes precedence).";
           dns_checkpoints_skipped++;
+          record_has_skipped_checkpoint = true;
           continue;
         }
 
@@ -215,8 +218,9 @@ namespace cn {
         logger(INFO) << "Added DNS checkpoint (PRIORITY 2): " << height_str << ":" << hash_str;
       }
       
-      // If a record had no valid checkpoints, count it as invalid
-      if (!record_has_valid_checkpoint && !record.empty()) {
+      // Count this record as invalid ONLY if it had invalid lines AND no valid/skipped checkpoints
+      // (A record with only skipped checkpoints is valid but redundant, not invalid)
+      if (invalid_lines_in_record > 0 && !record_has_valid_checkpoint && !record_has_skipped_checkpoint && !record.empty()) {
         dns_checkpoints_invalid++;
       }
     }

@@ -914,9 +914,16 @@ namespace cn
                   // If we're past the last chunk boundary, create missing chunks
                   if (current_chunk_index > last_chunk_index && currentHeight > greatestTargetHeight)
                   {
-                    logger(INFO) << "Creating missing checkpoint chunks beyond last hardcoded checkpoint (from chunk " 
-                                 << (last_chunk_index + 1) << " to " << current_chunk_index 
-                                 << ", heights " << (currentCoveredHeight + 1) << " to " << currentHeight << ")";
+                    uint32_t num_chunks_to_create = current_chunk_index - last_chunk_index;
+                    if (num_chunks_to_create == 1) {
+                      logger(INFO) << "Creating missing checkpoint chunk " << current_chunk_index 
+                                   << " beyond last hardcoded checkpoint (heights " 
+                                   << (currentCoveredHeight + 1) << " to " << currentHeight << ")";
+                    } else {
+                      logger(INFO) << "Creating missing checkpoint chunks beyond last hardcoded checkpoint (from chunk " 
+                                   << (last_chunk_index + 1) << " to " << current_chunk_index 
+                                   << ", heights " << (currentCoveredHeight + 1) << " to " << currentHeight << ")";
+                    }
                     
                     auto getBlockIdsFunc = [this](uint32_t startHeight, uint32_t maxCount) -> std::vector<crypto::Hash> {
                       return m_blockIndex.getBlockIds(startHeight, maxCount);
