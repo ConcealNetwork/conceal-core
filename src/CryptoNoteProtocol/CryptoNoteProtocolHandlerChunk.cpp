@@ -208,18 +208,20 @@ bool ChunkValidationManager::validate_unverified_chunks()
     // Only consider peers that support chunk-based checkpoints
     if (ctx.version < cn::P2P_CHECKPOINT_LIST_VERSION)
     {
-      logger(DEBUGGING) << "Peer " << peer_id << " " << ctx << " filtered: version " 
-                        << static_cast<int>(ctx.version) << " < " << cn::P2P_CHECKPOINT_LIST_VERSION;
+      logger(DEBUGGING) << "Peer " << peer_id << " " << ctx << " filtered: P2P version " 
+                        << static_cast<int>(ctx.version) << " < " << cn::P2P_CHECKPOINT_LIST_VERSION 
+                        << " (does not support chunk-based checkpoints)";
       return; // Skip old version peers
     }
     
-    // Accept peers in normal state (synchronized) OR synchronizing state
+    // Accept peers in normal state (synchronized), idle state, OR synchronizing state
     // We can validate chunks even during sync, as long as peers are connected
     if (ctx.m_state != CryptoNoteConnectionContext::state_normal && 
+        ctx.m_state != CryptoNoteConnectionContext::state_idle &&
         ctx.m_state != CryptoNoteConnectionContext::state_synchronizing)
     {
       logger(DEBUGGING) << "Peer " << peer_id << " " << ctx << " filtered: state " 
-                        << get_protocol_state_string(ctx.m_state) << " (need normal or synchronizing)";
+                        << get_protocol_state_string(ctx.m_state) << " (need normal, idle, or synchronizing)";
       return; // Skip peers that aren't in a usable state
     }
     
@@ -244,7 +246,7 @@ bool ChunkValidationManager::validate_unverified_chunks()
     }
     
     // Peer is eligible
-    logger(DEBUGGING) << "Peer " << peer_id << " " << ctx << " is ELIGIBLE: version " 
+    logger(DEBUGGING) << "Peer " << peer_id << " " << ctx << " is ELIGIBLE for chunk validation: P2P version " 
                       << static_cast<int>(ctx.version) << ", state " 
                       << get_protocol_state_string(ctx.m_state) << ", uptime " 
                       << peer_uptime_blocks << " blocks";
@@ -255,7 +257,7 @@ bool ChunkValidationManager::validate_unverified_chunks()
   if (eligible_peers.empty())
   {
     logger(INFO) << "No eligible peers for chunk validation (need uptime > " 
-                               << min_uptime_blocks << " blocks, version 2+, and in normal/synchronizing state)";
+                               << min_uptime_blocks << " blocks, version 2+, and in normal/idle/synchronizing state)";
     logger(INFO) << "Note: Only ACTIVE CONNECTIONS are considered, not peers in peerlist. "
                  << "Use 'print_cn' command to see active connections. "
                  << "To force connection to a peer, use --add-priority-node <IP>:<PORT>";
