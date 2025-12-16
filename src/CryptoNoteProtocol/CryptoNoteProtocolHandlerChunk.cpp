@@ -268,6 +268,14 @@ bool ChunkValidationManager::validate_unverified_chunks()
   logger(INFO) << "Found " << eligible_peers.size() << " eligible peer(s) for chunk validation "
                         << "(uptime > " << min_uptime_blocks << " blocks, support version 2+)";
   
+  // Log all eligible peers for debugging
+  logger(DEBUGGING) << "Eligible peers list:";
+  m_p2p->for_each_connection([&](CryptoNoteConnectionContext& ctx, uint64_t peer_id) {
+    if (std::find(eligible_peers.begin(), eligible_peers.end(), peer_id) != eligible_peers.end()) {
+      logger(DEBUGGING) << "  - Peer " << peer_id << " " << ctx << " (version " << static_cast<int>(ctx.version) << ")";
+    }
+  });
+  
   // Validate chunks in chronological order (oldest first)
   // This ensures we catch divergences at the root cause
   for (uint32_t chunk_index : unverified_chunks)
@@ -366,6 +374,12 @@ bool ChunkValidationManager::validate_unverified_chunks()
     
     logger(INFO) << "Sampled " << sampled_peers.size() << " peer(s) from " << distinct_networks 
                  << " distinct network(s) (requirement: " << req.min_diverse_networks << " networks)";
+    
+    // Log which peers were selected for debugging
+    logger(DEBUGGING) << "Sampled peers for chunk " << chunk_index << ":";
+    for (uint64_t peer_id : sampled_peers) {
+      logger(DEBUGGING) << "  - Selected peer " << peer_id;
+    }
     
     // Send async requests to sampled peers
     uint64_t request_time = time(nullptr);
