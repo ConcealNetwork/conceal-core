@@ -731,9 +731,9 @@ namespace cn
                 }
                 else
                 {
-                  logger(DEBUGGING) << "Skipping chunk " << chunk_idx 
-                                   << " - not enough blocks (have " << currentHeight 
-                                   << ", need " << chunk_end_height << ")";
+                  logger(INFO) << "Skipping chunk " << chunk_idx 
+                               << " - not enough blocks (have " << currentHeight 
+                               << ", need " << chunk_end_height << ")";
                   break; // Can't create more chunks if we don't have enough blocks
                 }
               }
@@ -808,9 +808,9 @@ namespace cn
                     }
                     else
                     {
-                      logger(DEBUGGING) << "Skipping chunk " << chunk_idx 
-                                       << " - not enough blocks (have " << currentHeight 
-                                       << ", need " << chunk_end_height << ")";
+                      logger(INFO) << "Skipping chunk " << chunk_idx 
+                                   << " - not enough blocks (have " << currentHeight 
+                                   << ", need " << chunk_end_height << ")";
                       break;
                     }
                   }
@@ -916,11 +916,11 @@ namespace cn
                   {
                     uint32_t num_chunks_to_create = current_chunk_index - last_chunk_index;
                     if (num_chunks_to_create == 1) {
-                      logger(INFO) << "Creating missing checkpoint chunk " << current_chunk_index 
+                      logger(INFO) << "Checking for missing checkpoint chunk " << current_chunk_index 
                                    << " beyond last hardcoded checkpoint (heights " 
                                    << (currentCoveredHeight + 1) << " to " << currentHeight << ")";
                     } else {
-                      logger(INFO) << "Creating missing checkpoint chunks beyond last hardcoded checkpoint (from chunk " 
+                      logger(INFO) << "Checking for missing checkpoint chunks beyond last hardcoded checkpoint (from chunk " 
                                    << (last_chunk_index + 1) << " to " << current_chunk_index 
                                    << ", heights " << (currentCoveredHeight + 1) << " to " << currentHeight << ")";
                     }
@@ -964,9 +964,9 @@ namespace cn
                       }
                       else
                       {
-                        logger(DEBUGGING) << "Skipping chunk " << chunk_idx 
-                                         << " - not enough blocks (have " << currentHeight 
-                                         << ", need " << chunk_end_height << ")";
+                        logger(INFO) << "Skipping chunk " << chunk_idx 
+                                     << " - not enough blocks (have " << currentHeight 
+                                     << ", need " << chunk_end_height << ")";
                         break;
                       }
                     }
@@ -1061,9 +1061,9 @@ namespace cn
                     }
                     else
                     {
-                      logger(DEBUGGING) << "Skipping chunk " << chunk_idx 
-                                       << " - not enough blocks yet (have " << currentHeight 
-                                       << ", need " << chunk_end_height << ")";
+                      logger(INFO) << "Skipping chunk " << chunk_idx 
+                                   << " - not enough blocks yet (have " << currentHeight 
+                                   << ", need " << chunk_end_height << ")";
                       break; // Can't create more chunks if we don't have enough blocks
                     }
                   }
