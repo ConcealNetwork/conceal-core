@@ -1,6 +1,6 @@
 // Copyright (c) 2011-2017 The Cryptonote developers
 // Copyright (c) 2017-2018 The Circle Foundation & Conceal Devs
-// Copyright (c) 2018-2023 Conceal Network & Conceal Devs
+// Copyright (c) 2018-2026 Conceal Network & Conceal Devs
 //
 // Distributed under the MIT/X11 software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
@@ -89,18 +89,12 @@ bool ChunkValidationManager::send_chunk_hash_request_async(uint64_t peer_id, uin
   NOTIFY_REQUEST_CHUNK_HASH::request req;
   req.chunk_index = chunk_index;
   
-  logger(INFO) << "Sending async chunk hash request for chunk " << chunk_index << " to peer " << peer_id 
-               << " " << *peer_context;
-  
   bool sent = post_notify<NOTIFY_REQUEST_CHUNK_HASH>(*m_p2p, req, *peer_context);
   if (!sent) {
-    logger(WARNING) << "Failed to send async chunk hash request to peer " << peer_id << " " << *peer_context 
-                    << " for chunk " << chunk_index;
+    logger(WARNING) << "[Chunk Validation] Failed to send chunk " << chunk_index << " hash request to peer " << peer_id;
     return false;
   }
   
-  logger(INFO) << "Successfully sent async chunk hash request for chunk " << chunk_index 
-               << " to peer " << peer_id << " " << *peer_context;
   return true;
 }
 
@@ -136,7 +130,7 @@ bool ChunkValidationManager::validate_unverified_chunks()
   // Validation can happen during sync as long as we have peers
   if (m_peersCount.load() == 0)
   {
-    logger(DEBUGGING) << "Cannot validate chunks: no peers connected yet";
+    logger(DEBUGGING) << "[Chunk Validation] No peers available for validation";
     return false;
   }
   
@@ -202,15 +196,13 @@ bool ChunkValidationManager::validate_unverified_chunks()
   m_p2p->for_each_connection([&](CryptoNoteConnectionContext& ctx, uint64_t peer_id) {
     total_connected++;
   });
-  logger(INFO) << "Checking " << total_connected << " connected peer(s) for chunk validation eligibility";
+  logger(INFO) << "[Chunk Validation] Checking " << total_connected << " connected peers for eligibility";
   
   m_p2p->for_each_connection([&](CryptoNoteConnectionContext& ctx, uint64_t peer_id) {
     // Only consider peers that support chunk-based checkpoints
     if (ctx.version < cn::P2P_CHECKPOINT_LIST_VERSION)
     {
-      logger(DEBUGGING) << "Peer " << peer_id << " " << ctx << " filtered: P2P version " 
-                        << static_cast<int>(ctx.version) << " < " << cn::P2P_CHECKPOINT_LIST_VERSION 
-                        << " (does not support chunk-based checkpoints)";
+      logger(DEBUGGING) << "[Chunk Validation] Peer " << peer_id << " filtered: P2P version " << ctx.version << " < required version";
       return; // Skip old version peers
     }
     
@@ -220,8 +212,7 @@ bool ChunkValidationManager::validate_unverified_chunks()
         ctx.m_state != CryptoNoteConnectionContext::state_idle &&
         ctx.m_state != CryptoNoteConnectionContext::state_synchronizing)
     {
-      logger(DEBUGGING) << "Peer " << peer_id << " " << ctx << " filtered: state " 
-                        << get_protocol_state_string(ctx.m_state) << " (need normal, idle, or synchronizing)";
+      logger(DEBUGGING) << "[Chunk Validation] Peer " << peer_id << " filtered: state " << get_protocol_state_string(ctx.m_state) << " (need normal, idle, or synchronizing)";
       return; // Skip peers that aren't in a usable state
     }
     
@@ -231,7 +222,7 @@ bool ChunkValidationManager::validate_unverified_chunks()
     time_t connection_duration = time_now - ctx.m_started;
     if (connection_duration < 0)
     {
-      logger(DEBUGGING) << "Peer " << peer_id << " " << ctx << " filtered: invalid connection time";
+      logger(DEBUGGING) << "[Chunk Validation] Peer " << peer_id << " filtered: invalid connection time";
       return; // Invalid connection time
     }
     
@@ -240,24 +231,20 @@ bool ChunkValidationManager::validate_unverified_chunks()
     // Check if peer meets minimum uptime requirement
     if (peer_uptime_blocks < min_uptime_blocks)
     {
-      logger(DEBUGGING) << "Peer " << peer_id << " " << ctx << " filtered: uptime " 
-                        << peer_uptime_blocks << " blocks < " << min_uptime_blocks << " blocks required";
+      logger(DEBUGGING) << "[Chunk Validation] Peer " << peer_id << " filtered: uptime " << peer_uptime_blocks << " blocks < required";
       return; // Peer doesn't meet uptime requirement
     }
     
     // Peer is eligible
-    logger(DEBUGGING) << "Peer " << peer_id << " " << ctx << " is ELIGIBLE for chunk validation: P2P version " 
-                      << static_cast<int>(ctx.version) << ", state " 
-                      << get_protocol_state_string(ctx.m_state) << ", uptime " 
-                      << peer_uptime_blocks << " blocks";
+    logger(DEBUGGING) << "[Chunk Validation] Peer " << peer_id << " is ELIGIBLE (version: " << ctx.version << ", state: "
+                  << get_protocol_state_string(ctx.m_state) << ", uptime: " << peer_uptime_blocks << " blocks)";
     eligible_peers.push_back(peer_id);
     peer_network_16[peer_id] = CheckpointList::get_network_16(ctx.m_remote_ip);
   });
   
   if (eligible_peers.empty())
   {
-    logger(INFO) << "No eligible peers for chunk validation (need uptime > " 
-                               << min_uptime_blocks << " blocks, version 2+, and in normal/idle/synchronizing state)";
+    logger(INFO) << "[Chunk Validation] No eligible peers found (need uptime > " << min_uptime_blocks << " blocks)";
     logger(INFO) << "Note: Only ACTIVE CONNECTIONS are considered, not peers in peerlist. "
                  << "Use 'print_cn' command to see active connections. "
                  << "To force connection to a peer, use --add-priority-node <IP>:<PORT>";
@@ -265,14 +252,26 @@ bool ChunkValidationManager::validate_unverified_chunks()
     return false;
   }
   
-  logger(INFO) << "Found " << eligible_peers.size() << " eligible peer(s) for chunk validation "
-                        << "(uptime > " << min_uptime_blocks << " blocks, support version 2+)";
+  logger(INFO) << "[Chunk Validation] Found " << eligible_peers.size() << " eligible peers (uptime > " << min_uptime_blocks << " blocks)";
+  
+  // Calculate consensus requirements (M, K, n) based on available eligible peers
+  CheckpointList::ConsensusRequirements req = m_core.getCheckpointList().calculate_consensus_requirements(eligible_peers.size());
+  
+  // STEP 1: Check if we have enough eligible peers to meet K requirement
+  // If not enough eligible peers, break and retry later when more peers become eligible
+  if (eligible_peers.size() < req.min_peers)
+  {
+    logger(INFO) << "[Chunk Validation] Not enough eligible peers: have " << eligible_peers.size() 
+                << ", need K=" << req.min_peers << ". Will retry when more peers become available.";
+    return false; // Will retry via rate limiting mechanism (5 minute wait)
+  }
+
   
   // Log all eligible peers for debugging
-  logger(DEBUGGING) << "Eligible peers list:";
+  logger(DEBUGGING) << "[Chunk Validation] Eligible peers list:";
   m_p2p->for_each_connection([&](CryptoNoteConnectionContext& ctx, uint64_t peer_id) {
     if (std::find(eligible_peers.begin(), eligible_peers.end(), peer_id) != eligible_peers.end()) {
-      logger(DEBUGGING) << "  - Peer " << peer_id << " " << ctx << " (version " << static_cast<int>(ctx.version) << ")";
+      logger(DEBUGGING) << "  - Peer " << peer_id << " (version: " << ctx.version << ")";
     }
   });
   
@@ -301,7 +300,7 @@ bool ChunkValidationManager::validate_unverified_chunks()
     crypto::Hash local_chunk_hash = m_core.getCheckpointList().get_chunk_hash(chunk_index);
     if (local_chunk_hash == NULL_HASH)
     {
-      logger(WARNING) << "Cannot validate chunk " << chunk_index << ": chunk hash not found in memory";
+      logger(WARNING) << "[Chunk Validation] Cannot validate chunk " << chunk_index << ": chunk hash not found in memory";
       {
         std::lock_guard<std::mutex> lock(m_chunk_validation_mutex);
         m_current_validating_chunk_index = UINT32_MAX;
@@ -309,15 +308,14 @@ bool ChunkValidationManager::validate_unverified_chunks()
       continue;
     }
     
-    logger(INFO) << "Validating chunk " << chunk_index << " (oldest unverified chunk) "
-                          << "with " << eligible_peers.size() << " eligible peer(s)";
+    logger(INFO) << "[Chunk Validation] Validating chunk " << chunk_index << " with " << eligible_peers.size() << " eligible peers";
     
     // Check if this chunk is already being validated asynchronously
     {
       std::lock_guard<std::mutex> lock(m_pending_validations_mutex);
       if (m_pending_validations.find(chunk_index) != m_pending_validations.end())
       {
-        logger(DEBUGGING) << "Chunk " << chunk_index << " is already being validated asynchronously, skipping";
+        logger(DEBUGGING) << "[Chunk Validation] Chunk " << chunk_index << " is already being validated, skipping";
         {
           std::lock_guard<std::mutex> lock2(m_chunk_validation_mutex);
           m_current_validating_chunk_index = UINT32_MAX;
@@ -328,9 +326,6 @@ bool ChunkValidationManager::validate_unverified_chunks()
     
     // Calculate consensus requirements (M, K, n)
     CheckpointList::ConsensusRequirements req = m_core.getCheckpointList().calculate_consensus_requirements(eligible_peers.size());
-    logger(INFO) << "Consensus requirements (testnet): M=" << req.min_agreements 
-                 << ", K=" << req.min_peers << ", n=" << req.min_diverse_networks 
-                 << " (have " << eligible_peers.size() << " available peers)";
     
     // Sample K peers with network diversity using shared utility function
     auto getPeerNetwork16 = [&peer_network_16](uint64_t peer_id) -> uint32_t {
@@ -348,7 +343,7 @@ bool ChunkValidationManager::validate_unverified_chunks()
     
     if (sampled_peers.empty())
     {
-      logger(WARNING) << "Could not sample any peers for chunk " << chunk_index << " validation";
+      logger(WARNING) << "[Chunk Validation] Could not sample any peers for chunk " << chunk_index << " validation";
       {
         std::lock_guard<std::mutex> lock(m_chunk_validation_mutex);
         m_current_validating_chunk_index = UINT32_MAX;
@@ -361,10 +356,8 @@ bool ChunkValidationManager::validate_unverified_chunks()
     
     if (distinct_networks < req.min_diverse_networks)
     {
-      logger(WARNING) << "Could not achieve network diversity for chunk " << chunk_index 
-                      << " validation: have " << distinct_networks 
-                      << " distinct networks, need " << req.min_diverse_networks
-                      << ". Sampled " << sampled_peers.size() << " peer(s).";
+      logger(WARNING) << "[Chunk Validation] Could not achieve network diversity for chunk " << chunk_index
+                    << ": have " << distinct_networks << " distinct networks, need " << req.min_diverse_networks;
       {
         std::lock_guard<std::mutex> lock(m_chunk_validation_mutex);
         m_current_validating_chunk_index = UINT32_MAX;
@@ -372,11 +365,11 @@ bool ChunkValidationManager::validate_unverified_chunks()
       continue;
     }
     
-    logger(INFO) << "Sampled " << sampled_peers.size() << " peer(s) from " << distinct_networks 
-                 << " distinct network(s) (requirement: " << req.min_diverse_networks << " networks)";
+    logger(INFO) << "[Chunk Validation] Sampled " << sampled_peers.size() << " peers from " << distinct_networks
+                 << " distinct networks (requirement: " << req.min_diverse_networks << " networks)";
     
     // Log which peers were selected for debugging
-    logger(DEBUGGING) << "Sampled peers for chunk " << chunk_index << ":";
+    logger(DEBUGGING) << "[Chunk Validation] Sampled peers for chunk " << chunk_index << ":";
     for (uint64_t peer_id : sampled_peers) {
       logger(DEBUGGING) << "  - Selected peer " << peer_id;
     }
@@ -394,7 +387,7 @@ bool ChunkValidationManager::validate_unverified_chunks()
     
     if (requests_sent == 0)
     {
-      logger(WARNING) << "Failed to send any async requests for chunk " << chunk_index;
+      logger(WARNING) << "[Chunk Validation] Failed to send any async requests for chunk " << chunk_index;
       {
         std::lock_guard<std::mutex> lock(m_chunk_validation_mutex);
         m_current_validating_chunk_index = UINT32_MAX;
@@ -416,9 +409,7 @@ bool ChunkValidationManager::validate_unverified_chunks()
       m_pending_validations[chunk_index] = pending;
     }
     
-    logger(INFO) << "Sent async chunk hash requests for chunk " << chunk_index 
-                 << " to " << requests_sent << " peer(s). "
-                 << "Will check for consensus after 2 minutes.";
+    logger(INFO) << "[Chunk Validation] Sent chunk " << chunk_index << " hash requests to " << requests_sent << " peers. Checking consensus in 2 minutes.";
     
     // Clear validation state (validation is now async - will be checked in check_pending_chunk_validations)
     {
@@ -459,8 +450,7 @@ void ChunkValidationManager::check_pending_chunk_validations()
     }
     
     // 2 minutes have passed - check for consensus
-    logger(INFO) << "Checking consensus for chunk " << chunk_index 
-                 << " (elapsed: " << elapsed << " seconds, attempt " << pending.attempt_number << ")";
+    logger(INFO) << "[Chunk Validation] Checking consensus for chunk " << chunk_index << " (elapsed: " << elapsed << " seconds, attempt " << pending.attempt_number << ")";
     
     // Collect responses from requested peers
     std::unordered_map<crypto::Hash, uint32_t, boost::hash<crypto::Hash>> hash_votes;  // hash -> vote count
@@ -499,7 +489,7 @@ void ChunkValidationManager::check_pending_chunk_validations()
     // Calculate consensus requirements
     CheckpointList::ConsensusRequirements req = m_core.getCheckpointList().calculate_consensus_requirements(pending.requested_peers.size());
     
-    logger(INFO) << "Chunk " << chunk_index << " consensus check: received " << responses_received 
+    logger(INFO) << "[Chunk Validation] Chunk " << chunk_index << " consensus check: received " << responses_received
                  << " response(s) from " << pending.requested_peers.size() << " requested peer(s). "
                  << "Agreements: " << agreements << " (need M=" << req.min_agreements << "), "
                  << "NULL_HASH responses: " << null_hash_responses;
@@ -508,14 +498,14 @@ void ChunkValidationManager::check_pending_chunk_validations()
     if (agreements >= req.min_agreements)
     {
       // Consensus reached - save to checkpoint.dat
-      logger(INFO, BRIGHT_GREEN) << "Chunk " << chunk_index 
-                                  << " validated via peer consensus (" << agreements 
-                                  << " agreements, need M=" << req.min_agreements << ")";
+      logger(INFO, BRIGHT_GREEN) << "[Chunk Validation] Chunk " << chunk_index
+                                      << " validated via peer consensus (" << agreements
+                                      << " agreements, need M=" << req.min_agreements << ")";
       
       if (m_core.getCheckpointList().add_verified_chunk_to_file(chunk_index))
       {
-        logger(INFO, BRIGHT_GREEN) << "Chunk " << chunk_index 
-                                    << " saved to checkpoint.dat";
+        logger(INFO, BRIGHT_GREEN) << "[Chunk Validation] Chunk " << chunk_index
+                                        << " saved to checkpoint.dat";
         
         // Remove pending validation
         it = m_pending_validations.erase(it);

@@ -1306,11 +1306,6 @@ namespace cn {
                                 << ") for consensus (need K=" << req.min_peers << " for " << (m_testnet ? "testnet" : "mainnet") << ")";
     }
     
-    logger(INFO) << "Consensus requirements (" << (m_testnet ? "testnet" : "mainnet") 
-                                << "): M=" << req.min_agreements 
-                                << ", K=" << req.min_peers << ", n=" << req.min_diverse_networks
-                                << " (have " << available_peers << " available peers)";
-    
     return req;
   }
 

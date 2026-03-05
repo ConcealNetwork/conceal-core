@@ -1346,8 +1346,6 @@ int CryptoNoteProtocolHandler::handle_response_chunk_hash(int command, NOTIFY_RE
     return 1;
   }
   
-  logger(INFO) << context << " Received chunk hash response from peer " << peer_id << " for chunk " << arg.chunk_index;
-  
   // Check if we're still validating this chunk (late responses might arrive after timeout)
   bool still_validating = m_chunkValidationManager->is_chunk_being_validated(arg.chunk_index);
   
@@ -1355,23 +1353,22 @@ int CryptoNoteProtocolHandler::handle_response_chunk_hash(int command, NOTIFY_RE
   // NOTE: NULL_HASH is a valid response (means peer doesn't have this chunk)
   m_chunkValidationManager->store_chunk_hash_response(peer_id, arg.chunk_index, arg.chunk_hash);
   
-  // Log if this is a late response (arrived after timeout)
+  // Log if this is a late response (arrived after timeout) - important to know why consensus might fail
   if (!still_validating)
   {
-    logger(DEBUGGING) << context << " Received chunk hash response from peer " << peer_id 
-                      << " for chunk " << arg.chunk_index 
-                      << " (validation may have completed - response will be used in next validation attempt)";
+    logger(WARNING) << context << " Late chunk hash response for chunk " << arg.chunk_index 
+                   << " from peer " << peer_id << " (validation may have completed)";
   }
   
   if (arg.chunk_hash == NULL_HASH)
   {
-    logger(INFO) << context << " Received chunk hash response for chunk " << arg.chunk_index 
-                             << ": peer does not have this chunk (NULL_HASH)";
+    logger(INFO) << context << " Received chunk " << arg.chunk_index << " hash from peer " << peer_id 
+                << ": peer does not have this chunk (NULL_HASH)";
   }
   else
   {
-    logger(INFO) << context << " Received chunk hash response for chunk " << arg.chunk_index 
-                             << " with hash " << arg.chunk_hash;
+    logger(INFO) << context << " Received chunk " << arg.chunk_index << " hash from peer " << peer_id 
+                << " with hash " << arg.chunk_hash;
   }
   return 1;
 }

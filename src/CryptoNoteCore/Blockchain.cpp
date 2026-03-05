@@ -1,7 +1,7 @@
 // Copyright (c) 2011-2017 The Cryptonote developers
 // Copyright (c) 2017-2018 The Circle Foundation & Conceal Devs
 // Copyright (c) 2018-2020 Karbo developers
-// Copyright (c) 2018-2025 Conceal Network & Conceal Devs
+// Copyright (c) 2018-2026 Conceal Network & Conceal Devs
 //
 // Distributed under the MIT/X11 software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
@@ -785,26 +785,21 @@ namespace cn
                     {
                       // Check if chunk already exists in memory (from previous session)
                       crypto::Hash existing_chunk_hash = m_checkpoints.get_chunk_hash(chunk_idx);
-                      if (existing_chunk_hash == NULL_HASH)
-                      {
-                        if (m_checkpoints.add_chunk_from_block_ids(getBlockIdsFunc, chunk_start_height))
-                        {
-                          logger(INFO) << "Created checkpoint chunk " << chunk_idx 
-                                       << " (blocks " << chunk_start_height << "-" << chunk_end_height 
-                                       << ") - stored in memory, awaiting P2P validation";
-                          // NOTE: We do NOT call add_verified_chunk_to_file() here
-                          // These chunks need peer consensus before being saved to checkpoint.dat
-                        }
-                        else
-                        {
-                          logger(WARNING) << "Failed to create chunk " << chunk_idx << " - blockchain mismatch detected";
-                          break;
-                        }
-                      }
-                      else
+                      if (existing_chunk_hash != NULL_HASH)
                       {
                         logger(DEBUGGING) << "Chunk " << chunk_idx << " already exists in memory (from previous session), awaiting P2P validation";
+                        continue; // Skip to next chunk
                       }
+                      
+                      // Create new chunk
+                      if (!m_checkpoints.add_chunk_from_block_ids(getBlockIdsFunc, chunk_start_height))
+                      {
+                        logger(WARNING) << "Failed to create chunk " << chunk_idx << " - blockchain mismatch detected";
+                        break;
+                      }
+                      // Chunk created and hash computed - logging is done in CheckpointsList.cpp
+                      // NOTE: We do NOT call add_verified_chunk_to_file() here
+                      // These chunks need peer consensus before being saved to checkpoint.dat
                     }
                     else
                     {
@@ -941,26 +936,21 @@ namespace cn
                       {
                         // Check if chunk already exists in memory (from previous session)
                         crypto::Hash existing_chunk_hash = m_checkpoints.get_chunk_hash(chunk_idx);
-                        if (existing_chunk_hash == NULL_HASH)
-                        {
-                          if (m_checkpoints.add_chunk_from_block_ids(getBlockIdsFunc, chunk_start_height))
-                          {
-                            logger(INFO) << "Created checkpoint chunk " << chunk_idx 
-                                       << " (blocks " << chunk_start_height << "-" << chunk_end_height 
-                                       << ") - stored in memory, awaiting P2P validation";
-                            // NOTE: We do NOT call add_verified_chunk_to_file() here
-                            // These chunks need peer consensus before being saved to checkpoint.dat
-                          }
-                          else
-                          {
-                            logger(WARNING) << "Failed to create chunk " << chunk_idx << " - blockchain mismatch detected";
-                            break;
-                          }
-                        }
-                        else
+                        if (existing_chunk_hash != NULL_HASH)
                         {
                           logger(DEBUGGING) << "Chunk " << chunk_idx << " already exists in memory (from previous session), awaiting P2P validation";
+                          continue; // Skip to next chunk
                         }
+                        
+                        // Create new chunk
+                        if (!m_checkpoints.add_chunk_from_block_ids(getBlockIdsFunc, chunk_start_height))
+                        {
+                          logger(WARNING) << "Failed to create chunk " << chunk_idx << " - blockchain mismatch detected";
+                          break;
+                        }
+                        // Chunk created and hash computed - logging is done in CheckpointsList.cpp
+                        // NOTE: We do NOT call add_verified_chunk_to_file() here
+                        // These chunks need peer consensus before being saved to checkpoint.dat
                       }
                       else
                       {
@@ -3354,13 +3344,7 @@ namespace cn
             return m_blockIndex.getBlockIds(startHeight, maxCount);
           };
           
-          if (m_checkpoints.add_chunk_from_block_ids(getBlockIdsFunc, chunk_start_height))
-          {
-            logger(INFO, BRIGHT_GREEN) << "Successfully computed chunk " << chunk_index 
-                                       << " hash (blocks " << chunk_start_height << " to " << chunk_end_height 
-                                       << "). Chunk stored in memory, awaiting peer consensus before saving to checkpoint.dat.";
-          }
-          else
+          if (!m_checkpoints.add_chunk_from_block_ids(getBlockIdsFunc, chunk_start_height))
           {
             logger(WARNING, BRIGHT_YELLOW) << "Failed to compute chunk " << chunk_index 
                                            << " hash at height " << current_height;
