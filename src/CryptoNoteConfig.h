@@ -216,14 +216,14 @@ namespace cn
 	// M = minimum agreements required (all M peers must agree)
 	// K = total peers to sample
 	// n = minimum distinct /16 networks required
-	const uint32_t CKPT_MIN_CONSENSUS_PEERS = 3;           // M: minimum agreements required
-	const uint32_t CKPT_CONSENSUS_PEERS = 5;               // K: minimun total peers to sample
-	const uint32_t CKPT_MIN_DIVERSE_NETWORKS = 2;          // n: minimum distinct /16 networks required
+	const uint32_t CKPT_MIN_CONSENSUS_PEERS = 6;           // M: minimum agreements required
+	const uint32_t CKPT_CONSENSUS_PEERS = 6;               // K: minimun total peers to sample
+	const uint32_t CKPT_MIN_DIVERSE_NETWORKS = 3;          // n: minimum distinct /16 networks required
 	
 	// Checkpoint consensus configuration (Testnet - relaxed for smaller network)
-	const uint32_t CKPT_MIN_CONSENSUS_PEERS_TESTNET = 1;          // M: minimum agreements required (testnet)
-	const uint32_t CKPT_CONSENSUS_PEERS_TESTNET = 1;              // K: minimum total peers to sample (testnet) - increased to ask multiple peers
-	const uint32_t CKPT_MIN_DIVERSE_NETWORKS_TESTNET = 1;          // n: minimum distinct /16 networks required (testnet)
+	const uint32_t CKPT_MIN_CONSENSUS_PEERS_TESTNET = 2;          // M: minimum agreements required (testnet)
+	const uint32_t CKPT_CONSENSUS_PEERS_TESTNET = 2;              // K: minimum total peers to sample (testnet) - increased to ask multiple peers
+	const uint32_t CKPT_MIN_DIVERSE_NETWORKS_TESTNET = 2;          // n: minimum distinct /16 networks required (testnet)
 	
 	const char P2P_STAT_TRUSTED_PUB_KEY[] = "f7061e9a5f0d30549afde49c9bfbaa52ac60afdc46304642b460a9ea34bf7a4e";
 
