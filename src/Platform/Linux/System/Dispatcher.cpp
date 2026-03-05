@@ -133,6 +133,12 @@ Dispatcher::~Dispatcher() {
     delete ucontext;
   }
 
+  // Clean up mainContext.ucontext allocated in constructor
+  if (mainContext.ucontext != nullptr) {
+    delete static_cast<ucontext_t*>(mainContext.ucontext);
+    mainContext.ucontext = nullptr;
+  }
+
   while (!timers.empty()) {
     int result = ::close(timers.top());
     assert(result == 0);

@@ -124,6 +124,12 @@ Dispatcher::~Dispatcher() {
     delete ucontext;
   }
 
+  // Clean up mainContext.uctx allocated in constructor
+  if (mainContext.uctx != nullptr) {
+    delete static_cast<uctx*>(mainContext.uctx);
+    mainContext.uctx = nullptr;
+  }
+
   auto result = close(kqueue);
   assert(result != -1);
   result = pthread_mutex_destroy(reinterpret_cast<pthread_mutex_t*>(this->mutex));
