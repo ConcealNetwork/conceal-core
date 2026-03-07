@@ -49,7 +49,7 @@ namespace cn
     bool validate_unverified_chunks();
     
     // Check pending chunk validations for consensus (called periodically)
-    // Checks if we have M identical hashes within the time window (2 minutes)
+    // Checks if we have M identical hashes within the time window (3 minutes)
     // If consensus reached, processes it; if timeout, schedules retry
     void check_pending_chunk_validations();
     

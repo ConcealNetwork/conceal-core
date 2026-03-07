@@ -113,8 +113,11 @@ void ChunkValidationManager::store_chunk_hash_response(uint64_t peer_id, uint32_
 
 bool ChunkValidationManager::is_chunk_being_validated(uint32_t chunk_index) const
 {
-  std::lock_guard<std::mutex> lock(m_chunk_validation_mutex);
-  return (m_current_validating_chunk_index == chunk_index);
+  // Check if chunk is in pending validations (actual validation state)
+  // m_current_validating_chunk_index is cleared immediately after sending requests,
+  // but validation is still pending for 3 minutes, so we need to check m_pending_validations
+  std::lock_guard<std::mutex> lock(m_pending_validations_mutex);
+  return (m_pending_validations.find(chunk_index) != m_pending_validations.end());
 }
 
 bool ChunkValidationManager::validate_unverified_chunks()
@@ -409,7 +412,7 @@ bool ChunkValidationManager::validate_unverified_chunks()
       m_pending_validations[chunk_index] = pending;
     }
     
-    logger(INFO) << "[Chunk Validation] Sent chunk " << chunk_index << " hash requests to " << requests_sent << " peers. Checking consensus in 2 minutes.";
+    logger(INFO) << "[Chunk Validation] Sent chunk " << chunk_index << " hash requests to " << requests_sent << " peers. Checking consensus in 3 minutes.";
     
     // Clear validation state (validation is now async - will be checked in check_pending_chunk_validations)
     {
@@ -428,7 +431,7 @@ bool ChunkValidationManager::validate_unverified_chunks()
 void ChunkValidationManager::check_pending_chunk_validations()
 {
   uint64_t time_now = time(nullptr);
-  const uint64_t CONSENSUS_WAIT_SECONDS = 120;  // 2 minutes
+  const uint64_t CONSENSUS_WAIT_SECONDS = 180;  // 3 minutes (increased from 2 to handle network latency and peer processing)
   const uint64_t RETRY_DELAY_SECONDS = 60;      // 1 minute delay before retry
   
   std::lock_guard<std::mutex> lock(m_pending_validations_mutex);
@@ -441,7 +444,7 @@ void ChunkValidationManager::check_pending_chunk_validations()
     
     uint64_t elapsed = time_now - pending.request_timestamp;
     
-    // Check if 2 minutes have passed since requests were sent
+    // Check if 3 minutes have passed since requests were sent
     if (elapsed < CONSENSUS_WAIT_SECONDS)
     {
       // Not enough time has passed yet, skip this validation
@@ -449,7 +452,7 @@ void ChunkValidationManager::check_pending_chunk_validations()
       continue;
     }
     
-    // 2 minutes have passed - check for consensus
+    // 3 minutes have passed - check for consensus
     logger(INFO) << "[Chunk Validation] Checking consensus for chunk " << chunk_index << " (elapsed: " << elapsed << " seconds, attempt " << pending.attempt_number << ")";
     
     // Collect responses from requested peers
@@ -603,7 +606,7 @@ void ChunkValidationManager::check_pending_chunk_validations()
         
         logger(INFO) << "Sent second attempt async requests for chunk " << chunk_index 
                      << " to " << requests_sent << " peer(s). "
-                     << "Will check for consensus after 2 minutes.";
+                     << "Will check for consensus after 3 minutes.";
       }
       else
       {
