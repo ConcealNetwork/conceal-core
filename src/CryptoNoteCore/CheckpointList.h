@@ -33,8 +33,10 @@ namespace cn
     // Convert old-style checkpoints (individual block hashes) to new-style (list hashes)
     // This allows the same checkpoint data in CryptoNoteConfig.h to work with both systems
     // getBlockIdsFunc: function that returns block IDs from genesis (0) to the specified height
+    // max_height: Only convert checkpoints up to this height (default: UINT32_MAX = convert all)
     void convert_old_checkpoints_to_list_hashes(
-      std::function<std::vector<crypto::Hash>(uint32_t startHeight, uint32_t maxCount)> getBlockIdsFunc);
+      std::function<std::vector<crypto::Hash>(uint32_t startHeight, uint32_t maxCount)> getBlockIdsFunc,
+      uint32_t max_height = UINT32_MAX);
   
     // Chunked checkpoint methods
     // Generate checkpoint chunks from block IDs (used during initialization)

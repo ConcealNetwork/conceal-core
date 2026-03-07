@@ -621,11 +621,12 @@ namespace cn
           
           // Convert old checkpoints (individual block hashes) to new format (list hashes)
           // This is only needed if we're going to use old-style full checkpoint lists
+          // Only convert checkpoints up to current blockchain height to avoid warnings for unsynced blocks
           auto getBlockIdsFunc = [this](uint32_t startHeight, uint32_t maxCount) -> std::vector<crypto::Hash> {
             return m_blockIndex.getBlockIds(startHeight, maxCount);
           };
           
-          m_checkpoints.convert_old_checkpoints_to_list_hashes(getBlockIdsFunc);
+          m_checkpoints.convert_old_checkpoints_to_list_hashes(getBlockIdsFunc, currentHeight);
         }
         else if (currentCoveredHeight >= greatestTargetHeight && greatestTargetHeight > 0)
         {

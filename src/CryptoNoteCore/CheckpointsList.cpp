@@ -242,7 +242,8 @@ namespace cn {
   }
 
   void CheckpointList::convert_old_checkpoints_to_list_hashes(
-    std::function<std::vector<crypto::Hash>(uint32_t startHeight, uint32_t maxCount)> getBlockIdsFunc)
+    std::function<std::vector<crypto::Hash>(uint32_t startHeight, uint32_t maxCount)> getBlockIdsFunc,
+    uint32_t max_height)
   {
     // Store old targets temporarily (they're individual block hashes from CryptoNoteConfig.h)
     // Note: m_targets stores size (height+1) as key, so we need to convert back to get heights
@@ -256,14 +257,27 @@ namespace cn {
                           << "to new-style (list hashes) for P2P compatibility";
     logger(INFO) << "Preserving " << m_old_checkpoint_hashes.size() 
                                << " old checkpoint block hashes for chunk validation";
+    if (max_height != UINT32_MAX)
+    {
+      logger(DEBUGGING) << "Only converting checkpoints up to height " << max_height 
+                                 << " (current blockchain height)";
+    }
     
     uint32_t converted_count = 0;
+    uint32_t skipped_count = 0;
     
     // For each old checkpoint, compute the list hash from genesis to that height
     for (const auto& old_target : old_targets)
     {
       uint32_t size = old_target.first;  // This is already height+1 (stored by add_checkpoint_target)
       uint32_t height = size - 1;
+      
+      // Skip checkpoints beyond the current blockchain height
+      if (height > max_height)
+      {
+        skipped_count++;
+        continue;
+      }
       
       // Get block IDs from genesis (0) to this height
       std::vector<crypto::Hash> blockIds = getBlockIdsFunc(0, size);
@@ -312,6 +326,11 @@ namespace cn {
     
     logger(INFO) << "Converted " << converted_count 
                                 << " checkpoint validation targets for P2P compatibility";
+    if (skipped_count > 0)
+    {
+      logger(DEBUGGING) << "Skipped " << skipped_count 
+                                 << " checkpoints beyond current blockchain height (will convert as blockchain syncs)";
+    }
     logger(INFO) << "Old checkpoint block hashes preserved for chunk validation: " 
                                << m_old_checkpoint_hashes.size() << " checkpoints";
   }
