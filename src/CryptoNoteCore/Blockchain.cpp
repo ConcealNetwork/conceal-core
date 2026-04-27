@@ -517,6 +517,12 @@ namespace cn
                 logger(ERROR, BRIGHT_RED) << "Failed to rebuild cache";
                 return false;
               }
+
+              if (!storeCache())
+              {
+                logger(ERROR, BRIGHT_RED) << "Failed to save rebuilt blockchain cache";
+                return false;
+              }
             }
           }
           
@@ -550,6 +556,12 @@ namespace cn
             if (!rebuildCache())
             {
               logger(ERROR, BRIGHT_RED) << "Failed to rebuild cache";
+              return false;
+            }
+
+            if (!storeCache())
+            {
+              logger(ERROR, BRIGHT_RED) << "Failed to save rebuilt blockchain cache";
               return false;
             }
           }
@@ -1342,13 +1354,15 @@ namespace cn
     BlockCacheSerializer ser(*this, getTailId(), logger.getLogger());
 
     const std::string &blocksCacheFileName = m_currency.blocksCacheFileName();
-    std::string blockCacheBkpFileName = blocksCacheFileName + ".bkp";
+    const std::string blocksCachePath = appendPath(m_config_folder, blocksCacheFileName);
+    const std::string blockCacheBkpPath = blocksCachePath + ".bkp";
 
     try
     {
-      std::rename(blocksCacheFileName.c_str(), blockCacheBkpFileName.c_str()); // fail here can be ignored
+      std::remove(blockCacheBkpPath.c_str()); // fail here can be ignored
+      std::rename(blocksCachePath.c_str(), blockCacheBkpPath.c_str()); // fail here can be ignored
 
-      if (!ser.save(appendPath(m_config_folder, blocksCacheFileName)))
+      if (!ser.save(blocksCachePath))
       {
         logger(ERROR, BRIGHT_RED) << "Failed to save blockchain cache";
         return false;
