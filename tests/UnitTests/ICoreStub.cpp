@@ -10,9 +10,11 @@
 #include "CryptoNoteCore/IBlock.h"
 #include "CryptoNoteCore/VerificationContext.h"
 
+#include <limits>
 
 ICoreStub::ICoreStub() :
     m_currency(cn::CurrencyBuilder(m_logger).currency()),
+    m_checkpoints(m_logger),
     topHeight(0),
     globalIndicesResult(false),
     randomOutsResult(false),
@@ -22,6 +24,7 @@ ICoreStub::ICoreStub() :
 
 ICoreStub::ICoreStub(const cn::Block& genesisBlock) :
     m_currency(cn::CurrencyBuilder(m_logger).currency()),
+    m_checkpoints(m_logger),
     topHeight(0),
     globalIndicesResult(false),
     randomOutsResult(false),
@@ -84,6 +87,10 @@ bool ICoreStub::handle_incoming_tx(cn::BinaryArray const& tx_blob, cn::tx_verifi
 bool ICoreStub::handle_incoming_block(const cn::Block &b, cn::block_verification_context &bvc, bool control_miner, bool relay_block)
 {
   return false;
+}
+
+cn::CheckpointList& ICoreStub::getCheckpointList() {
+  return m_checkpoints;
 }
 
 void ICoreStub::set_blockchain_top(uint32_t height, const crypto::Hash& top_id) {
@@ -205,6 +212,26 @@ crypto::Hash ICoreStub::getBlockIdByHeight(uint32_t height) {
     return cn::NULL_HASH;
   }
   return iter->second;
+}
+
+std::vector<crypto::Hash> ICoreStub::getBlockIds(uint32_t start_height, uint32_t end_height) {
+  std::vector<crypto::Hash> result;
+  uint32_t height = start_height;
+  while (height <= end_height) {
+    auto iter = blockHashByHeightIndex.find(height);
+    if (iter == blockHashByHeightIndex.end()) {
+      break;
+    }
+
+    result.push_back(iter->second);
+    if (height == std::numeric_limits<uint32_t>::max()) {
+      break;
+    }
+
+    ++height;
+  }
+
+  return result;
 }
 
 bool ICoreStub::getBlockByHash(const crypto::Hash &h, cn::Block &blk) {
@@ -372,6 +399,10 @@ bool ICoreStub::addMessageQueue(cn::MessageQueue<cn::BlockchainMessage>& message
 }
 
 bool ICoreStub::removeMessageQueue(cn::MessageQueue<cn::BlockchainMessage>& messageQueuePtr) {
+  return true;
+}
+
+bool ICoreStub::rollback_chain_to(uint32_t height) {
   return true;
 }
 

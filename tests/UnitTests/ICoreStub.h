@@ -9,6 +9,7 @@
 #include <unordered_map>
 
 #include "CryptoNoteCore/CryptoNoteBasic.h"
+#include "CryptoNoteCore/CheckpointList.h"
 #include "CryptoNoteCore/ICore.h"
 #include "CryptoNoteCore/ICoreObserver.h"
 #include "CryptoNoteCore/Currency.h"
@@ -59,10 +60,12 @@ public:
   bool handle_incoming_block(const cn::Block &b, cn::block_verification_context &bvc, bool control_miner, bool relay_block) override;
   virtual bool handle_get_objects(cn::NOTIFY_REQUEST_GET_OBJECTS::request& arg, cn::NOTIFY_RESPONSE_GET_OBJECTS::request& rsp) override { return false; }
   virtual void on_synchronized() override {}
+  virtual cn::CheckpointList& getCheckpointList() override;
   virtual bool getOutByMSigGIndex(uint64_t amount, uint64_t gindex, cn::MultisignatureOutput& out) override { return true; }
   virtual size_t addChain(const std::vector<const cn::IBlock*>& chain) override;
 
   virtual crypto::Hash getBlockIdByHeight(uint32_t height) override;
+  virtual std::vector<crypto::Hash> getBlockIds(uint32_t start_height, uint32_t end_height) override;
   virtual bool getBlockByHash(const crypto::Hash &h, cn::Block &blk) override;
   virtual bool getBlockHeight(const crypto::Hash& blockId, uint32_t& blockHeight) override;
   bool getTransaction(const crypto::Hash &id, cn::Transaction &tx, bool checkTxPool = false) override;
@@ -90,6 +93,7 @@ public:
 
   virtual bool addMessageQueue(cn::MessageQueue<cn::BlockchainMessage>& messageQueuePtr) override;
   virtual bool removeMessageQueue(cn::MessageQueue<cn::BlockchainMessage>& messageQueuePtr) override;
+  virtual bool rollback_chain_to(uint32_t height) override;
 
 
   void set_blockchain_top(uint32_t height, const crypto::Hash& top_id);
@@ -105,6 +109,7 @@ public:
 private:
   logging::ConsoleLogger m_logger;
   cn::Currency m_currency;
+  cn::CheckpointList m_checkpoints;
 
   uint32_t topHeight;
   crypto::Hash topId;
