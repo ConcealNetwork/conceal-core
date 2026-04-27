@@ -507,9 +507,6 @@ void ChunkValidationManager::check_pending_chunk_validations()
       
       if (m_core.getCheckpointList().add_verified_chunk_to_file(chunk_index))
       {
-        logger(INFO, BRIGHT_GREEN) << "[Chunk Validation] Chunk " << chunk_index
-                                        << " saved to checkpoint.dat";
-        
         // Remove pending validation
         it = m_pending_validations.erase(it);
         

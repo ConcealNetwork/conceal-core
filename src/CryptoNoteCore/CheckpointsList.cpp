@@ -255,8 +255,6 @@ namespace cn {
     
     logger(INFO) << "Converting old-style checkpoints (individual block hashes) "
                           << "to new-style (list hashes) for P2P compatibility";
-    logger(INFO) << "Preserving " << m_old_checkpoint_hashes.size() 
-                               << " old checkpoint block hashes for chunk validation";
     if (max_height != UINT32_MAX)
     {
       logger(DEBUGGING) << "Only converting checkpoints up to height " << max_height 
@@ -308,7 +306,7 @@ namespace cn {
           return;
         }
         
-        logger(INFO) << "Validated checkpoint at height " << height 
+        logger(DEBUGGING) << "Validated checkpoint at height " << height 
                                    << " before conversion (matches CryptoNoteConfig.h)";
       }
       
@@ -320,19 +318,19 @@ namespace cn {
       m_valid_point_sizes.insert(size);
       converted_count++;
       
-      logger(INFO) << "Converted checkpoint at height " << height 
+      logger(DEBUGGING) << "Converted checkpoint at height " << height 
                                   << " (old hash: " << old_target.second << ") to list hash: " << listHash;
     }
     
     logger(INFO) << "Converted " << converted_count 
-                                << " checkpoint validation targets for P2P compatibility";
+                                << " checkpoint validation targets for P2P compatibility"
+                                << " (preserved " << m_old_checkpoint_hashes.size()
+                                << " block hashes for chunk validation)";
     if (skipped_count > 0)
     {
       logger(DEBUGGING) << "Skipped " << skipped_count 
                                  << " checkpoints beyond current blockchain height (will convert as blockchain syncs)";
     }
-    logger(INFO) << "Old checkpoint block hashes preserved for chunk validation: " 
-                               << m_old_checkpoint_hashes.size() << " checkpoints";
   }
 
   /**
@@ -602,9 +600,11 @@ namespace cn {
    */
   bool CheckpointList::add_verified_chunk_to_file(uint32_t chunk_index)
   {
+    crypto::Hash chunk_hash;
     std::vector<crypto::Hash> chunks_to_save;
     std::string file_to_save;
     uint32_t chunk_size;
+    bool append_only = false;
     
     {
       const std::lock_guard<std::mutex> lock(m_chunks_lock);
@@ -617,49 +617,104 @@ namespace cn {
         return false;
       }
       
-      // Get current chunks from file (only verified chunks are in file)
-      // We need to load existing verified chunks and append the new one
-      std::vector<crypto::Hash> verified_chunks;
-      
-      // Load existing verified chunks from file
+      chunk_hash = m_chunks[chunk_index];
+      file_to_save = m_save_file;
+      chunk_size = m_chunk_size;
+
+      // Fast path: verified chunks are sequential, so adding the next chunk only
+      // needs to append one hash. Rewrites are still used for non-append cases.
       std::ifstream file(m_save_file, std::ios::binary | std::ios::ate);
       if (file.is_open())
       {
         uint64_t fsize = file.tellg();
-        file.seekg(0, std::ios::beg);
-        
+
         if (fsize > 0 && fsize % sizeof(crypto::Hash) == 0)
         {
           uint32_t num_existing_chunks = static_cast<uint32_t>(fsize / sizeof(crypto::Hash));
-          verified_chunks.resize(num_existing_chunks);
-          file.read(reinterpret_cast<char*>(verified_chunks.data()), fsize);
+          append_only = (chunk_index == num_existing_chunks);
+        }
+        else if (fsize == 0)
+        {
+          append_only = (chunk_index == 0);
         }
         file.close();
       }
-      
-      // Ensure verified_chunks has enough space for the new chunk
-      if (chunk_index >= verified_chunks.size())
+      else
       {
-        verified_chunks.resize(chunk_index + 1, NULL_HASH);
+        append_only = (chunk_index == 0);
       }
       
-      // Add the verified chunk
-      verified_chunks[chunk_index] = m_chunks[chunk_index];
+      if (!append_only)
+      {
+        // Get current chunks from file (only verified chunks are in file)
+        // We need to load existing verified chunks and rewrite the file.
+        std::vector<crypto::Hash> verified_chunks;
+        
+        std::ifstream rewrite_file(m_save_file, std::ios::binary | std::ios::ate);
+        if (rewrite_file.is_open())
+        {
+          uint64_t fsize = rewrite_file.tellg();
+          rewrite_file.seekg(0, std::ios::beg);
+          
+          if (fsize > 0 && fsize % sizeof(crypto::Hash) == 0)
+          {
+            uint32_t num_existing_chunks = static_cast<uint32_t>(fsize / sizeof(crypto::Hash));
+            verified_chunks.resize(num_existing_chunks);
+            rewrite_file.read(reinterpret_cast<char*>(verified_chunks.data()), fsize);
+          }
+          rewrite_file.close();
+        }
+        
+        // Ensure verified_chunks has enough space for the new chunk
+        if (chunk_index >= verified_chunks.size())
+        {
+          verified_chunks.resize(chunk_index + 1, NULL_HASH);
+        }
+        
+        // Add the verified chunk
+        verified_chunks[chunk_index] = chunk_hash;
+        chunks_to_save = verified_chunks;
+      }
       
-      // Mark as confirmed (chunks in checkpoint.dat are confirmed)
-      m_confirmed_chunks.insert(chunk_index);
-      
-      logger(INFO) << "Adding chunk " << chunk_index 
-                                  << " to checkpoint.dat";
-      
-      // Copy data before releasing lock
-      chunks_to_save = verified_chunks;
-      file_to_save = m_save_file;
-      chunk_size = m_chunk_size;
     } // Lock released here
     
-    // Save verified chunks to file
-    return save_checkpoints_impl(chunks_to_save, file_to_save, chunk_size);
+    bool success = false;
+    if (append_only)
+    {
+      std::ofstream file(file_to_save, std::ios::binary | std::ios::app);
+      if (!file.is_open())
+      {
+        logger(ERROR) << "Error opening checkpoint file for append: " << file_to_save;
+        return false;
+      }
+
+      file.write(reinterpret_cast<const char*>(&chunk_hash), sizeof(crypto::Hash));
+      file.close();
+
+      if (!file)
+      {
+        logger(ERROR) << "Error appending to checkpoint file: " << file_to_save;
+        return false;
+      }
+
+      uint32_t covered_height = (chunk_index + 1) * chunk_size;
+      logger(INFO) << "Appended checkpoint chunk " << chunk_index 
+                            << " to file (covers up to height " << covered_height << ")";
+      success = true;
+    }
+    else
+    {
+      success = save_checkpoints_impl(chunks_to_save, file_to_save, chunk_size);
+    }
+
+    if (success)
+    {
+      const std::lock_guard<std::mutex> lock(m_chunks_lock);
+      // Mark as confirmed (chunks in checkpoint.dat are confirmed)
+      m_confirmed_chunks.insert(chunk_index);
+    }
+
+    return success;
   }
 
   /**
@@ -990,7 +1045,7 @@ namespace cn {
       return false;
     }
 
-    uint32_t covered_height = (static_cast<uint32_t>(chunks.size()) * chunk_size) - 1;
+    uint32_t covered_height = static_cast<uint32_t>(chunks.size()) * chunk_size;
     logger(INFO) << "Saved " << chunks.size() 
                           << " checkpoint chunks to file (covers up to height " << covered_height << ")";
     return true;
@@ -1710,7 +1765,7 @@ namespace cn {
     
     if (success)
     {
-      uint32_t covered_height = ((last_valid_chunk_index + 1) * chunk_size) - 1;
+      uint32_t covered_height = (last_valid_chunk_index + 1) * chunk_size;
       logger(INFO) << "Successfully truncated checkpoint.dat to chunk " 
                             << last_valid_chunk_index << " (covers up to height " << covered_height << ")";
     }

@@ -191,7 +191,8 @@ namespace cn
 	const uint8_t P2P_UPGRADE_WINDOW = 2;
 
 	// This defines the minimum P2P version required for lite blocks propogation
-	const uint8_t P2P_LITE_BLOCKS_PROPOGATION_VERSION = 2;
+	const uint8_t P2P_LITE_BLOCKS_PROPOGATION_VERSION = 3;
+
     const uint8_t P2P_CHECKPOINT_LIST_VERSION = 2;
 
 	const size_t P2P_LOCAL_WHITE_PEERLIST_LIMIT = 1000;
@@ -239,8 +240,7 @@ namespace cn
 	};
 
 	const std::initializer_list<const char *> TESTNET_SEED_NODES = {
-		"161.97.145.65:15500",
-		"161.97.145.65:15501"
+		"5.189.177.60:15500"
 	};
 
 	struct CheckpointData
