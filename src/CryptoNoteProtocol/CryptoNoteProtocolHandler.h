@@ -9,6 +9,7 @@
 
 #include <atomic>
 #include <cstdint>
+#include <memory>
 
 #include <Common/ObserverManager.h>
 #include "../CryptoNoteConfig.h"
@@ -18,12 +19,14 @@
 #include "CryptoNoteProtocol/CryptoNoteProtocolHandlerCommon.h"
 #include "CryptoNoteProtocol/ICryptoNoteProtocolObserver.h"
 #include "CryptoNoteProtocol/ICryptoNoteProtocolQuery.h"
+#include "CryptoNoteProtocol/CryptoNoteProtocolHandlerChunk.h"
 
 #include "P2p/P2pProtocolDefinitions.h"
 #include "P2p/NetNodeCommon.h"
 #include "P2p/ConnectionContext.h"
 
 #include <Logging/LoggerRef.h>
+
 
 namespace platform_system {
   class Dispatcher;
@@ -81,6 +84,16 @@ namespace cn
     int handle_notify_new_transactions(int command, NOTIFY_NEW_TRANSACTIONS::request& arg, CryptoNoteConnectionContext& context);
     int handle_request_get_objects(int command, NOTIFY_REQUEST_GET_OBJECTS::request& arg, CryptoNoteConnectionContext& context);
     int handle_response_get_objects(int command, NOTIFY_RESPONSE_GET_OBJECTS::request& arg, CryptoNoteConnectionContext& context);
+    int handle_request_checkpoint_list(int command, NOTIFY_REQUEST_CHECKPOINT_LIST::request& arg, CryptoNoteConnectionContext& context);
+    int handle_response_checkpoint_list(int command, NOTIFY_RESPONSE_CHECKPOINT_LIST::request& arg, CryptoNoteConnectionContext& context);
+    int handle_request_chunk_hash(int command, NOTIFY_REQUEST_CHUNK_HASH::request& arg, CryptoNoteConnectionContext& context);
+    int handle_response_chunk_hash(int command, NOTIFY_RESPONSE_CHUNK_HASH::request& arg, CryptoNoteConnectionContext& context);
+    
+    // Request chunk hash from a specific peer (for consensus mechanism)
+    // @param peer_id The peer ID to request from
+    // @param chunk_index The chunk index to request
+    // @return The chunk hash, or NULL_HASH if request failed or peer doesn't have it
+    crypto::Hash request_chunk_hash_from_peer(uint64_t peer_id, uint32_t chunk_index);
     int handle_request_chain(int command, NOTIFY_REQUEST_CHAIN::request& arg, CryptoNoteConnectionContext& context);
     int handle_response_chain_entry(int command, NOTIFY_RESPONSE_CHAIN_ENTRY::request& arg, CryptoNoteConnectionContext& context);
     int handle_request_tx_pool(int command, NOTIFY_REQUEST_TX_POOL::request &arg, CryptoNoteConnectionContext &context);
@@ -112,7 +125,9 @@ namespace cn
     IP2pEndpoint* m_p2p;
     std::atomic<bool> m_synchronized;
     std::atomic<bool> m_stop;
-    std::recursive_mutex m_sync_lock;    
+    std::recursive_mutex m_sync_lock;
+    
+    std::atomic<uint64_t> m_last_checkpoint_req;
 
     mutable std::mutex m_observedHeightMutex;
     uint32_t m_observedHeight;
@@ -121,5 +136,8 @@ namespace cn
     tools::ObserverManager<ICryptoNoteProtocolObserver> m_observerManager;
 
     std::atomic<size_t> m_maxObjectCount;
+    
+    // Chunk validation manager (handles asynchronous P2P consensus)
+    std::unique_ptr<ChunkValidationManager> m_chunkValidationManager;
   };
 }

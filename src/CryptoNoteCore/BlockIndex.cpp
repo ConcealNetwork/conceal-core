@@ -34,6 +34,12 @@ namespace cn {
     return result;
   }
 
+  crypto::Hash BlockIndex::getHashOfIds(uint32_t startBlockIndex, uint32_t maxCount) const {
+    /* This can be made more efficient by hashing in-place instead of copying all hashes, but it needs three function hash code */
+    std::vector<crypto::Hash> block_ids = getBlockIds(startBlockIndex, maxCount);
+    return crypto::cn_fast_hash(block_ids.data(), block_ids.size() * sizeof(crypto::Hash));
+  }
+
   bool BlockIndex::findSupplement(const std::vector<crypto::Hash>& ids, uint32_t& offset) const {
     for (const auto& id : ids) {
       if (getBlockHeight(id, offset)) {

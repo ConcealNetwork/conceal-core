@@ -10,6 +10,17 @@
 #include "CryptoNoteProtocolHandler.h"
 
 #include <future>
+#include <thread>
+#include <chrono>
+#include <map>
+#include <set>
+#include <unordered_map>
+#include <mutex>
+#include <algorithm>
+#include <random>
+#include <boost/functional/hash.hpp>
+#include <climits>
+#include <sstream>
 #include <boost/scope_exit.hpp>
 #include <boost/uuid/uuid_io.hpp>
 #include <System/Dispatcher.h>
@@ -21,6 +32,8 @@
 #include "CryptoNoteCore/VerificationContext.h"
 #include "P2p/LevinProtocol.h"
 #include <cstdint>  // for UINT64_MAX
+#include "CryptoNoteCore/CheckpointList.h"
+#include "CryptoNoteProtocol/CryptoNoteProtocolHandlerChunk.h"
 
 using namespace logging;
 using namespace common;
@@ -51,6 +64,7 @@ CryptoNoteProtocolHandler::CryptoNoteProtocolHandler(const Currency &currency, p
   m_core(rcore),
   m_synchronized(false),
   m_stop(false),
+  m_last_checkpoint_req(0),
   m_observedHeight(0),
   m_peersCount(0),
   logger(log, "protocol"),
@@ -59,6 +73,10 @@ CryptoNoteProtocolHandler::CryptoNoteProtocolHandler(const Currency &currency, p
   {
     if (!m_p2p)
       m_p2p = &m_p2p_stub;
+    
+    // Initialize chunk validation manager
+    m_chunkValidationManager = std::unique_ptr<ChunkValidationManager>(
+      new ChunkValidationManager(m_core, m_p2p, m_currency, log, m_peersCount, m_stop));
   }
 
 size_t CryptoNoteProtocolHandler::getPeerCount() const
@@ -72,6 +90,12 @@ void CryptoNoteProtocolHandler::set_p2p_endpoint(IP2pEndpoint *p2p)
     m_p2p = p2p;
   else
     m_p2p = &m_p2p_stub;
+  
+  // Update chunk validation manager with the new P2P endpoint
+  if (m_chunkValidationManager)
+  {
+    m_chunkValidationManager->set_p2p_endpoint(m_p2p);
+  }
 }
 
 void CryptoNoteProtocolHandler::onConnectionOpened(CryptoNoteConnectionContext &context)
@@ -196,10 +220,10 @@ bool CryptoNoteProtocolHandler::process_payload_sync_data(const CORE_SYNC_DATA &
   {
     int64_t diff = static_cast<int64_t>(hshd.current_height) - static_cast<int64_t>(get_current_blockchain_height());
 
-    logger(diff >= 0 ? (is_inital ? logging::INFO : DEBUGGING) : logging::TRACE)  << context << "Unknown top block: " << get_current_blockchain_height() << " -> " << hshd.current_height
-                                                                                          << std::endl
-                                                                                          
-                                                                                          << "Synchronization started";
+    logger(diff >= 0 ? (is_inital ? logging::INFO : DEBUGGING) : logging::TRACE)  << context 
+              << "Unknown top block: " << get_current_blockchain_height() << " -> " << hshd.current_height
+              << std::endl
+              << "Synchronization started";
 
     logger(DEBUGGING) << "Remote top block height: " << hshd.current_height << ", id: " << hshd.top_id;
     //let the socket to send response to handshake, but request callback, to let send request data after response
@@ -214,6 +238,34 @@ bool CryptoNoteProtocolHandler::process_payload_sync_data(const CORE_SYNC_DATA &
   {
     m_peersCount++;
     m_observerManager.notify(&ICryptoNoteProtocolObserver::peerCountUpdated, m_peersCount.load());
+  }
+
+  if (context.version < cn::P2P_CHECKPOINT_LIST_VERSION || context.m_checkpoints_not_in_sync || context.m_active_checkpoint_req)
+    return true;
+
+  // Only request checkpoints if we can answer them (have confirmed chunks)
+  // This prevents nodes without confirmed chunks from requesting from peers that also can't answer
+  if (!m_core.getCheckpointList().can_answer_checkpoint_requests())
+    return true;
+
+  uint64_t time_now = time(nullptr);
+  uint64_t last_request = time_now - m_last_checkpoint_req.load();
+  if (last_request > P2P_CHECKPOINT_LIST_RE_REQUEST)
+    return true;
+
+  auto cl_status = m_core.getCheckpointList().get_incomplete_checkpoint_target();
+  if ( cl_status.target_hash != NULL_HASH )
+  {
+    NOTIFY_REQUEST_CHECKPOINT_LIST::request req = boost::value_initialized<NOTIFY_REQUEST_CHECKPOINT_LIST::request>();
+    req.target_hash = cl_status.target_hash;
+    req.start_height = cl_status.start_height;
+    req.end_height = cl_status.end_height;
+  
+    if (!post_notify<NOTIFY_REQUEST_CHECKPOINT_LIST>(*m_p2p, req, context))
+      return false;
+
+    m_last_checkpoint_req = time_now;
+    context.m_active_checkpoint_req = true;
   }
 
   return true;
@@ -256,12 +308,25 @@ int CryptoNoteProtocolHandler::handleCommand(bool is_notify, int command, const 
   int ret = 0;
   handled = true;
 
+  // Debug logging for chunk hash messages (BC_COMMANDS_POOL_BASE + 13 = REQUEST, + 14 = RESPONSE)
+  const int CHUNK_HASH_REQUEST_ID = BC_COMMANDS_POOL_BASE + 13;
+  const int CHUNK_HASH_RESPONSE_ID = BC_COMMANDS_POOL_BASE + 14;
+  if (command == CHUNK_HASH_REQUEST_ID || command == CHUNK_HASH_RESPONSE_ID)
+  {
+    logger(INFO) << ctx << " handleCommand: received " << (is_notify ? "NOTIFY" : "REQUEST") 
+                 << " command " << command << " (chunk hash message)";
+  }
+
   switch (command)
   {
     HANDLE_NOTIFY(NOTIFY_NEW_BLOCK, &CryptoNoteProtocolHandler::handle_notify_new_block)
     HANDLE_NOTIFY(NOTIFY_NEW_TRANSACTIONS, &CryptoNoteProtocolHandler::handle_notify_new_transactions)
     HANDLE_NOTIFY(NOTIFY_REQUEST_GET_OBJECTS, &CryptoNoteProtocolHandler::handle_request_get_objects)
     HANDLE_NOTIFY(NOTIFY_RESPONSE_GET_OBJECTS, &CryptoNoteProtocolHandler::handle_response_get_objects)
+    HANDLE_NOTIFY(NOTIFY_REQUEST_CHECKPOINT_LIST, &CryptoNoteProtocolHandler::handle_request_checkpoint_list)
+    HANDLE_NOTIFY(NOTIFY_RESPONSE_CHECKPOINT_LIST, &CryptoNoteProtocolHandler::handle_response_checkpoint_list)
+    HANDLE_NOTIFY(NOTIFY_REQUEST_CHUNK_HASH, &CryptoNoteProtocolHandler::handle_request_chunk_hash)
+    HANDLE_NOTIFY(NOTIFY_RESPONSE_CHUNK_HASH, &CryptoNoteProtocolHandler::handle_response_chunk_hash)
     HANDLE_NOTIFY(NOTIFY_REQUEST_CHAIN, &CryptoNoteProtocolHandler::handle_request_chain)
     HANDLE_NOTIFY(NOTIFY_RESPONSE_CHAIN_ENTRY, &CryptoNoteProtocolHandler::handle_response_chain_entry)
     HANDLE_NOTIFY(NOTIFY_REQUEST_TX_POOL, &CryptoNoteProtocolHandler::handle_request_tx_pool)
@@ -270,6 +335,14 @@ int CryptoNoteProtocolHandler::handleCommand(bool is_notify, int command, const 
 
   default:
     handled = false;
+    // Debug logging for unhandled commands (especially chunk hash related)
+    const int CHUNK_HASH_REQUEST_ID = BC_COMMANDS_POOL_BASE + 13;
+    const int CHUNK_HASH_RESPONSE_ID = BC_COMMANDS_POOL_BASE + 14;
+    if (command == CHUNK_HASH_REQUEST_ID || command == CHUNK_HASH_RESPONSE_ID)
+    {
+      logger(ERROR) << ctx << " handleCommand: chunk hash command " << command 
+                     << " not handled! This should not happen.";
+    }
   }
 
   return ret;
@@ -398,14 +471,14 @@ int CryptoNoteProtocolHandler::handle_request_get_objects(int command, NOTIFY_RE
   size_t maxObjects = m_maxObjectCount.load();
   const size_t totalObjects = arg.blocks.size() + arg.txs.size();
 
-  logger(INFO) << "DEBUG: Request for " << totalObjects << " objects (limit: " << maxObjects << ")";
-
-
   if (totalObjects > maxObjects)
   {
+    std::string ipAddress = common::ipAddressToString(context.m_remote_ip);
     logger(logging::ERROR) << context << "Requested objects count exceeds limit of " 
                           << maxObjects << ": blocks " << arg.blocks.size() 
                           << " + txs " << arg.txs.size() << " = " << totalObjects;
+    logger(logging::WARNING) << "IP " << ipAddress << ":" << context.m_remote_port 
+                            << " attempted to overload with " << totalObjects << " objects (limit: " << maxObjects << ")";
     context.m_state = CryptoNoteConnectionContext::state_shutdown;
     return 1;
   }
@@ -610,6 +683,16 @@ int CryptoNoteProtocolHandler::processObjects(CryptoNoteConnectionContext& conte
 
 bool CryptoNoteProtocolHandler::on_idle()
 {
+  // Periodically validate unverified chunks in chronological order
+  // Only for version 2+ nodes (chunked checkpoint system)
+  if (cn::P2P_CURRENT_VERSION >= cn::P2P_CHECKPOINT_LIST_VERSION)
+  {
+    // Check pending validations for consensus (asynchronous approach)
+    m_chunkValidationManager->check_pending_chunk_validations();
+    // Start new validations if needed
+    m_chunkValidationManager->validate_unverified_chunks();
+  }
+  
   return m_core.on_idle();
 }
 
@@ -1127,6 +1210,211 @@ int CryptoNoteProtocolHandler::doPushLiteBlock(NOTIFY_NEW_LITE_BLOCK::request ar
         context.m_state = CryptoNoteConnectionContext::state_shutdown;
       }
     }
+  }
+
+  return 1;
+}
+
+int CryptoNoteProtocolHandler::handle_request_checkpoint_list(int command, NOTIFY_REQUEST_CHECKPOINT_LIST::request& arg, CryptoNoteConnectionContext& context)
+{
+  // REFACTORED: This handler now supports both old (full checkpoint lists) and new (chunk-based) systems
+  // For backward compatibility with old nodes, we still support full checkpoint list requests
+  // However, new nodes should use NOTIFY_REQUEST_CHUNK_HASH for consensus
+  
+  // Only answer checkpoint requests if we have confirmed chunks
+  // This ensures we don't serve unverified data to other nodes
+  if (!m_core.getCheckpointList().can_answer_checkpoint_requests())
+  {
+    logger(logging::DEBUGGING) << context << " Cannot answer checkpoint request: no confirmed chunks available";
+    NOTIFY_RESPONSE_CHECKPOINT_LIST::request rsp;
+    rsp.list_start_height = 0;
+    rsp.checkpoint_list.clear();
+    if (!post_notify<NOTIFY_RESPONSE_CHECKPOINT_LIST>(*m_p2p, rsp, context))
+      context.m_state = CryptoNoteConnectionContext::state_shutdown;
+    return 1;
+  }
+  
+  // REFACTORED: For chunk-based system, we can still respond with block IDs if requested
+  // but this is mainly for backward compatibility with old nodes
+  // New nodes should use chunk hash requests instead
+  NOTIFY_RESPONSE_CHECKPOINT_LIST::request rsp;
+  rsp.list_start_height = arg.start_height;
+  rsp.checkpoint_list = m_core.getBlockIds(arg.start_height, arg.end_height);
+  
+  crypto::Hash hv = crypto::cn_fast_hash(rsp.checkpoint_list.data(), rsp.checkpoint_list.size() * sizeof(crypto::Hash));
+  if ( hv != arg.target_hash || rsp.checkpoint_list.size() == 0)
+  {
+    logger(ERROR) << context << " peer requested different hash for start_height " << arg.start_height
+                      << " end_height " << arg.end_height << " checkpoint list size " << rsp.checkpoint_list.size()
+                      << " I have hash " << hv << " peer wants " << arg.target_hash;
+
+    rsp.checkpoint_list.clear();
+    rsp.list_start_height = 0;
+    context.m_checkpoints_not_in_sync = true;
+  }
+  
+  if (!post_notify<NOTIFY_RESPONSE_CHECKPOINT_LIST>(*m_p2p, rsp, context))
+    context.m_state = CryptoNoteConnectionContext::state_shutdown;
+  return 1;
+}
+
+int CryptoNoteProtocolHandler::handle_request_chunk_hash(int command, NOTIFY_REQUEST_CHUNK_HASH::request& arg, CryptoNoteConnectionContext& context)
+{
+  logger(INFO) << context << " Received chunk hash request for chunk " << arg.chunk_index;
+  
+  // Only answer chunk hash requests if peer supports chunk-based checkpoints
+  if (context.version < cn::P2P_CHECKPOINT_LIST_VERSION)
+  {
+    logger(INFO) << context << " Peer doesn't support chunk-based checkpoints (version " << context.version << ")";
+    NOTIFY_RESPONSE_CHUNK_HASH::request rsp;
+    rsp.chunk_index = arg.chunk_index;
+    rsp.chunk_hash = NULL_HASH;  // Signal that we can't answer
+    if (!post_notify<NOTIFY_RESPONSE_CHUNK_HASH>(*m_p2p, rsp, context))
+      context.m_state = CryptoNoteConnectionContext::state_shutdown;
+    return 1;
+  }
+  
+  // Only answer chunk hash requests after this node has at least one confirmed chunk.
+  // Once bootstrapped, locally computed in-memory chunks may be served so peers can
+  // compare them during their own consensus process.
+  if (!m_core.getCheckpointList().can_answer_checkpoint_requests())
+  {
+    logger(INFO) << context << " Cannot answer chunk hash request: no confirmed chunks available";
+    NOTIFY_RESPONSE_CHUNK_HASH::request rsp;
+    rsp.chunk_index = arg.chunk_index;
+    rsp.chunk_hash = NULL_HASH;  // Signal that we can't answer
+    if (!post_notify<NOTIFY_RESPONSE_CHUNK_HASH>(*m_p2p, rsp, context))
+      context.m_state = CryptoNoteConnectionContext::state_shutdown;
+    return 1;
+  }
+  
+  // Return chunks that exist in memory, including not-yet-confirmed chunks.
+  // The requester treats this as one peer vote and validates it against consensus.
+  crypto::Hash chunk_hash = m_core.getCheckpointList().get_chunk_hash(arg.chunk_index);
+  
+  NOTIFY_RESPONSE_CHUNK_HASH::request rsp;
+  rsp.chunk_index = arg.chunk_index;
+  rsp.chunk_hash = chunk_hash;
+  
+  if (chunk_hash == NULL_HASH)
+  {
+    logger(INFO) << context << " Cannot answer chunk hash request for chunk " << arg.chunk_index 
+                             << ": chunk not found in memory (have " 
+                             << m_core.getCheckpointList().get_all_chunk_hashes().size() << " chunks)";
+  }
+  else
+  {
+    logger(INFO) << context << " Responding to chunk hash request for chunk " << arg.chunk_index 
+                             << " with hash " << chunk_hash;
+  }
+  
+  // Always send a response (even if NULL_HASH) so the requester knows we processed the request
+  logger(INFO) << context << " Sending chunk hash response for chunk " << arg.chunk_index 
+                           << " (hash: " << (chunk_hash == NULL_HASH ? "NULL_HASH" : "valid") << ")";
+  if (!post_notify<NOTIFY_RESPONSE_CHUNK_HASH>(*m_p2p, rsp, context))
+  {
+    logger(ERROR) << context << " Failed to send chunk hash response for chunk " << arg.chunk_index;
+    context.m_state = CryptoNoteConnectionContext::state_shutdown;
+  }
+  else
+  {
+    logger(INFO) << context << " Successfully sent chunk hash response for chunk " << arg.chunk_index;
+  }
+  return 1;
+}
+
+int CryptoNoteProtocolHandler::handle_response_chunk_hash(int command, NOTIFY_RESPONSE_CHUNK_HASH::request& arg, CryptoNoteConnectionContext& context)
+{
+  // Only process chunk hash responses if peer supports chunk-based checkpoints
+  if (context.version < cn::P2P_CHECKPOINT_LIST_VERSION)
+  {
+    logger(INFO) << context << " Peer doesn't support chunk-based checkpoints (version " << context.version << ")";
+    return 1;
+  }
+  
+  // Find peer_id from context using connection_id (more reliable than pointer comparison)
+  uint64_t peer_id = 0;
+  m_p2p->for_each_connection([&peer_id, &context](const CryptoNoteConnectionContext& ctx, PeerIdType id) {
+    if (ctx.m_connection_id == context.m_connection_id) {
+      peer_id = id;
+    }
+  });
+  
+  if (peer_id == 0) {
+    logger(WARNING) << context << " Cannot find peer ID for chunk hash response (connection_id: " 
+                    << context.m_connection_id << ")";
+    return 1;
+  }
+  
+  // Store the response in pending chunk hashes map for the consensus mechanism
+  // NOTE: NULL_HASH is a valid response (means peer doesn't have this chunk)
+  if (!m_chunkValidationManager->store_chunk_hash_response(peer_id, arg.chunk_index, arg.chunk_hash))
+  {
+    logger(WARNING) << context << " Ignored chunk hash response for chunk " << arg.chunk_index
+                    << " from peer " << peer_id
+                    << " (not pending, late, or peer was not requested)";
+    return 1;
+  }
+  
+  if (arg.chunk_hash == NULL_HASH)
+  {
+    logger(INFO) << context << " Received chunk " << arg.chunk_index << " hash from peer " << peer_id 
+                << ": peer does not have this chunk (NULL_HASH)";
+  }
+  else
+  {
+    logger(INFO) << context << " Received chunk " << arg.chunk_index << " hash from peer " << peer_id 
+                << " with hash " << arg.chunk_hash;
+  }
+  return 1;
+}
+
+crypto::Hash CryptoNoteProtocolHandler::request_chunk_hash_from_peer(uint64_t peer_id, uint32_t chunk_index)
+{
+  // Find the peer connection
+  CryptoNoteConnectionContext* peer_context = nullptr;
+  uint32_t found_connections = 0;
+  m_p2p->for_each_connection([&peer_context, &found_connections, peer_id](CryptoNoteConnectionContext& ctx, uint64_t id) {
+    found_connections++;
+    if (id == peer_id) {
+      peer_context = &ctx;
+    }
+  });
+  
+  if (!peer_context) {
+    logger(WARNING) << "Cannot request chunk hash from peer " << peer_id << ": peer not found (searched " 
+                    << found_connections << " connections)";
+    // Log all available peer IDs for debugging
+    logger(DEBUGGING) << "Available peer IDs:";
+    m_p2p->for_each_connection([&](CryptoNoteConnectionContext& ctx, uint64_t id) {
+      logger(DEBUGGING) << "  Peer ID: " << id << " " << ctx 
+                        << ", state: " << get_protocol_state_string(ctx.m_state)
+                        << ", version: " << static_cast<int>(ctx.version);
+    });
+    return NULL_HASH;
+  }
+  
+  // NOTE: This function is deprecated - we now use async validation via ChunkValidationManager
+  // This synchronous version is kept for backward compatibility but should not be used
+  // Responses will be handled asynchronously by the ChunkValidationManager
+  logger(WARNING) << "request_chunk_hash_from_peer is deprecated - use async validation instead";
+  return NULL_HASH;
+}
+
+int CryptoNoteProtocolHandler::handle_response_checkpoint_list(int command, NOTIFY_RESPONSE_CHECKPOINT_LIST::request& arg, CryptoNoteConnectionContext& context)
+{
+  if( !context.m_active_checkpoint_req )
+  {
+    context.m_state = CryptoNoteConnectionContext::state_shutdown;
+    return 1;
+  }
+
+  m_last_checkpoint_req = 0;
+  context.m_active_checkpoint_req = false;
+
+  if( arg.checkpoint_list.size() == 0 || !m_core.getCheckpointList().add_checkpoint_list(arg.list_start_height, arg.checkpoint_list) )
+  {
+    context.m_checkpoints_not_in_sync = true;
   }
 
   return 1;

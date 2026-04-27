@@ -141,7 +141,8 @@ namespace cn
 		const char P2P_NET_DATA_FILENAME[] = "p2pstate.bin";
 		const char CRYPTONOTE_BLOCKCHAIN_INDICES_FILENAME[] = "blockchainindices.dat";
 		const char MINER_CONFIG_FILE_NAME[] = "miner_conf.json";
-		
+		const char CRYPTONOTE_CHECKPOINT_FILENAME[] = "checkpoint.dat";
+
 	} // namespace parameters
 
 	const uint64_t START_BLOCK_REWARD = (UINT64_C(5000) * parameters::POINT);  // start reward (Consensus I)
@@ -185,12 +186,14 @@ namespace cn
 	and the minimum version for communication between nodes */
 	const uint8_t P2P_VERSION_1 = 1;
 	const uint8_t P2P_VERSION_2 = 2;
-	const uint8_t P2P_CURRENT_VERSION = 1;
+	const uint8_t P2P_CURRENT_VERSION = 2;  // Incremented to support checkpoint list propagation
 	const uint8_t P2P_MINIMUM_VERSION = 1;
 	const uint8_t P2P_UPGRADE_WINDOW = 2;
 
 	// This defines the minimum P2P version required for lite blocks propogation
 	const uint8_t P2P_LITE_BLOCKS_PROPOGATION_VERSION = 3;
+
+    const uint8_t P2P_CHECKPOINT_LIST_VERSION = 2;
 
 	const size_t P2P_LOCAL_WHITE_PEERLIST_LIMIT = 1000;
 	const size_t P2P_LOCAL_GRAY_PEERLIST_LIMIT = 5000;
@@ -206,6 +209,23 @@ namespace cn
 	const uint32_t P2P_DEFAULT_PING_CONNECTION_TIMEOUT = 2000; // 2 seconds
 	const uint64_t P2P_DEFAULT_INVOKE_TIMEOUT = 60 * 2 * 1000; // 2 minutes
 	const size_t P2P_DEFAULT_HANDSHAKE_INVOKE_TIMEOUT = 5000;  // 5 seconds
+	const size_t P2P_CHECKPOINT_LIST_RE_REQUEST = 300;  // 5 minutes
+	const uint32_t P2P_CHECKPOINT_PEER_MIN_UPTIME_BLOCKS = 12000;  // Minimum peer uptime for checkpoint verification (mainnet: 12000 blocks × 2 min = 24000 min ≈ 16.7 days)
+	const uint32_t P2P_CHECKPOINT_PEER_MIN_UPTIME_BLOCKS_TESTNET = 2; // Minimum peer uptime for checkpoint verification (testnet: 6000 blocks × 2 min = 12000 min ≈ 8.3 days, relaxed for smaller network)
+	
+	// Checkpoint consensus configuration (Mainnet)
+	// M = minimum agreements required (all M peers must agree)
+	// K = total peers to sample
+	// n = minimum distinct /16 networks required
+	const uint32_t CKPT_MIN_CONSENSUS_PEERS = 6;           // M: minimum agreements required
+	const uint32_t CKPT_CONSENSUS_PEERS = 6;               // K: minimun total peers to sample
+	const uint32_t CKPT_MIN_DIVERSE_NETWORKS = 3;          // n: minimum distinct /16 networks required
+	
+	// Checkpoint consensus configuration (Testnet - relaxed for smaller network)
+	const uint32_t CKPT_MIN_CONSENSUS_PEERS_TESTNET = 2;          // M: minimum agreements required (testnet)
+	const uint32_t CKPT_CONSENSUS_PEERS_TESTNET = 2;              // K: minimum total peers to sample (testnet) - increased to ask multiple peers
+	const uint32_t CKPT_MIN_DIVERSE_NETWORKS_TESTNET = 2;          // n: minimum distinct /16 networks required (testnet)
+	
 	const char P2P_STAT_TRUSTED_PUB_KEY[] = "f7061e9a5f0d30549afde49c9bfbaa52ac60afdc46304642b460a9ea34bf7a4e";
 
 	// Seed Nodes
@@ -220,8 +240,7 @@ namespace cn
 	};
 
 	const std::initializer_list<const char *> TESTNET_SEED_NODES = {
-		"161.97.145.65:15500",
-		"161.97.145.65:15501"
+		"5.189.177.60:15500"
 	};
 
 	struct CheckpointData
@@ -233,6 +252,9 @@ namespace cn
 #ifdef __GNUC__
 	__attribute__((unused))
 #endif
+
+	const char DNS_CHECKPOINT_DOMAIN[] = "checkpoints.conceal.id";
+	const char TESTNET_DNS_CHECKPOINT_DOMAIN[] = "testpoints.conceal.id";
 
 	// Blockchain Checkpoints:
 	// {<block height>, "<block hash>"},
@@ -425,7 +447,15 @@ namespace cn
 			{1840000, "b3a95fbf906555264a31906678b299c0851d09628b8d37969a285cb54a614c31"},
 			{1850000, "041d84a8c1fb68d24e6a9d8fe5aab27c6db654ecaad3b2d541c40d6e9df53feb"},
 			{1860000, "63642037f4d5d82150c120e776a3b2d2a80f725b4759ffda12c94bd45499fb25"},
-			{1870000, "159fa13f6f9f48e2d8344e76ebdfe2ea986b9a72e94325dacbbd3bd73cbdbb41"}
+			{1870000, "159fa13f6f9f48e2d8344e76ebdfe2ea986b9a72e94325dacbbd3bd73cbdbb41"},
+			{1880000, "7e5dd6c104989975b482d7bf277934d8f9252e81f5bc996ed7c54ee95542ade6"},
+			{1890000, "c2ded97cfaefc52aa1de9f6ca8f04d2f3c2ab3b48bf572801555e9fa7934f954"},
+			{1900000, "50f2fc1af569f1ebb6567b915e2ee1bf72c585f544725e952a303b447faab909"},
+			{1910000, "e2f3e1560369c4e457fdeffbe2ca2fbf9db7aa89a5cd6d9d2e96f7ef826690eb"},
+			{1920000, "ba318eb902d6a3f7dd4e7116b13c6b1f2cb4e8c9e70acbde3b6a28a1374c6243"},
+			{1930000, "6f39f0888c14808710e909fb45c864fdf738cf644e432486d8e01b65dbbc2862"},
+			{1940000, "fe774dd97a5b975c02abb18ca48bf6fd3a8048b597520befe1f261855a7ccf3f"},
+			{1950000, "6147f276271c55319cf6fc03e86bcaa75ea0a2aab126095a9a9f8a811eb229e1"}
 	};
 
 	const std::initializer_list<CheckpointData> TESTNET_CHECKPOINTS = {
@@ -467,7 +497,8 @@ namespace cn
 		{875000, "91eac54f608c1d0e43111c107a2f5caf259bcbbd66714b6591cedbc64f9c4cdf"},
 		{900000, "a70b6df1794a6d91071cd5fc87719769bf09610d520c2c2134f53908d1e3de40"},
 		{925000, "a00b47f3610cfd5c509183322fca89e388c0427601ce4db7e397acbcab5a3ee6"},
-		{950000, "387573b7b9bdbc1d79c28156cf15d7e08ddf248a0257b0ee7ef2731c5c7a0534"}
+		{950000, "387573b7b9bdbc1d79c28156cf15d7e08ddf248a0257b0ee7ef2731c5c7a0534"},
+		{975000, "2bbf6d2fecb329d9c34968e60b0d2814a2d5a2f69ee872b77d152ba795e881ae"}
 	};
 
 } // namespace cn

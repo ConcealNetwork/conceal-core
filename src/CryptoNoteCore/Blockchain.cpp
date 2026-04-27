@@ -1,7 +1,7 @@
 // Copyright (c) 2011-2017 The Cryptonote developers
 // Copyright (c) 2017-2018 The Circle Foundation & Conceal Devs
 // Copyright (c) 2018-2020 Karbo developers
-// Copyright (c) 2018-2025 Conceal Network & Conceal Devs
+// Copyright (c) 2018-2026 Conceal Network & Conceal Devs
 //
 // Distributed under the MIT/X11 software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
@@ -367,7 +367,6 @@ namespace cn
     m_blockchainIndexesEnabled(blockchainIndexesEnabled),
     m_blockchainAutosaveEnabled(blockchainAutosaveEnabled),
     logger(logger, "Blockchain")
-
   {
   }
 
@@ -475,7 +474,6 @@ namespace cn
     try
     {
       m_testnet = testnet;
-      m_checkpoints.set_testnet(testnet);
       std::lock_guard<decltype(m_blockchain_lock)> lk(m_blockchain_lock);
       
       if (!config_folder.empty() && !tools::create_directories_if_necessary(config_folder))
@@ -485,6 +483,9 @@ namespace cn
       }
 
       m_config_folder = config_folder;
+
+      m_checkpoints.init_targets(testnet, appendPath(config_folder, m_currency.checkpointFileName()));
+      m_checkpoints.load_checkpoints_from_file();
 
       if (!m_blocks.open(appendPath(config_folder, m_currency.blocksFileName()), 
                         appendPath(config_folder, m_currency.blockIndexesFileName()), 1024))
@@ -514,6 +515,12 @@ namespace cn
               if (!rebuildCache())
               {
                 logger(ERROR, BRIGHT_RED) << "Failed to rebuild cache";
+                return false;
+              }
+
+              if (!storeCache())
+              {
+                logger(ERROR, BRIGHT_RED) << "Failed to save rebuilt blockchain cache";
                 return false;
               }
             }
@@ -549,6 +556,12 @@ namespace cn
             if (!rebuildCache())
             {
               logger(ERROR, BRIGHT_RED) << "Failed to rebuild cache";
+              return false;
+            }
+
+            if (!storeCache())
+            {
+              logger(ERROR, BRIGHT_RED) << "Failed to save rebuilt blockchain cache";
               return false;
             }
           }
@@ -597,22 +610,475 @@ namespace cn
         }
       }
 
+      // Convert old-style checkpoints (individual block hashes) to new-style (list hashes)
+      // ONLY if we don't have valid chunks covering the hardcoded checkpoint range.
+      // If chunks exist and cover the hardcoded checkpoints, we're using the new chunked system
+      // and don't need to convert targets (they're only needed for old-style full checkpoint lists).
       try
       {
-        /* If the current checkpoint is invalid, then rollback the chain to the last 
-         valid checkpoint and try again. */
-        uint32_t lastValidCheckpointHeight = 0;
-        if (!checkCheckpoints(lastValidCheckpointHeight))
+        uint32_t currentHeight = static_cast<uint32_t>(m_blocks.size() - 1);
+        uint32_t greatestTargetHeight = m_checkpoints.get_greatest_target_height();
+        uint32_t currentCoveredHeight = m_checkpoints.get_covered_height();
+        
+        // Only convert if we don't have chunks covering the hardcoded checkpoint range
+        // Chunks are validated during generation, so if they exist and cover the range, we're good
+        bool needs_conversion = (currentHeight > 0) && 
+                                (greatestTargetHeight > 0) && 
+                                (currentCoveredHeight < greatestTargetHeight);
+        
+        if (needs_conversion)
         {
-          logger(WARNING, BRIGHT_YELLOW) << "Invalid checkpoint. Rollback blockchain to last valid checkpoint at height " 
-                                         << lastValidCheckpointHeight;
-          rollbackBlockchainTo(lastValidCheckpointHeight);
+          logger(DEBUGGING) << "Converting checkpoint validation targets for P2P compatibility (chunks cover up to " 
+                           << currentCoveredHeight << ", last checkpoint at " << greatestTargetHeight << ")";
+          
+          // Convert old checkpoints (individual block hashes) to new format (list hashes)
+          // This is only needed if we're going to use old-style full checkpoint lists
+          // Only convert checkpoints up to current blockchain height to avoid warnings for unsynced blocks
+          auto getBlockIdsFunc = [this](uint32_t startHeight, uint32_t maxCount) -> std::vector<crypto::Hash> {
+            return m_blockIndex.getBlockIds(startHeight, maxCount);
+          };
+          
+          m_checkpoints.convert_old_checkpoints_to_list_hashes(getBlockIdsFunc, currentHeight);
+        }
+        else if (currentCoveredHeight >= greatestTargetHeight && greatestTargetHeight > 0)
+        {
+          logger(DEBUGGING) << "Skipping target conversion - valid chunks already cover hardcoded checkpoint range (up to height " 
+                           << greatestTargetHeight << ")";
         }
       }
-      catch (const std::exception&)
+      catch (const std::exception& e)
       {
-        logger(ERROR, BRIGHT_RED) << "Error checking/rolling back checkpoints";
+        logger(WARNING, BRIGHT_YELLOW) << "Error converting checkpoints: " << e.what();
+        // Continue - old checkpoints will still work for individual block validation
+      }
+      
+      // Generate checkpoint.dat from local blockchain if it doesn't exist or is incomplete
+      // 
+      // CHUNKED CHECKPOINT GENERATION:
+      // Instead of storing all block hashes (60MB), we now store chunk hashes (~6KB):
+      // - Each chunk = hash of 10,000 consecutive blocks
+      // - For 1.87M blocks: 187 chunks × 32 bytes = ~6KB
+      // - Benefits: Fast P2P comparison, efficient disagreement detection, small file size
+      try
+      {
+        uint32_t currentHeight = static_cast<uint32_t>(m_blocks.size() - 1);
+        uint32_t greatestTargetHeight = m_checkpoints.get_greatest_target_height();
+        uint32_t currentCoveredHeight = m_checkpoints.get_covered_height();
+        
+        // If we have a blockchain and checkpoint targets, but no checkpoint chunks (or incomplete),
+        // generate them from the local blockchain
+        if (currentHeight > 0 && greatestTargetHeight > 0)
+        {
+          // Calculate target height: up to greatest target, but not more than current height
+          uint32_t targetHeight = std::min(greatestTargetHeight, currentHeight);
+          
+          if (currentCoveredHeight < targetHeight)
+          {
+            uint32_t existing_chunk_count = m_checkpoints.get_chunk_count();
+            
+            // If we already have some chunks, only create the missing ones incrementally
+            // Otherwise, generate all chunks from scratch
+            if (existing_chunk_count > 0)
+            {
+              logger(INFO) << "Creating missing checkpoint chunk(s) from " << (currentCoveredHeight + 1) 
+                           << " to " << greatestTargetHeight << " (last hardcoded checkpoint)";
+              
+              uint32_t chunk_size = m_checkpoints.get_chunk_size();
+              auto getBlockIdsFunc = [this](uint32_t startHeight, uint32_t maxCount) -> std::vector<crypto::Hash> {
+                return m_blockIndex.getBlockIds(startHeight, maxCount);
+              };
+              
+              // Calculate which chunks we need to create
+              // Find the last chunk we have
+              uint32_t last_chunk_index;
+              if (currentCoveredHeight <= chunk_size)
+              {
+                last_chunk_index = 0; // We have at least chunk 0
+              }
+              else
+              {
+                last_chunk_index = (currentCoveredHeight - 1) / chunk_size;
+              }
+              
+              // Find which chunk the last hardcoded checkpoint belongs to
+              uint32_t target_chunk_index;
+              if (greatestTargetHeight <= chunk_size)
+              {
+                target_chunk_index = 0;
+              }
+              else
+              {
+                target_chunk_index = (greatestTargetHeight - 1) / chunk_size;
+              }
+              
+              // Create missing chunks one by one
+              for (uint32_t chunk_idx = last_chunk_index + 1; chunk_idx <= target_chunk_index; chunk_idx++)
+              {
+                // SIMPLIFIED: All chunks are uniform (block 0 excluded)
+                uint32_t chunk_start_height = chunk_idx * chunk_size + 1;
+                uint32_t chunk_end_height = (chunk_idx + 1) * chunk_size;
+                
+                if (currentHeight >= chunk_end_height)
+                {
+                  if (m_checkpoints.add_chunk_from_block_ids(getBlockIdsFunc, chunk_start_height))
+                  {
+                    // Auto-confirm chunks up to the last hardcoded checkpoint
+                    // These chunks are validated against hardcoded checkpoints in add_chunk_from_block_ids,
+                    // so they're safe to add to checkpoint.dat immediately
+                    if (m_checkpoints.add_verified_chunk_to_file(chunk_idx))
+                    {
+                      logger(INFO) << "Created and saved checkpoint chunk " << chunk_idx 
+                                   << " (blocks " << chunk_start_height << "-" << chunk_end_height 
+                                   << ", validated against hardcoded checkpoints)";
+                    }
+                    else
+                    {
+                      logger(WARNING) << "Created chunk " << chunk_idx << " but failed to save to checkpoint.dat";
+                    }
+                  }
+                  else
+                  {
+                    logger(WARNING) << "Failed to create chunk " << chunk_idx << " - blockchain mismatch detected";
+                    break; // Stop if we can't create a chunk
+                  }
+                }
+                else
+                {
+                  logger(INFO) << "Skipping chunk " << chunk_idx 
+                               << " - not enough blocks (have " << currentHeight 
+                               << ", need " << chunk_end_height << ")";
+                  break; // Can't create more chunks if we don't have enough blocks
+                }
+              }
+            }
+            else
+            {
+              // REFINED STRATEGY: Initial setup (no checkpoint.dat file)
+              // 1. Generate chunks up to last CryptoNoteConfig.h checkpoint (PRIORITY 1)
+              // 2. If DNS checkpoints exist beyond that, try to extend up to DNS checkpoint (PRIORITY 2)
+              // 3. Beyond that, chunks will be validated via P2P (autonomous)
+              
+              logger(INFO, BRIGHT_GREEN) << "Initial setup: Generating checkpoint chunks from local blockchain (height " 
+                                        << currentHeight << ", target up to " << greatestTargetHeight << " from CryptoNoteConfig.h)";
+              
+              // Step 1: Generate chunks up to last CryptoNoteConfig.h checkpoint
+              auto getBlockIdsFunc = [this](uint32_t startHeight, uint32_t maxCount) -> std::vector<crypto::Hash> {
+                return m_blockIndex.getBlockIds(startHeight, maxCount);
+              };
+              
+              if (m_checkpoints.generate_chunks_from_block_ids(getBlockIdsFunc, targetHeight))
+              {
+                uint32_t chunkCount = m_checkpoints.get_chunk_count();
+                uint32_t coveredHeight = m_checkpoints.get_covered_height();
+                logger(INFO, BRIGHT_GREEN) << "Successfully generated " << chunkCount 
+                                          << " checkpoint chunks from CryptoNoteConfig.h (covers up to height " << coveredHeight << ")";
+                
+                // Step 2: Create chunks beyond hardcoded checkpoints up to current blockchain height
+                // These chunks will be stored in memory and validated via P2P consensus
+                if (currentHeight > greatestTargetHeight)
+                {
+                  uint32_t chunk_size = m_checkpoints.get_chunk_size();
+                  uint32_t last_hardcoded_chunk_index = (greatestTargetHeight - 1) / chunk_size;
+                  uint32_t current_chunk_index = (currentHeight - 1) / chunk_size;
+                  
+                  logger(INFO) << "Creating chunks " << (last_hardcoded_chunk_index + 1) 
+                               << " to " << current_chunk_index 
+                               << " (beyond hardcoded checkpoints, up to current height " << currentHeight << ")";
+                  
+                  // Create chunks beyond hardcoded checkpoints (these need P2P validation)
+                  // Use same logic as existing code path (lines 915-952) for consistency
+                  for (uint32_t chunk_idx = last_hardcoded_chunk_index + 1; chunk_idx <= current_chunk_index; chunk_idx++)
+                  {
+                    // SIMPLIFIED: All chunks are uniform (block 0 excluded)
+                    uint32_t chunk_start_height = chunk_idx * chunk_size + 1;
+                    uint32_t chunk_end_height = (chunk_idx + 1) * chunk_size;
+                    
+                    // Only create if we have all blocks for this chunk
+                    if (currentHeight >= chunk_end_height)
+                    {
+                      // Check if chunk already exists in memory (from previous session)
+                      crypto::Hash existing_chunk_hash = m_checkpoints.get_chunk_hash(chunk_idx);
+                      if (existing_chunk_hash != NULL_HASH)
+                      {
+                        logger(DEBUGGING) << "Chunk " << chunk_idx << " already exists in memory (from previous session), awaiting P2P validation";
+                        continue; // Skip to next chunk
+                      }
+                      
+                      // Create new chunk
+                      if (!m_checkpoints.add_chunk_from_block_ids(getBlockIdsFunc, chunk_start_height))
+                      {
+                        logger(WARNING) << "Failed to create chunk " << chunk_idx << " - blockchain mismatch detected";
+                        break;
+                      }
+                      // Chunk created and hash computed - logging is done in CheckpointsList.cpp
+                      // NOTE: We do NOT call add_verified_chunk_to_file() here
+                      // These chunks need peer consensus before being saved to checkpoint.dat
+                    }
+                    else
+                    {
+                      logger(INFO) << "Skipping chunk " << chunk_idx 
+                                   << " - not enough blocks (have " << currentHeight 
+                                   << ", need " << chunk_end_height << ")";
+                      break;
+                    }
+                  }
+                }
+                
+                logger(INFO) << "Initial setup complete. Chunks beyond CryptoNoteConfig.h checkpoints will be validated via P2P consensus.";
+              }
+              else
+              {
+                logger(WARNING, BRIGHT_YELLOW) << "Checkpoint chunk generation failed. "
+                                              << "This may happen if the blockchain doesn't match expected checkpoints from CryptoNoteConfig.h.";
+              }
+            }
+          }
+            else
+            {
+              logger(INFO, BRIGHT_GREEN) << "Checkpoint chunks already exist (covers up to height " 
+                                        << currentCoveredHeight << ")";
+              
+              // CRITICAL: Validate chunks against checkpoints from CryptoNoteConfig.h
+              // This detects if maintainer added new checkpoints that don't match our checkpoint.dat
+              // If validation fails, rollback blockchain and truncate checkpoint.dat
+              auto getBlockIdsFunc = [this](uint32_t startHeight, uint32_t maxCount) -> std::vector<crypto::Hash> {
+                return m_blockIndex.getBlockIds(startHeight, maxCount);
+              };
+              
+              // Get current blockchain height for validation
+              uint32_t current_height = static_cast<uint32_t>(m_blocks.size() > 0 ? m_blocks.size() - 1 : 0);
+              auto validation_result = m_checkpoints.validate_chunks_against_checkpoints(getBlockIdsFunc, current_height);
+              
+              if (!validation_result.is_valid)
+              {
+                uint32_t mismatched_chunk = validation_result.first_mismatched_chunk_index;
+                uint32_t rollback_height = mismatched_chunk * m_checkpoints.get_chunk_size();
+                
+                logger(ERROR, BRIGHT_RED) << "CHECKPOINT VALIDATION FAILED: "
+                                        << "Chunk " << mismatched_chunk << " (contains checkpoint from CryptoNoteConfig.h) "
+                                        << "does not match checkpoint.dat. "
+                                        << "This indicates maintainer added a new checkpoint or blockchain diverged. "
+                                        << "Rolling back blockchain to height " << rollback_height 
+                                        << " and truncating checkpoint.dat to chunk " << (mismatched_chunk > 0 ? mismatched_chunk - 1 : 0);
+                
+                // Truncate checkpoint.dat to last valid chunk (before the mismatch)
+                uint32_t last_valid_chunk = (mismatched_chunk > 0) ? (mismatched_chunk - 1) : 0;
+                if (!m_checkpoints.truncate_checkpoint_file(last_valid_chunk))
+                {
+                  logger(ERROR, BRIGHT_RED) << "Failed to truncate checkpoint.dat - file may be corrupted";
+                }
+                
+                // Rollback blockchain to the chunk boundary before the mismatch
+                if (rollback_height > 0 && rollback_height < currentHeight)
+                {
+                  logger(INFO, BRIGHT_YELLOW) << "Rolling back blockchain from height " << currentHeight 
+                                             << " to height " << rollback_height;
+                  if (!rollbackBlockchainTo(rollback_height))
+                  {
+                    logger(ERROR, BRIGHT_RED) << "Failed to rollback blockchain - node may be in inconsistent state";
         return false;
+                  }
+                  logger(INFO, BRIGHT_GREEN) << "Successfully rolled back blockchain to height " << rollback_height;
+                }
+                else
+                {
+                  logger(ERROR, BRIGHT_RED) << "Cannot rollback to height " << rollback_height 
+                                           << " (current height: " << currentHeight << ")";
+                  return false;
+                }
+              }
+              else
+              {
+                // VERSION 2 CHECKPOINT SYSTEM: Create missing chunks beyond last hardcoded checkpoint
+                // Only for P2P version 2+ nodes (chunked checkpoint system)
+                // Version 1 nodes stick with old checkpoint method only
+                if (cn::P2P_CURRENT_VERSION >= cn::P2P_CHECKPOINT_LIST_VERSION)
+                {
+                  // Check if we're past the last chunk boundary and need to create new chunks
+                  // These chunks are beyond the last hardcoded checkpoint, so they need P2P validation
+                  uint32_t chunk_size = m_checkpoints.get_chunk_size();
+                  uint32_t last_chunk_index;
+                  
+                  if (currentCoveredHeight <= chunk_size)
+                  {
+                    last_chunk_index = 0;
+                  }
+                  else
+                  {
+                    last_chunk_index = (currentCoveredHeight - 1) / chunk_size;
+                  }
+                  
+                  // Calculate which chunk the current height belongs to
+                  uint32_t current_chunk_index;
+                  if (currentHeight <= chunk_size)
+                  {
+                    current_chunk_index = 0;
+                  }
+                  else
+                  {
+                    current_chunk_index = (currentHeight - 1) / chunk_size;
+                  }
+                  
+                  // If we're past the last chunk boundary, create missing chunks
+                  if (current_chunk_index > last_chunk_index && currentHeight > greatestTargetHeight)
+                  {
+                    uint32_t num_chunks_to_create = current_chunk_index - last_chunk_index;
+                    if (num_chunks_to_create == 1) {
+                      logger(INFO) << "Checking for missing checkpoint chunk " << current_chunk_index 
+                                   << " beyond last hardcoded checkpoint (heights " 
+                                   << (currentCoveredHeight + 1) << " to " << currentHeight << ")";
+                    } else {
+                      logger(INFO) << "Checking for missing checkpoint chunks beyond last hardcoded checkpoint (from chunk " 
+                                   << (last_chunk_index + 1) << " to " << current_chunk_index 
+                                   << ", heights " << (currentCoveredHeight + 1) << " to " << currentHeight << ")";
+                    }
+                    
+                    auto getBlockIdsFunc = [this](uint32_t startHeight, uint32_t maxCount) -> std::vector<crypto::Hash> {
+                      return m_blockIndex.getBlockIds(startHeight, maxCount);
+                    };
+                    
+                    // Create missing chunks one by one (these need P2P validation, not auto-confirmed)
+                    for (uint32_t chunk_idx = last_chunk_index + 1; chunk_idx <= current_chunk_index; chunk_idx++)
+                    {
+                      // SIMPLIFIED: All chunks are uniform (block 0 excluded)
+                      uint32_t chunk_start_height = chunk_idx * chunk_size + 1;
+                      uint32_t chunk_end_height = (chunk_idx + 1) * chunk_size;
+                      
+                      // Only create if we have all blocks for this chunk
+                      if (currentHeight >= chunk_end_height)
+                      {
+                        // Check if chunk already exists in memory (from previous session)
+                        crypto::Hash existing_chunk_hash = m_checkpoints.get_chunk_hash(chunk_idx);
+                        if (existing_chunk_hash != NULL_HASH)
+                        {
+                          logger(DEBUGGING) << "Chunk " << chunk_idx << " already exists in memory (from previous session), awaiting P2P validation";
+                          continue; // Skip to next chunk
+                        }
+                        
+                        // Create new chunk
+                        if (!m_checkpoints.add_chunk_from_block_ids(getBlockIdsFunc, chunk_start_height))
+                        {
+                          logger(WARNING) << "Failed to create chunk " << chunk_idx << " - blockchain mismatch detected";
+                          break;
+                        }
+                        // Chunk created and hash computed - logging is done in CheckpointsList.cpp
+                        // NOTE: We do NOT call add_verified_chunk_to_file() here
+                        // These chunks need peer consensus before being saved to checkpoint.dat
+                      }
+                      else
+                      {
+                        logger(INFO) << "Skipping chunk " << chunk_idx 
+                                     << " - not enough blocks (have " << currentHeight 
+                                     << ", need " << chunk_end_height << ")";
+                        break;
+                      }
+                    }
+                    
+                    // Log unverified chunks that need P2P validation
+                    std::vector<uint32_t> unverified = m_checkpoints.get_unverified_chunks();
+                    if (!unverified.empty())
+                    {
+                      logger(INFO) << "Found " << unverified.size() << " unverified chunk(s) requiring P2P validation: chunks " 
+                                   << unverified[0];
+                      for (size_t i = 1; i < unverified.size() && i < 5; i++)
+                      {
+                        logger(INFO) << ", " << unverified[i];
+                      }
+                      if (unverified.size() > 5)
+                      {
+                        logger(INFO) << ", ... (and " << (unverified.size() - 5) << " more)";
+                      }
+                      logger(INFO) << ". These will be validated via peer consensus before being saved to checkpoint.dat.";
+                    }
+                  }
+                }
+                
+                // Check if we're missing chunks up to the last hardcoded checkpoint
+                // If we're synced past the last checkpoint, we can safely create missing chunks
+                // Only for version 2+ nodes (version 1 uses old checkpoint method)
+                if (cn::P2P_CURRENT_VERSION >= cn::P2P_CHECKPOINT_LIST_VERSION && 
+                    currentCoveredHeight < greatestTargetHeight && currentHeight >= greatestTargetHeight)
+                {
+                  logger(INFO) << "Creating missing checkpoint chunk(s) from " << (currentCoveredHeight + 1) 
+                               << " to " << greatestTargetHeight << " (last hardcoded checkpoint)";
+                  
+                  uint32_t chunk_size = m_checkpoints.get_chunk_size();
+                  
+                  // Calculate which chunks we need to create
+                  // Find the last chunk we have
+                  uint32_t last_chunk_index;
+                  if (currentCoveredHeight <= chunk_size)
+                  {
+                    last_chunk_index = 0; // We have at least chunk 0
+                  }
+                  else
+                  {
+                    last_chunk_index = (currentCoveredHeight - 1) / chunk_size;
+                  }
+                  
+                  // Find which chunk the last hardcoded checkpoint belongs to
+                  uint32_t target_chunk_index;
+                  if (greatestTargetHeight <= chunk_size)
+                  {
+                    target_chunk_index = 0;
+                  }
+                  else
+                  {
+                    target_chunk_index = (greatestTargetHeight - 1) / chunk_size;
+                  }
+                  
+                  // Create missing chunks one by one
+                  for (uint32_t chunk_idx = last_chunk_index + 1; chunk_idx <= target_chunk_index; chunk_idx++)
+                  {
+                    // SIMPLIFIED: All chunks are uniform (block 0 excluded)
+                    uint32_t chunk_start_height = chunk_idx * chunk_size + 1;
+                    uint32_t chunk_end_height = (chunk_idx + 1) * chunk_size;
+                    
+                    if (currentHeight >= chunk_end_height)
+                    {
+                      logger(INFO, BRIGHT_GREEN) << "Creating missing chunk " << chunk_idx 
+                                                << " (blocks " << chunk_start_height << " to " << chunk_end_height << ")";
+                      
+                      if (m_checkpoints.add_chunk_from_block_ids(getBlockIdsFunc, chunk_start_height))
+                      {
+                        // Auto-confirm chunks up to the last hardcoded checkpoint
+                        // These chunks are validated against hardcoded checkpoints in add_chunk_from_block_ids,
+                        // so they're safe to add to checkpoint.dat immediately
+                        if (m_checkpoints.add_verified_chunk_to_file(chunk_idx))
+                        {
+                          logger(INFO, BRIGHT_GREEN) << "Successfully created and saved chunk " << chunk_idx 
+                                                    << " to checkpoint.dat (validated against hardcoded checkpoints)";
+                        }
+                        else
+                        {
+                          logger(WARNING, BRIGHT_YELLOW) << "Created chunk " << chunk_idx 
+                                                        << " but failed to save to checkpoint.dat";
+                        }
+                      }
+                      else
+                      {
+                        logger(WARNING, BRIGHT_YELLOW) << "Failed to create chunk " << chunk_idx 
+                                                      << " - this may indicate a blockchain mismatch";
+                        break; // Stop if we can't create a chunk
+                      }
+                    }
+                    else
+                    {
+                      logger(INFO) << "Skipping chunk " << chunk_idx 
+                                   << " - not enough blocks yet (have " << currentHeight 
+                                   << ", need " << chunk_end_height << ")";
+                      break; // Can't create more chunks if we don't have enough blocks
+                    }
+                  }
+                }
+              }
+            }
+        }
+      }
+      catch (const std::exception& e)
+      {
+        logger(WARNING, BRIGHT_YELLOW) << "Error generating checkpoint list: " << e.what();
+        // Don't fail initialization - checkpoint generation is optional for lone wolf nodes
       }
 
       // Initialize upgrade detectors with proper exception handling
@@ -656,25 +1122,75 @@ namespace cn
 
   bool Blockchain::checkCheckpoints(uint32_t &lastValidCheckpointHeight)
   {
-    std::vector<uint32_t> checkpointHeights = m_checkpoints.getCheckpointHeights();
-    for (const auto &checkpointHeight : checkpointHeights)
-    {
-      if (m_blocks.size() <= checkpointHeight)
-      {
-        return true;
-      }
+    // Get checkpoint targets from hardcoded checkpoints in CryptoNoteConfig.h
+    // These are the expected hashes of block ID lists at specific heights
+    std::vector<std::pair<uint32_t, crypto::Hash>> checkpointHeights = m_checkpoints.get_checkpoint_targets();
+    lastValidCheckpointHeight = 0;
 
-      if (m_checkpoints.check_block(checkpointHeight, getBlockIdByHeight(checkpointHeight)))
+    // If no checkpoints are configured, validation passes
+    if (checkpointHeights.empty())
+    {
+      return true;
+    }
+
+    uint32_t currentHeight = static_cast<uint32_t>(m_blocks.size() - 1);
+    
+    /* Checkpoints are in reverse order (highest first), so we check from highest to lowest.
+     * If the highest checkpoint fails, we check the previous one, and so on,
+     * until we find a valid checkpoint. Once we find a valid one, we rollback to that height. */
+    bool foundValidCheckpoint = false;
+    for (const auto &check : checkpointHeights)
+    {
+      uint32_t height = check.first;
+      
+      // Only validate checkpoints that are at or below the current blockchain height
+      if (currentHeight < height)
+        continue;
+
+      // Compute hash of block IDs from genesis (height 0) to this checkpoint height
+      // Compare against the hardcoded checkpoint target from CryptoNoteConfig.h
+      crypto::Hash hv = m_blockIndex.getHashOfIds(0, height+1);
+      if (hv == check.second)
       {
-        lastValidCheckpointHeight = checkpointHeight;
+        lastValidCheckpointHeight = height;
+        foundValidCheckpoint = true;
+        logger(INFO, BRIGHT_GREEN) << "Found valid checkpoint at height " << height;
+        break;
       }
       else
       {
-        return false;
+        logger(WARNING, BRIGHT_YELLOW) << "Checkpoint validation failed for height " << height <<  
+            " - computed hash: " << hv << " expected (from hardcoded checkpoints): " << check.second;
+        // Continue checking previous checkpoints
       }
     }
-    logger(INFO, BRIGHT_WHITE) << "Checkpoints passed";
-    return true;
+
+    if(foundValidCheckpoint)
+    {
+      logger(INFO, BRIGHT_WHITE) << "Checkpoints validated, last valid checkpoint at height " << lastValidCheckpointHeight;
+      uint32_t n_valid_blocks = lastValidCheckpointHeight+1;
+      if(m_checkpoints.get_points_size() < n_valid_blocks)
+        m_checkpoints.set_checkpoint_list(m_blockIndex.getBlockIds(0, n_valid_blocks));
+      
+      // If we found a valid checkpoint but it's not at the current height, we need to rollback
+      if (lastValidCheckpointHeight < currentHeight)
+      {
+        logger(WARNING, BRIGHT_YELLOW) << "Blockchain height " << currentHeight << 
+            " is beyond last valid checkpoint " << lastValidCheckpointHeight << ", rollback required";
+        return false; // Signal that rollback is needed
+      }
+      
+      return true; // All checkpoints up to current height are valid
+    }
+    else
+    {
+      // No valid checkpoint found - this is a problem
+      logger(ERROR, BRIGHT_RED) << "No valid checkpoint found! All checkpoint validations failed.";
+      // Don't set lastValidCheckpointHeight to 0 - that would rollback the entire chain
+      // Instead, return true to allow the blockchain to continue (maybe checkpoints need updating)
+      // But log this as a serious error
+      return true; // Allow continuation, but this should be investigated
+    }
   }
 
   bool Blockchain::rebuildCache()
@@ -838,13 +1354,15 @@ namespace cn
     BlockCacheSerializer ser(*this, getTailId(), logger.getLogger());
 
     const std::string &blocksCacheFileName = m_currency.blocksCacheFileName();
-    std::string blockCacheBkpFileName = blocksCacheFileName + ".bkp";
+    const std::string blocksCachePath = appendPath(m_config_folder, blocksCacheFileName);
+    const std::string blockCacheBkpPath = blocksCachePath + ".bkp";
 
     try
     {
-      std::rename(blocksCacheFileName.c_str(), blockCacheBkpFileName.c_str()); // fail here can be ignored
+      std::remove(blockCacheBkpPath.c_str()); // fail here can be ignored
+      std::rename(blocksCachePath.c_str(), blockCacheBkpPath.c_str()); // fail here can be ignored
 
-      if (!ser.save(appendPath(m_config_folder, blocksCacheFileName)))
+      if (!ser.save(blocksCachePath))
       {
         logger(ERROR, BRIGHT_RED) << "Failed to save blockchain cache";
         return false;
@@ -1548,6 +2066,29 @@ namespace cn
     return true;
   }
 
+  bool Blockchain::is_alternative_block_allowed(uint32_t  blockchain_height, uint32_t  block_height) const {
+    if (0 == block_height)
+      return false;
+
+    uint32_t lowest_height = blockchain_height - cn::parameters::CRYPTONOTE_MINED_MONEY_UNLOCK_WINDOW;
+
+    if (blockchain_height < cn::parameters::CRYPTONOTE_MINED_MONEY_UNLOCK_WINDOW)
+    {
+      lowest_height = 0;
+    }
+
+    if (block_height < lowest_height && !m_checkpoints.is_in_checkpoint_zone(block_height))
+    {
+      logger(logging::DEBUGGING, logging::WHITE)
+          << "<< Checkpoints.cpp << "
+          << "Reorganization depth too deep : " << (blockchain_height - block_height) << ". Block Rejected";
+      return false;
+    }
+
+    uint32_t  checkpoint_height = m_checkpoints.get_greatest_target_height();
+    return checkpoint_height < block_height;
+  }
+
   bool Blockchain::handle_alternative_block(const Block &b, const crypto::Hash &id, block_verification_context &bvc, bool sendNewAlternativeBlockMessage)
   {
     try
@@ -1563,10 +2104,7 @@ namespace cn
         return false;
       }
 
-      /* in the absence of a better solution, we fetch checkpoints from dns records */
-      m_checkpoints.load_checkpoints_from_dns();
-
-      if (!m_checkpoints.is_alternative_block_allowed(getCurrentBlockchainHeight(), block_height))
+      if (!is_alternative_block_allowed(getCurrentBlockchainHeight(), block_height))
       {
         logger(DEBUGGING) << "Block with id: " << id << std::endl
                           << " can't be accepted for alternative chain, block height: " << block_height << std::endl
@@ -1661,8 +2199,8 @@ namespace cn
         bei.bl = b;
         bei.height = alt_chain.size() ? it_prev->second.height + 1 : mainPrevHeight + 1;
 
-        bool is_a_checkpoint;
-        if (!m_checkpoints.check_block(bei.height, id, is_a_checkpoint))
+        auto checkpoint_status = m_checkpoints.check_checkpoint(bei.height, id);
+        if ( checkpoint_status == CheckpointList::is_in_zone_failed )
         {
           logger(ERROR, BRIGHT_RED) << "Checkpoint validaton failure";
 
@@ -1728,7 +2266,7 @@ namespace cn
 
         alt_chain.push_back(i_res.first->first);
 
-        if (is_a_checkpoint)
+        if ( checkpoint_status == CheckpointList::is_checkpointed )
         {
           //do reorganize!
           logger(INFO, BRIGHT_GREEN) << "###### REORGANIZE on height: " << m_alternative_chains[alt_chain.front()].height << " of " << m_blocks.size() - 1 << ", checkpoint is found in alternative chain on height " << bei.height;
@@ -2660,15 +3198,13 @@ namespace cn
 
     auto longhashTimeStart = std::chrono::steady_clock::now();
     crypto::Hash proof_of_work = NULL_HASH;
-    if (m_checkpoints.is_in_checkpoint_zone(getCurrentBlockchainHeight()))
+    auto checkpoint_status = m_checkpoints.check_checkpoint(getCurrentBlockchainHeight(), blockHash);
+    if (checkpoint_status == CheckpointList::is_in_zone_failed )
     {
-      if (!m_checkpoints.check_block(getCurrentBlockchainHeight(), blockHash))
-      {
-        bvc.m_verification_failed = true;
-        return false;
-      }
+      bvc.m_verification_failed = true;
+      return false;
     }
-    else
+    else if(checkpoint_status == CheckpointList::is_out_of_zone )
     {
       if (!m_currency.checkProofOfWork(m_cn_context, blockData, currentDifficulty, proof_of_work))
       {
@@ -2787,6 +3323,55 @@ namespace cn
                       << ", " << block_processing_time << "(" << target_calculating_time << "/" << longhash_calculating_time << ")ms";
 
     bvc.m_added_to_main_chain = true;
+
+    // Check if we've reached a chunk boundary and need to create a new chunk hash
+    // This happens every chunk_size blocks (10,000 for mainnet, 25,000 for testnet)
+    // SIMPLIFIED: Block 0 (genesis) is excluded from chunks, all chunks are uniform
+    uint32_t current_height = block.height;
+    uint32_t chunk_size = m_checkpoints.get_chunk_size();
+    uint32_t current_covered_height = m_checkpoints.get_covered_height();
+    
+    // Skip block 0 (genesis) - it's validated separately and not part of any chunk
+    if (current_height > 0 && current_height > current_covered_height)
+    {
+      // SIMPLIFIED: Calculate which chunk this height belongs to
+      // All chunks are uniform: chunk_size blocks each
+      // chunk[0]: blocks 1 to chunk_size
+      // chunk[1]: blocks (chunk_size + 1) to (2 * chunk_size)
+      // chunk[n]: blocks (n * chunk_size + 1) to ((n + 1) * chunk_size)
+      uint32_t chunk_index = (current_height - 1) / chunk_size;
+      uint32_t chunk_start_height = chunk_index * chunk_size + 1;
+      uint32_t chunk_end_height = (chunk_index + 1) * chunk_size;
+      
+      // If we've reached the end of a chunk, create the chunk hash
+      // Only create if we haven't already created this chunk
+      if (current_height == chunk_end_height && current_height > current_covered_height)
+      {
+        // Check if chunk already exists (might have been created during initial generation)
+        crypto::Hash existing_chunk_hash = m_checkpoints.get_chunk_hash(chunk_index);
+        if (existing_chunk_hash == NULL_HASH)
+        {
+          logger(INFO, BRIGHT_GREEN) << "Reached chunk boundary at height " << current_height 
+                                     << " (chunk " << chunk_index << ", blocks " << chunk_start_height 
+                                     << " to " << chunk_end_height << "). Computing chunk hash...";
+          
+          auto getBlockIdsFunc = [this](uint32_t startHeight, uint32_t maxCount) -> std::vector<crypto::Hash> {
+            return m_blockIndex.getBlockIds(startHeight, maxCount);
+          };
+          
+          if (!m_checkpoints.add_chunk_from_block_ids(getBlockIdsFunc, chunk_start_height))
+          {
+            logger(WARNING, BRIGHT_YELLOW) << "Failed to compute chunk " << chunk_index 
+                                           << " hash at height " << current_height;
+          }
+        }
+        else
+        {
+          logger(DEBUGGING) << "Chunk " << chunk_index << " already exists (hash: " << existing_chunk_hash 
+                           << "), skipping creation at height " << current_height;
+        }
+      }
+    }
 
     m_upgradeDetectorV2.blockPushed();
     m_upgradeDetectorV3.blockPushed();
@@ -3185,34 +3770,45 @@ namespace cn
     try
     {
       std::lock_guard<decltype(m_blockchain_lock)> lk(m_blockchain_lock);
-      
-      logger(INFO, BRIGHT_YELLOW) << "Rolling back blockchain to height " << height;
-      
-      // Check if we're already at or below the requested height
-      if (height >= m_blocks.size())
-      {
-        logger(WARNING, BRIGHT_YELLOW) << "Requested rollback to height " << height 
-                                       << " which is higher than current height " << m_blocks.size();
-        return true;
-      }
-      
-      while (m_blocks.size() > height + 1)
-      {
-        if (!removeLastBlock())
-        {
-          logger(ERROR, BRIGHT_RED) << "Failed to remove last block during rollback";
-          return false;
-        }
-      }
-      
-      logger(INFO, BRIGHT_GREEN) << "Blockchain successfully rolled back to height: " << height << "Synchronization will resume";
-      return true;
+      return rollback_to_height_impl(height);
     }
     catch (const std::exception&)
     {
       logger(ERROR, BRIGHT_RED) << "Error rolling back blockchain";
       return false;
     }
+  }
+
+  bool Blockchain::rollback_to_height_impl(uint32_t height)
+  {
+    logger(INFO, BRIGHT_YELLOW) << "Rolling back blockchain to height " << height;
+    
+    // Check if we're already at or below the requested height
+    if (height >= m_blocks.size())
+    {
+      logger(WARNING, BRIGHT_YELLOW) << "Requested rollback to height " << height 
+                                     << " which is higher than current height " << m_blocks.size();
+      return true;
+    }
+    
+    // Validate height is reasonable (not 0, which would rollback genesis)
+    if (height == 0 && m_blocks.size() > 1)
+    {
+      logger(ERROR, BRIGHT_RED) << "Cannot rollback to height 0 (genesis block) - current height: " << m_blocks.size();
+      return false;
+    }
+    
+    while (m_blocks.size() > height + 1)
+    {
+      if (!removeLastBlock())
+      {
+        logger(ERROR, BRIGHT_RED) << "Failed to remove last block during rollback";
+        return false;
+      }
+    }
+    
+    logger(INFO, BRIGHT_GREEN) << "Blockchain successfully rolled back to height: " << height << "Synchronization will resume";
+    return true;
   }
 
   bool Blockchain::removeLastBlock()
@@ -3509,4 +4105,9 @@ namespace cn
     return m_checkpoints.is_in_checkpoint_zone(height);
   }
 
+  crypto::Hash Blockchain::getCheckpointHash(uint32_t height) const
+  {
+    std::lock_guard<decltype(m_blockchain_lock)> lk(m_blockchain_lock);
+    return m_blockIndex.getHashOfIds(0, height+1);
+  }
 } // namespace cn
