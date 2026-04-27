@@ -75,6 +75,7 @@
 #include <algorithm>
 #include <cmath>
 #include <random>
+#include <set>
 #include <boost/functional/hash.hpp>
 
 
@@ -1315,24 +1316,6 @@ namespace cn {
     // (chunks generated from hardcoded checkpoints are automatically confirmed)
     return !m_confirmed_chunks.empty();
   }
-
-  uint32_t CheckpointList::get_highest_confirmed_chunk() const
-  {
-    const std::lock_guard<std::mutex> lock(m_chunks_lock);
-    
-    if (m_confirmed_chunks.empty())
-      return 0;
-    
-    // Find the highest confirmed chunk index
-    uint32_t highest = 0;
-    for (uint32_t chunk_index : m_confirmed_chunks)
-    {
-      if (chunk_index > highest)
-        highest = chunk_index;
-    }
-    
-    return highest;
-  }
   
   std::vector<uint32_t> CheckpointList::get_unverified_chunks() const
   {
@@ -1383,6 +1366,91 @@ namespace cn {
     return req;
   }
 
+  CheckpointList::ConsensusVoteResult CheckpointList::evaluate_consensus_votes(
+    const std::vector<ConsensusVote>& votes,
+    const crypto::Hash& local_hash,
+    const std::map<uint64_t, uint32_t>& peer_network_16,
+    uint64_t min_response_timestamp,
+    const ConsensusRequirements& req)
+  {
+    ConsensusVoteResult result;
+    result.responses_received = 0;
+    result.null_hash_responses = 0;
+    result.agreements = 0;
+    result.local_diverse_networks = 0;
+    result.consensus_hash = NULL_HASH;
+    result.consensus_hash_votes = 0;
+    result.consensus_hash_diverse_networks = 0;
+    result.local_consensus = false;
+    result.divergent_consensus = false;
+
+    std::unordered_map<crypto::Hash, uint32_t, boost::hash<crypto::Hash>> hash_votes;
+    std::set<uint32_t> local_networks;
+    std::unordered_map<crypto::Hash, std::set<uint32_t>, boost::hash<crypto::Hash>> networks_by_hash;
+
+    for (const ConsensusVote& vote : votes)
+    {
+      if (vote.timestamp < min_response_timestamp)
+      {
+        continue;
+      }
+
+      result.responses_received++;
+
+      if (vote.hash == NULL_HASH)
+      {
+        result.null_hash_responses++;
+        continue;
+      }
+
+      hash_votes[vote.hash]++;
+
+      auto network_it = peer_network_16.find(vote.peer_id);
+      uint32_t network = (network_it != peer_network_16.end()) ? network_it->second : 0;
+
+      if (vote.hash == local_hash)
+      {
+        result.agreements++;
+        local_networks.insert(network);
+      }
+      else
+      {
+        networks_by_hash[vote.hash].insert(network);
+      }
+    }
+
+    result.local_diverse_networks = static_cast<uint32_t>(local_networks.size());
+    result.local_consensus = (result.agreements >= req.min_agreements &&
+                              result.local_diverse_networks >= req.min_diverse_networks);
+
+    for (const auto& vote_count : hash_votes)
+    {
+      if (vote_count.first == local_hash || vote_count.second < req.min_agreements)
+      {
+        continue;
+      }
+
+      auto network_it = networks_by_hash.find(vote_count.first);
+      uint32_t diverse_networks = (network_it != networks_by_hash.end()) ?
+        static_cast<uint32_t>(network_it->second.size()) : 0;
+
+      if (diverse_networks < req.min_diverse_networks)
+      {
+        continue;
+      }
+
+      if (!result.divergent_consensus || vote_count.second > result.consensus_hash_votes)
+      {
+        result.divergent_consensus = true;
+        result.consensus_hash = vote_count.first;
+        result.consensus_hash_votes = vote_count.second;
+        result.consensus_hash_diverse_networks = diverse_networks;
+      }
+    }
+
+    return result;
+  }
+
   uint32_t CheckpointList::get_network_16(uint32_t ip)
   {
     // Extract /16 network prefix: first 16 bits of IP address
@@ -1408,6 +1476,7 @@ namespace cn {
     std::random_device rd;
     std::mt19937 gen(rd());
     std::uniform_int_distribution<size_t> dis(0, available_peers.size() - 1);
+    std::unordered_set<uint64_t> sampled_peer_ids;
     
     // Sample K peers with network diversity (max 1 vote per /16 network)
     while (result.sampled_peers.size() < actual_sample_size)
@@ -1422,7 +1491,7 @@ namespace cn {
         uint64_t peer_id = available_peers[idx];
         
         // Check if we already sampled this peer
-        if (std::find(result.sampled_peers.begin(), result.sampled_peers.end(), peer_id) != result.sampled_peers.end())
+        if (sampled_peer_ids.find(peer_id) != sampled_peer_ids.end())
         {
           attempts++;
           continue;
@@ -1439,6 +1508,7 @@ namespace cn {
         
         // Accept this peer
         result.sampled_peers.push_back(peer_id);
+        sampled_peer_ids.insert(peer_id);
         result.network_votes[net16] = std::min(result.network_votes[net16] + 1, 1U);
         break;
       }
@@ -1446,7 +1516,7 @@ namespace cn {
       // If we couldn't find enough diverse peers, relax diversity requirement
       if (result.sampled_peers.size() < actual_sample_size && attempts >= max_attempts)
       {
-        fallback_peer_selection(available_peers, result.sampled_peers, actual_sample_size);
+        fallback_peer_selection(available_peers, result.sampled_peers, sampled_peer_ids, actual_sample_size);
       }
     }
     
@@ -1456,14 +1526,16 @@ namespace cn {
   void CheckpointList::fallback_peer_selection(
     const std::vector<uint64_t>& available_peers,
     std::vector<uint64_t>& sampled_peers,
+    std::unordered_set<uint64_t>& sampled_peer_ids,
     size_t target_size)
   {
     // Fall back to any available peer (diversity requirement relaxed)
     for (uint64_t peer_id : available_peers)
     {
-      if (std::find(sampled_peers.begin(), sampled_peers.end(), peer_id) == sampled_peers.end())
+      if (sampled_peer_ids.find(peer_id) == sampled_peer_ids.end())
       {
         sampled_peers.push_back(peer_id);
+        sampled_peer_ids.insert(peer_id);
         if (sampled_peers.size() >= target_size)
           break;
       }

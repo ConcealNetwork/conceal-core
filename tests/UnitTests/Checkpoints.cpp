@@ -14,6 +14,8 @@
 #include <Logging/LoggerGroup.h>
 #include <Common/StringTools.h>
 #include "crypto/hash.h"
+#include <map>
+#include <string>
 
 using namespace cn;
 
@@ -25,6 +27,114 @@ public:
   bool haveSpentKeyImages(const cn::Transaction&) override { return false; }
   bool checkTransactionSize(size_t) override { return true; }
 };
+
+namespace {
+
+crypto::Hash testHash(const std::string& hex) {
+  crypto::Hash hash = NULL_HASH;
+  bool parsed = common::podFromHex(hex, hash);
+  EXPECT_TRUE(parsed);
+  return hash;
+}
+
+CheckpointList::ConsensusRequirements testConsensusRequirements() {
+  CheckpointList::ConsensusRequirements req;
+  req.min_agreements = 2;
+  req.min_peers = 2;
+  req.min_diverse_networks = 2;
+  return req;
+}
+
+CheckpointList::ConsensusVote testVote(uint64_t peer_id, const crypto::Hash& hash, uint64_t timestamp) {
+  CheckpointList::ConsensusVote vote;
+  vote.peer_id = peer_id;
+  vote.hash = hash;
+  vote.timestamp = timestamp;
+  return vote;
+}
+
+}
+
+TEST(checkpoints_consensus_votes, ignores_stale_responses)
+{
+  crypto::Hash local_hash = testHash("1111111111111111111111111111111111111111111111111111111111111111");
+  std::vector<CheckpointList::ConsensusVote> votes;
+  votes.push_back(testVote(1, local_hash, 10));
+  votes.push_back(testVote(2, local_hash, 10));
+  
+  std::map<uint64_t, uint32_t> peer_networks;
+  peer_networks[1] = 0x0101;
+  peer_networks[2] = 0x0202;
+  
+  CheckpointList::ConsensusVoteResult result = CheckpointList::evaluate_consensus_votes(
+    votes, local_hash, peer_networks, 20, testConsensusRequirements());
+  
+  ASSERT_EQ(0, result.responses_received);
+  ASSERT_EQ(0, result.agreements);
+  ASSERT_FALSE(result.local_consensus);
+}
+
+TEST(checkpoints_consensus_votes, requires_diverse_networks_for_local_consensus)
+{
+  crypto::Hash local_hash = testHash("2222222222222222222222222222222222222222222222222222222222222222");
+  std::vector<CheckpointList::ConsensusVote> votes;
+  votes.push_back(testVote(1, local_hash, 30));
+  votes.push_back(testVote(2, local_hash, 30));
+  
+  std::map<uint64_t, uint32_t> peer_networks;
+  peer_networks[1] = 0x0101;
+  peer_networks[2] = 0x0101;
+  
+  CheckpointList::ConsensusVoteResult result = CheckpointList::evaluate_consensus_votes(
+    votes, local_hash, peer_networks, 20, testConsensusRequirements());
+  
+  ASSERT_EQ(2, result.responses_received);
+  ASSERT_EQ(2, result.agreements);
+  ASSERT_EQ(1, result.local_diverse_networks);
+  ASSERT_FALSE(result.local_consensus);
+}
+
+TEST(checkpoints_consensus_votes, accepts_diverse_local_consensus)
+{
+  crypto::Hash local_hash = testHash("3333333333333333333333333333333333333333333333333333333333333333");
+  std::vector<CheckpointList::ConsensusVote> votes;
+  votes.push_back(testVote(1, local_hash, 30));
+  votes.push_back(testVote(2, local_hash, 30));
+  
+  std::map<uint64_t, uint32_t> peer_networks;
+  peer_networks[1] = 0x0101;
+  peer_networks[2] = 0x0202;
+  
+  CheckpointList::ConsensusVoteResult result = CheckpointList::evaluate_consensus_votes(
+    votes, local_hash, peer_networks, 20, testConsensusRequirements());
+  
+  ASSERT_EQ(2, result.responses_received);
+  ASSERT_EQ(2, result.agreements);
+  ASSERT_EQ(2, result.local_diverse_networks);
+  ASSERT_TRUE(result.local_consensus);
+}
+
+TEST(checkpoints_consensus_votes, detects_diverse_divergent_consensus)
+{
+  crypto::Hash local_hash = testHash("4444444444444444444444444444444444444444444444444444444444444444");
+  crypto::Hash peer_hash = testHash("5555555555555555555555555555555555555555555555555555555555555555");
+  std::vector<CheckpointList::ConsensusVote> votes;
+  votes.push_back(testVote(1, peer_hash, 30));
+  votes.push_back(testVote(2, peer_hash, 30));
+  
+  std::map<uint64_t, uint32_t> peer_networks;
+  peer_networks[1] = 0x0101;
+  peer_networks[2] = 0x0202;
+  
+  CheckpointList::ConsensusVoteResult result = CheckpointList::evaluate_consensus_votes(
+    votes, local_hash, peer_networks, 20, testConsensusRequirements());
+  
+  ASSERT_FALSE(result.local_consensus);
+  ASSERT_TRUE(result.divergent_consensus);
+  ASSERT_EQ(peer_hash, result.consensus_hash);
+  ASSERT_EQ(2, result.consensus_hash_votes);
+  ASSERT_EQ(2, result.consensus_hash_diverse_networks);
+}
 
 TEST(checkpoints_is_alternative_block_allowed, handles_empty_checkpoints)
 {

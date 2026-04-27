@@ -82,10 +82,6 @@ namespace cn
     // Check if node can answer checkpoint requests (requires confirmed chunks)
     bool can_answer_checkpoint_requests() const;
     
-    // Get the highest confirmed chunk index (for rollback safety)
-    // Only confirmed chunks can be used as rollback anchors
-    uint32_t get_highest_confirmed_chunk() const;
-    
     // Get chunks that are in memory but not yet verified (not in checkpoint.dat)
     // These are chunks that need peer consensus before being added to file
     // Returns: vector of chunk indices that need verification
@@ -110,6 +106,31 @@ namespace cn
       uint32_t min_diverse_networks;   // n: minimum distinct /16 networks required
     };
     ConsensusRequirements calculate_consensus_requirements(size_t available_peers) const;
+
+    struct ConsensusVote {
+      uint64_t peer_id;
+      crypto::Hash hash;
+      uint64_t timestamp;
+    };
+
+    struct ConsensusVoteResult {
+      uint32_t responses_received;
+      uint32_t null_hash_responses;
+      uint32_t agreements;
+      uint32_t local_diverse_networks;
+      crypto::Hash consensus_hash;
+      uint32_t consensus_hash_votes;
+      uint32_t consensus_hash_diverse_networks;
+      bool local_consensus;
+      bool divergent_consensus;
+    };
+
+    static ConsensusVoteResult evaluate_consensus_votes(
+      const std::vector<ConsensusVote>& votes,
+      const crypto::Hash& local_hash,
+      const std::map<uint64_t, uint32_t>& peer_network_16,
+      uint64_t min_response_timestamp,
+      const ConsensusRequirements& req);
     
     // Get minimum peer uptime requirement for checkpoint verification (network-specific)
     // Mainnet: 12,000 blocks (~16.7 days)
@@ -161,12 +182,14 @@ namespace cn
      * and select any available peers to reach the target sample size.
      * 
      * @param available_peers List of all available peer IDs
-     * @param sampled_peers Already sampled peers (will be updated)
+     * @param sampled_peers Already selected peers
+     * @param sampled_peer_ids Lookup set mirroring sampled_peers
      * @param target_size Target number of peers to sample
      */
     static void fallback_peer_selection(
       const std::vector<uint64_t>& available_peers,
       std::vector<uint64_t>& sampled_peers,
+      std::unordered_set<uint64_t>& sampled_peer_ids,
       size_t target_size);
     
     // Health metrics for monitoring

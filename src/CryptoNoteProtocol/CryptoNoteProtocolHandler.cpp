@@ -1274,8 +1274,9 @@ int CryptoNoteProtocolHandler::handle_request_chunk_hash(int command, NOTIFY_REQ
     return 1;
   }
   
-  // Only answer chunk hash requests if we have confirmed chunks
-  // This ensures we don't serve unverified data to other nodes
+  // Only answer chunk hash requests after this node has at least one confirmed chunk.
+  // Once bootstrapped, locally computed in-memory chunks may be served so peers can
+  // compare them during their own consensus process.
   if (!m_core.getCheckpointList().can_answer_checkpoint_requests())
   {
     logger(INFO) << context << " Cannot answer chunk hash request: no confirmed chunks available";
@@ -1287,9 +1288,8 @@ int CryptoNoteProtocolHandler::handle_request_chunk_hash(int command, NOTIFY_REQ
     return 1;
   }
   
-  // Get the chunk hash for the requested chunk index
-  // NOTE: We can return chunks that exist in memory (even if unverified) for P2P validation
-  // The requester will validate against their own chunk hash
+  // Return chunks that exist in memory, including not-yet-confirmed chunks.
+  // The requester treats this as one peer vote and validates it against consensus.
   crypto::Hash chunk_hash = m_core.getCheckpointList().get_chunk_hash(arg.chunk_index);
   
   NOTIFY_RESPONSE_CHUNK_HASH::request rsp;
@@ -1346,18 +1346,14 @@ int CryptoNoteProtocolHandler::handle_response_chunk_hash(int command, NOTIFY_RE
     return 1;
   }
   
-  // Check if we're still validating this chunk (late responses might arrive after timeout)
-  bool still_validating = m_chunkValidationManager->is_chunk_being_validated(arg.chunk_index);
-  
   // Store the response in pending chunk hashes map for the consensus mechanism
   // NOTE: NULL_HASH is a valid response (means peer doesn't have this chunk)
-  m_chunkValidationManager->store_chunk_hash_response(peer_id, arg.chunk_index, arg.chunk_hash);
-  
-  // Log if this is a late response (arrived after timeout) - important to know why consensus might fail
-  if (!still_validating)
+  if (!m_chunkValidationManager->store_chunk_hash_response(peer_id, arg.chunk_index, arg.chunk_hash))
   {
-    logger(WARNING) << context << " Late chunk hash response for chunk " << arg.chunk_index 
-                   << " from peer " << peer_id << " (validation may have completed)";
+    logger(WARNING) << context << " Ignored chunk hash response for chunk " << arg.chunk_index
+                    << " from peer " << peer_id
+                    << " (not pending, late, or peer was not requested)";
+    return 1;
   }
   
   if (arg.chunk_hash == NULL_HASH)

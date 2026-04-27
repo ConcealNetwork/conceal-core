@@ -58,7 +58,8 @@ namespace cn
     bool send_chunk_hash_request_async(uint64_t peer_id, uint32_t chunk_index);
     
     // Store chunk hash response (called from message handler)
-    void store_chunk_hash_response(uint64_t peer_id, uint32_t chunk_index, const crypto::Hash& hash);
+    // Returns false for late, unsolicited, or non-requested peer responses.
+    bool store_chunk_hash_response(uint64_t peer_id, uint32_t chunk_index, const crypto::Hash& hash);
     
     // Check if chunk is currently being validated
     bool is_chunk_being_validated(uint32_t chunk_index) const;
@@ -78,9 +79,12 @@ namespace cn
       uint64_t attempt_start_time;     // When this attempt started
       uint32_t attempt_number;          // 1 or 2
       std::vector<uint64_t> requested_peers;  // Peers we requested from
+      std::map<uint64_t, uint32_t> peer_network_16; // peer_id -> /16 network
       crypto::Hash local_hash;
       bool is_first_attempt;
     };
+
+    void cleanup_chunk_responses(uint32_t chunk_index, const std::vector<uint64_t>& peer_ids);
     
     ICore& m_core;
     IP2pEndpoint* m_p2p;

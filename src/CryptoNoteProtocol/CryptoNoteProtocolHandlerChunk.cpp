@@ -98,16 +98,40 @@ bool ChunkValidationManager::send_chunk_hash_request_async(uint64_t peer_id, uin
   return true;
 }
 
-void ChunkValidationManager::store_chunk_hash_response(uint64_t peer_id, uint32_t chunk_index, const crypto::Hash& hash)
+bool ChunkValidationManager::store_chunk_hash_response(uint64_t peer_id, uint32_t chunk_index, const crypto::Hash& hash)
 {
   uint64_t response_time = time(nullptr);
   {
+    std::lock_guard<std::mutex> validation_lock(m_pending_validations_mutex);
+    auto pending_it = m_pending_validations.find(chunk_index);
+    if (pending_it == m_pending_validations.end())
+    {
+      return false;
+    }
+
+    const std::vector<uint64_t>& requested_peers = pending_it->second.requested_peers;
+    if (std::find(requested_peers.begin(), requested_peers.end(), peer_id) == requested_peers.end())
+    {
+      return false;
+    }
+
     std::lock_guard<std::mutex> lock(m_pending_chunk_hashes_mutex);
     auto key = std::make_pair(peer_id, chunk_index);
     ChunkHashResponse response;
     response.hash = hash;
     response.timestamp = response_time;
     m_pending_chunk_hashes[key] = response;
+  }
+
+  return true;
+}
+
+void ChunkValidationManager::cleanup_chunk_responses(uint32_t chunk_index, const std::vector<uint64_t>& peer_ids)
+{
+  std::lock_guard<std::mutex> lock(m_pending_chunk_hashes_mutex);
+  for (uint64_t peer_id : peer_ids)
+  {
+    m_pending_chunk_hashes.erase(std::make_pair(peer_id, chunk_index));
   }
 }
 
@@ -379,18 +403,23 @@ bool ChunkValidationManager::validate_unverified_chunks()
     
     // Send async requests to sampled peers
     uint64_t request_time = time(nullptr);
-    uint32_t requests_sent = 0;
+    std::vector<uint64_t> sent_peers;
+    std::map<uint64_t, uint32_t> sent_peer_networks;
     for (uint64_t peer_id : sampled_peers)
     {
       if (send_chunk_hash_request_async(peer_id, chunk_index))
       {
-        requests_sent++;
+        sent_peers.push_back(peer_id);
+        sent_peer_networks[peer_id] = getPeerNetwork16(peer_id);
       }
     }
     
-    if (requests_sent == 0)
+    if (sent_peers.size() < req.min_peers)
     {
-      logger(WARNING) << "[Chunk Validation] Failed to send any async requests for chunk " << chunk_index;
+      logger(WARNING) << "[Chunk Validation] Only sent " << sent_peers.size()
+                      << " async request(s) for chunk " << chunk_index
+                      << ", need K=" << req.min_peers << " for consensus";
+      cleanup_chunk_responses(chunk_index, sent_peers);
       {
         std::lock_guard<std::mutex> lock(m_chunk_validation_mutex);
         m_current_validating_chunk_index = UINT32_MAX;
@@ -406,13 +435,14 @@ bool ChunkValidationManager::validate_unverified_chunks()
       pending.request_timestamp = request_time;
       pending.attempt_start_time = request_time;
       pending.attempt_number = 1;
-      pending.requested_peers = sampled_peers;
+      pending.requested_peers = sent_peers;
+      pending.peer_network_16 = sent_peer_networks;
       pending.local_hash = local_chunk_hash;
       pending.is_first_attempt = true;
       m_pending_validations[chunk_index] = pending;
     }
     
-    logger(INFO) << "[Chunk Validation] Sent chunk " << chunk_index << " hash requests to " << requests_sent << " peers. Checking consensus in 3 minutes.";
+    logger(INFO) << "[Chunk Validation] Sent chunk " << chunk_index << " hash requests to " << sent_peers.size() << " peers. Checking consensus in 3 minutes.";
     
     // Clear validation state (validation is now async - will be checked in check_pending_chunk_validations)
     {
@@ -433,304 +463,270 @@ void ChunkValidationManager::check_pending_chunk_validations()
   uint64_t time_now = time(nullptr);
   const uint64_t CONSENSUS_WAIT_SECONDS = 180;  // 3 minutes (increased from 2 to handle network latency and peer processing)
   const uint64_t RETRY_DELAY_SECONDS = 60;      // 1 minute delay before retry
-  
-  std::lock_guard<std::mutex> lock(m_pending_validations_mutex);
-  
-  // Iterate through pending validations
-  for (auto it = m_pending_validations.begin(); it != m_pending_validations.end();)
+
+  struct PendingAction
   {
-    uint32_t chunk_index = it->first;
-    PendingChunkValidation& pending = it->second;
-    
-    uint64_t elapsed = time_now - pending.request_timestamp;
-    
-    // Check if 3 minutes have passed since requests were sent
-    if (elapsed < CONSENSUS_WAIT_SECONDS)
+    enum Type
     {
-      // Not enough time has passed yet, skip this validation
-      ++it;
-      continue;
-    }
-    
-    // 3 minutes have passed - check for consensus
-    logger(INFO) << "[Chunk Validation] Checking consensus for chunk " << chunk_index << " (elapsed: " << elapsed << " seconds, attempt " << pending.attempt_number << ")";
-    
-    // Collect responses from requested peers
-    std::unordered_map<crypto::Hash, uint32_t, boost::hash<crypto::Hash>> hash_votes;  // hash -> vote count
-    uint32_t agreements = 0;
-    uint32_t null_hash_responses = 0;
-    uint32_t responses_received = 0;
-    
+      ADD_VERIFIED_CHUNK,
+      ROLLBACK_DIVERGENT_CHUNK
+    };
+
+    Type type;
+    uint32_t chunk_index;
+    uint32_t rollback_height;
+    uint32_t last_valid_chunk;
+  };
+
+  std::vector<PendingAction> actions;
+  
+  {
+    std::lock_guard<std::mutex> lock(m_pending_validations_mutex);
+
+    // Iterate through pending validations
+    for (auto it = m_pending_validations.begin(); it != m_pending_validations.end();)
     {
-      std::lock_guard<std::mutex> lock2(m_pending_chunk_hashes_mutex);
+      uint32_t chunk_index = it->first;
+      PendingChunkValidation& pending = it->second;
       
-      for (uint64_t peer_id : pending.requested_peers)
-      {
-        auto response_it = m_pending_chunk_hashes.find(std::make_pair(peer_id, chunk_index));
-        if (response_it != m_pending_chunk_hashes.end())
-        {
-          crypto::Hash peer_hash = response_it->second.hash;
-          responses_received++;
-          
-          if (peer_hash == NULL_HASH)
-          {
-            null_hash_responses++;
-            continue;
-          }
-          
-          // Count votes for this hash
-          hash_votes[peer_hash]++;
-          
-          if (peer_hash == pending.local_hash)
-          {
-            agreements++;
-          }
-        }
-      }
-    }
-    
-    // Calculate consensus requirements
-    CheckpointList::ConsensusRequirements req = m_core.getCheckpointList().calculate_consensus_requirements(pending.requested_peers.size());
-    
-    logger(INFO) << "[Chunk Validation] Chunk " << chunk_index << " consensus check: received " << responses_received
-                 << " response(s) from " << pending.requested_peers.size() << " requested peer(s). "
-                 << "Agreements: " << agreements << " (need M=" << req.min_agreements << "), "
-                 << "NULL_HASH responses: " << null_hash_responses;
-    
-    // Check if we have M agreements (consensus reached)
-    if (agreements >= req.min_agreements)
-    {
-      // Consensus reached - save to checkpoint.dat
-      logger(INFO, BRIGHT_GREEN) << "[Chunk Validation] Chunk " << chunk_index
-                                      << " validated via peer consensus (" << agreements
-                                      << " agreements, need M=" << req.min_agreements << ")";
+      uint64_t elapsed = time_now - pending.request_timestamp;
       
-      if (m_core.getCheckpointList().add_verified_chunk_to_file(chunk_index))
+      // Check if 3 minutes have passed since requests were sent
+      if (elapsed < CONSENSUS_WAIT_SECONDS)
       {
-        // Remove pending validation
-        it = m_pending_validations.erase(it);
-        
-        // Clean up responses for this chunk
-        {
-          std::lock_guard<std::mutex> lock2(m_pending_chunk_hashes_mutex);
-          for (uint64_t peer_id : pending.requested_peers)
-          {
-            m_pending_chunk_hashes.erase(std::make_pair(peer_id, chunk_index));
-          }
-        }
-        continue;
-      }
-      else
-      {
-        logger(ERROR) << "Failed to save validated chunk " << chunk_index << " to checkpoint.dat";
-        // Remove pending validation anyway (we'll retry later)
-        it = m_pending_validations.erase(it);
-        continue;
-      }
-    }
-    
-    // Check if we have M peers agreeing on a DIFFERENT hash (actual divergence)
-    crypto::Hash consensus_hash = NULL_HASH;
-    uint32_t max_votes = 0;
-    for (const auto& vote : hash_votes)
-    {
-      if (vote.first != pending.local_hash && vote.second > max_votes)
-      {
-        max_votes = vote.second;
-        consensus_hash = vote.first;
-      }
-    }
-    
-    bool has_divergence = (consensus_hash != NULL_HASH && max_votes >= req.min_agreements);
-    
-    // If all responses are NULL_HASH or missing, peers don't have this chunk yet (not a divergence)
-    if (responses_received == 0 || (responses_received == null_hash_responses && !has_divergence))
-    {
-      logger(INFO) << "Chunk " << chunk_index 
-                   << " validation: No peers have this chunk in memory yet (all returned NULL_HASH or no response). "
-                   << "This is normal if: (1) peers are using version 1 (don't support chunk checkpoints), "
-                   << "or (2) peers haven't created this chunk yet. "
-                   << "Will retry validation once peers create this chunk.";
-      
-      // Remove pending validation - we'll retry later when peers have the chunk
-      it = m_pending_validations.erase(it);
-      
-      // Clean up responses
-      {
-        std::lock_guard<std::mutex> lock2(m_pending_chunk_hashes_mutex);
-        for (uint64_t peer_id : pending.requested_peers)
-        {
-          m_pending_chunk_hashes.erase(std::make_pair(peer_id, chunk_index));
-        }
-      }
-      continue;
-    }
-    
-    // Consensus not reached - check if we should retry
-    if (pending.is_first_attempt)
-    {
-      // First attempt failed - wait 1 more minute (3 minutes total) before retry
-      uint64_t total_elapsed = time_now - pending.attempt_start_time;
-      if (total_elapsed < (CONSENSUS_WAIT_SECONDS + RETRY_DELAY_SECONDS))
-      {
-        // Still waiting for retry delay
+        // Not enough time has passed yet, skip this validation
         ++it;
         continue;
       }
       
-      // Retry delay passed - start second attempt
-      logger(INFO) << "Chunk " << chunk_index 
-                   << " consensus failed on first attempt. Starting second attempt...";
+      // 3 minutes have passed - check for consensus
+      logger(INFO) << "[Chunk Validation] Checking consensus for chunk " << chunk_index << " (elapsed: " << elapsed << " seconds, attempt " << pending.attempt_number << ")";
       
-      // Send new requests to same peers (or get new eligible peers)
-      // For now, reuse same peers
-      uint64_t retry_time = time_now;
-      uint32_t requests_sent = 0;
-      for (uint64_t peer_id : pending.requested_peers)
+      // Collect fresh responses from requested peers
+      std::vector<CheckpointList::ConsensusVote> votes;
       {
-        if (send_chunk_hash_request_async(peer_id, chunk_index))
+        std::lock_guard<std::mutex> lock2(m_pending_chunk_hashes_mutex);
+        
+        for (uint64_t peer_id : pending.requested_peers)
         {
-          requests_sent++;
+          auto response_it = m_pending_chunk_hashes.find(std::make_pair(peer_id, chunk_index));
+          if (response_it != m_pending_chunk_hashes.end())
+          {
+            CheckpointList::ConsensusVote vote;
+            vote.peer_id = peer_id;
+            vote.hash = response_it->second.hash;
+            vote.timestamp = response_it->second.timestamp;
+            votes.push_back(vote);
+          }
         }
       }
       
-      if (requests_sent > 0)
+      // Calculate consensus requirements
+      CheckpointList::ConsensusRequirements req = m_core.getCheckpointList().calculate_consensus_requirements(pending.requested_peers.size());
+      CheckpointList::ConsensusVoteResult vote_result = CheckpointList::evaluate_consensus_votes(
+        votes,
+        pending.local_hash,
+        pending.peer_network_16,
+        pending.request_timestamp,
+        req);
+      
+      logger(INFO) << "[Chunk Validation] Chunk " << chunk_index << " consensus check: received " << vote_result.responses_received
+                   << " fresh response(s) from " << pending.requested_peers.size() << " requested peer(s). "
+                   << "Agreements: " << vote_result.agreements << " (need M=" << req.min_agreements
+                   << " from n=" << req.min_diverse_networks << " networks, got n="
+                   << vote_result.local_diverse_networks << "), "
+                   << "NULL_HASH responses: " << vote_result.null_hash_responses;
+      
+      // Check if we have M agreements from enough networks (consensus reached)
+      if (vote_result.local_consensus)
       {
-        // Update pending validation for second attempt
-        pending.request_timestamp = retry_time;
-        pending.attempt_number = 2;
-        pending.is_first_attempt = false;
-        
-        logger(INFO) << "Sent second attempt async requests for chunk " << chunk_index 
-                     << " to " << requests_sent << " peer(s). "
-                     << "Will check for consensus after 3 minutes.";
-      }
-      else
-      {
-        logger(WARNING) << "Failed to send second attempt requests for chunk " << chunk_index;
-        // Remove pending validation
+        logger(INFO, BRIGHT_GREEN) << "[Chunk Validation] Chunk " << chunk_index
+                                   << " validated via peer consensus (" << vote_result.agreements
+                                   << " agreements from " << vote_result.local_diverse_networks
+                                   << " networks, need M=" << req.min_agreements << ")";
+
+        std::vector<uint64_t> peers_to_cleanup = pending.requested_peers;
         it = m_pending_validations.erase(it);
+        cleanup_chunk_responses(chunk_index, peers_to_cleanup);
+
+        PendingAction action;
+        action.type = PendingAction::ADD_VERIFIED_CHUNK;
+        action.chunk_index = chunk_index;
+        action.rollback_height = 0;
+        action.last_valid_chunk = 0;
+        actions.push_back(action);
         continue;
       }
-    }
-    else
-    {
-      // Second attempt also failed - check if it's actual divergence or just no responses
-      
-      // Check if we have M peers agreeing on a DIFFERENT hash (actual divergence)
-      crypto::Hash consensus_hash_second = NULL_HASH;
-      uint32_t max_votes_second = 0;
-      for (const auto& vote : hash_votes)
-      {
-        if (vote.first != pending.local_hash && vote.second > max_votes_second)
-        {
-          max_votes_second = vote.second;
-          consensus_hash_second = vote.first;
-        }
-      }
-      
-      bool has_divergence_second = (consensus_hash_second != NULL_HASH && max_votes_second >= req.min_agreements);
       
       // If all responses are NULL_HASH or missing, peers don't have this chunk yet (not a divergence)
-      if (responses_received == 0 || (responses_received == null_hash_responses && !has_divergence_second))
+      if (vote_result.responses_received == 0 ||
+          (vote_result.responses_received == vote_result.null_hash_responses && !vote_result.divergent_consensus))
       {
         logger(INFO) << "Chunk " << chunk_index 
-                     << " validation: No peers have this chunk in memory yet after 2 attempts "
-                     << "(all returned NULL_HASH or no response). "
+                     << " validation: No peers have this chunk in memory yet (all returned NULL_HASH or no response). "
                      << "This is normal if: (1) peers are using version 1 (don't support chunk checkpoints), "
                      << "or (2) peers haven't created this chunk yet. "
                      << "Will retry validation once peers create this chunk.";
         
-        // Remove pending validation - we'll retry later when peers have the chunk
+        std::vector<uint64_t> peers_to_cleanup = pending.requested_peers;
         it = m_pending_validations.erase(it);
-        
-        // Clean up responses
-        {
-          std::lock_guard<std::mutex> lock2(m_pending_chunk_hashes_mutex);
-          for (uint64_t peer_id : pending.requested_peers)
-          {
-            m_pending_chunk_hashes.erase(std::make_pair(peer_id, chunk_index));
-          }
-        }
+        cleanup_chunk_responses(chunk_index, peers_to_cleanup);
         continue;
       }
       
-      // Actual divergence: M peers agree on different hash
-      if (has_divergence_second)
+      // Consensus not reached - check if we should retry
+      if (pending.is_first_attempt)
       {
-        logger(ERROR, BRIGHT_RED) << "Chunk " << chunk_index 
+        // First attempt failed - wait 1 more minute before retry
+        uint64_t total_elapsed = time_now - pending.attempt_start_time;
+        if (total_elapsed < (CONSENSUS_WAIT_SECONDS + RETRY_DELAY_SECONDS))
+        {
+          // Still waiting for retry delay
+          ++it;
+          continue;
+        }
+        
+        // Retry delay passed - start second attempt
+        logger(INFO) << "Chunk " << chunk_index 
+                     << " consensus failed on first attempt. Starting second attempt...";
+        
+        std::vector<uint64_t> previous_peers = pending.requested_peers;
+        std::map<uint64_t, uint32_t> previous_peer_networks = pending.peer_network_16;
+        cleanup_chunk_responses(chunk_index, previous_peers);
+
+        uint64_t retry_time = time_now;
+        std::vector<uint64_t> sent_peers;
+        std::map<uint64_t, uint32_t> sent_peer_networks;
+        for (uint64_t peer_id : previous_peers)
+        {
+          if (send_chunk_hash_request_async(peer_id, chunk_index))
+          {
+            sent_peers.push_back(peer_id);
+            auto network_it = previous_peer_networks.find(peer_id);
+            sent_peer_networks[peer_id] = (network_it != previous_peer_networks.end()) ? network_it->second : 0;
+          }
+        }
+        
+        if (sent_peers.size() >= req.min_peers)
+        {
+          // Update pending validation for second attempt
+          pending.request_timestamp = retry_time;
+          pending.attempt_number = 2;
+          pending.requested_peers = sent_peers;
+          pending.peer_network_16 = sent_peer_networks;
+          pending.is_first_attempt = false;
+          
+          logger(INFO) << "Sent second attempt async requests for chunk " << chunk_index 
+                       << " to " << sent_peers.size() << " peer(s). "
+                       << "Will check for consensus after 3 minutes.";
+        }
+        else
+        {
+          logger(WARNING) << "Failed to send enough second attempt requests for chunk " << chunk_index
+                          << ": sent " << sent_peers.size() << ", need K=" << req.min_peers;
+          it = m_pending_validations.erase(it);
+          cleanup_chunk_responses(chunk_index, sent_peers);
+          continue;
+        }
+      }
+      else
+      {
+        // Second attempt also failed - check if it's actual divergence or just no responses
+        if (vote_result.responses_received == 0 ||
+            (vote_result.responses_received == vote_result.null_hash_responses && !vote_result.divergent_consensus))
+        {
+          logger(INFO) << "Chunk " << chunk_index 
+                       << " validation: No peers have this chunk in memory yet after 2 attempts "
+                       << "(all returned NULL_HASH or no response). "
+                       << "This is normal if: (1) peers are using version 1 (don't support chunk checkpoints), "
+                       << "or (2) peers haven't created this chunk yet. "
+                       << "Will retry validation once peers create this chunk.";
+          
+          std::vector<uint64_t> peers_to_cleanup = pending.requested_peers;
+          it = m_pending_validations.erase(it);
+          cleanup_chunk_responses(chunk_index, peers_to_cleanup);
+          continue;
+        }
+        
+        // Actual divergence: M peers agree on a different hash from enough networks
+        if (vote_result.divergent_consensus)
+        {
+          logger(ERROR, BRIGHT_RED) << "Chunk " << chunk_index 
                                     << " validation FAILED: peer consensus did not agree with local chunk hash "
-                                    << "after 2 attempts. M peers (" << max_votes_second 
-                                    << ") agree on different hash: " << consensus_hash_second 
+                                    << "after 2 attempts. M peers (" << vote_result.consensus_hash_votes 
+                                    << ") from " << vote_result.consensus_hash_diverse_networks
+                                    << " networks agree on different hash: " << vote_result.consensus_hash 
                                     << " (local: " << pending.local_hash << "). "
                                     << "This indicates blockchain divergence.";
-        
-        // Calculate rollback height (bottom of the chunk)
-        uint32_t chunk_size = m_core.getCheckpointList().get_chunk_size();
-        uint32_t rollback_height = chunk_index * chunk_size;
-        
-        logger(ERROR, BRIGHT_RED) << "Rolling back blockchain to height " << rollback_height 
-                                  << " (chunk " << chunk_index << " boundary) due to peer consensus divergence";
-        
-        // Truncate checkpoint.dat to the previous chunk (chunk_index - 1)
-        uint32_t last_valid_chunk = (chunk_index > 0) ? (chunk_index - 1) : 0;
-        if (!m_core.getCheckpointList().truncate_checkpoint_file(last_valid_chunk))
-        {
-          logger(ERROR, BRIGHT_RED) << "Failed to truncate checkpoint.dat to chunk " << last_valid_chunk;
-        }
-        else
-        {
-          logger(INFO) << "Truncated checkpoint.dat to chunk " << last_valid_chunk;
-        }
-        
-        // Rollback blockchain to the chunk boundary
-        if (!m_core.rollback_chain_to(rollback_height))
-        {
-          logger(ERROR, BRIGHT_RED) << "Failed to rollback blockchain to height " << rollback_height 
-                                    << " - node may be in inconsistent state";
-        }
-        else
-        {
-          logger(INFO, BRIGHT_GREEN) << "Successfully rolled back blockchain to height " << rollback_height;
+          
+          // Calculate rollback height (bottom of the chunk)
+          uint32_t chunk_size = m_core.getCheckpointList().get_chunk_size();
+          uint32_t rollback_height = chunk_index * chunk_size;
+          
+          logger(ERROR, BRIGHT_RED) << "Rolling back blockchain to height " << rollback_height 
+                                    << " (chunk " << chunk_index << " boundary) due to peer consensus divergence";
+          
+          PendingAction action;
+          action.type = PendingAction::ROLLBACK_DIVERGENT_CHUNK;
+          action.chunk_index = chunk_index;
+          action.rollback_height = rollback_height;
+          action.last_valid_chunk = (chunk_index > 0) ? (chunk_index - 1) : 0;
+          actions.push_back(action);
+          
+          std::vector<uint64_t> peers_to_cleanup = pending.requested_peers;
+          it = m_pending_validations.erase(it);
+          cleanup_chunk_responses(chunk_index, peers_to_cleanup);
+          continue;
         }
         
-        // Remove pending validation
+        // Mixed responses (some NULL_HASH, some mismatches, but no diverse M agreement on a single different hash)
+        logger(WARNING) << "Chunk " << chunk_index 
+                        << " validation: Inconsistent results after 2 attempts. "
+                        << "Some peers returned NULL_HASH, some returned different hashes, "
+                        << "but no M peers from enough networks agreed on a single different hash. "
+                        << "This may indicate network issues or peers still syncing. "
+                        << "Will retry validation later.";
+        
+        std::vector<uint64_t> peers_to_cleanup = pending.requested_peers;
         it = m_pending_validations.erase(it);
-        
-        // Clean up responses
-        {
-          std::lock_guard<std::mutex> lock2(m_pending_chunk_hashes_mutex);
-          for (uint64_t peer_id : pending.requested_peers)
-          {
-            m_pending_chunk_hashes.erase(std::make_pair(peer_id, chunk_index));
-          }
-        }
+        cleanup_chunk_responses(chunk_index, peers_to_cleanup);
         continue;
       }
       
-      // Mixed responses (some NULL_HASH, some mismatches, but not M agreements on different hash)
-      logger(WARNING) << "Chunk " << chunk_index 
-                      << " validation: Inconsistent results after 2 attempts. "
-                      << "Some peers returned NULL_HASH, some returned different hashes, "
-                      << "but no M peers agreed on a single different hash. "
-                      << "This may indicate network issues or peers still syncing. "
-                      << "Will retry validation later.";
-      
-      // Remove pending validation - we'll retry later
-      it = m_pending_validations.erase(it);
-      
-      // Clean up responses
-      {
-        std::lock_guard<std::mutex> lock2(m_pending_chunk_hashes_mutex);
-        for (uint64_t peer_id : pending.requested_peers)
-        {
-          m_pending_chunk_hashes.erase(std::make_pair(peer_id, chunk_index));
-        }
-      }
-      continue;
+      ++it;
     }
-    
-    ++it;
+  }
+
+  for (const PendingAction& action : actions)
+  {
+    if (action.type == PendingAction::ADD_VERIFIED_CHUNK)
+    {
+      if (!m_core.getCheckpointList().add_verified_chunk_to_file(action.chunk_index))
+      {
+        logger(ERROR) << "Failed to save validated chunk " << action.chunk_index << " to checkpoint.dat";
+      }
+    }
+    else
+    {
+      if (!m_core.getCheckpointList().truncate_checkpoint_file(action.last_valid_chunk))
+      {
+        logger(ERROR, BRIGHT_RED) << "Failed to truncate checkpoint.dat to chunk " << action.last_valid_chunk;
+      }
+      else
+      {
+        logger(INFO) << "Truncated checkpoint.dat to chunk " << action.last_valid_chunk;
+      }
+      
+      if (!m_core.rollback_chain_to(action.rollback_height))
+      {
+        logger(ERROR, BRIGHT_RED) << "Failed to rollback blockchain to height " << action.rollback_height
+                                  << " - node may be in inconsistent state";
+      }
+      else
+      {
+        logger(INFO, BRIGHT_GREEN) << "Successfully rolled back blockchain to height " << action.rollback_height;
+      }
+    }
   }
 }
 
