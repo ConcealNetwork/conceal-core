@@ -308,8 +308,11 @@ namespace cn
 
     bool is_in_checkpoint_zone(uint32_t height) const
     {
-      // A height is in checkpoint zone if we don't have chunks covering it yet
-      return get_covered_height() < height;
+      // A height is in the checkpoint zone when it is covered by loaded chunk
+      // hashes — meaning it can be trusted without full ring-sig/input
+      // verification.  Height 0 (genesis) is always outside the zone so it
+      // is never used to skip validation.
+      return height > 0 && height <= get_covered_height();
     }
 
     enum check_rt
@@ -328,6 +331,12 @@ namespace cn
     //   Individual block validation isn't possible with chunks alone, but chunk integrity ensures chain correctness
     check_rt check_checkpoint(uint32_t height, const crypto::Hash& hv) const
     {
+      // Genesis is validated by Blockchain initialization. Core tests replace
+      // genesis with synthetic blocks, so do not compare height 0 with network
+      // checkpoint data here.
+      if (height == 0)
+        return is_checkpointed;
+
       // FIRST: Check if this height is a hardcoded checkpoint (from CryptoNoteConfig.h)
       // This works for BOTH version 1 and version 2 systems
       // m_old_checkpoint_hashes contains individual block hashes for each checkpoint height
@@ -358,11 +367,6 @@ namespace cn
         // If we have chunks, use chunk-based zone checking
         if (!m_chunks.empty())
         {
-          // SIMPLIFIED: Calculate which chunk this height belongs to
-          // Block 0 (genesis) is not in any chunk, so we need to handle it separately
-          if (height == 0)
-            return is_checkpointed; // Genesis is always valid (checked separately) in blockchain.cpp line 847
-          
           // For heights >= 1: chunk_index = (height - 1) / chunk_size
           uint32_t chunk_index = (height - 1) / m_chunk_size;
           

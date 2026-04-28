@@ -7,6 +7,7 @@
 
 #include <boost/program_options.hpp>
 #include <boost/serialization/variant.hpp>
+#include <boost/filesystem.hpp>
 #include "CryptoNoteCore/CoreConfig.h"
 
 #include "Common/CommandLine.h"
@@ -399,9 +400,28 @@ inline bool do_replay_events(std::vector<test_event_entry>& events, t_test_class
   if (!r)
     return false;
 
+  // Each test gets its own unique temp directory so:
+  //  1. No production checkpoint.dat is loaded — chunk-based checkpoints
+  //     covering small heights would bypass PoW for synthetic test blocks.
+  //  2. SwappedVector blockchain files from one test don't contaminate the next.
+  boost::filesystem::path testDir = boost::filesystem::temp_directory_path() /
+                                    boost::filesystem::unique_path("conceal_core_test_%%%%-%%%%");
+  boost::filesystem::create_directories(testDir);
+
+  // RAII guard: remove the temp dir when this scope exits (best effort).
+  struct TempDirGuard {
+    boost::filesystem::path path;
+    ~TempDirGuard() {
+      boost::system::error_code ec;
+      boost::filesystem::remove_all(path, ec);
+    }
+  } tempGuard{testDir};
+
   logging::ConsoleLogger logger;
   cn::CoreConfig coreConfig;
   coreConfig.init(vm);
+  coreConfig.configFolder = testDir.string();
+
   cn::MinerConfig emptyMinerConfig;
   cn::cryptonote_protocol_stub pr; //TODO: stub only for this kind of test, make real validation of relayed objects
   cn::core c(validator.currency(), &pr, logger);
