@@ -5,6 +5,9 @@ on:
     tags:
       - "*"
 
+permissions:
+  contents: write
+
 jobs:
   build-windows:
     name: Windows
@@ -12,7 +15,7 @@ jobs:
     env:
       BOOST_ROOT: C:/local/boost_1_83_0
     steps:
-      - uses: actions/checkout@master
+      - uses: actions/checkout@v5
 
       - name: Setup msbuild
         uses: microsoft/setup-msbuild@v2
@@ -55,7 +58,7 @@ jobs:
           echo "ccx_version=${ccx_version}" >> $env:GITHUB_OUTPUT
 
       - name: Create Release
-        uses: softprops/action-gh-release@v2.0.4
+        uses: softprops/action-gh-release@v3
         with:
           files: ${{ steps.build.outputs.asset_path }}
           name: Conceal Core CLI v${{ steps.build.outputs.ccx_version }}

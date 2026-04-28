@@ -7,7 +7,9 @@ on:
     tags-ignore:
       - "*" # We don't want this to run on release
   pull_request:
-
+permissions:
+  contents: read
+ 
 jobs:
   build-windows:
     name: Windows
@@ -15,7 +17,7 @@ jobs:
     env:
       BOOST_ROOT: C:/local/boost_1_83_0
     steps:
-      - uses: actions/checkout@master
+      - uses: actions/checkout@v5
 
       - name: Prepare version
         shell: powershell
@@ -103,7 +105,7 @@ jobs:
       run:
         shell: msys2 {0}
     steps:
-      - uses: actions/checkout@master
+      - uses: actions/checkout@v5
 
       - uses: msys2/setup-msys2@v2
         with:
@@ -184,7 +186,7 @@ jobs:
     name: Ubuntu 22.04
     runs-on: ubuntu-22.04
     steps:
-      - uses: actions/checkout@master
+      - uses: actions/checkout@v5
 
       - name: Prepare version
         id: setup
@@ -254,7 +256,7 @@ jobs:
     name: Ubuntu 24.04
     runs-on: ubuntu-24.04
     steps:
-      - uses: actions/checkout@master
+      - uses: actions/checkout@v5
 
       - name: Prepare version
         id: setup
@@ -324,7 +326,7 @@ jobs:
     name: Ubuntu 22.04 clang
     runs-on: ubuntu-22.04
     steps:
-      - uses: actions/checkout@master
+      - uses: actions/checkout@v5
 
       - name: Prepare version
         id: setup
@@ -392,14 +394,14 @@ jobs:
 
   build-macos:
     name: macOS
-    runs-on: macos-13
+    runs-on: macos-15-intel
     steps:
-      - uses: actions/checkout@master
+      - uses: actions/checkout@v5
 
       - name: Prepare version
         id: setup
         run: |
-          os=macos-13
+          os=macos-15-intel
           ccx_version=${GITHUB_SHA::7}
           release_name=ccx-cli-"$os"-dev-"$ccx_version"
           echo "release_name=${release_name}" >> $GITHUB_OUTPUT
