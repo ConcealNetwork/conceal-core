@@ -624,7 +624,7 @@ namespace cn
         // Chunks are validated during generation, so if they exist and cover the range, we're good
         bool needs_conversion = (currentHeight > 0) && 
                                 (greatestTargetHeight > 0) && 
-                                (currentCoveredHeight < greatestTargetHeight);
+                                (currentCoveredHeight < std::min(greatestTargetHeight, currentHeight));
         
         if (needs_conversion)
         {
@@ -640,10 +640,11 @@ namespace cn
           
           m_checkpoints.convert_old_checkpoints_to_list_hashes(getBlockIdsFunc, currentHeight);
         }
-        else if (currentCoveredHeight >= greatestTargetHeight && greatestTargetHeight > 0)
+        else if (greatestTargetHeight > 0)
         {
-          logger(DEBUGGING) << "Skipping target conversion - valid chunks already cover hardcoded checkpoint range (up to height " 
-                           << greatestTargetHeight << ")";
+          logger(DEBUGGING) << "Skipping target conversion - chunks cover up to height " 
+                           << currentCoveredHeight << " (effective target is " 
+                           << std::min(greatestTargetHeight, currentHeight) << ")";
         }
       }
       catch (const std::exception& e)
