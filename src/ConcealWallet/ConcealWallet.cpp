@@ -770,11 +770,15 @@ bool conceal_wallet::reset(const std::vector<std::string> &)
 
   m_wallet->reset(0);
   m_wallet->addObserver(this);
-  success_msg_writer(true) << "Reset completed successfully.";
+  success_msg_writer(true) << "Attempting wallet reset... this could take some time.";
 
   std::unique_lock<std::mutex> lock(m_walletSynchronizedMutex);
   m_walletSynchronizedCV.wait(lock, [this]
                               { return m_walletSynchronized; });
+
+  if (m_walletSynchronized) {
+    success_msg_writer(true) << "Wallet reset was successful";
+  }
 
   std::cout << std::endl;
 
