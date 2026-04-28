@@ -264,7 +264,18 @@ namespace cn {
     
     uint32_t converted_count = 0;
     uint32_t skipped_count = 0;
-    
+
+    // Pre-count how many checkpoints are within range so the spinner can show X/N
+    uint32_t convertible_count = 0;
+    for (const auto& t : old_targets)
+    {
+      if ((t.first - 1) <= max_height)
+        convertible_count++;
+    }
+
+    static const char spinner_chars[] = {'|', '/', '-', '\\'};
+    uint32_t spin_idx = 0;
+
     // For each old checkpoint, compute the list hash from genesis to that height
     for (const auto& old_target : old_targets)
     {
@@ -277,6 +288,11 @@ namespace cn {
         skipped_count++;
         continue;
       }
+
+      std::fprintf(stderr, "\r  [%c] Converting checkpoint %u/%u (height %u)...    ",
+                   spinner_chars[spin_idx % 4], converted_count + 1, convertible_count, height);
+      std::fflush(stderr);
+      ++spin_idx;
       
       // Get block IDs from genesis (0) to this height
       std::vector<crypto::Hash> blockIds = getBlockIdsFunc(0, size);
@@ -323,6 +339,10 @@ namespace cn {
                                   << " (old hash: " << old_target.second << ") to list hash: " << listHash;
     }
     
+    // Clear the spinner line before the final log message
+    std::fprintf(stderr, "\r%60s\r", "");
+    std::fflush(stderr);
+
     logger(INFO) << "Converted " << converted_count 
                                 << " checkpoint validation targets for P2P compatibility"
                                 << " (preserved " << m_old_checkpoint_hashes.size()
@@ -580,13 +600,13 @@ namespace cn {
       
       logger(INFO) << "Computed chunk " << chunk_index 
                             << " hash (blocks " << chunk_start_height << "-" << chunk_end_height << ")"
-                            << " - stored in memory, NOT yet saved to checkpoint.dat"
-                            << " (requires peer consensus with peers having uptime > "
-                            << get_min_peer_uptime_blocks() << " blocks)";
+                            << " - stored in memory";
     }
     
-    // NOTE: We do NOT save to checkpoint.dat here
-    // The chunk will be saved after peer consensus via add_verified_chunk_to_file()
+    // NOTE: We do NOT save to checkpoint.dat here.
+    // For chunks within the hardcoded-checkpoint range the caller saves immediately via
+    // add_verified_chunk_to_file().  For chunks beyond that range the caller waits for
+    // peer consensus before calling add_verified_chunk_to_file().
     return true;
   }
   
