@@ -2085,14 +2085,25 @@ namespace cn
       return false;
     }
 
-    // Use the height actually covered by confirmed chunk hashes, not the
-    // target height we want to reach.  The target comes from CHECKPOINTS in
-    // CryptoNoteConfig.h and can be far in the future relative to the current
-    // chain tip (or synthetic test blocks), which would incorrectly reject
-    // every alternative block.  Only blocks in the confirmed checkpoint zone
-    // (height <= covered_height) should be denied as alternative heads.
+    // Prefer chunk-based coverage (live chain): only blocks beyond the confirmed
+    // checkpoint zone are allowed as alternative heads.
     uint32_t covered_height = m_checkpoints.get_covered_height();
-    return covered_height < block_height;
+    if (covered_height > 0) {
+      return covered_height < block_height;
+    }
+
+    // No chunks present (e.g. unit tests, early bootstrap): fall back to
+    // target-based logic.  Find the highest checkpoint target whose height has
+    // already been reached by the current blockchain.  Blocks at or below that
+    // height cannot be alternative heads; blocks above it can.
+    uint32_t checkpoint_zone_height = 0;
+    for (const auto& target : m_checkpoints.get_checkpoint_targets()) {
+      uint32_t target_height = target.first;
+      if (target_height <= blockchain_height && target_height > checkpoint_zone_height) {
+        checkpoint_zone_height = target_height;
+      }
+    }
+    return checkpoint_zone_height < block_height;
   }
 
   bool Blockchain::handle_alternative_block(const Block &b, const crypto::Hash &id, block_verification_context &bvc, bool sendNewAlternativeBlockMessage)

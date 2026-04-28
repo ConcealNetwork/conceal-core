@@ -252,8 +252,27 @@ namespace cn
     bool set_checkpoint_list(std::vector<crypto::Hash>&& points);
     bool load_checkpoints_from_file();
     
-    // Test helper to add checkpoint targets (for unit testing only)
+    // Test helpers (for unit testing only)
     bool add_checkpoint_target_for_test(uint32_t height, const std::string& hash_str);
+
+    // Clear all checkpoint state so tests start from a known empty slate
+    // after init_targets() has loaded network checkpoints from CryptoNoteConfig.h
+    void clear_targets_for_test()
+    {
+      m_targets.clear();
+      m_valid_point_sizes.clear();
+      m_old_checkpoint_hashes.clear();
+      m_dns_checkpoint_hashes.clear();
+      {
+        const std::lock_guard<std::mutex> lock(m_points_lock);
+        m_points.clear();
+      }
+      {
+        const std::lock_guard<std::mutex> lock(m_chunks_lock);
+        m_chunks.clear();
+        m_confirmed_chunks.clear();
+      }
+    }
 
     // Get the number of chunks (not individual blocks)
     uint32_t get_chunk_count() const

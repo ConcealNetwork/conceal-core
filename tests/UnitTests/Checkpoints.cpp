@@ -165,25 +165,21 @@ TEST(checkpoints_is_alternative_block_allowed, handles_one_checkpoint)
   Blockchain blockchain(currency, tx_pool, logger, false, false);
   
   blockchain.getCheckpointList().init_targets(true, "");
-  
-  // Add checkpoint target at height 5
-  // The target system stores targets as m_targets[height+1] = hash
-  // So to have a checkpoint at height 5, we add target at height 5
-  blockchain.getCheckpointList().add_checkpoint_target_for_test(5, "0000000000000000000000000000000000000000000000000000000000000000");
-  
-  // Create checkpoint list with 6 elements (heights 0-5) to match the target
-  std::vector<crypto::Hash> checkpoint_list(6); // heights 0-5
-  crypto::Hash zero_hash = NULL_HASH;
-  std::fill(checkpoint_list.begin(), checkpoint_list.end(), zero_hash);
-  
-  // Calculate hash of the list to match the target
-  crypto::Hash list_hash = crypto::cn_fast_hash(checkpoint_list.data(), checkpoint_list.size() * sizeof(crypto::Hash));
-  
-  // Set the checkpoint list (this validates against the target)
-  // Note: This will fail validation unless we use the correct hash
-  // For testing, we'll just verify the target is set correctly
-  uint32_t greatest = blockchain.getCheckpointList().get_greatest_target_height();
-  ASSERT_EQ(greatest, 5);
+  // Reset to a clean slate so only our test targets exist
+  blockchain.getCheckpointList().clear_targets_for_test();
+
+  // Build a vector of 6 zero hashes (heights 0-5), mirroring old checkpoint.dat
+  std::vector<crypto::Hash> checkpoint_list(6, NULL_HASH);
+  crypto::Hash list_hash = crypto::cn_fast_hash(
+    checkpoint_list.data(), checkpoint_list.size() * sizeof(crypto::Hash));
+
+  // Add checkpoint target at height 5 using the real list hash
+  blockchain.getCheckpointList().add_checkpoint_target_for_test(5, common::podToHex(list_hash));
+
+  // Load the checkpoint list into m_points (mirrors loading old checkpoint.dat)
+  ASSERT_TRUE(blockchain.getCheckpointList().set_checkpoint_list(std::move(checkpoint_list)));
+
+  ASSERT_EQ(blockchain.getCheckpointList().get_greatest_target_height(), 5u);
 
   ASSERT_FALSE(blockchain.is_alternative_block_allowed(0, 0));
 
@@ -229,14 +225,24 @@ TEST(checkpoints_is_alternative_block_allowed, handles_two_and_more_checkpoints)
   Blockchain blockchain(currency, tx_pool, logger, false, false);
   
   blockchain.getCheckpointList().init_targets(true, "");
-  
-  // Add checkpoint targets at heights 5 and 9
-  blockchain.getCheckpointList().add_checkpoint_target_for_test(5, "0000000000000000000000000000000000000000000000000000000000000000");
-  blockchain.getCheckpointList().add_checkpoint_target_for_test(9, "0000000000000000000000000000000000000000000000000000000000000000");
-  
-  // Greatest target should be 9
-  uint32_t greatest = blockchain.getCheckpointList().get_greatest_target_height();
-  ASSERT_EQ(greatest, 9);
+  // Reset to a clean slate so only our test targets exist
+  blockchain.getCheckpointList().clear_targets_for_test();
+
+  // Build vectors of zero hashes mirroring old checkpoint.dat for each checkpoint
+  // Checkpoint at height 5: 6 hashes (heights 0-5)
+  std::vector<crypto::Hash> list_5(6, NULL_HASH);
+  crypto::Hash hash_5 = crypto::cn_fast_hash(list_5.data(), list_5.size() * sizeof(crypto::Hash));
+  blockchain.getCheckpointList().add_checkpoint_target_for_test(5, common::podToHex(hash_5));
+
+  // Checkpoint at height 9: 10 hashes (heights 0-9)
+  std::vector<crypto::Hash> list_9(10, NULL_HASH);
+  crypto::Hash hash_9 = crypto::cn_fast_hash(list_9.data(), list_9.size() * sizeof(crypto::Hash));
+  blockchain.getCheckpointList().add_checkpoint_target_for_test(9, common::podToHex(hash_9));
+
+  // Load the full checkpoint list into m_points (mirrors loading final checkpoint.dat)
+  ASSERT_TRUE(blockchain.getCheckpointList().set_checkpoint_list(std::move(list_9)));
+
+  ASSERT_EQ(blockchain.getCheckpointList().get_greatest_target_height(), 9u);
 
   ASSERT_FALSE(blockchain.is_alternative_block_allowed(0, 0));
 
