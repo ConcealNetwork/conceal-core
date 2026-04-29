@@ -417,7 +417,7 @@ jobs:
         run: |
           mkdir build
           cd build
-          cmake .. -DCMAKE_BUILD_TYPE=Release -DBUILD_TESTS=ON -DSTATIC=ON -DBOOST_ROOT="$(brew --prefix boost)
+          cmake .. -DCMAKE_BUILD_TYPE=Release -DBUILD_TESTS=ON -DSTATIC=ON -DBOOST_ROOT="$(brew --prefix boost)"
           make -j2
 
       - name: Prepare release
