@@ -15,6 +15,9 @@
 #include <Logging/LoggerRef.h>
 #include "../CryptoNoteConfig.h" // For P2P_CHECKPOINT_PEER_MIN_UPTIME_BLOCKS constants
 
+#ifdef _WIN32
+#undef ERROR
+#endif
 namespace cn
 {
   class CheckpointList

@@ -123,8 +123,10 @@ int daemonize() {
 int runDaemon() {
 #ifdef _WIN32
 
+  // Mutable buffer: SERVICE_TABLE_ENTRY expects LPSTR (non-const); string literals are const.
+  static char serviceDisplayName[] = "Payment Gate";
   SERVICE_TABLE_ENTRY serviceTable[] {
-    { "Payment Gate", serviceMain },
+    { serviceDisplayName, serviceMain },
     { NULL, NULL }
   };
 
