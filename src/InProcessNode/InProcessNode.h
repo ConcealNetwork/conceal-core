@@ -18,10 +18,19 @@
 
 #include <thread>
 #include <boost/asio.hpp>
+#include <boost/version.hpp>
 
 namespace cn {
 
 class core;
+
+#if BOOST_VERSION >= 106600
+using InProcessNodeIoContext = boost::asio::io_context;
+using InProcessNodeWork = boost::asio::executor_work_guard<InProcessNodeIoContext::executor_type>;
+#else
+using InProcessNodeIoContext = boost::asio::io_service;
+using InProcessNodeWork = boost::asio::io_service::work;
+#endif
 
 class InProcessNode : public INode, public cn::ICryptoNoteProtocolObserver, public cn::ICoreObserver {
 public:
@@ -135,9 +144,9 @@ private:
   cn::ICryptoNoteProtocolQuery& protocol;
   tools::ObserverManager<INodeObserver> observerManager;
 
-  boost::asio::io_service ioService;
+  InProcessNodeIoContext ioService;
   std::unique_ptr<std::thread> workerThread;
-  std::unique_ptr<boost::asio::io_service::work> work;
+  std::unique_ptr<InProcessNodeWork> work;
 
   BlockchainExplorerDataBuilder blockchainExplorerDataBuilder;
 

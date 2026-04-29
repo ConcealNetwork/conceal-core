@@ -63,7 +63,11 @@ void InProcessNode::init(const Callback& callback) {
     protocol.addObserver(this);
     core.addObserver(this);
 
-    work.reset(new boost::asio::io_service::work(ioService));
+#if BOOST_VERSION >= 106600
+    work.reset(new InProcessNodeWork(ioService.get_executor()));
+#else
+    work.reset(new InProcessNodeWork(ioService));
+#endif
     workerThread.reset(new std::thread(&InProcessNode::workerFunc, this));
 
     state = INITIALIZED;
