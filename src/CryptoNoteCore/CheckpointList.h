@@ -375,7 +375,7 @@ namespace cn
           if (hv != expected_hash)
           {
             // Block hash doesn't match hardcoded checkpoint - validation failed
-            logger(logging::ERROR) << "<< CheckpointList.cpp << " << "Checkpoint validation FAILED at height " 
+            logger(logging::ERROR) << "CheckpointList.cpp: Checkpoint validation FAILED at height " 
                                    << height << "! Expected (from CryptoNoteConfig.h): " << expected_hash
                                    << ", Got (from block): " << hv;
             return is_in_zone_failed;

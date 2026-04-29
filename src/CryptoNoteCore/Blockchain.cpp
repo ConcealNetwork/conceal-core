@@ -1240,6 +1240,7 @@ namespace cn
       m_spent_keys.clear();
       m_outputs.clear();
       m_multisignatureOutputs.clear();
+      crypto::Hash prevBlockHash = NULL_HASH;
       for (uint32_t b = 0; b < m_blocks.size(); ++b)
       {
         if (b % 1000 == 0)
@@ -1249,6 +1250,20 @@ namespace cn
 
         const BlockEntry &block = m_blocks[b];
         crypto::Hash blockHash = get_block_hash(block.bl);
+
+        // Verify chain linkage: every block except genesis must reference the previous block's hash.
+        // A mismatch means blockchain.dat was tampered or is corrupt at this height.
+        if (b > 0 && block.bl.previousBlockHash != prevBlockHash)
+        {
+          logger(ERROR, BRIGHT_RED)
+            << "Chain linkage broken at height " << b
+            << ": block.previousBlockHash=" << block.bl.previousBlockHash
+            << " expected=" << prevBlockHash
+            << ". blockchain.dat is corrupt or has been tampered.";
+          return false;
+        }
+        prevBlockHash = blockHash;
+
         m_blockIndex.push(blockHash);
         uint64_t interest = 0;
         for (uint32_t t = 0; t < block.transactions.size(); ++t)
