@@ -44,7 +44,7 @@ ChunkValidationManager::ChunkValidationManager(ICore& core,
                                                 IP2pEndpoint* p2p,
                                                 const Currency& currency,
                                                 logging::ILogger& log,
-                                                std::atomic<uint64_t>& peersCount,
+                                                std::atomic<size_t>& peersCount,
                                                 std::atomic<bool>& stop)
   : m_core(core)
   , m_p2p(p2p)

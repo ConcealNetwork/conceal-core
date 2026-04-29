@@ -12,6 +12,7 @@
 #include <mutex>
 #include <vector>
 #include <atomic>
+#include <cstddef>
 
 #include "CryptoNoteCore/CryptoNoteBasic.h"
 #include "CryptoNoteCore/CheckpointList.h"
@@ -36,7 +37,7 @@ namespace cn
                           IP2pEndpoint* p2p,
                           const Currency& currency,
                           logging::ILogger& log,
-                          std::atomic<uint64_t>& peersCount,
+                          std::atomic<size_t>& peersCount,
                           std::atomic<bool>& stop);
     
     // Update P2P endpoint (called when endpoint is set/updated)
@@ -90,7 +91,7 @@ namespace cn
     IP2pEndpoint* m_p2p;
     const Currency& m_currency;
     logging::LoggerRef logger;
-    std::atomic<uint64_t>& m_peersCount;
+    std::atomic<size_t>& m_peersCount;
     std::atomic<bool>& m_stop;
     
     // Pending chunk hash responses: (peer_id, chunk_index) -> (hash, timestamp)
