@@ -409,14 +409,15 @@ jobs:
 
       - name: Install dependencies
         run: |
-          brew install boost@1.85
+          brew install boost
+          brew list --versions boost
 
       - name: Build
         id: build
         run: |
           mkdir build
           cd build
-          cmake .. -DCMAKE_BUILD_TYPE=Release -DBUILD_TESTS=ON -DSTATIC=ON -DBOOST_ROOT=/usr/local/opt/boost@1.85
+          cmake .. -DCMAKE_BUILD_TYPE=Release -DBUILD_TESTS=ON -DSTATIC=ON -DBOOST_ROOT="$(brew --prefix boost)
           make -j2
 
       - name: Prepare release
