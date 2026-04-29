@@ -485,7 +485,11 @@ namespace cn
       m_config_folder = config_folder;
 
       m_checkpoints.init_targets(testnet, appendPath(config_folder, m_currency.checkpointFileName()));
-      m_checkpoints.load_checkpoints_from_file();
+      // Only load checkpoint.dat if it is the new chunk-based format.
+      // Old-style files (first entry = genesis block hash) are ignored here;
+      // they are handled once in the try block below after the blockchain is loaded.
+      if (!m_checkpoints.is_old_style_checkpoint_file())
+        m_checkpoints.load_checkpoints_from_file();
 
       if (!m_blocks.open(appendPath(config_folder, m_currency.blocksFileName()), 
                         appendPath(config_folder, m_currency.blockIndexesFileName()), 1024))
@@ -619,38 +623,67 @@ namespace cn
         uint32_t currentHeight = static_cast<uint32_t>(m_blocks.size() - 1);
         uint32_t greatestTargetHeight = m_checkpoints.get_greatest_target_height();
         uint32_t currentCoveredHeight = m_checkpoints.get_covered_height();
-        
-        // Only convert if we don't have chunks covering the hardcoded checkpoint range
-        // Chunks are validated during generation, so if they exist and cover the range, we're good
-        bool needs_conversion = (currentHeight > 0) && 
-                                (greatestTargetHeight > 0) && 
-                                (currentCoveredHeight < std::min(greatestTargetHeight, currentHeight));
-        
-        if (needs_conversion)
+        uint32_t computeUpTo = std::min(greatestTargetHeight, currentHeight);
+
+        auto getBlockIdsFunc = [this](uint32_t startHeight, uint32_t maxCount) -> std::vector<crypto::Hash> {
+          return m_blockIndex.getBlockIds(startHeight, maxCount);
+        };
+
+        if (currentHeight > 0 && greatestTargetHeight > 0 && computeUpTo > 0)
         {
-          logger(DEBUGGING) << "Converting checkpoint validation targets for P2P compatibility (chunks cover up to " 
-                           << currentCoveredHeight << ", last checkpoint at " << greatestTargetHeight << ")";
-          
-          // Convert old checkpoints (individual block hashes) to new format (list hashes)
-          // This is only needed if we're going to use old-style full checkpoint lists
-          // Only convert checkpoints up to current blockchain height to avoid warnings for unsynced blocks
-          auto getBlockIdsFunc = [this](uint32_t startHeight, uint32_t maxCount) -> std::vector<crypto::Hash> {
-            return m_blockIndex.getBlockIds(startHeight, maxCount);
-          };
-          
-          m_checkpoints.convert_old_checkpoints_to_list_hashes(getBlockIdsFunc, currentHeight);
-        }
-        else if (greatestTargetHeight > 0)
-        {
-          logger(DEBUGGING) << "Skipping target conversion - chunks cover up to height " 
-                           << currentCoveredHeight << " (effective target is " 
-                           << std::min(greatestTargetHeight, currentHeight) << ")";
+          uint32_t chunk_size  = m_checkpoints.get_chunk_size();
+          uint32_t last_chunk  = (computeUpTo - 1) / chunk_size;
+
+          if (m_checkpoints.is_old_style_checkpoint_file())
+          {
+            // ── ONE-TIME TRANSITION ──────────────────────────────────────────────
+            // Convert m_targets to cumulative list hashes up to what we actually have,
+            // then rebuild all chunks from scratch and write the new-format file.
+            // Writing chunk 0 overwrites the old file — transition never repeats.
+            logger(INFO) << "Old-style checkpoint.dat: one-time transition to chunk format "
+                         << "(up to height " << computeUpTo << ")";
+
+            m_checkpoints.convert_old_checkpoints_to_list_hashes(getBlockIdsFunc, computeUpTo);
+
+            for (uint32_t idx = 0; idx <= last_chunk; ++idx)
+            {
+              uint32_t chunk_start = idx * chunk_size + 1;
+              uint32_t chunk_end   = (idx + 1) * chunk_size;
+              if (currentHeight < chunk_end) break;
+              if (!m_checkpoints.add_chunk_from_block_ids(getBlockIdsFunc, chunk_start))
+              { logger(WARNING) << "Transition: chunk " << idx << " failed validation — stopping"; break; }
+              if (!m_checkpoints.add_verified_chunk_to_file(idx))
+                logger(WARNING) << "Transition: chunk " << idx << " could not be written";
+            }
+
+            logger(INFO) << "Transition complete — checkpoint.dat is now chunk-based";
+          }
+          else if (currentCoveredHeight < computeUpTo)
+          {
+            // ── NORMAL PATH ──────────────────────────────────────────────────────
+            // New-style or absent: append only the missing chunks up to computeUpTo.
+            uint32_t first_chunk = m_checkpoints.get_chunk_count();
+
+            logger(INFO) << "Appending checkpoint chunks " << first_chunk << ".." << last_chunk
+                         << " (heights " << (currentCoveredHeight + 1) << ".." << computeUpTo << ")";
+
+            for (uint32_t idx = first_chunk; idx <= last_chunk; ++idx)
+            {
+              uint32_t chunk_start = idx * chunk_size + 1;
+              uint32_t chunk_end   = (idx + 1) * chunk_size;
+              if (currentHeight < chunk_end)
+              { logger(DEBUGGING) << "Chunk " << idx << " incomplete — will finish during sync"; break; }
+              if (!m_checkpoints.add_chunk_from_block_ids(getBlockIdsFunc, chunk_start))
+              { logger(WARNING) << "Chunk " << idx << " failed validation — stopping"; break; }
+              if (!m_checkpoints.add_verified_chunk_to_file(idx))
+                logger(WARNING) << "Chunk " << idx << " could not be appended to checkpoint.dat";
+            }
+          }
         }
       }
       catch (const std::exception& e)
       {
-        logger(WARNING, BRIGHT_YELLOW) << "Error converting checkpoints: " << e.what();
-        // Continue - old checkpoints will still work for individual block validation
+        logger(WARNING, BRIGHT_YELLOW) << "Error building checkpoint chunks: " << e.what();
       }
       
       // Generate checkpoint.dat from local blockchain if it doesn't exist or is incomplete
@@ -670,7 +703,7 @@ namespace cn
         // generate them from the local blockchain
         if (currentHeight > 0 && greatestTargetHeight > 0)
         {
-          // Calculate target height: up to greatest target, but not more than current height
+          // Calculate target height: up to greatest known target, but not more than current height
           uint32_t targetHeight = std::min(greatestTargetHeight, currentHeight);
           
           if (currentCoveredHeight < targetHeight)

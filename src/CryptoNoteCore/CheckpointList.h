@@ -30,6 +30,11 @@ namespace cn
 
     void init_targets(bool is_testnet, const std::string& save_file);
     
+    // Returns true if checkpoint.dat exists and its first entry is the genesis block hash,
+    // which identifies the old per-block format.  New-style files start with a chunk hash
+    // (hash of blocks 1..chunk_size) which can never equal the genesis block hash.
+    bool is_old_style_checkpoint_file() const;
+
     // Convert old-style checkpoints (individual block hashes) to new-style (list hashes)
     // This allows the same checkpoint data in CryptoNoteConfig.h to work with both systems
     // getBlockIdsFunc: function that returns block IDs from genesis (0) to the specified height
@@ -314,9 +319,9 @@ namespace cn
 
     uint32_t get_greatest_target_height() const
     {
-      if (m_targets.empty())
-        return 0;
-      return m_targets.rbegin()->first - 1;
+      uint32_t hardcoded = m_targets.empty() ? 0 : m_targets.rbegin()->first - 1;
+      uint32_t dns       = m_dns_checkpoint_hashes.empty() ? 0 : m_dns_checkpoint_hashes.rbegin()->first;
+      return hardcoded > dns ? hardcoded : dns;
     }
 
     bool is_ready() const

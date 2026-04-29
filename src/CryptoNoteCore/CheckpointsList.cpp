@@ -242,10 +242,35 @@ namespace cn {
     }
   }
 
+  bool CheckpointList::is_old_style_checkpoint_file() const
+  {
+    auto genesis_it = m_old_checkpoint_hashes.find(0);
+    if (genesis_it == m_old_checkpoint_hashes.end())
+      return false; // no genesis checkpoint to compare against
+
+    std::ifstream file(m_save_file, std::ios::binary);
+    if (!file.is_open())
+      return false; // file absent → not old-style
+
+    crypto::Hash first_hash;
+    if (!file.read(reinterpret_cast<char*>(&first_hash), sizeof(first_hash)))
+      return false;
+
+    return first_hash == genesis_it->second;
+  }
+
   void CheckpointList::convert_old_checkpoints_to_list_hashes(
     std::function<std::vector<crypto::Hash>(uint32_t startHeight, uint32_t maxCount)> getBlockIdsFunc,
     uint32_t max_height)
   {
+    // If chunks already cover max_height, checkpoint.dat is already new-style —
+    // no need to convert m_targets (and we must not treat chunk hashes as block hashes).
+    if (get_covered_height() >= max_height)
+    {
+      logger(DEBUGGING) << "Skipping conversion - chunks already cover height " << max_height;
+      return;
+    }
+
     // Store old targets temporarily (they're individual block hashes from CryptoNoteConfig.h)
     // Note: m_targets stores size (height+1) as key, so we need to convert back to get heights
     // IMPORTANT: m_old_checkpoint_hashes is preserved - it contains the individual block hashes
