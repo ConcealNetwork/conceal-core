@@ -482,14 +482,32 @@ namespace cn
 
     if (amount_out > amount_in)
     {
-      // interest shows up in the output of the W/D transactions and W/Ds always have min fee
-      if (tx.inputs.size() > 0 && !tx.outputs.empty() && amount_out > amount_in + parameters::MINIMUM_FEE)
+      // Check if this is actually a deposit multisig spend (withdrawal)
+      bool isDepositWithdrawal = false;
+      for (const auto &in : tx.inputs)
       {
+        if (in.type() == typeid(MultisignatureInput))
+        {
+          const auto &msig = boost::get<MultisignatureInput>(in);
+          if (msig.term != 0)
+          {
+            isDepositWithdrawal = true;
+            break;
+          }
+        }
+      }
+
+      if (isDepositWithdrawal)
+      {
+        // Interest shows up in the output of withdrawal transactions
+        // W/Ds always have min fee
         fee = parameters::MINIMUM_FEE;
-        logger(INFO) << "TRIGGERED: Currency.cpp getTransactionFee";
+        return true;
       }
       else
       {
+        // Not a withdrawal — overspend is invalid
+        logger(ERROR) << "Transaction has outputs > inputs but is not a deposit withdrawal";
         return false;
       }
     }
