@@ -17,6 +17,12 @@ using common::JsonValue;
 LoggerManager::LoggerManager() {
 }
 
+LoggerManager::~LoggerManager() {
+  std::unique_lock<std::mutex> lock(reconfigureLock);
+  LoggerGroup::loggers.clear();
+  loggers.clear();
+}
+
 void LoggerManager::operator()(const std::string& category, Level level, boost::posix_time::ptime time, const std::string& body) {
   std::unique_lock<std::mutex> lock(reconfigureLock);
   LoggerGroup::operator()(category, level, time, body);

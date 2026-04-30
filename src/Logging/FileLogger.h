@@ -15,6 +15,7 @@ namespace logging {
 class FileLogger : public StreamLogger {
 public:
   FileLogger(Level level = DEBUGGING);
+  ~FileLogger();
   void init(const std::string& filename);
 
 private:

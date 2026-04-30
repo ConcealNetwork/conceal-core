@@ -84,6 +84,11 @@ void ContextGroup::wait() {
     dispatcher->dispatch();
     assert(context == dispatcher->getCurrentContext());
   }
+  
+  for (NativeContext* context = contextGroup.firstContext; context != nullptr; context = context->groupNext) {
+    context->procedure = nullptr;
+    context->interruptProcedure = nullptr;
+  }
 }
 
 }
