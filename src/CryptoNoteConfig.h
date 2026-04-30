@@ -210,8 +210,8 @@ namespace cn
 	const uint64_t P2P_DEFAULT_INVOKE_TIMEOUT = 60 * 2 * 1000; // 2 minutes
 	const size_t P2P_DEFAULT_HANDSHAKE_INVOKE_TIMEOUT = 5000;  // 5 seconds
 	const size_t P2P_CHECKPOINT_LIST_RE_REQUEST = 300;  // 5 minutes
-	const uint32_t P2P_CHECKPOINT_PEER_MIN_UPTIME_BLOCKS = 12000;  // Minimum peer uptime for checkpoint verification (mainnet: 12000 blocks × 2 min = 24000 min ≈ 16.7 days)
-	const uint32_t P2P_CHECKPOINT_PEER_MIN_UPTIME_BLOCKS_TESTNET = 2; // Minimum peer uptime for checkpoint verification (testnet: 6000 blocks × 2 min = 12000 min ≈ 8.3 days, relaxed for smaller network)
+	const uint32_t P2P_CHECKPOINT_PEER_MIN_UPTIME_BLOCKS = 20;  // Minimum uptime for checkpoint verification (mainnet: 20 blocks × 2 min = 40 min, should be enought to cover 10000 blocks)
+	const uint32_t P2P_CHECKPOINT_PEER_MIN_UPTIME_BLOCKS_TESTNET = 2; // Minimum uptime for checkpoint verification (testnet: 2 blocks × 2 min = 4 min relaxed for testing)
 	
 	// Checkpoint consensus configuration (Mainnet)
 	// M = minimum agreements required (all M peers must agree)
