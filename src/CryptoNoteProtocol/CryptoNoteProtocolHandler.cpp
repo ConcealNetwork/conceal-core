@@ -683,14 +683,19 @@ int CryptoNoteProtocolHandler::processObjects(CryptoNoteConnectionContext& conte
 
 bool CryptoNoteProtocolHandler::on_idle()
 {
-  // Periodically validate unverified chunks in chronological order
-  // Only for version 2+ nodes (chunked checkpoint system)
+  // Periodically validate unverified chunks and prefetch future chunk hashes.
+  // Only for version 2+ nodes (chunked checkpoint system).
   if (cn::P2P_CURRENT_VERSION >= cn::P2P_CHECKPOINT_LIST_VERSION)
   {
-    // Check pending validations for consensus (asynchronous approach)
     m_chunkValidationManager->check_pending_chunk_validations();
-    // Start new validations if needed
     m_chunkValidationManager->validate_unverified_chunks();
+
+    // Forward prefetch: fetch chunk hashes the network already has but we don't yet.
+    // This extends the checkpoint zone so IBD stays at fast speed.
+    // Observed height is local_tip + 1 per peer convention; subtract 1 for actual tip.
+    uint32_t obs = getObservedHeight();
+    uint32_t net_tip = (obs > 0) ? (obs - 1) : 0;
+    m_chunkValidationManager->prefetch_missing_chunks(net_tip);
   }
   
   return m_core.on_idle();

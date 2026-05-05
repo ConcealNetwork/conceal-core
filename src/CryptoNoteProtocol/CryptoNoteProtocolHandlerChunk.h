@@ -53,6 +53,14 @@ namespace cn
     // Checks if we have M identical hashes within the time window (3 minutes)
     // If consensus reached, processes it; if timeout, schedules retry
     void check_pending_chunk_validations();
+
+    // Prefetch chunk hashes ahead of local chain to keep the checkpoint zone extended.
+    // Queries network peers for the next missing chunk hash; if M-of-K peers agree,
+    // stores it as a prefetched chunk so IBD can continue at fast speed.
+    // Called from on_idle() alongside validate_unverified_chunks().
+    // @param network_height  Estimated network tip (observed height - 1)
+    // @return true if a prefetch round was started
+    bool prefetch_missing_chunks(uint32_t network_height);
     
     // Send chunk hash request asynchronously (non-blocking)
     // Returns true if request was sent successfully
@@ -83,6 +91,10 @@ namespace cn
       std::map<uint64_t, uint32_t> peer_network_16; // peer_id -> /16 network
       crypto::Hash local_hash;
       bool is_first_attempt;
+      // is_prefetch == true: we asked the network for a chunk we don't have locally yet.
+      // local_hash is NULL_HASH; success means M peers agreed on a non-null hash that
+      // we store as a prefetched chunk to extend the checkpoint zone.
+      bool is_prefetch;
     };
 
     void cleanup_chunk_responses(uint32_t chunk_index, const std::vector<uint64_t>& peer_ids);
@@ -107,6 +119,7 @@ namespace cn
     mutable std::mutex m_chunk_validation_mutex;
     uint32_t m_current_validating_chunk_index;  // Currently validating chunk (or UINT32_MAX if none)
     uint64_t m_last_chunk_validation_attempt;  // Last time we attempted validation (to avoid spamming)
+    uint64_t m_last_prefetch_attempt;          // Last time prefetch_missing_chunks() ran
   };
 
 } // namespace cn

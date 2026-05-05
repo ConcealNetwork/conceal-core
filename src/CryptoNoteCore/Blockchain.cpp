@@ -3413,22 +3413,41 @@ namespace cn
       // Only create if we haven't already created this chunk
       if (current_height == chunk_end_height && current_height > current_covered_height)
       {
-        // Check if chunk already exists (might have been created during initial generation)
+        // Check if chunk already exists (might have been created during initial generation
+        // or as a prefetched placeholder).  A prefetched chunk must be verified here.
+        bool chunk_is_prefetched = m_checkpoints.is_chunk_prefetched(chunk_index);
         crypto::Hash existing_chunk_hash = m_checkpoints.get_chunk_hash(chunk_index);
-        if (existing_chunk_hash == NULL_HASH)
+
+        if (existing_chunk_hash == NULL_HASH || chunk_is_prefetched)
         {
           logger(INFO, BRIGHT_GREEN) << "Reached chunk boundary at height " << current_height 
                                      << " (chunk " << chunk_index << ", blocks " << chunk_start_height 
-                                     << " to " << chunk_end_height << "). Computing chunk hash...";
+                                     << " to " << chunk_end_height << "). "
+                                     << (chunk_is_prefetched ? "Verifying prefetched hash..." : "Computing chunk hash...");
           
           auto getBlockIdsFunc = [this](uint32_t startHeight, uint32_t maxCount) -> std::vector<crypto::Hash> {
             return m_blockIndex.getBlockIds(startHeight, maxCount);
           };
-          
-          if (!m_checkpoints.add_chunk_from_block_ids(getBlockIdsFunc, chunk_start_height))
+
+          bool prefetch_mismatch = false;
+          if (!m_checkpoints.add_chunk_from_block_ids(getBlockIdsFunc, chunk_start_height, &prefetch_mismatch))
           {
-            logger(WARNING, BRIGHT_YELLOW) << "Failed to compute chunk " << chunk_index 
-                                           << " hash at height " << current_height;
+            if (prefetch_mismatch)
+            {
+              // Local chain diverges from the prefetched network consensus hash.
+              // The chunk has been re-queued as unverified; validate_unverified_chunks()
+              // will run M-of-K consensus and trigger a rollback if the network confirms
+              // the divergence.
+              logger(ERROR, BRIGHT_RED)
+                << "Chunk " << chunk_index << " PREFETCH MISMATCH at height " << current_height
+                << "! Local hash differs from prefetched network consensus. "
+                << "Consensus validation will trigger rollback if network confirms divergence.";
+            }
+            else
+            {
+              logger(WARNING, BRIGHT_YELLOW) << "Failed to compute chunk " << chunk_index
+                                             << " hash at height " << current_height;
+            }
           }
         }
         else

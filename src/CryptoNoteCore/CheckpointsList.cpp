@@ -555,26 +555,25 @@ namespace cn {
    */
   bool CheckpointList::add_chunk_from_block_ids(
     std::function<std::vector<crypto::Hash>(uint32_t startHeight, uint32_t maxCount)> getBlockIdsFunc,
-    uint32_t chunk_start_height)
+    uint32_t chunk_start_height,
+    bool* out_prefetch_mismatch)
   {
+    if (out_prefetch_mismatch) *out_prefetch_mismatch = false;
+
+    bool do_auto_confirm = false; // set inside lock when prefetch matches local hash
+    uint32_t auto_confirm_chunk_index = 0;
+
     {
       const std::lock_guard<std::mutex> lock(m_chunks_lock);
       
-      // SIMPLIFIED: Calculate chunk index and boundaries
       // All chunks are uniform: chunk_size blocks each (block 0/genesis excluded)
       // chunk[0]: blocks 1 to chunk_size
       // chunk[1]: blocks (chunk_size + 1) to (2 * chunk_size)
       // chunk[n]: blocks (n * chunk_size + 1) to ((n + 1) * chunk_size)
-      // 
-      // Formula: chunk_index = (chunk_start_height - 1) / chunk_size
-      // Example: chunk_start_height = 1 → chunk_index = 0 ✓
-      //          chunk_start_height = 10001 → chunk_index = 10000 / 10000 = 1 ✓
-      //          chunk_start_height = 20001 → chunk_index = 20000 / 10000 = 2 ✓
       uint32_t chunk_index = (chunk_start_height - 1) / m_chunk_size;
       uint32_t chunk_end_height = (chunk_index + 1) * m_chunk_size;
       uint32_t blocks_in_chunk = m_chunk_size;
       
-      // Get all block IDs for this chunk from blockchain.dat
       std::vector<crypto::Hash> chunk_block_ids = getBlockIdsFunc(chunk_start_height, blocks_in_chunk);
       
       if (chunk_block_ids.size() != blocks_in_chunk)
@@ -592,12 +591,10 @@ namespace cn {
         chunk_end_height,
         chunk_block_ids,
         getBlockIdsFunc,
-        false); // track_checkpoint_heights = false (only need counters)
+        false);
       
       if (!checkpoint_result.success)
-      {
         return false;
-      }
       
       uint32_t total_checkpoints_applied = checkpoint_result.checkpoints_from_config + checkpoint_result.checkpoints_from_dns;
       if (total_checkpoints_applied > 0)
@@ -609,29 +606,70 @@ namespace cn {
                                    << checkpoint_result.checkpoints_from_dns << " from DNS, rest from blockchain.dat";
       }
       
-      // Compute hash of this chunk's block IDs
-      crypto::Hash chunk_hash = crypto::cn_fast_hash(
+      crypto::Hash local_hash = crypto::cn_fast_hash(
         chunk_block_ids.data(), 
         chunk_block_ids.size() * sizeof(crypto::Hash)
       );
-      
-      // Ensure we have enough space in m_chunks
-      if (chunk_index >= m_chunks.size())
+
+      // --- Prefetch verification ---
+      // If this chunk was previously prefetched from the network, verify the local
+      // computation matches.  A match lets us confirm immediately; a mismatch means
+      // our local chain diverged from the network — queue for consensus validation
+      // which will trigger a rollback if the network disagrees.
+      bool was_prefetched = (m_prefetched_chunk_indices.find(chunk_index) != m_prefetched_chunk_indices.end());
+      if (was_prefetched)
       {
-        m_chunks.resize(chunk_index + 1);
+        crypto::Hash prefetched_hash = (chunk_index < m_chunks.size()) ? m_chunks[chunk_index] : NULL_HASH;
+
+        if (local_hash == prefetched_hash)
+        {
+          // Match: local chain agrees with network consensus.  Schedule confirmation.
+          m_prefetched_chunk_indices.erase(chunk_index);
+          m_chunks[chunk_index] = local_hash; // same value, but now locally owned
+          do_auto_confirm = true;
+          auto_confirm_chunk_index = chunk_index;
+          logger(INFO, logging::BRIGHT_GREEN)
+            << "Chunk " << chunk_index
+            << " locally verified — matches prefetched consensus hash. Confirming to checkpoint.dat.";
+        }
+        else
+        {
+          // Mismatch: local chain diverges from what the network agreed on.
+          // Replace the prefetched hash with the local one and remove the prefetch
+          // mark so validate_unverified_chunks() picks it up for consensus.
+          // If the network still disagrees, divergent_consensus will trigger a rollback.
+          logger(ERROR, logging::BRIGHT_RED)
+            << "Chunk " << chunk_index << " PREFETCH MISMATCH: "
+            << "local=" << local_hash << " prefetched=" << prefetched_hash
+            << ".  Queueing for consensus validation (rollback likely).";
+          m_prefetched_chunk_indices.erase(chunk_index);
+          m_chunks[chunk_index] = local_hash;
+          if (out_prefetch_mismatch) *out_prefetch_mismatch = true;
+          // Return true — chunk is stored; validate_unverified_chunks() handles rollback.
+        }
       }
-      
-      m_chunks[chunk_index] = chunk_hash;
-      
-      logger(INFO) << "Computed chunk " << chunk_index 
-                            << " hash (blocks " << chunk_start_height << "-" << chunk_end_height << ")"
-                            << " - stored in memory";
+      else
+      {
+        // Normal path: no prefetch record for this chunk.
+        if (chunk_index >= m_chunks.size())
+          m_chunks.resize(chunk_index + 1);
+        m_chunks[chunk_index] = local_hash;
+        logger(INFO) << "Computed chunk " << chunk_index
+                     << " hash (blocks " << chunk_start_height << "-" << chunk_end_height << ")"
+                     << " - stored in memory (pending peer consensus)";
+      }
+    } // m_chunks_lock released
+
+    // Auto-confirm outside the lock (add_verified_chunk_to_file takes its own lock)
+    if (do_auto_confirm)
+    {
+      if (!add_verified_chunk_to_file(auto_confirm_chunk_index))
+      {
+        logger(ERROR) << "Failed to save auto-confirmed prefetch chunk "
+                      << auto_confirm_chunk_index << " to checkpoint.dat";
+      }
     }
-    
-    // NOTE: We do NOT save to checkpoint.dat here.
-    // For chunks within the hardcoded-checkpoint range the caller saves immediately via
-    // add_verified_chunk_to_file().  For chunks beyond that range the caller waits for
-    // peer consensus before calling add_verified_chunk_to_file().
+
     return true;
   }
   
@@ -762,6 +800,88 @@ namespace cn {
 
     return success;
   }
+
+  // ---------------------------------------------------------------------------
+  // Forward-prefetch methods
+  // ---------------------------------------------------------------------------
+
+  /**
+   * Store a chunk hash that was obtained from P2P consensus before the local chain
+   * has reached that chunk boundary.  Extends is_in_checkpoint_zone() so IBD can
+   * continue at fast speed.  The hash is verified locally when
+   * add_chunk_from_block_ids() fires at the corresponding chunk boundary.
+   */
+  bool CheckpointList::add_prefetched_chunk(uint32_t chunk_index, const crypto::Hash& consensus_hash)
+  {
+    if (consensus_hash == NULL_HASH)
+    {
+      logger(WARNING) << "Prefetch rejected for chunk " << chunk_index << ": consensus_hash is NULL";
+      return false;
+    }
+
+    const std::lock_guard<std::mutex> lock(m_chunks_lock);
+
+    // Don't overwrite a chunk that has already been locally computed (not prefetched).
+    if (chunk_index < m_chunks.size() && m_chunks[chunk_index] != NULL_HASH
+        && m_prefetched_chunk_indices.find(chunk_index) == m_prefetched_chunk_indices.end())
+    {
+      logger(DEBUGGING) << "Prefetch skipped for chunk " << chunk_index
+                        << ": already has a locally-computed hash";
+      return false;
+    }
+
+    if (chunk_index >= m_chunks.size())
+      m_chunks.resize(chunk_index + 1, NULL_HASH);
+
+    m_chunks[chunk_index] = consensus_hash;
+    m_prefetched_chunk_indices.insert(chunk_index);
+
+    uint32_t covered_up_to = (chunk_index + 1) * m_chunk_size;
+    logger(INFO, logging::BRIGHT_CYAN)
+      << "Prefetched chunk " << chunk_index
+      << " from P2P consensus (covers up to block " << covered_up_to
+      << ", hash: " << consensus_hash << ")";
+    return true;
+  }
+
+  /**
+   * Returns true when the chunk at chunk_index holds a hash obtained from P2P
+   * consensus rather than local block-id computation.
+   */
+  bool CheckpointList::is_chunk_prefetched(uint32_t chunk_index) const
+  {
+    const std::lock_guard<std::mutex> lock(m_chunks_lock);
+    return m_prefetched_chunk_indices.find(chunk_index) != m_prefetched_chunk_indices.end();
+  }
+
+  /**
+   * Returns the index of the next chunk that should be fetched from the network.
+   * A chunk can be prefetched only when the network tip is high enough for that
+   * chunk to be complete (network_height >= (chunk_index + 1) * chunk_size).
+   * Returns UINT32_MAX when nothing to prefetch.
+   */
+  uint32_t CheckpointList::get_next_prefetchable_chunk_index(uint32_t network_height) const
+  {
+    const std::lock_guard<std::mutex> lock(m_chunks_lock);
+
+    // Find the first index with a missing/null entry.
+    uint32_t next = static_cast<uint32_t>(m_chunks.size()); // default: one past the end
+    for (uint32_t i = 0; i < static_cast<uint32_t>(m_chunks.size()); i++)
+    {
+      if (m_chunks[i] == NULL_HASH) { next = i; break; }
+    }
+
+    // The chunk is complete on the network only when network_height covers all its blocks:
+    //   chunk 'next' covers blocks (next * chunk_size + 1) to (next + 1) * chunk_size
+    //   → complete when network_height >= (next + 1) * chunk_size
+    uint64_t required = static_cast<uint64_t>(next + 1) * m_chunk_size;
+    if (static_cast<uint64_t>(network_height) < required)
+      return UINT32_MAX;
+
+    return next;
+  }
+
+  // ---------------------------------------------------------------------------
 
   /**
    * Get the hash of a specific chunk

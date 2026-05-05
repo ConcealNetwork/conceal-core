@@ -56,9 +56,32 @@ namespace cn
     // This computes the hash for the latest chunk and stores it in memory only
     // NOTE: Chunk is NOT saved to checkpoint.dat until peer consensus is reached
     // After peer consensus, call add_verified_chunk_to_file() to save it
+    //
+    // out_prefetch_mismatch (optional): set to true when a prefetched consensus hash
+    // existed for this chunk but the locally computed hash disagreed.  When this flag
+    // is set the chunk is stored with the local hash and queued for consensus validation
+    // (which will trigger a rollback if the network disagrees with the local chain).
     bool add_chunk_from_block_ids(
       std::function<std::vector<crypto::Hash>(uint32_t startHeight, uint32_t maxCount)> getBlockIdsFunc,
-      uint32_t chunk_start_height);
+      uint32_t chunk_start_height,
+      bool* out_prefetch_mismatch = nullptr);
+
+    // --- Forward-prefetch API ---
+    // Add a chunk hash obtained from P2P consensus BEFORE the local chain has reached
+    // that chunk boundary.  This extends the checkpoint zone so IBD can continue at
+    // fast speed.  The hash is verified locally when add_chunk_from_block_ids() fires
+    // at the corresponding chunk boundary.
+    // Returns false if chunk already has a locally-computed (non-prefetched) hash.
+    bool add_prefetched_chunk(uint32_t chunk_index, const crypto::Hash& consensus_hash);
+
+    // Returns true if the chunk at chunk_index was prefetched from the network and has
+    // not yet been confirmed by local computation.
+    bool is_chunk_prefetched(uint32_t chunk_index) const;
+
+    // Returns the next chunk index that should be fetched from the network, given the
+    // estimated network tip height.  Returns UINT32_MAX when nothing to prefetch
+    // (all chunks present, or the network tip is not far enough ahead).
+    uint32_t get_next_prefetchable_chunk_index(uint32_t network_height) const;
     
     // Add a verified chunk to checkpoint.dat (marks it as confirmed)
     // This is called after peer consensus is reached (M out of K peers agree)
@@ -279,6 +302,7 @@ namespace cn
         const std::lock_guard<std::mutex> lock(m_chunks_lock);
         m_chunks.clear();
         m_confirmed_chunks.clear();
+        m_prefetched_chunk_indices.clear();
       }
     }
 
@@ -526,6 +550,11 @@ namespace cn
     // and for answering checkpoint requests
     // Key: chunk_index, Value: true if confirmed via peer consensus
     std::unordered_set<uint32_t> m_confirmed_chunks;
+
+    // Prefetch tracking: chunk indices whose hash was obtained from P2P consensus
+    // BEFORE the local chain reached that boundary.  When add_chunk_from_block_ids()
+    // fires for such an index it verifies the local hash against the stored value.
+    std::unordered_set<uint32_t> m_prefetched_chunk_indices;
     
     // Legacy storage for backward compatibility (will be removed after migration)
     mutable std::mutex m_points_lock;

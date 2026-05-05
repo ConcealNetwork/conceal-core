@@ -54,6 +54,7 @@ ChunkValidationManager::ChunkValidationManager(ICore& core,
   , m_stop(stop)
   , m_current_validating_chunk_index(UINT32_MAX)
   , m_last_chunk_validation_attempt(0)
+  , m_last_prefetch_attempt(0)
 {
 }
 
@@ -439,6 +440,7 @@ bool ChunkValidationManager::validate_unverified_chunks()
       pending.peer_network_16 = sent_peer_networks;
       pending.local_hash = local_chunk_hash;
       pending.is_first_attempt = true;
+      pending.is_prefetch = false;
       m_pending_validations[chunk_index] = pending;
     }
     
@@ -537,6 +539,34 @@ void ChunkValidationManager::check_pending_chunk_validations()
                    << vote_result.local_diverse_networks << "), "
                    << "NULL_HASH responses: " << vote_result.null_hash_responses;
       
+      // --- Prefetch success path ---
+      // For prefetch rounds local_hash == NULL_HASH, so local_consensus is always false.
+      // Success is when M peers agree on a real (non-null) hash from enough networks,
+      // which evaluate_consensus_votes() reports as divergent_consensus.
+      if (pending.is_prefetch && vote_result.divergent_consensus
+          && vote_result.consensus_hash != NULL_HASH)
+      {
+        logger(INFO, BRIGHT_CYAN)
+          << "[Chunk Prefetch] Chunk " << chunk_index
+          << " consensus reached: " << vote_result.consensus_hash_votes
+          << " peers from " << vote_result.consensus_hash_diverse_networks
+          << " networks agree on hash " << vote_result.consensus_hash;
+
+        crypto::Hash prefetch_hash = vote_result.consensus_hash;
+        std::vector<uint64_t> peers_to_cleanup = pending.requested_peers;
+        it = m_pending_validations.erase(it);
+        cleanup_chunk_responses(chunk_index, peers_to_cleanup);
+
+        // Store the prefetched hash (extends checkpoint zone immediately)
+        if (!m_core.getCheckpointList().add_prefetched_chunk(chunk_index, prefetch_hash))
+        {
+          logger(WARNING) << "[Chunk Prefetch] add_prefetched_chunk(" << chunk_index << ") failed "
+                          << "(chunk may already be locally computed — this is fine)";
+        }
+        continue;
+      }
+
+      // --- Normal validation success path ---
       // Check if we have M agreements from enough networks (consensus reached)
       if (vote_result.local_consensus)
       {
@@ -562,11 +592,12 @@ void ChunkValidationManager::check_pending_chunk_validations()
       if (vote_result.responses_received == 0 ||
           (vote_result.responses_received == vote_result.null_hash_responses && !vote_result.divergent_consensus))
       {
-        logger(INFO) << "Chunk " << chunk_index 
-                     << " validation: No peers have this chunk in memory yet (all returned NULL_HASH or no response). "
+        const char* mode = pending.is_prefetch ? "prefetch" : "validation";
+        logger(INFO) << "Chunk " << chunk_index
+                     << " " << mode << ": No peers have this chunk in memory yet (all returned NULL_HASH or no response). "
                      << "This is normal if: (1) peers are using version 1 (don't support chunk checkpoints), "
                      << "or (2) peers haven't created this chunk yet. "
-                     << "Will retry validation once peers create this chunk.";
+                     << "Will retry once peers have this chunk.";
         
         std::vector<uint64_t> peers_to_cleanup = pending.requested_peers;
         it = m_pending_validations.erase(it);
@@ -615,6 +646,7 @@ void ChunkValidationManager::check_pending_chunk_validations()
           pending.requested_peers = sent_peers;
           pending.peer_network_16 = sent_peer_networks;
           pending.is_first_attempt = false;
+          // is_prefetch is preserved from the first attempt (already set)
           
           logger(INFO) << "Sent second attempt async requests for chunk " << chunk_index 
                        << " to " << sent_peers.size() << " peer(s). "
@@ -728,6 +760,146 @@ void ChunkValidationManager::check_pending_chunk_validations()
       }
     }
   }
+}
+
+// ---------------------------------------------------------------------------
+// Forward prefetch: fetch chunk hashes ahead of local chain tip
+// ---------------------------------------------------------------------------
+
+bool ChunkValidationManager::prefetch_missing_chunks(uint32_t network_height)
+{
+  // Derive the actual network tip: peers advertise local_tip + 1, so subtract 1.
+  uint32_t net_tip = (network_height > 0) ? (network_height - 1) : 0;
+
+  // Ask CheckpointList for the next chunk index we should prefetch.
+  uint32_t chunk_index = m_core.getCheckpointList().get_next_prefetchable_chunk_index(net_tip);
+  if (chunk_index == UINT32_MAX)
+    return false; // Nothing to prefetch
+
+  // Don't duplicate an in-flight request.
+  if (is_chunk_being_validated(chunk_index))
+    return false;
+
+  // Already prefetched?
+  if (m_core.getCheckpointList().is_chunk_prefetched(chunk_index))
+    return false;
+
+  // Rate-limit: attempt at most once every 60 seconds.
+  uint64_t time_now = time(nullptr);
+  {
+    std::lock_guard<std::mutex> lock(m_chunk_validation_mutex);
+    if (time_now - m_last_prefetch_attempt < 60)
+      return false;
+    m_last_prefetch_attempt = time_now;
+  }
+
+  if (m_peersCount.load() == 0)
+    return false;
+
+  // Collect eligible peers (same rules as validate_unverified_chunks).
+  uint32_t current_height;
+  crypto::Hash top_id;
+  m_core.get_blockchain_top(current_height, top_id);
+  uint32_t block_time       = m_currency.difficultyTarget();
+  uint32_t min_uptime_blocks = m_core.getCheckpointList().get_min_peer_uptime_blocks();
+
+  std::vector<uint64_t> eligible_peers;
+  std::map<uint64_t, uint32_t> peer_network_16;
+
+  m_p2p->for_each_connection([&](CryptoNoteConnectionContext& ctx, uint64_t peer_id) {
+    if (ctx.version < cn::P2P_CHECKPOINT_LIST_VERSION) return;
+    if (ctx.m_state != CryptoNoteConnectionContext::state_normal
+        && ctx.m_state != CryptoNoteConnectionContext::state_idle
+        && ctx.m_state != CryptoNoteConnectionContext::state_synchronizing) return;
+    time_t duration = time_now - ctx.m_started;
+    if (duration < 0) return;
+    uint32_t uptime_blocks = static_cast<uint32_t>(duration / block_time);
+    if (uptime_blocks < min_uptime_blocks) return;
+    eligible_peers.push_back(peer_id);
+    peer_network_16[peer_id] = CheckpointList::get_network_16(ctx.m_remote_ip);
+  });
+
+  if (eligible_peers.empty())
+  {
+    logger(DEBUGGING) << "[Chunk Prefetch] No eligible peers for chunk " << chunk_index;
+    return false;
+  }
+
+  CheckpointList::ConsensusRequirements req =
+    m_core.getCheckpointList().calculate_consensus_requirements(eligible_peers.size());
+
+  if (eligible_peers.size() < req.min_peers)
+  {
+    logger(DEBUGGING) << "[Chunk Prefetch] Not enough eligible peers: have "
+                      << eligible_peers.size() << ", need K=" << req.min_peers;
+    return false;
+  }
+
+  auto getPeerNetwork16 = [&peer_network_16](uint64_t pid) -> uint32_t {
+    auto it = peer_network_16.find(pid);
+    return (it != peer_network_16.end()) ? it->second : 0;
+  };
+
+  CheckpointList::PeerSamplingResult sampling =
+    CheckpointList::sample_peers_with_diversity(eligible_peers, getPeerNetwork16, req.min_peers);
+
+  if (sampling.sampled_peers.empty())
+  {
+    logger(WARNING) << "[Chunk Prefetch] Could not sample peers for chunk " << chunk_index;
+    return false;
+  }
+
+  uint32_t distinct_networks = static_cast<uint32_t>(sampling.network_votes.size());
+  if (distinct_networks < req.min_diverse_networks)
+  {
+    logger(DEBUGGING) << "[Chunk Prefetch] Insufficient network diversity for chunk " << chunk_index
+                      << ": have " << distinct_networks
+                      << " distinct /16, need " << req.min_diverse_networks;
+    return false;
+  }
+
+  // Send async requests.
+  std::vector<uint64_t> sent_peers;
+  std::map<uint64_t, uint32_t> sent_networks;
+  for (uint64_t pid : sampling.sampled_peers)
+  {
+    if (send_chunk_hash_request_async(pid, chunk_index))
+    {
+      sent_peers.push_back(pid);
+      sent_networks[pid] = getPeerNetwork16(pid);
+    }
+  }
+
+  if (sent_peers.size() < req.min_peers)
+  {
+    logger(WARNING) << "[Chunk Prefetch] Only sent " << sent_peers.size()
+                    << " request(s) for chunk " << chunk_index
+                    << ", need K=" << req.min_peers;
+    cleanup_chunk_responses(chunk_index, sent_peers);
+    return false;
+  }
+
+  {
+    std::lock_guard<std::mutex> lock(m_pending_validations_mutex);
+    PendingChunkValidation pending;
+    pending.chunk_index        = chunk_index;
+    pending.request_timestamp  = time_now;
+    pending.attempt_start_time = time_now;
+    pending.attempt_number     = 1;
+    pending.requested_peers    = sent_peers;
+    pending.peer_network_16    = sent_networks;
+    pending.local_hash         = NULL_HASH; // no local hash yet
+    pending.is_first_attempt   = true;
+    pending.is_prefetch        = true;
+    m_pending_validations[chunk_index] = pending;
+  }
+
+  logger(INFO, BRIGHT_CYAN)
+    << "[Chunk Prefetch] Requested chunk " << chunk_index
+    << " from " << sent_peers.size() << " peers across " << distinct_networks
+    << " networks. Will check consensus in 3 minutes.";
+
+  return true;
 }
 
 } // namespace cn
