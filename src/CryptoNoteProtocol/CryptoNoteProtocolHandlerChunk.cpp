@@ -140,7 +140,7 @@ bool ChunkValidationManager::is_chunk_being_validated(uint32_t chunk_index) cons
 {
   // Check if chunk is in pending validations (actual validation state)
   // m_current_validating_chunk_index is cleared immediately after sending requests,
-  // but validation is still pending for 3 minutes, so we need to check m_pending_validations
+  // but validation is still pending for up to 60 seconds, so we need to check m_pending_validations
   std::lock_guard<std::mutex> lock(m_pending_validations_mutex);
   return (m_pending_validations.find(chunk_index) != m_pending_validations.end());
 }
@@ -324,6 +324,20 @@ bool ChunkValidationManager::validate_unverified_chunks()
       m_current_validating_chunk_index = chunk_index;
     }
     
+    // Prefetched chunks are auto-confirmed when the local chain reaches the chunk
+    // boundary (add_chunk_from_block_ids verifies them). Running a separate peer
+    // consensus round on them is redundant and misleading — skip.
+    if (m_core.getCheckpointList().is_chunk_prefetched(chunk_index))
+    {
+      logger(DEBUGGING) << "[Chunk Validation] Chunk " << chunk_index
+                        << " is prefetched — skipping (auto-confirmed by local computation)";
+      {
+        std::lock_guard<std::mutex> lock(m_chunk_validation_mutex);
+        m_current_validating_chunk_index = UINT32_MAX;
+      }
+      continue;
+    }
+
     // Get local chunk hash
     crypto::Hash local_chunk_hash = m_core.getCheckpointList().get_chunk_hash(chunk_index);
     if (local_chunk_hash == NULL_HASH)
@@ -444,7 +458,7 @@ bool ChunkValidationManager::validate_unverified_chunks()
       m_pending_validations[chunk_index] = pending;
     }
     
-    logger(INFO) << "[Chunk Validation] Sent chunk " << chunk_index << " hash requests to " << sent_peers.size() << " peers. Checking consensus in 3 minutes.";
+    logger(INFO) << "[Chunk Validation] Sent chunk " << chunk_index << " hash requests to " << sent_peers.size() << " peers. Checking consensus in 60 seconds.";
     
     // Clear validation state (validation is now async - will be checked in check_pending_chunk_validations)
     {
@@ -463,8 +477,8 @@ bool ChunkValidationManager::validate_unverified_chunks()
 void ChunkValidationManager::check_pending_chunk_validations()
 {
   uint64_t time_now = time(nullptr);
-  const uint64_t CONSENSUS_WAIT_SECONDS = 180;  // 3 minutes (increased from 2 to handle network latency and peer processing)
-  const uint64_t RETRY_DELAY_SECONDS = 60;      // 1 minute delay before retry
+  const uint64_t CONSENSUS_WAIT_SECONDS = 60;   // 60 seconds
+  const uint64_t RETRY_DELAY_SECONDS = 30;      // 30 seconds delay before retry
 
   struct PendingAction
   {
@@ -502,7 +516,9 @@ void ChunkValidationManager::check_pending_chunk_validations()
       }
       
       // 3 minutes have passed - check for consensus
-      logger(INFO) << "[Chunk Validation] Checking consensus for chunk " << chunk_index << " (elapsed: " << elapsed << " seconds, attempt " << pending.attempt_number << ")";
+      if (!pending.is_prefetch)
+        logger(INFO) << "[Chunk Validation] Checking consensus for chunk " << chunk_index
+                     << " (elapsed: " << elapsed << " seconds, attempt " << pending.attempt_number << ")";
       
       // Collect fresh responses from requested peers
       std::vector<CheckpointList::ConsensusVote> votes;
@@ -532,12 +548,13 @@ void ChunkValidationManager::check_pending_chunk_validations()
         pending.request_timestamp,
         req);
       
-      logger(INFO) << "[Chunk Validation] Chunk " << chunk_index << " consensus check: received " << vote_result.responses_received
-                   << " fresh response(s) from " << pending.requested_peers.size() << " requested peer(s). "
-                   << "Agreements: " << vote_result.agreements << " (need M=" << req.min_agreements
-                   << " from n=" << req.min_diverse_networks << " networks, got n="
-                   << vote_result.local_diverse_networks << "), "
-                   << "NULL_HASH responses: " << vote_result.null_hash_responses;
+      if (!pending.is_prefetch)
+        logger(INFO) << "[Chunk Validation] Chunk " << chunk_index << " consensus check: received " << vote_result.responses_received
+                     << " fresh response(s) from " << pending.requested_peers.size() << " requested peer(s). "
+                     << "Agreements: " << vote_result.agreements << " (need M=" << req.min_agreements
+                     << " from n=" << req.min_diverse_networks << " networks, got n="
+                     << vote_result.local_diverse_networks << "), "
+                     << "NULL_HASH responses: " << vote_result.null_hash_responses;
       
       // --- Prefetch success path ---
       // For prefetch rounds local_hash == NULL_HASH, so local_consensus is always false.
@@ -650,7 +667,7 @@ void ChunkValidationManager::check_pending_chunk_validations()
           
           logger(INFO) << "Sent second attempt async requests for chunk " << chunk_index 
                        << " to " << sent_peers.size() << " peer(s). "
-                       << "Will check for consensus after 3 minutes.";
+                       << "Will check for consensus after 60 seconds.";
         }
         else
         {
@@ -897,7 +914,7 @@ bool ChunkValidationManager::prefetch_missing_chunks(uint32_t network_height)
   logger(INFO, BRIGHT_CYAN)
     << "[Chunk Prefetch] Requested chunk " << chunk_index
     << " from " << sent_peers.size() << " peers across " << distinct_networks
-    << " networks. Will check consensus in 3 minutes.";
+    << " networks. Will check consensus in 60 seconds.";
 
   return true;
 }
