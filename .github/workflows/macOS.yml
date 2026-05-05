@@ -5,13 +5,12 @@ on:
     tags:
       - "*"
       
-permissions:
-  contents: write
- 
 jobs:
   build-macos:
     name: macOS
     runs-on: macos-15-intel
+    permissions:
+      contents: write
     steps:
       - uses: actions/checkout@v5
 
