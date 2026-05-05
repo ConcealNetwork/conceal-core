@@ -12,6 +12,8 @@ jobs:
   build-windows:
     name: Windows
     runs-on: windows-2022
+    permissions:
+      contents: write
     env:
       BOOST_ROOT: C:/local/boost_1_83_0
     steps:
@@ -99,6 +101,8 @@ jobs:
   build-mingw:
     name: MinGW
     runs-on: windows-2022
+    permissions:
+      contents: write
     defaults:
       run:
         shell: msys2 {0}
@@ -183,6 +187,8 @@ jobs:
   build-ubuntu22:
     name: Ubuntu 22.04
     runs-on: ubuntu-22.04
+    permissions:
+      contents: write
     steps:
       - uses: actions/checkout@master
 
@@ -253,6 +259,8 @@ jobs:
   build-ubuntu24:
     name: Ubuntu 24.04
     runs-on: ubuntu-24.04
+    permissions:
+      contents: write
     steps:
       - uses: actions/checkout@master
 
@@ -323,6 +331,8 @@ jobs:
   build-ubuntu22-clang:
     name: Ubuntu 22.04 clang
     runs-on: ubuntu-22.04
+    permissions:
+      contents: write
     steps:
       - uses: actions/checkout@master
 
@@ -392,7 +402,9 @@ jobs:
 
   build-macos:
     name: macOS
-    runs-on: macos-13
+    runs-on: macos-15-intel
+    permissions:
+      contents: write
     steps:
       - uses: actions/checkout@master
 
