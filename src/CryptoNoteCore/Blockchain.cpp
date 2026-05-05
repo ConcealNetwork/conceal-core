@@ -10,6 +10,7 @@
 
 #include <algorithm>
 #include <numeric>
+#include <sstream>
 #include <cstdio>
 #include <cmath>
 #include <boost/foreach.hpp>
@@ -1012,17 +1013,10 @@ namespace cn
                     std::vector<uint32_t> unverified = m_checkpoints.get_unverified_chunks();
                     if (!unverified.empty())
                     {
-                      logger(INFO) << "Found " << unverified.size() << " unverified chunk(s) requiring P2P validation: chunks " 
-                                   << unverified[0];
-                      for (size_t i = 1; i < unverified.size() && i < 5; i++)
-                      {
-                        logger(INFO) << ", " << unverified[i];
-                      }
-                      if (unverified.size() > 5)
-                      {
-                        logger(INFO) << ", ... (and " << (unverified.size() - 5) << " more)";
-                      }
-                      logger(INFO) << ". These will be validated via peer consensus before being saved to checkpoint.dat.";
+                      if (unverified.size() == 1)
+                        logger(INFO) << "Found 1 unverified chunk: " << unverified[0];
+                      else
+                        logger(INFO) << "Found " << unverified.size() << " unverified chunks from " << unverified[0];
                     }
                   }
                 }
