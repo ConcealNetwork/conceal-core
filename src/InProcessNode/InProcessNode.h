@@ -18,13 +18,12 @@
 
 #include <thread>
 #include <boost/asio.hpp>
-#include <boost/version.hpp>
 
 namespace cn {
 
 class core;
 
-#if BOOST_VERSION >= 109000
+#if defined(BOOST_ASIO_HAS_IO_CONTEXT)
 using InProcessNodeIoContext = boost::asio::io_context;
 using InProcessNodeWork = boost::asio::executor_work_guard<InProcessNodeIoContext::executor_type>;
 #else
@@ -137,7 +136,7 @@ private:
 
   template<class Handler>
   void postIoService(Handler handler) {
-#if BOOST_VERSION >= 109000
+#if defined(BOOST_ASIO_HAS_IO_CONTEXT)
     boost::asio::post(ioService, handler);
 #else
     ioService.post(handler);

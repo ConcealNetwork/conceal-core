@@ -63,7 +63,7 @@ void InProcessNode::init(const Callback& callback) {
     protocol.addObserver(this);
     core.addObserver(this);
 
-#if BOOST_VERSION >= 109000
+#if defined(BOOST_ASIO_HAS_IO_CONTEXT)
     work.reset(new InProcessNodeWork(ioService.get_executor()));
 #else
     work.reset(new InProcessNodeWork(ioService));
@@ -98,7 +98,7 @@ bool InProcessNode::doShutdown() {
 }
 
 void InProcessNode::resetIoService() {
-#if BOOST_VERSION >= 109000
+#if defined(BOOST_ASIO_HAS_IO_CONTEXT)
   ioService.restart();
 #else
   ioService.reset();

@@ -169,6 +169,10 @@ else()
 endif()
 include_directories(SYSTEM ${Boost_INCLUDE_DIRS})
 
+if(Boost_VERSION AND NOT Boost_VERSION VERSION_LESS 1.90.0)
+  add_definitions(-DBOOST_ASIO_HAS_IO_CONTEXT)
+endif()
+
 if(MINGW)
   set(Boost_LIBRARIES "${Boost_LIBRARIES};ws2_32;mswsock;bcrypt")
 elseif(APPLE)
