@@ -406,6 +406,8 @@ void Dispatcher::contextProcedure(void* ucontext) {
       context.procedure();
     } catch(std::exception&) {
     }
+    context.procedure = nullptr;
+    context.interruptProcedure = nullptr;
 
     if (context.group != nullptr) {
       if (context.groupPrev != nullptr) {

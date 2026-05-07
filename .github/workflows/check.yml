@@ -12,10 +12,12 @@ jobs:
   build-windows:
     name: Windows
     runs-on: windows-2022
+    permissions:
+      contents: write
     env:
       BOOST_ROOT: C:/local/boost_1_83_0
     steps:
-      - uses: actions/checkout@master
+      - uses: actions/checkout@v5
 
       - name: Prepare version
         shell: powershell
@@ -27,10 +29,10 @@ jobs:
           echo "release_name=${release_name}" >> $env:GITHUB_OUTPUT
 
       - name: Install msbuild
-        uses: microsoft/setup-msbuild@v2
+        uses: microsoft/setup-msbuild@v3
 
       - name: Restore Boost
-        uses: actions/cache@v4
+        uses: actions/cache@v5
         id: restore-boost
         with:
           path: ${{env.BOOST_ROOT}}
@@ -64,7 +66,7 @@ jobs:
           cp build/tests/Release/*_tests.exe build/conceal
 
       - name: Upload To GH Artifacts
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v6
         with:
           name: ${{ steps.setup.outputs.release_name }}
           path: build/conceal
@@ -99,11 +101,13 @@ jobs:
   build-mingw:
     name: MinGW
     runs-on: windows-2022
+    permissions:
+      contents: write
     defaults:
       run:
         shell: msys2 {0}
     steps:
-      - uses: actions/checkout@master
+      - uses: actions/checkout@v5
 
       - uses: msys2/setup-msys2@v2
         with:
@@ -148,7 +152,7 @@ jobs:
           cp build/tests/*_tests.exe build/conceal
 
       - name: Upload To GH Artifacts
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v6
         with:
           name: ${{ steps.setup.outputs.release_name }}
           path: build/conceal
@@ -183,8 +187,10 @@ jobs:
   build-ubuntu22:
     name: Ubuntu 22.04
     runs-on: ubuntu-22.04
+    permissions:
+      contents: write
     steps:
-      - uses: actions/checkout@master
+      - uses: actions/checkout@v5
 
       - name: Prepare version
         id: setup
@@ -217,7 +223,7 @@ jobs:
           cp build/tests/*_tests build/conceal
 
       - name: Upload To GH Artifacts
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v6
         with:
           name: ${{ steps.setup.outputs.release_name }}
           path: build/conceal
@@ -253,8 +259,10 @@ jobs:
   build-ubuntu24:
     name: Ubuntu 24.04
     runs-on: ubuntu-24.04
+    permissions:
+      contents: write
     steps:
-      - uses: actions/checkout@master
+      - uses: actions/checkout@v5
 
       - name: Prepare version
         id: setup
@@ -287,7 +295,7 @@ jobs:
           cp build/tests/*_tests build/conceal
 
       - name: Upload To GH Artifacts
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v6
         with:
           name: ${{ steps.setup.outputs.release_name }}
           path: build/conceal
@@ -323,8 +331,10 @@ jobs:
   build-ubuntu22-clang:
     name: Ubuntu 22.04 clang
     runs-on: ubuntu-22.04
+    permissions:
+      contents: write
     steps:
-      - uses: actions/checkout@master
+      - uses: actions/checkout@v5
 
       - name: Prepare version
         id: setup
@@ -357,7 +367,7 @@ jobs:
           cp build/tests/*_tests build/conceal
 
       - name: Upload To GH Artifacts
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v6
         with:
           name: ${{ steps.setup.outputs.release_name }}
           path: build/conceal
@@ -392,28 +402,31 @@ jobs:
 
   build-macos:
     name: macOS
-    runs-on: macos-13
+    runs-on: macos-15-intel
+    permissions:
+      contents: write
     steps:
-      - uses: actions/checkout@master
+      - uses: actions/checkout@v5
 
       - name: Prepare version
         id: setup
         run: |
-          os=macos-13
+          os=macos-15-intel
           ccx_version=${GITHUB_SHA::7}
           release_name=ccx-cli-"$os"-dev-"$ccx_version"
           echo "release_name=${release_name}" >> $GITHUB_OUTPUT
 
       - name: Install dependencies
         run: |
-          brew install boost@1.85
+          brew install boost
+          brew list --versions boost
 
       - name: Build
         id: build
         run: |
           mkdir build
           cd build
-          cmake .. -DCMAKE_BUILD_TYPE=Release -DBUILD_TESTS=ON -DSTATIC=ON -DBOOST_ROOT=/usr/local/opt/boost@1.85
+          cmake .. -DCMAKE_BUILD_TYPE=Release -DBUILD_TESTS=ON -DSTATIC=ON -DBOOST_ROOT="$(brew --prefix boost)"
           make -j2
 
       - name: Prepare release
@@ -426,7 +439,7 @@ jobs:
           cp build/tests/*_tests build/conceal
 
       - name: Upload To GH Artifacts
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v6
         with:
           name: ${{ steps.setup.outputs.release_name }}
           path: build/conceal

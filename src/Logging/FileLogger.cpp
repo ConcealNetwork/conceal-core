@@ -12,6 +12,14 @@ namespace logging {
 FileLogger::FileLogger(Level level) : StreamLogger(level) {
 }
 
+FileLogger::~FileLogger() {
+  if (fileStream.is_open()) {
+    stream = nullptr;
+    fileStream.flush();
+    fileStream.close();
+  }
+}
+
 void FileLogger::init(const std::string& fileName) {
   fileStream.open(fileName, std::ios::app);
   StreamLogger::attachToStream(fileStream);

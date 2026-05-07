@@ -23,6 +23,14 @@ namespace cn {
 
 class core;
 
+#if defined(BOOST_ASIO_HAS_IO_CONTEXT)
+using InProcessNodeIoContext = boost::asio::io_context;
+using InProcessNodeWork = boost::asio::executor_work_guard<InProcessNodeIoContext::executor_type>;
+#else
+using InProcessNodeIoContext = boost::asio::io_service;
+using InProcessNodeWork = boost::asio::io_service::work;
+#endif
+
 class InProcessNode : public INode, public cn::ICryptoNoteProtocolObserver, public cn::ICoreObserver {
 public:
   InProcessNode(cn::ICore& core, cn::ICryptoNoteProtocolQuery& protocol);
@@ -124,6 +132,16 @@ private:
   std::error_code doGetTransaction(const crypto::Hash &transactionHash, cn::Transaction &transaction);
   void workerFunc();
   bool doShutdown();
+  void resetIoService();
+
+  template<class Handler>
+  void postIoService(Handler handler) {
+#if defined(BOOST_ASIO_HAS_IO_CONTEXT)
+    boost::asio::post(ioService, handler);
+#else
+    ioService.post(handler);
+#endif
+  }
 
   enum State {
     NOT_INITIALIZED,
@@ -135,9 +153,9 @@ private:
   cn::ICryptoNoteProtocolQuery& protocol;
   tools::ObserverManager<INodeObserver> observerManager;
 
-  boost::asio::io_service ioService;
+  InProcessNodeIoContext ioService;
   std::unique_ptr<std::thread> workerThread;
-  std::unique_ptr<boost::asio::io_service::work> work;
+  std::unique_ptr<InProcessNodeWork> work;
 
   BlockchainExplorerDataBuilder blockchainExplorerDataBuilder;
 
