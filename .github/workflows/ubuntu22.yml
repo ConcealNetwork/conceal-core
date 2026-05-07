@@ -12,7 +12,7 @@ jobs:
     permissions:
       contents: write
     steps:
-      - uses: actions/checkout@master
+      - uses: actions/checkout@v5
 
       - name: Build
         id: build
@@ -45,7 +45,7 @@ jobs:
           echo "ccx_version=${ccx_version}" >> $GITHUB_OUTPUT
 
       - name: Create Release
-        uses: softprops/action-gh-release@v2.0.4
+        uses: softprops/action-gh-release@v2
         with:
           files: ${{ steps.build.outputs.asset_path }}
           name: Conceal Core CLI v${{ steps.build.outputs.ccx_version }}
