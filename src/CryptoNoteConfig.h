@@ -1,6 +1,6 @@
 // Copyright (c) 2012-2017 The Cryptonote developers
 // Copyright (c) 2017-2018 The Circle Foundation & Conceal Devs
-// Copyright (c) 2018-2023 Conceal Network & Conceal Devs
+// Copyright (c) 2018-2026 Conceal Network & Conceal Devs
 //
 //
 // Distributed under the MIT/X11 software license, see the accompanying
@@ -141,8 +141,7 @@ namespace cn
 		const char P2P_NET_DATA_FILENAME[] = "p2pstate.bin";
 		const char CRYPTONOTE_BLOCKCHAIN_INDICES_FILENAME[] = "blockchainindices.dat";
 		const char MINER_CONFIG_FILE_NAME[] = "miner_conf.json";
-		const char CRYPTONOTE_CHECKPOINT_FILENAME[] = "checkpoint.dat";
-
+		
 	} // namespace parameters
 
 	const uint64_t START_BLOCK_REWARD = (UINT64_C(5000) * parameters::POINT);  // start reward (Consensus I)
@@ -186,14 +185,12 @@ namespace cn
 	and the minimum version for communication between nodes */
 	const uint8_t P2P_VERSION_1 = 1;
 	const uint8_t P2P_VERSION_2 = 2;
-	const uint8_t P2P_CURRENT_VERSION = 2;  // Incremented to support checkpoint list propagation
+	const uint8_t P2P_CURRENT_VERSION = 1;
 	const uint8_t P2P_MINIMUM_VERSION = 1;
 	const uint8_t P2P_UPGRADE_WINDOW = 2;
 
 	// This defines the minimum P2P version required for lite blocks propogation
 	const uint8_t P2P_LITE_BLOCKS_PROPOGATION_VERSION = 3;
-
-    const uint8_t P2P_CHECKPOINT_LIST_VERSION = 2;
 
 	const size_t P2P_LOCAL_WHITE_PEERLIST_LIMIT = 1000;
 	const size_t P2P_LOCAL_GRAY_PEERLIST_LIMIT = 5000;
@@ -209,23 +206,6 @@ namespace cn
 	const uint32_t P2P_DEFAULT_PING_CONNECTION_TIMEOUT = 2000; // 2 seconds
 	const uint64_t P2P_DEFAULT_INVOKE_TIMEOUT = 60 * 2 * 1000; // 2 minutes
 	const size_t P2P_DEFAULT_HANDSHAKE_INVOKE_TIMEOUT = 5000;  // 5 seconds
-	const size_t P2P_CHECKPOINT_LIST_RE_REQUEST = 300;  // 5 minutes
-	const uint32_t P2P_CHECKPOINT_PEER_MIN_UPTIME_BLOCKS = 12000;  // Minimum peer uptime for checkpoint verification (mainnet: 12000 blocks × 2 min = 24000 min ≈ 16.7 days)
-	const uint32_t P2P_CHECKPOINT_PEER_MIN_UPTIME_BLOCKS_TESTNET = 2; // Minimum peer uptime for checkpoint verification (testnet: 6000 blocks × 2 min = 12000 min ≈ 8.3 days, relaxed for smaller network)
-	
-	// Checkpoint consensus configuration (Mainnet)
-	// M = minimum agreements required (all M peers must agree)
-	// K = total peers to sample
-	// n = minimum distinct /16 networks required
-	const uint32_t CKPT_MIN_CONSENSUS_PEERS = 6;           // M: minimum agreements required
-	const uint32_t CKPT_CONSENSUS_PEERS = 6;               // K: minimun total peers to sample
-	const uint32_t CKPT_MIN_DIVERSE_NETWORKS = 3;          // n: minimum distinct /16 networks required
-	
-	// Checkpoint consensus configuration (Testnet - relaxed for smaller network)
-	const uint32_t CKPT_MIN_CONSENSUS_PEERS_TESTNET = 2;          // M: minimum agreements required (testnet)
-	const uint32_t CKPT_CONSENSUS_PEERS_TESTNET = 2;              // K: minimum total peers to sample (testnet) - increased to ask multiple peers
-	const uint32_t CKPT_MIN_DIVERSE_NETWORKS_TESTNET = 2;          // n: minimum distinct /16 networks required (testnet)
-	
 	const char P2P_STAT_TRUSTED_PUB_KEY[] = "f7061e9a5f0d30549afde49c9bfbaa52ac60afdc46304642b460a9ea34bf7a4e";
 
 	// Seed Nodes
@@ -252,9 +232,6 @@ namespace cn
 #ifdef __GNUC__
 	__attribute__((unused))
 #endif
-
-	const char DNS_CHECKPOINT_DOMAIN[] = "checkpoints.conceal.id";
-	const char TESTNET_DNS_CHECKPOINT_DOMAIN[] = "testpoints.conceal.id";
 
 	// Blockchain Checkpoints:
 	// {<block height>, "<block hash>"},
