@@ -9,13 +9,15 @@ jobs:
   build-windows:
     name: Windows
     runs-on: windows-2022
+    permissions:
+      contents: write
     env:
       BOOST_ROOT: C:/local/boost_1_83_0
     steps:
       - uses: actions/checkout@master
 
       - name: Setup msbuild
-        uses: microsoft/setup-msbuild@v2
+        uses: microsoft/setup-msbuild@v3
 
       - name: Restore Boost
         uses: actions/cache@v4

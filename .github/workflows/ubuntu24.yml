@@ -4,11 +4,13 @@ on:
   push:
     tags:
       - "*"
-
+  
 jobs:
   build-ubuntu24:
     name: Ubuntu 24.04
     runs-on: ubuntu-24.04
+    permissions:
+      contents: write
     steps:
       - uses: actions/checkout@master
 

@@ -1,7 +1,7 @@
 cmake_minimum_required(VERSION 3.5)
 
 include(CheckCXXCompilerFlag)
-set(VERSION "6.7.3")
+set(VERSION "6.7.4-beta.1")
 set(VERSION_BUILD_NO "Trebopala")
 # Packaged from main commits
 set(COMMIT 1db6e66)
@@ -112,7 +112,8 @@ else()
   endif()
   if(MINGW)
     set(WARNINGS "${WARNINGS} -Wno-error=unused-value")
-    set(MINGW_FLAG "-DWIN32_LEAN_AND_MEAN")
+    # Boost.Bind: avoid deprecated global placeholders (_1, _2) pragma on newer Boost
+    set(MINGW_FLAG "-DWIN32_LEAN_AND_MEAN -DBOOST_BIND_GLOBAL_PLACEHOLDERS")
     include_directories(SYSTEM src/platform/mingw)
   else()
     set(MINGW_FLAG "")
@@ -144,6 +145,10 @@ if(APPLE)
 	add_definitions(/DHAVE_ROTR)
 endif()
 
+if(POLICY CMP0167)
+  cmake_policy(SET CMP0167 OLD)
+endif()
+
 if(STATIC)
   set(Boost_NO_BOOST_CMAKE ON)
   set(Boost_USE_STATIC_LIBS ON)
@@ -151,8 +156,22 @@ if(STATIC)
 endif()
 
 #set(Boost_DEBUG on)
-find_package(Boost 1.55 REQUIRED COMPONENTS system filesystem thread date_time chrono regex serialization program_options)
+set(BOOST_COMPONENTS filesystem thread date_time chrono regex serialization program_options)
+
+if(APPLE)
+  find_package(Boost 1.55 COMPONENTS system ${BOOST_COMPONENTS})
+  if(NOT Boost_FOUND)
+    message(STATUS "Boost.System library not found; retrying without system component")
+    find_package(Boost 1.55 REQUIRED COMPONENTS ${BOOST_COMPONENTS})
+  endif()
+else()
+  find_package(Boost 1.55 REQUIRED COMPONENTS system ${BOOST_COMPONENTS})
+endif()
 include_directories(SYSTEM ${Boost_INCLUDE_DIRS})
+
+if(Boost_VERSION AND NOT Boost_VERSION VERSION_LESS 1.90.0)
+  add_definitions(-DBOOST_ASIO_HAS_IO_CONTEXT)
+endif()
 
 if(MINGW)
   set(Boost_LIBRARIES "${Boost_LIBRARIES};ws2_32;mswsock;bcrypt")
