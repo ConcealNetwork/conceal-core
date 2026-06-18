@@ -1028,7 +1028,10 @@ bool RpcServer::on_get_transactions(const COMMAND_RPC_GET_TRANSACTIONS::request&
     }
     if (b.size() != sizeof(Hash))
     {
+      // Wrong-sized hash: reject the request instead of dereferencing b.data() (which is null for an
+      // empty BinaryArray) — a malformed hash would otherwise crash the daemon with a null/OOB read.
       res.status = "Failed, size of data mismatch";
+      return true;
     }
     vh.push_back(*reinterpret_cast<const Hash*>(b.data()));
   }
