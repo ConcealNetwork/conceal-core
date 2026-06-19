@@ -1682,10 +1682,12 @@ namespace cn
     std::vector<size_t> updatedTransactions = deleteTransfersForAddress(address, deletedTransactions);
     deleteFromUncommitedTransactions(deletedTransactions);
 
-    m_walletsContainer.get<KeysIndex>().erase(it);
-
+    // Compute the random-access position BEFORE erasing: erase() frees the node `it` refers to, so
+    // project<>(it) and std::distance() must run while `it` is still valid (else heap-use-after-free).
     auto addressIndex = std::distance(
         m_walletsContainer.get<RandomAccessIndex>().begin(), m_walletsContainer.project<RandomAccessIndex>(it));
+
+    m_walletsContainer.get<KeysIndex>().erase(it);
 
     m_containerStorage.erase(std::next(m_containerStorage.begin(), addressIndex));
 
