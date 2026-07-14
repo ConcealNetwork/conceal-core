@@ -120,7 +120,7 @@ jobs:
 
       - name: Install dependencies
         run: |
-          pacman -U --noconfirm https://repo.msys2.org/mingw/mingw64/mingw-w64-x86_64-boost-1.85.0-4-any.pkg.tar.zst
+          pacman -S --noconfirm mingw-w64-x86_64-boost mingw-w64-x86_64-boost-libs
 
       - name: Prepare version
         shell: powershell
@@ -149,6 +149,12 @@ jobs:
           mv build/src/concealwallet.exe build/conceal
           mv build/src/optimizer.exe build/conceal
           mv build/src/walletd.exe build/conceal
+          cp /mingw64/bin/libboost_*.dll build/conceal
+          # Runtime DLLs for artifact users without MSYS2 on PATH.
+          if [ -f /mingw64/bin/libstdc++-6.dll ]; then cp /mingw64/bin/libstdc++-6.dll build/conceal; fi
+          if [ -f /mingw64/bin/libgcc_s_seh-1.dll ]; then cp /mingw64/bin/libgcc_s_seh-1.dll build/conceal; fi
+          if [ -f /mingw64/bin/libgcc_s_dw2-1.dll ]; then cp /mingw64/bin/libgcc_s_dw2-1.dll build/conceal; fi
+          if [ -f /mingw64/bin/libwinpthread-1.dll ]; then cp /mingw64/bin/libwinpthread-1.dll build/conceal; fi
           cp build/tests/*_tests.exe build/conceal
 
       - name: Upload To GH Artifacts
@@ -160,28 +166,47 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: core_tests
-        shell: powershell
+        shell: msys2 {0}
         run: |
+          set -euxo pipefail
+          export PATH="/mingw64/bin:${PATH}"
           cd build/conceal
+          pwd
+          ls -la
+          which g++ || true
+          echo "$PATH"
+          ldd ./core_tests.exe || true
           ./core_tests.exe --generate_and_play_test_data
 
       - name: difficulty_tests
-        shell: powershell
+        shell: msys2 {0}
         run: |
+          set -euxo pipefail
+          export PATH="/mingw64/bin:${PATH}"
           cp tests/Difficulty/data.txt build/conceal
           cd build/conceal
+          pwd
+          ls -la
+          ldd ./difficulty_tests.exe || true
           ./difficulty_tests.exe data.txt
 
       - name: performance_tests
-        shell: powershell
+        shell: msys2 {0}
         run: |
+          set -euxo pipefail
+          export PATH="/mingw64/bin:${PATH}"
           cd build/conceal
+          pwd
+          ls -la
+          ldd ./performance_tests.exe || true
           ./performance_tests.exe
 
       - name: unit_tests
-        shell: powershell
+        shell: msys2 {0}
         run: |
-          cd build/tests
+          set -euxo pipefail
+          export PATH="/mingw64/bin:${PATH}"
+          cd build
           ctest -R UnitTests --output-on-failure
 
   build-ubuntu22:
