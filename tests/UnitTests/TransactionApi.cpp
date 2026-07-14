@@ -101,6 +101,31 @@ namespace {
 
 }
 
+TEST(TransactionOutputScan, FindsKeyOutputAfterMultisignatureOutput) {
+  AccountKeys recipient = generateAccountKeys();
+  AccountKeys multisigRecipient1 = generateAccountKeys();
+  AccountKeys multisigRecipient2 = generateAccountKeys();
+
+  auto transaction = createTransaction();
+  transaction->addOutput(100, std::vector<AccountPublicAddress>{
+      multisigRecipient1.address, multisigRecipient2.address}, 2);
+  transaction->addOutput(200, recipient.address);
+
+  std::vector<uint32_t> apiOutputs;
+  uint64_t apiAmount = 0;
+  ASSERT_TRUE(transaction->findOutputsToAccount(
+      recipient.address, recipient.viewSecretKey, apiOutputs, apiAmount));
+  ASSERT_EQ(std::vector<uint32_t>({1}), apiOutputs);
+  ASSERT_EQ(200u, apiAmount);
+
+  Transaction rawTransaction = convertTx(*transaction);
+  std::vector<size_t> rawOutputs;
+  uint64_t rawAmount = 0;
+  ASSERT_TRUE(lookup_acc_outs(recipient, rawTransaction, rawOutputs, rawAmount));
+  ASSERT_EQ(std::vector<size_t>({1}), rawOutputs);
+  ASSERT_EQ(200u, rawAmount);
+}
+
 TEST_F(TransactionApi, createEmptyReload) {
   auto hash = tx->getTransactionHash();
   auto pk = tx->getTransactionPublicKey();

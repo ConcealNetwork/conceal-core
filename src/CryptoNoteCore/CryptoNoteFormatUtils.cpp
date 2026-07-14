@@ -450,7 +450,6 @@ bool lookup_acc_outs(const AccountKeys& acc, const Transaction& tx, std::vector<
 
 bool lookup_acc_outs(const AccountKeys& acc, const Transaction& tx, const PublicKey& tx_pub_key, std::vector<size_t>& outs, uint64_t& money_transfered) {
   money_transfered = 0;
-  size_t keyIndex = 0;
   size_t outputIndex = 0;
 
   KeyDerivation derivation;
@@ -459,14 +458,10 @@ bool lookup_acc_outs(const AccountKeys& acc, const Transaction& tx, const Public
   for (const TransactionOutput& o : tx.outputs) {
     assert(o.target.type() == typeid(KeyOutput) || o.target.type() == typeid(MultisignatureOutput));
     if (o.target.type() == typeid(KeyOutput)) {
-      if (is_out_to_acc(acc, boost::get<KeyOutput>(o.target), derivation, keyIndex)) {
+      if (is_out_to_acc(acc, boost::get<KeyOutput>(o.target), derivation, outputIndex)) {
         outs.push_back(outputIndex);
         money_transfered += o.amount;
       }
-
-      ++keyIndex;
-    } else if (o.target.type() == typeid(MultisignatureOutput)) {
-      keyIndex += boost::get<MultisignatureOutput>(o.target).keys.size();
     }
 
     ++outputIndex;

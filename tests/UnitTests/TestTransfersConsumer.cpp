@@ -978,6 +978,34 @@ TEST_F(TransfersConsumerTest, onNewBlocks_getsDepositOutputCorrectly) {
   EXPECT_EQ(TERM, transfers[0].term);
 }
 
+TEST_F(TransfersConsumerTest, onNewBlocks_findsKeyOutputAfterMultisignatureOutput) {
+  auto& container = addSubscription().getContainer();
+
+  AccountKeys multisigRecipient1 = generateAccountKeys();
+  AccountKeys multisigRecipient2 = generateAccountKeys();
+
+  const uint64_t KEY_AMOUNT = 84756;
+  std::shared_ptr<ITransaction> tx = createTransaction();
+  tx->addOutput(100, std::vector<AccountPublicAddress>{
+      multisigRecipient1.address, multisigRecipient2.address}, 2);
+  tx->addOutput(KEY_AMOUNT, m_accountKeys.address);
+
+  CompleteBlock block;
+  block.block = cn::Block();
+  block.block->timestamp = 1235;
+  block.transactions.push_back(tx);
+
+  m_consumer.onNewBlocks(&block, 0, 1);
+
+  std::vector<TransactionOutputInformation> transfers;
+  container.getOutputs(transfers, ITransfersContainer::IncludeAll);
+
+  ASSERT_EQ(1, transfers.size());
+  EXPECT_EQ(transaction_types::OutputType::Key, transfers[0].type);
+  EXPECT_EQ(KEY_AMOUNT, transfers[0].amount);
+  EXPECT_EQ(1u, transfers[0].outputInTransaction);
+}
+
 
 class AutoTimer {
 public:

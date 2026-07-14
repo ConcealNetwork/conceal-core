@@ -64,7 +64,6 @@ void findMyOutputs(
     return;
   }
 
-  size_t keyIndex = 0;
   size_t outputCount = tx.getOutputCount();
 
   for (size_t idx = 0; idx < outputCount; ++idx) {
@@ -76,8 +75,7 @@ void findMyOutputs(
       uint64_t amount;
       KeyOutput out;
       tx.getOutput(idx, out, amount);
-      checkOutputKey(derivation, out.key, keyIndex, idx, spendKeys, outputs);
-      ++keyIndex;
+      checkOutputKey(derivation, out.key, idx, idx, spendKeys, outputs);
 
     } else if (outType == transaction_types::OutputType::Multisignature) {
 
@@ -86,7 +84,6 @@ void findMyOutputs(
       tx.getOutput(idx, out, amount);
       for (const auto& key : out.keys) {
         checkOutputKey(derivation, key, idx, idx, spendKeys, outputs);
-        ++keyIndex;
      }
     }
   }
