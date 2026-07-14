@@ -718,7 +718,13 @@ namespace cn
             else if (i.type() == typeid(MultisignatureInput))
             {
               const auto &out = boost::get<MultisignatureInput>(i);
-              m_multisignatureOutputs[out.amount][out.outputIndex].isUsed = true;
+              auto amountOutputs = m_multisignatureOutputs.find(out.amount);
+              if (amountOutputs == m_multisignatureOutputs.end() || out.outputIndex >= amountOutputs->second.size())
+              {
+                logger(ERROR, BRIGHT_RED) << "Cache rebuild hit out-of-range multisignature input (amount=" << out.amount << ", outputIndex=" << out.outputIndex << ").";
+                return false;
+              }
+              amountOutputs->second[out.outputIndex].isUsed = true;
             }
           }
 
@@ -1433,6 +1439,14 @@ namespace cn
     if (!check_outs_valid(b.baseTransaction))
     {
       logger(INFO, BRIGHT_RED) << "miner transaction have invalid outputs";
+      return false;
+    }
+
+    /* Coinbase outputs must satisfy the same deposit rules as normal transaction
+       outputs. */
+    if (!check_tx_outputs(b.baseTransaction, height))
+    {
+      logger(INFO, BRIGHT_RED) << "miner transaction has invalid outputs in block " << get_block_hash(b);
       return false;
     }
 
@@ -2243,25 +2257,24 @@ namespace cn
           return false;
         }
 
-        if (!isInCheckpointZone(getCurrentBlockchainHeight()))
+        /* Always bind the input to real referenced outputs (index/amount/type
+           consistency) */
+        if (!check_tx_input(in_to_key, tx_prefix_hash, tx.signatures[inputIndex], pmax_used_block_height))
         {
-          if (!check_tx_input(in_to_key, tx_prefix_hash, tx.signatures[inputIndex], pmax_used_block_height))
-          {
-            logger(INFO, BRIGHT_WHITE) << "Failed to check input in transaction " << transactionHash;
-            return false;
-          }
+          logger(INFO, BRIGHT_WHITE) << "Failed to check input in transaction " << transactionHash;
+          return false;
         }
 
         ++inputIndex;
       }
       else if (txin.type() == typeid(MultisignatureInput))
       {
-        if (!isInCheckpointZone(getCurrentBlockchainHeight()))
+        /* Structural validation (existence, index bounds, double-spend, unlock,
+           term match, deposit maturity) always runs, even in the checkpoint
+           zone. Only the expensive signature crypto is skipped there. */
+        if (!validateInput(::boost::get<MultisignatureInput>(txin), transactionHash, tx_prefix_hash, tx.signatures[inputIndex]))
         {
-          if (!validateInput(::boost::get<MultisignatureInput>(txin), transactionHash, tx_prefix_hash, tx.signatures[inputIndex]))
-          {
-            return false;
-          }
+          return false;
         }
 
         ++inputIndex;
@@ -2938,13 +2951,41 @@ namespace cn
       }
     }
 
+    /* Defensive bounds check: never index (and thus grow via operator[]) the
+       multisignature container with an out-of-range amount/outputIndex.
+       validateInput already rejects such inputs, so reaching here indicates
+       corruption. Validate every multisignature input first so a later invalid
+       input cannot leave earlier ones marked used. */
     for (const auto &inv : transaction.tx.inputs)
     {
       if (inv.type() == typeid(MultisignatureInput))
       {
         const MultisignatureInput &in = ::boost::get<MultisignatureInput>(inv);
-        auto &amountOutputs = m_multisignatureOutputs[in.amount];
-        amountOutputs[in.outputIndex].isUsed = true;
+        auto amountOutputs = m_multisignatureOutputs.find(in.amount);
+        if (amountOutputs == m_multisignatureOutputs.end() || in.outputIndex >= amountOutputs->second.size())
+        {
+          logger(ERROR, BRIGHT_RED) << "Transaction pushed with out-of-range multisignature input (amount=" << in.amount << ", outputIndex=" << in.outputIndex << ").";
+
+          for (const auto &rollbackInv : transaction.tx.inputs)
+          {
+            if (rollbackInv.type() == typeid(KeyInput))
+            {
+              m_spent_keys.erase(::boost::get<KeyInput>(rollbackInv).keyImage);
+            }
+          }
+
+          m_transactionMap.erase(transactionHash);
+          return false;
+        }
+      }
+    }
+
+    for (const auto &inv : transaction.tx.inputs)
+    {
+      if (inv.type() == typeid(MultisignatureInput))
+      {
+        const MultisignatureInput &in = ::boost::get<MultisignatureInput>(inv);
+        m_multisignatureOutputs[in.amount][in.outputIndex].isUsed = true;
       }
     }
 
@@ -3073,13 +3114,19 @@ namespace cn
       else if (input.type() == typeid(MultisignatureInput))
       {
         const MultisignatureInput &in = ::boost::get<MultisignatureInput>(input);
-        auto &amountOutputs = m_multisignatureOutputs[in.amount];
-        if (!amountOutputs[in.outputIndex].isUsed)
+        auto amountOutputs = m_multisignatureOutputs.find(in.amount);
+        if (amountOutputs == m_multisignatureOutputs.end() || in.outputIndex >= amountOutputs->second.size())
+        {
+          logger(ERROR, BRIGHT_RED) << "Blockchain consistency broken - out-of-range multisignature input on pop (amount=" << in.amount << ", outputIndex=" << in.outputIndex << ").";
+          continue;
+        }
+
+        if (!amountOutputs->second[in.outputIndex].isUsed)
         {
           logger(ERROR, BRIGHT_RED) << "Blockchain consistency broken - multisignature output not marked as used.";
         }
 
-        amountOutputs[in.outputIndex].isUsed = false;
+        amountOutputs->second[in.outputIndex].isUsed = false;
       }
     }
 
@@ -3156,6 +3203,13 @@ namespace cn
     {
       logger(DEBUGGING) << "Transaction << " << transactionHash << " contains multisignature input that spends locked deposit output";
       return false;
+    }
+
+    /* All structural checks above always run. Only the expensive signature
+       verification is skipped inside the checkpoint zone (fast sync). */
+    if (isInCheckpointZone(getCurrentBlockchainHeight()))
+    {
+      return true;
     }
 
     size_t inputSignatureIndex = 0;

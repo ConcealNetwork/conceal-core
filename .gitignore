@@ -8,6 +8,7 @@ Release/
 Debug/
 CMakeFiles/
 .vscode/
+.cursor/
 
 # Mac OS
 *.DS_Store
@@ -26,3 +27,6 @@ compile_commands.json
 cmake-build*
 
 .cursorrules
+
+# Local / optional third-party trees
+external/FTXUI/

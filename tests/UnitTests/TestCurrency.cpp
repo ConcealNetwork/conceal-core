@@ -244,6 +244,75 @@ TEST_F(CurrencyTest, getTransactionFeeBaseTransaction)
   }
 }
 
+// --- Deposit / checkpoint inflation hardening ---
+
+// Supply-inflation vector: a MultisignatureInput carrying a near-uint32-max
+// term must yield zero interest
+TEST_F(CurrencyTest, overlongDepositTermYieldsNoInterest)
+{
+  const uint32_t forgedTerm = 4294590000u; // far above depositMaxTermV1
+  Transaction tx;
+  tx.inputs.emplace_back(MultisignatureInput{defaultCurrency.depositMinAmount() * 6, 1, 4, forgedTerm});
+  for (auto h : heights)
+  {
+    ASSERT_EQ(defaultCurrency.calculateTotalTransactionInterest(tx, h), 0);
+  }
+}
+
+// The spendable input amount must not gain interest for an out-of-range term.
+TEST_F(CurrencyTest, overlongDepositTermInputAmountHasNoInterest)
+{
+  const uint32_t forgedTerm = 4294590000u;
+  const uint64_t amount = defaultCurrency.depositMinAmount() * 6;
+  for (auto h : heights)
+  {
+    ASSERT_EQ(defaultCurrency.getTransactionInputAmount(MultisignatureInput{amount, 1, 4, forgedTerm}, h), amount);
+  }
+}
+
+// A legal deposit term (<= depositMaxTermV1) is unaffected by the gate.
+TEST_F(CurrencyTest, legalDepositTermInterestUnchanged)
+{
+  auto currency = builder.depositMaxTotalRate(10).depositMinTotalRateFactor(10).depositMinTerm(1).depositMaxTerm(501).depositMaxTermV1(500).currency();
+  Transaction tx;
+  tx.inputs.emplace_back(MultisignatureInput{fixed_amount, 1, 4, 400});
+  for (auto h : heights)
+  {
+    ASSERT_EQ(currency.calculateTotalTransactionInterest(tx, h), currency.calculateInterest(fixed_amount, 400, h - 400));
+    ASSERT_GT(currency.calculateInterest(fixed_amount, 400, h - 400), 0u);
+  }
+}
+
+// calculateInterest clamps an out-of-range term to depositMaxTermV1 rather than
+// scaling interest linearly with the forged term.
+TEST_F(CurrencyTest, calculateInterestClampsOverlongTerm)
+{
+  auto currency = builder.depositMaxTotalRate(10).depositMinTotalRateFactor(10).depositMinTerm(1).depositMaxTerm(501).depositMaxTermV1(500).currency();
+  for (auto h : heights)
+  {
+    ASSERT_EQ(currency.calculateInterest(fixed_amount, 600, h), currency.calculateInterest(fixed_amount, 500, h));
+    ASSERT_EQ(currency.calculateInterest(fixed_amount, 4294590000u, h), currency.calculateInterest(fixed_amount, 500, h));
+  }
+}
+
+// Coinbase-creation gap: a deposit (multisignature) output with an illegal term
+// must be rejected by validateOutput, which prevalidate_miner_transaction now
+// enforces on the coinbase as well.
+TEST_F(CurrencyTest, validateOutputRejectsIllegalDepositTerm)
+{
+  const uint32_t height = 2115000; // post depositHeightV4
+  const uint64_t amount = defaultCurrency.depositMinAmount() * 6;
+
+  // Forged near-uint32-max term -> rejected.
+  ASSERT_FALSE(defaultCurrency.validateOutput(amount, MultisignatureOutput{{}, 1, 4294590000u}, height));
+
+  // Legal one-year term -> accepted.
+  ASSERT_TRUE(defaultCurrency.validateOutput(amount, MultisignatureOutput{{}, 1, defaultCurrency.depositMaxTermV3()}, height));
+
+  // Non-deposit output (term 0) -> accepted.
+  ASSERT_TRUE(defaultCurrency.validateOutput(amount, MultisignatureOutput{{}, 1, 0}, height));
+}
+
 const size_t TEST_FUSION_TX_MAX_SIZE = 6000;
 const size_t TEST_FUSION_TX_MIN_INPUT_COUNT = 6;
 const size_t TEST_FUSION_TX_MIN_IN_OUT_COUNT_RATIO = 3;
