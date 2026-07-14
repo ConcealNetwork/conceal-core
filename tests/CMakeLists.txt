@@ -13,6 +13,7 @@ file(GLOB_RECURSE SystemTests System/*)
 file(GLOB_RECURSE TestGenerator TestGenerator/*)
 file(GLOB_RECURSE TransfersTests TransfersTests/*)
 file(GLOB_RECURSE UnitTests UnitTests/*)
+list(APPEND UnitTests ../src/ChainAudit/ChainAudit.cpp)
 
 file(GLOB_RECURSE CryptoNoteProtocol ../src/CryptoNoteProtocol/*)
 file(GLOB_RECURSE P2p ../src/P2p/*)
