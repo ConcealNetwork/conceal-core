@@ -19,6 +19,7 @@
 
 #include <System/ErrorMessage.h>
 #include <cassert>
+#include <cerrno>
 #include <fcntl.h>
 #include <stdexcept>
 #include <string.h>
@@ -182,7 +183,11 @@ void Dispatcher::dispatch() {
       if(((event.events & (EPOLLIN | EPOLLOUT)) != 0) && contextPair->readContext == nullptr && contextPair->writeContext == nullptr) {
         uint64_t buf;
         auto transferred = read(remoteSpawnEvent, &buf, sizeof buf);
-        if(transferred == -1) {
+        // The remoteSpawnEvent is a level-triggered, O_NONBLOCK eventfd drained from both
+        // dispatch() and yield(); a concurrent drain can make this read() return EAGAIN/EWOULDBLOCK
+        // (errno 11). That is benign (queued procedures are still drained under the mutex below), so
+        // treat it as "already drained" instead of aborting the process.
+        if(transferred == -1 && errno != EAGAIN && errno != EWOULDBLOCK) {
             throw std::runtime_error("Dispatcher::dispatch, read(remoteSpawnEvent) failed, " + lastErrorMessage());
         }
 
@@ -311,8 +316,12 @@ void Dispatcher::yield() {
         if(((events[i].events & (EPOLLIN | EPOLLOUT)) != 0) && contextPair->readContext == nullptr && contextPair->writeContext == nullptr) {
           uint64_t buf;
           auto transferred = read(remoteSpawnEvent, &buf, sizeof buf);
-          if(transferred == -1) {
-            throw std::runtime_error("Dispatcher::dispatch, read(remoteSpawnEvent) failed, " + lastErrorMessage());
+          // The remoteSpawnEvent is a level-triggered, O_NONBLOCK eventfd drained from both
+          // dispatch() and yield(); a concurrent drain can make this read() return EAGAIN/EWOULDBLOCK
+          // (errno 11). That is benign (queued procedures are still drained under the mutex below), so
+          // treat it as "already drained" instead of aborting the process.
+          if(transferred == -1 && errno != EAGAIN && errno != EWOULDBLOCK) {
+            throw std::runtime_error("Dispatcher::yield, read(remoteSpawnEvent) failed, " + lastErrorMessage());
           }
 
           MutextGuard guard(*reinterpret_cast<pthread_mutex_t*>(this->mutex));
