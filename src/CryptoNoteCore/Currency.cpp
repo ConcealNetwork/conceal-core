@@ -247,6 +247,11 @@ namespace cn
 
   uint64_t Currency::calculateInterest(uint64_t amount, uint32_t term, uint32_t lockHeight) const
   {
+    /* Defense-in-depth: clamp before any interest path selection. */
+    if (term > m_depositMaxTermV1)
+    {
+      term = m_depositMaxTermV1;
+    }
 
     /* deposits 3.0 and investments 1.0 */
     if (term % m_depositMinTermV3 == 0 && lockHeight > m_depositHeightV3)
@@ -265,7 +270,17 @@ namespace cn
       return calculateInterestV2(amount, term);
     }
 
-    uint64_t a = static_cast<uint64_t>(term) * m_depositMaxTotalRate - m_depositMinTotalRateFactor;
+    /* term * rate must exceed the min-rate factor; otherwise the unsigned
+       subtract underflows and the early MULTIPLIER_FACTOR path can assert /
+       produce nonsense interest. Mainnet uses factor 0 so this is a no-op
+       there; Deposit core-tests set factor 100 with depositMinTerm 10. */
+    const uint64_t termRate = static_cast<uint64_t>(term) * m_depositMaxTotalRate;
+    if (termRate < m_depositMinTotalRateFactor)
+    {
+      return 0;
+    }
+
+    uint64_t a = termRate - m_depositMinTotalRateFactor;
     uint64_t bHi;
     uint64_t bLo = mul128(amount, a, &bHi);
     uint64_t cHi;
@@ -280,7 +295,12 @@ namespace cn
     if (lockHeight <= cn::parameters::END_MULTIPLIER_BLOCK)
     {
       interestLo = mul128(cLo, cn::parameters::MULTIPLIER_FACTOR, &interestHi);
-      assert(interestHi == 0);
+      if (interestHi != 0)
+      {
+        /* Saturate instead of aborting on overflow (debug assert was too
+           brittle for adversarial / misconfigured factor+amount combos). */
+        return std::numeric_limits<uint64_t>::max();
+      }
     }
     else
     {
@@ -408,6 +428,14 @@ namespace cn
 
   uint64_t Currency::getInterestForInput(const MultisignatureInput &input, uint32_t height) const
   {
+    /* Reject terms that could never have originated from a valid deposit
+       output. The largest legal deposit term across all eras is
+       m_depositMaxTermV1. */
+    if (input.term == 0 || input.term > m_depositMaxTermV1)
+    {
+      return 0;
+    }
+
     uint32_t lockHeight = height - input.term;
     if (height == m_blockWithMissingInterest)
     {
