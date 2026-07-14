@@ -628,13 +628,21 @@ bool conceal_wallet::init(const boost::program_options::variables_map& vm) {
     {
       logger(WARNING, BRIGHT_RED) << "Couldn't write wallet address file: " + walletAddressFile;
     }
-  } else {    
+  } else {
     m_wallet.reset(new WalletGreen(m_dispatcher, m_currency, *m_node, logManager));
+
+    // Resolve the same way generation does (prepareFileNames appends ".wallet" when no extension is
+    // given) so "--wallet-file foo" reopens the "foo.wallet" file that "--generate-new-wallet foo"
+    // created. Without this, a bare-name reopen tries to open a non-existent path and WalletGreen::load
+    // reads EOF and throws "Failed to read wallet version: Wrong version".
+    std::string keys_file_unused;
+    std::string walletFileName;
+    WalletHelper::prepareFileNames(m_wallet_file_arg, keys_file_unused, walletFileName);
 
     try
     {
-      m_wallet->load(m_wallet_file_arg, pwd_container.password());
-      m_wallet_file = m_wallet_file_arg;
+      m_wallet->load(walletFileName, pwd_container.password());
+      m_wallet_file = walletFileName;
       success_msg_writer(true) << "Wallet loaded";
     }
     catch (const std::exception &e)
