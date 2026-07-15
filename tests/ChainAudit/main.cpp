@@ -43,7 +43,8 @@ namespace
     std::cout
         << "conceal-chain-audit --data-dir <path> [--start N] [--end N] [--testnet] [--include-info] [--out file]\n"
         << "\n"
-        << "Read-only monetary scanner for local Conceal chain data.\n";
+        << "Read-only monetary scanner for local Conceal chain data.\n"
+        << "Classic SwappedVector data dirs only; refuses --data-dir that contains mdbx_blocks.\n";
   }
 
   bool parseUint32(const std::string &value, uint32_t &out)
@@ -261,6 +262,23 @@ int main(int argc, char **argv)
     const uint32_t checkpointZoneEnd =
         checkpointHeights.empty() ? 0 : checkpointHeights.back();
     core.set_checkpoints(std::move(checkpoints));
+
+    // This SwappedVector build must not open MDBX data dirs: core.init() would create/overwrite
+    // classic blocks.dat beside mdbx_blocks (empty chain / height 1) instead of reading MDBX.
+    {
+      const std::string mdbxBlocks = cfg.dataDir + "/mdbx_blocks";
+      std::ifstream mdbxProbe(mdbxBlocks.c_str());
+      if (mdbxProbe.good())
+      {
+        std::cerr
+            << mdbxBlocks << " found. \n"
+            << "This conceal-chain-audit build uses SwappedVector storage; "
+               "not suitable for an MDBX chain. "
+               "Point --data-dir at a classic SwappedVector data dir."
+            << std::endl;
+        return 2;
+      }
+    }
 
     cn::MinerConfig minerConfig;
     if (!core.init(coreConfig, minerConfig, true))
