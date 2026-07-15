@@ -1,6 +1,6 @@
 add_definitions(-DMINIUPNP_STATICLIB)
 
-include_directories(${gtest_SOURCE_DIR}/include ${gtest_SOURCE_DIR} ../version ${CMAKE_CURRENT_SOURCE_DIR})
+include_directories(${gtest_SOURCE_DIR}/include ${gtest_SOURCE_DIR} ../version)
 
 file(GLOB_RECURSE CoreTests CoreTests/*)
 file(GLOB_RECURSE CryptoTests crypto/*)
@@ -33,6 +33,10 @@ add_executable(SystemTests ${SystemTests})
 add_executable(TransfersTests ${TransfersTests})
 add_executable(UnitTests ${UnitTests})
 add_executable(ChainAudit ChainAudit/main.cpp ChainAudit/ChainAudit.cpp)
+# Keep tests/ off the global include path: on Windows, #include <io.h> (CRT) would
+# otherwise resolve to tests/Io.h (case-insensitive) and redefine its helpers.
+target_include_directories(UnitTests PRIVATE ${CMAKE_CURRENT_SOURCE_DIR})
+target_include_directories(ChainAudit PRIVATE ${CMAKE_CURRENT_SOURCE_DIR})
 
 add_executable(DifficultyTests Difficulty/Difficulty.cpp)
 add_executable(HashTargetTests HashTarget.cpp)
