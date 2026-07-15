@@ -276,8 +276,18 @@ void Dispatcher::remoteSpawn(std::function<void()>&& procedure) {
     remoteSpawningProcedures.push(std::move(procedure));
   }
   uint64_t one = 1;
-  auto transferred = write(remoteSpawnEvent, &one, sizeof one);
-  if(transferred == - 1) {
+  for (;;) {
+    // Unlike the drained reads in dispatch()/yield(), EAGAIN here means the eventfd counter
+    // would overflow (a stuck consumer), not "already signaled" — that must not be swallowed.
+    auto transferred = write(remoteSpawnEvent, &one, sizeof one);
+    if (transferred == static_cast<ssize_t>(sizeof one)) {
+      break;
+    }
+
+    if (transferred == -1 && errno == EINTR) {
+      continue;
+    }
+
     throw std::runtime_error("Dispatcher::remoteSpawn, write failed, " + lastErrorMessage());
   }
 }
