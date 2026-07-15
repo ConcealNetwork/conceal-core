@@ -11,7 +11,7 @@
 
 #include "crypto/hash.h"
 #include "crypto/keccak.c"
-#include "../Io.h"
+#include "../TestIo.h"
 
 using namespace std;
 typedef crypto::Hash chash;
