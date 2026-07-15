@@ -1670,6 +1670,12 @@ namespace cn
       throw std::system_error(make_error_code(error::OBJECT_NOT_FOUND));
     }
 
+    // Compute the random-access position right after find(), while `it` is guaranteed valid:
+    // erase() below frees the node `it` refers to, so project<>(it)/distance() must not run after
+    // any code that could erase from m_walletsContainer (else heap-use-after-free).
+    auto addressIndex = std::distance(
+        m_walletsContainer.get<RandomAccessIndex>().begin(), m_walletsContainer.project<RandomAccessIndex>(it));
+
     stopBlockchainSynchronizer();
 
     m_actualBalance -= it->actualBalance;
@@ -1681,11 +1687,6 @@ namespace cn
     std::vector<size_t> deletedTransactions;
     std::vector<size_t> updatedTransactions = deleteTransfersForAddress(address, deletedTransactions);
     deleteFromUncommitedTransactions(deletedTransactions);
-
-    // Compute the random-access position BEFORE erasing: erase() frees the node `it` refers to, so
-    // project<>(it) and std::distance() must run while `it` is still valid (else heap-use-after-free).
-    auto addressIndex = std::distance(
-        m_walletsContainer.get<RandomAccessIndex>().begin(), m_walletsContainer.project<RandomAccessIndex>(it));
 
     m_walletsContainer.get<KeysIndex>().erase(it);
 
