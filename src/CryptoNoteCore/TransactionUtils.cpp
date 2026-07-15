@@ -123,7 +123,6 @@ bool findOutputsToAccount(const cn::TransactionPrefix& transaction, const Accoun
   crypto::PublicKey txPubKey = getTransactionPublicKeyFromExtra(transaction.extra);
 
   amount = 0;
-  size_t keyIndex = 0;
   uint32_t outputIndex = 0;
 
   crypto::KeyDerivation derivation;
@@ -132,18 +131,16 @@ bool findOutputsToAccount(const cn::TransactionPrefix& transaction, const Accoun
   for (const TransactionOutput& o : transaction.outputs) {
     assert(o.target.type() == typeid(KeyOutput) || o.target.type() == typeid(MultisignatureOutput));
     if (o.target.type() == typeid(KeyOutput)) {
-      if (is_out_to_acc(keys, boost::get<KeyOutput>(o.target), derivation, keyIndex)) {
+      if (is_out_to_acc(keys, boost::get<KeyOutput>(o.target), derivation, static_cast<size_t>(outputIndex))) {
         out.push_back(outputIndex);
         amount += o.amount;
       }
-      ++keyIndex;
     } else if (o.target.type() == typeid(MultisignatureOutput)) {
       const auto& target = boost::get<MultisignatureOutput>(o.target);
       for (const auto& key : target.keys) {
         if (isOutToKey(keys.address.spendPublicKey, key, derivation, static_cast<size_t>(outputIndex))) {
           out.push_back(outputIndex);
         }
-        ++keyIndex;
       }
     }
     ++outputIndex;
