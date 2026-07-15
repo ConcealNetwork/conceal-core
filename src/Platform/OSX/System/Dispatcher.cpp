@@ -286,6 +286,10 @@ void Dispatcher::spawn(std::function<void()>&& procedure) {
   pushContext(context);
 }
 
+bool Dispatcher::isOwnerThread() const {
+  return std::this_thread::get_id() == m_ownerThreadId;
+}
+
 void Dispatcher::yield() {
   struct timespec zeroTimeout = { 0, 0 };
   int updatesCounter = 0;

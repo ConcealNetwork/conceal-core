@@ -60,6 +60,7 @@ public:
   void pushContext(NativeContext* context);
   void remoteSpawn(std::function<void()>&& procedure);
   void yield();
+  bool isOwnerThread() const;
 
   // Platform-specific
   void addTimer(uint64_t time, NativeContext* context);

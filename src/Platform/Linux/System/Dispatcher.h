@@ -22,6 +22,7 @@
 #include <functional>
 #include <queue>
 #include <stack>
+#include <thread>
 #ifndef __GLIBC__
 #include <bits/reg.h>
 #endif
@@ -76,6 +77,7 @@ public:
   void pushContext(NativeContext* context);
   void remoteSpawn(std::function<void()>&& procedure);
   void yield();
+  bool isOwnerThread() const;
 
   // system-dependent
   int getEpoll() const;
@@ -100,6 +102,9 @@ public:
 
 private:
   void spawn(std::function<void()>&& procedure);
+  // Thread that constructed (and therefore pumps) this dispatcher; every API
+  // except remoteSpawn() must only be called from it.
+  std::thread::id m_ownerThreadId = std::this_thread::get_id();
   int epoll;
   alignas(void*) uint8_t mutex[SIZEOF_PTHREAD_MUTEX_T];
   int remoteSpawnEvent;

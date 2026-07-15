@@ -141,6 +141,7 @@ protected:
   void throwIfStopped() const;
   void throwIfTrackingMode() const;
   void doShutdown();
+  void waitForRemoteSpawns();
   void clearCaches(bool clearTransactions, bool clearCachedData);
   void clearCacheAndShutdown();
   void convertAndLoadWalletFile(const std::string &path, std::ifstream &&walletFileStream);

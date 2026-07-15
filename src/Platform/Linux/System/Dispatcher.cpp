@@ -312,6 +312,10 @@ void Dispatcher::spawn(std::function<void()>&& procedure) {
   pushContext(context);
 }
 
+bool Dispatcher::isOwnerThread() const {
+  return std::this_thread::get_id() == m_ownerThreadId;
+}
+
 void Dispatcher::yield() {
   for(;;){
     epoll_event events[16];

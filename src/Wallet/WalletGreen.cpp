@@ -8,8 +8,11 @@
 #include "WalletGreen.h"
 
 #include <algorithm>
+#include <chrono>
 #include <ctime>
 #include <cassert>
+#include <future>
+#include <memory>
 #include <numeric>
 #include <random>
 #include <set>
@@ -250,7 +253,14 @@ namespace cn
       doShutdown();
     }
 
-    m_dispatcher.yield(); //let remote spawns finish
+    try
+    {
+      waitForRemoteSpawns();
+    }
+    catch (const std::exception &e)
+    {
+      m_logger(WARNING, BRIGHT_YELLOW) << "Failed to drain remote spawns on destruction: " << e.what();
+    }
   }
 
   void WalletGreen::initialize(
@@ -681,7 +691,38 @@ namespace cn
     throwIfNotInitialized();
     doShutdown();
 
-    m_dispatcher.yield(); //let remote spawns finish
+    waitForRemoteSpawns();
+  }
+
+  /* Let remote spawns queued before shutdown finish, so none of them touches
+     this wallet after it is destroyed. yield() is only legal on the thread
+     that owns (pumps) the dispatcher; calling it from another thread — e.g.
+     the GUI thread in conceal-desktop closing the wallet while the node
+     thread pumps the same dispatcher — races the event loop and can hang or
+     corrupt state. From a foreign thread, queue a barrier through
+     remoteSpawn() (the only thread-safe dispatcher call) and wait for the
+     owner thread to execute it instead. */
+  void WalletGreen::waitForRemoteSpawns()
+  {
+    if (m_dispatcher.isOwnerThread())
+    {
+      m_dispatcher.yield();
+      return;
+    }
+
+    /* shared_ptr keeps the barrier alive even if the queued procedure runs
+       after a timeout below. */
+    auto barrier = std::make_shared<std::promise<void>>();
+    auto barrierReached = barrier->get_future();
+    m_dispatcher.remoteSpawn([barrier] { barrier->set_value(); });
+
+    /* Bounded wait: if the owner thread is no longer pumping the dispatcher,
+       a plain wait() would freeze the caller forever — the very hang this
+       path is meant to prevent. */
+    if (barrierReached.wait_for(std::chrono::seconds(10)) != std::future_status::ready)
+    {
+      m_logger(WARNING, BRIGHT_YELLOW) << "Timed out draining remote spawns; dispatcher is not being pumped";
+    }
   }
 
   void WalletGreen::initBlockchain(const crypto::PublicKey &viewPublicKey)

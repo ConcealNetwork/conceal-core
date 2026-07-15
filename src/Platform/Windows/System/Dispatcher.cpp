@@ -272,6 +272,10 @@ void Dispatcher::spawn(std::function<void()>&& procedure) {
   pushContext(context);
 }
 
+bool Dispatcher::isOwnerThread() const {
+  return GetCurrentThreadId() == threadId;
+}
+
 void Dispatcher::yield() {
   assert(GetCurrentThreadId() == threadId);
   for (;;) {
