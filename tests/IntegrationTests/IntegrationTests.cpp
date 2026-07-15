@@ -146,7 +146,7 @@ public:
   }
 
   platform_system::Dispatcher dispatcher;
-  std::string walletPassword = "pass";
+  std::string walletPassword = Tests::testWalletPassword();
   cn::Currency currency;
   logging::ConsoleLogger log;
   logging::LoggerRef logger;

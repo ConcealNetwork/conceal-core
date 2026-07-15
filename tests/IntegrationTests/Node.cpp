@@ -24,6 +24,7 @@
 #include "../IntegrationTestLib/TestNetwork.h"
 #include "../IntegrationTestLib/NodeObserver.h"
 #include "../IntegrationTestLib/NodeCallback.h"
+#include "../IntegrationTestLib/TestWalletPassword.h"
 
 #include "BaseTests.h"
 
@@ -203,7 +204,9 @@ TEST_F(NodeTest, generateBlockchain)
     std::unique_ptr<INode> mainNode;
     ASSERT_TRUE(daemon.makeINode(mainNode));
 
-    std::string password = "pass";
+    // Fixture wallet is reopened by other tests; set CCX_TEST_WALLET_PASSWORD
+    // consistently when regenerating or reusing blockchain fixtures.
+    std::string password = Tests::testWalletPassword();
     cn::WalletGreen wallet(dispatcher, currency, *mainNode, logger);
 
     std::string walletFile("wallet.bin", std::ios::binary | std::ios::trunc);
@@ -255,7 +258,7 @@ TEST_F(NodeTest, addMoreBlocks)
 
     auto startHeight = daemon.getLocalHeight();
 
-    std::string password = "pass";
+    std::string password = Tests::testWalletPassword();
     cn::WalletGreen wallet(dispatcher, currency, *mainNode, logger);
 
     {

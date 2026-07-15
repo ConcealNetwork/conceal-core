@@ -25,6 +25,7 @@
 #include "INode.h"
 #include "TestNode.h"
 #include "NetworkConfiguration.h"
+#include "TestWalletPassword.h"
 
 namespace Tests {
   namespace common {
@@ -140,7 +141,7 @@ namespace Tests {
       void startNode(size_t index);
       void stopNode(size_t index);
 
-      bool makeWallet(std::unique_ptr<cn::IWalletLegacy> & wallet, std::unique_ptr<cn::INode>& node, const std::string& password = "pass");
+      bool makeWallet(std::unique_ptr<cn::IWalletLegacy> & wallet, std::unique_ptr<cn::INode>& node, const std::string& password = testWalletPassword());
       bool mineBlocks(TestNode& node, const cn::AccountPublicAddress& address, size_t blockCount);
       bool mineBlock(std::unique_ptr<cn::IWalletLegacy>& wallet);
       bool mineBlock();
