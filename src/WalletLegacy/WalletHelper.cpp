@@ -96,7 +96,11 @@ void WalletHelper::IWalletRemoveObserverGuard::removeObserver() {
 }
 
 void WalletHelper::storeWallet(cn::IWalletLegacy& wallet, const std::string& walletFilename) {
-  boost::filesystem::path tempFile = boost::filesystem::unique_path(walletFilename + ".tmp.%%%%-%%%%");
+  // Fixed sibling name used only as rename destination for the previous wallet.
+  // Avoids unique_path TOCTOU (CWE-377); rename replaces any leftover node at tempFile.
+  boost::filesystem::path tempFile = walletFilename + ".tmp";
+  boost::system::error_code ignoreRemove;
+  boost::filesystem::remove(tempFile, ignoreRemove);
 
   if (boost::filesystem::exists(walletFilename)) {
     boost::filesystem::rename(walletFilename, tempFile);

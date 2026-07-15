@@ -11,6 +11,8 @@
 #include <boost/filesystem.hpp>
 #include <boost/utility/value_init.hpp>
 
+#include "SecureTempDirectory.h"
+
 #include "Common/StringTools.h"
 #include "CryptoNoteCore/Account.h"
 #include "CryptoNoteCore/Checkpoints.h"
@@ -35,12 +37,8 @@ namespace
 
     void SetUp() override
     {
-      dataDir = boost::filesystem::temp_directory_path() /
-                boost::filesystem::unique_path("ccx-l1-money-safety-%%%%%%%%");
-
-      boost::system::error_code ec;
-      boost::filesystem::create_directories(dataDir, ec);
-      ASSERT_FALSE(ec) << ec.message();
+      ASSERT_NO_THROW(
+          dataDir = unit_test::createSecureTempDirectory("ccx-l1-money-safety-"));
 
       miner.generate();
 

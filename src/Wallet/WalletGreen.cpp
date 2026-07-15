@@ -973,12 +973,16 @@ namespace cn
     walletFileStream.close();
 
     boost::filesystem::path bakPath = path + ".backup";
-    boost::filesystem::path tmpPath = boost::filesystem::unique_path(path + ".tmp.%%%%-%%%%");
+    // Fixed sibling name + O_EXCL create avoids unique_path TOCTOU (CWE-377).
+    boost::filesystem::path tmpPath = path + ".tmp";
     if (boost::filesystem::exists(bakPath))
     {
-      m_logger(INFO) << "Wallet backup already exists! Creating random file name backup.";
-      bakPath = boost::filesystem::unique_path(path + ".%%%%-%%%%" + ".backup");
+      m_logger(INFO) << "Wallet backup already exists! Creating timestamped backup.";
+      bakPath = path + "." + std::to_string(static_cast<long long>(time(nullptr))) + ".backup";
     }
+
+    boost::system::error_code ignoreRemove;
+    boost::filesystem::remove(tmpPath, ignoreRemove);
 
     tools::ScopeExit tmpFileDeleter([&tmpPath] {
       boost::system::error_code ignore;

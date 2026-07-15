@@ -789,11 +789,14 @@ void FileMappedVector<T>::atomicUpdate0(uint64_t newCapacity, uint64_t newPrefix
   }
 
   boost::filesystem::path bakPath = m_path + ".bak";
-  boost::filesystem::path tmpPath = boost::filesystem::unique_path(m_path + ".tmp.%%%%-%%%%");
+  // Fixed sibling name + O_EXCL create (via MemoryMappedFile) avoids unique_path TOCTOU.
+  boost::filesystem::path tmpPath = m_path + ".tmp";
 
+  boost::system::error_code ignoreRemove;
   if (boost::filesystem::exists(bakPath)) {
     boost::filesystem::remove(bakPath);
   }
+  boost::filesystem::remove(tmpPath, ignoreRemove);
 
   tools::ScopeExit tmpFileDeleter([&tmpPath] {
     boost::system::error_code ignore;

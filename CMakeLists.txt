@@ -4,7 +4,7 @@ include(CheckCXXCompilerFlag)
 set(VERSION "6.7.5")
 set(VERSION_BUILD_NO "Trebopala")
 # Packaged from main commits
-set(COMMIT d097aad)
+set(COMMIT 5f6de8b)
 set(REFS " (HEAD -> master)")
 
 set(CMAKE_CXX_STANDARD 11)
