@@ -1,10 +1,10 @@
 cmake_minimum_required(VERSION 3.5)
 
 include(CheckCXXCompilerFlag)
-set(VERSION "6.7.4")
+set(VERSION "6.7.5")
 set(VERSION_BUILD_NO "Trebopala")
 # Packaged from main commits
-set(COMMIT 1db6e66)
+set(COMMIT 5f6de8b)
 set(REFS " (HEAD -> master)")
 
 set(CMAKE_CXX_STANDARD 11)
@@ -150,15 +150,20 @@ if(POLICY CMP0167)
 endif()
 
 if(STATIC)
-  set(Boost_NO_BOOST_CMAKE ON)
-  set(Boost_USE_STATIC_LIBS ON)
-  set(Boost_USE_STATIC_RUNTIME ON)
+  if(MINGW)
+    # MSYS2 Boost is shared-only (.dll.a); STATIC=ON is for libgcc/winpthread, not Boost.
+    set(Boost_USE_STATIC_LIBS OFF)
+  else()
+    set(Boost_NO_BOOST_CMAKE ON)
+    set(Boost_USE_STATIC_LIBS ON)
+    set(Boost_USE_STATIC_RUNTIME ON)
+  endif()
 endif()
 
 #set(Boost_DEBUG on)
 set(BOOST_COMPONENTS filesystem thread date_time chrono regex serialization program_options)
 
-if(APPLE)
+if(APPLE OR MINGW)
   find_package(Boost 1.55 COMPONENTS system ${BOOST_COMPONENTS})
   if(NOT Boost_FOUND)
     message(STATUS "Boost.System library not found; retrying without system component")

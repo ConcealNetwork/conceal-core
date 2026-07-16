@@ -973,12 +973,16 @@ namespace cn
     walletFileStream.close();
 
     boost::filesystem::path bakPath = path + ".backup";
-    boost::filesystem::path tmpPath = boost::filesystem::unique_path(path + ".tmp.%%%%-%%%%");
+    // Fixed sibling name + O_EXCL create avoids unique_path TOCTOU (CWE-377).
+    boost::filesystem::path tmpPath = path + ".tmp";
     if (boost::filesystem::exists(bakPath))
     {
-      m_logger(INFO) << "Wallet backup already exists! Creating random file name backup.";
-      bakPath = boost::filesystem::unique_path(path + ".%%%%-%%%%" + ".backup");
+      m_logger(INFO) << "Wallet backup already exists! Creating timestamped backup.";
+      bakPath = path + "." + std::to_string(static_cast<long long>(time(nullptr))) + ".backup";
     }
+
+    boost::system::error_code ignoreRemove;
+    boost::filesystem::remove(tmpPath, ignoreRemove);
 
     tools::ScopeExit tmpFileDeleter([&tmpPath] {
       boost::system::error_code ignore;
@@ -1670,6 +1674,12 @@ namespace cn
       throw std::system_error(make_error_code(error::OBJECT_NOT_FOUND));
     }
 
+    // Compute the random-access position right after find(), while `it` is guaranteed valid:
+    // erase() below frees the node `it` refers to, so project<>(it)/distance() must not run after
+    // any code that could erase from m_walletsContainer (else heap-use-after-free).
+    auto addressIndex = std::distance(
+        m_walletsContainer.get<RandomAccessIndex>().begin(), m_walletsContainer.project<RandomAccessIndex>(it));
+
     stopBlockchainSynchronizer();
 
     m_actualBalance -= it->actualBalance;
@@ -1683,9 +1693,6 @@ namespace cn
     deleteFromUncommitedTransactions(deletedTransactions);
 
     m_walletsContainer.get<KeysIndex>().erase(it);
-
-    auto addressIndex = std::distance(
-        m_walletsContainer.get<RandomAccessIndex>().begin(), m_walletsContainer.project<RandomAccessIndex>(it));
 
     m_containerStorage.erase(std::next(m_containerStorage.begin(), addressIndex));
 

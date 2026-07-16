@@ -543,6 +543,7 @@ ssdpDiscoverDevices(const char * const deviceTypes[],
 	struct sockaddr_storage sockudp_w;
 #else
 	int rv;
+	int sendret;
 	struct addrinfo hints, *servinfo;
 #endif
 #ifdef _WIN32
@@ -900,8 +901,12 @@ ssdpDiscoverDevices(const char * const deviceTypes[],
 		} else {
 			struct addrinfo *p;
 			for(p = servinfo; p; p = p->ai_next) {
-				n = sendto(sudp, bufr, n, 0, p->ai_addr, MSC_CAST_INT p->ai_addrlen);
-				if (n < 0) {
+				/* Use a dedicated variable for the result: reassigning `n`
+				 * (the message length) would let a prior failed sendto()
+				 * (-1) be reused as the length on the next iteration,
+				 * causing an out-of-bounds read of `bufr`. */
+				sendret = sendto(sudp, bufr, n, 0, p->ai_addr, MSC_CAST_INT p->ai_addrlen);
+				if (sendret < 0) {
 #ifdef DEBUG
 					char hbuf[NI_MAXHOST], sbuf[NI_MAXSERV];
 					if (getnameinfo(p->ai_addr, (socklen_t)p->ai_addrlen, hbuf, sizeof(hbuf), sbuf,

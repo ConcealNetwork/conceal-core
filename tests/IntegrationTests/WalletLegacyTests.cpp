@@ -10,6 +10,7 @@
 #include <System/Timer.h>
 #include "WalletLegacy/WalletLegacy.h"
 #include "WalletLegacyObserver.h"
+#include "../IntegrationTestLib/TestWalletPassword.h"
 
 using namespace Tests;
 using namespace cn;
@@ -32,7 +33,7 @@ TEST_F(WalletLegacyTests, checkNetworkShutdown)
     logging::ConsoleLogger m_logger;
     auto node = daemon.makeINode();
     WalletLegacy wallet(currency, *node, m_logger, true);
-    wallet.initAndGenerate("pass");
+    wallet.initAndGenerate(Tests::testWalletPassword());
 
     WalletLegacyObserver observer;
     wallet.addObserver(&observer);

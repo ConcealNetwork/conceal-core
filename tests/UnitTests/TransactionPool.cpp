@@ -9,6 +9,8 @@
 
 #include <boost/filesystem/operations.hpp>
 
+#include "SecureTempDirectory.h"
+
 #include "CryptoNoteCore/Account.h"
 #include "CryptoNoteCore/CryptoNoteFormatUtils.h"
 #include "CryptoNoteCore/CryptoNoteTools.h"
@@ -138,7 +140,7 @@ public:
 
 protected:
   virtual void SetUp() override {
-    m_configDir = boost::filesystem::temp_directory_path() / boost::filesystem::unique_path("test_data_%%%%%%%%%%%%");
+    m_configDir = unit_test::createSecureTempDirectory("test_data_");
   }
 
   virtual void TearDown() override {

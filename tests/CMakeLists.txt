@@ -13,6 +13,7 @@ file(GLOB_RECURSE SystemTests System/*)
 file(GLOB_RECURSE TestGenerator TestGenerator/*)
 file(GLOB_RECURSE TransfersTests TransfersTests/*)
 file(GLOB_RECURSE UnitTests UnitTests/*)
+list(APPEND UnitTests ChainAudit/ChainAudit.cpp)
 
 file(GLOB_RECURSE CryptoNoteProtocol ../src/CryptoNoteProtocol/*)
 file(GLOB_RECURSE P2p ../src/P2p/*)
@@ -31,6 +32,9 @@ add_executable(PerformanceTests ${PerformanceTests})
 add_executable(SystemTests ${SystemTests})
 add_executable(TransfersTests ${TransfersTests})
 add_executable(UnitTests ${UnitTests})
+add_executable(ChainAudit ChainAudit/main.cpp ChainAudit/ChainAudit.cpp)
+target_include_directories(UnitTests PRIVATE ${CMAKE_CURRENT_SOURCE_DIR})
+target_include_directories(ChainAudit PRIVATE ${CMAKE_CURRENT_SOURCE_DIR})
 
 add_executable(DifficultyTests Difficulty/Difficulty.cpp)
 add_executable(HashTargetTests HashTarget.cpp)
@@ -48,13 +52,14 @@ if (MSVC)
 endif ()
 target_link_libraries(TransfersTests IntegrationTestLibrary Wallet gtest_main InProcessNode NodeRpcProxy P2P Rpc Http BlockchainExplorer CryptoNoteCore Serialization System Logging Transfers Common crypto libminiupnpc-static ${Boost_LIBRARIES})
 target_link_libraries(UnitTests TestGenerator PaymentGate Wallet NodeRpcProxy InProcessNode P2P Rpc Http Transfers Serialization System CryptoNoteCore Logging Common crypto BlockchainExplorer gtest ${Boost_LIBRARIES})
+target_link_libraries(ChainAudit CryptoNoteCore Serialization System Logging Common crypto BlockchainExplorer ${Boost_LIBRARIES})
 
 target_link_libraries(DifficultyTests CryptoNoteCore Serialization crypto Logging Common ${Boost_LIBRARIES})
 target_link_libraries(HashTargetTests CryptoNoteCore crypto)
 target_link_libraries(HashTests crypto)
 
 
-add_custom_target(tests DEPENDS NodeRpcProxyTests PerformanceTests SystemTests UnitTests DifficultyTests HashTargetTests)
+add_custom_target(tests DEPENDS NodeRpcProxyTests PerformanceTests SystemTests UnitTests DifficultyTests HashTargetTests ChainAudit)
 
 set_property(TARGET
   tests
@@ -68,6 +73,7 @@ set_property(TARGET
   SystemTests
   TransfersTests
   UnitTests
+  ChainAudit
 
   DifficultyTests
   HashTargetTests
@@ -83,17 +89,20 @@ set_property(TARGET PerformanceTests PROPERTY OUTPUT_NAME "performance_tests")
 set_property(TARGET SystemTests PROPERTY OUTPUT_NAME "system_tests")
 set_property(TARGET TransfersTests PROPERTY OUTPUT_NAME "transfers_tests")
 set_property(TARGET UnitTests PROPERTY OUTPUT_NAME "unit_tests")
+set_property(TARGET ChainAudit PROPERTY OUTPUT_NAME "conceal-chain-audit")
 
 set_property(TARGET DifficultyTests PROPERTY OUTPUT_NAME "difficulty_tests")
 set_property(TARGET HashTargetTests PROPERTY OUTPUT_NAME "hash_target_tests")
 set_property(TARGET HashTests PROPERTY OUTPUT_NAME "hash_tests")
 
+add_dependencies(ChainAudit version)
 
 if(${CMAKE_SYSTEM_NAME} STREQUAL "Linux" OR APPLE AND NOT ANDROID)
   target_link_libraries(CoreTests -lresolv)
   target_link_libraries(IntegrationTests -lresolv)
   target_link_libraries(TransfersTests -lresolv)
   target_link_libraries(UnitTests -lresolv)
+  target_link_libraries(ChainAudit -lresolv)
 endif()
 
 include(CTest)
@@ -106,6 +115,7 @@ add_test(PerformanceTests performance_tests)
 add_test(SystemTests system_tests)
 add_test(TransfersTests transfers_tests)
 add_test(UnitTests unit_tests --gtest_filter=-WalletApi.*:WalletApi_makeTransaction.*:WalletApi_commitTransaction.*:WalletApi_rollbackUncommitedTransaction.*:tx_pool.TxPoolDoesNotAcceptInvalidFusionTransaction:TxPool_FillBlockTemplate.TxPoolAddsFusionTransactionsToBlockTemplateNoMoreThanLimit:TxPool_FillBlockTemplate.TxPoolContinuesToAddOrdinaryTransactionsUpTo125PerCentOfMedianAfterAddingFusionTransactions:WalletLegacyApi.sendSeveralTransactions)
+
 
 add_test(DifficultyTests difficulty_tests ${CMAKE_CURRENT_SOURCE_DIR}/Difficulty/data.txt)
 add_test(HashTargetTests hash_target_tests)

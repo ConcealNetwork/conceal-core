@@ -1019,18 +1019,16 @@ bool RpcServer::on_get_height(const COMMAND_RPC_GET_HEIGHT::request&, COMMAND_RP
 
 bool RpcServer::on_get_transactions(const COMMAND_RPC_GET_TRANSACTIONS::request& req, COMMAND_RPC_GET_TRANSACTIONS::response& res) {
   std::vector<Hash> vh;
+  vh.reserve(req.txs_hashes.size());
   for (const auto& tx_hex_str : req.txs_hashes) {
-    BinaryArray b;
-    if (!fromHex(tx_hex_str, b))
+    Hash txHash;
+    if (!parse_hash256(tx_hex_str, txHash))
     {
+      // Reject empty/odd/wrong-sized hex instead of fromHex→vector + reinterpret_cast on possibly null data.
       res.status = "Failed to parse hex representation of transaction hash";
       return true;
     }
-    if (b.size() != sizeof(Hash))
-    {
-      res.status = "Failed, size of data mismatch";
-    }
-    vh.push_back(*reinterpret_cast<const Hash*>(b.data()));
+    vh.push_back(txHash);
   }
   std::list<Hash> missed_txs;
   std::list<Transaction> txs;
