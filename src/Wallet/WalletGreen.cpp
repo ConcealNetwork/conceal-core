@@ -1369,6 +1369,11 @@ namespace cn
     m_extra = extra;
 
     m_state = WalletState::INITIALIZED;
+
+    /* Backfill unlock jobs for deposits saved before one was scheduled at their term
+       (or migrated from an older wallet file), then drain anything already past due. */
+    scheduleDepositUnlockJobs();
+
     m_logger(INFO, BRIGHT_WHITE) << "Container loaded, view public key " << common::podToHex(m_viewPublicKey) << ", wallet count " << m_walletsContainer.size() << ", actual balance " << m_currency.formatAmount(m_actualBalance) << ", pending balance " << m_currency.formatAmount(m_pendingBalance);
     m_observerManager.notify(&IWalletObserver::initCompleted, std::error_code());
   }
@@ -1979,8 +1984,12 @@ namespace cn
 
     Deposit deposit = m_deposits.get<RandomAccessIndex>()[depositIndex];
 
-    uint32_t knownBlockHeight = m_node.getLastKnownBlockHeight();
-    if (knownBlockHeight > deposit.unlockHeight)
+    /* Was m_node.getLastKnownBlockHeight(), the node's (possibly ahead-of-sync) height.
+       That could report a deposit unlocked before this wallet's own chain (getBlockCount(),
+       same source withdrawDeposit() and TransfersContainer/updateBalance() use) actually
+       reached unlockHeight, so "Unlocked" would show while withdraw still threw
+       DEPOSIT_LOCKED and the cached withdrawable balance was still 0. */
+    if (deposit.unlockHeight <= getBlockCount())
     {
       deposit.locked = false;
     }
@@ -3480,6 +3489,38 @@ namespace cn
     }
   }
 
+  /* Ordinary unlock jobs cover a transaction's own unlockTime/soft-lock, not deposit-term
+     maturity, so deposits saved before an unlock job existed for their term (or migrated
+     from an older wallet file) would never get updateBalance() re-run when they matured.
+     Schedule the missing job per unspent deposit, then drain anything already past due so
+     a reopened wallet immediately reflects deposits that matured while it was closed. */
+  void WalletGreen::scheduleDepositUnlockJobs()
+  {
+    for (DepositId id = 0; id < m_deposits.size(); ++id)
+    {
+      const Deposit &deposit = m_deposits.get<RandomAccessIndex>()[id];
+      if (deposit.spendingTransactionId != WALLET_INVALID_TRANSACTION_ID)
+      {
+        continue;
+      }
+
+      try
+      {
+        const std::string address = getTransactionTransfer(deposit.creatingTransactionId, 0).address;
+        insertUnlockTransactionJob(deposit.transactionHash, static_cast<uint32_t>(deposit.unlockHeight), getWalletRecord(address).container);
+      }
+      catch (const std::exception &)
+      {
+        continue;
+      }
+    }
+
+    if (getBlockCount() > 0)
+    {
+      unlockBalances(getBlockCount() - 1);
+    }
+  }
+
   void WalletGreen::onTransactionUpdated(ITransfersSubscription * /*object*/, const crypto::Hash & /*transactionHash*/)
   {
     // Deprecated, ignore it. New event handler is onTransactionUpdated(const crypto::PublicKey&, const crypto::Hash&, const std::vector<ITransfersContainer*>&)
@@ -3521,7 +3562,8 @@ namespace cn
       const TransactionOutputInformation &depositOutput,
       TransactionId creatingTransactionId,
       const Currency &currency,
-      uint32_t height)
+      uint32_t height,
+      cn::ITransfersContainer *container)
   {
     assert(depositOutput.type == transaction_types::OutputType::Multisignature);
     assert(depositOutput.term != 0);
@@ -3536,7 +3578,14 @@ namespace cn
     deposit.unlockHeight = height + depositOutput.term;
     deposit.locked = true;
 
-    return insertDeposit(deposit, depositOutput.outputInTransaction, depositOutput.transactionHash);
+    DepositId id = insertDeposit(deposit, depositOutput.outputInTransaction, depositOutput.transactionHash);
+
+    /* Ordinary unlock jobs only cover the transaction's own unlockTime/soft-lock;
+       schedule one for deposit-term maturity too so unlockBalances() refreshes
+       the cached withdrawable balance the moment this deposit matures. */
+    insertUnlockTransactionJob(depositOutput.transactionHash, static_cast<uint32_t>(deposit.unlockHeight), container);
+
+    return id;
   }
 
   DepositId WalletGreen::insertDeposit(
@@ -3803,7 +3852,7 @@ namespace cn
         {
           continue;
         }
-        auto id = insertNewDeposit(depositOutput, transactionId, m_currency, transactionInfo.blockHeight);
+        auto id = insertNewDeposit(depositOutput, transactionId, m_currency, transactionInfo.blockHeight, containerAmounts.container);
         updatedDepositIds.push_back(id);
       }
 

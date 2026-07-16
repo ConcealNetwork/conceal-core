@@ -118,7 +118,8 @@ public:
   DepositId insertDeposit(const Deposit &deposit, size_t depositIndexInTransaction, const crypto::Hash &transactionHash);
   DepositId insertNewDeposit(const TransactionOutputInformation &depositOutput,
                              TransactionId creatingTransactionId,
-                             const Currency &currency, uint32_t height);
+                             const Currency &currency, uint32_t height,
+                             cn::ITransfersContainer *container);
 
   std::vector<TransactionOutputInformation> getUnspentOutputs() override;
   size_t getUnspentOutputsCount() override;
@@ -245,6 +246,7 @@ protected:
 
   void updateBalance(cn::ITransfersContainer *container);
   void unlockBalances(uint32_t height);
+  void scheduleDepositUnlockJobs();
 
   const WalletRecord &getWalletRecord(const crypto::PublicKey &key) const;
   const WalletRecord &getWalletRecord(const std::string &address) const;
