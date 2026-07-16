@@ -136,8 +136,25 @@ namespace
 
     if (notEnoughIt != mixinResult.end())
     {
-      throw std::system_error(make_error_code(cn::error::MIXIN_COUNT_TOO_BIG));
+      throw std::system_error(
+          make_error_code(cn::error::MIXIN_COUNT_TOO_BIG),
+          "amount=" + std::to_string(notEnoughIt->amount) +
+              " available=" + std::to_string(notEnoughIt->outs.size()) +
+              " required=" + std::to_string(mixIn));
     }
+  }
+
+  std::set<uint64_t> collectScarceMixinAmounts(const std::vector<outs_for_amount> &mixinResult, uint64_t mixIn)
+  {
+    std::set<uint64_t> scarce;
+    for (const auto &ofa : mixinResult)
+    {
+      if (ofa.outs.size() < mixIn)
+      {
+        scarce.insert(ofa.amount);
+      }
+    }
+    return scarce;
   }
 
   size_t getTransactionSize(const ITransactionReader &transaction)
@@ -443,22 +460,75 @@ namespace cn
 
     /* Select the wallet - If no source address was specified then it will pick funds from anywhere
      and the change will go to the primary address of the wallet container */
-    std::vector<WalletOuts> wallets;
-    wallets = pickWallets({sourceAddress});
+    std::vector<WalletOuts> wallets = pickWallets({sourceAddress});
 
-    /* Select the transfers */
+    /* Select transfers, skipping amounts that cannot be mixed */
     uint64_t fee = 1000;
     uint64_t neededMoney = amount + fee;
+    const uint64_t mixIn = cn::parameters::MINIMUM_MIXIN;
+    std::vector<WalletOuts> usableWallets = wallets;
     std::vector<OutputToTransfer> selectedTransfers;
-    uint64_t foundMoney = selectTransfers(neededMoney,
-                                          m_currency.defaultDustThreshold(),
-                                          wallets,
-                                          selectedTransfers);
+    std::vector<outs_for_amount> mixinResult;
+    uint64_t foundMoney = 0;
+    std::set<uint64_t> excludedAmounts;
 
-    /* Do we have enough funds */
-    if (foundMoney < neededMoney)
+    for (size_t attempt = 0;; ++attempt)
     {
-      throw std::system_error(make_error_code(error::WRONG_AMOUNT));
+      selectedTransfers.clear();
+      mixinResult.clear();
+      foundMoney = selectTransfers(neededMoney, m_currency.defaultDustThreshold(), usableWallets, selectedTransfers);
+
+      if (foundMoney < neededMoney)
+      {
+        if (!excludedAmounts.empty())
+        {
+          throw std::system_error(
+              make_error_code(error::MIXIN_COUNT_TOO_BIG),
+              "remaining outputs cannot satisfy required mixin");
+        }
+        throw std::system_error(make_error_code(error::WRONG_AMOUNT));
+      }
+
+      try
+      {
+        requestMixinOuts(selectedTransfers, mixIn, mixinResult);
+        break;
+      }
+      catch (const std::system_error &e)
+      {
+        if (e.code() != make_error_code(error::MIXIN_COUNT_TOO_BIG) || attempt >= 3)
+        {
+          throw;
+        }
+
+        auto scarce = collectScarceMixinAmounts(mixinResult, mixIn);
+        if (scarce.empty())
+        {
+          throw;
+        }
+
+        excludedAmounts.insert(scarce.begin(), scarce.end());
+        m_logger(WARNING, BRIGHT_YELLOW) << "Excluding " << scarce.size()
+                                         << " unmixable amount(s) and retrying deposit selection";
+
+        usableWallets.clear();
+        for (const auto &wallet : wallets)
+        {
+          WalletOuts copy;
+          copy.wallet = wallet.wallet;
+          for (const auto &out : wallet.outs)
+          {
+            if (excludedAmounts.count(out.amount) == 0)
+            {
+              copy.outs.push_back(out);
+            }
+          }
+          if (!copy.outs.empty())
+          {
+            usableWallets.emplace_back(std::move(copy));
+          }
+        }
+      }
     }
 
     /* Now we add the outputs to the transaction, starting with the deposits output
@@ -511,12 +581,8 @@ namespace cn
     transaction->setUnlockTime(0);
 
     /* Prepare the inputs */
-
-    /* Get additional inputs for the mixin */
-    std::vector<outs_for_amount> mixinResult;
-    requestMixinOuts(selectedTransfers, cn::parameters::MINIMUM_MIXIN, mixinResult);
     std::vector<InputInfo> keysInfo;
-    prepareInputs(selectedTransfers, mixinResult, cn::parameters::MINIMUM_MIXIN, keysInfo);
+    prepareInputs(selectedTransfers, mixinResult, mixIn, keysInfo);
 
     /* Add the inputs to the transaction */
     std::vector<KeyPair> ephKeys;
@@ -1995,19 +2061,74 @@ namespace cn
     preparedTransaction.destinations = convertOrdersToTransfers(orders);
     preparedTransaction.neededMoney = countNeededMoney(preparedTransaction.destinations, fee);
 
+    std::vector<WalletOuts> usableWallets = wallets;
     std::vector<OutputToTransfer> selectedTransfers;
-    uint64_t foundMoney = selectTransfers(preparedTransaction.neededMoney, m_currency.defaultDustThreshold(), wallets, selectedTransfers);
-
-    if (foundMoney < preparedTransaction.neededMoney)
-    {
-      throw std::system_error(make_error_code(error::WRONG_AMOUNT), "Not enough money");
-    }
-
     std::vector<outs_for_amount> mixinResult;
+    uint64_t foundMoney = 0;
+    std::set<uint64_t> excludedAmounts;
 
-    if (mixIn != 0)
+    for (size_t attempt = 0;; ++attempt)
     {
-      requestMixinOuts(selectedTransfers, mixIn, mixinResult);
+      selectedTransfers.clear();
+      mixinResult.clear();
+      foundMoney = selectTransfers(preparedTransaction.neededMoney, m_currency.defaultDustThreshold(), usableWallets, selectedTransfers);
+
+      if (foundMoney < preparedTransaction.neededMoney)
+      {
+        if (mixIn != 0 && !excludedAmounts.empty())
+        {
+          throw std::system_error(
+              make_error_code(error::MIXIN_COUNT_TOO_BIG),
+              "remaining outputs cannot satisfy required mixin");
+        }
+        throw std::system_error(make_error_code(error::WRONG_AMOUNT), "Not enough money");
+      }
+
+      if (mixIn == 0)
+      {
+        break;
+      }
+
+      try
+      {
+        requestMixinOuts(selectedTransfers, mixIn, mixinResult);
+        break;
+      }
+      catch (const std::system_error &e)
+      {
+        if (e.code() != make_error_code(error::MIXIN_COUNT_TOO_BIG) || attempt >= 3)
+        {
+          throw;
+        }
+
+        auto scarce = collectScarceMixinAmounts(mixinResult, mixIn);
+        if (scarce.empty())
+        {
+          throw;
+        }
+
+        excludedAmounts.insert(scarce.begin(), scarce.end());
+        m_logger(WARNING, BRIGHT_YELLOW) << "Excluding " << scarce.size()
+                                         << " unmixable amount(s) and retrying transfer selection";
+
+        usableWallets.clear();
+        for (const auto &wallet : wallets)
+        {
+          WalletOuts copy;
+          copy.wallet = wallet.wallet;
+          for (const auto &out : wallet.outs)
+          {
+            if (excludedAmounts.count(out.amount) == 0)
+            {
+              copy.outs.push_back(out);
+            }
+          }
+          if (!copy.outs.empty())
+          {
+            usableWallets.emplace_back(std::move(copy));
+          }
+        }
+      }
     }
 
     std::vector<InputInfo> keysInfo;
@@ -2846,18 +2967,21 @@ namespace cn
     auto getRandomOutsByAmountsCompleted = std::promise<std::error_code>();
     auto getRandomOutsByAmountsWaitFuture = getRandomOutsByAmountsCompleted.get_future();
 
-    m_node.getRandomOutsByAmounts(std::move(amounts), mixIn, mixinResult, [&getRandomOutsByAmountsCompleted](std::error_code ec) {
+    /* Request one extra so we can skip our own output if the daemon returns it
+       (same approach as WalletLegacy). Final ring size stays mixIn + 1 real. */
+    const uint64_t outsCount = mixIn + 1;
+    m_node.getRandomOutsByAmounts(std::move(amounts), outsCount, mixinResult, [&getRandomOutsByAmountsCompleted](std::error_code ec) {
       auto detachedPromise = std::move(getRandomOutsByAmountsCompleted);
       detachedPromise.set_value(ec);
     });
     std::error_code ec = getRandomOutsByAmountsWaitFuture.get();
 
-    checkIfEnoughMixins(mixinResult, mixIn);
-
     if (ec)
     {
       throw std::system_error(ec);
     }
+
+    checkIfEnoughMixins(mixinResult, mixIn);
   }
 
   uint64_t WalletGreen::selectTransfers(
