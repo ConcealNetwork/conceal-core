@@ -77,7 +77,7 @@ public:
     case WRONG_PASSWORD:           return "The password is wrong";
     case ALREADY_INITIALIZED:      return "The object is already initialized";
     case INTERNAL_WALLET_ERROR:    return "Internal error occurred";
-    case MIXIN_COUNT_TOO_BIG:      return "MixIn count is too big";
+    case MIXIN_COUNT_TOO_BIG:      return "Not enough mixins available for selected outputs; wait for pending transactions to confirm, try again later";
     case NOTHING_TO_OPTIMIZE:      return "There are no inputs to optimize";
     case THRESHOLD_TOO_LOW:        return "Threshold must be greater than 10";    
     case MINIMUM_ONE_ADDRESS:      return "You should have at least one address";

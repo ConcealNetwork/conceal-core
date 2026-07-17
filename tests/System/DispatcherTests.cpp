@@ -65,6 +65,25 @@ TEST_F(DispatcherTests, clearCalledFromSpawnRemainsDispatcherWorkable) {
   ASSERT_TRUE(spawn2Done);
 }
 
+TEST_F(DispatcherTests, isOwnerThreadDetectsForeignThread) {
+  ASSERT_TRUE(dispatcher.isOwnerThread());
+  bool foreignThreadIsOwner = true;
+  std::thread foreignThread([&]() { foreignThreadIsOwner = dispatcher.isOwnerThread(); });
+  foreignThread.join();
+  ASSERT_FALSE(foreignThreadIsOwner);
+}
+
+TEST_F(DispatcherTests, remoteSpawnFromForeignThreadRunsOnOwnerThread) {
+  bool procedureDone = false;
+  std::thread foreignThread([&]() {
+    dispatcher.remoteSpawn([&]() { procedureDone = true; });
+  });
+
+  foreignThread.join();
+  dispatcher.yield();
+  ASSERT_TRUE(procedureDone);
+}
+
 TEST_F(DispatcherTests, timerIsHandledOnlyAfterAllSpawnedTasksAreHandled) {
   Event event1(dispatcher);
   Event event2(dispatcher);

@@ -22,6 +22,7 @@
 #include <functional>
 #include <queue>
 #include <stack>
+#include <thread>
 
 namespace platform_system {
 
@@ -67,6 +68,7 @@ public:
   void pushContext(NativeContext* context);
   void remoteSpawn(std::function<void()>&& procedure);
   void yield();
+  bool isOwnerThread() const;
 
   int getKqueue() const;
   NativeContext& getReusableContext();
@@ -83,6 +85,9 @@ public:
 private:
   void spawn(std::function<void()>&& procedure);
 
+  // Thread that constructed (and therefore pumps) this dispatcher; every API
+  // except remoteSpawn() must only be called from it.
+  std::thread::id m_ownerThreadId = std::this_thread::get_id();
   int kqueue;
   int lastCreatedTimer;
   alignas(std::max_align_t) uint8_t mutex[SIZEOF_PTHREAD_MUTEX_T];

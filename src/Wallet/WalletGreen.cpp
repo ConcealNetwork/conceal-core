@@ -8,8 +8,11 @@
 #include "WalletGreen.h"
 
 #include <algorithm>
+#include <chrono>
 #include <ctime>
 #include <cassert>
+#include <future>
+#include <memory>
 #include <numeric>
 #include <random>
 #include <set>
@@ -133,8 +136,25 @@ namespace
 
     if (notEnoughIt != mixinResult.end())
     {
-      throw std::system_error(make_error_code(cn::error::MIXIN_COUNT_TOO_BIG));
+      throw std::system_error(
+          make_error_code(cn::error::MIXIN_COUNT_TOO_BIG),
+          "amount=" + std::to_string(notEnoughIt->amount) +
+              " available=" + std::to_string(notEnoughIt->outs.size()) +
+              " required=" + std::to_string(mixIn));
     }
+  }
+
+  std::set<uint64_t> collectScarceMixinAmounts(const std::vector<outs_for_amount> &mixinResult, uint64_t mixIn)
+  {
+    std::set<uint64_t> scarce;
+    for (const auto &ofa : mixinResult)
+    {
+      if (ofa.outs.size() < mixIn)
+      {
+        scarce.insert(ofa.amount);
+      }
+    }
+    return scarce;
   }
 
   size_t getTransactionSize(const ITransactionReader &transaction)
@@ -250,7 +270,14 @@ namespace cn
       doShutdown();
     }
 
-    m_dispatcher.yield(); //let remote spawns finish
+    try
+    {
+      waitForRemoteSpawns();
+    }
+    catch (const std::exception &e)
+    {
+      m_logger(WARNING, BRIGHT_YELLOW) << "Failed to drain remote spawns on destruction: " << e.what();
+    }
   }
 
   void WalletGreen::initialize(
@@ -433,22 +460,75 @@ namespace cn
 
     /* Select the wallet - If no source address was specified then it will pick funds from anywhere
      and the change will go to the primary address of the wallet container */
-    std::vector<WalletOuts> wallets;
-    wallets = pickWallets({sourceAddress});
+    std::vector<WalletOuts> wallets = pickWallets({sourceAddress});
 
-    /* Select the transfers */
+    /* Select transfers, skipping amounts that cannot be mixed */
     uint64_t fee = 1000;
     uint64_t neededMoney = amount + fee;
+    const uint64_t mixIn = cn::parameters::MINIMUM_MIXIN;
+    std::vector<WalletOuts> usableWallets = wallets;
     std::vector<OutputToTransfer> selectedTransfers;
-    uint64_t foundMoney = selectTransfers(neededMoney,
-                                          m_currency.defaultDustThreshold(),
-                                          wallets,
-                                          selectedTransfers);
+    std::vector<outs_for_amount> mixinResult;
+    uint64_t foundMoney = 0;
+    std::set<uint64_t> excludedAmounts;
 
-    /* Do we have enough funds */
-    if (foundMoney < neededMoney)
+    for (size_t attempt = 0;; ++attempt)
     {
-      throw std::system_error(make_error_code(error::WRONG_AMOUNT));
+      selectedTransfers.clear();
+      mixinResult.clear();
+      foundMoney = selectTransfers(neededMoney, m_currency.defaultDustThreshold(), usableWallets, selectedTransfers);
+
+      if (foundMoney < neededMoney)
+      {
+        if (!excludedAmounts.empty())
+        {
+          throw std::system_error(
+              make_error_code(error::MIXIN_COUNT_TOO_BIG),
+              "remaining outputs cannot satisfy required mixin");
+        }
+        throw std::system_error(make_error_code(error::WRONG_AMOUNT));
+      }
+
+      try
+      {
+        requestMixinOuts(selectedTransfers, mixIn, mixinResult);
+        break;
+      }
+      catch (const std::system_error &e)
+      {
+        if (e.code() != make_error_code(error::MIXIN_COUNT_TOO_BIG) || attempt >= 3)
+        {
+          throw;
+        }
+
+        auto scarce = collectScarceMixinAmounts(mixinResult, mixIn);
+        if (scarce.empty())
+        {
+          throw;
+        }
+
+        excludedAmounts.insert(scarce.begin(), scarce.end());
+        m_logger(WARNING, BRIGHT_YELLOW) << "Excluding " << scarce.size()
+                                         << " unmixable amount(s) and retrying deposit selection";
+
+        usableWallets.clear();
+        for (const auto &wallet : wallets)
+        {
+          WalletOuts copy;
+          copy.wallet = wallet.wallet;
+          for (const auto &out : wallet.outs)
+          {
+            if (excludedAmounts.count(out.amount) == 0)
+            {
+              copy.outs.push_back(out);
+            }
+          }
+          if (!copy.outs.empty())
+          {
+            usableWallets.emplace_back(std::move(copy));
+          }
+        }
+      }
     }
 
     /* Now we add the outputs to the transaction, starting with the deposits output
@@ -501,12 +581,8 @@ namespace cn
     transaction->setUnlockTime(0);
 
     /* Prepare the inputs */
-
-    /* Get additional inputs for the mixin */
-    std::vector<outs_for_amount> mixinResult;
-    requestMixinOuts(selectedTransfers, cn::parameters::MINIMUM_MIXIN, mixinResult);
     std::vector<InputInfo> keysInfo;
-    prepareInputs(selectedTransfers, mixinResult, cn::parameters::MINIMUM_MIXIN, keysInfo);
+    prepareInputs(selectedTransfers, mixinResult, mixIn, keysInfo);
 
     /* Add the inputs to the transaction */
     std::vector<KeyPair> ephKeys;
@@ -681,7 +757,38 @@ namespace cn
     throwIfNotInitialized();
     doShutdown();
 
-    m_dispatcher.yield(); //let remote spawns finish
+    waitForRemoteSpawns();
+  }
+
+  /* Let remote spawns queued before shutdown finish, so none of them touches
+     this wallet after it is destroyed. yield() is only legal on the thread
+     that owns (pumps) the dispatcher; calling it from another thread — e.g.
+     the GUI thread in conceal-desktop closing the wallet while the node
+     thread pumps the same dispatcher — races the event loop and can hang or
+     corrupt state. From a foreign thread, queue a barrier through
+     remoteSpawn() (the only thread-safe dispatcher call) and wait for the
+     owner thread to execute it instead. */
+  void WalletGreen::waitForRemoteSpawns()
+  {
+    if (m_dispatcher.isOwnerThread())
+    {
+      m_dispatcher.yield();
+      return;
+    }
+
+    /* shared_ptr keeps the barrier alive even if the queued procedure runs
+       after a timeout below. */
+    auto barrier = std::make_shared<std::promise<void>>();
+    auto barrierReached = barrier->get_future();
+    m_dispatcher.remoteSpawn([barrier] { barrier->set_value(); });
+
+    /* Bounded wait: if the owner thread is no longer pumping the dispatcher,
+       a plain wait() would freeze the caller forever — the very hang this
+       path is meant to prevent. */
+    if (barrierReached.wait_for(std::chrono::seconds(10)) != std::future_status::ready)
+    {
+      m_logger(WARNING, BRIGHT_YELLOW) << "Timed out draining remote spawns; dispatcher is not being pumped";
+    }
   }
 
   void WalletGreen::initBlockchain(const crypto::PublicKey &viewPublicKey)
@@ -1262,6 +1369,11 @@ namespace cn
     m_extra = extra;
 
     m_state = WalletState::INITIALIZED;
+
+    /* Backfill unlock jobs for deposits saved before one was scheduled at their term
+       (or migrated from an older wallet file), then drain anything already past due. */
+    scheduleDepositUnlockJobs();
+
     m_logger(INFO, BRIGHT_WHITE) << "Container loaded, view public key " << common::podToHex(m_viewPublicKey) << ", wallet count " << m_walletsContainer.size() << ", actual balance " << m_currency.formatAmount(m_actualBalance) << ", pending balance " << m_currency.formatAmount(m_pendingBalance);
     m_observerManager.notify(&IWalletObserver::initCompleted, std::error_code());
   }
@@ -1872,8 +1984,12 @@ namespace cn
 
     Deposit deposit = m_deposits.get<RandomAccessIndex>()[depositIndex];
 
-    uint32_t knownBlockHeight = m_node.getLastKnownBlockHeight();
-    if (knownBlockHeight > deposit.unlockHeight)
+    /* Was m_node.getLastKnownBlockHeight(), the node's (possibly ahead-of-sync) height.
+       That could report a deposit unlocked before this wallet's own chain (getBlockCount(),
+       same source withdrawDeposit() and TransfersContainer/updateBalance() use) actually
+       reached unlockHeight, so "Unlocked" would show while withdraw still threw
+       DEPOSIT_LOCKED and the cached withdrawable balance was still 0. */
+    if (deposit.unlockHeight <= getBlockCount())
     {
       deposit.locked = false;
     }
@@ -1954,19 +2070,74 @@ namespace cn
     preparedTransaction.destinations = convertOrdersToTransfers(orders);
     preparedTransaction.neededMoney = countNeededMoney(preparedTransaction.destinations, fee);
 
+    std::vector<WalletOuts> usableWallets = wallets;
     std::vector<OutputToTransfer> selectedTransfers;
-    uint64_t foundMoney = selectTransfers(preparedTransaction.neededMoney, m_currency.defaultDustThreshold(), wallets, selectedTransfers);
-
-    if (foundMoney < preparedTransaction.neededMoney)
-    {
-      throw std::system_error(make_error_code(error::WRONG_AMOUNT), "Not enough money");
-    }
-
     std::vector<outs_for_amount> mixinResult;
+    uint64_t foundMoney = 0;
+    std::set<uint64_t> excludedAmounts;
 
-    if (mixIn != 0)
+    for (size_t attempt = 0;; ++attempt)
     {
-      requestMixinOuts(selectedTransfers, mixIn, mixinResult);
+      selectedTransfers.clear();
+      mixinResult.clear();
+      foundMoney = selectTransfers(preparedTransaction.neededMoney, m_currency.defaultDustThreshold(), usableWallets, selectedTransfers);
+
+      if (foundMoney < preparedTransaction.neededMoney)
+      {
+        if (mixIn != 0 && !excludedAmounts.empty())
+        {
+          throw std::system_error(
+              make_error_code(error::MIXIN_COUNT_TOO_BIG),
+              "remaining outputs cannot satisfy required mixin");
+        }
+        throw std::system_error(make_error_code(error::WRONG_AMOUNT), "Not enough money");
+      }
+
+      if (mixIn == 0)
+      {
+        break;
+      }
+
+      try
+      {
+        requestMixinOuts(selectedTransfers, mixIn, mixinResult);
+        break;
+      }
+      catch (const std::system_error &e)
+      {
+        if (e.code() != make_error_code(error::MIXIN_COUNT_TOO_BIG) || attempt >= 3)
+        {
+          throw;
+        }
+
+        auto scarce = collectScarceMixinAmounts(mixinResult, mixIn);
+        if (scarce.empty())
+        {
+          throw;
+        }
+
+        excludedAmounts.insert(scarce.begin(), scarce.end());
+        m_logger(WARNING, BRIGHT_YELLOW) << "Excluding " << scarce.size()
+                                         << " unmixable amount(s) and retrying transfer selection";
+
+        usableWallets.clear();
+        for (const auto &wallet : wallets)
+        {
+          WalletOuts copy;
+          copy.wallet = wallet.wallet;
+          for (const auto &out : wallet.outs)
+          {
+            if (excludedAmounts.count(out.amount) == 0)
+            {
+              copy.outs.push_back(out);
+            }
+          }
+          if (!copy.outs.empty())
+          {
+            usableWallets.emplace_back(std::move(copy));
+          }
+        }
+      }
     }
 
     std::vector<InputInfo> keysInfo;
@@ -2805,18 +2976,21 @@ namespace cn
     auto getRandomOutsByAmountsCompleted = std::promise<std::error_code>();
     auto getRandomOutsByAmountsWaitFuture = getRandomOutsByAmountsCompleted.get_future();
 
-    m_node.getRandomOutsByAmounts(std::move(amounts), mixIn, mixinResult, [&getRandomOutsByAmountsCompleted](std::error_code ec) {
+    /* Request one extra so we can skip our own output if the daemon returns it
+       (same approach as WalletLegacy). Final ring size stays mixIn + 1 real. */
+    const uint64_t outsCount = mixIn + 1;
+    m_node.getRandomOutsByAmounts(std::move(amounts), outsCount, mixinResult, [&getRandomOutsByAmountsCompleted](std::error_code ec) {
       auto detachedPromise = std::move(getRandomOutsByAmountsCompleted);
       detachedPromise.set_value(ec);
     });
     std::error_code ec = getRandomOutsByAmountsWaitFuture.get();
 
-    checkIfEnoughMixins(mixinResult, mixIn);
-
     if (ec)
     {
       throw std::system_error(ec);
     }
+
+    checkIfEnoughMixins(mixinResult, mixIn);
   }
 
   uint64_t WalletGreen::selectTransfers(
@@ -3315,6 +3489,38 @@ namespace cn
     }
   }
 
+  /* Ordinary unlock jobs cover a transaction's own unlockTime/soft-lock, not deposit-term
+     maturity, so deposits saved before an unlock job existed for their term (or migrated
+     from an older wallet file) would never get updateBalance() re-run when they matured.
+     Schedule the missing job per unspent deposit, then drain anything already past due so
+     a reopened wallet immediately reflects deposits that matured while it was closed. */
+  void WalletGreen::scheduleDepositUnlockJobs()
+  {
+    for (DepositId id = 0; id < m_deposits.size(); ++id)
+    {
+      const Deposit &deposit = m_deposits.get<RandomAccessIndex>()[id];
+      if (deposit.spendingTransactionId != WALLET_INVALID_TRANSACTION_ID)
+      {
+        continue;
+      }
+
+      try
+      {
+        const std::string address = getTransactionTransfer(deposit.creatingTransactionId, 0).address;
+        insertUnlockTransactionJob(deposit.transactionHash, static_cast<uint32_t>(deposit.unlockHeight), getWalletRecord(address).container);
+      }
+      catch (const std::exception &)
+      {
+        continue;
+      }
+    }
+
+    if (getBlockCount() > 0)
+    {
+      unlockBalances(getBlockCount() - 1);
+    }
+  }
+
   void WalletGreen::onTransactionUpdated(ITransfersSubscription * /*object*/, const crypto::Hash & /*transactionHash*/)
   {
     // Deprecated, ignore it. New event handler is onTransactionUpdated(const crypto::PublicKey&, const crypto::Hash&, const std::vector<ITransfersContainer*>&)
@@ -3356,7 +3562,8 @@ namespace cn
       const TransactionOutputInformation &depositOutput,
       TransactionId creatingTransactionId,
       const Currency &currency,
-      uint32_t height)
+      uint32_t height,
+      cn::ITransfersContainer *container)
   {
     assert(depositOutput.type == transaction_types::OutputType::Multisignature);
     assert(depositOutput.term != 0);
@@ -3371,7 +3578,14 @@ namespace cn
     deposit.unlockHeight = height + depositOutput.term;
     deposit.locked = true;
 
-    return insertDeposit(deposit, depositOutput.outputInTransaction, depositOutput.transactionHash);
+    DepositId id = insertDeposit(deposit, depositOutput.outputInTransaction, depositOutput.transactionHash);
+
+    /* Ordinary unlock jobs only cover the transaction's own unlockTime/soft-lock;
+       schedule one for deposit-term maturity too so unlockBalances() refreshes
+       the cached withdrawable balance the moment this deposit matures. */
+    insertUnlockTransactionJob(depositOutput.transactionHash, static_cast<uint32_t>(deposit.unlockHeight), container);
+
+    return id;
   }
 
   DepositId WalletGreen::insertDeposit(
@@ -3638,7 +3852,7 @@ namespace cn
         {
           continue;
         }
-        auto id = insertNewDeposit(depositOutput, transactionId, m_currency, transactionInfo.blockHeight);
+        auto id = insertNewDeposit(depositOutput, transactionId, m_currency, transactionInfo.blockHeight, containerAmounts.container);
         updatedDepositIds.push_back(id);
       }
 
