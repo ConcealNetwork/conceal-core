@@ -11,7 +11,10 @@ to 26.04. After the first Arch test passed on Omarchy, log artifacts are
 uploaded only on failure (both workflows). After the Ubuntu 22.04 test, the
 missing LGPL-3.0-or-later license was added to both packages. Artifacts
 slimmed to package, `SHA256SUMS`, and `README.txt`; the CI upgrade test
-package was dropped after it passed.
+package was dropped after it passed. 2026-11-04: linked the proposed CLI
+binary rename plan (`docs/binary-naming.md`); package contents table below
+still describes **current** names until that plan is accepted and
+implemented.
 
 ## Channels
 
@@ -44,6 +47,12 @@ Package name: `conceal-core` on both systems.
 | `/usr/bin/concealwallet` | command-line wallet |
 | `/usr/bin/walletd` | payment gateway service |
 | `/usr/bin/optimizer` | wallet optimizer tool |
+
+**Proposed rename (not shipped yet):** `conceald` → `conceal-daemon`,
+`concealwallet` → `conceal-wallet`, `walletd` → `conceal-walletd`,
+`optimizer` → `conceal-optimizer`, with a transitional alias window for
+systemd `ExecStart` and Conceal Guardian. Full assessment and rollout plan:
+[`docs/binary-naming.md`](binary-naming.md) (DEC-0002).
 | `/usr/share/licenses/conceal-core/` (Arch) | `LICENSE` (MIT), `LICENSE.miniupnpc` (BSD-3-Clause), `LICENSE.parallel_hashmap` (Apache-2.0) |
 | `/usr/share/doc/conceal-core/copyright` (Debian) | MIT, LGPL-3.0-or-later, BSD-3-Clause, and Apache-2.0, in Debian copyright format |
 

@@ -131,3 +131,84 @@ Which transaction paths, key sizes, verification costs, and storage impacts must
 Update benchmark docs, migration planning docs, and any decision dashboard that references candidate narrowing.
 
 ---
+
+### DEC-0002: Normalize Conceal Core CLI binary names under a `conceal-` prefix
+
+- Date: 2026-11-04
+- Status: Proposed
+- Owners: @Acktarius / Conceal Core maintainers
+- Related work: Arch/Debian packaging (`docs/packaging.md`),
+  [`docs/binary-naming.md`](binary-naming.md), conceal-guardian daemon spawn /
+  auto-update, upcoming operator release notes
+- Supersedes: none
+- Superseded by: none
+- Tags: `compatibility`, `rollout`, `daemon`, `wallet`
+
+#### Context
+
+Manual Arch `.pkg.tar.zst` and Debian `.deb` workflows now install Core CLI
+binaries into `/usr/bin`. That makes on-disk names part of an operational
+contract for packages, systemd `ExecStart`, scripts, and Conceal Guardian
+(`execa` + `getNodeExecutableName()` + release extract). Current names are
+inconsistent: `conceald`, `concealwallet`, `walletd`, `optimizer`.
+
+#### Decision
+
+Normalize shipped executable names to a branded kebab-case set (pending final
+acceptance of the exact CLI wallet spelling):
+
+| Current | Proposed |
+| --- | --- |
+| `conceald` | `conceal-daemon` |
+| `concealwallet` | `conceal-wallet` (not `conceal-walletCli`) |
+| `walletd` | `conceal-walletd` |
+| `optimizer` | `conceal-optimizer` |
+
+Ship transitional legacy aliases for one release window, and coordinate
+conceal-guardian before dropping them. Do not treat conceal-desktop builds as
+blocked: Desktop does not spawn these CLI binaries by name.
+
+#### Rationale
+
+Packages made binary names a distribution API. A single `conceal-` + kebab-case
+scheme reduces PATH collisions (`walletd`, `optimizer`), matches how Guardian
+and operators refer to “the Conceal daemon”, and avoids mixed-case names that
+are awkward on Unix.
+
+#### Consequences
+
+- Core CMake `OUTPUT_NAME`, package install loops, CI staging, and docs must
+  move together.
+- Guardian must learn the new daemon filename (with temporary fallback).
+- Operator units/scripts need a migration notice even if symlinks soften the
+  first release.
+- Optimizer `--walletd-*` flags can stay for now (RPC endpoint labels, not
+  binary paths).
+
+#### Compatibility impact
+
+Breaking for anything that hard-codes the old filenames without going through
+aliases. Wallet files, RPC protocols, and `~/.conceal` data paths stay the
+same. conceal-desktop compile/link is unaffected by Core `OUTPUT_NAME` alone.
+
+#### Evidence
+
+Inventory in [`docs/binary-naming.md`](binary-naming.md): Core packaging files,
+Guardian `units/utils.js` / `engine.js` / `download.js`, Desktop
+`CN_PROJECT_NAME=conceal-desktop` with in-process node (no CLI spawn).
+
+#### Open questions
+
+- Exact transition length before removing legacy symlinks.
+- Whether Guardian must release on the same day as Core, or a day earlier with
+  dual-name support only.
+- Optional later rename of optimizer `--walletd-*` CLI flags.
+
+#### Documentation impact
+
+- [`docs/binary-naming.md`](binary-naming.md) — assessment and plan (primary)
+- [`docs/packaging.md`](packaging.md) — forward reference under package contents
+- Operator release notice draft (in binary-naming.md); wiki / conceal-docs /
+  Guardian docs when implementation lands
+
+---
