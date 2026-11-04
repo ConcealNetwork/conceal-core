@@ -36,3 +36,5 @@ external/FTXUI/
 
 # Generated from package/deb by the Debian package build
 /debian/
+# Local agent / tooling (not tracked)
+.repo-kit/
