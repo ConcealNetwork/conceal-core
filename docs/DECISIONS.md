@@ -251,8 +251,9 @@ end-to-end update test is claimed by this decision.
 - Whether any Core-first exception evidence will be gathered, or priority-1
   Guardian-first remains mandatory.
 - Optional later rename of optimizer `--walletd-*` CLI flags.
-- Priority-3 Desktop verification (installers / archive consumers) at a fresh
-  stated revision.
+- Priority-3 Desktop gate passed at `da23d79` (2026-11-04) for Core target /
+  `OUTPUT_NAME` renames; re-open only if Desktop changes cryptonote
+  integration.
 - Priority-4 faucet-api doc owners / timing relative to the Core notice window.
 
 #### Documentation impact

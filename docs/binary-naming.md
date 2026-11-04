@@ -12,8 +12,11 @@ release-gating checklist. Same day: added `conceal-faucet-api` impact from
 py-indexer (`da1b4fe`), GitHub wiki impact from
 `ConcealNetwork/conceal-core.wiki` (`d075187`), revised DEC-0002 to **align**
 CMake executable targets, and set explicit downstream **work priority**
-(Guardian → Core+wiki → Desktop verify → faucet-api). Still documentation
-only; DEC-0002 remains Proposed.
+(Guardian → Core+wiki → Desktop verify → faucet-api). Same day: Priority-3
+Desktop gate verified **zero impact** for Core CMake target/`OUTPUT_NAME`
+renames (GUI builds cryptonote sources into a private static lib; no
+`add_subdirectory` of Core executable CMake). Still documentation only;
+DEC-0002 remains Proposed.
 
 ## Work priority (downstream + this repo)
 
@@ -210,35 +213,63 @@ Confirmed source paths and behavior:
 Core-first exception — see compatibility strategy) breaks default Guardian
 installs and auto-update. Highest-risk external consumer.
 
-### Medium / pending: conceal-desktop
+### Low / verified zero build impact: conceal-desktop
 
 | Field | Value |
 | --- | --- |
 | Repository | `conceal-desktop` |
 | Revision inspected | `da23d79768b58ab34406c1987012b8f655bf5047` |
-| Status | **Partial confirmation** — do **not** treat Desktop as unconditionally safe |
+| Verification | 2026-11-04 — py-indexer + Sonnet 4.6 subagent review; parent spot-check of CMake/`cryptonote` |
+| Status | **ZERO IMPACT** on Desktop GUI build for planned Core CMake **target** rename and Core **`OUTPUT_NAME`** rename |
 
-Confirmed:
+How Desktop consumes Core (build graph):
 
-- `CryptoNoteWallet.cmake` sets `CN_PROJECT_NAME` to `conceal-desktop`.
-- Lexical search found **no** `conceald` string in the Desktop tree at this
-  revision.
-- `src/gui/MainWindow.cpp` uses `QProcess` for `gsettings` (dock position), not
-  for Core CLI spawn.
-- `ubuntu-shortcut-creator.sh` uses `concealwallet` only as a **MIME /
-  URI-scheme** token (`MimeType=x-scheme-handler/concealwallet;`), not as a
-  Core CLI path.
+- Top-level [`CMakeLists.txt`](../../conceal-desktop/CMakeLists.txt) sets
+  `CRYPTONOTE_LIB` / includes under `cryptonote/…`, then builds a **hand-picked**
+  `CRYPTONOTE_SOURCES` list of `.c`/`.cpp` files from that tree into a private
+  static library (`add_library(${CRYPTONOTE_LIB} STATIC …)`), then
+  `add_executable(${PROJECT_NAME} …)` linked against that lib + Qt.
+- There is **no** `add_subdirectory(cryptonote)` (or equivalent) in Desktop’s
+  top-level CMake — Core’s own `src/CMakeLists.txt` executable targets are
+  **not** part of the Desktop configure/build graph.
+- `CryptoNoteWallet.cmake` sets `CN_PROJECT_NAME` to `conceal-desktop` (GUI
+  binary name), independent of Core CLI `OUTPUT_NAME`.
+- A vendored copy of Core’s CMake still exists at
+  `cryptonote/src/CMakeLists.txt` (including `Daemon` / `OUTPUT_NAME
+  "conceald"` etc.), but that file is only relevant if someone builds the
+  vendored Core tree **standalone**. The GUI path does not parse it.
 
-Pending verification (unchecked until re-inspected or tested):
+Confirmed non-coupling to Core CLI names:
 
-- Whether any installer, CI, or release script downloads Core `ccx-cli-*`
-  archives and expects nested CLI filenames.
-- Whether docs/packaging text confuse GUI vs CLI names for operators.
-- Full-tree non-lexical review of every process-launch path.
+- No Desktop references to Core `OUTPUT_NAME` values `conceald` /
+  `concealwallet` / `walletd` / `optimizer` as spawn/install targets for the
+  GUI build.
+- `src/gui/MainWindow.cpp` `QProcess` is used for `gsettings` (dock), not Core
+  CLI.
+- Residual string `concealwallet` appears as Desktop packaging/MIME naming
+  (`install(… concealwallet.desktop …)`,
+  `MimeType=x-scheme-handler/concealwallet;`) — **GUI product naming**, not
+  Core CLI `OUTPUT_NAME`.
 
-**Conclusion:** evidence supports “Desktop does not currently spawn Core CLI
-binaries by those names,” but that is **not** the same as a completed
-downstream verification gate.
+| Planned Core change | Desktop GUI impact |
+| --- | --- |
+| Rename CMake targets `Daemon` → `ConcealDaemon`, etc. | **None** — Desktop does not consume those targets |
+| Change Core `OUTPUT_NAME` to `conceal-daemon`, etc. | **None** — Desktop does not ship/link those executables |
+| Sync newer Core sources into `cryptonote/` | Still **none** for GUI **as long as** Desktop keeps source-list + static-lib integration (not `add_subdirectory` of Core’s executable CMake) |
+
+Residual risks (do not reopen the rename gate; track separately):
+
+- Future Desktop CMake refactor that `add_subdirectory(cryptonote)` or builds
+  Core CLI tools from the vendored tree would suddenly inherit Core target /
+  `OUTPUT_NAME` changes — out of scope today.
+- Syncing Core into `cryptonote/` can still break Desktop if **source paths**
+  in the hand-picked list move/rename; that is unrelated to CLI binary naming.
+- Historical Desktop package paths named `concealwallet` may confuse operators
+  in docs; cosmetic/product naming only.
+
+**Conclusion (Priority 3 gate):** planned Core CMake executable-target
+alignment and CLI `OUTPUT_NAME` rename have **zero impact** on conceal-desktop
+at `da23d79` given the current cryptonote static-lib integration.
 
 ### Medium: conceal-faucet-api (confirmed at indexed revision)
 
@@ -466,9 +497,11 @@ pass under https://github.com/ConcealNetwork/conceal-core/wiki):
 
 #### Priority 3 — conceal-desktop verification
 
-Re-inspect Desktop at a stated revision: confirm no Core CLI spawn by old
-names; check installers/archive consumers; record residual MIME/doc tokens.
-Do not treat earlier partial search as a completed gate.
+**Passed (2026-11-04)** at Desktop `da23d79`: GUI build uses hand-picked
+`cryptonote/` sources → private static lib → `conceal-desktop` executable; no
+`add_subdirectory` of Core’s executable CMake. Core target / `OUTPUT_NAME`
+renames do not affect Desktop. Re-verify only if Desktop changes how it
+integrates `cryptonote/`.
 
 #### Priority 4 — conceal-faucet-api docs/templates
 
@@ -519,8 +552,9 @@ is actual evidence. Checking a box without evidence is not allowed.
       (resolve + extract/copy + restart on Linux and Windows).
 - [ ] **P2** Core rename/aliases (and optional target alignment) landed with
       tests; wiki pages updated in the notice window.
-- [ ] **P3** conceal-desktop low-impact verification recorded at a stated
-      revision.
+- [x] **P3** conceal-desktop low-impact verification recorded at `da23d79`
+      (2026-11-04): zero impact for Core target/`OUTPUT_NAME` rename; GUI uses
+      cryptonote sources as a static lib, not Core executable CMake.
 - [ ] **P4** faucet-api doc/template updates scheduled or landed
       (`WALLETD_SETUP.md`, `ccx-walletd.service.template`, README /
       LOCAL_TESTING).
