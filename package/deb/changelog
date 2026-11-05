@@ -1,7 +1,7 @@
-conceal-core (6.7.5-1) unstable; urgency=medium
+conceal-core (6.7.6-1) unstable; urgency=medium
 
-  * GitHub-distributed package of the Conceal Core command-line binaries.
-    The packaging workflow replaces this version with the build version.
-    See docs/packaging.md.
+  * Conceal Core command-line binaries.
+    The packaging workflow replaces the version and distribution above with
+    <version>-<0 or 1>~<codename>1 (jammy, noble, resolute). See docs/packaging.md.
 
- -- Conceal Network <ccx@conceal.network>  Thu, 29 Oct 2026 14:00:00 -0400
+ -- Conceal Network <ccx@conceal.network>  Wed, 04 Nov 2026 12:00:00 -0500
