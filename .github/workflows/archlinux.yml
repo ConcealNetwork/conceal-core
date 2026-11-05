@@ -1,0 +1,223 @@
+name: Arch Linux package
+
+on:
+  workflow_dispatch:
+  push:
+    tags:
+      - "*"
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    name: Build .pkg.tar.zst
+    runs-on: ubuntu-24.04
+    timeout-minutes: 120
+    # archlinux/archlinux:base-devel, digest pulled 2026-10-29. The image is
+    # rolling; the job runs pacman -Syu before use.
+    container:
+      image: archlinux/archlinux:base-devel@sha256:a3c048d95acbbf5acc15a9e9a727d3cae2ba2ac69aa8b24d8ccd4f60b3102f28
+    steps:
+      - name: Provision build environment
+        run: pacman -Syu --noconfirm --needed git cmake boost boost-libs namcap
+
+      # actions/checkout v7.0.1
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+
+      - name: Prepare PKGBUILD for this commit
+        id: prep
+        run: |
+          set -euo pipefail
+          git config --global --add safe.directory "$GITHUB_WORKSPACE"
+          commit=$(git rev-parse HEAD)
+          [[ $commit == "$GITHUB_SHA" ]] || { echo "checkout $commit is not $GITHUB_SHA"; exit 1; }
+
+          pkgver=$(sed -n 's/^set(VERSION "\(.*\)")$/\1/p' CMakeLists.txt)
+          tag=$(git describe --tags --exact-match HEAD 2>/dev/null || true)
+          if [[ $tag =~ ^v?([0-9]+\.[0-9]+\.[0-9]+)$ ]]; then
+            pkgver=${BASH_REMATCH[1]}
+          fi
+          if [[ $GITHUB_REF_TYPE == tag ]]; then
+            pkgrel=1
+          else
+            pkgrel=0
+          fi
+
+          useradd -m builder
+          work=/home/builder/pkg
+          mkdir -p "$work"
+          cp package/arch/PKGBUILD "$work/"
+          git bundle create "$work/conceal-core.bundle" HEAD
+          sum=$(sha256sum "$work/conceal-core.bundle" | cut -d' ' -f1)
+          sed -i \
+            -e "s/^pkgver=.*/pkgver=$pkgver/" \
+            -e "s/^pkgrel=.*/pkgrel=$pkgrel/" \
+            -e "s/^_commit=.*/_commit=$commit/" \
+            -e "s/^sha256sums=.*/sha256sums=('$sum')/" \
+            "$work/PKGBUILD"
+          chown -R builder: "$work"
+
+          bash -n "$work/PKGBUILD"
+          bash -n package/test-install.sh
+          cat "$work/PKGBUILD"
+
+          {
+            echo "commit=$commit"
+            echo "pkgver=$pkgver"
+            echo "pkgrel=$pkgrel"
+            echo "work=$work"
+          } >> "$GITHUB_OUTPUT"
+
+      - name: Build package as unprivileged user
+        working-directory: ${{ steps.prep.outputs.work }}
+        run: su builder -c 'makepkg --noconfirm --log'
+
+      - name: Check package
+        working-directory: ${{ steps.prep.outputs.work }}
+        run: |
+          set -euo pipefail
+          pkg=$(ls conceal-core-*.pkg.tar.zst)
+          namcap PKGBUILD "$pkg" | tee namcap.out
+          ! grep -q ' E: ' namcap.out || { echo "namcap reported errors"; exit 1; }
+          pacman -Qip "$pkg"
+          files=$(pacman -Qlp "$pkg")
+          echo "$files"
+          for bin in conceal-daemon conceal-wallet conceal-walletd conceal-optimizer; do
+            bsdtar -tvf "$pkg" "usr/bin/$bin" | grep -q '^-rwxr-xr-x' || { echo "usr/bin/$bin missing or not 755"; exit 1; }
+            ldd "src/build/src/$bin" | sed "s|^|$bin: |"
+          done
+          for f in LICENSE LICENSE.miniupnpc LICENSE.parallel_hashmap; do
+            grep -q "/usr/share/licenses/conceal-core/$f\$" <<< "$files" || { echo "license $f missing"; exit 1; }
+          done
+          echo "compiler: $(gcc --version | head -1)"
+          echo "cmake: $(cmake --version | head -1)"
+          echo "boost: $(pacman -Q boost)"
+          echo "compile flags: $(sed -n 's/^CXX_FLAGS = //p' src/build/src/CMakeFiles/ConcealDaemon.dir/flags.make)"
+
+      - name: Write SHA256SUMS and README.txt
+        working-directory: ${{ steps.prep.outputs.work }}
+        run: |
+          set -euo pipefail
+          mkdir -p "$GITHUB_WORKSPACE/dist"
+          pkg=$(ls conceal-core-*.pkg.tar.zst)
+          sha256sum "$pkg" > SHA256SUMS
+          cat > README.txt <<EOF
+          Conceal Core ${{ steps.prep.outputs.pkgver }} for Arch Linux and Omarchy (x86_64)
+          Commit: ${{ steps.prep.outputs.commit }}
+
+          Verify:     sha256sum -c SHA256SUMS
+          Install:    sudo pacman -U ./$pkg
+          Check:      conceal-daemon --version
+          Uninstall:  sudo pacman -R conceal-core
+
+          Installs conceal-daemon, conceal-wallet, conceal-walletd, and
+          conceal-optimizer in /usr/bin.
+          Default logs (conceal-daemon.log, ...) go to ~/.conceal.
+          Needs an x86-64 CPU with AES-NI. Uninstalling keeps wallets and
+          blockchain data in ~/.conceal.
+          EOF
+          cat README.txt SHA256SUMS
+          cp "$pkg" SHA256SUMS README.txt "$GITHUB_WORKSPACE/dist/"
+
+      - name: Collect logs
+        if: failure()
+        run: |
+          mkdir -p "$GITHUB_WORKSPACE/logs"
+          cp /home/builder/pkg/*.log /home/builder/pkg/*.out "$GITHUB_WORKSPACE/logs/" 2>/dev/null || true
+
+      # actions/upload-artifact v7.0.2
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9
+        with:
+          name: conceal-core-arch-x86_64
+          path: dist/
+          if-no-files-found: error
+
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9
+        if: failure()
+        with:
+          name: conceal-core-arch-build-logs
+          path: logs/
+          if-no-files-found: warn
+
+  test:
+    name: Install and remove in a clean container
+    needs: build
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    # archlinux/archlinux:base, digest pulled 2026-10-29. base-devel would not
+    # work here: its gdb already pulls in boost-libs, which hides whether the
+    # package declares Boost as a dependency.
+    container:
+      image: archlinux/archlinux:base@sha256:e4954feb61c332472f9cbf0e797a23be64434cf71db429349976192b4de782fc
+    steps:
+      - name: Update base image
+        run: pacman -Syu --noconfirm --needed git
+
+      # actions/checkout v7.0.1
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          persist-credentials: false
+
+      # actions/download-artifact v8.0.2
+      - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333
+        with:
+          name: conceal-core-arch-x86_64
+          path: dist
+
+      - name: Verify SHA256SUMS
+        working-directory: dist
+        run: sha256sum -c SHA256SUMS
+
+      - name: Install, remove, smoke test
+        run: |
+          set -o pipefail
+          mkdir -p logs
+          bash package/test-install.sh dist/conceal-core-*.pkg.tar.zst "$GITHUB_SHA" 2>&1 | tee logs/test-install.log
+
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9
+        if: failure()
+        with:
+          name: conceal-core-arch-test-logs
+          path: logs/
+          if-no-files-found: warn
+
+  release:
+    name: Attach to GitHub Release
+    needs: test
+    if: github.ref_type == 'tag'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333
+        with:
+          name: conceal-core-arch-x86_64
+          path: dist
+
+      - name: Name release files
+        id: files
+        working-directory: dist
+        run: |
+          set -euo pipefail
+          sha256sum -c SHA256SUMS
+          pkg=$(ls conceal-core-*.pkg.tar.zst)
+          mv SHA256SUMS conceal-core-arch-x86_64.SHA256SUMS
+          mv README.txt conceal-core-arch-x86_64.README.txt
+          sha256=$(cut -d' ' -f1 conceal-core-arch-x86_64.SHA256SUMS)
+          echo "pkg=$pkg" >> "$GITHUB_OUTPUT"
+          echo "sha256=${sha256^^}" >> "$GITHUB_OUTPUT"
+
+      - uses: softprops/action-gh-release@efb35369e0ad2afab669f228072c1b0d510eae64 # v3.0.3
+        with:
+          files: dist/*
+          append_body: true
+          body: |
+            [Arch Linux / Omarchy package](../../releases/download/${{ github.ref_name }}/${{ steps.files.outputs.pkg }}) **${{ steps.files.outputs.pkg }}**
+            `SHA256 : ${{ steps.files.outputs.sha256 }}`
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

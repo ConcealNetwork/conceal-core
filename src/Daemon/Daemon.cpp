@@ -1,7 +1,7 @@
 // Copyright (c) 2011-2017 The Cryptonote developers
 // Copyright (c) 2016-2022, The Karbo developers
 // Copyright (c) 2017-2018 The Circle Foundation & Conceal Devs
-// Copyright (c) 2018-2023 Conceal Network & Conceal Devs
+// Copyright (c) 2018-2026 Conceal Network & Conceal Devs
 //
 // Distributed under the MIT/X11 software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
@@ -15,6 +15,7 @@
 
 #include "Common/SignalHandler.h"
 #include "Common/PathTools.h"
+#include "Common/Util.h"
 #include "crypto/hash.h"
 #include "CryptoNoteConfig.h"
 #include "CryptoNoteCore/Checkpoints.h"
@@ -47,7 +48,7 @@ namespace
 {
   const command_line::arg_descriptor<std::string> arg_config_file = {"config-file", "Specify configuration file", "conceal.conf"};
   const command_line::arg_descriptor<bool>        arg_os_version  = {"os-version", ""};
-  const command_line::arg_descriptor<std::string> arg_log_file    = {"log-file", "", ""};
+  const command_line::arg_descriptor<std::string> arg_log_file    = {"log-file", "Log file; a bare file name goes in the data directory (default conceal-daemon.log)", ""};
   const command_line::arg_descriptor<std::string> arg_set_fee_address = { "fee-address", "Set a fee address for remote nodes", "" };
   const command_line::arg_descriptor<std::string> arg_set_view_key = { "view-key", "Set secret view-key for remote node fee confirmation", "" };
   const command_line::arg_descriptor<int>         arg_log_level   = {"log-level", "", 2};
@@ -181,18 +182,7 @@ int main(int argc, char* argv[])
       return 1;
     }
 
-    auto modulePath = common::NativePathToGeneric(argv[0]);
-    auto cfgLogFile = common::NativePathToGeneric(command_line::get_arg(vm, arg_log_file));
-
-    if (cfgLogFile.empty())
-    {
-      cfgLogFile = common::ReplaceExtenstion(modulePath, ".log");
-    }
-    else
-    {
-      if (!common::HasParentPath(cfgLogFile))
-        cfgLogFile = common::CombinePath(common::GetPathDirectory(modulePath), cfgLogFile);
-    }
+    auto cfgLogFile = tools::getLogFilePath(coreConfig.configFolder, command_line::get_arg(vm, arg_log_file), "conceal-daemon.log");
 
     auto cfgLogLevel = static_cast<Level>(static_cast<int>(logging::ERROR) + command_line::get_arg(vm, arg_log_level));
 

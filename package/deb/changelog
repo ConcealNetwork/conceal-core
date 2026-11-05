@@ -1,0 +1,7 @@
+conceal-core (6.7.6-1) unstable; urgency=medium
+
+  * Conceal Core command-line binaries.
+    The packaging workflow replaces the version and distribution above with
+    <version>-<0 or 1>~<codename>1 (jammy, noble, resolute). See docs/packaging.md.
+
+ -- Conceal Network <ccx@conceal.network>  Wed, 04 Nov 2026 12:00:00 -0500

@@ -1,6 +1,6 @@
 // Copyright (c) 2011-2017 The Cryptonote developers
 // Copyright (c) 2017-2018 The Circle Foundation & Conceal Devs
-// Copyright (c) 2018-2023 Conceal Network & Conceal Devs
+// Copyright (c) 2018-2026 Conceal Network & Conceal Devs
 //
 // Distributed under the MIT/X11 software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
@@ -1468,7 +1468,7 @@ bool conceal_wallet::save_keys_to_file(const std::vector<std::string>& args)
   backup_file << "Conceal Keys Backup" << std::endl
               << get_wallet_keys();
 
-  logger(INFO, BRIGHT_GREEN) << "Wallet keys have been saved to the current folder where \"concealwallet\" is located as \""
+  logger(INFO, BRIGHT_GREEN) << "Wallet keys have been saved next to the wallet file as \""
     << backup_filename << "\".";
 
   return true;
@@ -1553,7 +1553,7 @@ bool conceal_wallet::save_all_txs_to_file(const std::vector<std::string> &args)
   }
 
   /* tell user job complete */
-  logger(INFO, BRIGHT_GREEN) << "All transactions have been saved to the current folder where \"concealwallet\" is located as \""
+  logger(INFO, BRIGHT_GREEN) << "All transactions have been saved next to the wallet file as \""
     << tx_filename << "\".";
   
   /* if user uses "save_txs_to_file true" then we go through the deposits */
@@ -1610,7 +1610,7 @@ bool conceal_wallet::save_all_txs_to_file(const std::vector<std::string> &args)
     }
 
     /* tell user job complete */
-    logger(INFO, BRIGHT_GREEN) << "All deposits have been saved to the end of the file current folder where \"concealwallet\" is located as \""
+    logger(INFO, BRIGHT_GREEN) << "All deposits have been appended next to the wallet file in \""
       << tx_filename << "\".";
   }
 

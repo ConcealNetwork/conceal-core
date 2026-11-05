@@ -1,6 +1,6 @@
 // Copyright (c) 2011-2017 The Cryptonote developers
 // Copyright (c) 2017-2018 The Circle Foundation & Conceal Devs
-// Copyright (c) 2018-2023 Conceal Network & Conceal Devs
+// Copyright (c) 2018-2026 Conceal Network & Conceal Devs
 //
 // Distributed under the MIT/X11 software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
@@ -352,6 +352,21 @@ std::string get_nix_version_display_string()
   bool directoryExists(const std::string& path) {
     boost::system::error_code ec;
     return boost::filesystem::is_directory(path, ec);
+  }
+
+  std::string getLogFilePath(const std::string& dataDir, const std::string& configured, const std::string& defaultName)
+  {
+    namespace fs = boost::filesystem;
+    fs::path logPath(configured.empty() ? defaultName : configured);
+    if (!logPath.has_parent_path())
+    {
+      logPath = fs::path(dataDir) / logPath;
+    }
+    if (logPath.has_parent_path())
+    {
+      create_directories_if_necessary(logPath.parent_path().string());
+    }
+    return logPath.string();
   }
 
 }

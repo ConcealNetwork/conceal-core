@@ -1,7 +1,7 @@
 cmake_minimum_required(VERSION 3.5)
 
 include(CheckCXXCompilerFlag)
-set(VERSION "6.7.5")
+set(VERSION "6.7.6")
 set(VERSION_BUILD_NO "Trebopala")
 # Packaged from main commits
 set(COMMIT 5f6de8b)
@@ -161,17 +161,10 @@ if(STATIC)
 endif()
 
 #set(Boost_DEBUG on)
+# Boost.System is header-only since 1.69; Ubuntu 26.04 / Boost 1.90 no longer
+# ships boost_systemConfig.cmake or libboost-system. Do not request system.
 set(BOOST_COMPONENTS filesystem thread date_time chrono regex serialization program_options)
-
-if(APPLE OR MINGW)
-  find_package(Boost 1.55 COMPONENTS system ${BOOST_COMPONENTS})
-  if(NOT Boost_FOUND)
-    message(STATUS "Boost.System library not found; retrying without system component")
-    find_package(Boost 1.55 REQUIRED COMPONENTS ${BOOST_COMPONENTS})
-  endif()
-else()
-  find_package(Boost 1.55 REQUIRED COMPONENTS system ${BOOST_COMPONENTS})
-endif()
+find_package(Boost 1.55 REQUIRED COMPONENTS ${BOOST_COMPONENTS})
 include_directories(SYSTEM ${Boost_INCLUDE_DIRS})
 
 if(Boost_VERSION AND NOT Boost_VERSION VERSION_LESS 1.90.0)

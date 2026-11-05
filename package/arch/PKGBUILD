@@ -1,0 +1,52 @@
+# Maintainer: Conceal Network <ccx@conceal.network>
+#
+# Requirements, versioning, and the test plan: docs/packaging.md
+# The workflow .github/workflows/archlinux.yml fills pkgver, pkgrel, _commit,
+# and sha256sums for the exact commit it builds. See package/arch/README.md
+# for the same steps on a local Arch machine.
+
+pkgname=conceal-core
+pkgver=6.7.6
+pkgrel=1
+_commit=0000000000000000000000000000000000000000
+pkgdesc='Conceal Network command-line node and wallets (conceal-daemon, conceal-wallet, conceal-walletd, conceal-optimizer)'
+arch=('x86_64')
+url='https://github.com/ConcealNetwork/conceal-core'
+license=('MIT' 'LGPL-3.0-or-later' 'BSD-3-Clause' 'Apache-2.0')
+depends=('boost-libs' 'glibc' 'libgcc' 'libstdc++')
+makedepends=('boost' 'cmake' 'git')
+options=('!lto' '!debug')
+source=("$pkgname.bundle")
+sha256sums=('0000000000000000000000000000000000000000000000000000000000000000')
+
+prepare() {
+  rm -rf "$pkgname"
+  git clone --quiet --no-checkout "$srcdir/$pkgname.bundle" "$pkgname"
+  git -C "$pkgname" checkout --quiet --detach "$_commit"
+}
+
+build() {
+  # Packaged binaries must run on any x86-64 CPU with AES-NI, so a host -march
+  # from makepkg.conf is dropped; CMake adds -march=x86-64 -maes itself.
+  CFLAGS=$(sed -E 's/(^| )-march=[^ ]+//g' <<< "$CFLAGS")
+  CXXFLAGS=$(sed -E 's/(^| )-march=[^ ]+//g' <<< "$CXXFLAGS")
+  export CFLAGS CXXFLAGS
+
+  cmake -S "$pkgname" -B build \
+    -DCMAKE_BUILD_TYPE=Release \
+    -DSTATIC=OFF \
+    -DARCH=x86-64 \
+    -DBUILD_TESTS=OFF \
+    -Wno-dev
+  cmake --build build --parallel "${CCX_BUILD_JOBS:-2}"
+}
+
+package() {
+  local bin
+  for bin in conceal-daemon conceal-wallet conceal-walletd conceal-optimizer; do
+    install -Dm755 "build/src/$bin" "$pkgdir/usr/bin/$bin"
+  done
+  install -Dm644 "$pkgname/LICENSE" "$pkgdir/usr/share/licenses/$pkgname/LICENSE"
+  install -Dm644 "$pkgname/external/miniupnpc/LICENSE" "$pkgdir/usr/share/licenses/$pkgname/LICENSE.miniupnpc"
+  install -Dm644 "$pkgname/external/parallel_hashmap/LICENSE" "$pkgdir/usr/share/licenses/$pkgname/LICENSE.parallel_hashmap"
+}

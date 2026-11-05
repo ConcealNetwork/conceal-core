@@ -17,7 +17,7 @@ jobs:
     env:
       BOOST_ROOT: C:/local/boost_1_83_0
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5.1.0
 
       - name: Prepare version
         shell: powershell
@@ -59,10 +59,10 @@ jobs:
         shell: powershell
         run: |
           mkdir build/conceal
-          mv build/src/Release/conceald.exe build/conceal
-          mv build/src/Release/concealwallet.exe build/conceal
-          mv build/src/Release/optimizer.exe build/conceal
-          mv build/src/Release/walletd.exe build/conceal
+          mv build/src/Release/conceal-daemon.exe build/conceal
+          mv build/src/Release/conceal-wallet.exe build/conceal
+          mv build/src/Release/conceal-optimizer.exe build/conceal
+          mv build/src/Release/conceal-walletd.exe build/conceal
           cp build/tests/Release/*_tests.exe build/conceal
 
       - name: Upload To GH Artifacts
@@ -107,20 +107,21 @@ jobs:
       run:
         shell: msys2 {0}
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5.1.0
 
       - uses: msys2/setup-msys2@v2
         with:
+          msystem: UCRT64
           update: true
           install: >-
             git
             base-devel
-            mingw-w64-x86_64-toolchain
-            mingw-w64-x86_64-cmake
+            mingw-w64-ucrt-x86_64-toolchain
+            mingw-w64-ucrt-x86_64-cmake
 
       - name: Install dependencies
         run: |
-          pacman -S --noconfirm mingw-w64-x86_64-boost mingw-w64-x86_64-boost-libs
+          pacman -S --noconfirm mingw-w64-ucrt-x86_64-boost mingw-w64-ucrt-x86_64-boost-libs
 
       - name: Prepare version
         shell: powershell
@@ -145,16 +146,16 @@ jobs:
         shell: msys2 {0}
         run: |
           mkdir build/conceal
-          mv build/src/conceald.exe build/conceal
-          mv build/src/concealwallet.exe build/conceal
-          mv build/src/optimizer.exe build/conceal
-          mv build/src/walletd.exe build/conceal
-          cp /mingw64/bin/libboost_*.dll build/conceal
+          mv build/src/conceal-daemon.exe build/conceal
+          mv build/src/conceal-wallet.exe build/conceal
+          mv build/src/conceal-optimizer.exe build/conceal
+          mv build/src/conceal-walletd.exe build/conceal
+          cp /ucrt64/bin/libboost_*.dll build/conceal
           # Runtime DLLs for artifact users without MSYS2 on PATH.
-          if [ -f /mingw64/bin/libstdc++-6.dll ]; then cp /mingw64/bin/libstdc++-6.dll build/conceal; fi
-          if [ -f /mingw64/bin/libgcc_s_seh-1.dll ]; then cp /mingw64/bin/libgcc_s_seh-1.dll build/conceal; fi
-          if [ -f /mingw64/bin/libgcc_s_dw2-1.dll ]; then cp /mingw64/bin/libgcc_s_dw2-1.dll build/conceal; fi
-          if [ -f /mingw64/bin/libwinpthread-1.dll ]; then cp /mingw64/bin/libwinpthread-1.dll build/conceal; fi
+          if [ -f /ucrt64/bin/libstdc++-6.dll ]; then cp /ucrt64/bin/libstdc++-6.dll build/conceal; fi
+          if [ -f /ucrt64/bin/libgcc_s_seh-1.dll ]; then cp /ucrt64/bin/libgcc_s_seh-1.dll build/conceal; fi
+          if [ -f /ucrt64/bin/libgcc_s_dw2-1.dll ]; then cp /ucrt64/bin/libgcc_s_dw2-1.dll build/conceal; fi
+          if [ -f /ucrt64/bin/libwinpthread-1.dll ]; then cp /ucrt64/bin/libwinpthread-1.dll build/conceal; fi
           cp build/tests/*_tests.exe build/conceal
 
       - name: Upload To GH Artifacts
@@ -169,7 +170,7 @@ jobs:
         shell: msys2 {0}
         run: |
           set -euxo pipefail
-          export PATH="/mingw64/bin:${PATH}"
+          export PATH="/ucrt64/bin:${PATH}"
           cd build/conceal
           pwd
           ls -la
@@ -182,7 +183,7 @@ jobs:
         shell: msys2 {0}
         run: |
           set -euxo pipefail
-          export PATH="/mingw64/bin:${PATH}"
+          export PATH="/ucrt64/bin:${PATH}"
           cp tests/Difficulty/data.txt build/conceal
           cd build/conceal
           pwd
@@ -194,7 +195,7 @@ jobs:
         shell: msys2 {0}
         run: |
           set -euxo pipefail
-          export PATH="/mingw64/bin:${PATH}"
+          export PATH="/ucrt64/bin:${PATH}"
           cd build/conceal
           pwd
           ls -la
@@ -205,7 +206,7 @@ jobs:
         shell: msys2 {0}
         run: |
           set -euxo pipefail
-          export PATH="/mingw64/bin:${PATH}"
+          export PATH="/ucrt64/bin:${PATH}"
           cd build
           ctest -R UnitTests --output-on-failure
 
@@ -215,7 +216,7 @@ jobs:
     permissions:
       contents: write
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5.1.0
 
       - name: Prepare version
         id: setup
@@ -241,10 +242,10 @@ jobs:
       - name: Prepare release
         run: |
           mkdir build/conceal
-          mv build/src/conceald build/conceal
-          mv build/src/concealwallet build/conceal
-          mv build/src/optimizer build/conceal
-          mv build/src/walletd build/conceal
+          mv build/src/conceal-daemon build/conceal
+          mv build/src/conceal-wallet build/conceal
+          mv build/src/conceal-optimizer build/conceal
+          mv build/src/conceal-walletd build/conceal
           cp build/tests/*_tests build/conceal
 
       - name: Upload To GH Artifacts
@@ -287,7 +288,7 @@ jobs:
     permissions:
       contents: write
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5.1.0
 
       - name: Prepare version
         id: setup
@@ -313,10 +314,10 @@ jobs:
       - name: Prepare release
         run: |
           mkdir build/conceal
-          mv build/src/conceald build/conceal
-          mv build/src/concealwallet build/conceal
-          mv build/src/optimizer build/conceal
-          mv build/src/walletd build/conceal
+          mv build/src/conceal-daemon build/conceal
+          mv build/src/conceal-wallet build/conceal
+          mv build/src/conceal-optimizer build/conceal
+          mv build/src/conceal-walletd build/conceal
           cp build/tests/*_tests build/conceal
 
       - name: Upload To GH Artifacts
@@ -359,7 +360,7 @@ jobs:
     permissions:
       contents: write
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5.1.0
 
       - name: Prepare version
         id: setup
@@ -385,10 +386,10 @@ jobs:
       - name: Prepare release
         run: |
           mkdir build/conceal
-          mv build/src/conceald build/conceal
-          mv build/src/concealwallet build/conceal
-          mv build/src/optimizer build/conceal
-          mv build/src/walletd build/conceal
+          mv build/src/conceal-daemon build/conceal
+          mv build/src/conceal-wallet build/conceal
+          mv build/src/conceal-optimizer build/conceal
+          mv build/src/conceal-walletd build/conceal
           cp build/tests/*_tests build/conceal
 
       - name: Upload To GH Artifacts
@@ -431,7 +432,7 @@ jobs:
     permissions:
       contents: write
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5.1.0
 
       - name: Prepare version
         id: setup
@@ -457,10 +458,10 @@ jobs:
       - name: Prepare release
         run: |
           mkdir build/conceal
-          mv build/src/conceald build/conceal
-          mv build/src/concealwallet build/conceal
-          mv build/src/optimizer build/conceal
-          mv build/src/walletd build/conceal
+          mv build/src/conceal-daemon build/conceal
+          mv build/src/conceal-wallet build/conceal
+          mv build/src/conceal-optimizer build/conceal
+          mv build/src/conceal-walletd build/conceal
           cp build/tests/*_tests build/conceal
 
       - name: Upload To GH Artifacts

@@ -30,3 +30,19 @@ cmake-build*
 
 # Local / optional third-party trees
 external/FTXUI/
+
+# Checkpoints
+/tools/checkpoints*/
+
+# Generated from package/deb by the Debian package build
+/debian/
+
+# Local agent / tooling (not tracked)
+.repo-kit/
+
+# repo-kit py-indexer
+.repo-kit/tools/py-indexer/index/
+.repo-kit/tools/py-indexer/.venv/
+.repo-kit/tools/py-indexer/**/__pycache__/
+.repo-kit/tools/py-indexer/**/*.py[cod]
+.repo-kit/tools/py-indexer/repos.json
