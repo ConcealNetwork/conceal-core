@@ -677,12 +677,14 @@ is actual evidence. Checking a box without evidence is not allowed.
 - [x] ~~Confirm required DLLs and other runtime files remain available.~~
       Not a Core release check. `.github/workflows/windows.yml` zips `*.exe`
       only (MSVC + the Boost installer); it does not pack DLLs. The MinGW job
-      in `check.yml` copies `libboost_*.dll` and the MinGW runtime DLLs into
-      the dev artifact with no hash. OpenSSL (`libssl-1_1-x64.dll`,
-      `libcrypto-1_1-x64.dll`) and the VC runtime DLLs are copied in
-      conceal-desktop `.github/workflows/windows.yml` (Pack); those copies are
-      not SHA-checked. Desktop's Inno Setup checksums downloaded
-      redistributables, and the published SHA256 is of the finished zip.
+      in `check.yml` (MSYS2 **UCRT64**, packages `mingw-w64-ucrt-x86_64-*`,
+      paths under `/ucrt64`; migrated from deprecated MINGW64 on 2026-11-04)
+      copies `libboost_*.dll` and the MinGW runtime DLLs into the dev artifact
+      with no hash. OpenSSL (`libssl-1_1-x64.dll`, `libcrypto-1_1-x64.dll`) and
+      the VC runtime DLLs are copied in conceal-desktop
+      `.github/workflows/windows.yml` (Pack); those copies are not SHA-checked.
+      Desktop's Inno Setup checksums downloaded redistributables, and the
+      published SHA256 is of the finished zip.
 - [ ] Check no stale real legacy executable shadows the new executable.
 
 ### D. Package lifecycle
