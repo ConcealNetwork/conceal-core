@@ -6,10 +6,10 @@
 # for the same steps on a local Arch machine.
 
 pkgname=conceal-core
-pkgver=6.7.5
+pkgver=6.7.6
 pkgrel=1
 _commit=0000000000000000000000000000000000000000
-pkgdesc='Conceal Network command-line node and wallets (conceald, concealwallet, walletd, optimizer)'
+pkgdesc='Conceal Network command-line node and wallets (conceal-daemon, conceal-wallet, conceal-walletd, conceal-optimizer)'
 arch=('x86_64')
 url='https://github.com/ConcealNetwork/conceal-core'
 license=('MIT' 'LGPL-3.0-or-later' 'BSD-3-Clause' 'Apache-2.0')
@@ -43,7 +43,7 @@ build() {
 
 package() {
   local bin
-  for bin in conceald concealwallet walletd optimizer; do
+  for bin in conceal-daemon conceal-wallet conceal-walletd conceal-optimizer; do
     install -Dm755 "build/src/$bin" "$pkgdir/usr/bin/$bin"
   done
   install -Dm644 "$pkgname/LICENSE" "$pkgdir/usr/share/licenses/$pkgname/LICENSE"

@@ -1,14 +1,17 @@
 #!/bin/bash
+# Local bootstrap helper: clone, build, and run Conceal Core from
+# ~/.local/src. Not the packaging path; see docs/packaging.md for packages.
 
 GIT_URL="https://github.com/ConcealNetwork/conceal-core"
 BIN_DIR="$HOME/.local/src/conceal-core/build/src"
-WALLETBIN="concealwallet"
 BRANCH="master"
 
 INSTALL=0
 UPDATE=0
 
-DISTRO="$(awk -F\" '/PRETTY_NAME/ {print $2}' /etc/os-release)"
+. /etc/os-release
+OS_ID="${ID:-unknown}"
+OS_LIKE="${ID_LIKE:-}"
 
 # Check to see if this is a Raspberry Pi
 [ -f "/etc/apt/sources.list.d/raspi.list" ] && isRPI=1 || isRPI=0
@@ -18,22 +21,31 @@ DISTRO="$(awk -F\" '/PRETTY_NAME/ {print $2}' /etc/os-release)"
 
 ## FUNCTIONS ##
 
-# Install Dependencies
+# Install Dependencies. The apt names are the same on Ubuntu 22.04, 24.04, and
+# 26.04; libboost-all-dev resolves to each release's Boost (1.74, 1.83, 1.90).
 installDeps() {
-	case $DISTRO in
-	"Arch"*|"Artix"*|"Manjaro"*)
-		PKGMAN_CMD="sudo pacman -Sy --noconfirm"
-		PACKAGES="base-devel git cmake boost boost-libs";;
+	if [[ $OS_ID =~ ^(arch|artix|manjaro)$ || " $OS_LIKE " == *" arch "* ]]; then
+		PKGMAN_CMD="pacman -Sy --noconfirm --needed"
+		PACKAGES="base-devel git cmake boost boost-libs"
+	elif [[ $OS_ID =~ ^(ubuntu|debian)$ || " $OS_LIKE " == *" ubuntu "* || " $OS_LIKE " == *" debian "* ]]; then
+		PKGMAN_CMD="apt install -y"
+		PACKAGES="build-essential git cmake libboost-all-dev python3-dev"
+	else
+		echo "Unsupported distribution: ${PRETTY_NAME:-$OS_ID}"
+		exit 1
+	fi
 
-	*"buntu"*|"Debian"*|*"Mint"*)
-		PKGMAN_CMD="sudo apt install -y"
-		PACKAGES="build-essential git cmake libboost-all-dev python3-dev";;
-	esac
-
-	echo "Installing $(echo $PACKAGES | wc -w) Packages"
+	echo "Installing $(echo $PACKAGES | wc -w) packages on ${PRETTY_NAME:-$OS_ID}"
 	echo "You may be asked to enter your password"
 
 	sudo $PKGMAN_CMD $PACKAGES
+}
+
+# Executable from PATH, else from the build directory.
+findBinary() {
+	command -v "$1" > /dev/null 2>&1 && { echo "$1"; return 0; }
+	[ -x "$BIN_DIR/$1" ] && { echo "$BIN_DIR/$1"; return 0; }
+	return 1
 }
 
 # Get conceal-core
@@ -50,7 +62,7 @@ buildConceal() {
 
 	cmake .. > buildlog 3>&1 1>&2 2>&3 3>&- && make -j$JOBS >> buildLog 3>&1 1>&2 2>&3 3>&- || buildFail
 
-	which conceald > /dev/null 2>&1 || addToPath
+	command -v conceal-daemon > /dev/null 2>&1 || addToPath
 	echo "Build Completed at $(date +'%-I:%M%p on %A %-d %B %Y')"
 	exit 0
 }
@@ -71,9 +83,9 @@ updateConceal() {
 	exit 0
 }
 
-# Open a wallet using concealwallet
+# Open a wallet using conceal-wallet
 openWallet() {
-	which concealwallet > /dev/null 2>&1 || WALLETBIN="$BIN_DIR/concealwallet"
+	WALLETBIN="$(findBinary conceal-wallet)" || { echo "conceal-wallet not found; run --install first"; exit 1; }
 
 	[ "$TESTNET" = 1 ] && WALLET_ARGS="$WALLET_ARGS --testnet"
 	[ ! -z "$DAEMON_ADDR" ] && WALLET_ARGS="$WALLET_ARGS --daemon-address=$DAEMON_ADDR"
@@ -89,7 +101,7 @@ addToPath() {
 	read addToPath
 
 	case $addToPath in
-		"y"|"Y") echo "export PATH=\"$PATH:$BIN_DIR\" >> $HOME/.bashrc";;
+		"y"|"Y") echo "export PATH=\"\$PATH:$BIN_DIR\"" >> "$HOME/.bashrc" && echo "Added $BIN_DIR to PATH in $HOME/.bashrc";;
 		"n"|"N"|*) echo "Don't forget to add '$BIN_DIR' to your PATH later";;
 	esac
 	return
