@@ -1,6 +1,6 @@
 // Copyright (c) 2011-2017 The Cryptonote developers
 // Copyright (c) 2017-2018 The Circle Foundation & Conceal Devs
-// Copyright (c) 2018-2023 Conceal Network & Conceal Devs
+// Copyright (c) 2018-2026 Conceal Network & Conceal Devs
 //
 // Distributed under the MIT/X11 software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
@@ -38,9 +38,9 @@
 #endif
 
 #ifdef _WIN32
-const std::string DAEMON_FILENAME = "conceald.exe";
+const std::string DAEMON_FILENAME = "conceal-daemon.exe";
 #else
-const std::string DAEMON_FILENAME = "conceald";
+const std::string DAEMON_FILENAME = "conceal-daemon";
 #endif
 
 using namespace Tests::common;
@@ -212,7 +212,7 @@ void BaseFunctionalTests::startNode(size_t index)
   }
 
 #if defined WIN32
-  std::string commandLine = "start /MIN \"conceald" + std::to_string(index) + "\" \"" + daemonPath.string() +
+  std::string commandLine = "start /MIN \"conceal-daemon" + std::to_string(index) + "\" \"" + daemonPath.string() +
                             "\" --testnet --data-dir=\"" + dataDirPath + "\" --config-file=daemon.conf";
   LOG_DEBUG(commandLine);
   system(commandLine.c_str());
@@ -225,7 +225,7 @@ void BaseFunctionalTests::startNode(size_t index)
     close(2);
     std::string dataDir = "--data-dir=" + dataDirPath + "";
     LOG_TRACE(pathToDaemon);
-    if (execl(pathToDaemon.c_str(), "conceald", "--testnet", dataDir.c_str(), "--config-file=daemon.conf", NULL) == -1)
+    if (execl(pathToDaemon.c_str(), "conceal-daemon", "--testnet", dataDir.c_str(), "--config-file=daemon.conf", NULL) == -1)
     {
       LOG_ERROR(TO_STRING(errno));
     }

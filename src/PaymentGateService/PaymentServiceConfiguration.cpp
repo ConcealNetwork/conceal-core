@@ -1,6 +1,6 @@
 // Copyright (c) 2011-2017 The Cryptonote developers
 // Copyright (c) 2017-2018 The Circle Foundation & Conceal Devs
-// Copyright (c) 2018-2023 Conceal Network & Conceal Devs
+// Copyright (c) 2018-2026 Conceal Network & Conceal Devs
 //
 // Distributed under the MIT/X11 software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
@@ -28,7 +28,7 @@ void Configuration::initOptions(boost::program_options::options_description& des
       ("view-key", po::value<std::string>(),"Generate a wallet container with this secret view <key>")
       ("spend-key", po::value<std::string>(),"Generate a wallet container with this secret spend <key>")
       ("daemon,d", "run as daemon in Unix or as service in Windows")
-      ("log-file,l", po::value<std::string>(), "log file")
+      ("log-file,l", po::value<std::string>(), "log file; a bare file name goes in the data directory (default conceal-walletd.log)")
       ("server-root", po::value<std::string>(), "server root. The service will use it as working directory. Don't set it if don't want to change it")
       ("log-level", po::value<size_t>(), "log level")
       ("address", "print wallet addresses and exit");

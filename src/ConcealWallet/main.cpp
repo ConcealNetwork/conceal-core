@@ -1,4 +1,4 @@
-// Copyright (c) 2018-2023 Conceal Network & Conceal Devs
+// Copyright (c) 2018-2026 Conceal Network & Conceal Devs
 //
 // Distributed under the MIT/X11 software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
@@ -13,6 +13,7 @@
 #include "Common/CommandLine.h"
 #include "Common/PathTools.h"
 #include "Common/SignalHandler.h"
+#include "Common/Util.h"
 #include "Wallet/WalletRpcServer.h"
 
 #include "version.h"
@@ -94,11 +95,13 @@ int main(int argc, char* argv[])
   if (command_line::has_arg(vm, arg_log_level))
     logLevel = static_cast<Level>(command_line::get_arg(vm, arg_log_level));
 
-  logManager.configure(m_chelper.buildLoggerConfiguration(logLevel, common::ReplaceExtenstion(argv[0], ".log")));
+  bool testnet = command_line::get_arg(vm, arg_testnet);
+
+  logManager.configure(m_chelper.buildLoggerConfiguration(logLevel,
+      tools::getLogFilePath(tools::getDefaultDataDirectory(testnet), "", "conceal-wallet.log")));
 
   logger(INFO, BRIGHT_YELLOW) << CCX_WALLET_RELEASE_VERSION;
 
-  bool testnet = command_line::get_arg(vm, arg_testnet);
   if (testnet)
     logger(INFO, MAGENTA) << "/!\\ Starting in testnet mode /!\\";
 

@@ -1,5 +1,5 @@
 // Copyright (c) 2012-2017 The Cryptonote developers
-// Copyright (c) 2018-2023 Conceal Network & Conceal Devs
+// Copyright (c) 2018-2026 Conceal Network & Conceal Devs
 // Distributed under the MIT/X11 software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -13,9 +13,9 @@
 #include "RPCTestNode.h"
 
 #ifdef _WIN32
-const std::string daemonExec = "conceald.exe";
+const std::string daemonExec = "conceal-daemon.exe";
 #else
-const std::string daemonExec = "conceald";
+const std::string daemonExec = "conceal-daemon";
 #endif
 
 namespace {
