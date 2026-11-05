@@ -172,7 +172,7 @@ void BaseFunctionalTests::startNode(size_t index)
       << "rpc-bind-port=" << rpcPort << std::endl
       << "p2p-bind-port=" << p2pPort << std::endl
       << "log-level=4" << std::endl
-      << "log-file=test_conceald_" << index << ".log" << std::endl;
+      << "log-file=test_conceal-daemon_" << index << ".log" << std::endl;
 
   switch (m_topology)
   {
