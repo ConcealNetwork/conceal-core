@@ -30,6 +30,11 @@ Launchpad PPA upload sorts below an Ubuntu archive package of the same
 upstream version. No PPA upload job exists yet. Same day: Arch test builds
 use `pkgrel=0` instead of `0.<date>`. AUR and Omarchy keep `pkgrel=1`.
 
+Last updated because: 2026-11-05 — Ubuntu 26.04 `.deb` configure failed because
+Boost 1.90 has no `boost_system` CMake package. CMake no longer requests the
+`system` component (header-only since Boost 1.69); Apple/MinGW retry path
+removed. Debian `Depends` unchanged.
+
 ## Channels
 
 | Package | Built by | Who installs it | Distribution |
@@ -178,19 +183,22 @@ with full git history, so CMake's `git log -1` stamps the real commit into
 - CMake's own `-O3 -DNDEBUG` Release flags are added after the distribution
   flags, as in the existing release builds.
 
-No CMake change was needed. On Arch, CMake 4.4.5 accepts
-`cmake_minimum_required(VERSION 3.5)` with a deprecation warning, and Boost
-1.92 still provides a header-only `system` component, so the Linux
-`find_package(Boost ... system ...)` line succeeds (2026-10-29).
+On Arch, CMake 4.4.5 accepts `cmake_minimum_required(VERSION 3.5)` with a
+deprecation warning (2026-10-29). Ubuntu 26.04 / Boost 1.90 does not ship
+`boost_systemConfig.cmake` or `libboost-system*` (header-only; stub removed
+around Boost 1.89). As of 2026-11-05, top-level `CMakeLists.txt` requests
+Boost components without `system` on all platforms. *(Supersedes the earlier
+note that Linux `find_package(... system ...)` needed no change.)*
 
 ## Dependencies
 
 With `STATIC=OFF`, Linux builds request these Boost components:
-`system`, `filesystem`, `thread`, `date_time`, `chrono`, `regex`,
-`serialization`, and `program_options`. Only some of them are still separate
-shared libraries. The rest are header-only in current Boost. The binaries
-also need `libresolv`, `libstdc++`, `libgcc_s`, and `libc`. There is no
-OpenSSL, zlib, or database dependency.
+`filesystem`, `thread`, `date_time`, `chrono`, `regex`, `serialization`, and
+`program_options`. `system` is not requested (header-only since Boost 1.69).
+Only some of the listed components are still separate shared libraries. The
+rest are header-only in current Boost. The binaries also need `libresolv`,
+`libstdc++`, `libgcc_s`, and `libc`. There is no OpenSSL, zlib, or database
+dependency.
 
 ### Arch
 
