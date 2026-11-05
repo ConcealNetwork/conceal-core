@@ -1,0 +1,24 @@
+#!/usr/bin/make -f
+# The packaging workflow copies package/deb to debian/ before building.
+# See docs/packaging.md.
+
+# Ubuntu enables LTO by default; with it, the cn_slow_hash templates fail to link.
+export DEB_BUILD_MAINT_OPTIONS = hardening=+all optimize=-lto
+
+%:
+	dh $@ --buildsystem=cmake --builddir=build
+
+override_dh_auto_configure:
+	dh_auto_configure -- \
+		-DCMAKE_BUILD_TYPE=Release \
+		-DSTATIC=OFF \
+		-DARCH=x86-64 \
+		-DBUILD_TESTS=OFF
+
+override_dh_auto_test:
+
+# Upstream CMake has no install() rules for the four binaries.
+override_dh_auto_install:
+	for bin in conceal-daemon conceal-wallet conceal-walletd conceal-optimizer; do \
+		install -Dm755 build/src/$$bin debian/conceal-core/usr/bin/$$bin; \
+	done

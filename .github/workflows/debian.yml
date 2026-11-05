@@ -1,0 +1,241 @@
+name: Debian package
+
+on:
+  workflow_dispatch:
+  push:
+    tags:
+      - "*"
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    name: Build .deb (${{ matrix.os }})
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 120
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: ubuntu-22.04
+            id: ubuntu-2204
+          - os: ubuntu-24.04
+            id: ubuntu-2404
+          - os: ubuntu-26.04
+            id: ubuntu-2604
+    steps:
+      - name: Add swap
+        run: |
+          sudo fallocate -l 6G /swapfile-ccx
+          sudo chmod 600 /swapfile-ccx
+          sudo mkswap /swapfile-ccx
+          sudo swapon /swapfile-ccx
+
+      - name: Install build dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y build-essential python3-dev gcc g++ git cmake libboost-all-dev debhelper lintian
+
+      # actions/checkout v7.0.1
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+
+      - name: Prepare debian/ for this commit
+        id: prep
+        run: |
+          set -euo pipefail
+          commit=$(git rev-parse HEAD)
+          [[ $commit == "$GITHUB_SHA" ]] || { echo "checkout $commit is not $GITHUB_SHA"; exit 1; }
+
+          pkgver=$(sed -n 's/^set(VERSION "\(.*\)")$/\1/p' CMakeLists.txt)
+          tag=$(git describe --tags --exact-match HEAD 2>/dev/null || true)
+          if [[ $tag =~ ^v?([0-9]+\.[0-9]+\.[0-9]+)$ ]]; then
+            pkgver=${BASH_REMATCH[1]}
+          fi
+          . /etc/os-release
+          if [[ $GITHUB_REF_TYPE == tag ]]; then
+            revision=1
+          else
+            revision=0
+          fi
+          version="$pkgver-$revision~${VERSION_CODENAME}1"
+
+          rm -rf debian
+          cp -r package/deb debian
+          rm debian/README.md
+          sed -i "1s/^conceal-core ([^)]*) [^;]*;/conceal-core ($version) $VERSION_CODENAME;/" debian/changelog
+          head -1 debian/changelog
+          bash -n package/test-install.sh
+
+          {
+            echo "commit=$commit"
+            echo "pkgver=$pkgver"
+          } >> "$GITHUB_OUTPUT"
+
+      - name: Build package
+        env:
+          DEB_BUILD_OPTIONS: parallel=2 noddebs
+        run: |
+          set -o pipefail
+          mkdir -p logs
+          dpkg-buildpackage -b -us -uc 2>&1 | tee logs/build.log
+          mkdir -p dist
+          mv ../conceal-core_*_amd64.deb dist/
+
+      - name: Check package
+        run: |
+          set -euo pipefail
+          deb=$(ls dist/conceal-core_*_amd64.deb)
+          lintian --fail-on error --info --display-info "$deb"
+          dpkg-deb --info "$deb"
+          contents=$(dpkg-deb --contents "$deb")
+          echo "$contents"
+          for bin in conceal-daemon conceal-wallet conceal-walletd conceal-optimizer; do
+            grep -qE "^-rwxr-xr-x root/root .* \./usr/bin/$bin\$" <<< "$contents" || { echo "usr/bin/$bin missing or not 755"; exit 1; }
+            ldd "build/src/$bin" | sed "s|^|$bin: |"
+          done
+          grep -q '\./usr/share/doc/conceal-core/copyright$' <<< "$contents" || { echo "copyright missing"; exit 1; }
+          echo "compiler: $(gcc --version | head -1)"
+          echo "cmake: $(cmake --version | head -1)"
+          echo "boost: libboost-all-dev $(dpkg-query -W -f='${Version}' libboost-all-dev)"
+          echo "compile flags: $(sed -n 's/^CXX_FLAGS = //p' build/src/CMakeFiles/ConcealDaemon.dir/flags.make)"
+
+      - name: Write SHA256SUMS and README.txt
+        working-directory: dist
+        run: |
+          set -euo pipefail
+          deb=$(ls conceal-core_*_amd64.deb)
+          sha256sum "$deb" > SHA256SUMS
+          . /etc/os-release
+          cat > README.txt <<EOF
+          Conceal Core ${{ steps.prep.outputs.pkgver }} for $NAME $VERSION_ID only (amd64)
+          Commit: ${{ steps.prep.outputs.commit }}
+
+          Verify:     sha256sum -c SHA256SUMS
+          Install:    sudo apt install ./$deb
+          Check:      conceal-daemon --version
+          Uninstall:  sudo apt remove conceal-core
+
+          Installs conceal-daemon, conceal-wallet, conceal-walletd, and
+          conceal-optimizer in /usr/bin.
+          Default logs (conceal-daemon.log, ...) go to ~/.conceal.
+          Needs an x86-64 CPU with AES-NI. Use "apt install ./file", not
+          "dpkg -i": apt also installs the required Boost libraries.
+          Uninstalling keeps wallets and blockchain data in ~/.conceal.
+          EOF
+          cat README.txt SHA256SUMS
+
+      # actions/upload-artifact v7.0.2
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9
+        with:
+          name: conceal-core-deb-${{ matrix.id }}
+          path: dist/
+          if-no-files-found: error
+
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9
+        if: failure()
+        with:
+          name: conceal-core-deb-${{ matrix.id }}-build-logs
+          path: logs/
+          if-no-files-found: warn
+
+  test:
+    name: Install and remove in a clean ${{ matrix.id }} container
+    needs: build
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - id: ubuntu-2204
+            image: ubuntu:22.04@sha256:076e7bf82319619f28dd0aa9c02ab34b055ad37100395b4f49a2ffba04fb5e11
+          - id: ubuntu-2404
+            image: ubuntu:24.04@sha256:fe81560990fae86dc4743202b2cb4d3df98d0bcf949173cecef15ce1127ef852
+          - id: ubuntu-2604
+            image: ubuntu:26.04@sha256:6a06111c3b0a8600feadb270aec771dc239bf407b25625f93f44ab00e11f4d3c
+    container:
+      image: ${{ matrix.image }}
+    steps:
+      - name: Update base image
+        run: |
+          apt-get update
+          DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends ca-certificates git
+
+      # actions/checkout v7.0.1
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          persist-credentials: false
+
+      # actions/download-artifact v8.0.2
+      - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333
+        with:
+          name: conceal-core-deb-${{ matrix.id }}
+          path: dist
+
+      - name: Verify SHA256SUMS
+        working-directory: dist
+        run: sha256sum -c SHA256SUMS
+
+      - name: Install, remove, smoke test
+        shell: bash
+        run: |
+          set -o pipefail
+          mkdir -p logs
+          bash package/test-install.sh dist/conceal-core_*_amd64.deb "$GITHUB_SHA" 2>&1 | tee logs/test-install.log
+
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9
+        if: failure()
+        with:
+          name: conceal-core-deb-${{ matrix.id }}-test-logs
+          path: logs/
+          if-no-files-found: warn
+
+  release:
+    name: Attach to GitHub Release
+    needs: test
+    if: github.ref_type == 'tag'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333
+        with:
+          pattern: conceal-core-deb-ubuntu-*
+          path: artifacts
+
+      - name: Name release files
+        id: files
+        run: |
+          set -euo pipefail
+          mkdir -p dist
+          body=""
+          for dir in artifacts/conceal-core-deb-ubuntu-*; do
+            id=$(basename "$dir")
+            (cd "$dir" && sha256sum -c SHA256SUMS)
+            deb=$(cd "$dir" && ls conceal-core_*_amd64.deb)
+            sha256=$(cut -d' ' -f1 "$dir/SHA256SUMS")
+            mv "$dir/$deb" dist/
+            mv "$dir/SHA256SUMS" "dist/$id.SHA256SUMS"
+            mv "$dir/README.txt" "dist/$id.README.txt"
+            body+="[${id#conceal-core-deb-} .deb](../../releases/download/$GITHUB_REF_NAME/$deb) **$deb**"$'\n'
+            body+="\`SHA256 : ${sha256^^}\`"$'\n\n'
+          done
+          ls -l dist
+          {
+            echo "body<<EOF"
+            printf '%s' "$body"
+            echo "EOF"
+          } >> "$GITHUB_OUTPUT"
+
+      - uses: softprops/action-gh-release@efb35369e0ad2afab669f228072c1b0d510eae64 # v3.0.3
+        with:
+          files: dist/*
+          append_body: true
+          body: ${{ steps.files.outputs.body }}
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

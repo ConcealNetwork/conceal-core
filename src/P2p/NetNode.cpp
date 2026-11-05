@@ -64,13 +64,16 @@ size_t get_random_index_with_fixed_probability(size_t max_index) {
 
 void addPortMapping(const logging::LoggerRef& logger, uint32_t port) {
   // Add UPnP port mapping
-  logger(INFO) <<  "Attempting to add IGD port mapping.";
-  int result;
-  UPNPDev *deviceList = upnpDiscover(1000, nullptr, nullptr, 0, 0, 2, &result);
+  logger(INFO) <<  "Attempting to add IGD port mapping for port " << port << ".";
+  int discoverErr = 0;
+  UPNPDev *deviceList = upnpDiscover(1000, nullptr, nullptr, 0, 0, 2, &discoverErr);
+  logger(DEBUGGING) << "upnpDiscover returned devlist=" << (void*)deviceList
+              << " error=" << discoverErr;
   UPNPUrls urls;
   IGDdatas igdData;
   char lanAddress[64];
-  result = UPNP_GetValidIGD(deviceList, &urls, &igdData, lanAddress, sizeof lanAddress);
+  int result = UPNP_GetValidIGD(deviceList, &urls, &igdData, lanAddress, sizeof lanAddress);
+  logger(DEBUGGING) << "UPNP_GetValidIGD result=" << result;
   freeUPNPDevlist(deviceList);
   if (result != 0) {
     if (result == 1) {
@@ -80,19 +83,22 @@ void addPortMapping(const logging::LoggerRef& logger, uint32_t port) {
         portString.str().c_str(), lanAddress, "conceal", "TCP", nullptr, "0") != 0) {
         logger(ERROR) << "UPNP port mapping failed.";
       } else {
-        logger(INFO, BRIGHT_GREEN) << "Added IGD port mapping.";
+        logger(INFO, BRIGHT_GREEN) << "Added IGD port mapping for port " << port << ".";
       }
     } else if (result == 2) {
       logger(INFO) <<  "IGD was found but reported as not connected.";
     } else if (result == 3) {
       logger(INFO) <<  "UPnP device was found but not recognized as IGD.";
     } else {
-      logger(ERROR) << "UPNP_GetValidIGD returned an unknown result code.";
+      logger(ERROR) << "UPNP_GetValidIGD returned an unknown result code: " << result;
     }
 
     FreeUPNPUrls(&urls);
   } else {
-    logger(INFO) <<  "No IGD was found.";
+    logger(INFO) <<  "No IGD was found."
+                 << "If incoming connections fail, verify router port "
+                 << port
+                 << " and firewall rules.";
   }
 }
 

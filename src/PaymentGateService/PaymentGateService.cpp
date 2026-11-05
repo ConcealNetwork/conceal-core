@@ -1,6 +1,6 @@
 // Copyright (c) 2011-2017 The Cryptonote developers
 // Copyright (c) 2017-2018 The Circle Foundation & Conceal Devs
-// Copyright (c) 2018-2023 Conceal Network & Conceal Devs
+// Copyright (c) 2018-2026 Conceal Network & Conceal Devs
 //
 // Distributed under the MIT/X11 software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
@@ -10,6 +10,7 @@
 #include <future>
 
 #include "Common/SignalHandler.h"
+#include "Common/Util.h"
 #include "InProcessNode/InProcessNode.h"
 #include "Logging/LoggerRef.h"
 #include "PaymentGate/PaymentServiceJsonRpcServer.h"
@@ -64,7 +65,8 @@ bool PaymentGateService::init(int argc, char** argv) {
     log(logging::INFO) << "Current working directory now is " << config.gateConfiguration.serverRoot;
   }
 
-  fileStream.open(config.gateConfiguration.logFile, std::ofstream::app);
+  const std::string logFile = tools::getLogFilePath(config.coreConfig.configFolder, config.gateConfiguration.logFile, "conceal-walletd.log");
+  fileStream.open(logFile, std::ofstream::app);
 
   if (!fileStream) {
     throw std::runtime_error("Couldn't open log file");

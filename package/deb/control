@@ -1,0 +1,24 @@
+Source: conceal-core
+Section: net
+Priority: optional
+Maintainer: Conceal Network <ccx@conceal.network>
+Build-Depends: debhelper-compat (= 13),
+               cmake,
+               git,
+               libboost-all-dev,
+               python3-dev
+Standards-Version: 4.6.0
+Homepage: https://github.com/ConcealNetwork/conceal-core
+Rules-Requires-Root: no
+
+Package: conceal-core
+Architecture: amd64
+Depends: ${shlibs:Depends}, ${misc:Depends}
+Description: Conceal Network command-line node and wallets
+ Conceal Core provides the conceal-daemon node daemon, the conceal-wallet
+ command-line wallet, the conceal-walletd payment gateway service, and the
+ conceal-optimizer tool for the Conceal Network (CCX).
+ .
+ Installing the package does not start a service, create a wallet,
+ download blockchain data, or open network ports. The binaries are
+ built for generic x86-64 CPUs with AES-NI.

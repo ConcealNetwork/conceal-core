@@ -1,0 +1,57 @@
+name: Ubuntu 26.04
+
+on:
+  push:
+    tags:
+      - "*"
+  
+jobs:
+  build-ubuntu26:
+    name: Ubuntu 26.04
+    runs-on: ubuntu-26.04
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5.1.0
+
+      - name: Build
+        id: build
+        run: |
+          sudo fallocate -l 6G /swapfile-ccx
+          sudo chmod 600 /swapfile-ccx
+          sudo mkswap /swapfile-ccx
+          sudo swapon /swapfile-ccx
+          sudo apt-get update
+          sudo apt-get install -y libboost-all-dev
+          build_folder="build/debug"
+          ccx_version=$(echo "$GITHUB_REF" | sed 's|refs/tags/||')
+          ccx_ver_folder=$(echo $ccx_version | sed 's/\.//g')
+          release_name=ccx-cli-ubuntu-2604-v"$ccx_version"
+          mkdir -p "$build_folder"
+          cd "$build_folder"
+          cmake ../.. -DCMAKE_BUILD_TYPE=Release -DSTATIC=ON
+          make -j2
+          mkdir -p "$release_name/$ccx_ver_folder"
+          exeFiles=()
+          for f in src/*; do [[ -x $f && -f $f ]] && exeFiles+=( "$f" ); done
+          cp "${exeFiles[@]}" "$release_name/$ccx_ver_folder"
+          cd "$release_name"
+          tar -czf "$release_name".tar.gz "$ccx_ver_folder"
+          sha256=$(shasum -a 256 "$release_name".tar.gz | awk '{print toupper($1)}')
+          asset_path="./$build_folder/$release_name/$release_name.tar.gz"
+          echo "sha256=${sha256}" >> $GITHUB_OUTPUT
+          echo "release_name=${release_name}.tar.gz" >> $GITHUB_OUTPUT
+          echo "asset_path=${asset_path}" >> $GITHUB_OUTPUT
+          echo "ccx_version=${ccx_version}" >> $GITHUB_OUTPUT
+
+      - name: Create Release
+        uses: softprops/action-gh-release@efb35369e0ad2afab669f228072c1b0d510eae64 # v3.0.3
+        with:
+          files: ${{ steps.build.outputs.asset_path }}
+          name: Conceal Core CLI v${{ steps.build.outputs.ccx_version }}
+          body: |
+            [Download for Ubuntu 26.04](../../releases/download/${{ steps.build.outputs.ccx_version }}/${{ steps.build.outputs.release_name }}) **${{ steps.build.outputs.release_name }}**
+            `SHA256 : ${{ steps.build.outputs.sha256 }}`
+          append_body: true
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
