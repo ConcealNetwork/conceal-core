@@ -1,6 +1,7 @@
 # Linux packages: Arch `.pkg.tar.zst` and Debian `.deb`
 
-Status: Active. Manual test builds only; no release upload yet.
+Status: Active. Manual test builds, plus release upload on tag push (added
+2026-11-04, not yet run).
 Scope: native Linux packages of the Conceal Core command-line binaries.
 
 Last updated because: first version, added with the `Arch Linux package` and
@@ -18,22 +19,43 @@ implemented. Same day (docs revision): moved the proposed-rename note below
 the full contents table (including license rows) so the table markup stays
 valid; see DEC-0002 / `docs/binary-naming.md` for rollout policy.
 
+Last updated because: 2026-11-04 (6.7.6) — packages install only the new
+names `conceal-daemon`, `conceal-wallet`, `conceal-walletd`, and
+`conceal-optimizer` (no legacy aliases); default logs moved to the data
+directory; Ubuntu 26.04 `.deb` added; both workflows also run on tag push and
+attach to the GitHub Release. The earlier "manual only", "current names", and
+"proposed rename" statements are superseded below. Same day: Debian versions
+changed from `+ubuntu<release>` to `-<revision>~<codename>1` so a planned
+Launchpad PPA upload sorts below an Ubuntu archive package of the same
+upstream version. No PPA upload job exists yet. Same day: Arch test builds
+use `pkgrel=0` instead of `0.<date>`. AUR and Omarchy keep `pkgrel=1`.
+
 ## Channels
 
 | Package | Built by | Who installs it | Distribution |
 | --- | --- | --- | --- |
 | `conceal-core-<ver>-<rel>-x86_64.pkg.tar.zst` | [`.github/workflows/archlinux.yml`](../.github/workflows/archlinux.yml) | Arch Linux and Omarchy, with `pacman -U` | Workflow artifact for testing. Later submitted to the Omarchy package repository. |
-| `conceal-core_<ver>-<rev>+ubuntu22.04_amd64.deb` | [`.github/workflows/debian.yml`](../.github/workflows/debian.yml) | Ubuntu 22.04 only | GitHub only |
-| `conceal-core_<ver>-<rev>+ubuntu24.04_amd64.deb` | same workflow | Ubuntu 24.04 only | GitHub only |
+| `conceal-core_<ver>-<rev>~jammy1_amd64.deb` | [`.github/workflows/debian.yml`](../.github/workflows/debian.yml) | Ubuntu 22.04 only | GitHub Release binary. PPA source upload planned |
+| `conceal-core_<ver>-<rev>~noble1_amd64.deb` | same workflow | Ubuntu 24.04 only | same |
+| `conceal-core_<ver>-<rev>~resolute1_amd64.deb` | same workflow | Ubuntu 26.04 only | same |
 
-- Both workflows are `workflow_dispatch` only. They have no push, tag,
-  schedule, or release trigger, and only `contents: read` permission.
-- Workflow artifacts expire on GitHub's retention schedule. They are test
-  builds, not a pacman or apt repository and not a published release.
+- Both workflows run on `workflow_dispatch` (test builds: Arch `pkgrel=0`,
+  Debian revision `0`) and on any tag push (revision `1`). On a tag, a `release` job
+  that runs after `test` has `contents: write` and attaches the packages,
+  `<artifact>.SHA256SUMS`, and `<artifact>.README.txt` to that tag's GitHub
+  Release with `softprops/action-gh-release` (`append_body`), as the tarball
+  workflows do. Other jobs keep `contents: read`. *(Supersedes "dispatch
+  only", 2026-11-04.)*
+- A tag push fails the `test` job if the tag differs from CMake `VERSION`,
+  because `--version` must report the package's upstream version.
+- Workflow artifacts expire on GitHub's retention schedule. Manual runs are
+  test builds, not a pacman or apt repository and not a published release.
 - The `.deb` files are not submitted to the Debian or Ubuntu archives, and
-  are not part of Omarchy.
-- The existing tag-triggered Ubuntu, Windows, and macOS release workflows are
-  unchanged.
+  are not part of Omarchy. A Launchpad PPA is planned; it takes a source
+  upload, not these binaries (see Versions below).
+- The tag-triggered Ubuntu (22.04, 24.04, and since 2026-11-04 26.04 as
+  `ccx-cli-ubuntu-2604`), Windows, and macOS release workflows ship the same
+  four binaries in their archives.
 - Flatpak is out of scope. A blockchain node needs network access and a large
   persistent data directory, so a sandboxed package needs its own permission
   design. Omarchy installs ordinary Arch packages, so the Arch package is the
@@ -45,21 +67,24 @@ Package name: `conceal-core` on both systems.
 
 | Path | Contents |
 | --- | --- |
-| `/usr/bin/conceald` | node daemon |
-| `/usr/bin/concealwallet` | command-line wallet |
-| `/usr/bin/walletd` | payment gateway service |
-| `/usr/bin/optimizer` | wallet optimizer tool |
+| `/usr/bin/conceal-daemon` | node daemon |
+| `/usr/bin/conceal-wallet` | command-line wallet |
+| `/usr/bin/conceal-walletd` | payment gateway service |
+| `/usr/bin/conceal-optimizer` | wallet optimizer tool |
 | `/usr/share/licenses/conceal-core/` (Arch) | `LICENSE` (MIT), `LICENSE.miniupnpc` (BSD-3-Clause), `LICENSE.parallel_hashmap` (Apache-2.0) |
 | `/usr/share/doc/conceal-core/copyright` (Debian) | MIT, LGPL-3.0-or-later, BSD-3-Clause, and Apache-2.0, in Debian copyright format |
 
-**Proposed rename (not shipped yet):** `conceald` → `conceal-daemon`,
-`concealwallet` → `conceal-wallet`, `walletd` → `conceal-walletd`,
-`optimizer` → `conceal-optimizer`, with a transitional compatibility-alias
-window for systemd `ExecStart` and Conceal Guardian. Prefer Guardian
-dual-name support before the Core rename; full assessment, validation
-checklist, and rollout plan: [`docs/binary-naming.md`](binary-naming.md)
-(DEC-0002). Table above remains the **current** shipped layout until that
-plan is accepted and implemented.
+Renamed in 6.7.6 from `conceald`, `concealwallet`, `walletd`, and
+`optimizer` ([`docs/binary-naming.md`](binary-naming.md), DEC-0002). The old
+names are not installed, not even as symlinks; `test-install.sh` fails if
+they are. Earlier "proposed rename / transitional alias" text here is
+superseded.
+
+The binaries write no log under `/usr/bin`. Default logs are
+`conceal-daemon.log`, `conceal-wallet.log`, and `conceal-walletd.log` in the
+data directory (`~/.conceal`, `~/.conceal/testnet` with `--testnet`);
+`--log-file` overrides it (a bare file name still goes in the data
+directory). `conceal-optimizer` logs to the console.
 
 `/usr/bin` is where package-managed commands go; `/usr/local/bin` is for
 software installed outside the package manager. Upstream
@@ -72,7 +97,7 @@ their licenses ship too.
 32 files under `src/` are LGPL-3.0-or-later: CryptoNote/Bytecoin, Karbo,
 and the optimizer code, including `src/Platform/Linux/System/*`, `src/Rpc/*`,
 `src/Common/*`, and `src/Wallet/WalletSerializationV2.*`. They are compiled
-into every binary; `optimizer --help` prints a GNU license notice.
+into every binary; `conceal-optimizer --help` prints a GNU license notice.
 
 - **Arch:** `license=('MIT' 'LGPL-3.0-or-later' 'BSD-3-Clause' 'Apache-2.0')`.
   The LGPL text comes from Arch's shared SPDX license directory, so it is not
@@ -202,6 +227,7 @@ sudo apt-get install -y build-essential python3-dev gcc g++ git cmake libboost-a
 | --- | --- | --- |
 | 22.04 | GCC 11.4, CMake 3.22.1 (apt; the GitHub runner's preinstalled 3.31.6 takes precedence there), Boost 1.74 | `libboost-filesystem1.74.0, libboost-program-options1.74.0, libc6 (>= 2.34), libgcc-s1 (>= 3.0), libstdc++6 (>= 12)` |
 | 24.04 | GCC 13.3, CMake 3.28.3, Boost 1.83 | `libboost-filesystem1.83.0, libboost-program-options1.83.0, libc6 (>= 2.38), libgcc-s1 (>= 3.0), libstdc++6 (>= 13.1)` |
+| 26.04 | TODO: record from the first `debian.yml` run (job log prints compiler, CMake, Boost) | TODO: from that run's `dpkg-deb --info` |
 
 `lintian` reports no errors. Its warnings:
 
@@ -223,12 +249,45 @@ version, so versions stay ordered.
 
 | Build | Arch | Debian |
 | --- | --- | --- |
-| Manual test build | `6.7.5-0.<UTC yyyymmddHHMM>` | `6.7.5-0.<UTC yyyymmddHHMM>+ubuntu<release>` |
-| Future release package | `6.7.5-1` | `6.7.5-1+ubuntu<release>` |
+| Manual test build | `6.7.6-0` | `6.7.6-0~<codename>1` |
+| Tag release package | `6.7.6-1` | `6.7.6-1~<codename>1` |
 
-- A newer test build replaces an older one of the same upstream version.
-- Revision `1` sorts above every `0.*` test build, so a release package
-  upgrades a test install.
+`<codename>` comes from `/etc/os-release`: `jammy` (22.04), `noble` (24.04),
+`resolute` (26.04). A 22.04 release file is
+`conceal-core_6.7.6-1~jammy1_amd64.deb`.
+
+- Arch test builds use `pkgrel=0`, so the file is
+  `conceal-core-6.7.6-0-x86_64.pkg.tar.zst`. The date stamp is gone
+  (2026-11-04): AUR and Omarchy do not use one, and their recipes stay at
+  `pkgrel=1` (`package/arch/README.md`). Two test builds share `6.7.6-0`;
+  `pacman -U` reinstalls that version. `pkgrel=1` upgrades `pkgrel=0`.
+- Debian test builds carry no date. Two test builds of the same upstream
+  version share `6.7.6-0~<codename>1`: install the second with
+  `sudo apt install --reinstall ./conceal-core_*_amd64.deb`.
+- Revision `1` sorts above revision `0`, so `6.7.6-1~jammy1` upgrades
+  `6.7.6-0~jammy1`. Checked with `dpkg --compare-versions` on 2026-11-04:
+  `6.7.6-0~jammy1` < `6.7.6-1~jammy1` < `6.7.6-1~jammy2`, and
+  `6.7.6-1~jammy1` < `6.7.6-1~noble1` < `6.7.6-1~resolute1`.
+- `+ubuntu22.04` (used earlier the same day) is superseded. `+` sorts after a
+  plain revision, so that package would look newer than an Ubuntu archive
+  package `6.7.6-1` and block it. `~` sorts before, which is what a PPA
+  wants. Launchpad does not require a date in the version.
+
+### Launchpad PPA (planned, not implemented)
+
+The version above is the PPA form. The upload is not built yet.
+
+- A PPA accepts a source package (`.dsc` via `dput`), then Launchpad compiles
+  the binary. The `.deb` attached to the GitHub Release cannot be uploaded.
+- One version per Ubuntu series: `6.7.6-1~jammy1`, `6.7.6-1~noble1`,
+  `6.7.6-1~resolute1`. The changelog distribution is that codename, which the
+  workflow already writes.
+- The final digit is the upload count. Launchpad rejects a repeated version,
+  so a rebuild of the same upstream version must become `~jammy2`. The
+  workflow always writes `1`.
+- Source format stays `3.0 (native)`. `dpkg-source` 1.21.1 builds
+  `6.7.6-1~jammy1` in that format (checked 2026-11-04). `3.0 (quilt)` needs an
+  upstream tarball that this workflow does not produce.
 - Upgrade replaces the files in `/usr/bin` only.
 - Uninstall removes the packaged files only. Wallets and blockchain data under
   the default data directory, `~/.conceal`, are never touched by installation,
@@ -283,28 +342,33 @@ Every container job runs on an `ubuntu-24.04` host. It is pinned because
 
 ### Debian package
 
-1. `build` on GitHub-hosted `ubuntu-22.04` and `ubuntu-24.04` runners. The
+1. `build` on GitHub-hosted `ubuntu-22.04`, `ubuntu-24.04`, and
+   `ubuntu-26.04` runners. The
    build runs as the runner user; `sudo` is used only for swap and `apt-get`.
    `dpkg-buildpackage -b -us -uc` builds the binary package. Then
    `lintian --fail-on error`, `dpkg-deb --contents`, and `ldd` check it. The
    results and toolchain versions go to the job log.
-2. `test` in fresh `ubuntu:22.04` and `ubuntu:24.04` containers pinned by
-   digest. Each verifies `SHA256SUMS` and runs `package/test-install.sh` on
+2. `test` in fresh `ubuntu:22.04`, `ubuntu:24.04`, and `ubuntu:26.04`
+   containers pinned by digest (26.04 digest pulled 2026-11-04). Each verifies `SHA256SUMS` and runs `package/test-install.sh` on
    its own release's package.
 
 ### What `test-install.sh` checks
 
 1. Boost runtime libraries are absent before install.
 2. Install pulls them in, all four binaries are in `/usr/bin` with mode
-   `755`, and `ldd` finds every library.
-3. `conceald --version`, `concealwallet --version`, and `walletd --version`
-   print the upstream version and the built commit. `optimizer --help`
-   prints its options. Each runs under a 20-second timeout with a temporary
-   `HOME` and working directory, which must stay empty. These paths exit
-   before any wallet, network, or mining code. `concealwallet --version`
-   exits with status 1 after printing; the test checks the output, not the
-   exit status.
-4. Removal deletes the four binaries and leaves a marker file in
+   `755`, `ldd` finds every library, and none of the old names
+   (`conceald`, `concealwallet`, `walletd`, `optimizer`) exists.
+3. `conceal-daemon --version`, `conceal-wallet --version`, and
+   `conceal-walletd --version` print the upstream version and the built
+   commit. `conceal-optimizer --help` prints its options. Each runs under a
+   20-second timeout with a temporary `HOME` and working directory, which
+   must stay empty. These paths exit before any wallet, network, or mining
+   code. `conceal-wallet --version` exits with status 1 after printing; the
+   test checks the output, not the exit status.
+4. Log location: `conceal-walletd` with a missing container and a temporary
+   `HOME` must write `$HOME/.conceal/conceal-walletd.log`, create no
+   container, and leave no `*.log` in `/usr/bin`.
+5. Removal deletes the four binaries and leaves a marker file in
    `~/.conceal`.
 
 The first version also ran an upgrade to a repackaged higher revision. It
@@ -319,7 +383,7 @@ Each artifact holds only what a user needs:
 | Artifact | Contents |
 | --- | --- |
 | `conceal-core-arch-x86_64` | `.pkg.tar.zst`, `SHA256SUMS`, `README.txt` |
-| `conceal-core-deb-ubuntu-2204`, `conceal-core-deb-ubuntu-2404` | `.deb`, `SHA256SUMS`, `README.txt` |
+| `conceal-core-deb-ubuntu-2204`, `conceal-core-deb-ubuntu-2404`, `conceal-core-deb-ubuntu-2604` | `.deb`, `SHA256SUMS`, `README.txt` |
 | `*-build-logs`, `*-test-logs` | build and install logs, uploaded only when the job fails |
 
 `README.txt` gives the version, the commit, and the verify, install, check,
@@ -338,8 +402,8 @@ machine.
 2. Select **Arch Linux package** or **Debian package**.
 3. Choose **Run workflow**, select the branch or tag, and run it.
 4. When it finishes, download the artifact from the run summary:
-   `conceal-core-arch-x86_64`, `conceal-core-deb-ubuntu-2204`, or
-   `conceal-core-deb-ubuntu-2404`.
+   `conceal-core-arch-x86_64`, `conceal-core-deb-ubuntu-2204`,
+   `conceal-core-deb-ubuntu-2404`, or `conceal-core-deb-ubuntu-2604`.
 
 With the GitHub CLI:
 
@@ -355,8 +419,9 @@ gh run download <run-id> --name conceal-core-arch-x86_64
 | Package | Machines |
 | --- | --- |
 | `.pkg.tar.zst` | Arch Linux x86_64, then Omarchy x86_64 |
-| `+ubuntu22.04` `.deb` | Ubuntu 22.04 x86_64 |
-| `+ubuntu24.04` `.deb` | Ubuntu 24.04 x86_64 |
+| `~jammy1` `.deb` | Ubuntu 22.04 x86_64 |
+| `~noble1` `.deb` | Ubuntu 24.04 x86_64 |
+| `~resolute1` `.deb` | Ubuntu 26.04 x86_64 |
 
 Record the OS, CPU, and the commit from `README.txt`, then:
 
@@ -364,13 +429,18 @@ Record the OS, CPU, and the commit from `README.txt`, then:
 2. Install with `sudo pacman -U ./conceal-core-*.pkg.tar.zst` or
    `sudo apt install ./conceal-core_*_amd64.deb`. Confirm the package
    manager lists and installs the missing dependencies.
-3. Check `ls -l /usr/bin/conceald /usr/bin/concealwallet /usr/bin/walletd /usr/bin/optimizer`.
-4. Run `conceald --version`, `concealwallet --version`, `walletd --version`,
-   and `optimizer --help`. The version must show the commit from
-   `README.txt`. Do not create a wallet, start a sync, or mine.
-5. Upgrade: run the workflow again later, then install the newer artifact.
-   Confirm `pacman -Q conceal-core` or `dpkg -s conceal-core` shows the newer
-   revision and the binaries still run.
+3. Check `ls -l /usr/bin/conceal-daemon /usr/bin/conceal-wallet /usr/bin/conceal-walletd /usr/bin/conceal-optimizer`,
+   and that `ls /usr/bin/conceald /usr/bin/concealwallet /usr/bin/walletd /usr/bin/optimizer`
+   finds none of them.
+4. Run `conceal-daemon --version`, `conceal-wallet --version`,
+   `conceal-walletd --version`, and `conceal-optimizer --help`. The version
+   must show the commit from `README.txt`. Do not create a wallet, start a
+   sync, or mine.
+5. Upgrade: install a tag release package over the test build (Arch
+   `6.7.6-1` over `6.7.6-0`, Ubuntu `6.7.6-1~<codename>1` over
+   `6.7.6-0~<codename>1`). Confirm `pacman -Q conceal-core` or
+   `dpkg -s conceal-core` shows the release version. The binaries must still
+   run.
 6. Remove with `sudo pacman -R conceal-core` or `sudo apt remove conceal-core`.
    Confirm the binaries are gone and `~/.conceal`, if present, is unchanged.
 
@@ -381,21 +451,17 @@ list the package.
 
 ## After the developer test
 
-Not implemented yet. After the Arch, Omarchy, Ubuntu 22.04, and Ubuntu 24.04
-tests pass:
-
-1. Tag automation: add a tag push trigger to both package workflows, build
-   revision `1`, and attach the `.pkg.tar.zst`, both `.deb` files, and their
-   `SHA256SUMS` to that tag's GitHub Release, as
-   [`ubuntu24.yml`](../.github/workflows/ubuntu24.yml) does for the Ubuntu
-   tarball. That job needs `contents: write`; keep the manual trigger for
-   test builds.
+1. Tag automation: **implemented 2026-11-04, not yet run** (see Channels). A
+   tag push builds revision `1` and attaches the `.pkg.tar.zst`, the three
+   `.deb` files, and their renamed `SHA256SUMS` / `README.txt` to that tag's
+   GitHub Release. The manual trigger stays for test builds.
 2. Omarchy: submit a recipe to
    [omacom/omarchy-pkgs](https://github.com/omacom/omarchy-pkgs), as
    described in [`package/arch/README.md`](../package/arch/README.md).
    Omarchy builds from a pinned upstream tag, so this does not wait for tag
-   automation or release artifacts. The existing `6.7.5` tag is enough to
-   start, and Omarchy's upstream watch proposes later versions. Users then
+   automation or release artifacts. The recipe targets `6.7.6`, the first
+   tag with the `conceal-*` names, and Omarchy's upstream watch proposes
+   later versions. Users then
    install it with `omarchy pkg add conceal-core` or Install > Package in the
    Omarchy menu.
 

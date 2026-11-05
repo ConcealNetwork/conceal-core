@@ -1,6 +1,8 @@
 # Binary naming normalization
 
-Status: Proposed (assessment + alignment plan; **no rename implemented**)
+Status: Accepted — implemented in the working tree for 6.7.6 as a **hard
+rename without legacy aliases** (not released; CI and package runs pending).
+The alias-based transition below is kept for history and marked superseded.
 Scope: Conceal Core CLI executable names (`OUTPUT_NAME`), packages, release
 archives, and downstream consumers (Guardian, Desktop, faucet-api, docs,
 operators).
@@ -18,6 +20,15 @@ renames (GUI builds cryptonote sources into a private static lib; no
 `add_subdirectory` of Core executable CMake). Still documentation only;
 DEC-0002 remains Proposed.
 
+Last updated because: 2026-11-04 (implementation) — the maintainer chose a hard
+rename in 6.7.6 with **no legacy names** in packages, tarballs, or zips; CMake
+targets and `OUTPUT_NAME`s changed; default logs moved to the data directory
+as `conceal-daemon.log` / `conceal-wallet.log` / `conceal-walletd.log`;
+Ubuntu 26.04 tarball and `.deb` added; Arch/Debian package workflows also run
+on tag push. Superseded statements are marked inline. Same day: checklist §C
+DLL item closed — Core's Windows release ships executables only; DLL bundling
+is conceal-desktop.
+
 ## Work priority (downstream + this repo)
 
 Ordered for rollout coordination. Higher items gate or precede lower ones
@@ -26,7 +37,7 @@ unless maintainers explicitly waive with evidence.
 | Priority | Workstream | Intent |
 | --- | --- | --- |
 | **1** | **conceal-guardian** | Dual-name compatible with **both** legacy and new daemon filenames (resolve, extract/copy, restart) **before** Core ships a rename-only release |
-| **2** | **conceal-core + GitHub wiki** | Implement Core rename/aliases/CMake target alignment as planned; update wiki pages that hard-code old names in the same notice window |
+| **2** | **conceal-core + GitHub wiki** | Implement Core rename + CMake target alignment (no aliases — superseded 2026-11-04); update wiki pages that hard-code old names in the same notice window |
 | **3** | **conceal-desktop** | Re-verify low impact (no CLI spawn by old names; no archive consumer surprises). Treat as a verification gate, not a large implementation track |
 | **4** | **conceal-faucet-api** | Update operator docs/systemd template naming; API remains RPC host/port — lowest urgency among these four |
 
@@ -70,6 +81,12 @@ Findings at reassessment:
 
 ## Current state (as of packaging workflows / Core `OUTPUT_NAME`)
 
+> **Superseded 2026-11-04 for 6.7.6:** targets are now `ConcealDaemon`,
+> `ConcealWallet`, `ConcealWalletd`, `ConcealOptimizer` and binaries are
+> `conceal-daemon`, `conceal-wallet`, `conceal-walletd`, `conceal-optimizer`.
+> Packages install only those four in `/usr/bin`. The tables below describe
+> 6.7.5 and earlier.
+
 Source of truth: [`src/CMakeLists.txt`](../src/CMakeLists.txt) `OUTPUT_NAME`:
 
 | CMake target (current) | Current binary | Role |
@@ -89,7 +106,8 @@ current binaries until the rename release):
 | `PaymentGateService` | `ConcealWalletd` | `walletd` | `conceal-walletd` |
 | `Optimizer` | `ConcealOptimizer` | `optimizer` | `conceal-optimizer` |
 
-Notes for that prep step (docs plan only — not implemented here):
+Notes for that prep step (implemented together with the `OUTPUT_NAME` change
+on 2026-11-04):
 
 - Rename only `add_executable` / `target_*` / `add_dependencies` /
   `set_property(TARGET … OUTPUT_NAME …)` references in
@@ -120,6 +138,36 @@ Problems with the current set:
    vs bare tool names.
 3. Packages and Guardian make binary names part of an operational contract
    (`ExecStart=`, `node.path`, `execa`, auto-update extract/copy).
+
+## Default log location (6.7.6)
+
+Before 6.7.6 the daemon wrote `ReplaceExtension(argv[0], ".log")`, that is
+`conceald.log` beside the executable; `walletd` defaulted to
+`payment_gate.log` in the working directory; the CLI wallet wrote
+`concealwallet.log` beside the executable. A package binary in `/usr/bin`
+cannot write there.
+
+From 6.7.6, `tools::getLogFilePath(dataDir, configured, defaultName)`
+(`src/Common/Util.cpp`) picks the file:
+
+| Binary | Default file | Override |
+| --- | --- | --- |
+| `conceal-daemon` | `<data dir>/conceal-daemon.log` | `--log-file` |
+| `conceal-wallet` | `<data dir>/conceal-wallet.log` | none |
+| `conceal-walletd` | `<data dir>/conceal-walletd.log` | `--log-file` |
+| `conceal-optimizer` | console only | — |
+
+`<data dir>` is `~/.conceal`, `%APPDATA%\conceal`, or
+`~/Library/Application Support/conceal`, with `/testnet` appended under
+`--testnet`. `conceal-daemon` and `conceal-walletd` use `--data-dir` instead
+when it is given (`CoreConfig::configFolder`); `conceal-wallet` always uses
+the default data dir. A `--log-file` value with a directory part is
+used as given; a bare file name goes in the data directory. The name is fixed,
+not derived from `argv[0]`. `/etc/conceal` is not used. `--version` and
+`--help` exit before the log is opened.
+
+Not covered here: a walletd Windows service running as LocalSystem resolves
+`%APPDATA%` to the system profile; operators should pass `--log-file`.
 
 ## Proposed names (retain this mapping)
 
@@ -164,8 +212,8 @@ old names produces incomplete artifacts or false-green install tests.
 | Install test | `package/test-install.sh` (`bins=(…)` + version/help smoke) |
 | Package workflows | `.github/workflows/archlinux.yml`, `.github/workflows/debian.yml` (content checks + artifact `README.txt` text) |
 | Dev CI staging | `.github/workflows/check.yml` (`mv build/src/conceald` / `concealwallet` / `walletd` / `optimizer` into `build/conceal` on multiple jobs) |
-| Tag release workflows | `.github/workflows/ubuntu22.yml`, `ubuntu24.yml`, `macOS.yml` copy all executable files under `src/` by discovery; `.github/workflows/windows.yml` zips/copies `*.exe` from `src/Release` — still need alias **creation** rules if transition artifacts are required |
-| Deploy helper | `tools/deploy.sh` (`WALLETBIN="concealwallet"`, `which conceald`) |
+| Tag release workflows | `.github/workflows/ubuntu22.yml`, `ubuntu24.yml`, `ubuntu26.yml`, `macOS.yml` copy all executable files under `src/` by discovery; `.github/workflows/windows.yml` zips/copies `*.exe` from `src/Release` — no change needed since no aliases ship (2026-11-04) |
+| Deploy helper | `tools/deploy.sh` (`WALLETBIN="concealwallet"`, `which conceald`) — updated 2026-11-04 to `conceal-*` names |
 | User-facing strings | e.g. messages under `src/ConcealWallet/` that quote `"concealwallet"` |
 | Docs | this file, `docs/packaging.md`, package READMEs; root `README.md` if it lists binary names |
 
@@ -179,15 +227,40 @@ Optional / later:
 - Windows service registration string `"PaymentGate"` in
   `PaymentGateService/main.cpp` — separate from Unix binary name.
 
-### High: conceal-guardian (confirmed at indexed revision)
+### High: conceal-guardian (dual-name support landed)
 
 | Field | Value |
 | --- | --- |
 | Repository | `conceal-guardian` (local path from py-indexer: sibling checkout) |
-| Revision inspected | `63ca611ce24d42e15c6c9618de760ada0f66ff96` |
-| Status | **Confirmed** findings below; **no** end-to-end update test was run for this docs revision |
+| Revision inspected | `b617a4e9c7fd815236b47c740652efd6d28efeab` (merge of PR #123 `naming-evolution`; `package.json` version `0.7.10`, not yet tagged at inspection) |
+| Status | **Code landed**; `node --test test/daemon-names.test.js` 19/19 pass (2026-11-04, Node 24). **No** end-to-end update against a transition Core build has been run yet |
 
-Confirmed source paths and behavior:
+Current behavior at `b617a4e` (commits `b1efca5`, `5eaa14a`):
+
+- `units/utils.js` `describeNodeLaunch()` precedence: explicit `node.path`,
+  then `--daemon` (both kept as-is even when missing), then `conceal-daemon`
+  then `conceald` in the working directory, then `conceal-daemon` only in
+  `/usr/bin` and `PATH`, else working directory + `conceal-daemon`.
+- `units/download.js` copies a **real** archive binary, preferring
+  `conceal-daemon`, and skips symlink aliases; zip symlink entries are still
+  rejected. The live file is replaced only after the partial copy finishes, so
+  a leftover `conceald` cannot win.
+- Daemon log lookup: `daemonLogCandidates()` tries `<data dir>/<stem>.log`
+  first (`~/.conceal`, `%APPDATA%\conceal`, `~/Library/Application Support/conceal`),
+  then the legacy file beside the binary. `<stem>` comes from the **launched**
+  executable basename.
+- `units/setup.js`, README, INSTALL, `docs/*` name `conceal-daemon` and mention
+  legacy `conceald` once.
+
+Open follow-up for Guardian (does not block Core 6.7.6): Core 6.7.6 always
+writes `conceal-daemon.log` (see "Default log location (6.7.6)" above). If an
+operator keeps `node.path` on a legacy name such as `/usr/bin/conceald` (for
+example a hand-made link), Guardian looks for `conceald.log` and will not find
+the 6.7.6 log. Guardian should also try
+`conceal-daemon.log` in the data directory.
+
+Superseded findings at the earlier inspected revision
+`63ca611ce24d42e15c6c9618de760ada0f66ff96` (kept for history):
 
 - `units/utils.js` — `getNodeExecutableName()` returns `conceald` /
   `conceald.exe`; `getNodeActualPath()` prefers `configOpts.node.path`, else
@@ -209,9 +282,11 @@ Confirmed source paths and behavior:
   **child** daemon name when `node.path` is empty or when auto-update replaces
   the daemon next to Guardian.
 
-**Conclusion:** a Core rename without Guardian dual-name support (or a proven
-Core-first exception — see compatibility strategy) breaks default Guardian
-installs and auto-update. Highest-risk external consumer.
+**Conclusion (at `63ca611`, superseded):** a Core rename without Guardian
+dual-name support breaks default Guardian installs and auto-update.
+**At `b617a4e`:** Guardian accepts both names in code and unit tests; the
+priority-1 gate is met at code level. Runtime evidence for §E still has to be
+recorded against a 6.7.6 build.
 
 ### Low / verified zero build impact: conceal-desktop
 
@@ -401,6 +476,9 @@ Prefer **Guardian dual-name support before** the Core rename release (priority
 
 ### Why archive aliases alone are insufficient
 
+> **Superseded 2026-11-04:** 6.7.6 ships no aliases at all; this analysis is
+> kept for history.
+
 Distinguish three distribution paths:
 
 1. **Package aliases** — files or symlinks under `/usr/bin` managed by
@@ -440,9 +518,9 @@ Placeholders until maintainers fill them:
 
 | Placeholder | Meaning |
 | --- | --- |
-| Transition start release | First Core release that ships new names (+ aliases if any) — **TBD** |
-| Earliest alias-removal release | First Core release allowed to drop legacy names — **TBD** |
-| Minimum Guardian version | First Guardian release with dual-name support — **TBD** |
+| Transition start release | First Core release that ships new names — **6.7.6** (2026-11-04) |
+| Earliest alias-removal release | ~~First Core release allowed to drop legacy names~~ — superseded: 6.7.6 ships no aliases |
+| Minimum Guardian version | First Guardian release with dual-name support — **0.7.10** (`b617a4e`, PR #123; tag not yet published) |
 | Support / notice interval | Operator communication window before removal — **TBD** |
 
 #### Phase 1 — Priority 1: Guardian dual-name (before or blocking Core rename)
@@ -466,6 +544,10 @@ Minimum Guardian changes (implementation is out of scope for this docs PR):
 7. Setup prompt / docs: primary name `conceal-daemon`, mention legacy once.
 
 #### Phase 2 — Priority 2: Core rename + wiki (with transitional aliases)
+
+> **Superseded 2026-11-04:** 6.7.6 ships only the new names. Items 2–6 about
+> legacy artifacts no longer apply; items 1, 7, and 8 still do. Package
+> checks now assert the old names are **absent**.
 
 In the Core release that changes `OUTPUT_NAME` (and the matching wiki edit
 pass under https://github.com/ConcealNetwork/conceal-core/wiki):
@@ -517,6 +599,9 @@ Without that evidence, ship Guardian dual-name support first.
 
 #### Phase 3 — Remove legacy names (separately reviewed)
 
+> **Superseded 2026-11-04:** no aliases ship, so there is nothing to remove in
+> Core. Guardian's `conceald` fallback removal stays a separate decision.
+
 Gate alias removal on **demonstrated readiness** and operator notice — not on
 vague claims that a Guardian version is “ubiquitous.”
 
@@ -536,22 +621,30 @@ is actual evidence. Checking a box without evidence is not allowed.
 ### A. Decision / scope
 
 - [ ] Confirm intended PR base (`development`) and process for any retarget.
-- [ ] Accept exact executable names above; accept aligned CMake executable
+- [x] Accept exact executable names above; accept aligned CMake executable
       target names (`ConcealDaemon` / `ConcealWallet` / `ConcealWalletd` /
-      `ConcealOptimizer`).
-- [ ] Accept work priority order: (1) Guardian dual-name, (2) Core + wiki,
-      (3) Desktop verify, (4) faucet-api docs.
+      `ConcealOptimizer`). Maintainer request to implement, 2026-11-04;
+      `src/CMakeLists.txt`.
+- [x] Accept work priority order: (1) Guardian dual-name, (2) Core + wiki,
+      (3) Desktop verify, (4) faucet-api docs. Maintainer rollout plan,
+      2026-11-04.
 - [ ] Define transition policy owners; fill TBD placeholders (start release,
-      earliest removal, minimum Guardian version, notice interval).
+      earliest removal, minimum Guardian version, notice interval). Start
+      release 6.7.6, no aliases, Guardian 0.7.10 filled 2026-11-04; notice
+      interval and owners still open.
 - [ ] Record downstream evidence (Guardian/Desktop/faucet-api/wiki revisions +
       paths) and unresolved questions.
 
 ### A2. Priority trackers (keep unchecked until evidence exists)
 
-- [ ] **P1** Guardian accepts both legacy and new daemon filenames
-      (resolve + extract/copy + restart on Linux and Windows).
-- [ ] **P2** Core rename/aliases (and optional target alignment) landed with
-      tests; wiki pages updated in the notice window.
+- [x] **P1** Guardian accepts both legacy and new daemon filenames
+      (resolve + extract/copy + restart on Linux and Windows). Code landed at
+      Guardian `b617a4e` (0.7.10, PR #123); `test/daemon-names.test.js` 19/19
+      pass. Runtime matrix still tracked under §E.
+- [ ] **P2** Core rename (no aliases) and target alignment landed with
+      tests; wiki pages updated in the notice window. Code in the working tree
+      2026-11-04; open until CI/package runs pass and both wikis
+      (conceal-core.wiki, conceal-wiki) are updated.
 - [x] **P3** conceal-desktop low-impact verification recorded at `da23d79`
       (2026-11-04): zero impact for Core target/`OUTPUT_NAME` rename; GUI uses
       cryptonote sources as a static lib, not Core executable CMake.
@@ -562,22 +655,34 @@ is actual evidence. Checking a box without evidence is not allowed.
 ### B. Core implementation planning
 
 - [ ] Inventory every executable-path consumer (table in Impact assessment).
-- [ ] Plan CMake executable target alignment (and any `CMakeFiles/<Target>.dir`
-      CI path updates) with or before `OUTPUT_NAME` changes.
-- [ ] Plan `OUTPUT_NAME` and all staging/package/check changes together so no
-      workflow still moves only old names.
-- [ ] Specify compatibility artifacts per supported platform (symlink vs copy
-      vs hard link vs wrapper) — mechanisms not interchangeable.
-- [ ] Keep protocols, ports, data paths, wallet formats, package name, and
-      release asset prefixes out of scope.
+- [x] Plan CMake executable target alignment (and any `CMakeFiles/<Target>.dir`
+      CI path updates) with or before `OUTPUT_NAME` changes. Done together:
+      `src/CMakeLists.txt`, `ConcealDaemon.dir` in package workflows.
+- [x] Plan `OUTPUT_NAME` and all staging/package/check changes together so no
+      workflow still moves only old names. `check.yml`, package workflows,
+      `package/*`, `tools/deploy.sh`, integration tests changed together.
+- [x] ~~Specify compatibility artifacts per supported platform~~ — superseded
+      2026-11-04: none ship.
+- [x] Keep protocols, ports, data paths, wallet formats, package name, and
+      release asset prefixes out of scope. Only names and default log path
+      changed; `ccx-cli-*` prefixes and `conceal-core` package name kept.
 
 ### C. Build / artifacts
 
 - [ ] Clean-build each supported CI platform/toolchain.
 - [ ] Verify exact canonical names and executable permissions.
 - [ ] Inspect actual distributable archives and their extracted contents.
-- [ ] Verify aliases resolve within the installed/extracted layout.
-- [ ] Confirm required DLLs and other runtime files remain available.
+- [x] ~~Verify aliases resolve within the installed/extracted layout.~~
+      Superseded: no aliases; package checks assert old names are absent.
+- [x] ~~Confirm required DLLs and other runtime files remain available.~~
+      Not a Core release check. `.github/workflows/windows.yml` zips `*.exe`
+      only (MSVC + the Boost installer); it does not pack DLLs. The MinGW job
+      in `check.yml` copies `libboost_*.dll` and the MinGW runtime DLLs into
+      the dev artifact with no hash. OpenSSL (`libssl-1_1-x64.dll`,
+      `libcrypto-1_1-x64.dll`) and the VC runtime DLLs are copied in
+      conceal-desktop `.github/workflows/windows.yml` (Pack); those copies are
+      not SHA-checked. Desktop's Inno Setup checksums downloaded
+      redistributables, and the published SHA256 is of the finished zip.
 - [ ] Check no stale real legacy executable shadows the new executable.
 
 ### D. Package lifecycle
@@ -601,6 +706,19 @@ is actual evidence. Checking a box without evidence is not allowed.
 - [ ] Second update after initial migration.
 - [ ] Interrupted/failed update and rollback.
 - [ ] Ensure no stale daemon is selected after migration.
+- [ ] Default daemon log is in the data directory (`~/.conceal`,
+      `%APPDATA%\conceal`, `~/Library/Application Support/conceal`), not beside
+      the executable. Do not use `/etc/conceal` as that default; it needs extra
+      permissions. Keep reading `<binary-dir>/<name>.log` only as a legacy
+      fallback for writable install directories. Core side implemented
+      2026-11-04 (`tools::getLogFilePath`, fixed name `conceal-daemon.log`,
+      `/testnet` under the data dir for testnet); check only after a packaged
+      `/usr/bin` smoke (`package/test-install.sh` `check_log_location`).
+- [ ] Guardian follow-up: when `node.path` names a legacy binary
+      (`conceald`), Guardian must also try `conceal-daemon.log`, because the
+      log basename no longer follows the executable name.
+- [ ] Guardian follow-up: Ubuntu 26.04 is missing from Guardian's supported
+      Ubuntu versions / asset filter (`ccx-cli-ubuntu-2604`).
 
 ### F. Operational validation
 
@@ -614,18 +732,22 @@ is actual evidence. Checking a box without evidence is not allowed.
 
 - [ ] Publish precise migration instructions and operator notice.
 - [ ] Record compatible Guardian release and test evidence.
-- [ ] Specify transition start and earliest alias-removal release.
-- [ ] Require a separate reviewed alias-removal change.
-- [ ] Re-test supported consumers without aliases before removal.
+- [x] Specify transition start and earliest alias-removal release. 6.7.6;
+      no aliases (2026-11-04).
+- [x] ~~Require a separate reviewed alias-removal change.~~ Superseded: no
+      aliases.
+- [ ] Re-test supported consumers without aliases before release (Guardian
+      0.7.10 end-to-end update, §E).
 
 ## Draft operator notice (for the rename release)
 
-Versions below are placeholders — do not invent final numbers in commits.
+Updated 2026-11-04 for the hard rename in 6.7.6.
 
 ```text
-BREAKING — Conceal Core CLI binary names
+BREAKING — Conceal Core CLI binary names and log location
 
-Starting with Conceal Core <TRANSITION_START_TBD>, command-line binaries are renamed:
+Starting with Conceal Core 6.7.6, command-line binaries are renamed and the old
+names are no longer shipped:
 
   conceald        -> conceal-daemon
   concealwallet   -> conceal-wallet
@@ -636,12 +758,20 @@ Impact:
   - systemd/service ExecStart paths that call the old names
   - scripts and cron jobs
   - Conceal Guardian: default daemon filename and auto-update extract/copy
-    (use Guardian <MIN_GUARDIAN_TBD>+, or set node.path to the intended binary)
+    (use Guardian 0.7.10+; if node.path names conceald, change it to
+    conceal-daemon)
 
-Transition:
-  This release still provides legacy names as compatibility aliases where promised.
-  They will be removed no earlier than <EARLIEST_REMOVAL_TBD>, after operator notice
-  and demonstrated consumer readiness. Prefer the new names now.
+There are no compatibility aliases: edit every ExecStart, script, and
+node.path that uses an old name before upgrading.
+
+Logs:
+  Default logs are now conceal-daemon.log, conceal-wallet.log, and
+  conceal-walletd.log in the data directory (~/.conceal, %APPDATA%\conceal,
+  ~/Library/Application Support/conceal; testnet: <data dir>/testnet), not
+  next to the executable. --log-file with a path is used as given; a bare
+  file name goes in the data directory. conceal-optimizer logs to the
+  console only. A walletd Windows service running as LocalSystem logs under
+  that account's APPDATA; pass --log-file to choose the location.
 
 Packages (Arch/Debian) install the new names under /usr/bin.
 Data directories (~/.conceal) are unchanged. RPC protocols are unchanged.
@@ -652,12 +782,20 @@ Data directories (~/.conceal) are unchanged. RPC protocols are unchanged.
 Risks:
 
 - Guardian auto-update failing zip extract if transition zips contain symlink
-  aliases (extractor rejects symlinks).
+  aliases (extractor rejects symlinks). *(Resolved by shipping no aliases.)*
+- Guardian older than 0.7.10 cannot find `conceald` in a 6.7.6 archive, so its
+  auto-update breaks; operators must update Guardian first.
 - Guardian copying/selecting a **stale** legacy daemon after a partial upgrade.
-- Operators removing packages and losing aliases while units still use legacy
-  names.
+- ~~Operators removing packages and losing aliases while units still use
+  legacy names.~~ Superseded: units using old names break on the 6.7.6 upgrade
+  itself; the operator notice covers this.
 - Docs and Discord advice lagging the binaries (support load).
 - Treating package-install success as proof of updater compatibility.
+- Default daemon log beside `argv[0]`. Observed 2026-11-04: a package binary
+  running as `/usr/bin/conceal-daemon` updated `~/.conceal` and did not create
+  `/usr/bin/conceal-daemon.log`. A writable copy next to Guardian still logs
+  as `conceald.log` in that directory. *(Addressed in 6.7.6 code: default log
+  is `<data dir>/conceal-daemon.log`; packaged smoke pending.)*
 
 Non-goals for this rename:
 
@@ -670,8 +808,7 @@ Non-goals for this rename:
 
 ## Decision status
 
-See [`docs/DECISIONS.md`](DECISIONS.md) entry **DEC-0002**. Names and the
-transition policy are **Proposed** until maintainers accept them (intended
-review base: `development`). No `OUTPUT_NAME` change should land before that
-acceptance, Guardian coordination, and checklist evidence for the chosen
-rollout order.
+See [`docs/DECISIONS.md`](DECISIONS.md) entry **DEC-0002**. Accepted
+2026-11-04: hard rename in 6.7.6, no aliases, Guardian 0.7.10 first
+(intended review base: `development`). The earlier "Proposed until accepted"
+wording is superseded.

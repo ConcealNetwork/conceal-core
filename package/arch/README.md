@@ -6,9 +6,9 @@ This file covers only what is specific to this directory.
 
 ## Files
 
-- `PKGBUILD`: source build of one exact commit. It installs `conceald`,
-  `concealwallet`, `walletd`, and `optimizer` to `/usr/bin`, plus the license
-  files to `/usr/share/licenses/conceal-core/`.
+- `PKGBUILD`: source build of one exact commit. It installs `conceal-daemon`,
+  `conceal-wallet`, `conceal-walletd`, and `conceal-optimizer` to `/usr/bin`,
+  plus the license files to `/usr/share/licenses/conceal-core/`.
 - `../test-install.sh`: install and removal check that the workflow
   runs in a disposable container. Do not run it on a machine you care about.
 
@@ -30,7 +30,7 @@ cp package/arch/PKGBUILD "$work/"
 git bundle create "$work/conceal-core.bundle" HEAD
 sum=$(sha256sum "$work/conceal-core.bundle" | cut -d' ' -f1)
 sed -i \
-  -e "s/^pkgrel=.*/pkgrel=0.$(date -u +%Y%m%d%H%M)/" \
+  -e "s/^pkgrel=.*/pkgrel=0/" \
   -e "s/^_commit=.*/_commit=$commit/" \
   -e "s/^sha256sums=.*/sha256sums=('$sum')/" \
   "$work/PKGBUILD"
@@ -40,7 +40,8 @@ cd "$work" && makepkg
 `makepkg` uses two compile jobs. On a machine with more memory, set
 `CCX_BUILD_JOBS`, for example `CCX_BUILD_JOBS=8 makepkg`.
 
-Install the result with `sudo pacman -U ./conceal-core-*.pkg.tar.zst`.
+Install the result with `sudo pacman -U ./conceal-core-*.pkg.tar.zst`. This
+local build uses `pkgrel=0`. The Omarchy and AUR recipe below keeps `pkgrel=1`.
 
 ## Omarchy submission
 
@@ -83,15 +84,16 @@ mkdir -p pkgbuilds/conceal-core/.omarchy
 This is the PKGBUILD in this directory with the bundle replaced by the pinned
 release tag, so there is no `_commit` or `prepare()`. When the upstream
 version changes, update `pkgver` and the checksum; Omarchy's bot does this
-once the watch below is merged.
+once the watch below is merged. AUR uses this same `pkgver` and `pkgrel=1`.
+Neither wants a date in the version.
 
 ```bash
 # Maintainer: Conceal Network <ccx@conceal.network>
 
 pkgname=conceal-core
-pkgver=6.7.5
+pkgver=6.7.6
 pkgrel=1
-pkgdesc='Conceal Network command-line node and wallets (conceald, concealwallet, walletd, optimizer)'
+pkgdesc='Conceal Network command-line node and wallets (conceal-daemon, conceal-wallet, conceal-walletd, conceal-optimizer)'
 arch=('x86_64')
 url='https://github.com/ConcealNetwork/conceal-core'
 license=('MIT' 'LGPL-3.0-or-later' 'BSD-3-Clause' 'Apache-2.0')
@@ -119,7 +121,7 @@ build() {
 
 package() {
   local bin
-  for bin in conceald concealwallet walletd optimizer; do
+  for bin in conceal-daemon conceal-wallet conceal-walletd conceal-optimizer; do
     install -Dm755 "build/src/$bin" "$pkgdir/usr/bin/$bin"
   done
   install -Dm644 "$pkgname/LICENSE" "$pkgdir/usr/share/licenses/$pkgname/LICENSE"
@@ -129,8 +131,10 @@ package() {
 ```
 
 `arch=('x86_64')` only: the build needs AES-NI (`-maes`), so Omarchy's CI
-does not build aarch64. The `6.7.5` tag has the same CMake version, license
-paths, and binary targets as the commits tested here (checked 2026-10-29).
+does not build aarch64. This recipe targets the `6.7.6` tag, the first release
+with the `conceal-*` binary names (docs/binary-naming.md). The `6.7.5` tag still
+builds `conceald`, `concealwallet`, `walletd`, and `optimizer`, so a `6.7.5`
+recipe must use the old names in its install loop.
 
 ### 3. `pkgbuilds/conceal-core/.omarchy/package.json`
 
@@ -142,7 +146,7 @@ paths, and binary targets as the commits tested here (checked 2026-10-29).
 ```
 
 The `github` watch reads GitHub Releases. The pattern has no `v` because
-upstream tags look like `6.7.5`, and it must match the whole tag.
+upstream tags look like `6.7.6`, and it must match the whole tag.
 
 ### 4. Fill the checksum
 
@@ -180,8 +184,8 @@ bin/build --package conceal-core
 The package is written, unsigned, to `build-output/edge/x86_64/`. Copy it to
 the Omarchy VM and run the developer test from
 [docs/packaging.md](../../docs/packaging.md): `sha256sum`,
-`sudo pacman -U`, and the `--version` checks. The commit must be the `6.7.5`
-tag's commit, from `git rev-parse 6.7.5^{commit}`. Then remove it.
+`sudo pacman -U`, and the `--version` checks. The commit must be the `6.7.6`
+tag's commit, from `git rev-parse 6.7.6^{commit}`. Then remove it.
 
 On Arch or Omarchy, also check the upstream watch:
 
@@ -195,13 +199,14 @@ Expect `"status": "skipped"` with `"reason": "already current"`.
 
 ```bash
 git add pkgbuilds/conceal-core
-git commit -m "Add conceal-core 6.7.5"
+git commit -m "Add conceal-core 6.7.6"
 git push -u origin add-conceal-core
 gh pr create --repo omacom/omarchy-pkgs --base master --fill --web
 ```
 
 In the description, say what the package is: the Conceal Network node
-(`conceald`), CLI wallet, payment gateway (`walletd`), and optimizer. Say
+(`conceal-daemon`), CLI wallet (`conceal-wallet`), payment gateway
+(`conceal-walletd`), and optimizer (`conceal-optimizer`). Say
 how it was tested: `bin/build`, then install, version checks, and removal
 on Omarchy x86_64, plus a wallet connected to a remote node. Also note that
 upstream CI builds and install-tests the same recipe on Arch. Keep the PR to

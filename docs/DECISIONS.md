@@ -135,7 +135,8 @@ Update benchmark docs, migration planning docs, and any decision dashboard that 
 ### DEC-0002: Normalize Conceal Core CLI binary names under a `conceal-` prefix
 
 - Date: 2026-11-04
-- Status: Proposed
+- Status: Accepted — implemented for 6.7.6 as a hard rename without legacy
+  aliases (not yet released; see "Implementation update" below)
 - Owners: @Acktarius / Conceal Core maintainers
 - Related work: Arch/Debian packaging (`docs/packaging.md`),
   [`docs/binary-naming.md`](binary-naming.md), conceal-guardian daemon spawn /
@@ -195,6 +196,36 @@ version, and notice interval remain **TBD** until maintainers decide.
 This decision entry and [`docs/binary-naming.md`](binary-naming.md) are
 documentation only until implementation is accepted.
 
+#### Implementation update (2026-11-04): hard rename in 6.7.6, no legacy aliases
+
+Last updated because: the maintainer decided that 6.7.6 ships only the new
+names; this supersedes the transitional-alias plan above and below.
+
+- 6.7.6 is the transition start. Its packages, release tarballs, and release
+  zips contain only `conceal-daemon`, `conceal-wallet`, `conceal-walletd`, and
+  `conceal-optimizer`. No symlinks, copies, hard links, or wrappers with the
+  old names are shipped. `package/test-install.sh` fails if a package installs
+  an old name.
+- CMake targets are `ConcealDaemon`, `ConcealWallet`, `ConcealWalletd`, and
+  `ConcealOptimizer` (`src/CMakeLists.txt`).
+- Default CLI logs move out of the executable's directory, which is
+  `/usr/bin` for package installs, into the data directory with fixed
+  basenames: `conceal-daemon.log`, `conceal-wallet.log`, `conceal-walletd.log`
+  (`tools::getLogFilePath` in `src/Common/Util.cpp`). An explicit absolute or
+  relative `--log-file` path is used as given; a bare file name goes in the
+  data directory. `conceal-optimizer` logs to the console only.
+- Rationale: an alias period would only postpone the same break for scripts
+  and units while adding per-platform artifact rules (symlinks in packages,
+  copies in zips because Guardian's extractor rejects symlinks). Guardian
+  0.7.10 already resolves both names, so the updater does not need aliases.
+- Superseded: "Core rename/aliases", "every promised alias must be validated",
+  the Windows/zip alias mechanism question, and the "earliest alias-removal
+  release" TBD. They no longer apply because no aliases ship.
+- Consequence: every script, systemd unit, or Guardian `node.path` that names
+  `conceald`, `concealwallet`, `walletd`, or `optimizer` breaks on upgrade to
+  6.7.6 and must be edited. The operator notice in `docs/binary-naming.md`
+  says so.
+
 #### Rationale
 
 Packages made binary names a distribution API. A single `conceal-` + kebab-case
@@ -213,6 +244,10 @@ extract or copy.
   must be validated on Linux and Windows extract/copy/restart paths.
 - Operator units/scripts need a migration notice even if aliases soften the
   first release; every promised alias must be validated (not optional).
+  *(Superseded 2026-11-04: no aliases ship; the notice must say old names are
+  gone in 6.7.6.)*
+- Default log files change name and location (data directory instead of
+  beside the binary); data-directory paths themselves do not change.
 - Optimizer `--walletd-*` flags can stay for now (RPC endpoint labels, not
   binary paths).
 - No consensus, cryptography, RPC, wallet-format, data-directory, package-name,
@@ -220,11 +255,12 @@ extract or copy.
 
 #### Compatibility impact
 
-Breaking for anything that hard-codes the old filenames without going through
-validated aliases / dual-name resolvers. Wallet files, RPC protocols, and
-`~/.conceal` data paths stay the same. conceal-desktop impact remains
-**pending full verification**: inspected revision shows no `conceald` spawn
-path, but that is not a completed downstream gate.
+Breaking for anything that hard-codes the old filenames, since 6.7.6 ships no
+aliases; dual-name resolvers such as Guardian 0.7.10 keep working. Wallet
+files, RPC protocols, and `~/.conceal` data paths stay the same. Default log
+files move to the data directory. conceal-desktop: Priority-3 gate passed at
+`da23d79` (see Open questions); the earlier "pending full verification" text
+is superseded.
 
 #### Evidence
 
@@ -243,11 +279,25 @@ only in app code; `walletd`/`conceald` hard-coded in setup docs and
 `walletd`, `conceald`, `concealwallet`). No rename implementation or Guardian
 end-to-end update test is claimed by this decision.
 
+Priority-1 update (2026-11-04): Guardian `b617a4e9c7fd815236b47c740652efd6d28efeab`
+(0.7.10, PR #123) prefers `conceal-daemon`, falls back to `conceald` only in
+the working directory, keeps explicit `node.path` / `--daemon` unchanged,
+copies only real archive binaries (no symlink aliases), and reads the daemon
+log from the data directory before the beside-binary file.
+`test/daemon-names.test.js` passes 19/19. This is code and unit-test evidence,
+not an end-to-end update run against a transition Core build.
+
 #### Open questions
 
-- Fill TBD: transition start release, earliest alias-removal release, minimum
-  Guardian version, operator notice interval.
-- Exact Windows compatibility artifact for release zips and Guardian copy.
+- Fill TBD: ~~transition start release, earliest alias-removal release~~
+  (6.7.6, no aliases — 2026-11-04), minimum Guardian version (0.7.10 at
+  `b617a4e` is the first with dual-name support; not tagged yet), operator
+  notice interval.
+- ~~Exact Windows compatibility artifact for release zips and Guardian copy.~~
+  Superseded: zips carry no legacy names.
+- Guardian follow-ups: try `conceal-daemon.log` when `node.path` names a
+  legacy binary, and add Ubuntu 26.04 / `ccx-cli-ubuntu-2604` to its asset
+  selection.
 - Whether any Core-first exception evidence will be gathered, or priority-1
   Guardian-first remains mandatory.
 - Optional later rename of optimizer `--walletd-*` CLI flags.
@@ -260,8 +310,8 @@ end-to-end update test is claimed by this decision.
 
 - [`docs/binary-naming.md`](binary-naming.md) — assessment, strategy, checklist
   (primary)
-- [`docs/packaging.md`](packaging.md) — proposed-rename note after contents
-  table
+- [`docs/packaging.md`](packaging.md) — package contents and log location
+  (updated 2026-11-04 for the 6.7.6 rename)
 - Operator release notice draft (in binary-naming.md); wiki / conceal-docs /
   Guardian docs when implementation lands
 
