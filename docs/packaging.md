@@ -35,6 +35,13 @@ Boost 1.90 has no `boost_system` CMake package. CMake no longer requests the
 `system` component (header-only since Boost 1.69); Apple/MinGW retry path
 removed. Debian `Depends` unchanged.
 
+Last updated because: 2026-11-05 — SonarCloud `githubactions:S7637` on PR #362
+flagged `softprops/action-gh-release@v3` in new `ubuntu26.yml`. All tag
+release workflows and `check.yml` now pin third-party Actions to full commit
+SHAs (`softprops/action-gh-release@efb35369…` = v3.0.3;
+`actions/checkout@fbc6f399…` = v5.1.0). Arch/Debian package workflows already
+pinned release/checkout and keep those pins.
+
 ## Channels
 
 | Package | Built by | Who installs it | Distribution |
@@ -48,9 +55,10 @@ removed. Debian `Depends` unchanged.
   Debian revision `0`) and on any tag push (revision `1`). On a tag, a `release` job
   that runs after `test` has `contents: write` and attaches the packages,
   `<artifact>.SHA256SUMS`, and `<artifact>.README.txt` to that tag's GitHub
-  Release with `softprops/action-gh-release` (`append_body`), as the tarball
-  workflows do. Other jobs keep `contents: read`. *(Supersedes "dispatch
-  only", 2026-11-04.)*
+  Release with `softprops/action-gh-release` pinned to commit SHA v3.0.3
+  (`append_body`), as the tarball workflows do. Other jobs keep
+  `contents: read`. *(Supersedes "dispatch only", 2026-11-04. SHA pin added
+  2026-11-05 for SonarCloud S7637.)*
 - A tag push fails the `test` job if the tag differs from CMake `VERSION`,
   because `--version` must report the package's upstream version.
 - Workflow artifacts expire on GitHub's retention schedule. Manual runs are
