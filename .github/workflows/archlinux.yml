@@ -1,9 +1,10 @@
 name: Arch Linux package
 
-# Manual test builds only. See docs/packaging.md for the requirements and the
-# developer test plan. Tag-triggered release upload is a later change.
 on:
   workflow_dispatch:
+  push:
+    tags:
+      - "*"
 
 permissions:
   contents: read
@@ -40,8 +41,11 @@ jobs:
           if [[ $tag =~ ^v?([0-9]+\.[0-9]+\.[0-9]+)$ ]]; then
             pkgver=${BASH_REMATCH[1]}
           fi
-          stamp=$(date -u +%Y%m%d%H%M)
-          pkgrel=0.$stamp
+          if [[ $GITHUB_REF_TYPE == tag ]]; then
+            pkgrel=1
+          else
+            pkgrel=0
+          fi
 
           useradd -m builder
           work=/home/builder/pkg
@@ -82,7 +86,7 @@ jobs:
           pacman -Qip "$pkg"
           files=$(pacman -Qlp "$pkg")
           echo "$files"
-          for bin in conceald concealwallet walletd optimizer; do
+          for bin in conceal-daemon conceal-wallet conceal-walletd conceal-optimizer; do
             bsdtar -tvf "$pkg" "usr/bin/$bin" | grep -q '^-rwxr-xr-x' || { echo "usr/bin/$bin missing or not 755"; exit 1; }
             ldd "src/build/src/$bin" | sed "s|^|$bin: |"
           done
@@ -92,7 +96,7 @@ jobs:
           echo "compiler: $(gcc --version | head -1)"
           echo "cmake: $(cmake --version | head -1)"
           echo "boost: $(pacman -Q boost)"
-          echo "compile flags: $(sed -n 's/^CXX_FLAGS = //p' src/build/src/CMakeFiles/Daemon.dir/flags.make)"
+          echo "compile flags: $(sed -n 's/^CXX_FLAGS = //p' src/build/src/CMakeFiles/ConcealDaemon.dir/flags.make)"
 
       - name: Write SHA256SUMS and README.txt
         working-directory: ${{ steps.prep.outputs.work }}
@@ -107,10 +111,12 @@ jobs:
 
           Verify:     sha256sum -c SHA256SUMS
           Install:    sudo pacman -U ./$pkg
-          Check:      conceald --version
+          Check:      conceal-daemon --version
           Uninstall:  sudo pacman -R conceal-core
 
-          Installs conceald, concealwallet, walletd, and optimizer in /usr/bin.
+          Installs conceal-daemon, conceal-wallet, conceal-walletd, and
+          conceal-optimizer in /usr/bin.
+          Default logs (conceal-daemon.log, ...) go to ~/.conceal.
           Needs an x86-64 CPU with AES-NI. Uninstalling keeps wallets and
           blockchain data in ~/.conceal.
           EOF
@@ -178,3 +184,40 @@ jobs:
           name: conceal-core-arch-test-logs
           path: logs/
           if-no-files-found: warn
+
+  release:
+    name: Attach to GitHub Release
+    needs: test
+    if: github.ref_type == 'tag'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333
+        with:
+          name: conceal-core-arch-x86_64
+          path: dist
+
+      - name: Name release files
+        id: files
+        working-directory: dist
+        run: |
+          set -euo pipefail
+          sha256sum -c SHA256SUMS
+          pkg=$(ls conceal-core-*.pkg.tar.zst)
+          mv SHA256SUMS conceal-core-arch-x86_64.SHA256SUMS
+          mv README.txt conceal-core-arch-x86_64.README.txt
+          sha256=$(cut -d' ' -f1 conceal-core-arch-x86_64.SHA256SUMS)
+          echo "pkg=$pkg" >> "$GITHUB_OUTPUT"
+          echo "sha256=${sha256^^}" >> "$GITHUB_OUTPUT"
+
+      - uses: softprops/action-gh-release@efb35369e0ad2afab669f228072c1b0d510eae64
+        with:
+          files: dist/*
+          append_body: true
+          body: |
+            [Arch Linux / Omarchy package](../../releases/download/${{ github.ref_name }}/${{ steps.files.outputs.pkg }}) **${{ steps.files.outputs.pkg }}**
+            `SHA256 : ${{ steps.files.outputs.sha256 }}`
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

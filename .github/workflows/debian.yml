@@ -1,10 +1,10 @@
 name: Debian package
 
-# Manual test builds only, for GitHub distribution. See docs/packaging.md for
-# the requirements and the developer test plan. Tag-triggered release upload
-# is a later change.
 on:
   workflow_dispatch:
+  push:
+    tags:
+      - "*"
 
 permissions:
   contents: read
@@ -22,6 +22,8 @@ jobs:
             id: ubuntu-2204
           - os: ubuntu-24.04
             id: ubuntu-2404
+          - os: ubuntu-26.04
+            id: ubuntu-2604
     steps:
       - name: Add swap
         run: |
@@ -54,8 +56,12 @@ jobs:
             pkgver=${BASH_REMATCH[1]}
           fi
           . /etc/os-release
-          stamp=$(date -u +%Y%m%d%H%M)
-          version="$pkgver-0.$stamp+ubuntu$VERSION_ID"
+          if [[ $GITHUB_REF_TYPE == tag ]]; then
+            revision=1
+          else
+            revision=0
+          fi
+          version="$pkgver-$revision~${VERSION_CODENAME}1"
 
           rm -rf debian
           cp -r package/deb debian
@@ -87,7 +93,7 @@ jobs:
           dpkg-deb --info "$deb"
           contents=$(dpkg-deb --contents "$deb")
           echo "$contents"
-          for bin in conceald concealwallet walletd optimizer; do
+          for bin in conceal-daemon conceal-wallet conceal-walletd conceal-optimizer; do
             grep -qE "^-rwxr-xr-x root/root .* \./usr/bin/$bin\$" <<< "$contents" || { echo "usr/bin/$bin missing or not 755"; exit 1; }
             ldd "build/src/$bin" | sed "s|^|$bin: |"
           done
@@ -95,7 +101,7 @@ jobs:
           echo "compiler: $(gcc --version | head -1)"
           echo "cmake: $(cmake --version | head -1)"
           echo "boost: libboost-all-dev $(dpkg-query -W -f='${Version}' libboost-all-dev)"
-          echo "compile flags: $(sed -n 's/^CXX_FLAGS = //p' build/src/CMakeFiles/Daemon.dir/flags.make)"
+          echo "compile flags: $(sed -n 's/^CXX_FLAGS = //p' build/src/CMakeFiles/ConcealDaemon.dir/flags.make)"
 
       - name: Write SHA256SUMS and README.txt
         working-directory: dist
@@ -110,10 +116,12 @@ jobs:
 
           Verify:     sha256sum -c SHA256SUMS
           Install:    sudo apt install ./$deb
-          Check:      conceald --version
+          Check:      conceal-daemon --version
           Uninstall:  sudo apt remove conceal-core
 
-          Installs conceald, concealwallet, walletd, and optimizer in /usr/bin.
+          Installs conceal-daemon, conceal-wallet, conceal-walletd, and
+          conceal-optimizer in /usr/bin.
+          Default logs (conceal-daemon.log, ...) go to ~/.conceal.
           Needs an x86-64 CPU with AES-NI. Use "apt install ./file", not
           "dpkg -i": apt also installs the required Boost libraries.
           Uninstalling keeps wallets and blockchain data in ~/.conceal.
@@ -143,11 +151,12 @@ jobs:
       fail-fast: false
       matrix:
         include:
-          # ubuntu:22.04 and ubuntu:24.04, digests pulled 2026-10-29
           - id: ubuntu-2204
             image: ubuntu:22.04@sha256:076e7bf82319619f28dd0aa9c02ab34b055ad37100395b4f49a2ffba04fb5e11
           - id: ubuntu-2404
             image: ubuntu:24.04@sha256:fe81560990fae86dc4743202b2cb4d3df98d0bcf949173cecef15ce1127ef852
+          - id: ubuntu-2604
+            image: ubuntu:26.04@sha256:6a06111c3b0a8600feadb270aec771dc239bf407b25625f93f44ab00e11f4d3c
     container:
       image: ${{ matrix.image }}
     steps:
@@ -184,3 +193,49 @@ jobs:
           name: conceal-core-deb-${{ matrix.id }}-test-logs
           path: logs/
           if-no-files-found: warn
+
+  release:
+    name: Attach to GitHub Release
+    needs: test
+    if: github.ref_type == 'tag'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333
+        with:
+          pattern: conceal-core-deb-ubuntu-*
+          path: artifacts
+
+      - name: Name release files
+        id: files
+        run: |
+          set -euo pipefail
+          mkdir -p dist
+          body=""
+          for dir in artifacts/conceal-core-deb-ubuntu-*; do
+            id=$(basename "$dir")
+            (cd "$dir" && sha256sum -c SHA256SUMS)
+            deb=$(cd "$dir" && ls conceal-core_*_amd64.deb)
+            sha256=$(cut -d' ' -f1 "$dir/SHA256SUMS")
+            mv "$dir/$deb" dist/
+            mv "$dir/SHA256SUMS" "dist/$id.SHA256SUMS"
+            mv "$dir/README.txt" "dist/$id.README.txt"
+            body+="[${id#conceal-core-deb-} .deb](../../releases/download/$GITHUB_REF_NAME/$deb) **$deb**"$'\n'
+            body+="\`SHA256 : ${sha256^^}\`"$'\n\n'
+          done
+          ls -l dist
+          {
+            echo "body<<EOF"
+            printf '%s' "$body"
+            echo "EOF"
+          } >> "$GITHUB_OUTPUT"
+
+      - uses: softprops/action-gh-release@efb35369e0ad2afab669f228072c1b0d510eae64
+        with:
+          files: dist/*
+          append_body: true
+          body: ${{ steps.files.outputs.body }}
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

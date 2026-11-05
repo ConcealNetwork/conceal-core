@@ -59,10 +59,10 @@ jobs:
         shell: powershell
         run: |
           mkdir build/conceal
-          mv build/src/Release/conceald.exe build/conceal
-          mv build/src/Release/concealwallet.exe build/conceal
-          mv build/src/Release/optimizer.exe build/conceal
-          mv build/src/Release/walletd.exe build/conceal
+          mv build/src/Release/conceal-daemon.exe build/conceal
+          mv build/src/Release/conceal-wallet.exe build/conceal
+          mv build/src/Release/conceal-optimizer.exe build/conceal
+          mv build/src/Release/conceal-walletd.exe build/conceal
           cp build/tests/Release/*_tests.exe build/conceal
 
       - name: Upload To GH Artifacts
@@ -145,10 +145,10 @@ jobs:
         shell: msys2 {0}
         run: |
           mkdir build/conceal
-          mv build/src/conceald.exe build/conceal
-          mv build/src/concealwallet.exe build/conceal
-          mv build/src/optimizer.exe build/conceal
-          mv build/src/walletd.exe build/conceal
+          mv build/src/conceal-daemon.exe build/conceal
+          mv build/src/conceal-wallet.exe build/conceal
+          mv build/src/conceal-optimizer.exe build/conceal
+          mv build/src/conceal-walletd.exe build/conceal
           cp /mingw64/bin/libboost_*.dll build/conceal
           # Runtime DLLs for artifact users without MSYS2 on PATH.
           if [ -f /mingw64/bin/libstdc++-6.dll ]; then cp /mingw64/bin/libstdc++-6.dll build/conceal; fi
@@ -241,10 +241,10 @@ jobs:
       - name: Prepare release
         run: |
           mkdir build/conceal
-          mv build/src/conceald build/conceal
-          mv build/src/concealwallet build/conceal
-          mv build/src/optimizer build/conceal
-          mv build/src/walletd build/conceal
+          mv build/src/conceal-daemon build/conceal
+          mv build/src/conceal-wallet build/conceal
+          mv build/src/conceal-optimizer build/conceal
+          mv build/src/conceal-walletd build/conceal
           cp build/tests/*_tests build/conceal
 
       - name: Upload To GH Artifacts
@@ -313,10 +313,10 @@ jobs:
       - name: Prepare release
         run: |
           mkdir build/conceal
-          mv build/src/conceald build/conceal
-          mv build/src/concealwallet build/conceal
-          mv build/src/optimizer build/conceal
-          mv build/src/walletd build/conceal
+          mv build/src/conceal-daemon build/conceal
+          mv build/src/conceal-wallet build/conceal
+          mv build/src/conceal-optimizer build/conceal
+          mv build/src/conceal-walletd build/conceal
           cp build/tests/*_tests build/conceal
 
       - name: Upload To GH Artifacts
@@ -385,10 +385,10 @@ jobs:
       - name: Prepare release
         run: |
           mkdir build/conceal
-          mv build/src/conceald build/conceal
-          mv build/src/concealwallet build/conceal
-          mv build/src/optimizer build/conceal
-          mv build/src/walletd build/conceal
+          mv build/src/conceal-daemon build/conceal
+          mv build/src/conceal-wallet build/conceal
+          mv build/src/conceal-optimizer build/conceal
+          mv build/src/conceal-walletd build/conceal
           cp build/tests/*_tests build/conceal
 
       - name: Upload To GH Artifacts
@@ -457,10 +457,10 @@ jobs:
       - name: Prepare release
         run: |
           mkdir build/conceal
-          mv build/src/conceald build/conceal
-          mv build/src/concealwallet build/conceal
-          mv build/src/optimizer build/conceal
-          mv build/src/walletd build/conceal
+          mv build/src/conceal-daemon build/conceal
+          mv build/src/conceal-wallet build/conceal
+          mv build/src/conceal-optimizer build/conceal
+          mv build/src/conceal-walletd build/conceal
           cp build/tests/*_tests build/conceal
 
       - name: Upload To GH Artifacts
