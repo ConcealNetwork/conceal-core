@@ -10,10 +10,10 @@ YELLOW='\033[1;33m'
 NC='\033[0m' # No Color
 
 # Check if start height is provided
-if [ $# -eq 0 ]; then
-    echo -e "${RED}Error: Please provide a start height${NC}"
-    echo "Usage: $0 <start_height>"
-    echo "Example: $0 1730000"
+if [[ $# -eq 0 ]]; then
+    echo -e "${RED}Error: Please provide a start height${NC}" >&2
+    echo "Usage: $0 <start_height>" >&2
+    echo "Example: $0 1730000" >&2
     exit 1
 fi
 
@@ -34,8 +34,8 @@ echo ""
 # Function to get current blockchain height
 get_current_height() {
     local height=$(curl -s "$URL1/getheight" | grep -o '"height":[0-9]*' | cut -d':' -f2)
-    if [ -z "$height" ]; then
-        echo -e "${RED}Error: Could not fetch current height from $URL1${NC}"
+    if [[ -z "$height" ]]; then
+        echo -e "${RED}Error: Could not fetch current height from $URL1${NC}" >&2
         exit 1
     fi
     echo $height
@@ -76,7 +76,7 @@ for ((height=START_HEIGHT; height<=END_HEIGHT; height+=25000)); do
     
     # Fetch hash from URL1
     hash1=$(fetch_hash "$URL1" $height)
-    if [ -z "$hash1" ]; then
+    if [[ -z "$hash1" ]]; then
         echo -e "${RED}FAILED (URL1)${NC}"
         echo -e "${RED}Stopping collection due to failed request${NC}"
         break
@@ -84,14 +84,14 @@ for ((height=START_HEIGHT; height<=END_HEIGHT; height+=25000)); do
     
     # Fetch hash from URL2
     hash2=$(fetch_hash "$URL2" $height)
-    if [ -z "$hash2" ]; then
+    if [[ -z "$hash2" ]]; then
         echo -e "${RED}FAILED (URL2)${NC}"
         echo -e "${RED}Stopping collection due to failed request${NC}"
         break
     fi
     
     # Compare hashes - CRITICAL: if they don't match, stop immediately
-    if [ "$hash1" = "$hash2" ]; then
+    if [[ "$hash1" = "$hash2" ]]; then
         echo -e "${GREEN}MATCH${NC}"
         ((successful_blocks++))
         

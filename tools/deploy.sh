@@ -42,9 +42,10 @@ installDeps() {
 }
 
 # Executable from PATH, else from the build directory.
-findBinary() {
-	command -v "$1" > /dev/null 2>&1 && { echo "$1"; return 0; }
-	[ -x "$BIN_DIR/$1" ] && { echo "$BIN_DIR/$1"; return 0; }
+find_binary() {
+	local name=$1
+	command -v "$name" > /dev/null 2>&1 && { echo "$name"; return 0; }
+	[[ -x "$BIN_DIR/$name" ]] && { echo "$BIN_DIR/$name"; return 0; }
 	return 1
 }
 
@@ -85,7 +86,7 @@ updateConceal() {
 
 # Open a wallet using conceal-wallet
 openWallet() {
-	WALLETBIN="$(findBinary conceal-wallet)" || { echo "conceal-wallet not found; run --install first"; exit 1; }
+	WALLETBIN="$(find_binary conceal-wallet)" || { echo "conceal-wallet not found; run --install first"; exit 1; }
 
 	[ "$TESTNET" = 1 ] && WALLET_ARGS="$WALLET_ARGS --testnet"
 	[ ! -z "$DAEMON_ADDR" ] && WALLET_ARGS="$WALLET_ARGS --daemon-address=$DAEMON_ADDR"

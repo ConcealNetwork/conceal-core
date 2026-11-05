@@ -17,17 +17,17 @@ legacy=(conceald concealwallet walletd optimizer)
 
 case "$pkg" in
   *.pkg.tar.zst)
-    install_pkg() { pacman -U --noconfirm "$1"; }
+    install_pkg() { local package=$1; pacman -U --noconfirm "$package"; }
     remove_pkg() { pacman -R --noconfirm conceal-core; }
     installed_version() { pacman -Q conceal-core | cut -d' ' -f2; }
-    file_version() { pacman -Qp "$1" | cut -d' ' -f2; }
+    file_version() { local package=$1; pacman -Qp "$package" | cut -d' ' -f2; }
     ;;
   *.deb)
     export DEBIAN_FRONTEND=noninteractive
-    install_pkg() { apt-get install -y --no-install-recommends "$1"; }
+    install_pkg() { local package=$1; apt-get install -y --no-install-recommends "$package"; }
     remove_pkg() { apt-get remove -y conceal-core; }
     installed_version() { dpkg-query -W -f='${Version}' conceal-core; }
-    file_version() { dpkg-deb -f "$1" Version; }
+    file_version() { local package=$1; dpkg-deb -f "$package" Version; }
     ;;
   *)
     echo "unknown package type: $pkg" >&2
