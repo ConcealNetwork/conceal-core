@@ -15,9 +15,9 @@ Package: conceal-core
 Architecture: amd64
 Depends: ${shlibs:Depends}, ${misc:Depends}
 Description: Conceal Network command-line node and wallets
- Conceal Core provides the conceald node daemon, the concealwallet
- command-line wallet, the walletd payment gateway service, and the
- optimizer tool for the Conceal Network (CCX).
+ Conceal Core provides the conceal-daemon node daemon, the conceal-wallet
+ command-line wallet, the conceal-walletd payment gateway service, and the
+ conceal-optimizer tool for the Conceal Network (CCX).
  .
  Installing the package does not start a service, create a wallet,
  download blockchain data, or open network ports. The binaries are

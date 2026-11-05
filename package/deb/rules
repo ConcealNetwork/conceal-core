@@ -19,6 +19,6 @@ override_dh_auto_test:
 
 # Upstream CMake has no install() rules for the four binaries.
 override_dh_auto_install:
-	for bin in conceald concealwallet walletd optimizer; do \
+	for bin in conceal-daemon conceal-wallet conceal-walletd conceal-optimizer; do \
 		install -Dm755 build/src/$$bin debian/conceal-core/usr/bin/$$bin; \
 	done
