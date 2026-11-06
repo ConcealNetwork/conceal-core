@@ -1,0 +1,167 @@
+name: PPA source packages
+
+on:
+    workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  source:
+    name: Prepare source (${{ matrix.series }})
+    runs-on: ubuntu-22.04
+    timeout-minutes: 20
+    strategy:
+      fail-fast: false
+      matrix:
+        series: [jammy, noble, resolute]
+
+    steps:
+      # Same checkout pin as debian.yml.
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+
+      - name: Install source packaging tools
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y \
+            build-essential dpkg-dev debhelper cmake python3 git
+
+      - name: Prepare source archive and Debian packaging
+        id: prep
+        shell: bash
+        env:
+          SERIES: ${{ matrix.series }}
+        run: |
+          set -euo pipefail
+
+          commit=$(git rev-parse HEAD)
+          [[ "$commit" == "$GITHUB_SHA" ]]
+          short_commit=$(git rev-parse --short=7 HEAD)
+          epoch=$(git show -s --format=%ct HEAD)
+          pkgver=$(sed -n 's/^set(VERSION "\(.*\)")$/\1/p' CMakeLists.txt)
+          [[ "$pkgver" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]]
+
+          revision=0
+          if [[ "$GITHUB_REF_TYPE" == tag ]]; then
+            [[ "$GITHUB_REF_NAME" == "$pkgver" ||
+               "$GITHUB_REF_NAME" == "v$pkgver" ]]
+            revision=1
+          fi
+          version="$pkgver-$revision~${SERIES}1"
+
+          work="$RUNNER_TEMP/ppa-source"
+          mkdir -p "$work"
+          src="$work/conceal-core-$pkgver"
+          mkdir -p "$src"
+
+          # Export tracked source, without checkout metadata or local files.
+          git archive HEAD | tar -x -C "$src"
+
+          # Fail explicitly if the repository acquires submodules.
+          if git ls-files --stage | grep -q '^160000 '; then
+            echo "Source export needs explicit submodule handling."
+            exit 1
+          fi
+
+          # Stamp the exported source only; do not modify the checkout.
+          export SRC="$src" PKGVER="$pkgver" SHORT_COMMIT="$short_commit"
+          python3 <<'PY'
+          import os
+          import re
+          from pathlib import Path
+
+          path = Path(os.environ["SRC"]) / "CMakeLists.txt"
+          text = path.read_text()
+          replacements = [
+              (r"^set\(COMMIT [^\n]*\)$",
+               f'set(COMMIT {os.environ["SHORT_COMMIT"]})'),
+              (r'^set\(REFS "[^\n]*"\)$',
+               f'set(REFS " (tag: v{os.environ["PKGVER"]})")'),
+              (r"^  if\(Git_FOUND OR GIT_FOUND\)$",
+               '  if((Git_FOUND OR GIT_FOUND) AND EXISTS "${CMAKE_SOURCE_DIR}/.git")'),
+          ]
+          for pattern, replacement in replacements:
+              text, count = re.subn(
+                  pattern, lambda _: replacement, text, flags=re.MULTILINE
+              )
+              if count != 1:
+                  raise SystemExit(f"Expected one CMake match: {pattern}")
+          path.write_text(text)
+          PY
+
+          # Use identical archive bytes across series for the same commit.
+          tar --sort=name --mtime="@$epoch" \
+            --owner=0 --group=0 --numeric-owner \
+            -C "$work" -cf - "conceal-core-$pkgver" |
+            gzip -n > "$work/conceal-core_${pkgver}.orig.tar.gz"
+
+          cp -a "$src/package/deb" "$src/debian"
+          rm "$src/debian/README.md"
+          grep -qx '3.0 (quilt)' "$src/debian/source/format"
+
+          sed -i \
+            "1s/^conceal-core ([^)]*) [^;]*;/conceal-core ($version) $SERIES;/" \
+            "$src/debian/changelog"
+
+          {
+            echo "src=$src"
+            echo "work=$work"
+            echo "version=$version"
+            echo "commit=$commit"
+          } >> "$GITHUB_OUTPUT"
+
+      - name: Build unsigned source package
+        working-directory: ${{ steps.prep.outputs.src }}
+        run: |
+          set -euo pipefail
+          dpkg-buildpackage -S -d -us -uc -sa
+
+      - name: Verify source extraction and collect artifacts
+        shell: bash
+        env:
+          WORK: ${{ steps.prep.outputs.work }}
+          VERSION: ${{ steps.prep.outputs.version }}
+          COMMIT: ${{ steps.prep.outputs.commit }}
+          SERIES: ${{ matrix.series }}
+        run: |
+          set -euo pipefail
+
+          dpkg-source --no-check -x \
+            "$WORK/conceal-core_${VERSION}.dsc" \
+            "$RUNNER_TEMP/source-extraction-check"
+
+          mkdir -p dist
+          cp "$WORK"/conceal-core_*.orig.tar.gz dist/
+          cp "$WORK"/conceal-core_*.debian.tar.* dist/
+          cp "$WORK"/conceal-core_*.dsc dist/
+          cp "$WORK"/conceal-core_*_source.changes dist/
+          cp "$WORK"/conceal-core_*_source.buildinfo dist/
+
+          cat > dist/README.txt <<EOF
+          Conceal Core unsigned PPA source package
+          Version: $VERSION
+          Ubuntu series: $SERIES
+          Source commit: $COMMIT
+
+          These files are unsigned and have not been uploaded.
+          Revision 0 denotes a preparation/test build.
+          Revision 1 is generated when dispatched against a matching release tag.
+          Reusing an uploaded version requires incrementing its upload suffix.
+
+          The exported CMakeLists.txt is stamped with this source commit and
+          uses its existing version fallback when Git metadata is absent.
+          The repository checkout is not modified.
+          EOF
+
+          cd dist
+          sha256sum conceal-core_* > SHA256SUMS
+
+      # Same upload-artifact pin as debian.yml.
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9
+        with:
+          name: conceal-core-ppa-source-${{ matrix.series }}
+          path: dist/
+          if-no-files-found: error
