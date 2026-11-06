@@ -2,12 +2,6 @@ name: PPA source packages
 
 on:
     workflow_dispatch:
-    push:
-      branches:
-        - ci/ppa-source-packages
-      paths:
-        - .github/workflows/ppa-source.yml
-        - package/deb/**
 
 permissions:
   contents: read
